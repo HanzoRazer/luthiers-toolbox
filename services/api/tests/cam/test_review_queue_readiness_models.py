@@ -1,9 +1,9 @@
 """Contract tests for review-queue architecture readiness models."""
 
 import pytest
-from pydantic import ValidationError
 
 from app.cam.review_queue_readiness import (
+    ReadinessContractError,
     AggregateReadiness,
     ReadinessEvidence,
     ReadinessFinding,
@@ -44,7 +44,7 @@ class TestAuthorizationInvariants:
         ["implementation_authorized", "execution_authorized", "machine_output_allowed"],
     )
     def test_cannot_be_set_true(self, field):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ReadinessContractError):
             ReviewQueueReadinessReport(
                 aggregate=AggregateReadiness.READY, findings=(), **{field: True}
             )
@@ -61,16 +61,18 @@ class TestNoCallerSettableReadiness:
 
     def test_report_has_no_ready_input_field(self):
         # A caller-settable `ready` field would let the caller declare the answer.
-        assert "ready" not in ReviewQueueReadinessReport.model_fields
+        import dataclasses
+        names = {f.name for f in dataclasses.fields(ReviewQueueReadinessReport)}
+        assert "ready" not in names
 
     def test_evidence_requires_a_citable_source(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ReadinessContractError):
             ReadinessEvidence(evidence_kind="k", present=True, source="")
 
 
 class TestContextValidation:
     def test_duplicate_requirement_ids_rejected(self):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ReadinessContractError):
             ReviewQueueReadinessContext(
                 requirements=(_req("DUP"), _req("DUP")), evidence=()
             )

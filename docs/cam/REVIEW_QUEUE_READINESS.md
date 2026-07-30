@@ -10,6 +10,35 @@ It does not authorize implementation, execution, promotion, or machine output.
 
 ---
 
+## Dependency-boundary exception
+
+> The readiness contracts use stdlib dataclasses rather than Pydantic because they execute
+> within the repository's dependency-free required check. This is a runtime-boundary
+> exception, not a competing domain-model convention.
+
+`Fence Checks (Blocking)` installs **no packages** — that is what keeps the repository's sole
+required merge gate fast and independent of package-index availability. Anything running
+inside it must import only the standard library.
+
+Consequently **nothing in the readiness package may import a Pydantic model**, including the
+review-queue models it assesses. The evidence adapter therefore inspects declarations with
+`ast` over source files rather than importing them. That is also the more honest description
+of what it does: the question is what the subsystem *declares*, which is a property of the
+source, and importing would additionally execute module-level code and make a static claim
+partly dynamic.
+
+The **internal validator style** differs from `ReviewQueueCISummary`'s Pydantic pattern. The
+**external contract does not**: serialized schema, field names and order, statuses,
+severities, ordering, exit codes and the anti-authorization invariants are authoritative and
+unchanged. `test_review_queue_readiness_dependency_free.py` proves this by running the CLI in
+a subprocess with Pydantic made unimportable and asserting the JSON output is byte-identical
+to a normal run.
+
+Domain models elsewhere — `ReviewQueueItem`, `ReviewDecisionRecord`, `ReviewQueueCISummary` —
+remain Pydantic and are unaffected.
+
+---
+
 ## Three readiness mechanisms — do not conflate them
 
 This repository contains three things that assess "readiness". They have different subjects

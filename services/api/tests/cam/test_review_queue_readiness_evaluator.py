@@ -38,7 +38,9 @@ class TestRequirementEvaluation:
     def test_satisfied_when_evidence_present(self):
         f = evaluate_requirement(_req(), (_ev(present=True),))
         assert f.status is ReadinessStatus.SATISFIED
-        assert f.evidence_sources == ["src"]
+        # Tuple internally (frozen dataclass); to_dict() still emits a JSON list, so the
+        # external contract is unchanged by the stdlib conversion.
+        assert tuple(f.evidence_sources) == ("src",)
 
     def test_unsatisfied_on_confirmed_absence(self):
         f = evaluate_requirement(_req(), (_ev(present=False),))

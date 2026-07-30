@@ -6,7 +6,7 @@
   "title": "Review queue architecture readiness check (report-only CI rollout)",
   "intent": "Implement the valid question behind TD-2 without its historical architecture. The repository can now answer whether the declared operational prerequisites of the review-queue subsystem are present, derived deterministically from repository evidence rather than asserted by a caller. Replaces the historical POST /readiness endpoint and in-memory assessment registry, which are deliberately NOT carried forward. Requirement set ratified by owner ruling from the historical 8F assessment; structural precedent is CAM 7J.",
   "change_type": "feature",
-  "behavior_change": "Adds a CLI and a report-only CI step. No runtime route is added. No production behaviour changes: the evaluator is read-only, mutates nothing, and executes no workflow. The CI step runs inside the existing Fence Checks (Blocking) job with --report-only, so known readiness gaps do NOT fail the sole required check during rollout; an evaluator error still fails. Report content is truthful (currently NOT_READY) - only enforcement is deferred, and severities were not weakened to obtain a green check.",
+  "behavior_change": "Adds a CLI and a report-only CI step. No runtime route is added. No production behaviour changes: the evaluator is read-only, mutates nothing, and executes no workflow. The CI step runs inside the existing Fence Checks (Blocking) job with --report-only, so known readiness gaps do NOT fail the sole required check during rollout; an evaluator error still fails. Report content is truthful (currently NOT_READY) - only enforcement is deferred, and severities were not weakened to obtain a green check. Readiness contracts use stdlib dataclasses rather than Pydantic because they execute inside the dependency-free required check; the evidence adapter inspects declarations with ast instead of importing the Pydantic models it assesses. This is a runtime-boundary exception, not a competing domain-model convention: the serialized schema and behavioural invariants are unchanged.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
@@ -22,7 +22,8 @@
       "services/api/tests/cam/test_review_queue_readiness_evaluator.py",
       "services/api/tests/cam/test_review_queue_readiness_evidence.py",
       "services/api/tests/cam/test_review_queue_readiness_cli.py",
-      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py"
+      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
+      "services/api/tests/cam/test_review_queue_readiness_dependency_free.py"
     ],
     "files_expected_to_change": [
       "services/api/app/cam/review_queue_readiness.py",
@@ -36,7 +37,8 @@
       "services/api/tests/cam/test_review_queue_readiness_evaluator.py",
       "services/api/tests/cam/test_review_queue_readiness_evidence.py",
       "services/api/tests/cam/test_review_queue_readiness_cli.py",
-      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py"
+      "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
+      "services/api/tests/cam/test_review_queue_readiness_dependency_free.py"
     ]
   },
   "diff_articulation": {
@@ -50,7 +52,12 @@
       "CLI enforcement mode -> exit 1 (NOT_READY, truthful: 3 of 4 ratified requirements unmet)",
       "CLI --report-only -> exit 0 with NOT_READY still printed",
       "JSON output byte-identical across consecutive runs (determinism)",
-      "architecture_scan.yml still contains zero 'paths:' filters; required check name unchanged"
+      "architecture_scan.yml still contains zero 'paths:' filters; required check name unchanged",
+      "pytest tests/cam -k 'readiness and not cli' -> 132 passed",
+      "pytest tests/cam/test_review_queue_readiness_dependency_free.py -> 9 passed, incl. byte-identical output with and without pydantic",
+      "pytest tests/cam -k 'review_queue and not readiness' -> 62 passed, no regression",
+      "python -m app.ci.check_all_fences -> All fence checks passed (the actual required-check command)",
+      "check_complexity / check_file_sizes / check_bare_except -> all OK"
     ],
     "known_residual": "The check is REPORT-ONLY and does not gate merges. Promotion to enforcement requires a separate owner ruling. RQR-002-IDENTITY evaluates UNRESOLVED_RUNTIME_VALIDATION_REQUIRED by design: a reviewer_ref declaration is visible statically, but whether authentication is enforced on the request path is a runtime property this check cannot and does not claim to settle."
   },
@@ -124,6 +131,12 @@
     {
       "path": "services/api/tests/cam/test_review_queue_readiness_ci_topology.py",
       "intent": "Static workflow-policy assertions preventing a path filter from stranding the required check.",
+      "risk": "low",
+      "behavior_change": "Test-only."
+    },
+    {
+      "path": "services/api/tests/cam/test_review_queue_readiness_dependency_free.py",
+      "intent": "Subprocess proof that the CLI runs with pydantic genuinely unimportable \u2014 the regression test for the PR #242 required-check failure.",
       "risk": "low",
       "behavior_change": "Test-only."
     }

@@ -6,11 +6,28 @@ subsystem present in this repository?*
 
 This module is **assessment only**. It describes the presence of declared operational
 prerequisites. It does not authorize implementation, execution, promotion, or machine
-output — enforced below by model validators, following the 8E pattern already used by
-``ReviewQueueCISummary``.
+output — enforced below by ``__post_init__`` validation.
 
-Three distinct readiness mechanisms exist in this repository. They are separate on
-purpose and must not be conflated:
+DEPENDENCY BOUNDARY EXCEPTION
+-----------------------------
+These contracts use **stdlib dataclasses rather than Pydantic** because they execute inside
+the repository's dependency-free required check (``Fence Checks (Blocking)``). That job
+installs no packages by design, which is what keeps the sole required merge gate fast and
+independent of package-index availability.
+
+**This is a runtime-boundary exception, not a competing domain-model convention.** Domain
+models elsewhere in this package — ``ReviewQueueItem``, ``ReviewDecisionRecord``,
+``ReviewQueueCISummary`` — remain Pydantic. The internal validator style differs here; the
+**external contract does not**: the serialized report schema, statuses, severities,
+ordering, and anti-authorization invariants are authoritative and unchanged.
+
+A consequence worth stating: nothing in this readiness package may import a Pydantic model,
+including the review-queue models it assesses. The evidence adapter therefore inspects
+declarations via ``ast`` over source files rather than by importing them — which is a more
+honest description of what it does anyway.
+
+Three distinct readiness mechanisms exist in this repository. They are separate on purpose
+and must not be conflated:
 
 ===========================================  ==================================================
 Mechanism                                    Subject
@@ -26,11 +43,8 @@ Mechanism                                    Subject
 
 **None of the three authorizes implementation, execution, or machine output.**
 
-Structural precedent: CAM 7J (``translator_governance_review_matrix.py``) — deterministic
-evaluation, blocker/warning classification, stable ordering, anti-authorization language.
-
-Historical lineage: the requirement *set* is ratified by owner ruling from the historical
-8F assessment (TD-2, recovery branch ``p0-repository-state-triage`` @ ``8035f499``). The
+Historical lineage: the requirement *set* is ratified by owner ruling from the historical 8F
+assessment (TD-2, recovery branch ``p0-repository-state-triage`` @ ``8035f499``). The
 historical *implementation shape* — caller-supplied readiness booleans, an in-memory
 assessment registry, and a ``POST /readiness`` endpoint — is **deliberately not** carried
 forward. Readiness here is derived from repository evidence and can never be asserted by a
@@ -39,10 +53,9 @@ caller.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-
-from pydantic import BaseModel, Field, model_validator
 
 SCHEMA_VERSION = "review-queue-readiness/v1"
 
@@ -95,32 +108,47 @@ class ReadinessEvaluationError(Exception):
     """
 
 
-class ReadinessRequirement(BaseModel):
+class ReadinessContractError(ValueError):
+    """Raised when a contract invariant is violated.
+
+    A ValueError subclass so callers may catch either. Replaces Pydantic's
+    ValidationError at this boundary; the *invariants* are unchanged.
+    """
+
+
+@dataclass(frozen=True)
+class ReadinessRequirement:
     """A declared operational prerequisite of the review-queue subsystem."""
 
-    requirement_id: str = Field(..., description="Stable identifier, e.g. RQR-PERSISTENCE")
+    requirement_id: str
     title: str
     description: str
     severity: ReadinessSeverity
-    evidence_kind: str = Field(
-        ...,
-        description="The kind of evidence that can satisfy this requirement; matched "
-                    "against ReadinessEvidence.evidence_kind.",
-    )
+    evidence_kind: str
     verification_mode: VerificationMode
-    authority_source: str = Field(
-        ...,
-        description="Who says this is required. Every requirement must name its authority.",
-    )
-    runtime_validation_note: Optional[str] = Field(
-        default=None,
-        description="For RUNTIME/HYBRID requirements: what a runtime check would have to show.",
-    )
+    authority_source: str
+    runtime_validation_note: Optional[str] = None
 
-    model_config = {"frozen": True}
+    def __post_init__(self) -> None:
+        if not self.requirement_id.strip():
+            raise ReadinessContractError("requirement_id must be non-empty")
+        if not self.authority_source.strip():
+            raise ReadinessContractError(
+                f"{self.requirement_id}: authority_source must name who requires this — "
+                "a requirement without an authority is not policy"
+            )
+        if not isinstance(self.severity, ReadinessSeverity):
+            raise ReadinessContractError(
+                f"{self.requirement_id}: severity must be a ReadinessSeverity"
+            )
+        if not isinstance(self.verification_mode, VerificationMode):
+            raise ReadinessContractError(
+                f"{self.requirement_id}: verification_mode must be a VerificationMode"
+            )
 
 
-class ReadinessEvidence(BaseModel):
+@dataclass(frozen=True)
+class ReadinessEvidence:
     """A repository-derived fact used to evaluate a requirement.
 
     ``source`` is mandatory. Evidence without a citable source is rejected — a finding
@@ -128,31 +156,25 @@ class ReadinessEvidence(BaseModel):
     """
 
     evidence_kind: str
-    present: bool = Field(
-        ...,
-        description="True when the declaration was found. False means confirmed absence, "
-                    "not merely 'not looked for'.",
-    )
-    source: str = Field(
-        ...,
-        min_length=1,
-        description="Path or identifier the fact was read from.",
-    )
+    present: bool
+    source: str
     detail: Optional[str] = None
 
-    model_config = {"frozen": True}
-
-    @model_validator(mode="after")
-    def require_source(self) -> "ReadinessEvidence":
-        if not self.source.strip():
-            raise ValueError(
+    def __post_init__(self) -> None:
+        if not isinstance(self.present, bool):
+            raise ReadinessContractError(
+                f"{self.evidence_kind}: present must be a bool — a tri-state would blur "
+                "confirmed absence with unverifiability"
+            )
+        if not self.source or not self.source.strip():
+            raise ReadinessContractError(
                 "ReadinessEvidence.source must be a non-empty citable identifier — "
                 "evidence that cannot be re-checked is not evidence"
             )
-        return self
 
 
-class ReadinessFinding(BaseModel):
+@dataclass(frozen=True)
+class ReadinessFinding:
     """One requirement compared with current evidence."""
 
     requirement_id: str
@@ -160,9 +182,17 @@ class ReadinessFinding(BaseModel):
     status: ReadinessStatus
     severity: ReadinessSeverity
     detail: str
-    evidence_sources: List[str] = Field(default_factory=list)
+    evidence_sources: Tuple[str, ...] = ()
 
-    model_config = {"frozen": True}
+    def __post_init__(self) -> None:
+        if not isinstance(self.status, ReadinessStatus):
+            raise ReadinessContractError(
+                f"{self.requirement_id}: status must be a ReadinessStatus"
+            )
+        if not isinstance(self.severity, ReadinessSeverity):
+            raise ReadinessContractError(
+                f"{self.requirement_id}: severity must be a ReadinessSeverity"
+            )
 
     @property
     def is_blocking_failure(self) -> bool:
@@ -183,25 +213,22 @@ class ReadinessFinding(BaseModel):
         )
 
 
-class ReviewQueueReadinessContext(BaseModel):
+@dataclass(frozen=True)
+class ReviewQueueReadinessContext:
     """Typed input to the evaluator. Pure data — no filesystem, no framework."""
 
     requirements: Tuple[ReadinessRequirement, ...]
     evidence: Tuple[ReadinessEvidence, ...]
 
-    model_config = {"frozen": True}
-
-    @model_validator(mode="after")
-    def reject_duplicate_requirement_ids(self) -> "ReviewQueueReadinessContext":
+    def __post_init__(self) -> None:
         seen: set = set()
         for req in self.requirements:
             if req.requirement_id in seen:
-                raise ValueError(
+                raise ReadinessContractError(
                     f"Duplicate requirement_id {req.requirement_id!r} — requirement ids "
                     "must be unique or findings cannot be traced to a single requirement"
                 )
             seen.add(req.requirement_id)
-        return self
 
 
 NON_AUTHORIZATION_NOTICE = (
@@ -210,10 +237,12 @@ NON_AUTHORIZATION_NOTICE = (
 )
 
 
-class ReviewQueueReadinessReport(BaseModel):
+@dataclass(frozen=True)
+class ReviewQueueReadinessReport:
     """The assessment result.
 
-    Invariants (model-enforced, matching the 8E pattern in ``ReviewQueueCISummary``):
+    Invariants (enforced in ``__post_init__``, same semantics as the 8E pattern in
+    ``ReviewQueueCISummary``):
       - implementation_authorized: always False
       - execution_authorized: always False
       - machine_output_allowed: always False
@@ -223,36 +252,32 @@ class ReviewQueueReadinessReport(BaseModel):
     TD-2 design unsound: it recorded whatever readiness the caller claimed.
     """
 
-    schema_version: str = Field(default=SCHEMA_VERSION)
     aggregate: AggregateReadiness
     findings: Tuple[ReadinessFinding, ...]
-    notice: str = Field(default=NON_AUTHORIZATION_NOTICE)
+    schema_version: str = SCHEMA_VERSION
+    notice: str = NON_AUTHORIZATION_NOTICE
+    implementation_authorized: bool = False
+    execution_authorized: bool = False
+    machine_output_allowed: bool = False
 
-    implementation_authorized: bool = Field(default=False)
-    execution_authorized: bool = Field(default=False)
-    machine_output_allowed: bool = Field(default=False)
-
-    model_config = {"frozen": True}
-
-    @model_validator(mode="after")
-    def enforce_authorization_invariants(self) -> "ReviewQueueReadinessReport":
-        """Enforce the anti-authorization invariants."""
+    def __post_init__(self) -> None:
+        if not isinstance(self.aggregate, AggregateReadiness):
+            raise ReadinessContractError("aggregate must be an AggregateReadiness")
         if self.implementation_authorized:
-            raise ValueError(
+            raise ReadinessContractError(
                 "Readiness invariant violation: implementation_authorized must be False — "
                 "readiness does not authorize implementation"
             )
         if self.execution_authorized:
-            raise ValueError(
+            raise ReadinessContractError(
                 "Readiness invariant violation: execution_authorized must be False — "
                 "readiness does not authorize execution"
             )
         if self.machine_output_allowed:
-            raise ValueError(
+            raise ReadinessContractError(
                 "Readiness invariant violation: machine_output_allowed must be False — "
                 "readiness does not allow machine output"
             )
-        return self
 
     @property
     def blocking_failures(self) -> List[ReadinessFinding]:
@@ -265,8 +290,9 @@ class ReviewQueueReadinessReport(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         """Deterministic, host-independent mapping for JSON rendering.
 
-        Contains no timestamps, no host paths and no generated ids — the same tree must
-        always render byte-identically.
+        Field order and names are the authoritative external contract and are unchanged by
+        the stdlib conversion. Contains no timestamps, host paths or generated ids — the
+        same tree must always render byte-identically.
         """
         return {
             "schema_version": self.schema_version,
