@@ -23,10 +23,10 @@ Living index for annotated lecture packs derived from Robbie O’Brien / Trevor 
 | Mobility | \(\mu \propto 1/\sqrt{km}\); measure with stage metadata |
 | Philosophy | Acoustic specification over timber-cutter specification |
 
-### Critical Toolbox gaps called out
+### Critical Toolbox gaps (original callout)
 
-1. Monopole **mobility** as first-class measured quantity  
-2. Named mid-scale triad + scale-tone collision **design practice**  
+1. Monopole **mobility** as first-class measured quantity → **addressed by Pack 3 (measurement SOP); code still open**  
+2. Named mid-scale triad + scale-tone collision **design practice** → Pack 2 operationalizes clearance  
 3. Free-top prohibition / stage gates in UX  
 4. FRF lab pack + stage taxonomy  
 5. Live-back methodology on existing 2-/3-osc models  
@@ -34,41 +34,66 @@ Living index for annotated lecture packs derived from Robbie O’Brien / Trevor 
 
 ---
 
-## Pack 2 — Tips to Your Mailbag: Wolf Notes (this addition)
+## Pack 2 — Tips to Your Mailbag: Wolf Notes
 
 **Path:** [`gore_wolf_notes_mailbag/`](./gore_wolf_notes_mailbag/)  
-**Form:** ~6 minute focused tip; diagnosis + remediation depth  
-**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md)
+**Form:** ~6 minute focused tip; diagnosis + remediation  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md) (W01–W09)
 
-### How it extends Pack 1
+### What it adds
 
-Shop Talk #20 stated the **why** of wolves (admittance / mid-scale rule). This tip supplies the **shop procedure**:
-
-1. **Hear it** — note/string sounds distinctly different (often louder)  
-2. **Confirm on tuner** — wolfy pitch is unsteady / oscillatory and can push the scale tone sharp  
-3. **Measure box FRF** — 10-tap Visual Analyzer; identify air + main top peaks  
-4. **Map to scale tones / harmonics** — example: open A @ 110 Hz and harmonic @ 220 Hz both near resonances  
-5. **Move resonances ≥ ~½ semitone** from scale tones (maximum distance before approaching the next tone)  
-6. **Choose levers** — air: soften box (top/back stiffness) or change soundhole diameter; top: ±mass / ±stiffness  
-
-### Relationship map
+Shop procedure for wolves: ear → tuner flutter → 10-tap FRF → map to pitch class + harmonics → **½-semitone clearance** → air levers (soften box / ± soundhole Ø) + top levers (±mass / ±stiffness) → coordinated multi-peak plans.
 
 | Pack 1 point | Pack 2 detail |
 |--------------|---------------|
 | P03 mid-scale avoidance | Operational target: **half-semitone** clearance |
-| P04 100/180/226 | Concrete failure mode: air≈110, top≈220 (A and 2×A) |
+| P04 100/180/226 | Failure mode example: air≈110, top≈220 (A and 2×A) |
 | P02 mode-selective tuning | Explicit dual-resonance problem (air **and** top) |
-| P33 FRF SOP | Rubber-ball / satay-stick hammer; lower-bout taps; 10 averages |
-| Soundhole / plate calcs | Remediation menu now specified for guided workflow |
+
+---
+
+## Pack 3 — Measuring Monopole Mobility (this addition)
+
+**Path:** [`gore_monopole_mobility_measurement/`](./gore_monopole_mobility_measurement/)  
+**Form:** ~9 minute bench tip; definition + full measurement SOP  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md) (M01–M12)
+
+### What it adds
+
+1. **Definition:** \(Y\) approximates average admittance / soundboard responsiveness (Gore term)  
+2. **Formula:** \(Y = 1/\sqrt{k m}\) with \(k=F/\delta\), \(m=k/(2\pi f)^2\), \(F=9.81\,\mathrm{N}\) for 1 kg  
+3. **Stiffness SOP:** Carrico-style deflection jig; 1 kg load; δ in mm (demo 27 mm)  
+4. **Uncoupled \(f\):** plug soundhole (yogurt cup or dedicated plug); Guitar Tap / equivalent (demo 180.7 Hz)  
+5. **Thresholds (toolchain-relative):** steel ~11–12 “starting responsive”; classical / Gore “very responsive” ~20; demo score 31.3  
+6. **Critical caveat:** spoken score vs pure SI (~3.13 s/kg for those inputs) ⇒ lock a **unit profile** before shipping threshold UI  
+
+| Pack 1 point | Pack 3 detail |
+|--------------|---------------|
+| P09 \(1/\sqrt{km}\) | Full lab: measure \(k\), \(f\) → \(m\) → \(Y\) |
+| P01 plugged uncoupled top | Required boundary condition for mobility \(f\) |
+| P10–P11 mobility priority / brace height | Now has a number to optimize against — still co-equal with wolf clearance |
+
+---
+
+## How the three packs fit the priority stack
+
+```text
+1. Resonances off scale tones     ← Pack 1 philosophy + Pack 2 lab
+2. High monopole mobility         ← Pack 1 priority + Pack 3 measurement
+3. Intonation / compensation      ← Pack 1 (nut/saddle); separate calc stack
+```
+
+Do not ship mobility optimization that ignores Pack 2 clearance rules.
 
 ---
 
 ## Recommended reading order
 
 1. This summary  
-2. Pack 2 wolf-notes notes (tight lab)  
-3. Pack 1 full notes (broader methodology)  
-4. Both crosswalks before any code work  
+2. **Pack 3** mobility measurement (tight lab + unit warning)  
+3. **Pack 2** wolf-notes lab  
+4. **Pack 1** full methodology notes  
+5. All three crosswalks before code work  
 
 ---
 
@@ -79,4 +104,5 @@ Shop Talk #20 stated the **why** of wolves (admittance / mid-scale rule). This t
 | **EP** | Established principle |
 | **EO** | Empirical observation |
 | **TG** | Trevor Gore recommendation / practice |
+| **RO** | Robbie O’Brien shop practice / on-camera thresholds |
 | **OH** | Open hypothesis / taste / opinion |
