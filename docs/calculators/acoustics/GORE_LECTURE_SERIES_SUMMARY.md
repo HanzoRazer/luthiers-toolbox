@@ -91,9 +91,20 @@ Do not ship mobility optimization that ignores Pack 2 clearance rules.
 
 1. This summary  
 2. **Pack 3** mobility measurement (tight lab + unit warning)  
-3. **Pack 2** wolf-notes lab  
-4. **Pack 1** full methodology notes  
-5. All three crosswalks before code work  
+3. **Pack 3 gaps register** — [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md)  
+4. **Pack 2** wolf-notes lab  
+5. **Pack 1** full methodology notes  
+6. All three crosswalks before code work  
+
+---
+
+## Known absence (do not paper over)
+
+Granularity not available from the source videos is still **knowledge**. Primary register:
+
+- [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) — jig geometry, unit profile, peak-ID, stage matrix, threshold provenance (G-M01–G-M35)
+
+**Until blockers close:** no product threshold badges for mobility; SI output only if labeled `si_raw`; guided labs must allow `unknown` metadata rather than fabricated defaults.
 
 ---
 

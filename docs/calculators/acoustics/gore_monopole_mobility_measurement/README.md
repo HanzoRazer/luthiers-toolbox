@@ -10,8 +10,11 @@
 | File | Purpose |
 |------|---------|
 | [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | Definition, formulas (SI-safe), jig SOP, uncoupled-f capture, thresholds |
+| [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | Explicit inventory of missing shop-floor granularity (essential until closed) |
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Fills Pack 1 critical gap C1 (mobility) |
 | [`SOURCE_TRANSCRIPT.md`](./SOURCE_TRANSCRIPT.md) | Cleaned working transcript |
+
+**Recording fidelity:** procedure-complete, tooling-light. See gaps register before implementing calculators or threshold UI.
 
 ## Classification legend
 

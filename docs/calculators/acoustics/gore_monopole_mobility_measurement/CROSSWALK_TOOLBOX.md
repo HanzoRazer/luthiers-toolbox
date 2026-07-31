@@ -47,8 +47,9 @@ Until step 3 lands, docs may quote thresholds as **toolchain-relative** (this pa
 ## D. Implementation priority
 
 1. Docs/lab SOP (this pack) — done  
-2. Measurement schema fields (δ, F, f, plugged, stage)  
-3. SI calculator + checksum \(Y=2\pi f/k\)  
-4. Spreadsheet profile calibration  
-5. Guided UI + threshold badges  
-6. Link from voicing priority stack (modes + mobility)  
+2. Gaps register — [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) — done  
+3. Measurement schema fields (δ, F, f, plugged, stage) — allow `unknown` enums for G-M01–G-M04  
+4. SI calculator + checksum \(Y=2\pi f/k\) — label `si_raw`  
+5. Spreadsheet profile calibration — **blocks thresholds** (G-M13, G-M15)  
+6. Guided UI + threshold badges — only after blockers closed  
+7. Link from voicing priority stack (modes + mobility)  

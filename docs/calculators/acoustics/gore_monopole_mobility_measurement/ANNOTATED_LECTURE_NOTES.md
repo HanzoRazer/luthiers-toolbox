@@ -256,20 +256,23 @@ The tip correctly names SI ingredients (N, kg, N/m) but the spoken arithmetic (�
 
 ## 7. Measurement workflow (canonical SOP)
 
-1. Mount guitar in monopole mobility **deflection jig** (bridge/load point per jig design).  
+> **Fidelity:** outline SOP only. Everything *not* specified here (jig load point, support geometry, peak-ID rules, spreadsheet unit profile, etc.) is inventoried in [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md). Do not invent those details.
+
+1. Mount guitar in monopole mobility **deflection jig** (bridge/load point per jig design — **G-M01/G-M02 unknown**).  
 2. Zero indicator; apply **1.000 kg**; read \(\delta\) in mm (repeat load/unload average if needed).  
 3. Compute \(k = 9.81 / (\delta_{\mathrm{mm}}/1000)\) [N/m] for SI path.  
 4. **Plug soundhole** (cup or plug); ensure no rattle.  
-5. Capture **uncoupled monopole** \(f\) (Guitar Tap / Tap Tone Pi / equivalent).  
+5. Capture **uncoupled monopole** \(f\) (Guitar Tap / Tap Tone Pi / equivalent — **which peak: G-M17**).  
 6. \(m = k / (2\pi f)^2\).  
-7. \(Y = 1/\sqrt{k m}\) (or \(2\pi f/k\)); map through chosen unit profile to score.  
-8. Interpret vs steel (~11–12) / classical (~20) bands **only under that profile**.  
+7. \(Y = 1/\sqrt{k m}\) (or \(2\pi f/k\)); map through chosen unit profile to score (**profile: G-M13**).  
+8. Interpret vs steel (~11–12) / classical (~20) bands **only under that profile** (**G-M15**).  
 9. Record whether bridge/strings/neck configuration matches intended “finished responsiveness” claim (ST#20: bridge changes \(k\) and \(m\) significantly).
 
 | Field | Value |
 |-------|-------|
 | Classification | Synthesis of **RO** steps + **EP** formulas + ST#20 stage caveat |
 | Toolbox destination | **LAB** `Monopole Mobility Measurement` |
+| Gaps | [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) |
 
 **Point ID:** M12  
 
