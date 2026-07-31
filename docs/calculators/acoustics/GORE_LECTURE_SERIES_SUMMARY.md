@@ -126,7 +126,7 @@ Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) �
 
 ---
 
-## Pack 7 — Shop Talk Live Stream #44 (this addition)
+## Pack 7 — Shop Talk Live Stream #44
 
 **Path:** [`gore_shop_talk_44/`](./gore_shop_talk_44/)  
 **Form:** ~1 hour in-shop Q&A during masterclass week  
@@ -146,13 +146,41 @@ Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) �
 
 ---
 
+## Pack 8 — Shop Talk Live Stream #51 (this addition)
+
+**Path:** [`gore_shop_talk_51_luther_academy_apps/`](./gore_shop_talk_51_luther_academy_apps/)  
+**Form:** ~1 hour livestream; Gore motivation + Mallaloy five-tool demo  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_shop_talk_51_luther_academy_apps/ANNOTATED_LECTURE_NOTES.md) (A01–A29)  
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md)
+
+### What it adds
+
+| Theme | Takeaway |
+|-------|----------|
+| Program spine | ~2008: resonances in place + monopole mobility; \(E\)/density/size → plate thickness; brace design; measure → correct |
+| Productization | Course spreadsheets → free beta Luther Academy web apps (Resources footer) |
+| Five tools | 4DOF+environment; plate thickness; FFT resonance reader; mobility (\(k_\mathrm{eff}\), \(m_\mathrm{eff}\)); flexural rigidity |
+| Demo numbers | Plate → ~2.58 mm; boxed OM ~103/207; fit ~91.2/174/253; \(k\)~533 (units TBD), \(m\)~60.1 g; weight **1.00** vs **1.02 kg** |
+| 4DOF why | 3DOF + rigid sides inadequate; Blu-tack/coins = side **mass** |
+| \(Y\) vs tone | Same resonances → similar timbre; \(Y\) mainly loudness (psychoacoustic “volume=tone”) |
+| Wolves | Played-note view: cents-to-mode + sustain timeline |
+
+| Prior pack | Pack 8 detail |
+|------------|---------------|
+| Pack 3 / 5 mobility | App outputs \(k_\mathrm{eff}\)/\(m_\mathrm{eff}\); 1.00 kg weight note; **δ conflict unchanged** |
+| Pack 4 / 7 side mass | 4DOF origin + mold/coins restated for app audience |
+| Pack 2 wolves | Visual played-note / partial energy lab |
+| Pack 5 altitude | Environment what-ifs (~3 Hz) in app |
+
+---
+
 ## How the packs fit the priority stack
 
 ```text
-1. Resonances off scale tones     ← Packs 1, 2, 4, 5, 7
-2. Right monopole mobility        ← Packs 1, 3, 5, 7 (U04: mobility ≫ rotation vanity)
+1. Resonances off scale tones     ← Packs 1, 2, 4, 5, 7, 8 (A26 wolf viz)
+2. Right monopole mobility        ← Packs 1, 3, 5, 7, 8 (A19/A24; U04 mobility ≫ rotation)
 3. Musicality + intonation        ← Packs 5, 7 (responsive harder to intonate)
-4. Measurement setup chain        ← Pack 6 (partial)
+4. Measurement + tool chain       ← Pack 6 (partial) + Pack 8 (Academy apps map)
 ```
 
 Do not ship max-\(Y\) optimization that ignores clearance or intonation.
@@ -164,11 +192,12 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 1. This summary  
 2. **Pack 5** objectives spine + **Pack 7** U04/U05 (mobility priority + side-mass why)  
 3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI  
-4. **Pack 6** when complete (setup SOPs)  
-5. **Pack 4** Shop Talk #25  
-6. **Pack 2** wolf lab  
-7. **Pack 1** Shop Talk #20  
-8. All crosswalks before code work  
+4. **Pack 8** for spreadsheet→app toolchain + \(k_\mathrm{eff}\)/\(m_\mathrm{eff}\)→4DOF intent (after calibration)  
+5. **Pack 6** when complete (setup SOPs)  
+6. **Pack 4** Shop Talk #25  
+7. **Pack 2** wolf lab  
+8. **Pack 1** Shop Talk #20  
+9. All crosswalks before code work  
 
 ---
 
@@ -179,6 +208,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md) | Course SOPs incomplete |
 | [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict |
 | [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry / unit profile |
+| [`gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md`](./gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md) | App URLs; \(k\) units (**G-A05**); flexural-rigidity detail; δ still open |
 | [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, book F-number map |
 | [`gore_shop_talk_44/GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md) | Side-mass quantitative model; +25% tuck assumptions |
 
