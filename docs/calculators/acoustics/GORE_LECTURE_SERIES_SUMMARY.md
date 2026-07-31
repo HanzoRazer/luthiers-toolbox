@@ -93,37 +93,59 @@ Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) �
 
 ---
 
+## Pack 5 — Responsive Guitar Objectives (PowerPoint session) (this addition)
+
+**Path:** [`gore_shop_talk_responsive_objectives/`](./gore_shop_talk_responsive_objectives/)  
+**Form:** Prepared PowerPoint + dense Q&A (~1 hour)  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_shop_talk_responsive_objectives/ANNOTATED_LECTURE_NOTES.md) (R01–R25)  
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md)
+
+### What it adds
+
+| Theme | Takeaway |
+|-------|----------|
+| Objective spine | **Right** \(Y\) (not max) + evenness + musicality (peak density + ET intonation) |
+| Mobility demo | Bridge jig; ~**0.15 mm** @ ~1 kg (**conflicts Pack 3’s 27 mm** — calibration blocker) |
+| \(Y\) bands | Classical ~20 / ~30s; steel ~10–12 / low 20s; “conspiracy against guitarists” |
+| Wolf table | ±50¢ outer columns; no exact T111–T112 octave; 4 semitone T112–T113 |
+| Peak density | Matthews/Kohut: 20–30 peaks to 5 kHz; live back for peaks |
+| SRC / Q | SRC \(\sqrt{E/\rho^3}\) by guitar intent; Q blind tests often null |
+| Build path | Spectrogram stages boxed → edge thin → strung → side mass (e.g. → ~91/170/224) |
+| Other | Bridge mass vs headroom; harmonic bar; tertiaries; altitude/4DOF; trial mass for “banjo” |
+
+---
+
 ## How the packs fit the priority stack
 
 ```text
-1. Resonances off scale tones     ← Packs 1, 2, 4 (targets + rescue + B11)
-2. High monopole mobility         ← Packs 1, 3 (avoid heavy mass-load downs — Pack 4)
-3. Intonation / compensation      ← Pack 1 (nut/saddle); separate calc stack
+1. Resonances off scale tones     ← Packs 1, 2, 4, 5 (table + octave/4-semitone rules)
+2. Right monopole mobility        ← Packs 1, 3, 5 (R01: right ≠ max; Pack 4 mass-load caution)
+3. Musicality + intonation        ← Pack 5 peak density; Pack 1/5 nut+saddle
 ```
 
-Do not ship mobility optimization that ignores Pack 2 clearance rules.
+Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 
 ---
 
 ## Recommended reading order
 
 1. This summary  
-2. **Pack 4** Shop Talk #25 (falcate + rescue + side mass)  
-3. **Pack 3** mobility measurement + its gaps register  
-4. **Pack 2** wolf-notes lab  
-5. **Pack 1** Shop Talk #20 full methodology  
-6. All crosswalks before code work  
+2. **Pack 5** objectives PowerPoint (spine + mobility δ evidence)  
+3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before any mobility UI  
+4. **Pack 4** Shop Talk #25 (falcate + rescue + side mass)  
+5. **Pack 2** wolf-notes lab  
+6. **Pack 1** Shop Talk #20  
+7. All crosswalks before code work  
 
 ---
 
 ## Known absence (do not paper over)
 
-Granularity not available from the source videos is still **knowledge**.
-
 | Register | Focus |
 |----------|--------|
-| [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry, unit profile, peak-ID, thresholds (G-M01–G-M35) |
-| [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, side-mass mechanism, book F-number map, cube-rule worked example (G-S01–G-S15) |
+| [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict; full wolf table from slides; citations |
+| [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry, unit profile; G-M09 updated vs Pack 5 |
+| [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, side-mass mechanism, book F-number map |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry; guided labs may use `unknown` metadata.
 
