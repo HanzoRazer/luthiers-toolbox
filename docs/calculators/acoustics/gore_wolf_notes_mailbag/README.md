@@ -4,7 +4,8 @@
 **Guest expert:** Trevor Gore (on camera / at the bench during masterclass week)  
 **Length:** ~6 minutes focused tip  
 **Parent index:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md)  
-**Companion:** [`../gore_shop_talk_20/`](../gore_shop_talk_20/) — broader methodology; this pack is the **wolf diagnosis & fix lab**
+**Companion:** [`../gore_shop_talk_20/`](../gore_shop_talk_20/) — broader methodology; this pack is the **wolf diagnosis & fix lab**  
+**Companion:** [`../gore_monopole_mobility_measurement/`](../gore_monopole_mobility_measurement/) — mobility number (co-equal priority with wolf clearance)
 
 ## Contents
 
