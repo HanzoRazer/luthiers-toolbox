@@ -150,7 +150,6 @@ Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) �
 
 ```text
 1. Resonances off scale tones     ← Packs 1, 2, 4, 5, 7
-2. Right monopole mobility        ← Packs 1, 3, 5, 7 (U04: mobility �2, 4, 5, 7
 2. Right monopole mobility        ← Packs 1, 3, 5, 7 (U04: mobility ≫ rotation vanity)
 3. Musicality + intonation        ← Packs 5, 7 (responsive harder to intonate)
 4. Measurement setup chain        ← Pack 6 (partial)
@@ -187,6 +186,16 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 
 ---
 
+## Related non-Gore source packs
+
+These are **separate schools/workflows**. Cross-link; do not merge into Gore calculators.
+
+| Pack | Path | What it is |
+|------|------|------------|
+| Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Build chronicle: stiffness-sanded top, X+lattice, double sides, solid linings, post-glue tap voicing; dialect contrasts with Gore side/lining/voicing culture |
+
+---
+
 ## Shared classification legend
 
 | Tag | Meaning |
@@ -195,4 +204,6 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | **EO** | Empirical observation |
 | **TG** | Trevor Gore recommendation / practice |
 | **RO** | Robbie O’Brien shop practice / on-camera thresholds |
+| **IS** | Irvin Somogyi method (as attributed in source) |
+| **AP** | Apprentice / builder deviation |
 | **OH** | Open hypothesis / taste / opinion |
