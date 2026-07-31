@@ -52,34 +52,52 @@ Shop procedure for wolves: ear → tuner flutter → 10-tap FRF → map to pitch
 
 ---
 
-## Pack 3 — Measuring Monopole Mobility (this addition)
+## Pack 3 — Measuring Monopole Mobility
 
 **Path:** [`gore_monopole_mobility_measurement/`](./gore_monopole_mobility_measurement/)  
-**Form:** ~9 minute bench tip; definition + full measurement SOP  
-**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md) (M01–M12)
+**Form:** ~9 minute bench tip; definition + measurement SOP  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md) (M01–M12)  
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md)
 
 ### What it adds
 
-1. **Definition:** \(Y\) approximates average admittance / soundboard responsiveness (Gore term)  
-2. **Formula:** \(Y = 1/\sqrt{k m}\) with \(k=F/\delta\), \(m=k/(2\pi f)^2\), \(F=9.81\,\mathrm{N}\) for 1 kg  
-3. **Stiffness SOP:** Carrico-style deflection jig; 1 kg load; δ in mm (demo 27 mm)  
-4. **Uncoupled \(f\):** plug soundhole (yogurt cup or dedicated plug); Guitar Tap / equivalent (demo 180.7 Hz)  
-5. **Thresholds (toolchain-relative):** steel ~11–12 “starting responsive”; classical / Gore “very responsive” ~20; demo score 31.3  
-6. **Critical caveat:** spoken score vs pure SI (~3.13 s/kg for those inputs) ⇒ lock a **unit profile** before shipping threshold UI  
-
-| Pack 1 point | Pack 3 detail |
-|--------------|---------------|
-| P09 \(1/\sqrt{km}\) | Full lab: measure \(k\), \(f\) → \(m\) → \(Y\) |
-| P01 plugged uncoupled top | Required boundary condition for mobility \(f\) |
-| P10–P11 mobility priority / brace height | Now has a number to optimize against — still co-equal with wolf clearance |
+Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) → \(m\); toolchain thresholds (~11–12 / ~20) with unit-profile caveat (spoken 31.3 vs SI ~3.13).
 
 ---
 
-## How the three packs fit the priority stack
+## Pack 4 — Shop Talk Live Stream #25 (this addition)
+
+**Path:** [`gore_shop_talk_25/`](./gore_shop_talk_25/)  
+**Form:** ~1 hour falcate-focused Q&A  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_shop_talk_25/ANNOTATED_LECTURE_NOTES.md) (S01–S21)  
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md)
+
+### What it adds
+
+| Theme | Takeaway |
+|-------|----------|
+| Falcate humidity | Less cross-grain continuity → less top pump; action stable; edge-bulge optical “sunk bridge” |
+| Falcate origin | Sail tape-drive stress paths + put stiffness where stress is; name = sickle-shaped |
+| Frequency rescue | Aim high; stiff/light bridge to raise; mass-load down hurts responsiveness; retop if way low |
+| Side mass | Coins/mold experiment; 4DOF; large side mass can greatly increase loudness (anecdote) |
+| Live-back retop | B11 ≈ target T113; +few Hz when topped; 4-semitone rule |
+| Marty vs falcate | Meyer “third” = long dipole under his setup; falcate uses cross-tripole / limits bridge rotation (~2°) |
+| Sides / ports / scale | Solid sides tunable ~2–3 Hz air; side port shifts A0; dread braces follow span³ |
+
+| Prior pack | Pack 4 detail |
+|------------|---------------|
+| ST#20 falcate / mids | Humidity mechanics + Marty contrast + naming/origin |
+| ST#20 P07 / mobility | Rescue vs mass-load tension made explicit |
+| ST#20 four-semitone | B11 back-only procedure |
+| Wolf mid-scale | Steel 170/180/190; classical ~190 |
+
+---
+
+## How the packs fit the priority stack
 
 ```text
-1. Resonances off scale tones     ← Pack 1 philosophy + Pack 2 lab
-2. High monopole mobility         ← Pack 1 priority + Pack 3 measurement
+1. Resonances off scale tones     ← Packs 1, 2, 4 (targets + rescue + B11)
+2. High monopole mobility         ← Packs 1, 3 (avoid heavy mass-load downs — Pack 4)
 3. Intonation / compensation      ← Pack 1 (nut/saddle); separate calc stack
 ```
 
@@ -90,21 +108,24 @@ Do not ship mobility optimization that ignores Pack 2 clearance rules.
 ## Recommended reading order
 
 1. This summary  
-2. **Pack 3** mobility measurement (tight lab + unit warning)  
-3. **Pack 3 gaps register** — [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md)  
+2. **Pack 4** Shop Talk #25 (falcate + rescue + side mass)  
+3. **Pack 3** mobility measurement + its gaps register  
 4. **Pack 2** wolf-notes lab  
-5. **Pack 1** full methodology notes  
-6. All three crosswalks before code work  
+5. **Pack 1** Shop Talk #20 full methodology  
+6. All crosswalks before code work  
 
 ---
 
 ## Known absence (do not paper over)
 
-Granularity not available from the source videos is still **knowledge**. Primary register:
+Granularity not available from the source videos is still **knowledge**.
 
-- [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) — jig geometry, unit profile, peak-ID, stage matrix, threshold provenance (G-M01–G-M35)
+| Register | Focus |
+|----------|--------|
+| [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry, unit profile, peak-ID, thresholds (G-M01–G-M35) |
+| [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, side-mass mechanism, book F-number map, cube-rule worked example (G-S01–G-S15) |
 
-**Until blockers close:** no product threshold badges for mobility; SI output only if labeled `si_raw`; guided labs must allow `unknown` metadata rather than fabricated defaults.
+**Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry; guided labs may use `unknown` metadata.
 
 ---
 

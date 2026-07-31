@@ -5,7 +5,8 @@
 **Deliverable type:** Annotated engineering lecture notes + Toolbox / Tap Tone Pi crosswalk  
 **Series index:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md)  
 **Companion lab (wolves):** [`../gore_wolf_notes_mailbag/`](../gore_wolf_notes_mailbag/)  
-**Companion lab (mobility):** [`../gore_monopole_mobility_measurement/`](../gore_monopole_mobility_measurement/)
+**Companion lab (mobility):** [`../gore_monopole_mobility_measurement/`](../gore_monopole_mobility_measurement/)  
+**Companion (falcate Q&A):** [`../gore_shop_talk_25/`](../gore_shop_talk_25/)
 
 ## Contents
 
