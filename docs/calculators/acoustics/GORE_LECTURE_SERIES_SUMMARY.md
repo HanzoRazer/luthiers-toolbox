@@ -118,29 +118,42 @@ Outline lab for \(Y=1/\sqrt{km}\): 1 kg jig → \(k\); plugged uncoupled \(f\) �
 ## Pack 6 — Guitar Analysis & Testing course (**PARTIAL**)
 
 **Path:** [`gore_guitar_analysis_testing/`](./gore_guitar_analysis_testing/)  
-**Form:** Workshop measurement-setup course (Gore on camera at O’Brien’s)  
+**Form:** Workshop measurement-setup course  
 **Ingest:** Introduction only — five modules announced; SOPs not yet transcribed  
-**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md) (G-T01–G-T11)
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md)
 
-### Announced modules
+**Action needed:** paste Modules A–E body (especially mobility SOP vs Packs 3 & 5 δ conflict).
 
-1. Microphone setup — Windows 7 & 10  
-2. FRF via Visual Analyzer (Win7/10 quirks)  
-3. Wood elastic / vibration modes (for thicknessing)  
-4. Bridge rotation test  
-5. Monopole mobility  
+---
 
-**Action needed:** paste remaining transcript sections to fill Modules A–E (especially mobility SOP to resolve δ conflict with Packs 3 & 5).
+## Pack 7 — Shop Talk Live Stream #44 (this addition)
+
+**Path:** [`gore_shop_talk_44/`](./gore_shop_talk_44/)  
+**Form:** ~1 hour in-shop Q&A during masterclass week  
+**Primary deliverable:** [`ANNOTATED_LECTURE_NOTES.md`](./gore_shop_talk_44/ANNOTATED_LECTURE_NOTES.md) (U01–U23)  
+**Gaps:** [`GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md)
+
+### What it adds
+
+| Theme | Takeaway |
+|-------|----------|
+| Mobility vs rotation | Hear mobility; 2° is structural ceiling, not fetish target |
+| Side-mass mechanism | T112 concentric-dipole node outboard → louder + trims f |
+| Dread falcate | Prefer T112 **170/180**; large guitars stiffer than 2° |
+| Construction | Brace tuck ~+25% K; heavy linings → standing-wave volume; scallop→symmetry |
+| Definitions | Modal tuning; better guitar = playability + structure + musicality |
+| Conspiracy | High Street ~50% of potential; banjo floor if too light/floppy |
 
 ---
 
 ## How the packs fit the priority stack
 
 ```text
-1. Resonances off scale tones     ← Packs 1, 2, 4, 5 (table + octave/4-semitone rules)
-2. Right monopole mobility        ← Packs 1, 3, 5 (R01: right ≠ max; Pack 4 mass-load caution)
-3. Musicality + intonation        ← Pack 5 peak density; Pack 1/5 nut+saddle
-4. Measurement setup chain        ← Pack 6 (partial) — how to capture the above
+1. Resonances off scale tones     ← Packs 1, 2, 4, 5, 7
+2. Right monopole mobility        ← Packs 1, 3, 5, 7 (U04: mobility �2, 4, 5, 7
+2. Right monopole mobility        ← Packs 1, 3, 5, 7 (U04: mobility ≫ rotation vanity)
+3. Musicality + intonation        ← Packs 5, 7 (responsive harder to intonate)
+4. Measurement setup chain        ← Pack 6 (partial)
 ```
 
 Do not ship max-\(Y\) optimization that ignores clearance or intonation.
@@ -150,11 +163,11 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 ## Recommended reading order
 
 1. This summary  
-2. **Pack 5** objectives PowerPoint (spine + mobility δ evidence)  
-3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before any mobility UI  
-4. **Pack 6** when complete (canonical setup SOPs)  
-5. **Pack 4** Shop Talk #25 (falcate + rescue + side mass)  
-6. **Pack 2** wolf-notes lab  
+2. **Pack 5** objectives spine + **Pack 7** U04/U05 (mobility priority + side-mass why)  
+3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI  
+4. **Pack 6** when complete (setup SOPs)  
+5. **Pack 4** Shop Talk #25  
+6. **Pack 2** wolf lab  
 7. **Pack 1** Shop Talk #20  
 8. All crosswalks before code work  
 
@@ -164,10 +177,11 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 
 | Register | Focus |
 |----------|--------|
-| [`gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md) | **Course SOPs incomplete** (mic, VA, wood, rotation, mobility) |
-| [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict; full wolf table from slides; citations |
-| [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry, unit profile; G-M09 updated vs Pack 5 |
-| [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, side-mass mechanism, book F-number map |
+| [`gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md) | Course SOPs incomplete |
+| [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict |
+| [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry / unit profile |
+| [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, book F-number map |
+| [`gore_shop_talk_44/GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md) | Side-mass quantitative model; +25% tuck assumptions |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
