@@ -3,6 +3,8 @@
 **Source:** Robbie O’Brien *Shop Talk* Live Stream #20 (Trevor Gore Q&A + shop demo)  
 **Processing template:** Full-content review (~95% of substantive content), not formula extraction  
 **Deliverable type:** Annotated engineering lecture notes + Toolbox / Tap Tone Pi crosswalk  
+**Series index:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md)  
+**Companion lab (wolves):** [`../gore_wolf_notes_mailbag/`](../gore_wolf_notes_mailbag/)
 
 ## Contents
 
