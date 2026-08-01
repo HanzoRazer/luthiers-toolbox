@@ -6,12 +6,13 @@
   "program": "DO-SIP-013",
   "target_specimen_count_approx": 60,
   "target_species_count_approx": 4,
-  "specimen_count": 4,
+  "specimen_count": 5,
   "specimen_ids": [
     "mb-adt-000001",
     "mb-adt-000003",
     "mb-adt-000004",
-    "mb-adt-000005"
+    "mb-adt-000005",
+    "mb-adt-000006"
   ],
   "species_cohorts": [
     "adirondack"
@@ -19,7 +20,7 @@
   "treatments": [
     "torrefied"
   ],
-  "dataset_digest_sha256": "1955006169a8f092fcb851574f9b6dae1aad23420b38bce28b3f9fbb530a8c3c",
+  "dataset_digest_sha256": "93adc054fd47fed245b2f8389fac947459df8a1837487d35c797c7ac910aeea6",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",
