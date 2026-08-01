@@ -183,6 +183,13 @@
       "card_vs_ui_q": "card sustain Q 132.8 vs UI Q 134.4; \u03c0/Q\u22480.0234 agrees with UI log decrement \u2014 re-check card frame",
       "batch_size_stated": "not read from these frames",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-05 + fingerprint to catalog 000005"
+    },
+    "mb-rc-000006": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "batch_size_stated": "not read from these frames",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-06 + fingerprint to catalog 000006"
     }
   }
 }
