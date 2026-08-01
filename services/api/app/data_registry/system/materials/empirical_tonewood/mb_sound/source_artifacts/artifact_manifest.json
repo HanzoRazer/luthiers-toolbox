@@ -9,7 +9,8 @@
       "title": "Adirondack - MB Sound - Sample and analysis of the complete batch",
       "channel": "Maderas Barber Official",
       "stated_specimen_count": 22,
-      "linked_specimen_ids": ["mb-adt-000001"]
+      "linked_specimen_ids": ["mb-adt-000001", "mb-adt-000003"],
+      "catalog_gaps_noted": ["000002"]
     }
   ]
 }
