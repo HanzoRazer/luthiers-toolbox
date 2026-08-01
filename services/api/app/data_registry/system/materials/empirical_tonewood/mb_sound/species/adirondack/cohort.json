@@ -25,7 +25,8 @@
     "mb-adt-000017",
     "mb-adt-000018",
     "mb-adt-000019",
-    "mb-adt-000020"
+    "mb-adt-000020",
+    "mb-adt-000021"
   ],
   "catalog_gaps": [
     {
@@ -36,5 +37,5 @@
     }
   ],
   "status": "intake_partial",
-  "notes": "Complete-batch video states 22 pieces; 19 specimen records present; catalog 000002 unavailable. Dual-ID W-series: 000011 ↔ ADT-W-01 … 000020 ↔ ADT-W-10. Note: 000019/000020 share geometry+mass but differ in f/E/Q/rad."
+  "notes": "Complete-batch video states 22 pieces; 20 specimen records present; catalog 000002 unavailable. Dual-ID W-series: 000011 ↔ ADT-W-01 … 000021 ↔ ADT-W-11."
 }
