@@ -4,7 +4,7 @@
   "species_label": "Adirondack spruce",
   "treatments_seen": ["torrefied"],
   "target_batch_size_stated": 22,
-  "specimen_ids": ["mb-adt-000001", "mb-adt-000003", "mb-adt-000004"],
+  "specimen_ids": ["mb-adt-000001", "mb-adt-000003", "mb-adt-000004", "mb-adt-000005"],
   "catalog_gaps": [
     {
       "catalog_id": "000002",
@@ -14,6 +14,7 @@
     }
   ],
   "status": "intake_partial",
-  "notes": "Complete-batch video states 22 pieces; 3 specimen records present; catalog 000002 unavailable."
+  "notes": "Complete-batch video states 22 pieces; 4 specimen records present; catalog 000002 unavailable."
 }
+
 
