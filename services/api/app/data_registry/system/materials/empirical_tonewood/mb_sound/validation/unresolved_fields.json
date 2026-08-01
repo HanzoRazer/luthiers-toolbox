@@ -42,6 +42,12 @@
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-07 + fingerprint"
+    },
+    "mb-adt-000008": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-08 + fingerprint"
     }
   }
 }
