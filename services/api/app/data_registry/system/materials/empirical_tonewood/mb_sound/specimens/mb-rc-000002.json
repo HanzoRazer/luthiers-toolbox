@@ -1,0 +1,104 @@
+{
+  "specimen_id": "mb-rc-000002",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar",
+  "treatment": "plain",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000002",
+    "analysis_sample_name": "CED-C-02",
+    "species_label_vendor": "RED CEDAR",
+    "card": {
+      "density_kg_m3": 363.1,
+      "stiffness_gpa": 6.0,
+      "resonance_frequency_hz": 44.5,
+      "sustain_q_factor": 93.9,
+      "radiation_coefficient": 11.2
+    },
+    "analysis_ui": {
+      "sample_length_mm": 590,
+      "sample_width_mm": 193,
+      "sample_thickness_mm": 3.7,
+      "sample_mass_g": 153,
+      "sample_density_kg_m3": 363.1,
+      "sample_nodal_lines_mm": 319,
+      "resonance_freq_hz": 44.5,
+      "time_constant_ms": 671.3,
+      "log_decrement": 0.0335,
+      "q_factor": 93.9,
+      "fitting_pct": 91.5,
+      "young_modulus_gpa": 6.0,
+      "radiation_coefficient": 11.2,
+      "peak_ampl_dbfs": -3.9,
+      "total_rec_length_sec": 21.3,
+      "visualized_length_sec": 6.9,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+      "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "batch_size_stated": null,
+      "extracted_at": "2026-08-01",
+      "extractor": "manual_frame",
+      "notes": "Linked to catalog 000002 by fingerprint match with CED-C-02."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 363.1,
+    "modulus_of_elasticity_gpa": 6.0,
+    "E_C_gpa": null,
+    "length_mm": 590.0,
+    "width_mm": 193.0,
+    "thickness_mm": 3.7,
+    "mass_g": 153.0,
+    "nodal_lines_mm": 319.0,
+    "resonance_frequency_hz": 44.5,
+    "q_factor": 93.9,
+    "log_decrement": 0.0335,
+    "time_constant_ms": 671.3,
+    "fitting_pct": 91.5,
+    "radiation_coefficient_vendor": 11.2,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Card decimals from European comma form. Dual-ID: 000002 ↔ CED-C-02."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "pass",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
+    "batch_size_stated": "not read from these frames",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-02 + fingerprint to catalog 000002"
+  },
+  "artifacts": {
+    "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc-000002-card",
+      "source_artifacts/frames/mb-rc-000002-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}

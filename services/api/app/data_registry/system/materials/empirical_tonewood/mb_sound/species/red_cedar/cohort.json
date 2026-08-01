@@ -3,13 +3,16 @@
   "species_id": "cedar_western_red",
   "species_label": "Red cedar (plain / untreated)",
   "treatment": "plain",
-  "treatments_seen": ["plain"],
+  "treatments_seen": [
+    "plain"
+  ],
   "target_batch_size_stated": null,
   "specimen_ids": [
-    "mb-rc-000001"
+    "mb-rc-000001",
+    "mb-rc-000002"
   ],
   "catalog_gaps": [],
   "status": "intake_partial",
   "specimen_id_prefix": "mb-rc-",
-  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). Catalog IDs restart at 000001 within this suite — distinct from Adirondack 000001. Specimen prefix mb-rc-. Dual-ID: 000001 ↔ CED-C-01."
+  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 2 specimen records present. Catalog IDs restart within this suite. Prefix mb-rc-. Dual-ID: 000001 ↔ CED-C-01, 000002 ↔ CED-C-02."
 }

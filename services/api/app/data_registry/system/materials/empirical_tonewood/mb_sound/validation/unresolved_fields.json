@@ -152,6 +152,13 @@
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "batch_size_stated": "not read from these frames",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-01 + fingerprint to catalog 000001"
+    },
+    "mb-rc-000002": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "batch_size_stated": "not read from these frames",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-02 + fingerprint to catalog 000002"
     }
   }
 }

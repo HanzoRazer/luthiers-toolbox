@@ -44,7 +44,8 @@
       "channel": "Maderas Barber Official",
       "stated_specimen_count": null,
       "linked_specimen_ids": [
-        "mb-rc-000001"
+        "mb-rc-000001",
+        "mb-rc-000002"
       ],
       "catalog_gaps_noted": []
     }
