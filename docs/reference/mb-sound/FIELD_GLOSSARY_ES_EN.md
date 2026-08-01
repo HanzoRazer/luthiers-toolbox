@@ -42,7 +42,7 @@ Panel-only concepts map under `panel.*`. See [`NAMESPACE.md`](./NAMESPACE.md).
 |----------------------|---------------------|
 | Adirondack spruce / abeto rojo americano | `spruce_adirondack` |
 | Torrefied Adirondack / Adirondack torrefacto | same `species_id`; `treatment: torrefied`; cohort `adirondack_torrefied`; IDs `mb-adt-*` |
-| Plain / untreated Adirondack | same `species_id`; `treatment: plain`; cohort `adirondack_plain`; IDs `mb-adp-*` |
+| Plain / untreated Adirondack | same `species_id`; `treatment: plain`; cohort `adirondack`; IDs `mb-ad-*` |
 | Alpine / European spruce / abeto europeo | `spruce_european` (or alpine alias if present) |
 | Red cedar / cedro rojo | `cedar_western_red` |
 | Indian rosewood / palosanto de la India | `rosewood_east_indian` |

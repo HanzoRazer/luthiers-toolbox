@@ -46,7 +46,7 @@ mb_sound/
   manifest.json
   species/
     adirondack_torrefied/   # TORREFIED suite (mb-adt-*)
-    adirondack_plain/       # plain/untreated suite (mb-adp-* reserved)
+    adirondack/             # plain/untreated suite (mb-ad-* reserved)
     red_cedar/
     alpine_spruce/
     european_spruce/
@@ -62,7 +62,7 @@ Same botanical species can appear in **multiple MB Sound suites**. Do not confla
 | Suite | `species_id` | `treatment` | Cohort | Specimen prefix |
 |-------|--------------|-------------|--------|-----------------|
 | Torrefied Adirondack | `spruce_adirondack` | `torrefied` | `adirondack_torrefied` | `mb-adt-` |
-| Plain Adirondack | `spruce_adirondack` | `plain` | `adirondack_plain` | `mb-adp-` |
+| Plain Adirondack | `spruce_adirondack` | `plain` | `adirondack` | `mb-ad-` |
 
 See `docs/reference/mb-sound/TREATMENT_COHORTS.md`.
 

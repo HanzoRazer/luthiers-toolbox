@@ -12,9 +12,9 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 | Axis | Torrefied suite | Plain suite |
 |------|-----------------|-------------|
 | `treatment` | `torrefied` | `plain` |
-| `species_cohort` | `adirondack_torrefied` | `adirondack_plain` |
-| Cohort file | `species/adirondack_torrefied/cohort.json` | `species/adirondack_plain/cohort.json` |
-| Specimen ID prefix | `mb-adt-` | `mb-adp-` (reserved) |
+| `species_cohort` | `adirondack_torrefied` | `adirondack` |
+| Cohort file | `species/adirondack_torrefied/cohort.json` | `species/adirondack/cohort.json` |
+| Specimen ID prefix | `mb-adt-` | `mb-ad-` (reserved) |
 | Vendor card label (typical) | `TORREFIED ADIRONDACK` | `ADIRONDACK` (no torrefied) |
 
 ## Status
@@ -22,7 +22,7 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 | Cohort | Status |
 |--------|--------|
 | `mb_sound_adirondack_torrefied` | Intake complete-with-gap (21/22; gap `000002`) |
-| `mb_sound_adirondack_plain` | Empty stub — awaiting frames |
+| `mb_sound_adirondack` | Empty stub — awaiting frames |
 
 ## Rules
 
