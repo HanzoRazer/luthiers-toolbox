@@ -6,7 +6,7 @@
   "program": "DO-SIP-013",
   "target_specimen_count_approx": 60,
   "target_species_count_approx": 4,
-  "specimen_count": 10,
+  "specimen_count": 11,
   "specimen_ids": [
     "mb-adt-000001",
     "mb-adt-000003",
@@ -17,6 +17,7 @@
     "mb-adt-000008",
     "mb-adt-000009",
     "mb-adt-000010",
+    "mb-adt-000011",
     "mb-adt-000012"
   ],
   "species_cohorts": [
@@ -25,7 +26,7 @@
   "treatments": [
     "torrefied"
   ],
-  "dataset_digest_sha256": "c3ea66c45e5169b5b43cec4951379ebe67974500bd9b07c95525288475082960",
+  "dataset_digest_sha256": "bf517988ec40ae45d6aa992399442e2d3594e73d6ce06f4f3131e8367c1792cc",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

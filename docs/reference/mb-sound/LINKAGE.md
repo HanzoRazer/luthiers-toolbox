@@ -21,7 +21,7 @@ For each panel row, keep:
 | `source.analysis_sample_name` | `ADT-C-01` / `ADT-W-02` | Software “Sample name” (prefix may be `ADT-C-` or `ADT-W-`) |
 | `specimen_id` | `mb-adt-000012` | Stable repo key from catalog id |
 
-Do **not** assume catalog `000012` ≡ `ADT-C-12`. Observed pair: **000012 ↔ ADT-W-02** (fingerprint: ρ/E/f/Q/radiation). Always confirm with evidence.
+Do **not** assume catalog `000012` ≡ `ADT-C-12`. Observed W-series pairs: **000011 ↔ ADT-W-01**, **000012 ↔ ADT-W-02** (fingerprint: ρ/E/f/Q/radiation). Always confirm with evidence.
 
 ## How to attach unnumbered spectral frames
 

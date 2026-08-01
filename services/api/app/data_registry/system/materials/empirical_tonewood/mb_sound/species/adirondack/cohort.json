@@ -14,6 +14,7 @@
     "mb-adt-000008",
     "mb-adt-000009",
     "mb-adt-000010",
+    "mb-adt-000011",
     "mb-adt-000012"
   ],
   "catalog_gaps": [
@@ -22,22 +23,8 @@
       "expected_analysis_sample_name": "ADT-C-02",
       "status": "unavailable",
       "notes": "Not available in source material provided for intake; skip without inventing a specimen record."
-    },
-    {
-      "catalog_id": "000011",
-      "expected_analysis_sample_name": null,
-      "status": "unavailable",
-      "notes": "Not available in source material provided for intake; skip without inventing a specimen record."
     }
   ],
   "status": "intake_partial",
-  "notes": "Complete-batch video states 22 pieces; 10 specimen records present; catalog 000002 and 000011 unavailable. 000012 analysis name is ADT-W-02 (not ADT-C-12)."
+  "notes": "Complete-batch video states 22 pieces; 11 specimen records present; catalog 000002 unavailable. Dual-ID W-series: 000011 ↔ ADT-W-01, 000012 ↔ ADT-W-02."
 }
-
-
-
-
-
-
-
-

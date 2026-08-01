@@ -1,0 +1,104 @@
+{
+  "specimen_id": "mb-adt-000011",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "spruce_adirondack",
+  "species_cohort": "adirondack",
+  "treatment": "torrefied",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000011",
+    "analysis_sample_name": "ADT-W-01",
+    "species_label_vendor": "TORREFIED ADIRONDACK",
+    "card": {
+      "density_kg_m3": 442.1,
+      "stiffness_gpa": 14.5,
+      "resonance_frequency_hz": 84.7,
+      "sustain_q_factor": 173.0,
+      "radiation_coefficient": 13.0
+    },
+    "analysis_ui": {
+      "sample_length_mm": 554,
+      "sample_width_mm": 219,
+      "sample_thickness_mm": 4.4,
+      "sample_mass_g": 236,
+      "sample_density_kg_m3": 442.1,
+      "sample_nodal_lines_mm": 299,
+      "resonance_freq_hz": 84.7,
+      "time_constant_ms": 650.1,
+      "log_decrement": 0.0182,
+      "q_factor": 173.0,
+      "fitting_pct": 92.1,
+      "young_modulus_gpa": 14.5,
+      "radiation_coefficient": 13.0,
+      "peak_ampl_dbfs": -1.8,
+      "total_rec_length_sec": 24.9,
+      "visualized_length_sec": 4.2,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+      "batch_title": "Adirondack - MB Sound - Sample and analysis of the complete batch",
+      "batch_size_stated": 22,
+      "extracted_at": "2026-08-01",
+      "extractor": "manual_frame",
+      "notes": "Analysis Sample name uses ADT-W-01 (not ADT-C-11); linked to catalog 000011 by fingerprint match."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 442.1,
+    "modulus_of_elasticity_gpa": 14.5,
+    "E_C_gpa": null,
+    "length_mm": 554.0,
+    "width_mm": 219.0,
+    "thickness_mm": 4.4,
+    "mass_g": 236.0,
+    "nodal_lines_mm": 299.0,
+    "resonance_frequency_hz": 84.7,
+    "q_factor": 173.0,
+    "log_decrement": 0.0182,
+    "time_constant_ms": 650.1,
+    "fitting_pct": 92.1,
+    "radiation_coefficient_vendor": 13.0,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Card decimals from European comma form. Dual-ID: 000011 ↔ ADT-W-01."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "pass",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
+    "analysis_name_scheme": "ADT-W-01 vs prior ADT-C-## series — meaning of W vs C unknown",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-01 + fingerprint to catalog 000011"
+  },
+  "artifacts": {
+    "video_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+    "artifact_refs": [
+      "source_artifacts/frames/mb-adt-000011-card",
+      "source_artifacts/frames/mb-adt-000011-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}
