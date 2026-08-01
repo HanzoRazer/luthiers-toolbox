@@ -22,7 +22,8 @@
     "mb-adt-000014",
     "mb-adt-000015",
     "mb-adt-000016",
-    "mb-adt-000017"
+    "mb-adt-000017",
+    "mb-adt-000018"
   ],
   "catalog_gaps": [
     {
@@ -33,5 +34,5 @@
     }
   ],
   "status": "intake_partial",
-  "notes": "Complete-batch video states 22 pieces; 16 specimen records present; catalog 000002 unavailable. Dual-ID W-series: 000011 ↔ ADT-W-01 … 000017 ↔ ADT-W-07."
+  "notes": "Complete-batch video states 22 pieces; 17 specimen records present; catalog 000002 unavailable. Dual-ID W-series: 000011 ↔ ADT-W-01 … 000018 ↔ ADT-W-08."
 }
