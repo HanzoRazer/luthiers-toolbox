@@ -3,12 +3,12 @@
   "specimen_count": 21,
   "unique_specimen_ids": 21,
   "counts_by_species_cohort": {
-    "adirondack": 21
+    "adirondack_torrefied": 21
   },
   "counts_by_treatment": {
     "torrefied": 21
   },
-  "dataset_digest_sha256": "c407b94b5634cff6071f9b00a794760d9cef49e4234249b9d061c0e88b635c4b",
+  "dataset_digest_sha256": "cb843a10a63fba5de65a90fc84c77ecfda0758329bb5f93d5a0bfafbf3027da2",
   "errors": [],
   "warnings": [],
   "gates": {

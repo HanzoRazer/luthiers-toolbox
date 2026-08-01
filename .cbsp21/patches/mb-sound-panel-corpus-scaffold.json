@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
   "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
-  "intent": "Versioned empirical MB Sound corpus intake. Adirondack batch 000001–000022 complete except gap 000002; ADT-C/ADT-W dual-ID. No production behavior changes.",
+  "intent": "Versioned empirical MB Sound corpus intake. Adirondack TORREFIED batch complete except gap 000002; plain Adirondack is a separate empty cohort (mb-adp-). No production behavior changes.",
   "change_type": "docs",
   "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
@@ -20,6 +20,7 @@
     "files_expected_to_change": [
       ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
       "docs/reference/mb-sound/DO_SIP_PROGRAM.md",
+      "docs/reference/mb-sound/TREATMENT_COHORTS.md",
       "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
       "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
       "docs/reference/mb-sound/LINKAGE.md",
@@ -39,7 +40,8 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_torrefied/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_plain/cohort.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json",
@@ -72,7 +74,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Empirical MB Sound corpus; Adirondack torrefied batch intake complete except 000002; W-series through 000022↔ADT-W-12.",
+    "what_changed": "Empirical MB Sound corpus; treatment-split Adirondack cohorts (torrefied vs plain); 21 torrefied specimens; gap 000002.",
     "why_not_redundant": "DO-SIP-013 intake boundary.",
     "governance": "Draft until corpus gates pass."
   },
@@ -80,7 +82,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "21/~60 specimens; Adirondack gap 000002; other species pending."
+    "known_residual": "21/~60 specimens; Adirondack plain empty; other species pending; gap 000002."
   },
   "files": [
     {
@@ -328,18 +330,6 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
-      "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
-      ]
-    },
-    {
-      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
-      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
-      "scan_targets": [
-        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
@@ -688,6 +678,42 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_torrefied/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_torrefied/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_torrefied/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_plain/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_plain/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_plain/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/TREATMENT_COHORTS.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/TREATMENT_COHORTS.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/TREATMENT_COHORTS.md"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",

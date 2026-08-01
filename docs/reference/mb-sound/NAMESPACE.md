@@ -25,7 +25,7 @@ If a cross-repo materials JSON / Inv-026-A ruling supersedes this, **rebind the 
 
 1. Prefer `density_kg_m3`, `modulus_of_elasticity_gpa`, `E_C_gpa` over invented synonyms.  
 2. Discriminate rows with `record_kind: "measured_panel"` so they are not species averages.  
-3. Join species via `species_id` only.  
+3. Join botanical species via `species_id`, but **always** also store `treatment` + `species_cohort` — same species can have separate MB Sound suites (e.g. torrefied vs plain Adirondack). See [`TREATMENT_COHORTS.md`](./TREATMENT_COHORTS.md).  
 4. Panel-only keys under `panel.*`.  
 5. Plate calculator `E_L_GPa` / `E_C_GPa` remain **call-site adapters**, not a storage vocabulary.  
 6. Forbidden in this scaffold: `E_parallel_gpa`, `E_perpendicular_gpa`, `youngs_modulus`, bare `moe`.

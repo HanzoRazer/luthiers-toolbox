@@ -1,7 +1,7 @@
 {
-  "cohort_id": "mb_sound_adirondack",
+  "cohort_id": "mb_sound_adirondack_torrefied",
   "species_id": "spruce_adirondack",
-  "species_label": "Adirondack spruce",
+  "species_label": "Adirondack spruce (torrefied)",
   "treatments_seen": [
     "torrefied"
   ],
@@ -38,5 +38,9 @@
     }
   ],
   "status": "intake_batch_complete_with_gaps",
-  "notes": "Complete-batch video states 22 pieces; 21 specimen records present (catalog 000001–000022 except gap 000002). Dual-ID: 000001/000003–000010 ↔ ADT-C-##; 000011–000022 ↔ ADT-W-01…12."
+  "notes": "TORREFIED Adirondack MB Sound batch only. Stated 22 pieces; 21 specimen records (catalog 000001–000022 except gap 000002). Dual-ID: 000001/000003–000010 ↔ ADT-C-##; 000011–000022 ↔ ADT-W-01…12. Specimen IDs use prefix mb-adt- (Adirondack Torrefied). Do NOT merge with plain/untreated Adirondack cohort mb_sound_adirondack_plain.",
+  "treatment": "torrefied",
+  "distinct_from": [
+    "mb_sound_adirondack_plain"
+  ]
 }

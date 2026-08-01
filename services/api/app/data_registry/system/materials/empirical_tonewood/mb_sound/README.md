@@ -44,11 +44,27 @@ Future plate, damping, matching, and cohort adapters  (DO-SIP-016+)
 ```text
 mb_sound/
   manifest.json
-  species/{adirondack,red_cedar,alpine_spruce,european_spruce}/
+  species/
+    adirondack_torrefied/   # TORREFIED suite (mb-adt-*)
+    adirondack_plain/       # plain/untreated suite (mb-adp-* reserved)
+    red_cedar/
+    alpine_spruce/
+    european_spruce/
   specimens/mb-*.json
   source_artifacts/artifact_manifest.json
   validation/{consistency_results,unresolved_fields}.json
 ```
+
+## Treatment discrimination (required)
+
+Same botanical species can appear in **multiple MB Sound suites**. Do not conflate them.
+
+| Suite | `species_id` | `treatment` | Cohort | Specimen prefix |
+|-------|--------------|-------------|--------|-----------------|
+| Torrefied Adirondack | `spruce_adirondack` | `torrefied` | `adirondack_torrefied` | `mb-adt-` |
+| Plain Adirondack | `spruce_adirondack` | `plain` | `adirondack_plain` | `mb-adp-` |
+
+See `docs/reference/mb-sound/TREATMENT_COHORTS.md`.
 
 ## Non-claims
 
