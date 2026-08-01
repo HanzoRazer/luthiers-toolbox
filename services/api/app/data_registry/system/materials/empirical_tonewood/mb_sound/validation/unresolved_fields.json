@@ -81,6 +81,13 @@
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "analysis_name_scheme": "ADT-W-03 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-03 + fingerprint to catalog 000013"
+    },
+    "mb-adt-000014": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "ADT-W-04 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-04 + fingerprint to catalog 000014"
     }
   }
 }
