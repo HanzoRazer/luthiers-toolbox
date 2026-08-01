@@ -92,15 +92,17 @@ def validate(write: bool) -> int:
         if not sid or not str(sid).startswith("mb-"):
             errors.append(f"bad specimen_id {sid!r}")
 
-    catalog_ids = []
+    # Catalog IDs restart per MB Sound suite/video; uniqueness is (species_cohort, catalog_id).
+    catalog_keys = []
     for s in specimens:
         src = s.get("source") or {}
         cid = src.get("catalog_id")
         aname = src.get("analysis_sample_name")
+        cohort = s.get("species_cohort") or s.get("species_id") or ""
         if not cid:
             errors.append(f"{s.get('specimen_id')}: missing source.catalog_id")
         else:
-            catalog_ids.append(cid)
+            catalog_keys.append((str(cohort), str(cid)))
         if not aname:
             warnings.append(f"{s.get('specimen_id')}: missing analysis_sample_name")
         if not s.get("species_id") and s.get("species_id") is not None:
@@ -158,8 +160,8 @@ def validate(write: bool) -> int:
                     f"{s.get('specimen_id')}: radiation_vendor {rad} vs c/ρ={schelleng:.3f}"
                 )
 
-    if len(catalog_ids) != len(set(catalog_ids)):
-        errors.append("duplicate source.catalog_id values")
+    if len(catalog_keys) != len(set(catalog_keys)):
+        errors.append("duplicate (species_cohort, source.catalog_id) pairs")
 
     by_species = Counter(s.get("species_cohort") or s.get("species_id") for s in specimens)
     by_treatment = Counter(s.get("treatment") for s in specimens)
@@ -176,7 +178,7 @@ def validate(write: bool) -> int:
         "warnings": warnings,
         "gates": {
             "unique_specimen_ids": len(ids) == len(set(ids)) and len(ids) == len(specimens),
-            "unique_catalog_ids": len(catalog_ids) == len(set(catalog_ids)),
+            "unique_catalog_ids_per_cohort": len(catalog_keys) == len(set(catalog_keys)),
             "layer_separation": not any("missing layer" in e for e in errors),
             "no_forbidden_normalized_synonyms": not any("forbidden normalized" in e for e in errors),
             "intake_complete_approx_60": len(specimens) >= 55,

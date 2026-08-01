@@ -30,3 +30,10 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 2. Never average or match across `torrefied` and `plain` without an explicit cross-treatment analysis flag.  
 3. Catalog IDs (`000001`…) may restart per video/batch — they are **not** globally unique across treatments; uniqueness is `(dataset, species_cohort, catalog_id)` or `specimen_id`.  
 4. Same rule applies later to other species if MB Sound ships treated vs untreated suites.
+
+## Other suites
+
+| Suite | Cohort | Prefix | Status |
+|-------|--------|--------|--------|
+| Red Cedar (plain) | `red_cedar` | `mb-rc-` | intake in progress |
+

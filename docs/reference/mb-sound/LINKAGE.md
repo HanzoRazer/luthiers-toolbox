@@ -50,3 +50,7 @@ Use this order (stop at first success):
 - URL: https://www.youtube.com/watch?v=Ovhx0BxcbtQ  
 - Stated batch size: **22** Adirondack pieces  
 - Software attribution (vendor): Giuliano Nicoletti (measurement software); blog collaboration on maderasbarber.com
+
+## Catalog IDs restart per suite
+
+MB Sound card numbers (`000001`…) **restart in each species/treatment video**. Uniqueness is `(species_cohort, catalog_id)` or `specimen_id` (e.g. Adirondack torrefied `mb-adt-000001` ≠ Red Cedar `mb-rc-000001`).

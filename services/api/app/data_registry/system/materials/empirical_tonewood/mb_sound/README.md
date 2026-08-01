@@ -63,6 +63,7 @@ Same botanical species can appear in **multiple MB Sound suites**. Do not confla
 |-------|--------------|-------------|--------|-----------------|
 | Torrefied Adirondack | `spruce_adirondack` | `torrefied` | `adirondack_torrefied` | `mb-adt-` |
 | Plain Adirondack | `spruce_adirondack` | `plain` | `adirondack` | `mb-ad-` |
+| Red Cedar (plain) | `cedar_western_red` | `plain` | `red_cedar` | `mb-rc-` |
 
 See `docs/reference/mb-sound/TREATMENT_COHORTS.md`.
 

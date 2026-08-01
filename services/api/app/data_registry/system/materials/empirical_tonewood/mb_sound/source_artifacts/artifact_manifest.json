@@ -35,6 +35,18 @@
       "catalog_gaps_noted": [
         "000002"
       ]
+    },
+    {
+      "artifact_id": "yt_red_cedar_complete_batch",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+      "title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "channel": "Maderas Barber Official",
+      "stated_specimen_count": null,
+      "linked_specimen_ids": [
+        "mb-rc-000001"
+      ],
+      "catalog_gaps_noted": []
     }
   ]
 }
