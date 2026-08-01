@@ -3,150 +3,618 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
-  "title": "Annotated Gore/O'Brien lecture notes: Packs 1–5",
-  "intent": "Add knowledge-layer documentation for five Gore/O'Brien teaching sources: Gore Shop Talk 20 (Pack 1), Gore Wolf Notes Mailbag (Pack 2), Gore Monopole Mobility Measurement (Pack 3), Gore Shop Talk 25 (Pack 4), and Gore Shop Talk Responsive Objectives (Pack 5). Includes annotated lecture notes, Toolbox crosswalk, source transcripts, gap registers, and a series-level executive summary. No executable code changes.",
+  "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1\u20138 + Somogyi related)",
+  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related packs. No executable production code. Pack 6 remains partial (intro only).",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       "docs/calculators/acoustics/",
-      ".cbsp21/"
+      ".cbsp21/patches/gore-lecture-series-packs-1-5.json"
     ],
     "files_expected_to_change": [
+      ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
+      "docs/calculators/acoustics/gore_guitar_analysis_testing/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/gore_guitar_analysis_testing/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_guitar_analysis_testing/README.md",
+      "docs/calculators/acoustics/gore_guitar_analysis_testing/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md",
-      "docs/calculators/acoustics/gore_shop_talk_20/README.md",
-      "docs/calculators/acoustics/gore_shop_talk_20/ANNOTATED_LECTURE_NOTES.md",
-      "docs/calculators/acoustics/gore_shop_talk_20/CROSSWALK_TOOLBOX.md",
-      "docs/calculators/acoustics/gore_shop_talk_20/SOURCE_TRANSCRIPT.md",
-      "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
-      "docs/calculators/acoustics/gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md",
-      "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
-      "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
-      "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md",
       "docs/calculators/acoustics/gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/gore_monopole_mobility_measurement/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md",
       "docs/calculators/acoustics/gore_monopole_mobility_measurement/SOURCE_TRANSCRIPT.md",
-      "docs/calculators/acoustics/gore_shop_talk_25/README.md",
+      "docs/calculators/acoustics/gore_shop_talk_20/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/gore_shop_talk_20/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/gore_shop_talk_20/README.md",
+      "docs/calculators/acoustics/gore_shop_talk_20/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/gore_shop_talk_25/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/gore_shop_talk_25/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_shop_talk_25/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_shop_talk_25/README.md",
       "docs/calculators/acoustics/gore_shop_talk_25/SOURCE_TRANSCRIPT.md",
-      "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md",
+      "docs/calculators/acoustics/gore_shop_talk_44/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/gore_shop_talk_44/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/gore_shop_talk_44/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_shop_talk_44/README.md",
+      "docs/calculators/acoustics/gore_shop_talk_44/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/README.md",
+      "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md",
       "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/SOURCE_TRANSCRIPT.md",
-      ".cbsp21/patches/gore-lecture-series-packs-1-5.json"
+      "docs/calculators/acoustics/gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
+      "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/somogyi_apprentice_build_workflow/ANNOTATED_WORKFLOW_NOTES.md",
+      "docs/calculators/acoustics/somogyi_apprentice_build_workflow/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/somogyi_apprentice_build_workflow/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/somogyi_apprentice_build_workflow/README.md",
+      "docs/calculators/acoustics/somogyi_apprentice_build_workflow/SOURCE_TRANSCRIPT.md"
     ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest.",
+    "why_not_redundant": "Captures teaching methodology and explicit gaps (including mobility \u03b4 conflict) before any calculator UI work."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> -> pass"
+    ],
+    "known_residual": "Pack 6 SOPs incomplete. Mobility deflection \u03b4 Pack3 vs Pack5 unresolved. No runtime code."
   },
   "files": [
     {
-      "path": "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md",
-      "intent": "Series-level executive summary and living index for all five Gore/O'Brien lecture packs. Summarises pack scope, key findings, and open gaps.",
-      "scan_targets": [
-        "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "File present and readable"
-      ]
-    },
-    {
-      "path": "docs/calculators/acoustics/gore_shop_talk_20/README.md",
-      "intent": "Pack 1: Gore Shop Talk 20 — methodology breadth overview, pack index and orientation.",
-      "scan_targets": [
-        "docs/calculators/acoustics/gore_shop_talk_20/README.md",
-        "docs/calculators/acoustics/gore_shop_talk_20/ANNOTATED_LECTURE_NOTES.md",
-        "docs/calculators/acoustics/gore_shop_talk_20/CROSSWALK_TOOLBOX.md",
-        "docs/calculators/acoustics/gore_shop_talk_20/SOURCE_TRANSCRIPT.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "All four Pack 1 files present and readable"
-      ]
-    },
-    {
-      "path": "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
-      "intent": "Pack 2: Gore Wolf Notes Mailbag — wolf diagnosis and half-semitone clearance methodology.",
-      "scan_targets": [
-        "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
-        "docs/calculators/acoustics/gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md",
-        "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
-        "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "All four Pack 2 files present and readable"
-      ]
-    },
-    {
-      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md",
-      "intent": "Pack 3: Gore Monopole Mobility Measurement — mobility tip SOP and gap register (G-M01..G-M09).",
-      "scan_targets": [
-        "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md",
-        "docs/calculators/acoustics/gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md",
-        "docs/calculators/acoustics/gore_monopole_mobility_measurement/CROSSWALK_TOOLBOX.md",
-        "docs/calculators/acoustics/gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md",
-        "docs/calculators/acoustics/gore_monopole_mobility_measurement/SOURCE_TRANSCRIPT.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "All five Pack 3 files present and readable"
-      ]
-    },
-    {
-      "path": "docs/calculators/acoustics/gore_shop_talk_25/README.md",
-      "intent": "Pack 4: Gore Shop Talk 25 — falcate humidity/rescue, side mass, Marty guitar analysis.",
-      "scan_targets": [
-        "docs/calculators/acoustics/gore_shop_talk_25/README.md",
-        "docs/calculators/acoustics/gore_shop_talk_25/ANNOTATED_LECTURE_NOTES.md",
-        "docs/calculators/acoustics/gore_shop_talk_25/CROSSWALK_TOOLBOX.md",
-        "docs/calculators/acoustics/gore_shop_talk_25/GAPS_NOT_RECORDED.md",
-        "docs/calculators/acoustics/gore_shop_talk_25/SOURCE_TRANSCRIPT.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "All five Pack 4 files present and readable"
-      ]
-    },
-    {
-      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md",
-      "intent": "Pack 5: Gore Shop Talk Responsive Objectives — three-objective spine, PowerPoint mobility (~0.15 mm @ 1 kg), wolf table, peak density, SRC/Q, spectrogram path. Blocker G-R01/G-M09 logged.",
-      "scan_targets": [
-        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md",
-        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/ANNOTATED_LECTURE_NOTES.md",
-        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/CROSSWALK_TOOLBOX.md",
-        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md",
-        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/SOURCE_TRANSCRIPT.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation only",
-      "verification": [
-        "All five Pack 5 files present and readable"
-      ]
-    },
-    {
       "path": ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
-      "intent": "CBSP21 manifest declaring the Gore lecture series documentation batch for gate coverage.",
+      "intent": "CBSP21 per-PR manifest covering all knowledge-pack files in this PR",
       "scan_targets": [
         ".cbsp21/patches/gore-lecture-series-packs-1-5.json"
       ],
       "risk": "low",
-      "behavior_change": "none - CI/review metadata only",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
       "verification": [
-        "python scripts/ci/check_cbsp21_gate.py --changed-files <PR file list> -> pass, 100% coverage"
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_guitar_analysis_testing/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 6 partial: Guitar Analysis & Testing intro + gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_guitar_analysis_testing/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_guitar_analysis_testing/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 6 partial: Guitar Analysis & Testing intro + gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_guitar_analysis_testing/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 6 partial: Guitar Analysis & Testing intro + gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_guitar_analysis_testing/README.md",
+      "intent": "Pack 6 partial: Guitar Analysis & Testing intro + gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_guitar_analysis_testing/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_guitar_analysis_testing/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 6 partial: Guitar Analysis & Testing intro + gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_guitar_analysis_testing/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md",
+      "intent": "Living index for Gore/O'Brien lecture knowledge packs",
+      "scan_targets": [
+        "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 3: Monopole mobility measurement",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_monopole_mobility_measurement/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 3: Monopole mobility measurement",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_monopole_mobility_measurement/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 3: Monopole mobility measurement",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md",
+      "intent": "Pack 3: Monopole mobility measurement",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_monopole_mobility_measurement/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_monopole_mobility_measurement/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 3: Monopole mobility measurement",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_monopole_mobility_measurement/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_20/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 1: Shop Talk #20",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_20/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_20/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 1: Shop Talk #20",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_20/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_20/README.md",
+      "intent": "Pack 1: Shop Talk #20",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_20/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_20/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 1: Shop Talk #20",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_20/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_25/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 4: Shop Talk #25",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_25/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_25/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 4: Shop Talk #25",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_25/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_25/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 4: Shop Talk #25",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_25/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_25/README.md",
+      "intent": "Pack 4: Shop Talk #25",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_25/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_25/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 4: Shop Talk #25",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_25/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_44/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 7: Shop Talk #44 mobility vs rotation / side-mass",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_44/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_44/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 7: Shop Talk #44 mobility vs rotation / side-mass",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_44/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_44/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 7: Shop Talk #44 mobility vs rotation / side-mass",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_44/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_44/README.md",
+      "intent": "Pack 7: Shop Talk #44 mobility vs rotation / side-mass",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_44/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_44/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 7: Shop Talk #44 mobility vs rotation / side-mass",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_44/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 8: Shop Talk #51 Luther Academy modal apps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 8: Shop Talk #51 Luther Academy modal apps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 8: Shop Talk #51 Luther Academy modal apps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/README.md",
+      "intent": "Pack 8: Shop Talk #51 Luther Academy modal apps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 8: Shop Talk #51 Luther Academy modal apps",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_51_luther_academy_apps/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 5: Responsive objectives",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 5: Responsive objectives",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md",
+      "intent": "Pack 5: Responsive objectives",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md",
+      "intent": "Pack 5: Responsive objectives",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 5: Responsive objectives",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_shop_talk_responsive_objectives/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Pack 2: Wolf notes mailbag",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_wolf_notes_mailbag/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
+      "intent": "Pack 2: Wolf notes mailbag",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
+      "intent": "Pack 2: Wolf notes mailbag",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
+      "intent": "Pack 2: Wolf notes mailbag",
+      "scan_targets": [
+        "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/somogyi_apprentice_build_workflow/ANNOTATED_WORKFLOW_NOTES.md",
+      "intent": "Related non-Gore Somogyi apprentice workflow pack (dialect crosswalk)",
+      "scan_targets": [
+        "docs/calculators/acoustics/somogyi_apprentice_build_workflow/ANNOTATED_WORKFLOW_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/somogyi_apprentice_build_workflow/CROSSWALK_TOOLBOX.md",
+      "intent": "Related non-Gore Somogyi apprentice workflow pack (dialect crosswalk)",
+      "scan_targets": [
+        "docs/calculators/acoustics/somogyi_apprentice_build_workflow/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/somogyi_apprentice_build_workflow/GAPS_NOT_RECORDED.md",
+      "intent": "Related non-Gore Somogyi apprentice workflow pack (dialect crosswalk)",
+      "scan_targets": [
+        "docs/calculators/acoustics/somogyi_apprentice_build_workflow/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/somogyi_apprentice_build_workflow/README.md",
+      "intent": "Related non-Gore Somogyi apprentice workflow pack (dialect crosswalk)",
+      "scan_targets": [
+        "docs/calculators/acoustics/somogyi_apprentice_build_workflow/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/somogyi_apprentice_build_workflow/SOURCE_TRANSCRIPT.md",
+      "intent": "Related non-Gore Somogyi apprentice workflow pack (dialect crosswalk)",
+      "scan_targets": [
+        "docs/calculators/acoustics/somogyi_apprentice_build_workflow/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
       ]
     }
   ],
   "architecture_scan": {
-    "scan_id": "AS-2026-07-31-gore-lecture-series",
+    "scan_id": "AS-2026-08-01-gore-lecture-series",
     "risk_summary": {
       "critical": 0,
       "high": 0,
@@ -155,6 +623,6 @@
     },
     "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "Documentation-only PR. No executable code added or modified. No architectural risk."
+    "acknowledgement_notes": "Documentation-only knowledge packs. No executable code. No materials-authority ruling."
   }
 }
