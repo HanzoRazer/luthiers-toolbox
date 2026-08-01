@@ -1,0 +1,41 @@
+{
+  "id": "mb_sound_example_001",
+  "record_kind": "measured_panel",
+  "species_id": "spruce_adirondack",
+  "species_label": "Adirondack Spruce",
+  "scientific_name": "Picea rubens",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "density_kg_m3": null,
+  "specific_gravity": null,
+  "modulus_of_elasticity_gpa": null,
+  "E_C_gpa": null,
+  "modulus_of_rupture_mpa": null,
+  "speed_of_sound_m_s": null,
+  "acoustic_impedance": null,
+  "panel": {
+    "role": "soundboard",
+    "sku_or_lot": null,
+    "length_mm": null,
+    "width_mm": null,
+    "thickness_mm": null,
+    "mass_g": null,
+    "moisture_content_pct": null,
+    "cutting_year": null,
+    "elastic_method": "vendor_stated",
+    "R_anis": null,
+    "modes": [],
+    "q": null,
+    "src_vendor": null
+  },
+  "provenance": {
+    "source_type": "video",
+    "source_url": null,
+    "local_media_path": null,
+    "extracted_at": null,
+    "extractor": "manual",
+    "confidence": "low",
+    "indices_source": null,
+    "notes": "TEMPLATE ONLY — TonewoodEntry field names for overlapping quantities. Do not commit synthetic numbers as real data."
+  }
+}

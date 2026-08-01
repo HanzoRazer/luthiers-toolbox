@@ -1,0 +1,271 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "mb-sound-panel-corpus-scaffold",
+  "title": "PROVISIONAL MB Sound panel corpus scaffold (non-authoritative)",
+  "intent": "Empty panel-level MB Sound corpus scaffold + extraction tooling. Separates measured panels from wood_species averages. Field-name reuse of TonewoodEntry is PROVISIONAL and explicitly non-authoritative pending Inv-026-A. Does not admit Inv-024 extraction. No runtime calculator wiring. No panel measurements committed.",
+  "change_type": "docs",
+  "behavior_change": "none - empty JSON scaffold, docs, and offline scripts; no production API behavior change",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/reference/mb-sound/",
+      "scripts/mb_sound_",
+      "services/api/app/data_registry/system/materials/panel_acoustic/",
+      "services/api/app/data_registry/system/materials/SOURCES.md",
+      ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json"
+    ],
+    "files_expected_to_change": [
+      "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
+      "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
+      "docs/reference/mb-sound/NAMESPACE.md",
+      "docs/reference/mb-sound/README.md",
+      "docs/reference/mb-sound/schema/panel.example.json",
+      "docs/reference/mb-sound/staging/.gitignore",
+      "docs/reference/mb-sound/staging/ocr/.gitkeep",
+      "docs/reference/mb-sound/staging/rows.jsonl",
+      "scripts/mb_sound_extract_frames.py",
+      "scripts/mb_sound_merge_rows.py",
+      "scripts/mb_sound_ocr_frames.py",
+      "scripts/mb_sound_validate_corpus.py",
+      "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
+      "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "services/api/app/data_registry/system/materials/SOURCES.md",
+      ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds empty mb_sound_panels.json, provisional NAMESPACE note demoting authority claims, Spanish glossary, ffmpeg/OCR/merge/validate scripts, and a SOURCES.md pointer.",
+    "why_not_redundant": "No prior panel_acoustic corpus path existed; this is scaffold-only so later extracts do not invent a colliding materials vocabulary.",
+    "governance": "Does not decide Inv-026-A. Does not unblock Inv-024. Draft PR must not be read as materials-authority ratification."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/mb_sound_validate_corpus.py -> OK empty scaffold",
+      "git diff --name-only origin/main...HEAD must not include docs/calculators/acoustics/gore_*"
+    ],
+    "known_residual": "No real MB Sound numeric rows. Field alignment is provisional. Extraction remains blocked on source availability."
+  },
+  "files": [
+    {
+      "path": "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/NAMESPACE.md",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/NAMESPACE.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/NAMESPACE.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/README.md",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/README.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/schema/panel.example.json",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/schema/panel.example.json",
+      "scan_targets": [
+        "docs/reference/mb-sound/schema/panel.example.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/staging/.gitignore",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/staging/.gitignore",
+      "scan_targets": [
+        "docs/reference/mb-sound/staging/.gitignore"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/staging/ocr/.gitkeep",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/staging/ocr/.gitkeep",
+      "scan_targets": [
+        "docs/reference/mb-sound/staging/ocr/.gitkeep"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/staging/rows.jsonl",
+      "intent": "MB Sound provisional scaffold: docs/reference/mb-sound/staging/rows.jsonl",
+      "scan_targets": [
+        "docs/reference/mb-sound/staging/rows.jsonl"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "scripts/mb_sound_extract_frames.py",
+      "intent": "MB Sound provisional scaffold: scripts/mb_sound_extract_frames.py",
+      "scan_targets": [
+        "scripts/mb_sound_extract_frames.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "scripts/mb_sound_merge_rows.py",
+      "intent": "MB Sound provisional scaffold: scripts/mb_sound_merge_rows.py",
+      "scan_targets": [
+        "scripts/mb_sound_merge_rows.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "scripts/mb_sound_ocr_frames.py",
+      "intent": "MB Sound provisional scaffold: scripts/mb_sound_ocr_frames.py",
+      "scan_targets": [
+        "scripts/mb_sound_ocr_frames.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "scripts/mb_sound_validate_corpus.py",
+      "intent": "MB Sound provisional scaffold: scripts/mb_sound_validate_corpus.py",
+      "scan_targets": [
+        "scripts/mb_sound_validate_corpus.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
+      "intent": "MB Sound provisional scaffold: services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "intent": "MB Sound provisional scaffold: services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/SOURCES.md",
+      "intent": "MB Sound provisional scaffold: services/api/app/data_registry/system/materials/SOURCES.md",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/SOURCES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - scaffold/docs/scripts only; empty corpus; non-authoritative field alignment",
+      "verification": [
+        "path present",
+        "python scripts/mb_sound_validate_corpus.py"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
+      "intent": "CBSP21 per-PR manifest for this scaffold only (must not select gore-lecture-series manifest).",
+      "scan_targets": [
+        ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI metadata",
+      "verification": [
+        "gate selects this manifest; coverage >= 95%"
+      ]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-01-mb-sound-scaffold",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Scaffold/docs/scripts only. Explicitly non-authoritative on materials vocabulary. Empty panels array."
+  }
+}

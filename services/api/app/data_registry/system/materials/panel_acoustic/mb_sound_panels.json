@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "tier": "system",
+    "category": "materials_panel_acoustic",
+    "version": "0.2.1",
+    "description": "PROVISIONAL empty scaffold for measured MB Sound panels. Field names temporarily align with TonewoodEntry to avoid synonym collision — NOT a materials specification-authority ruling (see docs/reference/mb-sound/NAMESPACE.md).",
+    "vendor": "Maderas Barber",
+    "dataset": "MB Sound",
+    "record_kind": "measured_panel",
+    "field_alignment": "provisional_reuse_TonewoodEntry_names",
+    "authority_status": "non_authoritative_pending_Inv-026-A",
+    "namespace_policy": "docs/reference/mb-sound/NAMESPACE.md",
+    "units": {
+      "density_kg_m3": "kg/m³",
+      "modulus_of_elasticity_gpa": "GPa (longitudinal / E∥ / E_L)",
+      "E_C_gpa": "GPa (cross-grain / E⊥)",
+      "speed_of_sound_m_s": "m/s",
+      "panel.thickness_mm": "mm",
+      "panel.mass_g": "g",
+      "panel.modes[].frequency_hz": "Hz"
+    },
+    "forbidden_synonyms": [
+      "E_parallel_gpa",
+      "E_perpendicular_gpa",
+      "E_L",
+      "youngs_modulus",
+      "moe"
+    ],
+    "plate_adapter": {
+      "modulus_of_elasticity_gpa": "E_L_GPa",
+      "E_C_gpa": "E_C_GPa",
+      "density_kg_m3": "density_kg_m3"
+    },
+    "source_policy": "Measured panel values only when Inv-024/source admission allows. Do not overwrite wood_species.json species averages. Join via species_id.",
+    "panel_count": 0,
+    "status": "scaffold — no panels extracted yet; extraction blocked pending source availability / Inv-024"
+  },
+  "panels": []
+}

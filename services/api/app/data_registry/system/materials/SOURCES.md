@@ -144,6 +144,23 @@ Each species includes a `guitar_relevance` field indicating its classification:
 
 ---
 
+## Panel-level acoustic corpora (separate from species averages)
+
+> **Provisional pointer only.** Not an Inv-026-A materials-vocabulary ruling.  
+> Empty scaffold; extraction/admission remains gated (Inv-024 / source availability).
+
+Measured **individual tops / back–side sets** (e.g. Maderas Barber **MB Sound**) must not be folded into `wood_species.json` as if they were handbook species means.
+
+While the scaffold is empty, overlapping acoustic **keys** provisionally reuse `TonewoodEntry` names to avoid synonym collision — revocable when specification authority lands. See [`docs/reference/mb-sound/NAMESPACE.md`](../../../../../../docs/reference/mb-sound/NAMESPACE.md).
+
+| Corpus | Path |
+|--------|------|
+| MB Sound panels | [`panel_acoustic/mb_sound_panels.json`](./panel_acoustic/mb_sound_panels.json) |
+| Provenance | [`panel_acoustic/MB_SOUND_SOURCES.md`](./panel_acoustic/MB_SOUND_SOURCES.md) |
+| Extraction playbook | [`docs/reference/mb-sound/`](../../../../../../docs/reference/mb-sound/) |
+
+---
+
 ## Contact & Corrections
 
 If you identify an error in species data, please:
