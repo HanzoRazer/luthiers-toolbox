@@ -1,8 +1,8 @@
 # MB Sound Extraction Playbook
 
-Goal: turn ~60+ video (or web) listings into rows in  
-`services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json`  
-without hand-screenshotting every sample as the primary workflow.
+Goal: turn ~60 video/catalog specimens into layered records under  
+`services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/`  
+(see DO-SIP-013), without hand-screenshotting every sample as the primary workflow.
 
 ## Preferred order (least pain first)
 
@@ -66,16 +66,11 @@ Otherwise: open the 2–5 frames that show the data card, type into `staging/row
 
 ## Merge into corpus
 
-```bash
-python scripts/mb_sound_merge_rows.py \
-  --rows docs/reference/mb-sound/staging/rows.jsonl \
-  --out services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json
-```
-
-Validate required numeric fields and species mapping:
+Write one layered specimen JSON per piece (see `specimens/mb-adt-000001.json` as template),  
+update the matching `species/*/cohort.json` `specimen_ids` list, then:
 
 ```bash
-python scripts/mb_sound_validate_corpus.py
+python3 scripts/mb_sound_validate_corpus.py --write-validation
 ```
 
 ## Target fields (minimum for plate-math proofs)

@@ -1,15 +1,15 @@
-# Maderas Barber — MB Sound reference corpus
+# MB Sound — process docs (intake boundary)
 
-Panel-level tonewood measurements for validating plate / SRC math in Luthiers Toolbox.
+**Canonical corpus:** [`services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/`](../../../services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/)  
+**Draft PR:** https://github.com/HanzoRazer/luthiers-toolbox/pull/244  
+**Program:** [`DO_SIP_PROGRAM.md`](./DO_SIP_PROGRAM.md) (DO-SIP-013 … 017)
 
 | Doc | Purpose |
 |-----|---------|
-| [`NAMESPACE.md`](./NAMESPACE.md) | **Read first** — provisional field alignment / collision rules |
-| [`LINKAGE.md`](./LINKAGE.md) | Numbered cards vs **unnumbered** spectral frames |
-| [`EXTRACTION_PLAYBOOK.md`](./EXTRACTION_PLAYBOOK.md) | Batch extract path |
-| [`FIELD_GLOSSARY_ES_EN.md`](./FIELD_GLOSSARY_ES_EN.md) | Vendor UI → TonewoodEntry / `panel.*` |
-| [`schema/panel.example.json`](./schema/panel.example.json) | First real row shape |
-| [`staging/rows.jsonl`](./staging/rows.jsonl) | Staging extract rows |
-| Runtime JSON | [`../../../services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json`](../../../services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json) |
+| [`DO_SIP_PROGRAM.md`](./DO_SIP_PROGRAM.md) | Dev Order sequence + intake rules |
+| [`NAMESPACE.md`](./NAMESPACE.md) | Provisional field alignment (non-authoritative) |
+| [`LINKAGE.md`](./LINKAGE.md) | Numbered cards vs unnumbered spectra |
+| [`EXTRACTION_PLAYBOOK.md`](./EXTRACTION_PLAYBOOK.md) | Frame/OCR extract hygiene |
+| [`FIELD_GLOSSARY_ES_EN.md`](./FIELD_GLOSSARY_ES_EN.md) | Vendor UI → layers |
 
-**Boundary:** does **not** replace `wood_species.json`. Does **not** decide Inv-026-A. Empty scaffold only; field-name reuse is provisional (see [`NAMESPACE.md`](./NAMESPACE.md)).
+Corpus remains **draft** until corpus-level gates pass (~60 specimens, consistency clean). No production behavior changes in this PR.

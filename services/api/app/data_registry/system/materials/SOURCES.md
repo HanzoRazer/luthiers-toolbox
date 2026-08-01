@@ -144,20 +144,19 @@ Each species includes a `guitar_relevance` field indicating its classification:
 
 ---
 
-## Panel-level acoustic corpora (separate from species averages)
+## Empirical tonewood corpora (separate from species averages)
 
-> **Provisional pointer only.** Not an Inv-026-A materials-vocabulary ruling.  
-> Empty scaffold; extraction/admission remains gated (Inv-024 / source availability).
+> **Draft intake only (DO-SIP-013).** Not an Inv-026-A materials-vocabulary ruling.  
+> Does not change plate solvers, generator defaults, or `TonewoodEntry` authority.  
+> ~4 species / ~60 specimens target — versioned empirical dataset, not fixtures.
 
-Measured **individual tops / back–side sets** (e.g. Maderas Barber **MB Sound**) must not be folded into `wood_species.json` as if they were handbook species means.
-
-While the scaffold is empty, overlapping acoustic **keys** provisionally reuse `TonewoodEntry` names to avoid synonym collision — revocable when specification authority lands. See [`docs/reference/mb-sound/NAMESPACE.md`](../../../../../../docs/reference/mb-sound/NAMESPACE.md).
+Measured **individual specimens** (e.g. Maderas Barber **MB Sound**) must not be folded into `wood_species.json` as handbook species means.
 
 | Corpus | Path |
 |--------|------|
-| MB Sound panels | [`panel_acoustic/mb_sound_panels.json`](./panel_acoustic/mb_sound_panels.json) |
-| Provenance | [`panel_acoustic/MB_SOUND_SOURCES.md`](./panel_acoustic/MB_SOUND_SOURCES.md) |
-| Extraction playbook | [`docs/reference/mb-sound/`](../../../../../../docs/reference/mb-sound/) |
+| MB Sound empirical corpus | [`empirical_tonewood/mb_sound/`](./empirical_tonewood/mb_sound/) |
+| Program / process | [`docs/reference/mb-sound/DO_SIP_PROGRAM.md`](../../../../../../docs/reference/mb-sound/DO_SIP_PROGRAM.md) |
+| Draft PR | https://github.com/HanzoRazer/luthiers-toolbox/pull/244 |
 
 ---
 

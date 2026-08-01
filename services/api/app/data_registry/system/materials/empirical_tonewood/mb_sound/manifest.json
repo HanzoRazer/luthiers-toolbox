@@ -1,0 +1,46 @@
+{
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "vendor": "Maderas Barber",
+  "authority_status": "non_authoritative_draft_intake",
+  "program": "DO-SIP-013",
+  "target_specimen_count_approx": 60,
+  "target_species_count_approx": 4,
+  "specimen_count": 1,
+  "specimen_ids": [
+    "mb-adt-000001"
+  ],
+  "species_cohorts": [
+    "adirondack"
+  ],
+  "treatments": [
+    "torrefied"
+  ],
+  "dataset_digest_sha256": "ad9a4b66d620a82826d3b0a57a49f28307f5ea9293abbb3e2e258b46c567338f",
+  "paths": {
+    "specimens": "specimens/",
+    "species": "species/",
+    "source_artifacts": "source_artifacts/",
+    "validation": "validation/",
+    "process_docs": "docs/reference/mb-sound/"
+  },
+  "layer_contract": [
+    "source",
+    "normalized",
+    "derived",
+    "validation",
+    "unresolved",
+    "artifacts"
+  ],
+  "forbidden_production_effects": [
+    "generator_defaults",
+    "TonewoodEntry_authority",
+    "plate_solver_defaults",
+    "wood_species.json_overwrite"
+  ],
+  "draft_merge_blocked_until": [
+    "corpus intake ~complete",
+    "consistency_results.errors empty",
+    "gates.intake_complete_approx_60 true"
+  ]
+}

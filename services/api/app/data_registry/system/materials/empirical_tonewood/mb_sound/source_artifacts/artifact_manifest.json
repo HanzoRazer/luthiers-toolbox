@@ -1,0 +1,15 @@
+{
+  "dataset": "mb_sound",
+  "policy": "Do not commit copyrighted full videos/audio. Store URLs and optional local private paths; frame extracts stay gitignored under frames/.",
+  "artifacts": [
+    {
+      "artifact_id": "yt_adirondack_complete_batch",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+      "title": "Adirondack - MB Sound - Sample and analysis of the complete batch",
+      "channel": "Maderas Barber Official",
+      "stated_specimen_count": 22,
+      "linked_specimen_ids": ["mb-adt-000001"]
+    }
+  ]
+}

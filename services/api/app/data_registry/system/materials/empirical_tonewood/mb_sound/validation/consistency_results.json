@@ -1,0 +1,24 @@
+{
+  "dataset": "mb_sound",
+  "specimen_count": 1,
+  "unique_specimen_ids": 1,
+  "counts_by_species_cohort": {
+    "adirondack": 1
+  },
+  "counts_by_treatment": {
+    "torrefied": 1
+  },
+  "dataset_digest_sha256": "ad9a4b66d620a82826d3b0a57a49f28307f5ea9293abbb3e2e258b46c567338f",
+  "errors": [],
+  "warnings": [],
+  "gates": {
+    "unique_specimen_ids": true,
+    "unique_catalog_ids": true,
+    "layer_separation": true,
+    "no_forbidden_normalized_synonyms": true,
+    "intake_complete_approx_60": false,
+    "production_behavior_unchanged": true
+  },
+  "draft_ready_for_merge": false,
+  "notes": "draft_ready_for_merge stays false until intake_complete and error-free DO-SIP-013 gates."
+}

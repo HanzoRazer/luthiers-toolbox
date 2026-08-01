@@ -3,21 +3,23 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
-  "title": "PROVISIONAL MB Sound panel corpus (first Adirondack row; non-authoritative)",
-  "intent": "Provisional panel-level MB Sound corpus + extract tooling. First row from public Adirondack batch video (catalog 000001 / ADT-C-01). Documents dual-ID linkage for unnumbered spectral frames. Field-name reuse of TonewoodEntry remains provisional pending Inv-026-A. No runtime calculator wiring.",
+  "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
+  "intent": "Versioned empirical MB Sound corpus (~4 species / ~60 specimens target) as controlled draft intake boundary. Layered specimen records (source/normalized/derived/validation/unresolved/artifacts). No generator defaults, TonewoodEntry authority, or plate solver changes. Program DO-SIP-013..017 documented.",
   "change_type": "docs",
-  "behavior_change": "none - data registry JSON scaffold + offline scripts; no production API behavior change",
+  "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      "docs/reference/mb-sound/",
-      "scripts/mb_sound_",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/",
       "services/api/app/data_registry/system/materials/panel_acoustic/",
       "services/api/app/data_registry/system/materials/SOURCES.md",
+      "docs/reference/mb-sound/",
+      "scripts/mb_sound_",
       ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
+      "docs/reference/mb-sound/DO_SIP_PROGRAM.md",
       "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
       "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
       "docs/reference/mb-sound/LINKAGE.md",
@@ -32,230 +34,410 @@
       "scripts/mb_sound_ocr_frames.py",
       "scripts/mb_sound_validate_corpus.py",
       "services/api/app/data_registry/system/materials/SOURCES.md",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/MB_SOUND_SOURCES.md",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/README.md",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000001.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json",
       "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "services/api/app/data_registry/system/materials/panel_acoustic/README.md",
       "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Scaffold + LINKAGE.md + first measured panel row from video frames; TonewoodEntry field names; dual vendor IDs.",
-    "why_not_redundant": "Captures real MB Sound card/UI values and the numbered-card vs unnumbered-spectrum join problem.",
-    "governance": "Non-authoritative on Inv-026-A. Vendor-stated values only."
+    "what_changed": "Restructures MB Sound into empirical_tonewood/mb_sound corpus layout with layered specimen mb-adt-000001, cohorts, validation digests, DO-SIP program note.",
+    "why_not_redundant": "Developer architecture: ~60-specimen versioned dataset needs intake boundary before plate/damping adapters.",
+    "governance": "Draft until corpus gates pass. Non-authoritative. Not DO-SIP-014+."
   },
   "verification": {
     "commands_run": [
-      "python3 scripts/mb_sound_validate_corpus.py -> OK",
-      "geometry density check: mass/(L*W*h) \u2248 467.69 vs stated 467.7"
+      "python3 scripts/mb_sound_validate_corpus.py --write-validation -> OK draft, intake_complete false"
     ],
-    "known_residual": "21/22 Adirondack batch rows not yet extracted. E_C absent. Spectrum plot frames need LINKAGE rules."
+    "known_residual": "1/~~60 specimens. Four species cohorts mostly empty. derived layer empty until DO-SIP-014."
   },
   "files": [
     {
       "path": ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
-      "intent": "MB Sound provisional corpus: .cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: .cbsp21/patches/mb-sound-panel-corpus-scaffold.json",
       "scan_targets": [
         ".cbsp21/patches/mb-sound-panel-corpus-scaffold.json"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/DO_SIP_PROGRAM.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/DO_SIP_PROGRAM.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/DO_SIP_PROGRAM.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
       "scan_targets": [
         "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
       "scan_targets": [
         "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/LINKAGE.md",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/LINKAGE.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/LINKAGE.md",
       "scan_targets": [
         "docs/reference/mb-sound/LINKAGE.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/NAMESPACE.md",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/NAMESPACE.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/NAMESPACE.md",
       "scan_targets": [
         "docs/reference/mb-sound/NAMESPACE.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/README.md",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/README.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/README.md",
       "scan_targets": [
         "docs/reference/mb-sound/README.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/schema/panel.example.json",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/schema/panel.example.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/schema/panel.example.json",
       "scan_targets": [
         "docs/reference/mb-sound/schema/panel.example.json"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/staging/.gitignore",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/staging/.gitignore",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/staging/.gitignore",
       "scan_targets": [
         "docs/reference/mb-sound/staging/.gitignore"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/staging/ocr/.gitkeep",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/staging/ocr/.gitkeep",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/staging/ocr/.gitkeep",
       "scan_targets": [
         "docs/reference/mb-sound/staging/ocr/.gitkeep"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "docs/reference/mb-sound/staging/rows.jsonl",
-      "intent": "MB Sound provisional corpus: docs/reference/mb-sound/staging/rows.jsonl",
+      "intent": "DO-SIP-013 MB Sound empirical intake: docs/reference/mb-sound/staging/rows.jsonl",
       "scan_targets": [
         "docs/reference/mb-sound/staging/rows.jsonl"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "scripts/mb_sound_extract_frames.py",
-      "intent": "MB Sound provisional corpus: scripts/mb_sound_extract_frames.py",
+      "intent": "DO-SIP-013 MB Sound empirical intake: scripts/mb_sound_extract_frames.py",
       "scan_targets": [
         "scripts/mb_sound_extract_frames.py"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "scripts/mb_sound_merge_rows.py",
-      "intent": "MB Sound provisional corpus: scripts/mb_sound_merge_rows.py",
+      "intent": "DO-SIP-013 MB Sound empirical intake: scripts/mb_sound_merge_rows.py",
       "scan_targets": [
         "scripts/mb_sound_merge_rows.py"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "scripts/mb_sound_ocr_frames.py",
-      "intent": "MB Sound provisional corpus: scripts/mb_sound_ocr_frames.py",
+      "intent": "DO-SIP-013 MB Sound empirical intake: scripts/mb_sound_ocr_frames.py",
       "scan_targets": [
         "scripts/mb_sound_ocr_frames.py"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "scripts/mb_sound_validate_corpus.py",
-      "intent": "MB Sound provisional corpus: scripts/mb_sound_validate_corpus.py",
+      "intent": "DO-SIP-013 MB Sound empirical intake: scripts/mb_sound_validate_corpus.py",
       "scan_targets": [
         "scripts/mb_sound_validate_corpus.py"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "services/api/app/data_registry/system/materials/SOURCES.md",
-      "intent": "MB Sound provisional corpus: services/api/app/data_registry/system/materials/SOURCES.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/SOURCES.md",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/SOURCES.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/MB_SOUND_SOURCES.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/MB_SOUND_SOURCES.md",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/MB_SOUND_SOURCES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/README.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/README.md",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000001.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000001.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000001.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
-      "intent": "MB Sound provisional corpus: services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/panel_acoustic/README.md",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/panel_acoustic/README.md",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/panel_acoustic/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     },
     {
       "path": "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
-      "intent": "MB Sound provisional corpus: services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json"
       ],
       "risk": "low",
-      "behavior_change": "none - docs/scaffold/offline scripts; one vendor-stated panel row from public video frames; non-authoritative",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
       "verification": [
-        "python3 scripts/mb_sound_validate_corpus.py"
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
       ]
     }
   ],
   "architecture_scan": {
-    "scan_id": "AS-2026-08-01-mb-sound-first-row",
+    "scan_id": "AS-2026-08-01-mb-sound-empirical-intake",
     "risk_summary": {
       "critical": 0,
       "high": 0,
@@ -264,6 +446,6 @@
     },
     "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "One vendor-stated panel; provisional vocabulary; no calculator wiring."
+    "acknowledgement_notes": "Draft empirical dataset intake only. Explicitly forbidden from changing production material/plate defaults."
   }
 }

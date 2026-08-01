@@ -1,9 +1,9 @@
 # MB Sound / materials field namespace — provisional alignment note
 
 > **Status: PROVISIONAL — NOT a specification-authority ruling.**  
-> Does **not** decide Inv-026-A (or any materials-vocabulary authority investigation).  
-> Does **not** admit Inv-024 source extraction.  
-> Draft-PR scaffolding only; merge must not be treated as ratifying field authority.
+> Does **not** decide Inv-026-A. Does **not** complete DO-SIP-013.  
+> Applies only to the `normalized` layer of empirical specimens.  
+> Draft PR #244 is the intake boundary — not Empirical Material Registry authority.
 
 ## Concern
 

@@ -1,0 +1,10 @@
+{
+  "cohort_id": "mb_sound_alpine_spruce",
+  "species_id": null,
+  "species_label": "Alpine spruce",
+  "treatments_seen": [],
+  "target_batch_size_stated": null,
+  "specimen_ids": [],
+  "status": "intake_empty",
+  "notes": "species_id pending SoT alias confirmation when first specimen arrives."
+}
