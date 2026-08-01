@@ -167,6 +167,14 @@
       "card_vs_ui_radiation": "card radiation 5.3 vs UI 13.6; Schelleng c/\u03c1\u224813.6 agrees with UI \u2014 re-check card frame (5.3 equals stiffness)",
       "batch_size_stated": "not read from these frames",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-03 + fingerprint to catalog 000003"
+    },
+    "mb-rc-000004": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "card_vs_ui_radiation": "card radiation 4.1 vs UI 12.6; Schelleng c/\u03c1\u224812.6 agrees with UI \u2014 re-check card frame (4.1 equals stiffness); same pattern as mb-rc-000003",
+      "batch_size_stated": "not read from these frames",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-04 + fingerprint to catalog 000004"
     }
   }
 }

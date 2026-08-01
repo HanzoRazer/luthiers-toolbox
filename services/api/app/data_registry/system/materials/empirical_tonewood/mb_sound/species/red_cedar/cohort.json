@@ -10,10 +10,11 @@
   "specimen_ids": [
     "mb-rc-000001",
     "mb-rc-000002",
-    "mb-rc-000003"
+    "mb-rc-000003",
+    "mb-rc-000004"
   ],
   "catalog_gaps": [],
   "status": "intake_partial",
   "specimen_id_prefix": "mb-rc-",
-  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 3 specimen records present. Catalog IDs restart within this suite. Prefix mb-rc-. Dual-ID through 000003 ↔ CED-C-03. Note: 000003 card/UI radiation mismatch flagged."
+  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 4 specimen records present. Prefix mb-rc-. Dual-ID through 000004 ↔ CED-C-04. Card/UI radiation mismatches on 000003–000004 flagged (card value equals stiffness; UI≈Schelleng)."
 }
