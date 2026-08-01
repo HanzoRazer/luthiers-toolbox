@@ -74,7 +74,8 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000001.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000002.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000003.json",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000004.json"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000004.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000005.json"
     ]
   },
   "diff_articulation": {
@@ -86,7 +87,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "25/~60 specimens; Red Cedar 4+; Adirondack plain empty; Adirondack gap 000002."
+    "known_residual": "26/~60 specimens; Red Cedar 5+; Adirondack plain empty; Adirondack gap 000002."
   },
   "files": [
     {
@@ -766,6 +767,18 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000004.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000004.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000005.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000005.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000005.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
