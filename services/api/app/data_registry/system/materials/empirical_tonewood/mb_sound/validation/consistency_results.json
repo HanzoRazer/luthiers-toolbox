@@ -1,14 +1,14 @@
 {
   "dataset": "mb_sound",
-  "specimen_count": 5,
-  "unique_specimen_ids": 5,
+  "specimen_count": 6,
+  "unique_specimen_ids": 6,
   "counts_by_species_cohort": {
-    "adirondack": 5
+    "adirondack": 6
   },
   "counts_by_treatment": {
-    "torrefied": 5
+    "torrefied": 6
   },
-  "dataset_digest_sha256": "93adc054fd47fed245b2f8389fac947459df8a1837487d35c797c7ac910aeea6",
+  "dataset_digest_sha256": "b84edc950e188f445e3f2954f661eed450aeb35a9ed349f188e5ae54461efde7",
   "errors": [],
   "warnings": [],
   "gates": {

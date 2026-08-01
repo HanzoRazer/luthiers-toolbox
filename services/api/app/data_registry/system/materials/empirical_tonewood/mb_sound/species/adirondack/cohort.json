@@ -9,7 +9,8 @@
     "mb-adt-000003",
     "mb-adt-000004",
     "mb-adt-000005",
-    "mb-adt-000006"
+    "mb-adt-000006",
+    "mb-adt-000007"
   ],
   "catalog_gaps": [
     {
@@ -20,8 +21,9 @@
     }
   ],
   "status": "intake_partial",
-  "notes": "Complete-batch video states 22 pieces; 5 specimen records present; catalog 000002 unavailable."
+  "notes": "Complete-batch video states 22 pieces; 6 specimen records present; catalog 000002 unavailable."
 }
+
 
 
 
