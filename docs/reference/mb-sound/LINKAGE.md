@@ -17,11 +17,11 @@ For each panel row, keep:
 
 | Field | Example | Role |
 |-------|---------|------|
-| `panel.vendor_ids.catalog_id` | `000001` | MB Sound card number (zero-padded) |
-| `panel.vendor_ids.analysis_sample_name` | `ADT-C-01` | Software “Sample name” |
-| `id` (corpus) | `mb_sound_adirondack_torrefied_adt_c_01` | Stable repo key |
+| `source.catalog_id` | `000001` / `000012` | MB Sound card number (zero-padded) |
+| `source.analysis_sample_name` | `ADT-C-01` / `ADT-W-02` | Software “Sample name” (prefix may be `ADT-C-` or `ADT-W-`) |
+| `specimen_id` | `mb-adt-000012` | Stable repo key from catalog id |
 
-Do **not** assume `000001` ≡ `ADT-C-01` without evidence. For the first extract, both frames share density **467.7**, E **14.9**, f **78**, Q **188**, radiation **12.1** → linked at `confidence: high`.
+Do **not** assume catalog `000012` ≡ `ADT-C-12`. Observed pair: **000012 ↔ ADT-W-02** (fingerprint: ρ/E/f/Q/radiation). Always confirm with evidence.
 
 ## How to attach unnumbered spectral frames
 
