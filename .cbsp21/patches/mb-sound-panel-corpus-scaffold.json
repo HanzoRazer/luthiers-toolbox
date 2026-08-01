@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
   "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
-  "intent": "Versioned empirical MB Sound corpus intake. Specimens through 000016 (skip 000002); ADT-W-01..06 linkage. No production behavior changes.",
+  "intent": "Versioned empirical MB Sound corpus intake. Specimens through 000017 (skip 000002); ADT-W-01..07 linkage. No production behavior changes.",
   "change_type": "docs",
   "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
@@ -58,6 +58,7 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000014.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000015.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000016.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000017.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json",
       "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
@@ -66,7 +67,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Empirical MB Sound corpus + Adirondack specimens; gap 000002; W-series through 000016↔ADT-W-06.",
+    "what_changed": "Empirical MB Sound corpus + Adirondack specimens; gap 000002; W-series through 000017↔ADT-W-07.",
     "why_not_redundant": "DO-SIP-013 intake boundary.",
     "governance": "Draft until corpus gates pass."
   },
@@ -74,7 +75,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "15/~60 specimens; gap 000002."
+    "known_residual": "16/~60 specimens; gap 000002."
   },
   "files": [
     {
@@ -550,6 +551,18 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000016.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000016.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000017.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000017.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000017.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
