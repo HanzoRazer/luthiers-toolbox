@@ -10,13 +10,16 @@ Panel-only concepts map under `panel.*`. See [`NAMESPACE.md`](./NAMESPACE.md).
 | Espesor / Grosor | `panel.thickness_mm` | mm |
 | Largo / Longitud | `panel.length_mm` | along grain if labeled |
 | Ancho / Anchura | `panel.width_mm` | across grain if labeled |
-| Módulo de Young / E / Rigidez longitudinal | `modulus_of_elasticity_gpa` | **not** `E_parallel_*` |
-| Módulo transversal / E⊥ / Rigidez transversal | `E_C_gpa` | **not** `E_perpendicular_*` |
+| Módulo de Young / E / Rigidez longitudinal / **Stiffness (Gpa)** | `modulus_of_elasticity_gpa` | MB card says “Stiffness”; analysis UI says “Young modulus” — **same field**, not `stiffness_gpa` |
+| Módulo transversal / E⊥ / Rigidez transversal | `E_C_gpa` | **not** shown on first Adirondack frames |
 | Relación de anisotropía | `panel.R_anis` | or compute MOE/`E_C_gpa` |
-| Frecuencia / f / Modo | `panel.modes[].frequency_hz` | keep vendor mode label |
-| Respuesta en frecuencia | `panel.modes` / notes | curve ≠ single number |
-| Índice de radiación / SRC / RR | `panel.src_vendor` | vendor formula; do not overload computed `radiation_ratio` without `indices_source` |
-| Factor Q | `panel.q` | |
+| Resonance Frequency / Frecuencia | `panel.modes[].frequency_hz` | single value → label `resonance_vendor` until (m,n) known |
+| Respuesta en frecuencia / Spectrum | provenance + plots | unnumbered plots → [`LINKAGE.md`](./LINKAGE.md) |
+| Radiation coefficient / Índice de radiación | `panel.src_vendor` | vendor formula (Nicoletti); do **not** silently overwrite computed `radiation_ratio` |
+| Sustain (Q Factor) / Q factor | `panel.q` | |
+| Sample name (analysis UI) | `panel.vendor_ids.analysis_sample_name` | e.g. `ADT-C-01` |
+| Card number under species title | `panel.vendor_ids.catalog_id` | e.g. `000001` |
+| Sample nodal lines (mm) | `panel.nodal_lines_mm` | analysis UI only |
 | Año de corte | `panel.cutting_year` | |
 | Humedad / MC | `panel.moisture_content_pct` | |
 | Tapa / Soundboard / Top | `panel.role: soundboard` | TonewoodRole |

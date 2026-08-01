@@ -4,10 +4,11 @@ Panel-level tonewood measurements for validating plate / SRC math in Luthiers To
 
 | Doc | Purpose |
 |-----|---------|
-| [`NAMESPACE.md`](./NAMESPACE.md) | **Read first** — field authority / collision rules |
-| [`EXTRACTION_PLAYBOOK.md`](./EXTRACTION_PLAYBOOK.md) | How to get ~60 samples without 60 hand screenshots |
-| [`FIELD_GLOSSARY_ES_EN.md`](./FIELD_GLOSSARY_ES_EN.md) | Spanish UI → TonewoodEntry / `panel.*` |
-| [`schema/panel.example.json`](./schema/panel.example.json) | Row template |
+| [`NAMESPACE.md`](./NAMESPACE.md) | **Read first** — provisional field alignment / collision rules |
+| [`LINKAGE.md`](./LINKAGE.md) | Numbered cards vs **unnumbered** spectral frames |
+| [`EXTRACTION_PLAYBOOK.md`](./EXTRACTION_PLAYBOOK.md) | Batch extract path |
+| [`FIELD_GLOSSARY_ES_EN.md`](./FIELD_GLOSSARY_ES_EN.md) | Vendor UI → TonewoodEntry / `panel.*` |
+| [`schema/panel.example.json`](./schema/panel.example.json) | First real row shape |
 | [`staging/rows.jsonl`](./staging/rows.jsonl) | Staging extract rows |
 | Runtime JSON | [`../../../services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json`](../../../services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json) |
 

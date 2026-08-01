@@ -14,6 +14,8 @@ without hand-screenshotting every sample as the primary workflow.
 
 Manual “60 screenshots into a folder then type everything” is a last resort for a few hard frames, not the plan for the whole set.
 
+**Numbering gap:** MB Sound **data cards** carry `000001`-style IDs; analysis **spectrum plots** often do not. Always capture the Parameters sidebar (`Sample name`) or use fingerprint/timeline rules in [`LINKAGE.md`](./LINKAGE.md).
+
 ## Directory layout
 
 ```text
