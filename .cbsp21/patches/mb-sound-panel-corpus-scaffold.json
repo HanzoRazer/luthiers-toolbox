@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
   "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
-  "intent": "Versioned empirical MB Sound corpus intake. Adirondack torrefied complete except 000002; Red Cedar complete except gap 000009. Catalog uniqueness per cohort. No production behavior changes.",
+  "intent": "Versioned empirical MB Sound corpus intake. Adirondack torrefied complete except 000002; Red Cedar batch complete 22/22. Catalog uniqueness per cohort. No production behavior changes.",
   "change_type": "docs",
   "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
@@ -79,6 +79,7 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000006.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000007.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000008.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000009.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000010.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000011.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000012.json",
@@ -95,7 +96,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Empirical MB Sound corpus; Adirondack torrefied + Red Cedar batch (gap 000009); 000013–000022 from spreadsheet summary intake.",
+    "what_changed": "Empirical MB Sound corpus; Adirondack torrefied + Red Cedar complete (000009 cleared); 000021 0.1 Hz card/UI delta accepted as run deviation.",
     "why_not_redundant": "DO-SIP-013 intake boundary.",
     "governance": "Draft until corpus gates pass."
   },
@@ -103,7 +104,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "42/~60 specimens; Red Cedar 21/22 (gap 000009); Adirondack plain empty; Adirondack gap 000002; other species pending."
+    "known_residual": "43/~60 specimens; Red Cedar 22/22; Adirondack plain empty; Adirondack gap 000002; other species pending."
   },
   "files": [
     {
@@ -831,6 +832,18 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000008.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000008.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000009.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000009.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000009.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",

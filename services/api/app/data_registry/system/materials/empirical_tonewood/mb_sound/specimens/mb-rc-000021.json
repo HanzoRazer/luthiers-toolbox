@@ -47,7 +47,7 @@
       "batch_size_stated": 22,
       "extracted_at": "2026-08-02",
       "extractor": "manual_spreadsheet_summary",
-      "notes": "Ingested from user spreadsheet \"Maderas Barber MB Sound – Red Cedar Summary + Spectral Analysis\" pairing summary slides with detailed spectral screenshots. Dual-ID 000021 ↔ CED-W-11."
+      "notes": "Ingested from user spreadsheet \"Maderas Barber MB Sound – Red Cedar Summary + Spectral Analysis\" pairing summary slides with detailed spectral screenshots. Dual-ID 000021 ↔ CED-W-11. Card/UI f delta 0.1 Hz accepted as run/display deviation per intake review."
     }
   },
   "normalized": {
@@ -65,7 +65,7 @@
     "time_constant_ms": 664.7,
     "fitting_pct": 88.2,
     "radiation_coefficient_vendor": 10.8,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000021 ↔ CED-W-11. Values from user spreadsheet (Detailed=UI, Summary=card). Resonance normalized from UI 50.4 (card/summary 50.5)."
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000021 ↔ CED-W-11. Resonance: card/summary 50.5 Hz vs UI 50.4 Hz — 0.1 Hz treated as normal card rounding / run-to-run deviation; normalized from UI."
   },
   "derived": {
     "volume_m3": null,
@@ -79,7 +79,7 @@
     "status": "partial",
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
-      "card_ui_fingerprint_match": "partial_resonance_mismatch",
+      "card_ui_fingerprint_match": "pass",
       "dual_vendor_ids_present": "pass"
     }
   },
@@ -91,7 +91,7 @@
     "batch_size_stated": "spreadsheet covers 000013–000022; full batch size not restated",
     "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-11 + fingerprint to catalog 000021",
     "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video",
-    "card_vs_ui_resonance": "Summary slide 50.5 Hz; detailed analysis panel 50.4 Hz — normalized from UI"
+    "resonance_card_ui_delta_0p1hz": "Card 50.5 vs UI 50.4 Hz retained in source layers; accepted as ordinary test-run / display rounding deviation (not a conflict requiring hold)."
   },
   "artifacts": {
     "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",

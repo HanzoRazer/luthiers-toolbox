@@ -6,7 +6,7 @@
   "program": "DO-SIP-013",
   "target_specimen_count_approx": 60,
   "target_species_count_approx": 4,
-  "specimen_count": 42,
+  "specimen_count": 43,
   "specimen_ids": [
     "mb-adt-000001",
     "mb-adt-000003",
@@ -37,6 +37,7 @@
     "mb-rc-000006",
     "mb-rc-000007",
     "mb-rc-000008",
+    "mb-rc-000009",
     "mb-rc-000010",
     "mb-rc-000011",
     "mb-rc-000012",
@@ -59,7 +60,7 @@
     "plain",
     "torrefied"
   ],
-  "dataset_digest_sha256": "eb7b38ab0dce1a66024ddfdf1fe36003dcd18217fc2f66a440c936f755a8e10a",
+  "dataset_digest_sha256": "3f0d2e321ac5b1126c8b28ed3007fbaac6b7eff236d0bc0a32be303d928479eb",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

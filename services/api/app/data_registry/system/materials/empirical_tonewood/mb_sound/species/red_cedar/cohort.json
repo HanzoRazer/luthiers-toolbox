@@ -16,6 +16,7 @@
     "mb-rc-000006",
     "mb-rc-000007",
     "mb-rc-000008",
+    "mb-rc-000009",
     "mb-rc-000010",
     "mb-rc-000011",
     "mb-rc-000012",
@@ -30,15 +31,8 @@
     "mb-rc-000021",
     "mb-rc-000022"
   ],
-  "catalog_gaps": [
-    {
-      "catalog_id": "000009",
-      "expected_analysis_sample_name": "CED-C-09",
-      "status": "unavailable",
-      "notes": "Not available in source material provided for intake (sequence jumped 000008→000010); skip without inventing a specimen record. Clear if frames arrive later."
-    }
-  ],
-  "status": "intake_batch_complete_with_gaps",
+  "catalog_gaps": [],
+  "status": "intake_batch_complete",
   "specimen_id_prefix": "mb-rc-",
-  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 21 specimen records present (catalog 000001–000022 except gap 000009). Prefix mb-rc-. Dual-ID: 000001–000008/000010 ↔ CED-C-##; 000011–000022 ↔ CED-W-01…12. 000013–000022 ingested from user spreadsheet summary of paired screenshots; 000020 analysis name inferred as CED-W-10 (partial OCR on source)."
+  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 22 specimen records present (catalog 000001–000022 complete). Prefix mb-rc-. Dual-ID: 000001–000010 ↔ CED-C-##; 000011–000022 ↔ CED-W-01…12. 000009 gap cleared 2026-08-02."
 }
