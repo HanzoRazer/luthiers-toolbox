@@ -40,7 +40,10 @@ Future plate, damping, matching, and cohort adapters  (DO-SIP-016+)
 | `artifacts` | References to video/workbook/screenshots/spectra |
 
 **Record schema:** `mb_sound_lab_procedure_v1` (`dataset_version` `0.5.0-draft`). See `docs/reference/mb-sound/LABORATORY_RECORD.md`.  
-Torrefied Adirondack rebuilt from `source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx` (detailed analyzer = primary numerical source).
+Workbook rebuilds (detailed analyzer = primary numerical source):
+
+- Torrefied Adirondack → `source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx`
+- Red Cedar (plain) → `source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx`
 
 ## Layout
 
