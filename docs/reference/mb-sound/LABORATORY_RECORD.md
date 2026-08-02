@@ -72,6 +72,10 @@ Forbidden synonyms unchanged (`stiffness_gpa`, `youngs_modulus`, `moe`, …).
 
 Same sheet pattern. Capture audits: RC-001 (000005 Q card/detail), RC-002 (000021 f 50.5/50.4), RC-003 (000020 name obscured → CED-W-10), RC-004 (screenshot-only graphs). 22/22 complete; do not pool with `red_cedar_30yr_naturally_dried`.
 
+### Alpine Spruce workbook
+
+Same sheet pattern. Capture audits: AS-001 (000021 ~0.1 Hz note), AS-002 (screenshot-only graphs), AS-003 (env/calibration unavailable). 22/22 complete; `species_id` `spruce_european` but cohort `alpine_spruce` (distinct from `european_spruce` stub). Source video URL pending. Note: 000001/000002 share geometry/mass with different acoustics.
+
 ## Migration
 
 | Generation | Shape |
