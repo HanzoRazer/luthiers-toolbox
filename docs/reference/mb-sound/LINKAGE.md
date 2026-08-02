@@ -59,4 +59,4 @@ Red Cedar analysis names similarly switch: early **CED-C-##**, later **CED-W-##*
 
 Alpine Spruce analysis names: early **ABA-C-##**, later **ABA-W-##** (observed **000011 ↔ ABA-W-01** … **000022 ↔ ABA-W-12**). Do not assume catalog `0000NN` ≡ `ABA-C-NN`.
 
-30-Year Naturally Dried Red Cedar (cohort `red_cedar_30yr_naturally_dried`, prefix `mb-rc30-`) uses lot-style analysis names (**CA-00002**, **CA3-0003**, **CA23-0006**, **CA2-0011**, **CA1-0016**, …). Observed transcribed catalog range **000024–000040**. Do not pool with plain `red_cedar` / `CED-*` names. Do not invent catalog rows for `000001`–`000023` until frames exist.
+30-Year Naturally Dried Red Cedar (cohort `red_cedar_30yr_naturally_dried`, prefix `mb-rc30-`) uses lot-style analysis names (**CA-00002**, **CA3-0003**, **CA23-0006**, **CA2-0011**, **CA1-0016**, …). Complete suite workbook catalog range **000024–000040** (17). Do not pool with plain `red_cedar` / `CED-*` names. Do not invent rows before `000024` — they are outside this suite record.

@@ -6,7 +6,7 @@
   "treatments_seen": [
     "naturally_dried_30yr"
   ],
-  "target_batch_size_stated": null,
+  "target_batch_size_stated": 17,
   "specimen_ids": [
     "mb-rc30-000024",
     "mb-rc30-000025",
@@ -28,13 +28,11 @@
   ],
   "catalog_gaps": [],
   "catalog_range_transcribed": "000024-000040",
-  "catalog_ids_not_provided": "000001-000023 (and any after 000040) \u2014 currently unavailable; not invented",
-  "status": "intake_partial_transcribed_range",
-  "source_availability": "transcribed_range_workbook",
+  "catalog_ids_not_provided": "000001\u2013000023 are outside this complete suite workbook (IDs begin at 000024); not invented. Video URL unavailable.",
+  "status": "intake_batch_complete",
+  "source_availability": "complete_laboratory_workbook",
   "blocked_inputs": [
-    "source_video_url",
-    "catalog_000001_to_000023",
-    "catalog_after_000040"
+    "source_video_url"
   ],
   "specimen_id_prefix": "mb-rc30-",
   "record_schema": "mb_sound_lab_procedure_v1",
@@ -43,10 +41,10 @@
   "capture_audit": [
     {
       "issue_id": "RC30-001",
-      "severity": "High",
+      "severity": "Info",
       "affected": "catalog 000001\u2013000023 (and after 000040)",
-      "finding": "Not present in transcribed workbook range 000024\u2013000040.",
-      "disposition": "Currently unavailable; not invented."
+      "finding": "Complete suite workbook covers catalog 000024\u2013000040 only (17 paired screenshots).",
+      "disposition": "Accepted as complete available suite; IDs before 000024 are outside this record and are not invented."
     },
     {
       "issue_id": "RC30-002",
@@ -74,7 +72,9 @@
     "The detailed analyzer screens were used as the primary numerical source; summary cards were used for cross-checking.",
     "The images expose plotted waveforms, amplitude spectra, and impulse responses, but not the underlying numeric series.",
     "Environmental conditions, calibration records, microphone placement, and support tolerances are not visible in the screenshots.",
-    "Several sample-name prefixes are faint or unusually formatted. They are preserved as transcribed rather than silently normalized."
+    "Several sample-name prefixes are faint or unusually formatted. They are preserved as transcribed rather than silently normalized.",
+    "Operator 2026-08-02: this workbook is the complete file for the 30-year suite."
   ],
-  "notes": "Rebuilt from 30_Year_Aged_Red_Cedar_MB_Sound.xlsx (17/17 for catalog 000024\u2013000040). Workbook includes Source Pairing screenshot index + Notes; not the full multi-sheet Spectral Sheet Archive format used for ADT/RC/AS. Separate from plain red_cedar (mb-rc-*). Source video URL and earlier catalog frames currently unavailable."
+  "notes": "Complete laboratory workbook 30_Year_Aged_Red_Cedar_MB_Sound.xlsx (operator-confirmed). 17/17 specimens for suite catalog 000024\u2013000040. Sheets: 30-Year Red Cedar, Batch Summary, Source Pairing, Notes. Detailed analyzer primary. Distinct from plain red_cedar (mb-rc-*). Source video URL unavailable.",
+  "catalog_range_complete": "000024-000040"
 }

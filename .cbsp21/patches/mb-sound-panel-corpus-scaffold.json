@@ -142,15 +142,15 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Rebuild 30yr naturally dried Red Cedar (mb-rc30-000024\u2026000040) from 30_Year_Aged_Red_Cedar_MB_Sound.xlsx with Source Pairing filenames.",
-    "why_not_redundant": "Workbook-backed lab-procedure intake for remaining cedar treatment cohort.",
+    "what_changed": "Confirm 30_Year_Aged_Red_Cedar_MB_Sound.xlsx as the complete suite laboratory file (17/17; catalog 000024\u2013000040); update status/docs accordingly.",
+    "why_not_redundant": "Operator clarification that this workbook is the complete 30yr record.",
     "governance": "Draft until corpus gates pass; no production behavior changes."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "82 lab-procedure specimens. Workbook-backed: ADT torrefied, RC plain, Alpine, RC30 (000024\u2013000040). BLOCKED: plain Adirondack, European spruce, ADT 000002, RC30 earlier catalog + video URLs."
+    "known_residual": "82 lab-procedure specimens. All available suites workbook-complete. BLOCKED: plain Adirondack, European spruce, ADT 000002, Alpine/30yr video URLs."
   },
   "files": [
     {

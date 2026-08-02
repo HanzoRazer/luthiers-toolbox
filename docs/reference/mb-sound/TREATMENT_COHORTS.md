@@ -36,7 +36,7 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 | Suite | Cohort | Prefix | Status |
 |-------|--------|--------|--------|
 | Red Cedar (plain) | `red_cedar` | `mb-rc-` | Lab workbook rebuild complete (22/22) |
-| Red Cedar (30-year naturally dried) | `red_cedar_30yr_naturally_dried` | `mb-rc30-` | Workbook rebuild for `000024`–`000040` (17); earlier IDs + video URL **unavailable** |
+| Red Cedar (30-year naturally dried) | `red_cedar_30yr_naturally_dried` | `mb-rc30-` | **Complete** lab workbook (17/17; catalog `000024`–`000040`); video URL unavailable |
 | Alpine Spruce (plain) | `alpine_spruce` | `mb-as-` | Lab workbook rebuild complete (22/22); species_id `spruce_european`; video URL pending |
 | European Spruce | `european_spruce` | — | empty stub — **source currently unavailable** |
 
@@ -45,10 +45,9 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 Operator report: the following are **not available now**. Leave stubs/gaps; do not fabricate specimens or URLs.
 
 1. 30yr red-cedar source video URL  
-2. 30yr red-cedar catalog frames before `000024` (and any after `000040`) — transcribed range now workbook-backed  
-3. Plain Adirondack suite frames  
-4. European spruce suite frames  
-5. Adirondack torrefied gap `000002` (still unavailable)
+2. Plain Adirondack suite frames  
+3. European spruce suite frames  
+4. Adirondack torrefied gap `000002` (still unavailable)
 
 ### Red Cedar treatment discrimination
 

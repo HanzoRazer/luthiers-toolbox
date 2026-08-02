@@ -98,38 +98,15 @@
     ],
     "batch": {
       "batch_title": "30-Year Naturally Dried Red Cedar - MB Sound",
-      "batch_size_stated": null,
+      "batch_size_stated": 17,
       "batch_sequence": null,
       "video_t_start_sec": null,
       "video_t_end_sec": null,
       "artifact_id": "yt_red_cedar_30yr_naturally_dried",
       "recovered_specimen_count": 17,
       "catalog_range_transcribed": "000024-000040",
-      "missing_catalog_ids": [
-        "000001",
-        "000002",
-        "000003",
-        "000004",
-        "000005",
-        "000006",
-        "000007",
-        "000008",
-        "000009",
-        "000010",
-        "000011",
-        "000012",
-        "000013",
-        "000014",
-        "000015",
-        "000016",
-        "000017",
-        "000018",
-        "000019",
-        "000020",
-        "000021",
-        "000022",
-        "000023"
-      ]
+      "missing_catalog_ids": [],
+      "catalog_range_complete": "000024-000040"
     },
     "field_provenance": {
       "summary_card_surface": "video_frame_mb_sound_card",
@@ -141,7 +118,7 @@
       "detailed_screenshot_filename": "Screenshot 2026-08-02 013410.png",
       "extracted_at": "2026-08-02",
       "extractor": "complete_laboratory_workbook",
-      "intake_workbook_generation": "lab_procedure_v1_red_cedar_30yr",
+      "intake_workbook_generation": "lab_procedure_v1_red_cedar_30yr_complete",
       "confidence": "high",
       "workbook_notes": [
         "The detailed analyzer screens were used as the primary numerical source; summary cards were used for cross-checking.",
@@ -149,7 +126,7 @@
         "Environmental conditions, calibration records, microphone placement, and support tolerances are not visible in the screenshots.",
         "Several sample-name prefixes are faint or unusually formatted. They are preserved as transcribed rather than silently normalized."
       ],
-      "notes": "Rebuilt from laboratory workbook (source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx). Primary numerical source = detailed analyzer (workbook Notes). Dual-ID 000027 \u2194 CA3-0005. Summary screenshots: Screenshot 2026-08-02 013342.png; detailed: Screenshot 2026-08-02 013410.png. Catalog range transcribed: 000024\u2013000040; earlier/later IDs unavailable. Review: Peak amplitude is visually faint; transcribed as -6.8 dBFS."
+      "notes": "Rebuilt from laboratory workbook (source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx). Primary numerical source = detailed analyzer (workbook Notes). Dual-ID 000027 \u2194 CA3-0005. Summary screenshots: Screenshot 2026-08-02 013342.png; detailed: Screenshot 2026-08-02 013410.png. Complete suite workbook catalog range: 000024\u2013000040 (17/17). Review: Peak amplitude is visually faint; transcribed as -6.8 dBFS."
     }
   },
   "normalized": {
@@ -206,7 +183,6 @@
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
     "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
     "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-    "catalog_ids_000001_to_000023": "currently unavailable; not invented",
     "raw_audio": "Not included in submission",
     "numeric_waveform": "No \u2013 rendered screenshot only",
     "numeric_fft_bins": "No \u2013 rendered screenshot only",
@@ -217,7 +193,8 @@
     "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0005 + fingerprint to catalog 000027",
     "capture_flags": [
       "review_note: Peak amplitude is visually faint; transcribed as -6.8 dBFS."
-    ]
+    ],
+    "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
   },
   "artifacts": {
     "video_url": null,

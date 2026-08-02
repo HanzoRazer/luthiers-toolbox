@@ -106,7 +106,7 @@
   "record_schemas": {
     "mb_sound_lab_procedure_v1": 82
   },
-  "dataset_digest_sha256": "a12fce7273e2b5f6e08d9b6ad995f598921d4ae91d9d0e7d533fdfbe475711d2",
+  "dataset_digest_sha256": "e1a1c638821a68078df7ed9c8ffcc34d1152217835547f06c4691b050f896c7f",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

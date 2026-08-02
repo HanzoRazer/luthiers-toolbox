@@ -114,7 +114,7 @@
       "url": null,
       "title": "30-Year Naturally Dried Red Cedar - MB Sound",
       "channel": "Maderas Barber Official",
-      "stated_specimen_count": null,
+      "stated_specimen_count": 17,
       "linked_specimen_ids": [
         "mb-rc30-000024",
         "mb-rc30-000025",
@@ -135,7 +135,7 @@
         "mb-rc30-000040"
       ],
       "catalog_gaps_noted": [],
-      "notes": "Laboratory workbook is primary intake for transcribed catalog 000024\u2013000040. Detailed analyzer primary. Source video URL and catalog 000001\u2013000023 unavailable. Separate treatment cohort from plain red_cedar.",
+      "notes": "Complete laboratory workbook is the full available intake for this suite (catalog 000024\u2013000040, 17/17). Detailed analyzer primary. Source video URL unavailable. Separate treatment cohort from plain red_cedar.",
       "laboratory_workbook": "source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
     },
     {
@@ -287,7 +287,7 @@
         "Source Pairing",
         "Notes"
       ],
-      "notes": "Paired-screenshot transcription workbook (17 specimens). Includes Source Pairing filenames; does not embed spectral image archive like ADT/RC/AS complete records."
+      "notes": "Operator-confirmed complete laboratory workbook for the 30-year naturally dried Red Cedar suite (17 paired screenshots). Sheets: Specimen table, Batch Summary, Source Pairing, Notes. No additional specimens beyond 000024\u2013000040."
     }
   ]
 }
