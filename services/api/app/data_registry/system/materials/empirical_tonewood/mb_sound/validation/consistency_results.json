@@ -1,16 +1,16 @@
 {
   "dataset": "mb_sound",
-  "specimen_count": 30,
-  "unique_specimen_ids": 30,
+  "specimen_count": 31,
+  "unique_specimen_ids": 31,
   "counts_by_species_cohort": {
     "adirondack_torrefied": 21,
-    "red_cedar": 9
+    "red_cedar": 10
   },
   "counts_by_treatment": {
     "torrefied": 21,
-    "plain": 9
+    "plain": 10
   },
-  "dataset_digest_sha256": "12c5d5315ae95a5685d360afc82c91f7f238412d03a82a507dd4ca23055db67f",
+  "dataset_digest_sha256": "c4d4b9d6b157923834b6ede65b962321853871f9275868c5d7a249b7ee8107bf",
   "errors": [],
   "warnings": [],
   "gates": {

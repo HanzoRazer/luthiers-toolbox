@@ -1,0 +1,106 @@
+{
+  "specimen_id": "mb-rc-000011",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar",
+  "treatment": "plain",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000011",
+    "analysis_sample_name": "CED-W-01",
+    "species_label_vendor": "RED CEDAR",
+    "card": {
+      "density_kg_m3": 333.1,
+      "stiffness_gpa": 7.2,
+      "resonance_frequency_hz": 63.1,
+      "sustain_q_factor": 143.1,
+      "radiation_coefficient": 7.2
+    },
+    "analysis_ui": {
+      "sample_length_mm": 590,
+      "sample_width_mm": 229,
+      "sample_thickness_mm": 4.6,
+      "sample_mass_g": 207,
+      "sample_density_kg_m3": 333.1,
+      "sample_nodal_lines_mm": 319,
+      "resonance_freq_hz": 63.1,
+      "time_constant_ms": 721.6,
+      "log_decrement": 0.0220,
+      "q_factor": 143.1,
+      "fitting_pct": 94.1,
+      "young_modulus_gpa": 7.2,
+      "radiation_coefficient": 13.9,
+      "peak_ampl_dbfs": -1.6,
+      "total_rec_length_sec": 16.6,
+      "visualized_length_sec": 4.7,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+      "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "batch_size_stated": null,
+      "extracted_at": "2026-08-02",
+      "extractor": "manual_frame",
+      "notes": "Analysis Sample name uses CED-W-01 (not CED-C-11); linked to catalog 000011 by fingerprint. Card radiation transcribed as 7.2 vs UI 13.9 — see unresolved."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 333.1,
+    "modulus_of_elasticity_gpa": 7.2,
+    "E_C_gpa": null,
+    "length_mm": 590.0,
+    "width_mm": 229.0,
+    "thickness_mm": 4.6,
+    "mass_g": 207.0,
+    "nodal_lines_mm": 319.0,
+    "resonance_frequency_hz": 63.1,
+    "q_factor": 143.1,
+    "log_decrement": 0.0220,
+    "time_constant_ms": 721.6,
+    "fitting_pct": 94.1,
+    "radiation_coefficient_vendor": 13.9,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000011 ↔ CED-W-01. Normalized radiation from analysis UI (13.9); card source keeps 7.2 pending re-check."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "partial_radiation_mismatch",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
+    "analysis_name_scheme": "CED-W-01 vs prior CED-C-## series — meaning of W vs C unknown (parallel to Adirondack ADT-W)",
+    "card_vs_ui_radiation": "card radiation 7.2 vs UI 13.9; Schelleng c/ρ≈13.96 agrees with UI — re-check card frame (7.2 equals stiffness)",
+    "batch_size_stated": "not read from these frames",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-01 + fingerprint to catalog 000011"
+  },
+  "artifacts": {
+    "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc-000011-card",
+      "source_artifacts/frames/mb-rc-000011-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}
