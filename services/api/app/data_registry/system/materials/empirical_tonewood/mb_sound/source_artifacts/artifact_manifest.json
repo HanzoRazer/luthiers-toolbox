@@ -51,9 +51,12 @@
         "mb-rc-000005",
         "mb-rc-000006",
         "mb-rc-000007",
-        "mb-rc-000008"
+        "mb-rc-000008",
+        "mb-rc-000010"
       ],
-      "catalog_gaps_noted": []
+      "catalog_gaps_noted": [
+        "000009"
+      ]
     }
   ]
 }
