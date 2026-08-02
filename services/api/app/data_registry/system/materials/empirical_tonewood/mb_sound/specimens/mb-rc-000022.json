@@ -1,0 +1,106 @@
+{
+  "specimen_id": "mb-rc-000022",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar",
+  "treatment": "plain",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000022",
+    "analysis_sample_name": "CED-W-12",
+    "species_label_vendor": "RED CEDAR",
+    "card": {
+      "density_kg_m3": 358.4,
+      "stiffness_gpa": 5.9,
+      "resonance_frequency_hz": 53.1,
+      "sustain_q_factor": 111.8,
+      "radiation_coefficient": 11.3
+    },
+    "analysis_ui": {
+      "sample_length_mm": 581,
+      "sample_width_mm": 239,
+      "sample_thickness_mm": 4.3,
+      "sample_mass_g": 214,
+      "sample_density_kg_m3": 358.4,
+      "sample_nodal_lines_mm": 314,
+      "resonance_freq_hz": 53.1,
+      "time_constant_ms": 669.8,
+      "log_decrement": 0.0281,
+      "q_factor": 111.8,
+      "fitting_pct": 85.3,
+      "young_modulus_gpa": 5.9,
+      "radiation_coefficient": 11.3,
+      "peak_ampl_dbfs": -1.5,
+      "total_rec_length_sec": 29.9,
+      "visualized_length_sec": 6.3,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+      "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "batch_size_stated": 22,
+      "extracted_at": "2026-08-02",
+      "extractor": "manual_spreadsheet_summary",
+      "notes": "Ingested from user spreadsheet \"Maderas Barber MB Sound – Red Cedar Summary + Spectral Analysis\" pairing summary slides with detailed spectral screenshots. Dual-ID 000022 ↔ CED-W-12."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 358.4,
+    "modulus_of_elasticity_gpa": 5.9,
+    "E_C_gpa": null,
+    "length_mm": 581.0,
+    "width_mm": 239.0,
+    "thickness_mm": 4.3,
+    "mass_g": 214.0,
+    "nodal_lines_mm": 314.0,
+    "resonance_frequency_hz": 53.1,
+    "q_factor": 111.8,
+    "log_decrement": 0.0281,
+    "time_constant_ms": 669.8,
+    "fitting_pct": 85.3,
+    "radiation_coefficient_vendor": 11.3,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000022 ↔ CED-W-12. Values from user spreadsheet (Detailed=UI, Summary=card)."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "pass",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
+    "analysis_name_scheme": "CED-W-12 W-series — meaning of W vs C unknown",
+    "batch_size_stated": "spreadsheet covers 000013–000022; full batch size not restated",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-12 + fingerprint to catalog 000022",
+    "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+  },
+  "artifacts": {
+    "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc-000022-card",
+      "source_artifacts/frames/mb-rc-000022-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}

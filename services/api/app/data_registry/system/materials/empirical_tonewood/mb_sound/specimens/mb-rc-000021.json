@@ -1,0 +1,107 @@
+{
+  "specimen_id": "mb-rc-000021",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar",
+  "treatment": "plain",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000021",
+    "analysis_sample_name": "CED-W-11",
+    "species_label_vendor": "RED CEDAR",
+    "card": {
+      "density_kg_m3": 360.3,
+      "stiffness_gpa": 5.4,
+      "resonance_frequency_hz": 50.5,
+      "sustain_q_factor": 105.2,
+      "radiation_coefficient": 10.8
+    },
+    "analysis_ui": {
+      "sample_length_mm": 585,
+      "sample_width_mm": 235,
+      "sample_thickness_mm": 4.3,
+      "sample_mass_g": 213,
+      "sample_density_kg_m3": 360.3,
+      "sample_nodal_lines_mm": 316,
+      "resonance_freq_hz": 50.4,
+      "time_constant_ms": 664.7,
+      "log_decrement": 0.0299,
+      "q_factor": 105.2,
+      "fitting_pct": 88.2,
+      "young_modulus_gpa": 5.4,
+      "radiation_coefficient": 10.8,
+      "peak_ampl_dbfs": -1.6,
+      "total_rec_length_sec": 27.7,
+      "visualized_length_sec": 4.3,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+      "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "batch_size_stated": 22,
+      "extracted_at": "2026-08-02",
+      "extractor": "manual_spreadsheet_summary",
+      "notes": "Ingested from user spreadsheet \"Maderas Barber MB Sound – Red Cedar Summary + Spectral Analysis\" pairing summary slides with detailed spectral screenshots. Dual-ID 000021 ↔ CED-W-11."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 360.3,
+    "modulus_of_elasticity_gpa": 5.4,
+    "E_C_gpa": null,
+    "length_mm": 585.0,
+    "width_mm": 235.0,
+    "thickness_mm": 4.3,
+    "mass_g": 213.0,
+    "nodal_lines_mm": 316.0,
+    "resonance_frequency_hz": 50.4,
+    "q_factor": 105.2,
+    "log_decrement": 0.0299,
+    "time_constant_ms": 664.7,
+    "fitting_pct": 88.2,
+    "radiation_coefficient_vendor": 10.8,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000021 ↔ CED-W-11. Values from user spreadsheet (Detailed=UI, Summary=card). Resonance normalized from UI 50.4 (card/summary 50.5)."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "partial_resonance_mismatch",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
+    "analysis_name_scheme": "CED-W-11 W-series — meaning of W vs C unknown",
+    "batch_size_stated": "spreadsheet covers 000013–000022; full batch size not restated",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-11 + fingerprint to catalog 000021",
+    "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video",
+    "card_vs_ui_resonance": "Summary slide 50.5 Hz; detailed analysis panel 50.4 Hz — normalized from UI"
+  },
+  "artifacts": {
+    "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc-000021-card",
+      "source_artifacts/frames/mb-rc-000021-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}

@@ -42,7 +42,7 @@
       "url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
       "title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
       "channel": "Maderas Barber Official",
-      "stated_specimen_count": null,
+      "stated_specimen_count": 22,
       "linked_specimen_ids": [
         "mb-rc-000001",
         "mb-rc-000002",
@@ -54,7 +54,17 @@
         "mb-rc-000008",
         "mb-rc-000010",
         "mb-rc-000011",
-        "mb-rc-000012"
+        "mb-rc-000012",
+        "mb-rc-000013",
+        "mb-rc-000014",
+        "mb-rc-000015",
+        "mb-rc-000016",
+        "mb-rc-000017",
+        "mb-rc-000018",
+        "mb-rc-000019",
+        "mb-rc-000020",
+        "mb-rc-000021",
+        "mb-rc-000022"
       ],
       "catalog_gaps_noted": [
         "000009"

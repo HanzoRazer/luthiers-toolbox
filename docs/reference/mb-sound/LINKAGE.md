@@ -55,4 +55,4 @@ Use this order (stop at first success):
 
 MB Sound card numbers (`000001`…) **restart in each species/treatment video**. Uniqueness is `(species_cohort, catalog_id)` or `specimen_id` (e.g. Adirondack torrefied `mb-adt-000001` ≠ Red Cedar `mb-rc-000001`).
 
-Red Cedar analysis names similarly switch: early **CED-C-##**, later **CED-W-##** (observed **000011 ↔ CED-W-01**, **000012 ↔ CED-W-02**). Do not assume catalog `000011` ≡ `CED-C-11`.
+Red Cedar analysis names similarly switch: early **CED-C-##**, later **CED-W-##** (observed **000011 ↔ CED-W-01** … **000022 ↔ CED-W-12**). Do not assume catalog `000011` ≡ `CED-C-11`.

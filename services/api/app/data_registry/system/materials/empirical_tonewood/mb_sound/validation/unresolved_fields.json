@@ -228,6 +228,98 @@
       "analysis_name_scheme": "CED-W-02 vs prior CED-C-## series \u2014 meaning of W vs C unknown",
       "batch_size_stated": "not read from these frames",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-02 + fingerprint to catalog 000012"
+    },
+    "mb-rc-000013": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-03 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-03 + fingerprint to catalog 000013",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000014": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-04 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-04 + fingerprint to catalog 000014",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000015": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-05 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-05 + fingerprint to catalog 000015",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000016": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-06 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-06 + fingerprint to catalog 000016",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000017": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-07 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-07 + fingerprint to catalog 000017",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000018": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-08 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-08 + fingerprint to catalog 000018",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000019": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-09 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-09 + fingerprint to catalog 000019",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
+    },
+    "mb-rc-000020": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-10 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-10 + fingerprint to catalog 000020",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video",
+      "analysis_sample_name": "Detailed screenshot shows only first character of sample name; inferred CED-W-10 from W-series sequence \u2014 verify against source frame"
+    },
+    "mb-rc-000021": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-11 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-11 + fingerprint to catalog 000021",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video",
+      "card_vs_ui_resonance": "Summary slide 50.5 Hz; detailed analysis panel 50.4 Hz \u2014 normalized from UI"
+    },
+    "mb-rc-000022": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "analysis_name_scheme": "CED-W-12 W-series \u2014 meaning of W vs C unknown",
+      "batch_size_stated": "spreadsheet covers 000013\u2013000022; full batch size not restated",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-W-12 + fingerprint to catalog 000022",
+      "intake_source": "User spreadsheet summary of paired card+UI screenshots from Red Cedar complete-batch video"
     }
   }
 }
