@@ -79,7 +79,21 @@ Same sheet pattern. Capture audits: AS-001 (000021 ~0.1 Hz note), AS-002 (screen
 
 ### 30-Year Naturally Dried Red Cedar workbook
 
-**Complete suite file** (operator-confirmed): `30-Year Red Cedar` + `Batch Summary` + `Source Pairing` + `Notes`. 17/17 specimens (`000024`–`000040`); screenshot filenames paired; detailed analyzer primary. Suite catalog IDs begin at `000024` — do not invent earlier rows. Do not pool with plain `red_cedar`. Video URL unavailable.
+**Complete suite file:** `Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx`  
+Sheets: README, Specimen Master (35 cols), Acquisition Procedure, Capture Audit, Batch Statistics, Spectral Sheet Archive.
+
+| Statistic | Value |
+|-----------|------:|
+| Specimens | 49 (`000024`–`000072`) |
+| Primary measurement fields / specimen | 16 |
+| Max possible primary measurements | 784 |
+| Populated primary measurements | 767 |
+| Calculated verification values | 98 (density + radiation) |
+| Measurement cells incl. verification | 865 |
+| Populated cells (all 35 columns) | 1,663 |
+| Source screenshots | 99 (1 duplicate summary for 000050) |
+
+Detailed analyzer primary; calculated verification fields stored separately (`source.verification_calculations` / `derived`). Unreadable fields left blank (Review Notes). Do not pool with plain `red_cedar`. Video URL unavailable.
 
 ## Migration
 
