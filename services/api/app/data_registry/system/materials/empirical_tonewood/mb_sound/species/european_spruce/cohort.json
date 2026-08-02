@@ -6,5 +6,8 @@
   "target_batch_size_stated": null,
   "specimen_ids": [],
   "status": "intake_empty",
-  "notes": "Listed in public MB Sound materials; no specimens ingested yet."
+  "notes": "Listed in public MB Sound materials; no specimens ingested yet. Distinct from Alpine Spruce suite (same botanical species_id possible; separate MB Sound cohort).",
+  "distinct_from": [
+    "mb_sound_alpine_spruce"
+  ]
 }

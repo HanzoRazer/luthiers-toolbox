@@ -36,4 +36,5 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 | Suite | Cohort | Prefix | Status |
 |-------|--------|--------|--------|
 | Red Cedar (plain) | `red_cedar` | `mb-rc-` | intake complete (22/22) |
+| Alpine Spruce (plain) | `alpine_spruce` | `mb-as-` | intake complete (22/22); species_id `spruce_european` |
 

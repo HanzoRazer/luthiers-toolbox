@@ -1,10 +1,41 @@
 {
   "cohort_id": "mb_sound_alpine_spruce",
-  "species_id": null,
-  "species_label": "Alpine spruce",
-  "treatments_seen": [],
-  "target_batch_size_stated": null,
-  "specimen_ids": [],
-  "status": "intake_empty",
-  "notes": "species_id pending SoT alias confirmation when first specimen arrives."
+  "species_id": "spruce_european",
+  "species_label": "Alpine spruce (plain / untreated)",
+  "treatment": "plain",
+  "treatments_seen": [
+    "plain"
+  ],
+  "target_batch_size_stated": 22,
+  "specimen_ids": [
+    "mb-as-000001",
+    "mb-as-000002",
+    "mb-as-000003",
+    "mb-as-000004",
+    "mb-as-000005",
+    "mb-as-000006",
+    "mb-as-000007",
+    "mb-as-000008",
+    "mb-as-000009",
+    "mb-as-000010",
+    "mb-as-000011",
+    "mb-as-000012",
+    "mb-as-000013",
+    "mb-as-000014",
+    "mb-as-000015",
+    "mb-as-000016",
+    "mb-as-000017",
+    "mb-as-000018",
+    "mb-as-000019",
+    "mb-as-000020",
+    "mb-as-000021",
+    "mb-as-000022"
+  ],
+  "catalog_gaps": [],
+  "status": "intake_batch_complete",
+  "specimen_id_prefix": "mb-as-",
+  "distinct_from": [
+    "mb_sound_european_spruce"
+  ],
+  "notes": "ALPINE SPRUCE MB Sound complete-lot spreadsheet (22 samples). species_id=spruce_european (Picea abies); keep separate from european_spruce cohort. Prefix mb-as-. Dual-ID: 000001–000010 ↔ ABA-C-##; 000011–000022 ↔ ABA-W-01…12. 000001/000002 share geometry+mass; acoustic fingerprints differ. Source video URL pending confirmation."
 }

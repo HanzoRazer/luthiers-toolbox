@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
   "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
-  "intent": "Versioned empirical MB Sound corpus intake. Adirondack torrefied complete except 000002; Red Cedar batch complete 22/22. Catalog uniqueness per cohort. No production behavior changes.",
+  "intent": "Versioned empirical MB Sound corpus intake. Adirondack torrefied (gap 000002); Red Cedar 22/22; Alpine Spruce 22/22 (mb-as-). No production behavior changes.",
   "change_type": "docs",
   "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
@@ -92,11 +92,33 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000019.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000020.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000021.json",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000022.json"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000022.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000001.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000002.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000003.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000004.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000005.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000006.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000007.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000008.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000009.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000010.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000011.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000012.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000013.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000014.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000015.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000016.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000017.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000018.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000019.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000020.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000021.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000022.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Empirical MB Sound corpus; Adirondack torrefied + Red Cedar complete (000009 cleared); 000021 0.1 Hz card/UI delta accepted as run deviation.",
+    "what_changed": "Empirical MB Sound corpus; Alpine Spruce complete-lot spreadsheet intake (22 specimens).",
     "why_not_redundant": "DO-SIP-013 intake boundary.",
     "governance": "Draft until corpus gates pass."
   },
@@ -104,7 +126,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "43/~60 specimens; Red Cedar 22/22; Adirondack plain empty; Adirondack gap 000002; other species pending."
+    "known_residual": "65/~60 specimens (over interim target by count); Adirondack plain empty; Adirondack gap 000002; European spruce pending; Alpine video URL pending."
   },
   "files": [
     {
@@ -1000,6 +1022,270 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000022.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000022.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000001.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000001.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000001.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000002.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000002.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000002.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000003.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000003.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000003.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000004.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000004.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000004.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000005.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000005.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000005.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000006.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000006.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000006.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000007.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000007.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000007.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000008.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000008.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000008.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000009.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000009.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000009.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000010.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000010.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000010.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000011.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000011.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000011.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000012.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000012.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000012.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000013.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000013.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000013.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000014.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000014.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000014.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000015.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000015.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000015.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000016.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000016.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000016.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000017.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000017.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000017.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000018.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000018.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000018.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000019.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000019.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000019.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000020.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000020.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000020.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000021.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000021.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000021.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000022.json",
+      "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000022.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000022.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
