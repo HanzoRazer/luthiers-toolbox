@@ -136,7 +136,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Empirical MB Sound corpus; 30-Year Naturally Dried Red Cedar spreadsheet intake (17 specimens, catalog 000024\u2013000040) as separate treatment cohort.",
+    "what_changed": "Mark blocked MB Sound sources (30yr URL/earlier catalog, plain Adirondack, European spruce, ADT 000002) as currently unavailable; park further intake.",
     "why_not_redundant": "DO-SIP-013 intake boundary; treatment discrimination from plain red_cedar.",
     "governance": "Draft until corpus gates pass."
   },
@@ -144,7 +144,7 @@
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "82 specimens; Adirondack plain empty; Adirondack gap 000002; European spruce pending; Alpine + 30yr red-cedar video URLs pending; 30yr red-cedar catalog 000001\u2013000023 not provided."
+    "known_residual": "82 specimens on available sources. BLOCKED/unavailable: 30yr red-cedar URL + catalog before 000024; plain Adirondack; European spruce; Adirondack gap 000002. Alpine video URL still pending. DO-SIP-014+ not started."
   },
   "files": [
     {

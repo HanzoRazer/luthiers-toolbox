@@ -28,8 +28,14 @@
   ],
   "catalog_gaps": [],
   "catalog_range_transcribed": "000024-000040",
-  "catalog_ids_not_provided": "000001-000023 (and any after 000040) \u2014 not invented",
+  "catalog_ids_not_provided": "000001-000023 (and any after 000040) \u2014 currently unavailable; not invented",
   "status": "intake_partial_transcribed_range",
   "specimen_id_prefix": "mb-rc30-",
-  "notes": "30-Year Naturally Dried Red Cedar MB Sound suite. Separate from plain red_cedar (mb-rc-*, CED-*/CED-W-*). Analysis sample names use CA* lot prefixes (CA-, CA3-, CA23-, CA2-, CA1-) \u2014 do not assume catalog NNN \u2261 CA suffix. 17/17 rows for transcribed catalog 000024\u2013000040. Source video URL pending."
+  "notes": "30-Year Naturally Dried Red Cedar MB Sound suite. Separate from plain red_cedar (mb-rc-*, CED-*/CED-W-*). Analysis sample names use CA* lot prefixes (CA-, CA3-, CA23-, CA2-, CA1-) \u2014 do not assume catalog NNN \u2261 CA suffix. 17/17 rows for transcribed catalog 000024\u2013000040. Source video URL and earlier/later catalog frames currently unavailable (operator 2026-08-02).",
+  "source_availability": "transcribed_range_only",
+  "blocked_inputs": [
+    "source_video_url",
+    "catalog_000001_to_000023",
+    "catalog_after_000040"
+  ]
 }

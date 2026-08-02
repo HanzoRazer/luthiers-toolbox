@@ -1,7 +1,12 @@
 {
   "dataset": "mb_sound",
   "corpus_level": [
-    "Full ~60-specimen intake incomplete",
+    "BLOCKED (2026-08-02): 30yr red-cedar video URL \u2014 currently unavailable",
+    "BLOCKED (2026-08-02): 30yr red-cedar catalog 000001\u2013000023 (and after 000040) \u2014 currently unavailable",
+    "BLOCKED (2026-08-02): plain Adirondack suite frames \u2014 currently unavailable",
+    "BLOCKED (2026-08-02): European spruce suite frames \u2014 currently unavailable",
+    "BLOCKED (2026-08-02): Adirondack torrefied catalog gap 000002 \u2014 currently unavailable",
+    "Available-source intake parked at 82 specimens; remaining suites blocked on source availability",
     "Confirm four-species catalog membership vs public MB Sound listing",
     "Radiation coefficient formal definition (Nicoletti vs Schelleng vs Toolbox scale)",
     "E_C_gpa absent on current specimens \u2014 blocks orthotropic plate adapters"

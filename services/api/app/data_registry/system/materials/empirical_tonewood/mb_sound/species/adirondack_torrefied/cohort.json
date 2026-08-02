@@ -38,7 +38,7 @@
     }
   ],
   "status": "intake_batch_complete_with_gaps",
-  "notes": "TORREFIED Adirondack MB Sound batch only. Stated 22 pieces; 21 specimen records (catalog 000001–000022 except gap 000002). Dual-ID: 000001/000003–000010 ↔ ADT-C-##; 000011–000022 ↔ ADT-W-01…12. Specimen IDs use prefix mb-adt- (Adirondack Torrefied). Do NOT merge with plain/untreated Adirondack cohort mb_sound_adirondack.",
+  "notes": "TORREFIED Adirondack MB Sound batch only. Stated 22 pieces; 21 specimen records (catalog 000001\u2013000022 except gap 000002). Dual-ID: 000001/000003\u2013000010 \u2194 ADT-C-##; 000011\u2013000022 \u2194 ADT-W-01\u202612. Specimen IDs use prefix mb-adt- (Adirondack Torrefied). Do NOT merge with plain/untreated Adirondack cohort mb_sound_adirondack. Gap 000002 currently unavailable (operator 2026-08-02).",
   "treatment": "torrefied",
   "distinct_from": [
     "mb_sound_adirondack"

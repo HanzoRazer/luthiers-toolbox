@@ -8,9 +8,10 @@
   "specimen_ids": [],
   "catalog_gaps": [],
   "status": "intake_empty",
+  "source_availability": "currently_unavailable",
   "distinct_from": [
     "mb_sound_adirondack_torrefied"
   ],
   "specimen_id_prefix_reserved": "mb-ad-",
-  "notes": "PLAIN (non-torrefied) Adirondack spruce MB Sound suite — separate from torrefied batch. Same species_id spruce_adirondack; discrimination is treatment + cohort + specimen_id prefix. Cohort folder/name: adirondack (unqualified = plain). Reserved specimen_id prefix: mb-ad-. Do NOT merge with torrefied cohort mb_sound_adirondack_torrefied (mb-adt-)."
+  "notes": "PLAIN (non-torrefied) Adirondack spruce MB Sound suite — separate from torrefied batch. Same species_id spruce_adirondack; discrimination is treatment + cohort + specimen_id prefix. Cohort folder/name: adirondack (unqualified = plain). Reserved specimen_id prefix: mb-ad-. Do NOT merge with torrefied cohort mb_sound_adirondack_torrefied (mb-adt-). Source frames currently unavailable (operator 2026-08-02) — leave stub empty."
 }
