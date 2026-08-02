@@ -18,6 +18,7 @@
       "catalog_id": "000029",
       "analysis_sample_name": "CA23-0007",
       "species_label_vendor": "30-YEAR NATURALLY DRIED RED CEDAR",
+      "material_treatment_label": "30-Year Naturally Dried Red Cedar",
       "role": "soundboard",
       "treatment": "naturally_dried_30yr",
       "species_cohort": "red_cedar_30yr_naturally_dried"
@@ -25,7 +26,7 @@
     "specimen_geometry": {
       "length_mm": 567,
       "width_mm": 202,
-      "thickness_mm": 4.0,
+      "thickness_mm": 4,
       "mass_g": 136,
       "density_kg_m3_stated": 296.9,
       "nodal_lines_mm": 306,
@@ -39,12 +40,15 @@
       "elastic_method": "vendor_stated",
       "analysis_software": {
         "name": "Nicoletti",
-        "attribution": "Giuliano Nicoletti (vendor-stated)",
+        "title": "Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti",
+        "attribution": "Giuliano Nicoletti (vendor-stated; same MB Sound analyzer UI family)",
+        "revision": "Rev 1.5",
         "version": null
       },
+      "signal_channel": "Signal 1",
       "select_source": "Mono",
       "excitation": null,
-      "sensor_channel": null,
+      "sensor_channel": "Signal 1",
       "support_condition": null
     },
     "signal_recording": {
@@ -53,30 +57,40 @@
       "peak_ampl_dbfs": -4.6,
       "sample_rate_hz": null,
       "bit_depth": null,
-      "channel_label": "Mono"
+      "channel_label": "Mono",
+      "signal_channel": "Signal 1"
+    },
+    "plot_evidence": {
+      "recorded_signal_plot": "Present",
+      "amplitude_spectrum_plot": "Present",
+      "impulse_response_plot": "Present",
+      "numeric_arrays_available": false,
+      "note": "Rendered screenshot evidence only; not a substitute for raw numeric arrays."
     },
     "vendor_surfaces": {
       "summary_card": {
         "density_kg_m3": 296.9,
         "stiffness_gpa": 5.1,
-        "resonance_frequency_hz": 53.0,
+        "resonance_frequency_hz": 53,
         "sustain_q_factor": 236.4,
         "radiation_coefficient": 13.9
       },
       "detailed_analysis": {
-        "resonance_freq_hz": 53.0,
+        "resonance_freq_hz": 53,
         "time_constant_ms": 1420.3,
         "log_decrement": 0.0133,
         "q_factor": 236.4,
         "fitting_pct": 94.7,
         "young_modulus_gpa": 5.1,
         "radiation_coefficient": 13.9
-      }
+      },
+      "summary_vs_detailed": [],
+      "summary_vs_detailed_note": "Workbook pairs screenshots and uses detailed analyzer as primary; no per-metric difference table published in this workbook."
     },
     "resonance_modes": [
       {
         "label": "resonance_vendor",
-        "frequency_hz": 53.0,
+        "frequency_hz": 53,
         "mn": null,
         "q_factor": 236.4,
         "notes": "Single vendor resonance; (m,n) not stated"
@@ -88,17 +102,54 @@
       "batch_sequence": null,
       "video_t_start_sec": null,
       "video_t_end_sec": null,
-      "artifact_id": "yt_red_cedar_30yr_naturally_dried"
+      "artifact_id": "yt_red_cedar_30yr_naturally_dried",
+      "recovered_specimen_count": 17,
+      "catalog_range_transcribed": "000024-000040",
+      "missing_catalog_ids": [
+        "000001",
+        "000002",
+        "000003",
+        "000004",
+        "000005",
+        "000006",
+        "000007",
+        "000008",
+        "000009",
+        "000010",
+        "000011",
+        "000012",
+        "000013",
+        "000014",
+        "000015",
+        "000016",
+        "000017",
+        "000018",
+        "000019",
+        "000020",
+        "000021",
+        "000022",
+        "000023"
+      ]
     },
     "field_provenance": {
       "summary_card_surface": "video_frame_mb_sound_card",
       "detailed_analysis_surface": "video_frame_nicoletti_ui",
+      "primary_numerical_source": "detailed_analyzer",
       "source_url": null,
+      "laboratory_workbook": "source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
+      "summary_screenshot_filename": "Screenshot 2026-08-02 013438.png",
+      "detailed_screenshot_filename": "Screenshot 2026-08-02 013450.png",
       "extracted_at": "2026-08-02",
-      "extractor": "manual_spreadsheet_summary",
-      "intake_workbook_generation": "tonewood_property_v1_migrated_to_lab_procedure_v1",
-      "confidence": null,
-      "notes": "Ingested from user spreadsheet of 17 paired card+UI screenshots (catalog 000029 \u2194 CA23-0007). Separate cohort from plain red_cedar (mb-rc-*). Catalog range transcribed: 000024\u2013000040; earlier IDs in this suite not provided."
+      "extractor": "complete_laboratory_workbook",
+      "intake_workbook_generation": "lab_procedure_v1_red_cedar_30yr",
+      "confidence": "high",
+      "workbook_notes": [
+        "The detailed analyzer screens were used as the primary numerical source; summary cards were used for cross-checking.",
+        "The images expose plotted waveforms, amplitude spectra, and impulse responses, but not the underlying numeric series.",
+        "Environmental conditions, calibration records, microphone placement, and support tolerances are not visible in the screenshots.",
+        "Several sample-name prefixes are faint or unusually formatted. They are preserved as transcribed rather than silently normalized."
+      ],
+      "notes": "Rebuilt from laboratory workbook (source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx). Primary numerical source = detailed analyzer (workbook Notes). Dual-ID 000029 \u2194 CA23-0007. Summary screenshots: Screenshot 2026-08-02 013438.png; detailed: Screenshot 2026-08-02 013450.png. Catalog range transcribed: 000024\u2013000040; earlier/later IDs unavailable."
     }
   },
   "normalized": {
@@ -110,24 +161,27 @@
     "thickness_mm": 4.0,
     "mass_g": 136.0,
     "nodal_lines_mm": 306.0,
-    "resonance_frequency_hz": 53.0,
+    "resonance_frequency_hz": 53,
     "q_factor": 236.4,
     "log_decrement": 0.0133,
     "time_constant_ms": 1420.3,
     "fitting_pct": 94.7,
     "radiation_coefficient_vendor": 13.9,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000029 \u2194 CA23-0007. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar.",
     "signal": {
       "peak_ampl_dbfs": -4.6,
       "total_rec_length_sec": 25.7,
       "visualized_length_sec": 6.5,
-      "select_source": "Mono"
+      "select_source": "Mono",
+      "signal_channel": "Signal 1"
     },
     "procedure": {
       "method_label": "vendor_free_plate_resonance",
+      "software_title": "Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti",
       "fitting_pct": 94.7,
-      "nodal_lines_mm": 306
-    }
+      "nodal_lines_mm": 306.0,
+      "primary_numerical_source": "detailed_analyzer"
+    },
+    "field_alignment_note": "Detailed analyzer is primary numerical source (workbook Notes). stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000029 \u2194 CA23-0007. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar."
   },
   "derived": {
     "volume_m3": null,
@@ -141,30 +195,49 @@
     "status": "partial",
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
-      "card_ui_fingerprint_match": "pass_spreadsheet_paired",
+      "card_ui_fingerprint_match": "workbook_paired_screenshots",
       "dual_vendor_ids_present": "pass",
-      "lab_procedure_schema": "pass"
+      "lab_procedure_schema": "pass",
+      "primary_source_detailed_analyzer": "pass"
     }
   },
   "unresolved": {
     "E_C_gpa": "not published on these frames",
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
     "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-    "source_video_url": "YouTube URL not confirmed for this 30-year naturally dried suite",
-    "catalog_ids_000001_to_000023": "not in transcribed batch; do not invent",
+    "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+    "catalog_ids_000001_to_000023": "currently unavailable; not invented",
+    "raw_audio": "Not included in submission",
+    "numeric_waveform": "No \u2013 rendered screenshot only",
+    "numeric_fft_bins": "No \u2013 rendered screenshot only",
+    "numeric_impulse_response": "No \u2013 rendered screenshot only",
+    "environmental_conditions": "Not visible",
+    "calibration_record": "Not visible",
+    "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
     "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0007 + fingerprint to catalog 000029"
   },
   "artifacts": {
     "video_url": null,
+    "laboratory_workbook": "source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
     "artifact_refs": [
       "source_artifacts/frames/mb-rc30-000029-card",
-      "source_artifacts/frames/mb-rc30-000029-analysis-ui"
+      "source_artifacts/frames/mb-rc30-000029-analysis-ui",
+      "source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
     ],
+    "screenshot_filenames": {
+      "summary_card": "Screenshot 2026-08-02 013438.png",
+      "detailed_analysis": "Screenshot 2026-08-02 013450.png"
+    },
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
     "nodal_image_ref": null,
-    "software_ref": "nicoletti_measurement_software",
-    "batch_artifact_id": "yt_red_cedar_30yr_naturally_dried"
+    "software_ref": "nicoletti_tonewood_parameters_characterization_rev_1_5",
+    "batch_artifact_id": "yt_red_cedar_30yr_naturally_dried",
+    "plot_evidence_status": {
+      "recorded_signal": "Present",
+      "amplitude_spectrum": "Present",
+      "impulse_response": "Present"
+    }
   }
 }

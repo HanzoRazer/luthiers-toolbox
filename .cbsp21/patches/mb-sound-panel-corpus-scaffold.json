@@ -137,19 +137,20 @@
       "docs/reference/mb-sound/schema/lab_procedure.example.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Rebuild Alpine Spruce cohort from Complete Laboratory Record workbook (22/22; acquisition, audit, plot evidence).",
-    "why_not_redundant": "Lab-procedure intake parity with Torrefied Adirondack and Red Cedar workbooks.",
+    "what_changed": "Rebuild 30yr naturally dried Red Cedar (mb-rc30-000024\u2026000040) from 30_Year_Aged_Red_Cedar_MB_Sound.xlsx with Source Pairing filenames.",
+    "why_not_redundant": "Workbook-backed lab-procedure intake for remaining cedar treatment cohort.",
     "governance": "Draft until corpus gates pass; no production behavior changes."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "82 lab-procedure specimens. Workbook-complete: ADT torrefied, Red Cedar plain, Alpine Spruce. Await lab workbook: 30yr red-cedar. BLOCKED: plain Adirondack, European spruce, ADT 000002. Alpine video URL pending."
+    "known_residual": "82 lab-procedure specimens. Workbook-backed: ADT torrefied, RC plain, Alpine, RC30 (000024\u2013000040). BLOCKED: plain Adirondack, European spruce, ADT 000002, RC30 earlier catalog + video URLs."
   },
   "files": [
     {
@@ -1585,6 +1586,18 @@
       "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
