@@ -7,7 +7,7 @@
   "program": "DO-SIP-013",
   "target_specimen_count_approx": 60,
   "target_species_count_approx": 4,
-  "specimen_count": 82,
+  "specimen_count": 114,
   "specimen_ids": [
     "mb-adt-000001",
     "mb-adt-000003",
@@ -90,7 +90,39 @@
     "mb-rc30-000037",
     "mb-rc30-000038",
     "mb-rc30-000039",
-    "mb-rc30-000040"
+    "mb-rc30-000040",
+    "mb-rc30-000041",
+    "mb-rc30-000042",
+    "mb-rc30-000043",
+    "mb-rc30-000044",
+    "mb-rc30-000045",
+    "mb-rc30-000046",
+    "mb-rc30-000047",
+    "mb-rc30-000048",
+    "mb-rc30-000049",
+    "mb-rc30-000050",
+    "mb-rc30-000051",
+    "mb-rc30-000052",
+    "mb-rc30-000053",
+    "mb-rc30-000054",
+    "mb-rc30-000055",
+    "mb-rc30-000056",
+    "mb-rc30-000057",
+    "mb-rc30-000058",
+    "mb-rc30-000059",
+    "mb-rc30-000060",
+    "mb-rc30-000061",
+    "mb-rc30-000062",
+    "mb-rc30-000063",
+    "mb-rc30-000064",
+    "mb-rc30-000065",
+    "mb-rc30-000066",
+    "mb-rc30-000067",
+    "mb-rc30-000068",
+    "mb-rc30-000069",
+    "mb-rc30-000070",
+    "mb-rc30-000071",
+    "mb-rc30-000072"
   ],
   "species_cohorts": [
     "adirondack_torrefied",
@@ -104,9 +136,9 @@
     "torrefied"
   ],
   "record_schemas": {
-    "mb_sound_lab_procedure_v1": 82
+    "mb_sound_lab_procedure_v1": 114
   },
-  "dataset_digest_sha256": "e1a1c638821a68078df7ed9c8ffcc34d1152217835547f06c4691b050f896c7f",
+  "dataset_digest_sha256": "a210eed402bba07bedeca06969b24a8941b54b1b1f5a825018c65e85e0769904",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

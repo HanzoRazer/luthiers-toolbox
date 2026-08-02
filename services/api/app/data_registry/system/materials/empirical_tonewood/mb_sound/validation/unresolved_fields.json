@@ -6,7 +6,7 @@
     "BLOCKED (2026-08-02): European spruce suite frames \u2014 currently unavailable",
     "BLOCKED (2026-08-02): Adirondack torrefied catalog gap 000002 \u2014 currently unavailable",
     "Record schema: mb_sound_lab_procedure_v1 (dataset_version 0.5.0-draft)",
-    "Workbook-complete suites: Torrefied Adirondack (21/22), Red Cedar plain (22), Alpine Spruce (22), 30yr Red Cedar (17/17 complete suite file)",
+    "Workbook-complete: ADT torrefied 21/22, Red Cedar plain 22, Alpine 22, 30yr Red Cedar 49/49 (767 transcribed + 98 verification)",
     "Alpine + 30yr Red Cedar source video URLs still pending",
     "Full ~60-specimen intake incomplete",
     "Confirm four-species catalog membership vs public MB Sound listing",
@@ -854,264 +854,724 @@
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA-00002 + fingerprint to catalog 000024",
-      "capture_flags": [
-        "review_note: Sample-name prefix is faint; transcribed as displayed."
-      ],
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA-00002 + fingerprint to catalog 000024"
     },
     "mb-rc30-000025": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0003 + fingerprint to catalog 000025",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0003 + fingerprint to catalog 000025"
     },
     "mb-rc30-000026": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0004 + fingerprint to catalog 000026",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0004 + fingerprint to catalog 000026"
     },
     "mb-rc30-000027": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0005 + fingerprint to catalog 000027",
-      "capture_flags": [
-        "review_note: Peak amplitude is visually faint; transcribed as -6.8 dBFS."
-      ],
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0005 + fingerprint to catalog 000027"
     },
     "mb-rc30-000028": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0006 + fingerprint to catalog 000028",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0006 + fingerprint to catalog 000028"
     },
     "mb-rc30-000029": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0007 + fingerprint to catalog 000029",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0007 + fingerprint to catalog 000029"
     },
     "mb-rc30-000030": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0008 + fingerprint to catalog 000030",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0008 + fingerprint to catalog 000030"
     },
     "mb-rc30-000031": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0009 + fingerprint to catalog 000031",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0009 + fingerprint to catalog 000031"
     },
     "mb-rc30-000032": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0010 + fingerprint to catalog 000032",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0010 + fingerprint to catalog 000032"
     },
     "mb-rc30-000033": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0011 + fingerprint to catalog 000033",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0011 + fingerprint to catalog 000033"
     },
     "mb-rc30-000034": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0012 + fingerprint to catalog 000034",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0012 + fingerprint to catalog 000034"
     },
     "mb-rc30-000035": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0013 + fingerprint to catalog 000035",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0013 + fingerprint to catalog 000035"
     },
     "mb-rc30-000036": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0014 + fingerprint to catalog 000036",
-      "capture_flags": [
-        "review_note: Radiation coefficient is visible on summary card and consistent with the detailed panel crop."
-      ],
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0014 + fingerprint to catalog 000036"
     },
     "mb-rc30-000037": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0015 + fingerprint to catalog 000037",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0015 + fingerprint to catalog 000037"
     },
     "mb-rc30-000038": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0016 + fingerprint to catalog 000038",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0016 + fingerprint to catalog 000038"
     },
     "mb-rc30-000039": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0017 + fingerprint to catalog 000039",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0017 + fingerprint to catalog 000039"
     },
     "mb-rc30-000040": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
       "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
-      "raw_audio": "Not included in submission",
-      "numeric_waveform": "No \u2013 rendered screenshot only",
-      "numeric_fft_bins": "No \u2013 rendered screenshot only",
-      "numeric_impulse_response": "No \u2013 rendered screenshot only",
-      "environmental_conditions": "Not visible",
-      "calibration_record": "Not visible",
-      "summary_vs_detailed_metric_sheet": "Workbook does not include a per-metric card/detail comparison sheet; detailed analyzer treated as primary",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0018 + fingerprint to catalog 000040",
-      "catalog_ids_before_000024": "Outside complete suite workbook (IDs begin at 000024); not invented"
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0018 + fingerprint to catalog 000040"
+    },
+    "mb-rc30-000041": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0019 + fingerprint to catalog 000041",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000042": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0020 + fingerprint to catalog 000042",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000043": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0021 + fingerprint to catalog 000043"
+    },
+    "mb-rc30-000044": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0022 + fingerprint to catalog 000044",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000045": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0023 + fingerprint to catalog 000045"
+    },
+    "mb-rc30-000046": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0024 + fingerprint to catalog 000046"
+    },
+    "mb-rc30-000047": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0025 + fingerprint to catalog 000047",
+      "unreadable_primary_fields": [
+        "Peak Amplitude (dBFS)"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Peak Amplitude (dBFS)"
+      ]
+    },
+    "mb-rc30-000048": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0026 + fingerprint to catalog 000048"
+    },
+    "mb-rc30-000049": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0027 + fingerprint to catalog 000049",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000050": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0028 + fingerprint to catalog 000050"
+    },
+    "mb-rc30-000051": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0029 + fingerprint to catalog 000051",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000052": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA3-0030 + fingerprint to catalog 000052"
+    },
+    "mb-rc30-000053": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0031 + fingerprint to catalog 000053"
+    },
+    "mb-rc30-000054": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0032 + fingerprint to catalog 000054"
+    },
+    "mb-rc30-000055": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0033 + fingerprint to catalog 000055",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient",
+        "Peak Amplitude (dBFS)"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient, Peak Amplitude (dBFS)"
+      ]
+    },
+    "mb-rc30-000056": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0034 + fingerprint to catalog 000056",
+      "unreadable_primary_fields": [
+        "Sample Mass (g)",
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Sample Mass (g), Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000057": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA23-0035 + fingerprint to catalog 000057",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient",
+        "Peak Amplitude (dBFS)"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient, Peak Amplitude (dBFS)"
+      ]
+    },
+    "mb-rc30-000058": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0036 + fingerprint to catalog 000058"
+    },
+    "mb-rc30-000059": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0037 + fingerprint to catalog 000059",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000060": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0038 + fingerprint to catalog 000060"
+    },
+    "mb-rc30-000061": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0039 + fingerprint to catalog 000061"
+    },
+    "mb-rc30-000062": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA2-0040 + fingerprint to catalog 000062"
+    },
+    "mb-rc30-000063": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0041 + fingerprint to catalog 000063"
+    },
+    "mb-rc30-000064": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0042 + fingerprint to catalog 000064"
+    },
+    "mb-rc30-000065": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0043 + fingerprint to catalog 000065",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000066": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0044 + fingerprint to catalog 000066",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000067": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0045 + fingerprint to catalog 000067"
+    },
+    "mb-rc30-000068": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0046 + fingerprint to catalog 000068",
+      "unreadable_primary_fields": [
+        "Displayed Radiation Coefficient"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Displayed Radiation Coefficient"
+      ]
+    },
+    "mb-rc30-000069": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0047 + fingerprint to catalog 000069"
+    },
+    "mb-rc30-000070": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0048 + fingerprint to catalog 000070"
+    },
+    "mb-rc30-000071": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0049 + fingerprint to catalog 000071",
+      "unreadable_primary_fields": [
+        "Peak Amplitude (dBFS)"
+      ],
+      "capture_flags": [
+        "review_note: Unreadable/not reliably transcribed: Peak Amplitude (dBFS)"
+      ]
+    },
+    "mb-rc30-000072": {
+      "E_C_gpa": "not published on these frames",
+      "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+      "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+      "source_video_url": "YouTube URL currently unavailable for this 30-year naturally dried suite",
+      "raw_audio": "No",
+      "numeric_waveform": "No \u2013 screenshot only",
+      "numeric_fft_bins": "No \u2013 screenshot only",
+      "numeric_impulse_response": "No \u2013 screenshot only",
+      "environmental_conditions": "No",
+      "calibration_record": "No",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CAE-0050 + fingerprint to catalog 000072"
     }
   }
 }

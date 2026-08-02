@@ -138,19 +138,51 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000041.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000042.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000043.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000044.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000045.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000046.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000047.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000048.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000049.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000050.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000051.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000052.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000053.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000054.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000055.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000056.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000057.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000058.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000059.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000060.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000061.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000062.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000063.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000064.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000065.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000066.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000067.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000068.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Confirm 30_Year_Aged_Red_Cedar_MB_Sound.xlsx as the complete suite laboratory file (17/17; catalog 000024\u2013000040); update status/docs accordingly.",
-    "why_not_redundant": "Operator clarification that this workbook is the complete 30yr record.",
+    "what_changed": "Replace 30yr Red Cedar cohort with complete 49-specimen laboratory workbook (000024\u2013000072; 767 transcribed + 98 verification values).",
+    "why_not_redundant": "Supersedes prior 17-specimen partial workbook for the same treatment cohort.",
     "governance": "Draft until corpus gates pass; no production behavior changes."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "82 lab-procedure specimens. All available suites workbook-complete. BLOCKED: plain Adirondack, European spruce, ADT 000002, Alpine/30yr video URLs."
+    "known_residual": "114 lab-procedure specimens. Workbook-complete available suites. BLOCKED: plain Adirondack, European spruce, ADT 000002, Alpine/30yr video URLs. 30yr: 17 blank primary cells left null per Review Notes."
   },
   "files": [
     {
@@ -1594,10 +1626,394 @@
       ]
     },
     {
-      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
-      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx",
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx",
       "scan_targets": [
-        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/30_Year_Aged_Red_Cedar_MB_Sound.xlsx"
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000041.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000041.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000041.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000042.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000042.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000042.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000043.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000043.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000043.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000044.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000044.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000044.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000045.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000045.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000045.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000046.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000046.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000046.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000047.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000047.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000047.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000048.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000048.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000048.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000049.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000049.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000049.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000050.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000050.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000050.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000051.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000051.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000051.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000052.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000052.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000052.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000053.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000053.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000053.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000054.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000054.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000054.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000055.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000055.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000055.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000056.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000056.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000056.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000057.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000057.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000057.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000058.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000058.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000058.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000059.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000059.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000059.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000060.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000060.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000060.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000061.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000061.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000061.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000062.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000062.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000062.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000063.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000063.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000063.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000064.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000064.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000064.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000065.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000065.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000065.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000066.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000066.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000066.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000067.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000067.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000067.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000068.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000068.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000068.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
