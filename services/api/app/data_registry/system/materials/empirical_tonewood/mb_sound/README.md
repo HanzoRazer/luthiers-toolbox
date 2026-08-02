@@ -44,6 +44,7 @@ Workbook rebuilds (detailed analyzer = primary numerical source):
 
 - Torrefied Adirondack → `source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx`
 - Red Cedar (plain) → `source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx`
+- Alpine Spruce → `source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx`
 
 ## Layout
 

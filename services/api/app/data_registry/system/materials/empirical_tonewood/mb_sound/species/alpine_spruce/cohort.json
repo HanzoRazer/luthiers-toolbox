@@ -1,7 +1,7 @@
 {
   "cohort_id": "mb_sound_alpine_spruce",
   "species_id": "spruce_european",
-  "species_label": "Alpine spruce (plain / untreated)",
+  "species_label": "Alpine spruce (plain)",
   "treatment": "plain",
   "treatments_seen": [
     "plain"
@@ -34,8 +34,41 @@
   "catalog_gaps": [],
   "status": "intake_batch_complete",
   "specimen_id_prefix": "mb-as-",
+  "record_schema": "mb_sound_lab_procedure_v1",
+  "laboratory_workbook": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+  "primary_numerical_source": "detailed_analyzer",
+  "capture_audit": [
+    {
+      "issue_id": "AS-001",
+      "severity": "Low",
+      "affected": "000021",
+      "finding": "Summary and detailed resonance values may differ by approximately 0.1 Hz depending on the displayed run/rounding.",
+      "disposition": "Both values are retained when visible; detailed analyzer remains primary."
+    },
+    {
+      "issue_id": "AS-002",
+      "severity": "Medium",
+      "affected": "All samples",
+      "finding": "Graphs are available only as rendered screenshots, not numeric signal arrays.",
+      "disposition": "Embedded image archive preserves visual evidence; no digitized values are presented as raw data."
+    },
+    {
+      "issue_id": "AS-003",
+      "severity": "Low",
+      "affected": "All samples",
+      "finding": "Environmental conditions, calibration traceability, microphone placement, and support tolerances are not visible.",
+      "disposition": "Recorded as unavailable rather than inferred."
+    }
+  ],
+  "readme_notes": [
+    "Primary numerical source: detailed analyzer screen (Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti).",
+    "Summary-card values retained separately for audit comparison.",
+    "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
+    "22/22 specimens recovered (000001\u2013000022).",
+    "Source video URL not confirmed in workbook \u2014 left unresolved."
+  ],
   "distinct_from": [
     "mb_sound_european_spruce"
   ],
-  "notes": "ALPINE SPRUCE MB Sound complete-lot spreadsheet (22 samples). species_id=spruce_european (Picea abies); keep separate from european_spruce cohort. Prefix mb-as-. Dual-ID: 000001–000010 ↔ ABA-C-##; 000011–000022 ↔ ABA-W-01…12. 000001/000002 share geometry+mass; acoustic fingerprints differ. Source video URL pending confirmation."
+  "notes": "Rebuilt from Alpine_Spruce_Complete_Laboratory_Record.xlsx (22/22). Detailed analyzer primary. Dual-ID: 000001\u2013000010 \u2194 ABA-C-##; 000011\u2013000022 \u2194 ABA-W-01\u202612. species_id spruce_european; cohort alpine_spruce distinct from european_spruce stub. Source video URL pending."
 }

@@ -37,7 +37,7 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 |-------|--------|--------|--------|
 | Red Cedar (plain) | `red_cedar` | `mb-rc-` | Lab workbook rebuild complete (22/22) |
 | Red Cedar (30-year naturally dried) | `red_cedar_30yr_naturally_dried` | `mb-rc30-` | partial — catalog `000024`–`000040` (17); earlier IDs + video URL **currently unavailable** |
-| Alpine Spruce (plain) | `alpine_spruce` | `mb-as-` | intake complete (22/22); species_id `spruce_european`; video URL pending |
+| Alpine Spruce (plain) | `alpine_spruce` | `mb-as-` | Lab workbook rebuild complete (22/22); species_id `spruce_european`; video URL pending |
 | European Spruce | `european_spruce` | — | empty stub — **source currently unavailable** |
 
 ## Blocked / unavailable sources (2026-08-02)

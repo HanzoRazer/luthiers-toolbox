@@ -105,7 +105,8 @@
         "mb-as-000022"
       ],
       "catalog_gaps_noted": [],
-      "notes": "YouTube URL pending; specimens ingested from user spreadsheet of paired card+UI screenshots."
+      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. 22/22 complete. YouTube URL still pending.",
+      "laboratory_workbook": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx"
     },
     {
       "artifact_id": "yt_red_cedar_30yr_naturally_dried",
@@ -203,6 +204,46 @@
         "mb-rc-000020",
         "mb-rc-000021",
         "mb-rc-000022"
+      ],
+      "sheets": [
+        "README",
+        "Specimen Master",
+        "Acquisition Procedure",
+        "Summary vs Detailed",
+        "Capture Audit",
+        "Batch Statistics",
+        "Spectral Sheet Archive"
+      ],
+      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
+    },
+    {
+      "artifact_id": "workbook_alpine_spruce_lab_record",
+      "type": "laboratory_workbook",
+      "path": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+      "title": "Alpine Spruce \u2013 Complete Laboratory Procedural Record",
+      "linked_specimen_ids": [
+        "mb-as-000001",
+        "mb-as-000002",
+        "mb-as-000003",
+        "mb-as-000004",
+        "mb-as-000005",
+        "mb-as-000006",
+        "mb-as-000007",
+        "mb-as-000008",
+        "mb-as-000009",
+        "mb-as-000010",
+        "mb-as-000011",
+        "mb-as-000012",
+        "mb-as-000013",
+        "mb-as-000014",
+        "mb-as-000015",
+        "mb-as-000016",
+        "mb-as-000017",
+        "mb-as-000018",
+        "mb-as-000019",
+        "mb-as-000020",
+        "mb-as-000021",
+        "mb-as-000022"
       ],
       "sheets": [
         "README",
