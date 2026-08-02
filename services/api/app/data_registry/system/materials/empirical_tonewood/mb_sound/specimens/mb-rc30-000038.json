@@ -1,0 +1,105 @@
+{
+  "specimen_id": "mb-rc30-000038",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar_30yr_naturally_dried",
+  "treatment": "naturally_dried_30yr",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000038",
+    "analysis_sample_name": "CA1-0016",
+    "species_label_vendor": "30-YEAR NATURALLY DRIED RED CEDAR",
+    "card": {
+      "density_kg_m3": 328.6,
+      "stiffness_gpa": 6.7,
+      "resonance_frequency_hz": 58.0,
+      "sustain_q_factor": 211.2,
+      "radiation_coefficient": 13.8
+    },
+    "analysis_ui": {
+      "sample_length_mm": 560,
+      "sample_width_mm": 209,
+      "sample_thickness_mm": 3.9,
+      "sample_mass_g": 150,
+      "sample_density_kg_m3": 328.6,
+      "sample_nodal_lines_mm": 302,
+      "resonance_freq_hz": 58.0,
+      "time_constant_ms": 1158.1,
+      "log_decrement": 0.0149,
+      "q_factor": 211.2,
+      "fitting_pct": 91.4,
+      "young_modulus_gpa": 6.7,
+      "radiation_coefficient": 13.8,
+      "peak_ampl_dbfs": -3.2,
+      "total_rec_length_sec": 52.9,
+      "visualized_length_sec": 7.9,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": null,
+      "batch_title": "30-Year Naturally Dried Red Cedar - MB Sound",
+      "batch_size_stated": null,
+      "extracted_at": "2026-08-02",
+      "extractor": "manual_spreadsheet_summary",
+      "notes": "Ingested from user spreadsheet of 17 paired card+UI screenshots (catalog 000038 \u2194 CA1-0016). Separate cohort from plain red_cedar (mb-rc-*). Catalog range transcribed: 000024\u2013000040; earlier IDs in this suite not provided."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 328.6,
+    "modulus_of_elasticity_gpa": 6.7,
+    "E_C_gpa": null,
+    "length_mm": 560.0,
+    "width_mm": 209.0,
+    "thickness_mm": 3.9,
+    "mass_g": 150.0,
+    "nodal_lines_mm": 302.0,
+    "resonance_frequency_hz": 58.0,
+    "q_factor": 211.2,
+    "log_decrement": 0.0149,
+    "time_constant_ms": 1158.1,
+    "fitting_pct": 91.4,
+    "radiation_coefficient_vendor": 13.8,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000038 \u2194 CA1-0016. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "pass_spreadsheet_paired",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+    "source_video_url": "YouTube URL not confirmed for this 30-year naturally dried suite",
+    "catalog_ids_000001_to_000023": "not in transcribed batch; do not invent",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA1-0016 + fingerprint to catalog 000038"
+  },
+  "artifacts": {
+    "video_url": null,
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc30-000038-card",
+      "source_artifacts/frames/mb-rc30-000038-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}

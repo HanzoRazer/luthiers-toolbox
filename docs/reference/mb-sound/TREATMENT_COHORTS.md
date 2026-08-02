@@ -36,5 +36,18 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 | Suite | Cohort | Prefix | Status |
 |-------|--------|--------|--------|
 | Red Cedar (plain) | `red_cedar` | `mb-rc-` | intake complete (22/22) |
+| Red Cedar (30-year naturally dried) | `red_cedar_30yr_naturally_dried` | `mb-rc30-` | partial — catalog `000024`–`000040` (17); earlier IDs not provided |
 | Alpine Spruce (plain) | `alpine_spruce` | `mb-as-` | intake complete (22/22); species_id `spruce_european` |
+
+### Red Cedar treatment discrimination
+
+Same `species_id` (`cedar_western_red`). Do not pool:
+
+| Axis | Plain suite | 30-year naturally dried |
+|------|-------------|-------------------------|
+| `treatment` | `plain` | `naturally_dried_30yr` |
+| `species_cohort` | `red_cedar` | `red_cedar_30yr_naturally_dried` |
+| Specimen prefix | `mb-rc-` | `mb-rc30-` |
+| Analysis names (observed) | `CED-C-##` / `CED-W-##` | `CA-*` / `CA3-*` / `CA23-*` / `CA2-*` / `CA1-*` |
+| Vendor label (typical) | `RED CEDAR` | `30-YEAR NATURALLY DRIED RED CEDAR` |
 

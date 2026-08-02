@@ -6,7 +6,7 @@
   "program": "DO-SIP-013",
   "target_specimen_count_approx": 60,
   "target_species_count_approx": 4,
-  "specimen_count": 65,
+  "specimen_count": 82,
   "specimen_ids": [
     "mb-adt-000001",
     "mb-adt-000003",
@@ -72,18 +72,37 @@
     "mb-rc-000019",
     "mb-rc-000020",
     "mb-rc-000021",
-    "mb-rc-000022"
+    "mb-rc-000022",
+    "mb-rc30-000024",
+    "mb-rc30-000025",
+    "mb-rc30-000026",
+    "mb-rc30-000027",
+    "mb-rc30-000028",
+    "mb-rc30-000029",
+    "mb-rc30-000030",
+    "mb-rc30-000031",
+    "mb-rc30-000032",
+    "mb-rc30-000033",
+    "mb-rc30-000034",
+    "mb-rc30-000035",
+    "mb-rc30-000036",
+    "mb-rc30-000037",
+    "mb-rc30-000038",
+    "mb-rc30-000039",
+    "mb-rc30-000040"
   ],
   "species_cohorts": [
     "adirondack_torrefied",
     "alpine_spruce",
-    "red_cedar"
+    "red_cedar",
+    "red_cedar_30yr_naturally_dried"
   ],
   "treatments": [
+    "naturally_dried_30yr",
     "plain",
     "torrefied"
   ],
-  "dataset_digest_sha256": "3f3c6ef45778be7300bc7ff3fa99247127afabb5fd9c2a31a0f9df6ca5f81876",
+  "dataset_digest_sha256": "dde291fdd0fd2f7db7375b36fd4fd12d2b28c033caa69c6fc8b2aa60df93a96d",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

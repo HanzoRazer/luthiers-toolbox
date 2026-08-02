@@ -102,6 +102,35 @@
       ],
       "catalog_gaps_noted": [],
       "notes": "YouTube URL pending; specimens ingested from user spreadsheet of paired card+UI screenshots."
+    },
+    {
+      "artifact_id": "yt_red_cedar_30yr_naturally_dried",
+      "type": "video",
+      "url": null,
+      "title": "30-Year Naturally Dried Red Cedar - MB Sound",
+      "channel": "Maderas Barber Official",
+      "stated_specimen_count": null,
+      "linked_specimen_ids": [
+        "mb-rc30-000024",
+        "mb-rc30-000025",
+        "mb-rc30-000026",
+        "mb-rc30-000027",
+        "mb-rc30-000028",
+        "mb-rc30-000029",
+        "mb-rc30-000030",
+        "mb-rc30-000031",
+        "mb-rc30-000032",
+        "mb-rc30-000033",
+        "mb-rc30-000034",
+        "mb-rc30-000035",
+        "mb-rc30-000036",
+        "mb-rc30-000037",
+        "mb-rc30-000038",
+        "mb-rc30-000039",
+        "mb-rc30-000040"
+      ],
+      "catalog_gaps_noted": [],
+      "notes": "YouTube URL pending. 17 specimens (catalog 000024\u2013000040) ingested from user spreadsheet of paired summary-card + detailed spectral-analysis screenshots. Catalog IDs 000001\u2013000023 not provided \u2014 not invented. Separate treatment cohort from plain red_cedar complete-batch video."
     }
   ]
 }

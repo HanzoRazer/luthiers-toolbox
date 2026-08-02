@@ -47,7 +47,8 @@ mb_sound/
   species/
     adirondack_torrefied/   # TORREFIED suite (mb-adt-*)
     adirondack/             # plain/untreated suite (mb-ad-* reserved)
-    red_cedar/
+    red_cedar/              # plain red cedar (mb-rc-*)
+    red_cedar_30yr_naturally_dried/  # 30yr naturally dried (mb-rc30-*)
     alpine_spruce/
     european_spruce/
   specimens/mb-*.json
@@ -64,6 +65,7 @@ Same botanical species can appear in **multiple MB Sound suites**. Do not confla
 | Torrefied Adirondack | `spruce_adirondack` | `torrefied` | `adirondack_torrefied` | `mb-adt-` |
 | Plain Adirondack | `spruce_adirondack` | `plain` | `adirondack` | `mb-ad-` |
 | Red Cedar (plain) | `cedar_western_red` | `plain` | `red_cedar` | `mb-rc-` |
+| Red Cedar (30yr naturally dried) | `cedar_western_red` | `naturally_dried_30yr` | `red_cedar_30yr_naturally_dried` | `mb-rc30-` |
 | Alpine Spruce (plain) | `spruce_european` | `plain` | `alpine_spruce` | `mb-as-` |
 
 See `docs/reference/mb-sound/TREATMENT_COHORTS.md`.

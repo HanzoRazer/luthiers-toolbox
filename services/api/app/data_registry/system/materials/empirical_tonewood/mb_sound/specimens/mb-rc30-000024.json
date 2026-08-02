@@ -1,0 +1,108 @@
+{
+  "specimen_id": "mb-rc30-000024",
+  "dataset": "mb_sound",
+  "dataset_version": "0.4.0-draft",
+  "record_kind": "measured_panel",
+  "species_id": "cedar_western_red",
+  "species_cohort": "red_cedar_30yr_naturally_dried",
+  "treatment": "naturally_dried_30yr",
+  "role": "soundboard",
+  "vendor": "Maderas Barber",
+  "product_line": "MB Sound",
+  "source": {
+    "catalog_id": "000024",
+    "analysis_sample_name": "CA-00002",
+    "species_label_vendor": "30-YEAR NATURALLY DRIED RED CEDAR",
+    "card": {
+      "density_kg_m3": 309.4,
+      "stiffness_gpa": 5.2,
+      "resonance_frequency_hz": 60.9,
+      "sustain_q_factor": 222.0,
+      "radiation_coefficient": 13.2
+    },
+    "analysis_ui": {
+      "sample_length_mm": 533,
+      "sample_width_mm": 210,
+      "sample_thickness_mm": 4.1,
+      "sample_mass_g": 142,
+      "sample_density_kg_m3": 309.4,
+      "sample_nodal_lines_mm": 288,
+      "resonance_freq_hz": 60.9,
+      "time_constant_ms": 1160.8,
+      "log_decrement": 0.0141,
+      "q_factor": 222.0,
+      "fitting_pct": 92.5,
+      "young_modulus_gpa": 5.2,
+      "radiation_coefficient": 13.2,
+      "peak_ampl_dbfs": -3.1,
+      "total_rec_length_sec": 42.4,
+      "visualized_length_sec": 6.3,
+      "select_source": "Mono"
+    },
+    "field_provenance": {
+      "card": "video_frame_mb_sound_card",
+      "analysis_ui": "video_frame_nicoletti_ui",
+      "source_url": null,
+      "batch_title": "30-Year Naturally Dried Red Cedar - MB Sound",
+      "batch_size_stated": null,
+      "extracted_at": "2026-08-02",
+      "extractor": "manual_spreadsheet_summary",
+      "notes": "Ingested from user spreadsheet of 17 paired card+UI screenshots (catalog 000024 \u2194 CA-00002). Separate cohort from plain red_cedar (mb-rc-*). Catalog range transcribed: 000024\u2013000040; earlier IDs in this suite not provided. Review: Sample-name prefix is faint; transcribed as displayed."
+    }
+  },
+  "normalized": {
+    "density_kg_m3": 309.4,
+    "modulus_of_elasticity_gpa": 5.2,
+    "E_C_gpa": null,
+    "length_mm": 533.0,
+    "width_mm": 210.0,
+    "thickness_mm": 4.1,
+    "mass_g": 142.0,
+    "nodal_lines_mm": 288.0,
+    "resonance_frequency_hz": 60.9,
+    "q_factor": 222.0,
+    "log_decrement": 0.0141,
+    "time_constant_ms": 1160.8,
+    "fitting_pct": 92.5,
+    "radiation_coefficient_vendor": 13.2,
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000024 \u2194 CA-00002. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar."
+  },
+  "derived": {
+    "volume_m3": null,
+    "density_from_geometry_kg_m3": null,
+    "speed_of_sound_m_s": null,
+    "radiation_ratio_toolbox": null,
+    "q_from_log_decrement": null,
+    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
+  },
+  "validation": {
+    "status": "partial",
+    "checks": {
+      "mass_density_volume": "pending_corpus_validator",
+      "card_ui_fingerprint_match": "pass_spreadsheet_paired",
+      "dual_vendor_ids_present": "pass"
+    }
+  },
+  "unresolved": {
+    "E_C_gpa": "not published on these frames",
+    "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+    "source_video_url": "YouTube URL not confirmed for this 30-year naturally dried suite",
+    "catalog_ids_000001_to_000023": "not in transcribed batch; do not invent",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CA-00002 + fingerprint to catalog 000024",
+    "transcription_flags": [
+      "transcription_review_note"
+    ]
+  },
+  "artifacts": {
+    "video_url": null,
+    "artifact_refs": [
+      "source_artifacts/frames/mb-rc30-000024-card",
+      "source_artifacts/frames/mb-rc30-000024-analysis-ui"
+    ],
+    "audio_ref": null,
+    "spectrum_ref": null,
+    "impulse_ref": null,
+    "nodal_image_ref": null
+  }
+}
