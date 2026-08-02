@@ -32,12 +32,15 @@ Future plate, damping, matching, and cohort adapters  (DO-SIP-016+)
 
 | Layer | Meaning |
 |-------|---------|
-| `source` | Copied/transcribed vendor labels and values |
-| `normalized` | Canonical units + provisional field alignment |
+| `source` | Laboratory procedural sections (identity, geometry, procedure, signal, vendor surfaces, batch, provenance) |
+| `normalized` | Canonical units + provisional field alignment (+ `signal` / `procedure` groups) |
 | `derived` | Toolbox recomputed quantities (empty until DO-SIP-014) |
 | `validation` | Source vs recomputed / consistency checks |
 | `unresolved` | Unknown definitions or protocols |
-| `artifacts` | References to video/audio/spectra (no binary ingest here) |
+| `artifacts` | References to video/workbook/screenshots/spectra |
+
+**Record schema:** `mb_sound_lab_procedure_v1` (`dataset_version` `0.5.0-draft`). See `docs/reference/mb-sound/LABORATORY_RECORD.md`.  
+Torrefied Adirondack rebuilt from `source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx` (detailed analyzer = primary numerical source).
 
 ## Layout
 

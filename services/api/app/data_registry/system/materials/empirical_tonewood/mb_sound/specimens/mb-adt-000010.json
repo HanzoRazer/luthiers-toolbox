@@ -1,7 +1,8 @@
 {
   "specimen_id": "mb-adt-000010",
   "dataset": "mb_sound",
-  "dataset_version": "0.4.0-draft",
+  "dataset_version": "0.5.0-draft",
+  "record_schema": "mb_sound_lab_procedure_v1",
   "record_kind": "measured_panel",
   "species_id": "spruce_adirondack",
   "species_cohort": "adirondack_torrefied",
@@ -13,40 +14,148 @@
     "catalog_id": "000010",
     "analysis_sample_name": "ADT-C-10",
     "species_label_vendor": "TORREFIED ADIRONDACK",
-    "card": {
-      "density_kg_m3": 458.4,
-      "stiffness_gpa": 13.3,
-      "resonance_frequency_hz": 83.7,
-      "sustain_q_factor": 180.9,
-      "radiation_coefficient": 11.7
+    "identity": {
+      "catalog_id": "000010",
+      "analysis_sample_name": "ADT-C-10",
+      "species_label_vendor": "TORREFIED ADIRONDACK",
+      "material_treatment_label": "Torrefied Adirondack Spruce",
+      "role": "soundboard",
+      "treatment": "torrefied",
+      "species_cohort": "adirondack_torrefied"
     },
-    "analysis_ui": {
-      "sample_length_mm": 546,
-      "sample_width_mm": 190,
-      "sample_thickness_mm": 4.5,
-      "sample_mass_g": 214,
-      "sample_density_kg_m3": 458.4,
-      "sample_nodal_lines_mm": 295,
-      "resonance_freq_hz": 83.7,
-      "time_constant_ms": 688.0,
-      "log_decrement": 0.0174,
-      "q_factor": 180.9,
-      "fitting_pct": 94.5,
-      "young_modulus_gpa": 13.3,
-      "radiation_coefficient": 11.7,
-      "peak_ampl_dbfs": -1.6,
+    "specimen_geometry": {
+      "length_mm": 546,
+      "width_mm": 190,
+      "thickness_mm": 4.5,
+      "mass_g": 214,
+      "density_kg_m3_stated": 458.4,
+      "nodal_lines_mm": 295,
+      "moisture_content_pct": null,
+      "cutting_year": null,
+      "grain_orientation_note": null,
+      "boundary_condition": null
+    },
+    "measurement_procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "elastic_method": "vendor_stated",
+      "analysis_software": {
+        "name": "Nicoletti",
+        "title": "Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti",
+        "attribution": "Giuliano Nicoletti (vendor-stated)",
+        "revision": "Rev 1.5",
+        "version": null
+      },
+      "signal_channel": "Signal 1",
+      "select_source": "Mono",
+      "excitation": null,
+      "sensor_channel": "Signal 1",
+      "support_condition": null
+    },
+    "signal_recording": {
       "total_rec_length_sec": 19.7,
       "visualized_length_sec": 5.4,
-      "select_source": "Mono"
+      "peak_ampl_dbfs": -1.6,
+      "sample_rate_hz": null,
+      "bit_depth": null,
+      "channel_label": "Mono",
+      "signal_channel": "Signal 1"
     },
-    "field_provenance": {
-      "card": "video_frame_mb_sound_card",
-      "analysis_ui": "video_frame_nicoletti_ui",
-      "source_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+    "plot_evidence": {
+      "recorded_signal_plot": "Present",
+      "amplitude_spectrum_plot": "Present",
+      "impulse_response_plot": "Present",
+      "numeric_arrays_available": false,
+      "note": "Rendered screenshot evidence only; not a substitute for raw numeric arrays."
+    },
+    "vendor_surfaces": {
+      "summary_card": {
+        "density_kg_m3": 458.4,
+        "stiffness_gpa": 13.3,
+        "resonance_frequency_hz": 83.7,
+        "sustain_q_factor": 180.9,
+        "radiation_coefficient": 11.7
+      },
+      "detailed_analysis": {
+        "resonance_freq_hz": 83.7,
+        "time_constant_ms": 688,
+        "log_decrement": 0.0174,
+        "q_factor": 180.9,
+        "fitting_pct": 94.5,
+        "young_modulus_gpa": 13.3,
+        "radiation_coefficient": 11.7
+      },
+      "summary_vs_detailed": [
+        {
+          "metric": "Density (kg/m\u00b3)",
+          "summary_card_value": 458.4,
+          "detailed_analyzer_value": 458.4,
+          "difference": 0,
+          "assessment": "Match / display rounding"
+        },
+        {
+          "metric": "Stiffness (GPa)",
+          "summary_card_value": 13.3,
+          "detailed_analyzer_value": 13.3,
+          "difference": 0,
+          "assessment": "Match / display rounding"
+        },
+        {
+          "metric": "Resonance Frequency (Hz)",
+          "summary_card_value": 83.7,
+          "detailed_analyzer_value": 83.7,
+          "difference": 0,
+          "assessment": "Match / display rounding"
+        },
+        {
+          "metric": "Q Factor / Sustain",
+          "summary_card_value": 180.9,
+          "detailed_analyzer_value": 180.9,
+          "difference": 0,
+          "assessment": "Match / display rounding"
+        },
+        {
+          "metric": "Radiation Coefficient",
+          "summary_card_value": 11.7,
+          "detailed_analyzer_value": 11.7,
+          "difference": 0,
+          "assessment": "Match / display rounding"
+        }
+      ]
+    },
+    "resonance_modes": [
+      {
+        "label": "resonance_vendor",
+        "frequency_hz": 83.7,
+        "mn": null,
+        "q_factor": 180.9,
+        "notes": "Single vendor resonance; (m,n) not stated"
+      }
+    ],
+    "batch": {
       "batch_title": "Adirondack - MB Sound - Sample and analysis of the complete batch",
       "batch_size_stated": 22,
-      "extracted_at": "2026-08-01",
-      "extractor": "manual_frame"
+      "batch_sequence": null,
+      "video_t_start_sec": null,
+      "video_t_end_sec": null,
+      "artifact_id": "yt_adirondack_complete_batch",
+      "recovered_specimen_count": 21,
+      "missing_catalog_ids": [
+        "000002"
+      ]
+    },
+    "field_provenance": {
+      "summary_card_surface": "video_frame_mb_sound_card",
+      "detailed_analysis_surface": "video_frame_nicoletti_ui",
+      "primary_numerical_source": "detailed_analyzer",
+      "source_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+      "laboratory_workbook": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+      "summary_screenshot_filename": "Screenshot 2026-08-01 032805.png",
+      "detailed_screenshot_filename": "Screenshot 2026-08-01 032832.png",
+      "extracted_at": "2026-08-02",
+      "extractor": "complete_laboratory_workbook",
+      "intake_workbook_generation": "lab_procedure_v1_torrefied_adirondack",
+      "confidence": "high",
+      "notes": "Rebuilt from complete laboratory workbook (source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx). Primary numerical source = detailed analyzer. Dual-ID 000010 \u2194 ADT-C-10. Summary screenshots: Screenshot 2026-08-01 032805.png; detailed: Screenshot 2026-08-01 032832.png."
     }
   },
   "normalized": {
@@ -61,10 +170,24 @@
     "resonance_frequency_hz": 83.7,
     "q_factor": 180.9,
     "log_decrement": 0.0174,
-    "time_constant_ms": 688.0,
+    "time_constant_ms": 688,
     "fitting_pct": 94.5,
     "radiation_coefficient_vendor": 11.7,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Card decimals from European comma form (458,4 → 458.4)."
+    "signal": {
+      "peak_ampl_dbfs": -1.6,
+      "total_rec_length_sec": 19.7,
+      "visualized_length_sec": 5.4,
+      "select_source": "Mono",
+      "signal_channel": "Signal 1"
+    },
+    "procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "software_title": "Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti",
+      "fitting_pct": 94.5,
+      "nodal_lines_mm": 295.0,
+      "primary_numerical_source": "detailed_analyzer"
+    },
+    "field_alignment_note": "Detailed analyzer is primary numerical source (lab workbook rule). stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000010 \u2194 ADT-C-10. Catalog uniqueness is (species_cohort, catalog_id)."
   },
   "derived": {
     "volume_m3": null,
@@ -72,31 +195,52 @@
     "speed_of_sound_m_s": null,
     "radiation_ratio_toolbox": null,
     "q_from_log_decrement": null,
-    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
   },
   "validation": {
     "status": "partial",
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
-      "card_ui_fingerprint_match": "pass",
-      "dual_vendor_ids_present": "pass"
+      "card_ui_fingerprint_match": "audited_in_workbook",
+      "dual_vendor_ids_present": "pass",
+      "lab_procedure_schema": "pass",
+      "primary_source_detailed_analyzer": "pass"
     }
   },
   "unresolved": {
     "E_C_gpa": "not published on these frames",
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
-    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
-    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-10 + fingerprint"
+    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+    "raw_audio": "Not included in submission",
+    "numeric_waveform": "No \u2013 rendered screenshot only",
+    "numeric_fft_bins": "No \u2013 rendered screenshot only",
+    "numeric_impulse_response": "No \u2013 rendered screenshot only",
+    "environmental_conditions": "Not visible",
+    "calibration_record": "Not visible",
+    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-10 + fingerprint to catalog 000010"
   },
   "artifacts": {
     "video_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+    "laboratory_workbook": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
     "artifact_refs": [
       "source_artifacts/frames/mb-adt-000010-card",
-      "source_artifacts/frames/mb-adt-000010-analysis-ui"
+      "source_artifacts/frames/mb-adt-000010-analysis-ui",
+      "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx"
     ],
+    "screenshot_filenames": {
+      "summary_card": "Screenshot 2026-08-01 032805.png",
+      "detailed_analysis": "Screenshot 2026-08-01 032832.png"
+    },
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
-    "nodal_image_ref": null
+    "nodal_image_ref": null,
+    "software_ref": "nicoletti_tonewood_parameters_characterization_rev_1_5",
+    "batch_artifact_id": "yt_adirondack_complete_batch",
+    "plot_evidence_status": {
+      "recorded_signal": "Present",
+      "amplitude_spectrum": "Present",
+      "impulse_response": "Present"
+    }
   }
 }

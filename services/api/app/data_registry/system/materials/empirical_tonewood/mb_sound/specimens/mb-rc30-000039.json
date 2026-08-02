@@ -1,7 +1,8 @@
 {
   "specimen_id": "mb-rc30-000039",
   "dataset": "mb_sound",
-  "dataset_version": "0.4.0-draft",
+  "dataset_version": "0.5.0-draft",
+  "record_schema": "mb_sound_lab_procedure_v1",
   "record_kind": "measured_panel",
   "species_id": "cedar_western_red",
   "species_cohort": "red_cedar_30yr_naturally_dried",
@@ -13,40 +14,90 @@
     "catalog_id": "000039",
     "analysis_sample_name": "CA1-0017",
     "species_label_vendor": "30-YEAR NATURALLY DRIED RED CEDAR",
-    "card": {
-      "density_kg_m3": 334.8,
-      "stiffness_gpa": 7.1,
-      "resonance_frequency_hz": 60.5,
-      "sustain_q_factor": 214.1,
-      "radiation_coefficient": 13.7
+    "identity": {
+      "catalog_id": "000039",
+      "analysis_sample_name": "CA1-0017",
+      "species_label_vendor": "30-YEAR NATURALLY DRIED RED CEDAR",
+      "role": "soundboard",
+      "treatment": "naturally_dried_30yr",
+      "species_cohort": "red_cedar_30yr_naturally_dried"
     },
-    "analysis_ui": {
-      "sample_length_mm": 560,
-      "sample_width_mm": 208,
-      "sample_thickness_mm": 4.0,
-      "sample_mass_g": 156,
-      "sample_density_kg_m3": 334.8,
-      "sample_nodal_lines_mm": 302,
-      "resonance_freq_hz": 60.5,
-      "time_constant_ms": 1127.2,
-      "log_decrement": 0.0147,
-      "q_factor": 214.1,
-      "fitting_pct": 94.7,
-      "young_modulus_gpa": 7.1,
-      "radiation_coefficient": 13.7,
-      "peak_ampl_dbfs": -3.2,
+    "specimen_geometry": {
+      "length_mm": 560,
+      "width_mm": 208,
+      "thickness_mm": 4.0,
+      "mass_g": 156,
+      "density_kg_m3_stated": 334.8,
+      "nodal_lines_mm": 302,
+      "moisture_content_pct": null,
+      "cutting_year": null,
+      "grain_orientation_note": null,
+      "boundary_condition": null
+    },
+    "measurement_procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "elastic_method": "vendor_stated",
+      "analysis_software": {
+        "name": "Nicoletti",
+        "attribution": "Giuliano Nicoletti (vendor-stated)",
+        "version": null
+      },
+      "select_source": "Mono",
+      "excitation": null,
+      "sensor_channel": null,
+      "support_condition": null
+    },
+    "signal_recording": {
       "total_rec_length_sec": 26.8,
       "visualized_length_sec": 4.6,
-      "select_source": "Mono"
+      "peak_ampl_dbfs": -3.2,
+      "sample_rate_hz": null,
+      "bit_depth": null,
+      "channel_label": "Mono"
     },
-    "field_provenance": {
-      "card": "video_frame_mb_sound_card",
-      "analysis_ui": "video_frame_nicoletti_ui",
-      "source_url": null,
+    "vendor_surfaces": {
+      "summary_card": {
+        "density_kg_m3": 334.8,
+        "stiffness_gpa": 7.1,
+        "resonance_frequency_hz": 60.5,
+        "sustain_q_factor": 214.1,
+        "radiation_coefficient": 13.7
+      },
+      "detailed_analysis": {
+        "resonance_freq_hz": 60.5,
+        "time_constant_ms": 1127.2,
+        "log_decrement": 0.0147,
+        "q_factor": 214.1,
+        "fitting_pct": 94.7,
+        "young_modulus_gpa": 7.1,
+        "radiation_coefficient": 13.7
+      }
+    },
+    "resonance_modes": [
+      {
+        "label": "resonance_vendor",
+        "frequency_hz": 60.5,
+        "mn": null,
+        "q_factor": 214.1,
+        "notes": "Single vendor resonance; (m,n) not stated"
+      }
+    ],
+    "batch": {
       "batch_title": "30-Year Naturally Dried Red Cedar - MB Sound",
       "batch_size_stated": null,
+      "batch_sequence": null,
+      "video_t_start_sec": null,
+      "video_t_end_sec": null,
+      "artifact_id": "yt_red_cedar_30yr_naturally_dried"
+    },
+    "field_provenance": {
+      "summary_card_surface": "video_frame_mb_sound_card",
+      "detailed_analysis_surface": "video_frame_nicoletti_ui",
+      "source_url": null,
       "extracted_at": "2026-08-02",
       "extractor": "manual_spreadsheet_summary",
+      "intake_workbook_generation": "tonewood_property_v1_migrated_to_lab_procedure_v1",
+      "confidence": null,
       "notes": "Ingested from user spreadsheet of 17 paired card+UI screenshots (catalog 000039 \u2194 CA1-0017). Separate cohort from plain red_cedar (mb-rc-*). Catalog range transcribed: 000024\u2013000040; earlier IDs in this suite not provided."
     }
   },
@@ -65,7 +116,18 @@
     "time_constant_ms": 1127.2,
     "fitting_pct": 94.7,
     "radiation_coefficient_vendor": 13.7,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000039 \u2194 CA1-0017. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar."
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000039 \u2194 CA1-0017. Catalog uniqueness is (species_cohort, catalog_id). Treatment naturally_dried_30yr \u2014 do not pool with plain red_cedar.",
+    "signal": {
+      "peak_ampl_dbfs": -3.2,
+      "total_rec_length_sec": 26.8,
+      "visualized_length_sec": 4.6,
+      "select_source": "Mono"
+    },
+    "procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "fitting_pct": 94.7,
+      "nodal_lines_mm": 302
+    }
   },
   "derived": {
     "volume_m3": null,
@@ -80,7 +142,8 @@
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
       "card_ui_fingerprint_match": "pass_spreadsheet_paired",
-      "dual_vendor_ids_present": "pass"
+      "dual_vendor_ids_present": "pass",
+      "lab_procedure_schema": "pass"
     }
   },
   "unresolved": {
@@ -100,6 +163,8 @@
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
-    "nodal_image_ref": null
+    "nodal_image_ref": null,
+    "software_ref": "nicoletti_measurement_software",
+    "batch_artifact_id": "yt_red_cedar_30yr_naturally_dried"
   }
 }

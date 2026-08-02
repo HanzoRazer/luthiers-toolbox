@@ -6,7 +6,9 @@
     "BLOCKED (2026-08-02): plain Adirondack suite frames \u2014 currently unavailable",
     "BLOCKED (2026-08-02): European spruce suite frames \u2014 currently unavailable",
     "BLOCKED (2026-08-02): Adirondack torrefied catalog gap 000002 \u2014 currently unavailable",
-    "Available-source intake parked at 82 specimens; remaining suites blocked on source availability",
+    "Record schema: mb_sound_lab_procedure_v1 (dataset_version 0.5.0-draft)",
+    "Torrefied Adirondack rebuilt from complete laboratory workbook (detailed analyzer primary)",
+    "Available-source intake at 82 lab-procedure specimens; remaining suites blocked on source availability",
     "Confirm four-species catalog membership vs public MB Sound listing",
     "Radiation coefficient formal definition (Nicoletti vs Schelleng vs Toolbox scale)",
     "E_C_gpa absent on current specimens \u2014 blocks orthotropic plate adapters"
@@ -16,139 +18,265 @@
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; see docs/reference/mb-sound/LINKAGE.md"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-01 + fingerprint to catalog 000001"
     },
     "mb-adt-000003": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-03 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-03 + fingerprint to catalog 000003"
     },
     "mb-adt-000004": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-04 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-04 + fingerprint to catalog 000004",
+      "capture_flags": [
+        "summary_vs_detailed: Q Factor / Sustain card=177 detail=177.2 (Small run/display variation)"
+      ]
     },
     "mb-adt-000005": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-05 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-05 + fingerprint to catalog 000005"
     },
     "mb-adt-000006": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-06 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-06 + fingerprint to catalog 000006"
     },
     "mb-adt-000007": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-07 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-07 + fingerprint to catalog 000007"
     },
     "mb-adt-000008": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-08 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-08 + fingerprint to catalog 000008",
+      "capture_flags": [
+        "CAP-002: invalid 000008/000007 crossed pair discarded; valid pair used"
+      ]
     },
     "mb-adt-000009": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-09 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-09 + fingerprint to catalog 000009"
     },
     "mb-adt-000010": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-10 + fingerprint"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-C-10 + fingerprint to catalog 000010"
     },
     "mb-adt-000011": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-01 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-01 + fingerprint to catalog 000011"
     },
     "mb-adt-000012": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-02 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-02 + fingerprint to catalog 000012"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-02 + fingerprint to catalog 000012",
+      "capture_flags": [
+        "CAP-004: nodal-line OCR ambiguous; recorded 299 mm"
+      ]
     },
     "mb-adt-000013": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-03 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-03 + fingerprint to catalog 000013"
     },
     "mb-adt-000014": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-04 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
-      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-04 + fingerprint to catalog 000014"
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
+      "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-04 + fingerprint to catalog 000014",
+      "capture_flags": [
+        "CAP-003: card radiation 12.1 vs detailed 12.4 \u2014 both retained",
+        "summary_vs_detailed: Radiation Coefficient card=12.1 detail=12.4 (Small run/display variation)"
+      ]
     },
     "mb-adt-000015": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-05 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-05 + fingerprint to catalog 000015"
     },
     "mb-adt-000016": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-06 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-06 + fingerprint to catalog 000016"
     },
     "mb-adt-000017": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-07 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-07 + fingerprint to catalog 000017"
     },
     "mb-adt-000018": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-08 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-08 + fingerprint to catalog 000018"
     },
     "mb-adt-000019": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-09 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-09 + fingerprint to catalog 000019"
     },
     "mb-adt-000020": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-10 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
-      "geometry_coincidence_with_000019": "L/W/h/mass/density/nodal match mb-adt-000019; acoustic values differ \u2014 confirm not frame-OCR mixup",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-10 + fingerprint to catalog 000020"
     },
     "mb-adt-000021": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-11 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-11 + fingerprint to catalog 000021"
     },
     "mb-adt-000022": {
       "E_C_gpa": "not published on these frames",
       "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
       "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-      "analysis_name_scheme": "ADT-W-12 vs prior ADT-C-## series \u2014 meaning of W vs C unknown",
+      "raw_audio": "Not included in submission",
+      "numeric_waveform": "No \u2013 rendered screenshot only",
+      "numeric_fft_bins": "No \u2013 rendered screenshot only",
+      "numeric_impulse_response": "No \u2013 rendered screenshot only",
+      "environmental_conditions": "Not visible",
+      "calibration_record": "Not visible",
       "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name ADT-W-12 + fingerprint to catalog 000022"
     },
     "mb-as-000001": {

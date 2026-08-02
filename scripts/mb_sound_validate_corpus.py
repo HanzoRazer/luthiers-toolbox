@@ -118,6 +118,38 @@ def validate(write: bool) -> int:
             if layer not in s:
                 errors.append(f"{s.get('specimen_id')}: missing layer {layer}")
 
+        # Laboratory procedural schema (mb_sound_lab_procedure_v1)
+        schema = s.get("record_schema")
+        if schema != "mb_sound_lab_procedure_v1":
+            warnings.append(
+                f"{s.get('specimen_id')}: record_schema {schema!r} "
+                f"(expected mb_sound_lab_procedure_v1)"
+            )
+        else:
+            for section in (
+                "identity",
+                "specimen_geometry",
+                "measurement_procedure",
+                "signal_recording",
+                "vendor_surfaces",
+                "resonance_modes",
+                "batch",
+                "field_provenance",
+            ):
+                if section not in src:
+                    errors.append(
+                        f"{s.get('specimen_id')}: missing source.{section} "
+                        f"(lab_procedure_v1)"
+                    )
+            surfaces = src.get("vendor_surfaces") or {}
+            if "summary_card" not in surfaces or "detailed_analysis" not in surfaces:
+                errors.append(
+                    f"{s.get('specimen_id')}: vendor_surfaces needs "
+                    f"summary_card + detailed_analysis"
+                )
+            if "signal" not in (s.get("normalized") or {}):
+                warnings.append(f"{s.get('specimen_id')}: missing normalized.signal")
+
         norm = s.get("normalized") or {}
         for bad in FORBIDDEN_NORMALIZED:
             if bad in norm:
@@ -208,9 +240,11 @@ def validate(write: bool) -> int:
         (CORPUS / "validation" / "unresolved_fields.json").write_text(
             json.dumps(unresolved, indent=2) + "\n", encoding="utf-8"
         )
+        schemas = Counter(s.get("record_schema") for s in specimens)
         manifest = {
             "dataset": "mb_sound",
-            "dataset_version": "0.4.0-draft",
+            "dataset_version": "0.5.0-draft",
+            "record_schema": "mb_sound_lab_procedure_v1",
             "vendor": "Maderas Barber",
             "authority_status": "non_authoritative_draft_intake",
             "program": "DO-SIP-013",
@@ -220,6 +254,7 @@ def validate(write: bool) -> int:
             "specimen_ids": sorted(str(i) for i in ids if i),
             "species_cohorts": sorted(by_species.keys(), key=lambda x: str(x)),
             "treatments": sorted(str(t) for t in by_treatment if t),
+            "record_schemas": dict(schemas),
             "dataset_digest_sha256": digest,
             "paths": {
                 "specimens": "specimens/",

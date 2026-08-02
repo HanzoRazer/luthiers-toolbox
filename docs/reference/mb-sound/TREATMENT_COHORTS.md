@@ -21,7 +21,7 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 
 | Cohort | Status |
 |--------|--------|
-| `mb_sound_adirondack_torrefied` | Intake complete-with-gap (21/22; gap `000002` — source currently unavailable) |
+| `mb_sound_adirondack_torrefied` | Lab-procedure rebuild from complete workbook (21/22; gap `000002` unavailable) |
 | `mb_sound_adirondack` | Empty stub — **source currently unavailable** (do not invent rows) |
 
 ## Rules

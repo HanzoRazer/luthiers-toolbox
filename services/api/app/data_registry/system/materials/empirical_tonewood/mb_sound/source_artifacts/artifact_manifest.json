@@ -34,7 +34,9 @@
       ],
       "catalog_gaps_noted": [
         "000002"
-      ]
+      ],
+      "laboratory_workbook": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. Gap 000002 currently unavailable."
     },
     {
       "artifact_id": "yt_red_cedar_complete_batch",
@@ -131,6 +133,45 @@
       ],
       "catalog_gaps_noted": [],
       "notes": "Source video URL currently unavailable (operator 2026-08-02). 17 specimens (catalog 000024\u2013000040) ingested from user spreadsheet of paired summary-card + detailed spectral-analysis screenshots. Catalog IDs 000001\u2013000023 currently unavailable \u2014 not invented. Separate treatment cohort from plain red_cedar."
+    },
+    {
+      "artifact_id": "workbook_torrefied_adirondack_lab_record",
+      "type": "laboratory_workbook",
+      "path": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+      "title": "Torrefied Adirondack Spruce \u2013 Complete Laboratory Procedural Record",
+      "linked_specimen_ids": [
+        "mb-adt-000001",
+        "mb-adt-000003",
+        "mb-adt-000004",
+        "mb-adt-000005",
+        "mb-adt-000006",
+        "mb-adt-000007",
+        "mb-adt-000008",
+        "mb-adt-000009",
+        "mb-adt-000010",
+        "mb-adt-000011",
+        "mb-adt-000012",
+        "mb-adt-000013",
+        "mb-adt-000014",
+        "mb-adt-000015",
+        "mb-adt-000016",
+        "mb-adt-000017",
+        "mb-adt-000018",
+        "mb-adt-000019",
+        "mb-adt-000020",
+        "mb-adt-000021",
+        "mb-adt-000022"
+      ],
+      "sheets": [
+        "README",
+        "Specimen Master",
+        "Acquisition Procedure",
+        "Summary vs Detailed",
+        "Capture Audit",
+        "Batch Statistics",
+        "Spectral Sheet Archive"
+      ],
+      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
     }
   ]
 }

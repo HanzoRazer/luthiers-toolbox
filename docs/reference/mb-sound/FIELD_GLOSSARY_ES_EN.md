@@ -19,7 +19,12 @@ Panel-only concepts map under `panel.*`. See [`NAMESPACE.md`](./NAMESPACE.md).
 | Sustain (Q Factor) / Q factor | `panel.q` | |
 | Sample name (analysis UI) | `panel.vendor_ids.analysis_sample_name` | e.g. `ADT-C-01` |
 | Card number under species title | `panel.vendor_ids.catalog_id` | e.g. `000001` |
-| Sample nodal lines (mm) | `panel.nodal_lines_mm` | analysis UI only |
+| Sample nodal lines (mm) | `panel.nodal_lines_mm` / `source.specimen_geometry.nodal_lines_mm` | analysis UI only |
+| Total Recording Length / Visualized Length / Peak Amplitude | `source.signal_recording.*` / `normalized.signal.*` | lab procedure v1 |
+| Signal 1 / Mono / Select source | `source.measurement_procedure.signal_channel` / `select_source` | Nicoletti UI |
+| Fit Quality / Fitting (%) | `normalized.fitting_pct` / `source.vendor_surfaces.detailed_analysis.fitting_pct` | |
+| Time Constant / Log Decrement | `normalized.time_constant_ms` / `log_decrement` | |
+| Software title (Rev 1.5) | `source.measurement_procedure.analysis_software.title` | Giuliano Nicoletti |
 | Año de corte | `panel.cutting_year` | |
 | Humedad / MC | `panel.moisture_content_pct` | |
 | Tapa / Soundboard / Top | `panel.role: soundboard` | TonewoodRole |

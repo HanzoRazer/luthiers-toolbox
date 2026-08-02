@@ -1,6 +1,7 @@
 {
   "dataset": "mb_sound",
-  "dataset_version": "0.4.0-draft",
+  "dataset_version": "0.5.0-draft",
+  "record_schema": "mb_sound_lab_procedure_v1",
   "vendor": "Maderas Barber",
   "authority_status": "non_authoritative_draft_intake",
   "program": "DO-SIP-013",
@@ -102,7 +103,10 @@
     "plain",
     "torrefied"
   ],
-  "dataset_digest_sha256": "dde291fdd0fd2f7db7375b36fd4fd12d2b28c033caa69c6fc8b2aa60df93a96d",
+  "record_schemas": {
+    "mb_sound_lab_procedure_v1": 82
+  },
+  "dataset_digest_sha256": "4415044ebf3c61cb44db05a354b906c75e79431b7253617a7ea7d8e889a3031f",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",

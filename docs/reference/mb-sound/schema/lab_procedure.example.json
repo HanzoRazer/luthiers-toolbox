@@ -1,34 +1,34 @@
 {
-  "specimen_id": "mb-rc-000009",
+  "specimen_id": "mb-adt-000001",
   "dataset": "mb_sound",
   "dataset_version": "0.5.0-draft",
   "record_schema": "mb_sound_lab_procedure_v1",
   "record_kind": "measured_panel",
-  "species_id": "cedar_western_red",
-  "species_cohort": "red_cedar",
-  "treatment": "plain",
+  "species_id": "spruce_adirondack",
+  "species_cohort": "adirondack_torrefied",
+  "treatment": "torrefied",
   "role": "soundboard",
   "vendor": "Maderas Barber",
   "product_line": "MB Sound",
   "source": {
-    "catalog_id": "000009",
-    "analysis_sample_name": "CED-C-09",
-    "species_label_vendor": "RED CEDAR",
+    "catalog_id": "000001",
+    "analysis_sample_name": "ADT-C-01",
+    "species_label_vendor": "TORREFIED ADIRONDACK",
     "identity": {
-      "catalog_id": "000009",
-      "analysis_sample_name": "CED-C-09",
-      "species_label_vendor": "RED CEDAR",
+      "catalog_id": "000001",
+      "analysis_sample_name": "ADT-C-01",
+      "species_label_vendor": "TORREFIED ADIRONDACK",
       "role": "soundboard",
-      "treatment": "plain",
-      "species_cohort": "red_cedar"
+      "treatment": "torrefied",
+      "species_cohort": "adirondack_torrefied"
     },
     "specimen_geometry": {
-      "length_mm": 600,
+      "length_mm": 560,
       "width_mm": 200,
-      "thickness_mm": 4.4,
-      "mass_g": 163,
-      "density_kg_m3_stated": 308.7,
-      "nodal_lines_mm": 324,
+      "thickness_mm": 4.2,
+      "mass_g": 220,
+      "density_kg_m3_stated": 467.7,
+      "nodal_lines_mm": 302,
       "moisture_content_pct": null,
       "cutting_year": null,
       "grain_orientation_note": null,
@@ -48,86 +48,86 @@
       "support_condition": null
     },
     "signal_recording": {
-      "total_rec_length_sec": null,
-      "visualized_length_sec": null,
-      "peak_ampl_dbfs": null,
+      "total_rec_length_sec": 27.7,
+      "visualized_length_sec": 5.2,
+      "peak_ampl_dbfs": -1.6,
       "sample_rate_hz": null,
       "bit_depth": null,
       "channel_label": "Mono"
     },
     "vendor_surfaces": {
       "summary_card": {
-        "density_kg_m3": 308.7,
-        "stiffness_gpa": 4.7,
-        "resonance_frequency_hz": 49.4,
-        "sustain_q_factor": 184.0,
-        "radiation_coefficient": 12.7
+        "density_kg_m3": 467.7,
+        "stiffness_gpa": 14.9,
+        "resonance_frequency_hz": 78.0,
+        "sustain_q_factor": 188.0,
+        "radiation_coefficient": 12.1
       },
       "detailed_analysis": {
-        "resonance_freq_hz": 49.4,
-        "time_constant_ms": 1185.7,
-        "log_decrement": 0.0171,
-        "q_factor": 184.0,
-        "fitting_pct": 90.5,
-        "young_modulus_gpa": 4.7,
-        "radiation_coefficient": 12.7
+        "resonance_freq_hz": 78.0,
+        "time_constant_ms": 766.9,
+        "log_decrement": 0.0167,
+        "q_factor": 188.0,
+        "fitting_pct": 94.7,
+        "young_modulus_gpa": 14.9,
+        "radiation_coefficient": 12.1
       }
     },
     "resonance_modes": [
       {
         "label": "resonance_vendor",
-        "frequency_hz": 49.4,
+        "frequency_hz": 78.0,
         "mn": null,
-        "q_factor": 184.0,
+        "q_factor": 188.0,
         "notes": "Single vendor resonance; (m,n) not stated"
       }
     ],
     "batch": {
-      "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
+      "batch_title": "Adirondack - MB Sound - Sample and analysis of the complete batch",
       "batch_size_stated": 22,
       "batch_sequence": null,
       "video_t_start_sec": null,
       "video_t_end_sec": null,
-      "artifact_id": "yt_red_cedar_complete_batch"
+      "artifact_id": "yt_adirondack_complete_batch"
     },
     "field_provenance": {
       "summary_card_surface": "video_frame_mb_sound_card",
       "detailed_analysis_surface": "video_frame_nicoletti_ui",
-      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
-      "extracted_at": "2026-08-02",
+      "source_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
+      "extracted_at": "2026-08-01",
       "extractor": "manual_frame",
       "intake_workbook_generation": "tonewood_property_v1_migrated_to_lab_procedure_v1",
       "confidence": null,
-      "notes": "Gap cleared \u2014 linked to catalog 000009 by fingerprint match with CED-C-09."
+      "notes": "EXAMPLE skeleton — see live specimens for authoritative transcribed values."
     }
   },
   "normalized": {
-    "density_kg_m3": 308.7,
-    "modulus_of_elasticity_gpa": 4.7,
+    "density_kg_m3": 467.7,
+    "modulus_of_elasticity_gpa": 14.9,
     "E_C_gpa": null,
-    "length_mm": 600.0,
+    "length_mm": 560.0,
     "width_mm": 200.0,
-    "thickness_mm": 4.4,
-    "mass_g": 163.0,
-    "nodal_lines_mm": 324.0,
-    "resonance_frequency_hz": 49.4,
-    "q_factor": 184.0,
-    "log_decrement": 0.0171,
-    "time_constant_ms": 1185.7,
-    "fitting_pct": 90.5,
-    "radiation_coefficient_vendor": 12.7,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000009 \u2194 CED-C-09.",
+    "thickness_mm": 4.2,
+    "mass_g": 220.0,
+    "nodal_lines_mm": 302.0,
+    "resonance_frequency_hz": 78.0,
+    "q_factor": 188.0,
+    "log_decrement": 0.0167,
+    "time_constant_ms": 766.9,
+    "fitting_pct": 94.7,
+    "radiation_coefficient_vendor": 12.1,
     "signal": {
-      "peak_ampl_dbfs": null,
-      "total_rec_length_sec": null,
-      "visualized_length_sec": null,
+      "peak_ampl_dbfs": -1.6,
+      "total_rec_length_sec": 27.7,
+      "visualized_length_sec": 5.2,
       "select_source": "Mono"
     },
     "procedure": {
       "method_label": "vendor_free_plate_resonance",
-      "fitting_pct": 90.5,
-      "nodal_lines_mm": 324
-    }
+      "fitting_pct": 94.7,
+      "nodal_lines_mm": 302.0
+    },
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional)."
   },
   "derived": {
     "volume_m3": null,
@@ -135,7 +135,7 @@
     "speed_of_sound_m_s": null,
     "radiation_ratio_toolbox": null,
     "q_from_log_decrement": null,
-    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
+    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
   },
   "validation": {
     "status": "partial",
@@ -149,20 +149,19 @@
   "unresolved": {
     "E_C_gpa": "not published on these frames",
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
-    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
-    "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-09 + fingerprint to catalog 000009"
+    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale"
   },
   "artifacts": {
-    "video_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "video_url": "https://www.youtube.com/watch?v=Ovhx0BxcbtQ",
     "artifact_refs": [
-      "source_artifacts/frames/mb-rc-000009-card",
-      "source_artifacts/frames/mb-rc-000009-analysis-ui"
+      "source_artifacts/frames/mb-adt-000001-card",
+      "source_artifacts/frames/mb-adt-000001-analysis-ui"
     ],
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
     "nodal_image_ref": null,
     "software_ref": "nicoletti_measurement_software",
-    "batch_artifact_id": "yt_red_cedar_complete_batch"
+    "batch_artifact_id": "yt_adirondack_complete_batch"
   }
 }

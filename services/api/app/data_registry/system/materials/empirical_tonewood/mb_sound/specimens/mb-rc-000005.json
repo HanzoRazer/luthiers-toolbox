@@ -1,7 +1,8 @@
 {
   "specimen_id": "mb-rc-000005",
   "dataset": "mb_sound",
-  "dataset_version": "0.4.0-draft",
+  "dataset_version": "0.5.0-draft",
+  "record_schema": "mb_sound_lab_procedure_v1",
   "record_kind": "measured_panel",
   "species_id": "cedar_western_red",
   "species_cohort": "red_cedar",
@@ -13,41 +14,91 @@
     "catalog_id": "000005",
     "analysis_sample_name": "CED-C-05",
     "species_label_vendor": "RED CEDAR",
-    "card": {
-      "density_kg_m3": 338.4,
-      "stiffness_gpa": 9.0,
-      "resonance_frequency_hz": 63.3,
-      "sustain_q_factor": 132.8,
-      "radiation_coefficient": 15.2
+    "identity": {
+      "catalog_id": "000005",
+      "analysis_sample_name": "CED-C-05",
+      "species_label_vendor": "RED CEDAR",
+      "role": "soundboard",
+      "treatment": "plain",
+      "species_cohort": "red_cedar"
     },
-    "analysis_ui": {
-      "sample_length_mm": 557,
-      "sample_width_mm": 228,
-      "sample_thickness_mm": 3.7,
-      "sample_mass_g": 159,
-      "sample_density_kg_m3": 338.4,
-      "sample_nodal_lines_mm": 301,
-      "resonance_freq_hz": 63.3,
-      "time_constant_ms": 675.6,
-      "log_decrement": 0.0234,
-      "q_factor": 134.4,
-      "fitting_pct": 91.9,
-      "young_modulus_gpa": 9.0,
-      "radiation_coefficient": 15.2,
-      "peak_ampl_dbfs": -2.0,
+    "specimen_geometry": {
+      "length_mm": 557,
+      "width_mm": 228,
+      "thickness_mm": 3.7,
+      "mass_g": 159,
+      "density_kg_m3_stated": 338.4,
+      "nodal_lines_mm": 301,
+      "moisture_content_pct": null,
+      "cutting_year": null,
+      "grain_orientation_note": null,
+      "boundary_condition": null
+    },
+    "measurement_procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "elastic_method": "vendor_stated",
+      "analysis_software": {
+        "name": "Nicoletti",
+        "attribution": "Giuliano Nicoletti (vendor-stated)",
+        "version": null
+      },
+      "select_source": "Mono",
+      "excitation": null,
+      "sensor_channel": null,
+      "support_condition": null
+    },
+    "signal_recording": {
       "total_rec_length_sec": 20.2,
       "visualized_length_sec": 5.5,
-      "select_source": "Mono"
+      "peak_ampl_dbfs": -2.0,
+      "sample_rate_hz": null,
+      "bit_depth": null,
+      "channel_label": "Mono"
     },
-    "field_provenance": {
-      "card": "video_frame_mb_sound_card",
-      "analysis_ui": "video_frame_nicoletti_ui",
-      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
+    "vendor_surfaces": {
+      "summary_card": {
+        "density_kg_m3": 338.4,
+        "stiffness_gpa": 9.0,
+        "resonance_frequency_hz": 63.3,
+        "sustain_q_factor": 132.8,
+        "radiation_coefficient": 15.2
+      },
+      "detailed_analysis": {
+        "resonance_freq_hz": 63.3,
+        "time_constant_ms": 675.6,
+        "log_decrement": 0.0234,
+        "q_factor": 134.4,
+        "fitting_pct": 91.9,
+        "young_modulus_gpa": 9.0,
+        "radiation_coefficient": 15.2
+      }
+    },
+    "resonance_modes": [
+      {
+        "label": "resonance_vendor",
+        "frequency_hz": 63.3,
+        "mn": null,
+        "q_factor": 134.4,
+        "notes": "Single vendor resonance; (m,n) not stated"
+      }
+    ],
+    "batch": {
       "batch_title": "Red Cedar - MB Sound - Sample and analysis of the complete batch",
       "batch_size_stated": null,
+      "batch_sequence": null,
+      "video_t_start_sec": null,
+      "video_t_end_sec": null,
+      "artifact_id": "yt_red_cedar_complete_batch"
+    },
+    "field_provenance": {
+      "summary_card_surface": "video_frame_mb_sound_card",
+      "detailed_analysis_surface": "video_frame_nicoletti_ui",
+      "source_url": "https://www.youtube.com/watch?v=L3sP5MWmVvs",
       "extracted_at": "2026-08-01",
       "extractor": "manual_frame",
-      "notes": "Linked to catalog 000005 by fingerprint (ρ/E/f/rad). Card Q 132.8 vs UI Q 134.4 — see unresolved."
+      "intake_workbook_generation": "tonewood_property_v1_migrated_to_lab_procedure_v1",
+      "confidence": null,
+      "notes": "Linked to catalog 000005 by fingerprint (\u03c1/E/f/rad). Card Q 132.8 vs UI Q 134.4 \u2014 see unresolved."
     }
   },
   "normalized": {
@@ -65,7 +116,18 @@
     "time_constant_ms": 675.6,
     "fitting_pct": 91.9,
     "radiation_coefficient_vendor": 15.2,
-    "field_alignment_note": "stiffness_gpa/young_modulus_gpa → modulus_of_elasticity_gpa (provisional). Dual-ID: 000005 ↔ CED-C-05. Normalized Q from analysis UI (134.4); card sustain Q kept as 132.8 pending re-check."
+    "field_alignment_note": "stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000005 \u2194 CED-C-05. Normalized Q from analysis UI (134.4); card sustain Q kept as 132.8 pending re-check.",
+    "signal": {
+      "peak_ampl_dbfs": -2.0,
+      "total_rec_length_sec": 20.2,
+      "visualized_length_sec": 5.5,
+      "select_source": "Mono"
+    },
+    "procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "fitting_pct": 91.9,
+      "nodal_lines_mm": 301
+    }
   },
   "derived": {
     "volume_m3": null,
@@ -73,21 +135,22 @@
     "speed_of_sound_m_s": null,
     "radiation_ratio_toolbox": null,
     "q_from_log_decrement": null,
-    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
   },
   "validation": {
     "status": "partial",
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
       "card_ui_fingerprint_match": "partial_q_mismatch",
-      "dual_vendor_ids_present": "pass"
+      "dual_vendor_ids_present": "pass",
+      "lab_procedure_schema": "pass"
     }
   },
   "unresolved": {
     "E_C_gpa": "not published on these frames",
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
-    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
-    "card_vs_ui_q": "card sustain Q 132.8 vs UI Q 134.4; π/Q≈0.0234 agrees with UI log decrement — re-check card frame",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+    "card_vs_ui_q": "card sustain Q 132.8 vs UI Q 134.4; \u03c0/Q\u22480.0234 agrees with UI log decrement \u2014 re-check card frame",
     "batch_size_stated": "not read from these frames",
     "spectrum_plot_id": "spectrum panes unnumbered; linked via Sample name CED-C-05 + fingerprint to catalog 000005"
   },
@@ -100,6 +163,8 @@
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
-    "nodal_image_ref": null
+    "nodal_image_ref": null,
+    "software_ref": "nicoletti_measurement_software",
+    "batch_artifact_id": "yt_red_cedar_complete_batch"
   }
 }

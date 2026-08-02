@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "mb-sound-panel-corpus-scaffold",
   "title": "DO-SIP-013 draft intake: MB Sound empirical tonewood corpus",
-  "intent": "Versioned empirical MB Sound corpus intake. Adirondack torrefied (gap 000002); Red Cedar plain 22/22; Red Cedar 30yr naturally dried 17 (000024\u2013000040); Alpine Spruce 22/22. No production behavior changes.",
+  "intent": "Versioned empirical MB Sound corpus as laboratory procedural records (mb_sound_lab_procedure_v1). Torrefied Adirondack rebuilt from complete lab workbook.",
   "change_type": "docs",
   "behavior_change": "none - data registry empirical corpus + offline validation; production behavior unchanged",
   "risk_level": "low",
@@ -132,19 +132,22 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000037.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000038.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000039.json",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000040.json"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000040.json",
+      "docs/reference/mb-sound/LABORATORY_RECORD.md",
+      "docs/reference/mb-sound/schema/lab_procedure.example.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Mark blocked MB Sound sources (30yr URL/earlier catalog, plain Adirondack, European spruce, ADT 000002) as currently unavailable; park further intake.",
-    "why_not_redundant": "DO-SIP-013 intake boundary; treatment discrimination from plain red_cedar.",
-    "governance": "Draft until corpus gates pass."
+    "what_changed": "Reorganized corpus to lab_procedure_v1; Torrefied Adirondack refreshed from Complete Laboratory Record workbook (acquisition, audit, plot evidence).",
+    "why_not_redundant": "Preserves procedure/signal fields beyond tonewood-property columns.",
+    "governance": "Draft until corpus gates pass; no production behavior changes."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "82 specimens on available sources. BLOCKED/unavailable: 30yr red-cedar URL + catalog before 000024; plain Adirondack; European spruce; Adirondack gap 000002. Alpine video URL still pending. DO-SIP-014+ not started."
+    "known_residual": "82 lab-procedure specimens. BLOCKED: 30yr URL/earlier catalog, plain Adirondack, European spruce, ADT 000002. Other suites structurally migrated; await their lab workbooks."
   },
   "files": [
     {
@@ -1520,6 +1523,42 @@
       "intent": "DO-SIP-013 MB Sound empirical intake: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000040.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000040.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/LABORATORY_RECORD.md",
+      "intent": "DO-SIP-013 MB Sound lab procedure: docs/reference/mb-sound/LABORATORY_RECORD.md",
+      "scan_targets": [
+        "docs/reference/mb-sound/LABORATORY_RECORD.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/schema/lab_procedure.example.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: docs/reference/mb-sound/schema/lab_procedure.example.json",
+      "scan_targets": [
+        "docs/reference/mb-sound/schema/lab_procedure.example.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",

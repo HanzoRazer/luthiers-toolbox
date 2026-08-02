@@ -2,6 +2,7 @@
   "cohort_id": "mb_sound_adirondack_torrefied",
   "species_id": "spruce_adirondack",
   "species_label": "Adirondack spruce (torrefied)",
+  "treatment": "torrefied",
   "treatments_seen": [
     "torrefied"
   ],
@@ -30,17 +31,48 @@
     "mb-adt-000022"
   ],
   "catalog_gaps": [
+    "000002"
+  ],
+  "status": "intake_complete_with_gap",
+  "specimen_id_prefix": "mb-adt-",
+  "record_schema": "mb_sound_lab_procedure_v1",
+  "laboratory_workbook": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+  "primary_numerical_source": "detailed_analyzer",
+  "capture_audit": [
     {
-      "catalog_id": "000002",
-      "expected_analysis_sample_name": "ADT-C-02",
-      "status": "unavailable",
-      "notes": "Not available in source material provided for intake; skip without inventing a specimen record."
+      "issue_id": "CAP-001",
+      "severity": "High",
+      "affected": "Expected sample 000002",
+      "finding": "No summary card or detailed analyzer screenshot for sample 000002 was present in the submitted ZIP.",
+      "disposition": "Not fabricated; excluded from Specimen Master and listed as missing."
+    },
+    {
+      "issue_id": "CAP-002",
+      "severity": "Medium",
+      "affected": "031318.png + 031426.png",
+      "finding": "Summary card shows 000008, while the following detailed screenshot repeats ADT-C-07 / sample 000007.",
+      "disposition": "Pair marked invalid; correct 000008 pair 031556.png + 031630.png used."
+    },
+    {
+      "issue_id": "CAP-003",
+      "severity": "Medium",
+      "affected": "Sample 000014",
+      "finding": "Summary card radiation coefficient reads 12.1; detailed analyzer reads 12.4.",
+      "disposition": "Both retained in comparison sheet; no silent correction."
+    },
+    {
+      "issue_id": "CAP-004",
+      "severity": "Low",
+      "affected": "Sample 000012 nodal line",
+      "finding": "The nodal-line text is visually/OCR ambiguous; 299 mm is consistent with the displayed geometry and expected ~54% nodal location.",
+      "disposition": "Recorded as 299 mm and flagged here."
     }
   ],
-  "status": "intake_batch_complete_with_gaps",
-  "notes": "TORREFIED Adirondack MB Sound batch only. Stated 22 pieces; 21 specimen records (catalog 000001\u2013000022 except gap 000002). Dual-ID: 000001/000003\u2013000010 \u2194 ADT-C-##; 000011\u2013000022 \u2194 ADT-W-01\u202612. Specimen IDs use prefix mb-adt- (Adirondack Torrefied). Do NOT merge with plain/untreated Adirondack cohort mb_sound_adirondack. Gap 000002 currently unavailable (operator 2026-08-02).",
-  "treatment": "torrefied",
-  "distinct_from": [
-    "mb_sound_adirondack"
-  ]
+  "readme_notes": [
+    "Primary numerical source: detailed analyzer screen (Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti).",
+    "Summary-card values retained separately for audit comparison.",
+    "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
+    "Expected 000002 absent \u2014 not fabricated."
+  ],
+  "notes": "Rebuilt from Torrefied_Adirondack_Complete_Laboratory_Record.xlsx (21/22; gap 000002). Detailed analyzer is primary; summary cards retained for audit. CAP-002 crossed pair for 000008 dispositioned per workbook."
 }

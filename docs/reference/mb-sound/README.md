@@ -7,6 +7,7 @@
 | Doc | Purpose |
 |-----|---------|
 | [`DO_SIP_PROGRAM.md`](./DO_SIP_PROGRAM.md) | Dev Order sequence + intake rules |
+| [`LABORATORY_RECORD.md`](./LABORATORY_RECORD.md) | Complete laboratory procedural record (`mb_sound_lab_procedure_v1`) |
 | [`TREATMENT_COHORTS.md`](./TREATMENT_COHORTS.md) | Torrefied vs plain (etc.) suite discrimination |
 | [`NAMESPACE.md`](./NAMESPACE.md) | Provisional field alignment (non-authoritative) |
 | [`LINKAGE.md`](./LINKAGE.md) | Numbered cards vs unnumbered spectra |

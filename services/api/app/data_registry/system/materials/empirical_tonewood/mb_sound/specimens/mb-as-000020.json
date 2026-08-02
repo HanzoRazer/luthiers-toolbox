@@ -1,7 +1,8 @@
 {
   "specimen_id": "mb-as-000020",
   "dataset": "mb_sound",
-  "dataset_version": "0.4.0-draft",
+  "dataset_version": "0.5.0-draft",
+  "record_schema": "mb_sound_lab_procedure_v1",
   "record_kind": "measured_panel",
   "species_id": "spruce_european",
   "species_cohort": "alpine_spruce",
@@ -13,41 +14,91 @@
     "catalog_id": "000020",
     "analysis_sample_name": "ABA-W-10",
     "species_label_vendor": "ALPINE SPRUCE",
-    "card": {
-      "density_kg_m3": 416.2,
-      "stiffness_gpa": 11.0,
-      "resonance_frequency_hz": 58.5,
-      "sustain_q_factor": 149.5,
-      "radiation_coefficient": 12.4
+    "identity": {
+      "catalog_id": "000020",
+      "analysis_sample_name": "ABA-W-10",
+      "species_label_vendor": "ALPINE SPRUCE",
+      "role": "soundboard",
+      "treatment": "plain",
+      "species_cohort": "alpine_spruce"
     },
-    "analysis_ui": {
-      "sample_length_mm": 625,
-      "sample_width_mm": 236,
-      "sample_thickness_mm": 4.3,
-      "sample_mass_g": 264,
-      "sample_density_kg_m3": 416.2,
-      "sample_nodal_lines_mm": 338,
-      "resonance_freq_hz": 58.5,
-      "time_constant_ms": 814.3,
-      "log_decrement": 0.021,
-      "q_factor": 149.5,
-      "fitting_pct": 95.4,
-      "young_modulus_gpa": 11.0,
-      "radiation_coefficient": 12.4,
-      "peak_ampl_dbfs": -1.6,
+    "specimen_geometry": {
+      "length_mm": 625,
+      "width_mm": 236,
+      "thickness_mm": 4.3,
+      "mass_g": 264,
+      "density_kg_m3_stated": 416.2,
+      "nodal_lines_mm": 338,
+      "moisture_content_pct": null,
+      "cutting_year": null,
+      "grain_orientation_note": null,
+      "boundary_condition": null
+    },
+    "measurement_procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "elastic_method": "vendor_stated",
+      "analysis_software": {
+        "name": "Nicoletti",
+        "attribution": "Giuliano Nicoletti (vendor-stated)",
+        "version": null
+      },
+      "select_source": "Mono",
+      "excitation": null,
+      "sensor_channel": null,
+      "support_condition": null
+    },
+    "signal_recording": {
       "total_rec_length_sec": 17.9,
       "visualized_length_sec": 3.9,
-      "select_source": "Mono"
+      "peak_ampl_dbfs": -1.6,
+      "sample_rate_hz": null,
+      "bit_depth": null,
+      "channel_label": "Mono"
     },
-    "field_provenance": {
-      "card": "video_frame_mb_sound_card",
-      "analysis_ui": "video_frame_nicoletti_ui",
-      "source_url": null,
+    "vendor_surfaces": {
+      "summary_card": {
+        "density_kg_m3": 416.2,
+        "stiffness_gpa": 11.0,
+        "resonance_frequency_hz": 58.5,
+        "sustain_q_factor": 149.5,
+        "radiation_coefficient": 12.4
+      },
+      "detailed_analysis": {
+        "resonance_freq_hz": 58.5,
+        "time_constant_ms": 814.3,
+        "log_decrement": 0.021,
+        "q_factor": 149.5,
+        "fitting_pct": 95.4,
+        "young_modulus_gpa": 11.0,
+        "radiation_coefficient": 12.4
+      }
+    },
+    "resonance_modes": [
+      {
+        "label": "resonance_vendor",
+        "frequency_hz": 58.5,
+        "mn": null,
+        "q_factor": 149.5,
+        "notes": "Single vendor resonance; (m,n) not stated"
+      }
+    ],
+    "batch": {
       "batch_title": "Alpine Spruce - MB Sound - Sampling and analysis of the complete lot",
       "batch_size_stated": 22,
+      "batch_sequence": null,
+      "video_t_start_sec": null,
+      "video_t_end_sec": null,
+      "artifact_id": "yt_alpine_spruce_complete_lot"
+    },
+    "field_provenance": {
+      "summary_card_surface": "video_frame_mb_sound_card",
+      "detailed_analysis_surface": "video_frame_nicoletti_ui",
+      "source_url": null,
       "extracted_at": "2026-08-02",
       "extractor": "manual_spreadsheet_summary",
-      "notes": "Ingested from user Alpine Spruce complete-lot spreadsheet (detailed analysis values). Dual-ID 000020 ↔ ABA-W-10. Verify against original video before certified-lab claim."
+      "intake_workbook_generation": "tonewood_property_v1_migrated_to_lab_procedure_v1",
+      "confidence": null,
+      "notes": "Ingested from user Alpine Spruce complete-lot spreadsheet (detailed analysis values). Dual-ID 000020 \u2194 ABA-W-10. Verify against original video before certified-lab claim."
     }
   },
   "normalized": {
@@ -65,7 +116,18 @@
     "time_constant_ms": 814.3,
     "fitting_pct": 95.4,
     "radiation_coefficient_vendor": 12.4,
-    "field_alignment_note": "Young's Modulus / Stiffness → modulus_of_elasticity_gpa (provisional). Dual-ID: 000020 ↔ ABA-W-10. species_id spruce_european (Picea abies); suite discrimination via species_cohort alpine_spruce (not european_spruce)."
+    "field_alignment_note": "Young's Modulus / Stiffness \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000020 \u2194 ABA-W-10. species_id spruce_european (Picea abies); suite discrimination via species_cohort alpine_spruce (not european_spruce).",
+    "signal": {
+      "peak_ampl_dbfs": -1.6,
+      "total_rec_length_sec": 17.9,
+      "visualized_length_sec": 3.9,
+      "select_source": "Mono"
+    },
+    "procedure": {
+      "method_label": "vendor_free_plate_resonance",
+      "fitting_pct": 95.4,
+      "nodal_lines_mm": 338
+    }
   },
   "derived": {
     "volume_m3": null,
@@ -73,24 +135,25 @@
     "speed_of_sound_m_s": null,
     "radiation_ratio_toolbox": null,
     "q_from_log_decrement": null,
-    "notes": "Filled by DO-SIP-014 validation pass — not authored by hand."
+    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
   },
   "validation": {
     "status": "partial",
     "checks": {
       "mass_density_volume": "pending_corpus_validator",
       "card_ui_fingerprint_match": "pass",
-      "dual_vendor_ids_present": "pass"
+      "dual_vendor_ids_present": "pass",
+      "lab_procedure_schema": "pass"
     }
   },
   "unresolved": {
     "E_C_gpa": "not published on source spreadsheet rows",
     "resonance_mode_mn": "vendor single resonance; (m,n) not stated",
-    "radiation_coefficient_definition": "vendor/Nicoletti formula — confirm vs Schelleng c/ρ and Toolbox ×1e6 scale",
-    "source_video_url": "Alpine Spruce complete-lot YouTube URL not confirmed in this paste — fill when known",
-    "intake_source": "User spreadsheet \"Maderas Barber MB Sound – Alpine Spruce Complete Lot (22 Samples)\" transcribed from summary cards + spectral screenshots",
+    "radiation_coefficient_definition": "vendor/Nicoletti formula \u2014 confirm vs Schelleng c/\u03c1 and Toolbox \u00d71e6 scale",
+    "source_video_url": "Alpine Spruce complete-lot YouTube URL not confirmed in this paste \u2014 fill when known",
+    "intake_source": "User spreadsheet \"Maderas Barber MB Sound \u2013 Alpine Spruce Complete Lot (22 Samples)\" transcribed from summary cards + spectral screenshots",
     "spectrum_plot_id": "linked via Sample name ABA-W-10 + fingerprint to catalog 000020",
-    "analysis_name_scheme": "ABA-W-10 W-series — meaning of W vs C unknown (parallel to ADT-W / CED-W)"
+    "analysis_name_scheme": "ABA-W-10 W-series \u2014 meaning of W vs C unknown (parallel to ADT-W / CED-W)"
   },
   "artifacts": {
     "video_url": null,
@@ -101,6 +164,8 @@
     "audio_ref": null,
     "spectrum_ref": null,
     "impulse_ref": null,
-    "nodal_image_ref": null
+    "nodal_image_ref": null,
+    "software_ref": "nicoletti_measurement_software",
+    "batch_artifact_id": "yt_alpine_spruce_complete_lot"
   }
 }
