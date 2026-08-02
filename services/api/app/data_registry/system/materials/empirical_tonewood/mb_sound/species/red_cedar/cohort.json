@@ -34,5 +34,44 @@
   "catalog_gaps": [],
   "status": "intake_batch_complete",
   "specimen_id_prefix": "mb-rc-",
-  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 22 specimen records present (catalog 000001–000022 complete). Prefix mb-rc-. Dual-ID: 000001–000010 ↔ CED-C-##; 000011–000022 ↔ CED-W-01…12. 000009 gap cleared 2026-08-02."
+  "record_schema": "mb_sound_lab_procedure_v1",
+  "laboratory_workbook": "source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
+  "primary_numerical_source": "detailed_analyzer",
+  "capture_audit": [
+    {
+      "issue_id": "RC-001",
+      "severity": "Medium",
+      "affected": "000005",
+      "finding": "Summary card displays Q = 132.8; detailed analyzer displays Q = 134.4.",
+      "disposition": "Both values retained; detailed value remains primary."
+    },
+    {
+      "issue_id": "RC-002",
+      "severity": "Low",
+      "affected": "000021",
+      "finding": "Summary card displays resonance = 50.5 Hz; detailed analyzer displays 50.4 Hz.",
+      "disposition": "Treated as run/rounding variation and preserved."
+    },
+    {
+      "issue_id": "RC-003",
+      "severity": "Low",
+      "affected": "000020",
+      "finding": "Analyzer sample name is partly obscured in the detailed screenshot.",
+      "disposition": "Recorded as CED-W-10 from sequence; verify against original source if available."
+    },
+    {
+      "issue_id": "RC-004",
+      "severity": "Medium",
+      "affected": "All samples",
+      "finding": "Graphs are available only as rendered screenshots, not numeric signal arrays.",
+      "disposition": "Embedded image archive preserves visual evidence; no digitized values are presented as raw data."
+    }
+  ],
+  "readme_notes": [
+    "Primary numerical source: detailed analyzer screen (Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti).",
+    "Summary-card values retained separately for audit comparison.",
+    "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
+    "22/22 specimens recovered (000001\u2013000022)."
+  ],
+  "notes": "Rebuilt from Red_Cedar_Complete_Laboratory_Record.xlsx (22/22). Detailed analyzer primary; summary cards audited. Dual-ID: 000001\u2013000010 \u2194 CED-C-##; 000011\u2013000022 \u2194 CED-W-01\u202612. Distinct from red_cedar_30yr_naturally_dried."
 }

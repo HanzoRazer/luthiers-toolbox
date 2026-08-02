@@ -46,9 +46,14 @@ Property fields keep TonewoodEntry-aligned names. Additive groups:
 
 Forbidden synonyms unchanged (`stiffness_gpa`, `youngs_modulus`, `moe`, …).
 
-## Reference workbook (Torrefied Adirondack)
+## Reference workbooks
 
-`source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx`
+| Suite | Path |
+|-------|------|
+| Torrefied Adirondack | `source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx` |
+| Red Cedar (plain) | `source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx` |
+
+### Torrefied Adirondack workbook
 
 | Sheet | Role |
 |-------|------|
@@ -61,6 +66,10 @@ Forbidden synonyms unchanged (`stiffness_gpa`, `youngs_modulus`, `moe`, …).
 | Spectral Sheet Archive | Embedded cropped screenshots (visual evidence only) |
 
 **Rule:** detailed analyzer is the primary numerical source; summary-card values stay under `vendor_surfaces.summary_card` for audit.
+
+### Red Cedar (plain) workbook
+
+Same sheet pattern. Capture audits: RC-001 (000005 Q card/detail), RC-002 (000021 f 50.5/50.4), RC-003 (000020 name obscured → CED-W-10), RC-004 (screenshot-only graphs). 22/22 complete; do not pool with `red_cedar_30yr_naturally_dried`.
 
 ## Migration
 

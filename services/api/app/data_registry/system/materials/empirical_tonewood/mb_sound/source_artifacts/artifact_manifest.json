@@ -69,7 +69,9 @@
         "mb-rc-000021",
         "mb-rc-000022"
       ],
-      "catalog_gaps_noted": []
+      "catalog_gaps_noted": [],
+      "laboratory_workbook": "source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
+      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. 22/22 complete."
     },
     {
       "artifact_id": "yt_alpine_spruce_complete_lot",
@@ -161,6 +163,46 @@
         "mb-adt-000020",
         "mb-adt-000021",
         "mb-adt-000022"
+      ],
+      "sheets": [
+        "README",
+        "Specimen Master",
+        "Acquisition Procedure",
+        "Summary vs Detailed",
+        "Capture Audit",
+        "Batch Statistics",
+        "Spectral Sheet Archive"
+      ],
+      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
+    },
+    {
+      "artifact_id": "workbook_red_cedar_lab_record",
+      "type": "laboratory_workbook",
+      "path": "source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
+      "title": "Red Cedar \u2013 Complete Laboratory Procedural Record",
+      "linked_specimen_ids": [
+        "mb-rc-000001",
+        "mb-rc-000002",
+        "mb-rc-000003",
+        "mb-rc-000004",
+        "mb-rc-000005",
+        "mb-rc-000006",
+        "mb-rc-000007",
+        "mb-rc-000008",
+        "mb-rc-000009",
+        "mb-rc-000010",
+        "mb-rc-000011",
+        "mb-rc-000012",
+        "mb-rc-000013",
+        "mb-rc-000014",
+        "mb-rc-000015",
+        "mb-rc-000016",
+        "mb-rc-000017",
+        "mb-rc-000018",
+        "mb-rc-000019",
+        "mb-rc-000020",
+        "mb-rc-000021",
+        "mb-rc-000022"
       ],
       "sheets": [
         "README",
