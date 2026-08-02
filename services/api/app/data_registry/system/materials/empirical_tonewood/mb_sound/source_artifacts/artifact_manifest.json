@@ -36,7 +36,41 @@
         "000002"
       ],
       "laboratory_workbook": "source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
-      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. Gap 000002 currently unavailable."
+      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. Gap 000002 currently unavailable.",
+      "dataset_statistics": {
+        "specimen_count": 21,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 336,
+        "populated_primary_measurements": 336,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 399,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "21 specimens containing 336 directly transcribed laboratory measurements.",
+        "catalog_gaps": [
+          "000002"
+        ],
+        "expected_batch_size": 22,
+        "missing_specimen_note": "Sample 000002 was absent from the submitted Torrefied Adirondack source set, which is why this workbook contains 21 specimens rather than 22."
+      }
     },
     {
       "artifact_id": "yt_red_cedar_complete_batch",
@@ -71,7 +105,36 @@
       ],
       "catalog_gaps_noted": [],
       "laboratory_workbook": "source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
-      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. 22/22 complete."
+      "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. 22/22 complete.",
+      "dataset_statistics": {
+        "specimen_count": 22,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 352,
+        "populated_primary_measurements": 352,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 418,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+      }
     },
     {
       "artifact_id": "yt_alpine_spruce_complete_lot",
@@ -106,7 +169,36 @@
       ],
       "catalog_gaps_noted": [],
       "notes": "Complete laboratory workbook is primary intake for this suite. Detailed analyzer primary; summary cards audited separately. 22/22 complete. YouTube URL still pending.",
-      "laboratory_workbook": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx"
+      "laboratory_workbook": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+      "dataset_statistics": {
+        "specimen_count": 22,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 352,
+        "populated_primary_measurements": 352,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 418,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+      }
     },
     {
       "artifact_id": "yt_red_cedar_30yr_naturally_dried",
@@ -207,7 +299,41 @@
         "Batch Statistics",
         "Spectral Sheet Archive"
       ],
-      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
+      "notes": "Complete laboratory workbook for available records: 21 specimens, 336/336 primary measurements (100%); gap 000002 absent from source set. User-authored complete lab record from 44 screenshots; embeds cropped source images.",
+      "dataset_statistics": {
+        "specimen_count": 21,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 336,
+        "populated_primary_measurements": 336,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 399,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "21 specimens containing 336 directly transcribed laboratory measurements.",
+        "catalog_gaps": [
+          "000002"
+        ],
+        "expected_batch_size": 22,
+        "missing_specimen_note": "Sample 000002 was absent from the submitted Torrefied Adirondack source set, which is why this workbook contains 21 specimens rather than 22."
+      }
     },
     {
       "artifact_id": "workbook_red_cedar_lab_record",
@@ -247,7 +373,36 @@
         "Batch Statistics",
         "Spectral Sheet Archive"
       ],
-      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
+      "notes": "Complete laboratory workbook: 22 specimens, 352/352 primary measurements (100%). User-authored complete lab record from 44 screenshots; embeds cropped source images.",
+      "dataset_statistics": {
+        "specimen_count": 22,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 352,
+        "populated_primary_measurements": 352,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 418,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+      }
     },
     {
       "artifact_id": "workbook_alpine_spruce_lab_record",
@@ -287,7 +442,36 @@
         "Batch Statistics",
         "Spectral Sheet Archive"
       ],
-      "notes": "User-authored complete lab record from 44 screenshots; embeds cropped source images."
+      "notes": "Complete laboratory workbook: 22 specimens, 352/352 primary measurements (100%). User-authored complete lab record from 44 screenshots; embeds cropped source images.",
+      "dataset_statistics": {
+        "specimen_count": 22,
+        "catalog_range": "000001-000022",
+        "primary_measurement_fields_per_specimen": 16,
+        "max_possible_primary_measurements": 352,
+        "populated_primary_measurements": 352,
+        "blank_primary_measurements": 0,
+        "primary_data_completeness_pct": 100.0,
+        "populated_record_cells_incl_ids_material": 418,
+        "primary_fields": [
+          "Sample Length (mm)",
+          "Sample Width (mm)",
+          "Sample Thickness (mm)",
+          "Sample Mass (g)",
+          "Sample Density (kg/m\u00b3)",
+          "Sample Nodal Lines (mm)",
+          "Resonance Frequency (Hz)",
+          "Time Constant (ms)",
+          "Log Decrement",
+          "Q Factor / Sustain",
+          "Fitting (%)",
+          "Young's Modulus / Stiffness (GPa)",
+          "Radiation Coefficient",
+          "Total Recording Length (s)",
+          "Visualized Length (s)",
+          "Peak Amplitude (dBFS)"
+        ],
+        "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+      }
     },
     {
       "artifact_id": "workbook_red_cedar_30yr_lab_record",

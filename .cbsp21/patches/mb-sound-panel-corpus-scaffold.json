@@ -170,19 +170,20 @@
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json",
       "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json",
-      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json"
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json",
+      "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/corpus_laboratory_statistics.json"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Replace 30yr Red Cedar cohort with complete 49-specimen laboratory workbook (000024\u2013000072; 767 transcribed + 98 verification values).",
-    "why_not_redundant": "Supersedes prior 17-specimen partial workbook for the same treatment cohort.",
+    "what_changed": "Add full laboratory-analysis dataset_statistics to Alpine, Red Cedar plain, and Torrefied Adirondack cohorts; corpus totals 114 / 1807 primary.",
+    "why_not_redundant": "Documents completeness of the three complete lab workbooks alongside 30yr RC.",
     "governance": "Draft until corpus gates pass; no production behavior changes."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/mb_sound_validate_corpus.py --write-validation"
     ],
-    "known_residual": "114 lab-procedure specimens. Workbook-complete available suites. BLOCKED: plain Adirondack, European spruce, ADT 000002, Alpine/30yr video URLs. 30yr: 17 blank primary cells left null per Review Notes."
+    "known_residual": "114 specimens; 1,807 transcribed primary measurements. BLOCKED: plain Adirondack, European spruce, ADT 000002, Alpine/30yr video URLs."
   },
   "files": [
     {
@@ -2014,6 +2015,18 @@
       "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json",
       "scan_targets": [
         "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",
+      "verification": [
+        "python3 scripts/mb_sound_validate_corpus.py --write-validation"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/corpus_laboratory_statistics.json",
+      "intent": "DO-SIP-013 MB Sound lab procedure: services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/corpus_laboratory_statistics.json",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/corpus_laboratory_statistics.json"
       ],
       "risk": "low",
       "behavior_change": "none - draft empirical dataset intake; no production solver/default changes",

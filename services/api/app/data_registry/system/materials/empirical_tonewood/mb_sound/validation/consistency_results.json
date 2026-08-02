@@ -13,7 +13,7 @@
     "plain": 44,
     "naturally_dried_30yr": 49
   },
-  "dataset_digest_sha256": "a210eed402bba07bedeca06969b24a8941b54b1b1f5a825018c65e85e0769904",
+  "dataset_digest_sha256": "ea77ca6397c2e4b34d92133a59a55f07ff14a8ec3bec7f33e0f59590df653717",
   "errors": [],
   "warnings": [
     "mb-rc30-000056: incomplete geometry for mass/density check"

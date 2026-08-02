@@ -154,6 +154,15 @@
       "intake_workbook_generation": "lab_procedure_v1_alpine_spruce",
       "confidence": "high",
       "notes": "Rebuilt from complete laboratory workbook (source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx). Primary numerical source = detailed analyzer. Dual-ID 000009 \u2194 ABA-C-09. Summary screenshots: Screenshot 2026-08-02 002620.png; detailed: Screenshot 2026-08-02 002634.png. species_id spruce_european but cohort alpine_spruce (distinct from european_spruce stub)."
+    },
+    "verification_calculations": {
+      "calculated_density_kg_m3": 431.8,
+      "calculated_radiation_coefficient": 12.31,
+      "formulas": {
+        "calculated_density_kg_m3": "mass_g*1e6/(length_mm*width_mm*thickness_mm)",
+        "calculated_radiation_coefficient": "sqrt(E_gpa*1e9/density_kg_m3)/density_kg_m3"
+      },
+      "note": "Verification calcs for full laboratory analysis parity; not displayed source columns in this workbook (unlike 30yr Red Cedar)."
     }
   },
   "normalized": {
@@ -188,12 +197,13 @@
     "field_alignment_note": "Detailed analyzer is primary numerical source (lab workbook rule). stiffness_gpa/young_modulus_gpa \u2192 modulus_of_elasticity_gpa (provisional). Dual-ID: 000009 \u2194 ABA-C-09. Catalog uniqueness is (species_cohort, catalog_id). Cohort alpine_spruce distinct from european_spruce stub."
   },
   "derived": {
-    "volume_m3": null,
-    "density_from_geometry_kg_m3": null,
-    "speed_of_sound_m_s": null,
+    "volume_m3": 0.000558126,
+    "density_from_geometry_kg_m3": 431.8,
+    "speed_of_sound_m_s": 5315.432363742838,
     "radiation_ratio_toolbox": null,
     "q_from_log_decrement": null,
-    "notes": "Filled by DO-SIP-014 validation pass \u2014 not authored by hand."
+    "notes": "Verification density/radiation filled for laboratory-analysis parity. Remaining derived fields reserved for DO-SIP-014.",
+    "radiation_coefficient_schelleng": 12.31
   },
   "validation": {
     "status": "partial",
@@ -202,7 +212,9 @@
       "card_ui_fingerprint_match": "audited_in_workbook",
       "dual_vendor_ids_present": "pass",
       "lab_procedure_schema": "pass",
-      "primary_source_detailed_analyzer": "pass"
+      "primary_source_detailed_analyzer": "pass",
+      "verification_calcs_separated": "pass",
+      "laboratory_analysis_complete": "pass"
     }
   },
   "unresolved": {

@@ -73,5 +73,35 @@
     "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
     "22/22 specimens recovered (000001\u2013000022)."
   ],
-  "notes": "Rebuilt from Red_Cedar_Complete_Laboratory_Record.xlsx (22/22). Detailed analyzer primary; summary cards audited. Dual-ID: 000001\u2013000010 \u2194 CED-C-##; 000011\u2013000022 \u2194 CED-W-01\u202612. Distinct from red_cedar_30yr_naturally_dried."
+  "notes": "Rebuilt from Red_Cedar_Complete_Laboratory_Record.xlsx (22/22). Full laboratory analysis: 352/352 primary measurements (100%). Detailed analyzer primary; summary cards audited. Dual-ID: 000001\u2013000010 \u2194 CED-C-##; 000011\u2013000022 \u2194 CED-W-01\u202612. Distinct from red_cedar_30yr_naturally_dried.",
+  "dataset_statistics": {
+    "specimen_count": 22,
+    "catalog_range": "000001-000022",
+    "primary_measurement_fields_per_specimen": 16,
+    "max_possible_primary_measurements": 352,
+    "populated_primary_measurements": 352,
+    "blank_primary_measurements": 0,
+    "primary_data_completeness_pct": 100.0,
+    "populated_record_cells_incl_ids_material": 418,
+    "primary_fields": [
+      "Sample Length (mm)",
+      "Sample Width (mm)",
+      "Sample Thickness (mm)",
+      "Sample Mass (g)",
+      "Sample Density (kg/m\u00b3)",
+      "Sample Nodal Lines (mm)",
+      "Resonance Frequency (Hz)",
+      "Time Constant (ms)",
+      "Log Decrement",
+      "Q Factor / Sustain",
+      "Fitting (%)",
+      "Young's Modulus / Stiffness (GPa)",
+      "Radiation Coefficient",
+      "Total Recording Length (s)",
+      "Visualized Length (s)",
+      "Peak Amplitude (dBFS)"
+    ],
+    "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+  },
+  "laboratory_analysis_complete": true
 }

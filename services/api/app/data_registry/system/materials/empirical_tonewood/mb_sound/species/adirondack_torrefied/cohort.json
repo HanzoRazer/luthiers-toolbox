@@ -74,5 +74,40 @@
     "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
     "Expected 000002 absent \u2014 not fabricated."
   ],
-  "notes": "Rebuilt from Torrefied_Adirondack_Complete_Laboratory_Record.xlsx (21/22; gap 000002). Detailed analyzer is primary; summary cards retained for audit. CAP-002 crossed pair for 000008 dispositioned per workbook."
+  "notes": "Rebuilt from Torrefied_Adirondack_Complete_Laboratory_Record.xlsx (21/22; gap 000002). Full laboratory analysis of available records: 336/336 primary measurements (100%). 000002 absent from submitted source set \u2014 not fabricated. Detailed analyzer is primary; summary cards retained for audit.",
+  "dataset_statistics": {
+    "specimen_count": 21,
+    "catalog_range": "000001-000022",
+    "primary_measurement_fields_per_specimen": 16,
+    "max_possible_primary_measurements": 336,
+    "populated_primary_measurements": 336,
+    "blank_primary_measurements": 0,
+    "primary_data_completeness_pct": 100.0,
+    "populated_record_cells_incl_ids_material": 399,
+    "primary_fields": [
+      "Sample Length (mm)",
+      "Sample Width (mm)",
+      "Sample Thickness (mm)",
+      "Sample Mass (g)",
+      "Sample Density (kg/m\u00b3)",
+      "Sample Nodal Lines (mm)",
+      "Resonance Frequency (Hz)",
+      "Time Constant (ms)",
+      "Log Decrement",
+      "Q Factor / Sustain",
+      "Fitting (%)",
+      "Young's Modulus / Stiffness (GPa)",
+      "Radiation Coefficient",
+      "Total Recording Length (s)",
+      "Visualized Length (s)",
+      "Peak Amplitude (dBFS)"
+    ],
+    "description": "21 specimens containing 336 directly transcribed laboratory measurements.",
+    "catalog_gaps": [
+      "000002"
+    ],
+    "expected_batch_size": 22,
+    "missing_specimen_note": "Sample 000002 was absent from the submitted Torrefied Adirondack source set, which is why this workbook contains 21 specimens rather than 22."
+  },
+  "laboratory_analysis_complete": true
 }

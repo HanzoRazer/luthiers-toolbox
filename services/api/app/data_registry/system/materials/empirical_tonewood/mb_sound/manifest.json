@@ -138,7 +138,7 @@
   "record_schemas": {
     "mb_sound_lab_procedure_v1": 114
   },
-  "dataset_digest_sha256": "a210eed402bba07bedeca06969b24a8941b54b1b1f5a825018c65e85e0769904",
+  "dataset_digest_sha256": "ea77ca6397c2e4b34d92133a59a55f07ff14a8ec3bec7f33e0f59590df653717",
   "paths": {
     "specimens": "specimens/",
     "species": "species/",
@@ -164,5 +164,18 @@
     "corpus intake ~complete",
     "consistency_results.errors empty",
     "gates.intake_complete_approx_60 true"
-  ]
+  ],
+  "laboratory_corpus_statistics": {
+    "datasets": [
+      "adirondack_torrefied",
+      "red_cedar",
+      "alpine_spruce",
+      "red_cedar_30yr_naturally_dried"
+    ],
+    "specimen_count": 114,
+    "populated_primary_measurements": 1807,
+    "calculated_verification_values_30yr_red_cedar": 98,
+    "description": "114 specimens; 1,807 directly transcribed primary laboratory measurements, plus calculated verification values in the 30-year Red Cedar workbook."
+  },
+  "laboratory_statistics_path": "validation/corpus_laboratory_statistics.json"
 }
