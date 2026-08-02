@@ -77,6 +77,10 @@ Same sheet pattern. Capture audits: RC-001 (000005 Q card/detail), RC-002 (00002
 
 Same sheet pattern. Capture audits: AS-001 (000021 ~0.1 Hz note), AS-002 (screenshot-only graphs), AS-003 (env/calibration unavailable). 22/22 complete; `species_id` `spruce_european` but cohort `alpine_spruce` (distinct from `european_spruce` stub). Source video URL pending. Note: 000001/000002 share geometry/mass with different acoustics.
 
+### 30-Year Naturally Dried Red Cedar workbook
+
+Lighter sheet set: `30-Year Red Cedar` + `Batch Summary` + `Source Pairing` + `Notes` (no embedded Spectral Sheet Archive). 17 specimens (`000024`–`000040`); screenshot filenames paired; detailed analyzer primary. Do not pool with plain `red_cedar`. Earlier catalog IDs and video URL remain unavailable.
+
 ## Migration
 
 | Generation | Shape |

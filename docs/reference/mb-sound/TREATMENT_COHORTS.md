@@ -45,7 +45,7 @@ Same `species_id` (`spruce_adirondack`) is allowed. Discrimination is mandatory 
 Operator report: the following are **not available now**. Leave stubs/gaps; do not fabricate specimens or URLs.
 
 1. 30yr red-cedar source video URL  
-2. 30yr red-cedar catalog frames before `000024` (and any after `000040`)  
+2. 30yr red-cedar catalog frames before `000024` (and any after `000040`) — transcribed range now workbook-backed  
 3. Plain Adirondack suite frames  
 4. European spruce suite frames  
 5. Adirondack torrefied gap `000002` (still unavailable)
