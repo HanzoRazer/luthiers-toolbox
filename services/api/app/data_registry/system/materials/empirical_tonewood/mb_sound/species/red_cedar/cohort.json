@@ -17,7 +17,8 @@
     "mb-rc-000007",
     "mb-rc-000008",
     "mb-rc-000010",
-    "mb-rc-000011"
+    "mb-rc-000011",
+    "mb-rc-000012"
   ],
   "catalog_gaps": [
     {
@@ -29,5 +30,5 @@
   ],
   "status": "intake_partial",
   "specimen_id_prefix": "mb-rc-",
-  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 10 specimen records present; catalog gap 000009. Prefix mb-rc-. Dual-ID: 000001–000008/000010 ↔ CED-C-##; 000011 ↔ CED-W-01 (W-series starts)."
+  "notes": "RED CEDAR MB Sound complete-batch video (https://www.youtube.com/watch?v=L3sP5MWmVvs). 11 specimen records present; catalog gap 000009. Prefix mb-rc-. Dual-ID: CED-C-## for early IDs; 000011↔CED-W-01, 000012↔CED-W-02."
 }
