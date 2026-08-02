@@ -112,6 +112,14 @@ Sheets: README, Specimen Master (35 cols), Acquisition Procedure, Capture Audit,
 
 Detailed analyzer primary; calculated verification fields stored separately (`source.verification_calculations` / `derived`). Unreadable fields left blank (Review Notes). Do not pool with plain `red_cedar`. Video URL unavailable.
 
+### Four-dataset corpus totals
+
+| | |
+|--|--:|
+| Specimens | **114** |
+| Directly transcribed primary measurements | **1,807** |
+| Calculated verification values (30yr Red Cedar workbook) | **98** |
+
 ## Migration
 
 | Generation | Shape |
