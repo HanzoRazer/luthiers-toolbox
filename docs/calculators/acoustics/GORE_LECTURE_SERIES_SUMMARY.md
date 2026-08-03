@@ -214,6 +214,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md`](./nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md) | Kit δ unread; software identity |
 | [`nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md`](./nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md) | Spreadsheets; exact \(Y\) formula; δ still open |
 | [`nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md`](./nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md) | ETS masses; TPC formulas; book reference numbers |
+| [`nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md`](./nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md) | Sheet cells; SRC formula; stage-Hz calibration |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -231,6 +232,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Nicoletti / MB Acoustic Study Set | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | Three-phase kit how-to: miniDSP tap FRF → Chladni → 1 kg bridge dial |
 | Nicoletti / MB kit interview | [`nicoletti_mb_kit_interview/`](./nicoletti_mb_kit_interview/) | Doctrine interview: why measure; between-note tuning; SRC/Q wood pick; monopole \(f,m,k\) → mobility; Chladni mass-at-pole |
 | Nicoletti Science / Luthier Stories | [`nicoletti_science_luthier_stories/`](./nicoletti_science_luthier_stories/) | Watts interview: \(c\) in wood/air; responsiveness+headroom; ETS; TPC tonewood; offset hole; active-back mobility; D28 vs Larrivée contrast |
+| Nicoletti tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | PLG/EGB webinar: \(\rho\)/\(E\)/SRC/orthotropy/Q; REW+Caldersmith; Gore vibrational stiffness; mold pretune; wolf bands |
 
 ### Somogyi 01 — what it adds
 
@@ -320,7 +322,26 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Gore Packs 2/3/5/7 | Wolves, \(Y\), side-mass cousins of ETS |
 | MB Sound corpus | TPC ≠ panel workbook SOP — cross-link culture only |
 
-**Open Nicoletti blockers:** G-N02 (δ), G-N01/G-N10 (kit software/spreadsheets), G-N15 (ETS masses), G-N16 (TPC formulas), G-N17 (book reference numbers), G-N08 (mode-label map).
+### Nicoletti tonewood webinar — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Parameters | \(\rho\) (impedance + bridge EQ); \(E\); Schelleng SRC (density cubed); orthotropy (\(E_L\gtrsim10 E_T\)); Q/damping |
+| Density lesson | Higher \(E\) does **not** compensate denser spruce via thinner plate (PRT scatter + sheet sims) |
+| Metrology | Prefer FFT (REW + UMIK/miniDSP; Caldersmith nodes/antinodes) over static deflection; Lucchi inadequate for damping |
+| Gore link | Explicit **vibrational stiffness** (Gore 2011/13) → target thickness/mass/SRC; calibrate to side wood |
+| Build | Top-on-sides in fixed mold; pretune monopole (e.g. 220→190) without moving dipoles; stage Hz are maker-specific |
+| Finish | ETS example 200 g ≈ 5 Hz; customer sheet: FRF, \(Y\), equiv. mass, main modes |
+| Wolves | Search bands air ~90–120 / monopole ~170–220 Hz; small mass/pins/putty; can’t erase resonances |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| G-N01 | **Partial** — REW named (N80) |
+| Gore Design/Build | Vibrational stiffness canon cited by Nicoletti |
+| TPC / kit packs | Complementary plate vs guitar-kit tooling |
+| Somogyi deflection | Different purpose/stage than preferred FFT plate \(E\) |
+
+**Open Nicoletti blockers:** G-N02 (kit δ), G-N10/G-N21–23 (sheet/SRC/targets), G-N15–17, G-N08; confirm ASR “50 GPa” (G-N22).
 
 ---
 

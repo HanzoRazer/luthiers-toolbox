@@ -4,7 +4,7 @@
 
 | ID | Gap | Severity |
 |----|-----|----------|
-| G-N01 | Measurement software name, version, OS, download URL (beyond “QR in book”) | High |
+| G-N01 | Measurement software name, version, OS, download URL (beyond “QR in book”) | Partial — webinar names **Room EQ Wizard** + UMIK/miniDSP for plate FFT; kit QR app may differ |
 | G-N02 | Dial-indicator **δ reading** on demo guitar; dial units; creep/settling protocol | **Blocker** for linking to Gore \(k\) / G-R01 |
 | G-N03 | Whether Nicoletti computes full monopole mobility \(Y=1/\sqrt{km}\) or only δ / qualitative movilidad | **Partial** — interview N31–N34: \(f\), monopole mass, stiffness → mobility; exact \(Y\) formula still unspoken |
 | G-N04 | String state, support, tap locations, mic axis for Phase 1 | Medium — tap zones partial (interview N20); string state / mic axis still open |
