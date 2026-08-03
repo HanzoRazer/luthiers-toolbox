@@ -255,7 +255,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Gore Packs 3/5/8 mobility | Efficiency language cousin — do not merge |
 | Gore modal triad | Related *relationship* discipline — do not invent Somogyi Hz ratios |
 
-**Open Somogyi blockers:** G-ES09 (top–back ratio), G-ES10 (deflection targets), G-ES11 (brace-stop words). Paste later episodes when available.
+**Open Somogyi blockers:** G-ES09 (top–back ratio), G-ES10 (deflection targets), G-ES11 (brace-stop words). Episode 03 not available; continue with other sources or later Somogyi episodes when they exist.
 
 ---
 
