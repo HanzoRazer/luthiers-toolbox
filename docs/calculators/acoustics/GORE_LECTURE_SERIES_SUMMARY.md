@@ -211,6 +211,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md`](./gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md) | App URLs; \(k\) units (**G-A05**); flexural-rigidity detail; δ still open |
 | [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, book F-number map |
 | [`gore_shop_talk_44/GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md) | Side-mass quantitative model; +25% tuck assumptions |
+| [`nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md`](./nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md) | Kit δ unread; \(Y\) vs δ-only; software identity |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -225,6 +226,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Somogyi 01 — Air pump / bracing / tap | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | Primary voice: efficient air pump; stiffness/weight + Q; tap for ringing potential; X ubiquity; don’t ignore the back; energy-loop setup |
 | Somogyi 02 — Top & Back | [`somogyi_02_top_and_back/`](./somogyi_02_top_and_back/) | Back A/B proof; coupled-oscillator demo; top–back frequency relationship; stiffness-by-deflection + brace reduction while listening |
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Build chronicle: stiffness-sanded top, X+lattice, double sides, solid linings, post-glue tap voicing; dialect contrasts with Gore side/lining/voicing culture |
+| Nicoletti / MB Acoustic Study Set | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | Three-phase kit: miniDSP tap FRF → Chladni at identified Hz → 1 kg bridge dial deflection (“movilidad”) |
 
 ### Somogyi 01 — what it adds
 
@@ -257,6 +259,26 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 
 **Open Somogyi blockers:** G-ES09 (top–back ratio), G-ES10 (deflection targets), G-ES11 (brace-stop words). Episode 03 not available; continue with other sources or later Somogyi episodes when they exist.
 
+### Nicoletti / MB Study Set — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Provenance | Giuliano Nicoletti × Maderas Barber kit from *Master in the Sound of the Acoustic Guitar* |
+| Phase 1 | miniDSP USB mic (+ serial calibration file); book-QR software **RTA**; hammer taps → curve → **monopole / dipole / tripole** freqs |
+| Phase 2 | BT amp **NS-01G** + precision speaker + phone frequency generator; oregano/pepper/sawdust Chladni at Phase-1 keys |
+| Demo Hz | This guitar only: mono ~**236–238 Hz**; dipole trial ~**275 Hz** — not design targets |
+| Phase 3 | Dial indicator on bridge; calibrated **1 kg**; Δheight = tapa deflexión / movilidad; bone strip protects bridge |
+| Depth | Connectivity video only — full SOP → Nicoletti book + MB Sound playlist |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| Gore Pack 3 / 5 / G-R01 | Same **1 kg deflection** family; **no δ spoken** → does **not** close 27 mm vs ~0.15 mm |
+| Gore Pack 6 | Alternate measurement toolchain (miniDSP vs Visual Analyzer) |
+| Somogyi ES27 | Deflection-stiffness culture (free top) vs finished-bridge kit |
+| MB Sound corpus (data PR) | Same vendor ecosystem; kit SOP ≠ panel workbook specimens |
+
+**Open Nicoletti blockers:** G-N02 (δ reading), G-N03 (full \(Y\) vs δ-only), G-N01 (software identity), G-N08 (mode-label map).
+
 ---
 
 ## Shared classification legend
@@ -269,4 +291,6 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | **RO** | Robbie O’Brien shop practice / on-camera thresholds |
 | **IS** | Irvin/Ervin Somogyi method (as attributed in source) |
 | **AP** | Apprentice / builder deviation |
+| **GN** | Giuliano Nicoletti method (as attributed in source) |
+| **MB** | Maderas Barber kit / presentation practice |
 | **OH** | Open hypothesis / taste / opinion |
