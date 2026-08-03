@@ -6,7 +6,7 @@
 | ID | Gap | Severity |
 |----|-----|----------|
 | G-ES01 | Objective criteria for “tapping / ringing potential” (pass/fail, modes, loudness) | **Blocker** for ES06 lab automation |
-| G-ES02 | Remainder of episode after ~9:52 (back-contribution proof + any bracing/tap closure) | **Blocker** for pack completeness |
+| G-ES02 | Remainder of episode after ~9:52 (back-contribution proof + any bracing/tap closure) | **Closed** — see pack 02 ES17 |
 | G-ES03 | Numeric stiffness-to-weight or Q values for demo plates | High |
 | G-ES04 | Species beyond BR / maple; grading within “spectrum of Q” | Medium |
 | G-ES05 | Whether “sound port” means top soundhole, side port, or both | Medium |
@@ -18,4 +18,4 @@
 
 | Gap ID | Closed? | Date | Evidence |
 |--------|---------|------|----------|
-| *(awaiting further transcript)* | — | — | — |
+| G-ES02 | Yes | 2026-08-03 | Continued/completed in [`../somogyi_02_top_and_back/`](../somogyi_02_top_and_back/) ES17 (knees-damped vs free back) |

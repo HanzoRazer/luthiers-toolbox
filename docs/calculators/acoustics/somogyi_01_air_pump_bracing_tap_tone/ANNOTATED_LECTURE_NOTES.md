@@ -245,15 +245,15 @@ Path: strings activate top → air mass → back → air mass / top again; energ
 
 ---
 
-### 6.3 “How do we know that?” — demonstration incomplete  
-**Timestamps:** ~9:32–9:52  
+### 6.3 “How do we know that?” — continued in episode 02  
+**Timestamps:** ~9:32–9:52 (setup); closure in Pack 02  
 
-Sets up proof that the back is involved; provided extract ends in tap/music without narrated closure.
+Sets up proof that the back is involved. **Closure:** [`../somogyi_02_top_and_back/`](../somogyi_02_top_and_back/) ES17 — back damped on knees vs lifted free → open/loud/sustaining/woody; top–back “ping-pong.”
 
 | Field | Value |
 |-------|-------|
-| Classification | **IS** (incomplete in ingest) |
-| Gap | **G-ES02** — remainder of episode required |
+| Classification | **IS** (setup here; proof in Pack 02) |
+| Gap | **G-ES02** closed 2026-08-03 |
 
 **Point ID:** ES15  
 

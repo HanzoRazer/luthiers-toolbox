@@ -3,8 +3,9 @@
 **Source:** Ervin (Irvin) Somogyi — *Guitar Maker* series episode 01: “The Air Pump – Bracing – Tap Tone.”  
 **Method school:** Somogyi primary voice (canonical teacher), not apprentice paraphrase.  
 **Content type:** Philosophy + wood selection + bracing culture + early sound-box energy path — **not** a Gore modal-tuning lecture.  
-**Status:** **PARTIAL** — provided extract covers intro through ~9:52 (back-contribution demo incomplete).  
+**Status:** Intro through ~9:52 ingested; back-contribution proof completed in Pack 02.  
 **Parent indexes:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md) (cross-links only); stands with other non-Gore Somogyi packs.  
+**Continues in:** [`../somogyi_02_top_and_back/`](../somogyi_02_top_and_back/)  
 **Related:** [`../somogyi_apprentice_build_workflow/`](../somogyi_apprentice_build_workflow/) (workshop chronicle; secondary to this voice)
 
 ## Contents
