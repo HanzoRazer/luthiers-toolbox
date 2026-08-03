@@ -218,6 +218,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md`](./nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md) | ETS masses; TPC formulas; book reference numbers |
 | [`nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md`](./nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md) | Sheet cells; SRC formula; stage-Hz calibration |
 | [`nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md`](./nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md) | Excel formulas; checklist table; δ evidence for G-R01 |
+| [`physics_mind_steel_string_lecture/GAPS_NOT_RECORDED.md`](./physics_mind_steel_string_lecture/GAPS_NOT_RECORDED.md) | Slide S/W table; X-brace geometry; dome stiffness gain |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -237,6 +238,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Nicoletti Science / Luthier Stories | [`nicoletti_science_luthier_stories/`](./nicoletti_science_luthier_stories/) | Watts interview: \(c\) in wood/air; responsiveness+headroom; ETS; TPC tonewood; offset hole; active-back mobility; D28 vs Larrivée contrast |
 | Nicoletti tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | PLG/EGB webinar: \(\rho\)/\(E\)/SRC/orthotropy/Q; REW+Caldersmith; Gore vibrational stiffness; mold pretune; wolf bands |
 | Nicoletti EGB measuring/tuning (Jul 2022) | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | FRF+mobility+Chladni practice; REW/miniDSP; δ~0.01–0.02 mm; characterizations; PLG checklist |
+| Howman — Physics Mind (Curtin 2011) | [`physics_mind_steel_string_lecture/`](./physics_mind_steel_string_lecture/) | Steel-string survey: energy path, QS/S/W wood pick, monopole/dipoles, X-brace + cube rule, basswood linings, live back, scale/intonation/bridge center |
 
 ### Somogyi 01 — what it adds
 
@@ -367,6 +369,29 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 
 **Open Nicoletti blockers:** G-N10 (Excel formulas), G-N15–17, G-N08, G-N21–23; G-R01 not fully closed without Carrico.
 
+### Howman Physics Mind (Curtin 2011) — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Epistemology | Physics = **language after intuition**; not formula-first modal rebuilds |
+| Energy | Guitar wastes string energy (not an amplifier); whole-body + bellows + hole radiation |
+| Wood | Prefer QS / split billets; fist-tap S/W + crack screen over timber reputation; spruce vs WRC by tension/bass intent |
+| Modes | Braces primarily **control modes** (~700 N steel); monopole→steel bass; cross dipole→nylon treble/projection; long dipole risky |
+| X-brace | Bridge ties X for monopole; small X-angle / finger braces bias dipoles; scalloping = factory myth |
+| Structure math | Brace height ~**cube** stiffness; ~40 ft top / ~28 ft back domes free braces toward mode control |
+| Linings / back | Hoover **basswood** linings isolate plates; tune top↔back; body-damped vs free live-back test; match effort to playing posture |
+| Setup | Longer scale → more bass/fundamental; saddle compensation by measurement; bridge at **body center** for monopole |
+| Chladni | Informative; speaker declines as process; free top ≠ rim-fixed |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| Somogyi ES01–ES17 | Air pump, S/W, live back, music-box/center-vs-edge cousin demos |
+| Gore Packs 1/3/5 | Mode vocabulary + live back; **no** mid-scale triad / mobility δ here |
+| Nicoletti EGB / MB kit | Opposite Chladni-process choice; shared mode names |
+| G-ES05 | Partial dialect close: Howman PM23 = **side** sound ports |
+
+**Open Howman blockers:** G-PM01–G-PM03 (slide S/W table, brace schedules, dome stiffness gain).
+
 ---
 
 ## Shared classification legend
@@ -377,6 +402,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | **EO** | Empirical observation |
 | **TG** | Trevor Gore recommendation / practice |
 | **RO** | Robbie O’Brien shop practice / on-camera thresholds |
+| **DH** | Dominic Howman method / recommendation |
 | **IS** | Irvin/Ervin Somogyi method (as attributed in source) |
 | **AP** | Apprentice / builder deviation |
 | **GN** | Giuliano Nicoletti method (as attributed in source) |

@@ -9,7 +9,7 @@
 | G-ES02 | Remainder of episode after ~9:52 (back-contribution proof + any bracing/tap closure) | **Closed** — see pack 02 ES17 |
 | G-ES03 | Numeric stiffness-to-weight or Q values for demo plates | High |
 | G-ES04 | Species beyond BR / maple; grading within “spectrum of Q” | Medium |
-| G-ES05 | Whether “sound port” means top soundhole, side port, or both | Medium |
+| G-ES05 | Whether “sound port” means top soundhole, side port, or both | Medium — Howman PM23 is explicitly **side** ports (dialect only; does not rewrite this film) |
 | G-ES06 | X-brace template geometry shown on camera | Medium |
 | G-ES07 | Video URL, publish date, series catalog number confirmation | Low |
 | G-ES08 | Name spelling authority in series titles (Ervin vs Irvin) — treat as same person; keep dual label | Low |
@@ -19,3 +19,4 @@
 | Gap ID | Closed? | Date | Evidence |
 |--------|---------|------|----------|
 | G-ES02 | Yes | 2026-08-03 | Continued/completed in [`../somogyi_02_top_and_back/`](../somogyi_02_top_and_back/) ES17 (knees-damped vs free back) |
+| G-ES05 | Partial | 2026-08-03 | Howman PM23 = side sound ports ([`../physics_mind_steel_string_lecture/`](../physics_mind_steel_string_lecture/)); Somogyi film wording still ambiguous |

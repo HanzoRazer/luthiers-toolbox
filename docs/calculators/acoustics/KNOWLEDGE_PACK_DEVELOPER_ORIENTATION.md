@@ -32,6 +32,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **GN** | Giuliano Nicoletti |
 | **MB** | Maderas Barber kit / presentation |
 | **MW** | Michael Watts framing |
+| **DH** | Dominic Howman method |
 | **OH** | Open hypothesis / taste |
 
 ### Processing pipeline used
@@ -60,7 +61,8 @@ transcript paste
 | Y | Somogyi apprentice workflow |
 | ES | Somogyi primary (01–02) |
 | N | Nicoletti family (continues across his packs) |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-T##`, …) |
+| PM | Howman *Physics Mind* steel-string seminar |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-T##`, …) |
 
 ---
 
@@ -97,6 +99,12 @@ transcript paste
 | Tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | N69–N99 |
 | EGB measuring/tuning Jul 2022 | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | N100–N130 |
 
+### D. Howman (related non-Gore)
+
+| Pack | Path | Notes |
+|------|------|-------|
+| Physics Mind (Curtin 2011) | [`physics_mind_steel_string_lecture/`](./physics_mind_steel_string_lecture/) | PM01–PM36 |
+
 ---
 
 ## 3. Harvested workflow remnants (what developers should stare at)
@@ -115,13 +123,13 @@ Select wood (optional metrology)
   → Optional: customer/spec sheet of modes + Y
 ```
 
-| Stage | Gore remnant | Nicoletti remnant | Somogyi remnant |
-|-------|--------------|-------------------|-----------------|
-| Wood pick | SRC by intent; Q often secondary | \(\rho\), \(E\), SRC (Schelleng), orthotropy, Q/damping; REW plate FFT; Gore *vibrational stiffness* sheet | Stiffness/weight + Q by genre; tap “ringing potential” |
-| Free / early top | Free-top pitch tuning discouraged as finished proxy | Half-plate FFT @ ~4 mm; RH ~45% | Deflection **stiffness** target (not mm); braces oversized → carve while listening |
-| Boxed stages | Closed-box FRF; spectrogram stages | Top-on-sides in **fixed mold**; pretune monopole; then close box / bridge | Shell tap; top↔air↔back “ping-pong” |
-| Finished QC | Mid-scale triad; ½-semitone clearance; mobility thresholds (unit-blocked) | FRF + mobility every guitar; Chladni for R&D; ETS / putty / pins | Qualitative live vs thud; tandem frequency relationship |
-| Tools | Visual Analyzer (Pack 6 partial); Carrico; Luther Academy apps | miniDSP + **Room EQ Wizard**; 25 cm; ~32 averages; 1 kg dial | Ear + deflection feel |
+| Stage | Gore remnant | Nicoletti remnant | Somogyi remnant | Howman remnant |
+|-------|--------------|-------------------|-----------------|----------------|
+| Wood pick | SRC by intent; Q often secondary | \(\rho\), \(E\), SRC (Schelleng), orthotropy, Q/damping; REW plate FFT; Gore *vibrational stiffness* sheet | Stiffness/weight + Q by genre; tap “ringing potential” | QS/split billets; fist-tap S/W + crack screen; spruce vs WRC by tension |
+| Free / early top | Free-top pitch tuning discouraged as finished proxy | Half-plate FFT @ ~4 mm; RH ~45% | Deflection **stiffness** target (not mm); braces oversized → carve while listening | Free-edge tap toward target; cube-rule caution; Chladni optional/declined |
+| Boxed stages | Closed-box FRF; spectrogram stages | Top-on-sides in **fixed mold**; pretune monopole; then close box / bridge | Shell tap; top↔air↔back “ping-pong” | Basswood linings isolate; voice back for long dipole / posture intent |
+| Finished QC | Mid-scale triad; ½-semitone clearance; mobility thresholds (unit-blocked) | FRF + mobility every guitar; Chladni for R&D; ETS / putty / pins | Qualitative live vs thud; tandem frequency relationship | Body-damped vs free back; strobe intonation; bridge near body center |
+| Tools | Visual Analyzer (Pack 6 partial); Carrico; Luther Academy apps | miniDSP + **Room EQ Wizard**; 25 cm; ~32 averages; 1 kg dial | Ear + deflection feel | Ear/tap; go-bar dome dishes; strobe tuner |
 
 ### 3.2 Concrete lab SOPs already sketched (candidate Toolbox labs)
 
@@ -136,7 +144,8 @@ Select wood (optional metrology)
 
 - Gore stack: modes off scale tones → right mobility → intonation (don’t max-\(Y\) alone).  
 - Nicoletti: QC + standards + customer vocabulary; measure finished guitars before changing your method.  
-- Somogyi: efficient **air pump**; don’t ignore the back; top–back resonance relationship.
+- Somogyi: efficient **air pump**; don’t ignore the back; top–back resonance relationship.  
+- Howman: physics as post-hoc language; X-brace mode control; Hoover basswood isolation; bridge-center monopole.
 
 ---
 
