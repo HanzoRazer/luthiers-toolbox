@@ -213,6 +213,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`gore_shop_talk_44/GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md) | Side-mass quantitative model; +25% tuck assumptions |
 | [`nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md`](./nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md) | Kit δ unread; software identity |
 | [`nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md`](./nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md) | Spreadsheets; exact \(Y\) formula; δ still open |
+| [`nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md`](./nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md) | ETS masses; TPC formulas; book reference numbers |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -229,6 +230,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Build chronicle: stiffness-sanded top, X+lattice, double sides, solid linings, post-glue tap voicing; dialect contrasts with Gore side/lining/voicing culture |
 | Nicoletti / MB Acoustic Study Set | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | Three-phase kit how-to: miniDSP tap FRF → Chladni → 1 kg bridge dial |
 | Nicoletti / MB kit interview | [`nicoletti_mb_kit_interview/`](./nicoletti_mb_kit_interview/) | Doctrine interview: why measure; between-note tuning; SRC/Q wood pick; monopole \(f,m,k\) → mobility; Chladni mass-at-pole |
+| Nicoletti Science / Luthier Stories | [`nicoletti_science_luthier_stories/`](./nicoletti_science_luthier_stories/) | Watts interview: \(c\) in wood/air; responsiveness+headroom; ETS; TPC tonewood; offset hole; active-back mobility; D28 vs Larrivée contrast |
 
 ### Somogyi 01 — what it adds
 
@@ -299,7 +301,26 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Gore Packs 2/3/5/8 | Between-note wolves; \(f,k,m,Y\) family — **δ still unread** |
 | Somogyi ES03–ES08 | Genre ↔ material properties cousin |
 
-**Open Nicoletti blockers:** G-N02 (δ), G-N01/G-N10 (software + spreadsheets), G-N08 (mode-label map). Exact \(Y=1/\sqrt{km}\) not spoken — do not invent.
+### Nicoletti Science / Luthier Stories — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Physics primer | Air ~343 m/s vs spruce ~4.5–5 km/s; multi-material wave path; rim energy split ↔ sustain |
+| Responsiveness | Light-touch sensitivity **+** strum headroom; ↑ mobility → ↑ wolf risk; factory often less responsive for reliability |
+| Color vs hi-fi | Guitar as multipole “distortion producer” vs linear studio monitors; tune modes to right spots |
+| ETS | Lower-bout **External Tuning Slot** — swappable masses tune main board resonance |
+| TPC | Tonewood jig on nodal lines + marble ramp → \(f\), damping, stiffness, SRC; build wood library |
+| Iulius design | Offset soundhole (radiate + structure); 13-fret overlapping bolt-on; active back with controlled mobility via denser ebony |
+| References | Book “joining the dots”: same dread shape, D28 high-\(Y\) punchy vs Larrivée lower-\(Y\) smooth |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| Kit interview N34–N35 | Headroom/saturation restated with factory/wolf tradeoff |
+| Somogyi air pump | Explicit pistonic monopole = pump |
+| Gore Packs 2/3/5/7 | Wolves, \(Y\), side-mass cousins of ETS |
+| MB Sound corpus | TPC ≠ panel workbook SOP — cross-link culture only |
+
+**Open Nicoletti blockers:** G-N02 (δ), G-N01/G-N10 (kit software/spreadsheets), G-N15 (ETS masses), G-N16 (TPC formulas), G-N17 (book reference numbers), G-N08 (mode-label map).
 
 ---
 
@@ -315,4 +336,5 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | **AP** | Apprentice / builder deviation |
 | **GN** | Giuliano Nicoletti method (as attributed in source) |
 | **MB** | Maderas Barber kit / presentation practice |
+| **MW** | Michael Watts / player-facing framing |
 | **OH** | Open hypothesis / taste / opinion |

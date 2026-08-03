@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
   "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1–8 + related schools)",
-  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi, Nicoletti/MB kit how-to + interview). No executable production code. Pack 6 partial. Nicoletti interview aligns monopole mobility conceptually with Gore; δ unread.",
+  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi, Nicoletti/MB kit + interview + Luthier Stories science). No executable production code.",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
   "risk_level": "low",
@@ -64,6 +64,11 @@
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md",
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/README.md",
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/nicoletti_science_luthier_stories/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/nicoletti_science_luthier_stories/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/nicoletti_science_luthier_stories/README.md",
+      "docs/calculators/acoustics/nicoletti_science_luthier_stories/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/GAPS_NOT_RECORDED.md",
@@ -82,14 +87,14 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest (Gore + Somogyi + Nicoletti/MB).",
+    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest (Gore + Somogyi + Nicoletti family).",
     "why_not_redundant": "Captures teaching methodology and explicit gaps (including mobility δ conflict) before any calculator UI work."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> -> pass"
     ],
-    "known_residual": "Pack 6 SOPs incomplete. Mobility δ Pack3 vs Pack5 unresolved. Nicoletti G-N02/G-N01/G-N10 open. Somogyi G-ES09/10/11 open. No runtime code."
+    "known_residual": "Pack 6 SOPs incomplete. Mobility δ Pack3 vs Pack5 unresolved. Nicoletti: G-N02/G-N15/G-N16/G-N17 open (δ, ETS, TPC, book numbers). Somogyi G-ES09/10/11 open. No runtime code."
   },
   "files": [
     {
@@ -685,6 +690,66 @@
       "intent": "Related non-Gore Nicoletti/MB Acoustic Guitar Study Set kit pack",
       "scan_targets": [
         "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_science_luthier_stories/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Related non-Gore Nicoletti/Iulius Luthier Stories science pack (ETS/TPC/responsiveness)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_science_luthier_stories/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_science_luthier_stories/CROSSWALK_TOOLBOX.md",
+      "intent": "Related non-Gore Nicoletti/Iulius Luthier Stories science pack (ETS/TPC/responsiveness)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_science_luthier_stories/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md",
+      "intent": "Related non-Gore Nicoletti/Iulius Luthier Stories science pack (ETS/TPC/responsiveness)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_science_luthier_stories/README.md",
+      "intent": "Related non-Gore Nicoletti/Iulius Luthier Stories science pack (ETS/TPC/responsiveness)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_science_luthier_stories/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_science_luthier_stories/SOURCE_TRANSCRIPT.md",
+      "intent": "Related non-Gore Nicoletti/Iulius Luthier Stories science pack (ETS/TPC/responsiveness)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_science_luthier_stories/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
