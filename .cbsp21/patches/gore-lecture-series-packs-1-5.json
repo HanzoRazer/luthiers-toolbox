@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
   "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1–8 + related schools)",
-  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi; Nicoletti kit/interview/science/tonewood webinar). No executable production code.",
+  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi; Nicoletti kit/interview/science/tonewood/EGB measuring). No executable production code. Nicoletti EGB 2022 supplies typical 1 kg δ ~0.01–0.02 mm (G-R01 evidence).",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
   "risk_level": "low",
@@ -54,6 +54,11 @@
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/README.md",
+      "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/nicoletti_mb_kit_interview/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/nicoletti_mb_kit_interview/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md",
@@ -92,14 +97,14 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest (Gore + Somogyi + Nicoletti family).",
+    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary, G-R01/G-M09 evidence notes, and this CBSP21 manifest.",
     "why_not_redundant": "Captures teaching methodology and explicit gaps (including mobility δ conflict) before any calculator UI work."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> -> pass"
     ],
-    "known_residual": "Pack 6 SOPs incomplete. Mobility δ Pack3 vs Pack5 unresolved. Nicoletti: sheet/SRC/ETS/TPC/δ gaps open; REW named (partial G-N01). Somogyi G-ES09/10/11 open. No runtime code."
+    "known_residual": "Pack 6 SOPs incomplete. G-R01 softening (Nicoletti/Pack5 small-δ class) but Carrico sheet still owed before mobility UI. Nicoletti Excel/SRC/ETS gaps open. Somogyi G-ES09/10/11 open. No runtime code."
   },
   "files": [
     {
@@ -575,6 +580,66 @@
       "intent": "Pack 2: Wolf notes mailbag",
       "scan_targets": [
         "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Related non-Gore Nicoletti EGB Jul 2022 measuring/tuning webinar pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/CROSSWALK_TOOLBOX.md",
+      "intent": "Related non-Gore Nicoletti EGB Jul 2022 measuring/tuning webinar pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md",
+      "intent": "Related non-Gore Nicoletti EGB Jul 2022 measuring/tuning webinar pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/README.md",
+      "intent": "Related non-Gore Nicoletti EGB Jul 2022 measuring/tuning webinar pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/SOURCE_TRANSCRIPT.md",
+      "intent": "Related non-Gore Nicoletti EGB Jul 2022 measuring/tuning webinar pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

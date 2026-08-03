@@ -191,7 +191,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 
 1. This summary  
 2. **Pack 5** objectives spine + **Pack 7** U04/U05 (mobility priority + side-mass why)  
-3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI  
+3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI (Nicoletti EGB 2022 supports **0.01–0.15 mm** class; Carrico sheet still owed)  
 4. **Pack 8** for spreadsheet→app toolchain + \(k_\mathrm{eff}\)/\(m_\mathrm{eff}\)→4DOF intent (after calibration)  
 5. **Pack 6** when complete (setup SOPs)  
 6. **Pack 4** Shop Talk #25  
@@ -206,7 +206,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | Register | Focus |
 |----------|--------|
 | [`gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md`](./gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md) | Course SOPs incomplete |
-| [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict |
+| [`gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md`](./gore_shop_talk_responsive_objectives/GAPS_NOT_RECORDED.md) | **G-R01** δ conflict (softening: Nicoletti ~0.01–0.02 mm) |
 | [`gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md`](./gore_monopole_mobility_measurement/GAPS_NOT_RECORDED.md) | Jig geometry / unit profile |
 | [`gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md`](./gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md) | App URLs; \(k\) units (**G-A05**); flexural-rigidity detail; δ still open |
 | [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, book F-number map |
@@ -215,6 +215,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md`](./nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md) | Spreadsheets; exact \(Y\) formula; δ still open |
 | [`nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md`](./nicoletti_science_luthier_stories/GAPS_NOT_RECORDED.md) | ETS masses; TPC formulas; book reference numbers |
 | [`nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md`](./nicoletti_tonewood_parameters_webinar/GAPS_NOT_RECORDED.md) | Sheet cells; SRC formula; stage-Hz calibration |
+| [`nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md`](./nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md) | Excel formulas; checklist table; δ evidence for G-R01 |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -233,6 +234,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Nicoletti / MB kit interview | [`nicoletti_mb_kit_interview/`](./nicoletti_mb_kit_interview/) | Doctrine interview: why measure; between-note tuning; SRC/Q wood pick; monopole \(f,m,k\) → mobility; Chladni mass-at-pole |
 | Nicoletti Science / Luthier Stories | [`nicoletti_science_luthier_stories/`](./nicoletti_science_luthier_stories/) | Watts interview: \(c\) in wood/air; responsiveness+headroom; ETS; TPC tonewood; offset hole; active-back mobility; D28 vs Larrivée contrast |
 | Nicoletti tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | PLG/EGB webinar: \(\rho\)/\(E\)/SRC/orthotropy/Q; REW+Caldersmith; Gore vibrational stiffness; mold pretune; wolf bands |
+| Nicoletti EGB measuring/tuning (Jul 2022) | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | FRF+mobility+Chladni practice; REW/miniDSP; δ~0.01–0.02 mm; characterizations; PLG checklist |
 
 ### Somogyi 01 — what it adds
 
@@ -278,7 +280,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 
 | Prior / related | Intersection |
 |-----------------|--------------|
-| Gore Pack 3 / 5 / G-R01 | Same **1 kg deflection** family; **no δ spoken** → does **not** close 27 mm vs ~0.15 mm |
+| Gore Pack 3 / 5 / G-R01 | Kit how-to had no δ; **EGB 2022 supplies typical ~0.01–0.02 mm** — see measuring/tuning pack |
 | Gore Pack 6 | Alternate measurement toolchain (miniDSP vs Visual Analyzer) |
 | Somogyi ES27 | Deflection-stiffness culture (free top) vs finished-bridge kit |
 | MB Sound corpus (data PR) | Same vendor ecosystem; kit SOP ≠ panel workbook specimens |
@@ -341,7 +343,27 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | TPC / kit packs | Complementary plate vs guitar-kit tooling |
 | Somogyi deflection | Different purpose/stage than preferred FFT plate \(E\) |
 
-**Open Nicoletti blockers:** G-N02 (kit δ), G-N10/G-N21–23 (sheet/SRC/targets), G-N15–17, G-N08; confirm ASR “50 GPa” (G-N22).
+### Nicoletti EGB measuring/tuning (Jul 2022) — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Why | QC photograph even if builds already good — not only R&D |
+| Trio | FRF (primary) + monopole mobility; Chladni for R&D/troubleshoot |
+| FRF setup | miniDSP + **Room EQ Wizard**; mic ~**25 cm**; ~**32** averages; saddle taps; damp strings |
+| Checklist | Modes match intent; wolf clearance; avoid peak harmonic stacking; higher-mode radiation |
+| **δ (critical)** | Typical deflection under ~1 kg **~0.01–0.02 mm**; Taylor samples ~0.13–0.15 mm |
+| Mobility | Plug soundhole; \(f\) + δ → equiv. mass + mobility (Excel) |
+| Examples | D28 vs LX / Larrivée / OM-28 / archtop / solid-body FRF contrasts |
+| Levers | Hole size for A0; braces/mass/pins for monopole; Gore **4DOF** coupling; selective putty |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| **G-R01 / G-M09** | Independent small-δ evidence — Pack 3 **27 mm** remains ASR-risk; Carrico sheet still needed for full close |
+| G-N01 / G-N02 | Stronger partial closes (REW for guitar FRF; δ range) |
+| Tonewood webinar | Sequel on plate params; this pack = guitar performance |
+| Gore Packs 2/3/5/6 | Same jobs; shared δ conflict now tilts strongly to mm/100 class |
+
+**Open Nicoletti blockers:** G-N10 (Excel formulas), G-N15–17, G-N08, G-N21–23; G-R01 not fully closed without Carrico.
 
 ---
 
