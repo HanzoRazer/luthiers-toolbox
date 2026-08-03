@@ -222,7 +222,28 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 
 | Pack | Path | What it is |
 |------|------|------------|
+| Somogyi 01 — Air pump / bracing / tap (**PARTIAL**) | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | Primary Somogyi voice: efficient air pump; stiffness/weight + Q; tap for ringing potential; X ubiquity; **don’t ignore the back**; top↔air↔back energy loop (ingest ends ~9:52) |
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Build chronicle: stiffness-sanded top, X+lattice, double sides, solid linings, post-glue tap voicing; dialect contrasts with Gore side/lining/voicing culture |
+
+### Somogyi 01 — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Definition | Guitar at bottom = **air pump**; success = efficient air move per finite string energy |
+| Wood | Prefer best **stiffness-to-weight**; **Q** = liveness; BR high-Q exemplar; maple lower sustain |
+| Intent | Not better/worse woods — match sustain vs quick-decay (flamenco/jazz) |
+| Tap | Screen **ringing potential**; hold/location changes tone; rest “takes care of itself” |
+| Bracing | Spanish named dialects vs steel-string **X** ubiquity; makers obsess top, ignore back |
+| Box | Top → air → back → air/top bounce; radiation via port + exterior; back necessarily involved |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| Gore Packs 3/5/8 mobility | Related *efficiency* intuition — different meter; do not merge |
+| Gore Pack 1 live back | Same “back contributes” doctrine, different language |
+| Gore Pack 5 Q / SRC | Document Q-tension + stiffness/weight ↔ SRC family |
+| Apprentice pack Y03/Y13 | Later stiffness sanding / tap voicing; this film is earlier material doctrine |
+
+**Action needed:** paste remainder after ~9:52 (G-ES02) and any later Somogyi episodes for the series.
 
 ---
 
@@ -234,6 +255,6 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | **EO** | Empirical observation |
 | **TG** | Trevor Gore recommendation / practice |
 | **RO** | Robbie O’Brien shop practice / on-camera thresholds |
-| **IS** | Irvin Somogyi method (as attributed in source) |
+| **IS** | Irvin/Ervin Somogyi method (as attributed in source) |
 | **AP** | Apprentice / builder deviation |
 | **OH** | Open hypothesis / taste / opinion |
