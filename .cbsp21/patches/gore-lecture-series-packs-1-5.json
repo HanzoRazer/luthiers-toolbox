@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
   "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1–8 + related schools)",
-  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi, Nicoletti/MB study set). No executable production code. Pack 6 remains partial. Nicoletti kit confirms 1 kg bridge deflection family without δ reading.",
+  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi, Nicoletti/MB kit how-to + interview). No executable production code. Pack 6 partial. Nicoletti interview aligns monopole mobility conceptually with Gore; δ unread.",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
   "risk_level": "low",
@@ -54,6 +54,11 @@
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/nicoletti_mb_kit_interview/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/nicoletti_mb_kit_interview/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/nicoletti_mb_kit_interview/README.md",
+      "docs/calculators/acoustics/nicoletti_mb_kit_interview/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md",
@@ -77,14 +82,14 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest (Gore + Somogyi + Nicoletti/MB kit).",
+    "what_changed": "Adds/updates annotated lecture packs under docs/calculators/acoustics/ plus series summary and this CBSP21 manifest (Gore + Somogyi + Nicoletti/MB).",
     "why_not_redundant": "Captures teaching methodology and explicit gaps (including mobility δ conflict) before any calculator UI work."
   },
   "verification": {
     "commands_run": [
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> -> pass"
     ],
-    "known_residual": "Pack 6 SOPs incomplete. Mobility δ Pack3 vs Pack5 unresolved (Nicoletti kit adds apparatus family but no δ). Somogyi G-ES09/10/11 open. Nicoletti G-N02/G-N03 open. No runtime code."
+    "known_residual": "Pack 6 SOPs incomplete. Mobility δ Pack3 vs Pack5 unresolved. Nicoletti G-N02/G-N01/G-N10 open. Somogyi G-ES09/10/11 open. No runtime code."
   },
   "files": [
     {
@@ -560,6 +565,66 @@
       "intent": "Pack 2: Wolf notes mailbag",
       "scan_targets": [
         "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_mb_kit_interview/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Related non-Gore Nicoletti/MB kit interview (monopole parameters / wood intent)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_mb_kit_interview/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_mb_kit_interview/CROSSWALK_TOOLBOX.md",
+      "intent": "Related non-Gore Nicoletti/MB kit interview (monopole parameters / wood intent)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_mb_kit_interview/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md",
+      "intent": "Related non-Gore Nicoletti/MB kit interview (monopole parameters / wood intent)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_mb_kit_interview/README.md",
+      "intent": "Related non-Gore Nicoletti/MB kit interview (monopole parameters / wood intent)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_mb_kit_interview/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/nicoletti_mb_kit_interview/SOURCE_TRANSCRIPT.md",
+      "intent": "Related non-Gore Nicoletti/MB kit interview (monopole parameters / wood intent)",
+      "scan_targets": [
+        "docs/calculators/acoustics/nicoletti_mb_kit_interview/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

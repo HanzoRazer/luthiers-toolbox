@@ -211,7 +211,8 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 | [`gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md`](./gore_shop_talk_51_luther_academy_apps/GAPS_NOT_RECORDED.md) | App URLs; \(k\) units (**G-A05**); flexural-rigidity detail; δ still open |
 | [`gore_shop_talk_25/GAPS_NOT_RECORDED.md`](./gore_shop_talk_25/GAPS_NOT_RECORDED.md) | Humidity Δaction, book F-number map |
 | [`gore_shop_talk_44/GAPS_NOT_RECORDED.md`](./gore_shop_talk_44/GAPS_NOT_RECORDED.md) | Side-mass quantitative model; +25% tuck assumptions |
-| [`nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md`](./nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md) | Kit δ unread; \(Y\) vs δ-only; software identity |
+| [`nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md`](./nicoletti_mb_sound_acoustic_study_set/GAPS_NOT_RECORDED.md) | Kit δ unread; software identity |
+| [`nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md`](./nicoletti_mb_kit_interview/GAPS_NOT_RECORDED.md) | Spreadsheets; exact \(Y\) formula; δ still open |
 
 **Until blockers close:** no mobility threshold badges; SI only if `si_raw`; no invented falcate geometry or Win7 click-paths; guided labs may use `unknown` metadata.
 
@@ -226,7 +227,8 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Somogyi 01 — Air pump / bracing / tap | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | Primary voice: efficient air pump; stiffness/weight + Q; tap for ringing potential; X ubiquity; don’t ignore the back; energy-loop setup |
 | Somogyi 02 — Top & Back | [`somogyi_02_top_and_back/`](./somogyi_02_top_and_back/) | Back A/B proof; coupled-oscillator demo; top–back frequency relationship; stiffness-by-deflection + brace reduction while listening |
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Build chronicle: stiffness-sanded top, X+lattice, double sides, solid linings, post-glue tap voicing; dialect contrasts with Gore side/lining/voicing culture |
-| Nicoletti / MB Acoustic Study Set | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | Three-phase kit: miniDSP tap FRF → Chladni at identified Hz → 1 kg bridge dial deflection (“movilidad”) |
+| Nicoletti / MB Acoustic Study Set | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | Three-phase kit how-to: miniDSP tap FRF → Chladni → 1 kg bridge dial |
+| Nicoletti / MB kit interview | [`nicoletti_mb_kit_interview/`](./nicoletti_mb_kit_interview/) | Doctrine interview: why measure; between-note tuning; SRC/Q wood pick; monopole \(f,m,k\) → mobility; Chladni mass-at-pole |
 
 ### Somogyi 01 — what it adds
 
@@ -277,7 +279,27 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Somogyi ES27 | Deflection-stiffness culture (free top) vs finished-bridge kit |
 | MB Sound corpus (data PR) | Same vendor ecosystem; kit SOP ≠ panel workbook specimens |
 
-**Open Nicoletti blockers:** G-N02 (δ reading), G-N03 (full \(Y\) vs δ-only), G-N01 (software identity), G-N08 (mode-label map).
+### Nicoletti / MB kit interview — what it adds (this intake)
+
+| Theme | Takeaway |
+|-------|----------|
+| Why measure | Not required for *a* great guitar; required for **consistent** greatness + diagnosis (~100% potential) |
+| Finished vs build | Finished: tune only — resonances **between notes**; build: check before bridge glue vs prior instruments |
+| Monopole | Central bridge region; frequency dials bass↔treble character |
+| Wood (MB catalog) | Fingerstyle high SRC; stage lower SRC; flamenco med–low damping; concert high Q / low damping |
+| Chladni | Shape map for dipole/tripole; nodal lines; add mass on **one pole** to shift without spoiling others |
+| Parameters | Monopole **mass** ≈ 20–25 cm circle + stiffness from weight deflection + frequency → **monopole mobility** (dynamic character) |
+| Style fit | Very light/high mobility saturates under hard strumming; favor lower mass for even classical / fingerstyle |
+| Philosophy | Reduce dispersion; don’t clone (“180 Hz ≠ same guitar”); player experience before FRF charts |
+
+| Prior / related | Intersection |
+|-----------------|--------------|
+| Study-set pack | How-to hardware; interview supplies meaning layer |
+| G-N03 / G-N04 | **Partial close** via N31–N34 / N20 |
+| Gore Packs 2/3/5/8 | Between-note wolves; \(f,k,m,Y\) family — **δ still unread** |
+| Somogyi ES03–ES08 | Genre ↔ material properties cousin |
+
+**Open Nicoletti blockers:** G-N02 (δ), G-N01/G-N10 (software + spreadsheets), G-N08 (mode-label map). Exact \(Y=1/\sqrt{km}\) not spoken — do not invent.
 
 ---
 

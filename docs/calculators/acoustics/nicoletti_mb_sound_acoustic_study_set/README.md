@@ -5,7 +5,8 @@
 **Content type:** Three-phase **shop measurement kit** walkthrough (connectivity + demo) — not a Gore lecture; not Somogyi doctrine  
 **Language:** Spanish presentation; notes in English  
 **Parent indexes:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md) (cross-links only)  
-**Related vendor line:** MB Sound empirical corpus (separate PR / data track) — kit procedure ≠ panel lab workbook
+**Related vendor line:** MB Sound empirical corpus (separate PR / data track) — kit procedure ≠ panel lab workbook  
+**Doctrine companion:** [`../nicoletti_mb_kit_interview/`](../nicoletti_mb_kit_interview/) (why/when/monopole parameters)
 
 ## Contents
 
