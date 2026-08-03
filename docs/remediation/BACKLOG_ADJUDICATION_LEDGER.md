@@ -117,9 +117,36 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 > which fixes both call sites at once. This sizing confirms the BR-002B scope boundary was
 > correct: it is a bounded Dev Order, not a line-edit.
 
+## Materials-index intake (2026-08-03)
+
+Adjudicated outside the 2026-07-20 sweep, against `origin/main` `ada33581`. Recorded here because the
+execution queue requires a corresponding adjudication record; kept in its own dated section so the
+sweep table above continues to mean "the 2026-07-20 set".
+
+| BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
+| ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
+| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-encoded | high | ready | correct the producer to unscaled `c/rho`; add direct scorer coverage |
+
+**Evidence.** The producer returns `(c/rho)*1e6`; its own docstring, `_ROLE_TARGETS`, and `router.py:88`
+all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with `sigma = 3.0` and no
+inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduced by
+`tests/materials/test_tonewood_acoustic_indices.py` (3 × `xfail(strict=True)`).
+
+**Owner ruling required:** no. This is an internal-consistency repair against contracts the repository
+already states; it does not adjudicate physics, role targets, or recommendation philosophy.
+
+**Dependencies:** none. Independent of PR #244 — MB Sound corroborates the scale but is not runtime
+authority and is not imported by this repair.
+
+> **Ledger/register divergence, noted not fixed.** BR-037…BR-042 appear in
+> [REPOSITORY_DEFECT_REGISTER.md](REPOSITORY_DEFECT_REGISTER.md) but have no row in this ledger; both
+> were admitted through dated register sections that did not write back here. BR-043 does write back.
+> Reconciling BR-037…042 is pre-existing and outside this Dev Order.
+
 ## Verification coverage
 
-36 items total: **Tier A 22 · Tier B 13 · Tier C 1**. **BR-001/002/004/035 FIXED by BR-002B** (first
+36 items total in the 2026-07-20 sweep table: **Tier A 22 · Tier B 13 · Tier C 1**. Plus **BR-043**
+(Tier A, `CONFIRMED_DEFECT`, 2026-08-03 materials-index intake, recorded in its own section above). **BR-001/002/004/035 FIXED by BR-002B** (first
 executed code remediation); BR-036 added (deeper batch_tree shape defect, out of BR-002B scope).
 
 - **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,

@@ -322,3 +322,57 @@ work and are handled Lab-side under Investigation 025.
   intake; this entry defines scope only.
 - **Recovery record:** if `salvage/other-stash8-ingest-audit-binaries` is ever deleted, its content is
   recoverable at `f102380d` until garbage collection.
+
+## Materials-index intake — static unit adjudication (2026-08-03)
+
+Single item, surfaced while grounding an acoustics knowledge-pack SOP against runtime code. Unlike the
+scan intake above, this entry is **not** a detector lead: it is reproduced by committed tests and is
+authorized for bounded remediation.
+
+### BR-043 · Tonewood radiation-ratio scale collapses acoustic recommendation scoring
+- **Subsystem:** materials intelligence (backend schema + recommendation scorer)
+- **Confidence:** **CONFIRMED — reproduced on `origin/main` `ada33581`** by
+  `services/api/tests/materials/test_tonewood_acoustic_indices.py`
+  (3 × `xfail(strict=True)` assertions of the intended scale; they fail against current code).
+  Static contradiction confirmed first by direct read of the four sites below.
+- **Observed vs expected:** `TonewoodEntry.radiation_ratio` returns `(c / rho) * 1e6`. Three
+  independent places in this repository declare the *unscaled* `c / rho` value — including the
+  property's own docstring. The `1e6` is spurious.
+
+| Fact | Evidence on `ada33581` |
+|---|---|
+| Producer applies `*1e6` | `services/api/app/materials/schemas.py:148-156` — `return round((c / self.density_kg_m3) * 1e6, 2)` |
+| Its own docstring contradicts it | same docstring: *"Reference: Schelleng (1963) — Adirondack spruce ~11.7, Sitka ~11.4"*. Shipped code returns ~1.17e7 for those species |
+| Scorer targets are on the unscaled scale | `scorer.py:33-44` `_ROLE_TARGETS` — soundboard 11.5, bracing 12.0, back_sides 8.0, fretboard 4.0 |
+| Consumer applies no inverse scaling | `scorer.py:61-73` `_score_acoustic` = `exp(-0.5*((rr - target)/3.0)**2)`, `sigma = 3.0`, compared directly |
+| Router documents the unscaled form | `services/api/app/materials/router.py:88` — *"radiation_ratio (Schelleng c/ρ)"* |
+| Value is user-visible unrepaired | `packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue:97` renders `RR {{ entry.radiation_ratio.toFixed(1) }}`; `composables/useTonewoods.ts:66` passes the API value through with no rescale |
+| Worked case from shipped reference data | American Basswood `rho = 415`, `E = 10.07 GPa` → `c = 4926 m/s`, `c/rho = 11.87`. Property returns `1.187e+07` |
+
+- **Downstream effect:** with `rr ≈ 1.19e7` against a target of `11.5` and `sigma = 3.0`, the Gaussian
+  exponent is astronomically negative. **`_score_acoustic` returns 0.0 for every acoustically-populated
+  species in every role.** The acoustic term of `score_for_role` / `recommend_for_role` /
+  `compare_species` is silently dead; only the structural and machinability terms differentiate.
+  No consumer compensates, so the API also serves — and the UI displays — a value ~1e6 too large.
+- **Governing contract:** the property's own docstring and the role-target profiles it is compared
+  against. This is an internal-consistency defect, not a physics dispute.
+- **Test gap:** `_score_acoustic` had **no direct test**. No test asserted `radiation_ratio`'s magnitude.
+  The defect was reachable only by reading the producer and consumer side by side.
+- **Severity:** high (silent wrong output in a user-facing advisory path; no data loss, no machine
+  output affected) · **Regression risk:** low-medium — the repair *will* change recommendation ordering,
+  which is the intended effect · **Fix size:** small (producer expression + docstring), with the
+  substantive work in test coverage
+- **Dependencies:** none. **Independent of PR #244** — the MB Sound corpus corroborates the target scale
+  (vendor SRC medians 12.28–14.00, all on the unscaled `c/rho` scale) but is evidence only, and must not
+  be imported or hard-coded by this repair.
+- **Readiness:** **AUTHORIZED — bounded remediation in progress** under the BR-043 Dev Order.
+- **Related but out of scope — recorded, not fixed here:**
+  1. `TonewoodEntry.specific_moe` (`schemas.py:158-168`) applies `* 1e6` to a GPa-denominated ratio while
+     its docstring claims *"Same as c²/10⁶"*; those differ by 1e3. Investigate-only under this order —
+     see BR-043 Commit 4 disposition.
+  2. The frontend `StiffnessIndexPanel` path is **independent of the API**, computing from hardcoded
+     `tonewoodData.ts`. Its `calcRadiationRatio` (`useStiffnessIndex.ts:69-71`) applies `* 1000` and
+     labels it `c/ρ ×10³` — self-consistent in display — but `rrColor` and `soundboardRating`
+     (`useStiffnessIndex.ts:149-152`, `StiffnessIndexPanel.vue:312-317`) threshold at 12.0 / 10.5 / 9.0,
+     the *unscaled* scale, so every wood renders "Excellent". Same defect family, different data path,
+     **not** a compensating conversion for the backend. Needs its own entry.
