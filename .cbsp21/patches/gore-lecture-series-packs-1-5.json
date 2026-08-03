@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
   "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1–8 + related schools)",
-  "intent": "Knowledge-layer documentation only: classified teaching points, crosswalks, gap registers, and source extracts for Gore/O'Brien Shop Talks and related non-Gore packs (Somogyi; Nicoletti kit/interview/science/tonewood/EGB measuring). No executable production code. Nicoletti EGB 2022 supplies typical 1 kg δ ~0.01–0.02 mm (G-R01 evidence).",
+  "intent": "Knowledge-layer documentation only: Gore/O'Brien + related Somogyi/Nicoletti packs; developer orientation for workflow harvest. No executable production code.",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
   "risk_level": "low",
@@ -16,6 +16,7 @@
     "files_expected_to_change": [
       ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
       "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md",
+      "docs/calculators/acoustics/KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md",
@@ -124,6 +125,18 @@
       "intent": "Living index for Gore/O'Brien lecture knowledge packs",
       "scan_targets": [
         "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md",
+      "intent": "Developer orientation: pack template, catalog, harvested workflow remnants, blockers",
+      "scan_targets": [
+        "docs/calculators/acoustics/KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

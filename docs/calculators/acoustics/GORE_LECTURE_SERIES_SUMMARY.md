@@ -1,6 +1,8 @@
 # Gore Lecture Knowledge Series — Executive Summary
 
-Living index for annotated lecture packs derived from Robbie O’Brien / Trevor Gore teaching video. Processing template: full-content review → classified teaching points → Toolbox / Tap Tone Pi crosswalk (empirical knowledge layer preferred over new calculators).
+Living index for annotated lecture packs derived from Robbie O’Brien / Trevor Gore teaching video (plus related non-Gore schools). Processing template: full-content review → classified teaching points → Toolbox / Tap Tone Pi crosswalk (empirical knowledge layer preferred over new calculators).
+
+**Developer entry (template + catalog + harvested workflows):** [`KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md`](./KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md)
 
 ---
 
