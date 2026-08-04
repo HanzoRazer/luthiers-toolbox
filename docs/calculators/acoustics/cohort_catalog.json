@@ -1177,6 +1177,9 @@
         "G-HM09",
         "G-HM10",
         "G-HM11",
+        "G-HM12",
+        "G-HM13",
+        "G-HM14",
         "G-M09",
         "G-R01",
         "HM01",
@@ -1227,10 +1230,11 @@
         "HM46",
         "HM47",
         "HM48",
+        "HM49",
         "M09",
         "R01"
       ],
-      "point_count": 63,
+      "point_count": 67,
       "has_process_workflow": true,
       "missing_template_files": [],
       "search_keywords": [
@@ -3091,7 +3095,7 @@
   ],
   "counts": {
     "packs": 24,
-    "points": 1086,
+    "points": 1090,
     "unfiled": 0,
     "template_incomplete": 0
   }

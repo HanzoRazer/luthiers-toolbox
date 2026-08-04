@@ -15,8 +15,9 @@
 
 | File | Purpose |
 |------|---------|
-| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM48 |
+| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM49 |
 | [`WORKBOOK_INVENTORY.md`](./WORKBOOK_INVENTORY.md) | All five Get-started guitars + Wood Properties; SHA-256 |
+| [`TAB_BY_TAB_EVALUATION.md`](./TAB_BY_TAB_EVALUATION.md) | Every sheet in all six uploads — purpose, I/O, issues |
 | [`PROCESS_WORKFLOW.md`](./PROCESS_WORKFLOW.md) | Sheet/module calculation spine |
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Calculator destinations + NO-CALC |
 | [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | G-HM01/02 closed; G-HM10/11 from inventory |

@@ -64,7 +64,7 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 | Pack | Path | Notes |
 |------|------|-------|
-| Holmberg — Gore/Gilet modeling spreadsheets | [`holmberg_gore_modeling_spreadsheets/`](./holmberg_gore_modeling_spreadsheets/) | HM01–HM48 — docs + complete Get-started xlsx set (5 guitars + Wood Properties); **G-HM01/02 closed**; **G-HM03/04/10/11** open |
+| Holmberg — Gore/Gilet modeling spreadsheets | [`holmberg_gore_modeling_spreadsheets/`](./holmberg_gore_modeling_spreadsheets/) | HM01–HM49 — docs + xlsx inventory + **tab-by-tab evaluation**; **G-HM01/02 closed**; **G-HM03/04/07/10–14** open |
 
 ## Standing physics blockers
 

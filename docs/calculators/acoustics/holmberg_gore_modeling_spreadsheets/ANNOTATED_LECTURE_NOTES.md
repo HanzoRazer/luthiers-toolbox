@@ -351,6 +351,13 @@ Same body/triad as CF classical (95/190.5/240) but smaller hole than CF (80 vs 8
 
 **Point ID:** HM48  
 
+### 10.7 Tab-by-tab audit of all six session uploads  
+**Classification:** **EO** / **GH**
+
+Every sheet opened/classified — see [`TAB_BY_TAB_EVALUATION.md`](./TAB_BY_TAB_EVALUATION.md). Confirms measure-rig `#DIV/0!` on all string tabs; `deflection` only on Medium SS noCF; Wood Properties `Chassis` ToDo; pastel fill roles.
+
+**Point ID:** HM49  
+
 ---
 
 ## Point index
@@ -404,3 +411,4 @@ Same body/triad as CF classical (95/190.5/240) but smaller hole than CF (80 vs 8
 | HM45 | Compensation tables + SS CF over-band |
 | HM46 | Wood Properties schema (306 spp) |
 | HM47 | OM X-brace V3 preset (101 Hz air, 97 mm hole) |
+| HM48 | Classical nylon falcate noCF preset |
