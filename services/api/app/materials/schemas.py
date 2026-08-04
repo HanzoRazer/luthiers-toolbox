@@ -169,12 +169,22 @@ class TonewoodEntry(BaseModel):
     @property
     def specific_moe(self) -> Optional[float]:
         """
-        Specific MOE: E / ρ × 10⁶ (GPa / kg/m³).
-        Stiffness per unit mass. Same as c²/10⁶.
-        Used for fretboard and brace comparison where pure stiffness matters.
+        Specific MOE: c² / 10⁶, in units of 10⁶ m²/s².
+
+        Stiffness per unit mass. Equivalently ``(E_GPa / ρ) × 10³``, because
+        ``c² = E_Pa / ρ`` and ``E_Pa = E_GPa × 10⁹``. Common tonewoods land near
+        20–30. Used for fretboard and brace comparison where pure stiffness
+        matters — it is not scored or thresholded anywhere.
+
+        BR-045 (2026-08-04): the coded factor was ``× 10⁶``, which returned
+        ``c² / 10³`` — a thousandfold above both the ``c²/10⁶`` this docstring
+        already claimed and the value the client's ``calcSpecificMoe``
+        independently produces. Owner ruling adopted the client/docstring scale,
+        so the factor moved to ``× 10³`` and one site changed rather than two.
+        See docs/remediation/REPOSITORY_DEFECT_REGISTER.md · BR-045.
         """
         if self.modulus_of_elasticity_gpa and self.density_kg_m3:
-            return round((self.modulus_of_elasticity_gpa / self.density_kg_m3) * 1e6, 4)
+            return round((self.modulus_of_elasticity_gpa / self.density_kg_m3) * 1e3, 4)
         return None
 
     @computed_field  # type: ignore[misc]

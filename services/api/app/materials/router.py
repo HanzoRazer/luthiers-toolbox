@@ -86,7 +86,7 @@ def get_tonewoods(
 
     All 71 entries include computed acoustic indices:
     - radiation_ratio (Schelleng c/ρ)
-    - specific_moe (E/ρ)
+    - specific_moe (c²/10⁶, i.e. (E_GPa/ρ)×10³ — typical tonewoods ~20–30)
     - ashby_index (E^1/3 / ρ)
     - acoustic_impedance_mrayl (ρ×c in MRayl)
 

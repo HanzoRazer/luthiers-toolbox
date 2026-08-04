@@ -134,7 +134,7 @@ inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduc
 
 | BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
 
-| BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | OWNER_DECISION_REQUIRED | code-inspection | med | **QUEUED — NOT AUTHORIZED** | owner rules the published unit, then align one site (recommended `1e6`→`1e3`) and pin both surfaces with one test |
+| BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | OWNER_DECISION_REQUIRED | code-inspection | med | **IMPLEMENTED — AWAITING MERGE** | ✅ owner ruled `c²/10⁶` on 2026-08-04; backend factor `1e6`→`1e3`, one site moved. Parity exact (24.2651 Basswood both surfaces). 2 stale unit labels also corrected. 4 tests pin the identity + parity |
 
 **BR-045 — why `OWNER_DECISION_REQUIRED` and not `CONFIRMED_DEFECT`.** The docstring being false about
 its code is confirmed; *which side moves* is not derivable from the repository, because the frontend
