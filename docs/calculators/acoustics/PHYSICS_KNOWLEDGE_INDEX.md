@@ -60,6 +60,12 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 |------|------|-------|
 | Jacob / Kanaka — I-beam bracing | [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) | IB01–IB24 — cube/height, I-beam demos, steel X application (shop dual-file) |
 
+### Spreadsheet / equation implementations (calculator-port)
+
+| Pack | Path | Notes |
+|------|------|-------|
+| Holmberg — Gore/Gilet modeling spreadsheets | [`holmberg_gore_modeling_spreadsheets/`](./holmberg_gore_modeling_spreadsheets/) | HM01–HM42 — panel \(f\)→thickness, nut/saddle Δ, 4-DOF FRF/SPL, experimental brace sizing; PROCESS_WORKFLOW; **G-HM03/04** |
+
 ## Standing physics blockers
 
-See orientation §4 and Gore summary “Known absence.” Lead item: **G-R01 / G-M09** mobility δ unit profile.
+See orientation §4 and Gore summary “Known absence.” Lead item: **G-R01 / G-M09** mobility δ unit profile. Holmberg mobility citations (**HM31**) stay badge-blocked on the same gap (**G-HM04**).

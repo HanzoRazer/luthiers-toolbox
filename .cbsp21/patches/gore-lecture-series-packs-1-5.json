@@ -69,6 +69,12 @@
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/GAPS_NOT_RECORDED.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/README.md",
       "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/PROCESS_WORKFLOW.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/README.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/GAPS_NOT_RECORDED.md",
@@ -146,7 +152,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds physics vs shop lane indexes; annotated packs including Schaefer compensated-saddle shop workflow (SC); cohort governance (catalog + coverage gate); CBSP21.",
+    "what_changed": "Adds physics vs shop lane indexes; annotated packs including Holmberg Gore/Gilet modeling spreadsheet docs (HM); cohort governance; CBSP21.",
     "why_not_redundant": "Separates instrument-building physics from shop/building knowledge so calculators are not fed folklore defaults; captures teaching methodology and gaps before UI work."
   },
   "verification": {
@@ -798,6 +804,78 @@
       "intent": "Pack 2: Wolf notes mailbag",
       "scan_targets": [
         "docs/calculators/acoustics/gore_wolf_notes_mailbag/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "HM01–HM42 annotated physics/math points",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/CROSSWALK_TOOLBOX.md",
+      "intent": "Calculator destinations + NO-CALC for Holmberg sheets",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/GAPS_NOT_RECORDED.md",
+      "intent": "G-HM01–G-HM09 gaps (URLs, verify builds, mobility units)",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/PROCESS_WORKFLOW.md",
+      "intent": "Sheet calculation spine for calculator-port order",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/PROCESS_WORKFLOW.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/README.md",
+      "intent": "Holmberg Gore/Gilet spreadsheet pack identity + NO-CALC",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/SOURCE_TRANSCRIPT.md",
+      "intent": "Structured extract from public Holmberg docs export",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

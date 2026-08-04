@@ -31,6 +31,7 @@ KNOWN_PREFIX = {
     "BK": "Bashkin JM workflow",
     "GL": "Garrett Lee deflection Ep.13",
     "SC": "Schaefer compensated saddle",
+    "HM": "Holmberg Gore modeling spreadsheets",
     "G": "Gap IDs (G-R01, G-GL01, …) — see pack GAPS file",
 }
 
@@ -59,7 +60,7 @@ def extract_points(text: str) -> list[str]:
         ids.add(f"{m[0]}0{m[1]}")
     ids.update(
         re.findall(
-            r"\b((?:P|H|W|M|S|R|U|A|T|Y|ES|N|PM|SB|TB|IB|BK|GL|SC)\d{2,3})\b",
+            r"\b((?:P|H|W|M|S|R|U|A|T|Y|ES|N|PM|SB|TB|IB|BK|GL|SC|HM)\d{2,3})\b",
             text,
         )
     )

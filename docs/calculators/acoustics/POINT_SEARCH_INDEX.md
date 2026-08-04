@@ -17,6 +17,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (55): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +47
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
@@ -41,6 +42,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (55): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +47
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
 - [`physics_mind_steel_string_lecture`](./physics_mind_steel_string_lecture/) (62): ES01, ES02, ES03, ES05, ES06, ES10, ES11, ES12 … +54
@@ -71,6 +73,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (55): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +47
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
@@ -128,6 +131,9 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 ### `GL` — Garrett Lee deflection Ep.13
 - [`garrett_lee_soundboard_deflection_ep13`](./garrett_lee_soundboard_deflection_ep13/) (33): G-GL01, G-GL02, G-GL03, G-GL04, G-GL05, GL01, GL02, GL03 … +25
 
+### `HM` — Holmberg Gore modeling spreadsheets
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (55): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +47
+
 ### `IB` — Jacob I-beam
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
 
@@ -161,6 +167,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 | [gore_shop_talk_51_luther_academy_apps](./gore_shop_talk_51_luther_academy_apps/) | physics | 58 | A, G, M, P, R, S, T, U, W |  | academy, altitude, analysis, apps, architecture, audience, autofill, backgrounds |
 | [gore_shop_talk_responsive_objectives](./gore_shop_talk_responsive_objectives/) | physics | 51 | G, M, N, P, R, S, T, W |  | acoustic, against, altitude, architecture, avoidance, braces, bracing, brassy |
 | [gore_wolf_notes_mailbag](./gore_wolf_notes_mailbag/) | physics | 14 | P, W |  | anomaly, architecture, bridge, catalog, class, clearance, close, closed-box |
+| [holmberg_gore_modeling_spreadsheets](./holmberg_gore_modeling_spreadsheets/) | physics | 55 | G, HM, M, R | yes | achievable, across, action, added, affect, after, air-stiffness, attribution |
 | [jacob_ibeam_bracing_physics](./jacob_ibeam_bracing_physics/) | physics+shop | 37 | ES, G, IB, PM, SB, TB |  | acrylic, against, almost, applied, asymmetry, balsa-core, blanks, brace |
 | [nicoletti_egb_measuring_tuning_2022](./nicoletti_egb_measuring_tuning_2022/) | physics | 57 | G, M, N, R |  | acoustic, already, averages, basic, between, brace, bracing, bridge |
 | [nicoletti_mb_kit_interview](./nicoletti_mb_kit_interview/) | shop | 52 | ES, G, N, R |  | accessible, analogy, around, barber, before, bench, between, board |
@@ -179,8 +186,10 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 ## Keyword → packs
 - **acoustic**: `gore_shop_talk_20`, `gore_shop_talk_responsive_objectives`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `shop_bashkin_jm_build_workflow`
 - **acoustics**: `gore_shop_talk_20`, `nicoletti_tonewood_parameters_webinar`
+- **across**: `gore_shop_talk_20`, `holmberg_gore_modeling_spreadsheets`
+- **action**: `holmberg_gore_modeling_spreadsheets`, `shop_schaefer_compensated_saddle`
 - **active**: `gore_shop_talk_44`, `nicoletti_science_luthier_stories`
-- **after**: `gore_shop_talk_20`, `gore_shop_talk_25`, `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`
+- **after**: `gore_shop_talk_20`, `gore_shop_talk_25`, `holmberg_gore_modeling_spreadsheets`, `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`
 - **against**: `gore_shop_talk_25`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`
 - **aging**: `gore_shop_talk_20`, `nicoletti_tonewood_parameters_webinar`
 - **altitude**: `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`
@@ -190,11 +199,14 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **angle**: `physics_mind_steel_string_lecture`, `shop_schaefer_compensated_saddle`
 - **architecture**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `nicoletti_mb_sound_acoustic_study_set`
 - **asymmetry**: `gore_shop_talk_44`, `jacob_ibeam_bracing_physics`
+- **averages**: `holmberg_gore_modeling_spreadsheets`, `nicoletti_egb_measuring_tuning_2022`
+- **avoidance**: `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`
 - **backs**: `shop_soundboard_species_voicing`, `somogyi_01_air_pump_bracing_tap_tone`
+- **bands**: `holmberg_gore_modeling_spreadsheets`, `somogyi_02_top_and_back`
 - **barber**: `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`
 - **before**: `gore_shop_talk_20`, `nicoletti_mb_kit_interview`, `shop_schaefer_compensated_saddle`
 - **better**: `gore_shop_talk_44`, `somogyi_01_air_pump_bracing_tap_tone`
-- **between**: `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`
+- **between**: `holmberg_gore_modeling_spreadsheets`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`
 - **beyond**: `gore_shop_talk_51_luther_academy_apps`, `nicoletti_science_luthier_stories`
 - **billets**: `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`
 - **binding**: `shop_bashkin_jm_build_workflow`, `somogyi_apprentice_build_workflow`
@@ -204,7 +216,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **brace**: `gore_shop_talk_44`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`, `somogyi_02_top_and_back`, `somogyi_apprentice_build_workflow`
 - **braces**: `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`, `shop_top_bracing_history_h_brace`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_apprentice_build_workflow`
 - **bracing**: `garrett_lee_soundboard_deflection_ep13`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`, `shop_bashkin_jm_build_workflow`
-- **bridge**: `garrett_lee_soundboard_deflection_ep13`, `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`
+- **bridge**: `garrett_lee_soundboard_deflection_ep13`, `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `holmberg_gore_modeling_spreadsheets`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`
 - **bridges**: `gore_shop_talk_44`, `shop_schaefer_compensated_saddle`
 - **build**: `gore_shop_talk_25`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `shop_bashkin_jm_build_workflow`, `somogyi_apprentice_build_workflow`
 - **build-stage**: `nicoletti_mb_kit_interview`, `nicoletti_tonewood_parameters_webinar`
@@ -212,15 +224,16 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **builds**: `nicoletti_mb_kit_interview`, `shop_top_bracing_history_h_brace`
 - **canonical**: `gore_monopole_mobility_measurement`, `gore_shop_talk_20`
 - **capture**: `gore_monopole_mobility_measurement`, `nicoletti_mb_sound_acoustic_study_set`
-- **carve**: `jacob_ibeam_bracing_physics`, `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
+- **carve**: `holmberg_gore_modeling_spreadsheets`, `jacob_ibeam_bracing_physics`, `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
 - **catalog**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `nicoletti_mb_kit_interview`, `shop_top_bracing_history_h_brace`, `somogyi_apprentice_build_workflow`
 - **cedar**: `garrett_lee_soundboard_deflection_ep13`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`
 - **center**: `jacob_ibeam_bracing_physics`, `physics_mind_steel_string_lecture`
-- **cents**: `gore_shop_talk_responsive_objectives`, `shop_schaefer_compensated_saddle`
+- **cents**: `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `shop_schaefer_compensated_saddle`
 - **changes**: `gore_shop_talk_20`, `somogyi_01_air_pump_bracing_tap_tone`
 - **chladni**: `gore_shop_talk_20`, `gore_shop_talk_44`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`
 - **choice**: `nicoletti_tonewood_parameters_webinar`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_apprentice_build_workflow`
-- **classical**: `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`
+- **circle**: `holmberg_gore_modeling_spreadsheets`, `nicoletti_mb_kit_interview`
+- **classical**: `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`
 - **clone**: `nicoletti_mb_kit_interview`, `nicoletti_science_luthier_stories`
 - **close**: `gore_wolf_notes_mailbag`, `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
 - **closed-box**: `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `gore_wolf_notes_mailbag`
@@ -230,7 +243,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **compare**: `gore_shop_talk_51_luther_academy_apps`, `nicoletti_mb_kit_interview`
 - **compensate**: `nicoletti_science_luthier_stories`, `shop_schaefer_compensated_saddle`
 - **compensated**: `nicoletti_tonewood_parameters_webinar`, `shop_schaefer_compensated_saddle`
-- **compensation**: `gore_shop_talk_20`, `gore_shop_talk_responsive_objectives`, `physics_mind_steel_string_lecture`
+- **compensation**: `gore_shop_talk_20`, `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `physics_mind_steel_string_lecture`
 - **compute**: `gore_monopole_mobility_measurement`, `nicoletti_egb_measuring_tuning_2022`
 - **conspiracy**: `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`
 - **constraints**: `gore_shop_talk_responsive_objectives`, `nicoletti_tonewood_parameters_webinar`, `shop_schaefer_compensated_saddle`
@@ -241,20 +254,20 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **coupling**: `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `nicoletti_egb_measuring_tuning_2022`
 - **course**: `gore_guitar_analysis_testing`, `gore_shop_talk_51_luther_academy_apps`
 - **critical**: `gore_monopole_mobility_measurement`, `gore_shop_talk_20`
-- **cross**: `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`
+- **cross**: `holmberg_gore_modeling_spreadsheets`, `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`
 - **cross-tags**: `jacob_ibeam_bracing_physics`, `shop_top_bracing_history_h_brace`
 - **cube**: `garrett_lee_soundboard_deflection_ep13`, `gore_shop_talk_25`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`, `shop_bashkin_jm_build_workflow`
 - **customer**: `nicoletti_mb_kit_interview`, `nicoletti_tonewood_parameters_webinar`, `shop_schaefer_compensated_saddle`
-- **damping**: `gore_shop_talk_25`, `gore_shop_talk_responsive_objectives`, `nicoletti_mb_kit_interview`, `nicoletti_tonewood_parameters_webinar`, `somogyi_02_top_and_back`
+- **damping**: `gore_shop_talk_25`, `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_mb_kit_interview`, `nicoletti_tonewood_parameters_webinar`, `somogyi_02_top_and_back`
 - **decay**: `nicoletti_science_luthier_stories`, `shop_schaefer_compensated_saddle`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`
 - **default**: `shop_soundboard_species_voicing`, `shop_top_bracing_history_h_brace`
 - **deferred**: `gore_guitar_analysis_testing`, `jacob_ibeam_bracing_physics`
 - **definition**: `gore_monopole_mobility_measurement`, `gore_shop_talk_44`, `gore_wolf_notes_mailbag`, `nicoletti_science_luthier_stories`, `somogyi_01_air_pump_bracing_tap_tone`
 - **definitions**: `gore_shop_talk_44`, `gore_wolf_notes_mailbag`
-- **deflection**: `garrett_lee_soundboard_deflection_ep13`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`
+- **deflection**: `garrett_lee_soundboard_deflection_ep13`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`
 - **deliverable**: `jacob_ibeam_bracing_physics`, `shop_soundboard_species_voicing`
-- **density**: `gore_shop_talk_responsive_objectives`, `nicoletti_tonewood_parameters_webinar`
-- **design**: `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_wolf_notes_mailbag`, `nicoletti_science_luthier_stories`
+- **density**: `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_tonewood_parameters_webinar`
+- **design**: `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_wolf_notes_mailbag`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_science_luthier_stories`
 - **diagnosis**: `gore_wolf_notes_mailbag`, `nicoletti_mb_kit_interview`
 - **dipole**: `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`
 - **dipoles**: `nicoletti_egb_measuring_tuning_2022`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`
@@ -271,31 +284,34 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **early**: `shop_bashkin_jm_build_workflow`, `shop_top_bracing_history_h_brace`, `somogyi_01_air_pump_bracing_tap_tone`
 - **ebony**: `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`
 - **ecosystem**: `gore_monopole_mobility_measurement`, `gore_shop_talk_51_luther_academy_apps`
-- **effective**: `gore_monopole_mobility_measurement`, `gore_shop_talk_51_luther_academy_apps`
+- **effective**: `gore_monopole_mobility_measurement`, `gore_shop_talk_51_luther_academy_apps`, `holmberg_gore_modeling_spreadsheets`
 - **efficiency**: `gore_shop_talk_25`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`
 - **efficient**: `shop_soundboard_species_voicing`, `somogyi_02_top_and_back`
 - **energy**: `jacob_ibeam_bracing_physics`, `nicoletti_science_luthier_stories`, `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`
 - **ervin**: `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`
 - **example**: `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_tonewood_parameters_webinar`
 - **factory**: `nicoletti_science_luthier_stories`, `shop_soundboard_species_voicing`
-- **falcate**: `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `jacob_ibeam_bracing_physics`, `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`, `somogyi_01_air_pump_bracing_tap_tone`
+- **falcate**: `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `holmberg_gore_modeling_spreadsheets`, `jacob_ibeam_bracing_physics`, `physics_mind_steel_string_lecture`, `shop_top_bracing_history_h_brace`, `somogyi_01_air_pump_bracing_tap_tone`
 - **families**: `jacob_ibeam_bracing_physics`, `shop_top_bracing_history_h_brace`
 - **fan**: `garrett_lee_soundboard_deflection_ep13`, `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `nicoletti_tonewood_parameters_webinar`, `shop_top_bracing_history_h_brace`
 - **figured**: `shop_soundboard_species_voicing`, `shop_top_bracing_history_h_brace`
+- **finger**: `holmberg_gore_modeling_spreadsheets`, `shop_top_bracing_history_h_brace`
 - **finish**: `physics_mind_steel_string_lecture`, `shop_bashkin_jm_build_workflow`, `somogyi_apprentice_build_workflow`
 - **finished**: `nicoletti_mb_kit_interview`, `nicoletti_tonewood_parameters_webinar`
 - **finite**: `jacob_ibeam_bracing_physics`, `shop_soundboard_species_voicing`, `somogyi_01_air_pump_bracing_tap_tone`
-- **first**: `gore_shop_talk_20`, `nicoletti_mb_kit_interview`, `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
+- **first**: `gore_shop_talk_20`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_mb_kit_interview`, `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
 - **fixed**: `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`, `shop_soundboard_species_voicing`, `somogyi_apprentice_build_workflow`
 - **formulas**: `gore_monopole_mobility_measurement`, `gore_shop_talk_51_luther_academy_apps`
 - **forward**: `gore_shop_talk_51_luther_academy_apps`, `shop_schaefer_compensated_saddle`
 - **framing**: `gore_wolf_notes_mailbag`, `shop_top_bracing_history_h_brace`
 - **frequencies**: `gore_shop_talk_20`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `nicoletti_mb_sound_acoustic_study_set`
-- **frequency**: `gore_monopole_mobility_measurement`, `gore_shop_talk_25`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `somogyi_02_top_and_back`
+- **frequency**: `gore_monopole_mobility_measurement`, `gore_shop_talk_25`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `somogyi_02_top_and_back`
+- **fretboard**: `holmberg_gore_modeling_spreadsheets`, `somogyi_apprentice_build_workflow`
 - **frets**: `shop_schaefer_compensated_saddle`, `somogyi_apprentice_build_workflow`
-- **frf**: `gore_guitar_analysis_testing`, `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`, `shop_bashkin_jm_build_workflow`
+- **frf**: `gore_guitar_analysis_testing`, `gore_shop_talk_20`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `holmberg_gore_modeling_spreadsheets`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`, `physics_mind_steel_string_lecture`
+- **geometry**: `holmberg_gore_modeling_spreadsheets`, `somogyi_apprentice_build_workflow`
 - **giuliano**: `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`
-- **gore**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`
+- **gore**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_25`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `gore_wolf_notes_mailbag`, `holmberg_gore_modeling_spreadsheets`
 - **guitar**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_shop_talk_20`, `gore_shop_talk_44`, `gore_shop_talk_51_luther_academy_apps`, `gore_shop_talk_responsive_objectives`, `jacob_ibeam_bracing_physics`, `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`, `nicoletti_science_luthier_stories`, `nicoletti_tonewood_parameters_webinar`
 - **guitars**: `nicoletti_egb_measuring_tuning_2022`, `physics_mind_steel_string_lecture`, `somogyi_02_top_and_back`
 - **hammer**: `nicoletti_mb_kit_interview`, `nicoletti_mb_sound_acoustic_study_set`

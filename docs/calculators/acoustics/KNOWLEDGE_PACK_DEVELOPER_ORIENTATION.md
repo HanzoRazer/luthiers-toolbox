@@ -61,6 +61,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **SH** | Shop / builder practice (non-school-specific shop lane) |
 | **BK** | Michael Bashkin shop practice |
 | **ESF** | Eric Schaefer shop practice |
+| **GH** | Gregory Holmberg spreadsheet implementation |
 | **OH** | Open hypothesis / taste |
 
 ### Processing pipeline used
@@ -103,7 +104,8 @@ transcript paste
 | TB | Shop top bracing history / H-brace journal | Shop |
 | BK | Bashkin JM full acoustic build workflow | Shop |
 | SC | Schaefer straight → fully compensated saddle | Shop |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, `G-SC##`, …) | — |
+| HM | Holmberg Gore/Gilet modeling spreadsheets | Physics |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, `G-SC##`, `G-HM##`, …) | — |
 
 **Search tip:** prefixes may collide across packs (e.g. `T##`); always disambiguate with `pack_id` in [`cohort_catalog.json`](./cohort_catalog.json) / [`POINT_SEARCH_INDEX.md`](./POINT_SEARCH_INDEX.md).
 
@@ -115,7 +117,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 
 | Lane | Where to look |
 |------|----------------|
-| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Somogyi doctrine |
+| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Holmberg Gore sheets (HM), Somogyi doctrine |
 | Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Schaefer compensated saddle (SC), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
@@ -174,8 +176,9 @@ Select wood (optional metrology)
 | G-N08 | Mode-label map Nicoletti ↔ Gore T11x | Labeling bugs in FRF UI |
 | Unit profiles | Carrico score vs SI \(Y\) | Threshold badges unsafe |
 | **G-GL01** | Garrett Lee on-screen δ targets not in ASR | Can’t ship his deflection band as lab defaults |
+| **G-HM03 / G-HM04** | Holmberg presets unverified as builds; Y&gt;14 citations share mobility unit block | No cut lists / no exceptional-Y badges from sheets alone |
 
-**Standing NO-CALC rules (from packs):** no invented Win7 paths; no falcate geometry from talk alone; no hardcoded 236/275 Hz or 190 Hz mold coincidence as globals; no mobility “responsive” badges until unit profile locked.
+**Standing NO-CALC rules (from packs):** no invented Win7 paths; no falcate geometry from talk alone; no hardcoded 236/275 Hz or 190 Hz mold coincidence as globals; no mobility “responsive” badges until unit profile locked; Holmberg sheets = starting points + measure-your-wood (HM02).
 
 ---
 
