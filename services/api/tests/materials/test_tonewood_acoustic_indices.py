@@ -16,8 +16,9 @@ than every one of those references by six orders of magnitude. Because
 through a Gaussian with ``sigma = 3.0`` and applies no inverse scaling, every
 acoustically-populated species scores 0.0 for every role.
 
-Commit 1 of BR-043 lands these as ``xfail(strict=True)`` so the defect is proven
-and pinned before production behavior changes. Commit 2 removes the markers.
+Commit 1 of BR-043 landed these as ``xfail(strict=True)`` so the defect was
+proven before production behavior changed. Commit 2 removed the spurious factor
+and these markers; the assertions now hold and stand as scale regression guards.
 
 See: docs/remediation/REPOSITORY_DEFECT_REGISTER.md · BR-043
 """
@@ -51,10 +52,6 @@ def make_tonewood(
 # The defect, stated as arithmetic
 # ---------------------------------------------------------------------------
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BR-043: radiation_ratio applies a spurious *1e6; returns ~1.19e7, not ~11.90",
-)
 def test_radiation_ratio_uses_declared_reference_scale():
     """
     TC-01 — c = 5000 m/s, rho = 420 kg/m3 gives c/rho = 11.90 m^4/(kg*s).
@@ -66,10 +63,6 @@ def test_radiation_ratio_uses_declared_reference_scale():
     assert entry.radiation_ratio == pytest.approx(11.90, abs=0.01)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BR-043: radiation_ratio is ~1e6 too large, collapsing the Gaussian to 0.0",
-)
 def test_score_acoustic_is_not_collapsed_at_role_target():
     """
     A species sitting exactly on the soundboard target must score ~1.0.
@@ -87,10 +80,6 @@ def test_score_acoustic_is_not_collapsed_at_role_target():
     assert _score_acoustic(on_target, target) == pytest.approx(1.0, abs=1e-9)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BR-043: all species collapse to 0.0, so near and far score identically",
-)
 def test_score_acoustic_differentiates_near_from_far():
     """
     Ordering test, not a species-quality claim: a wood nearer the role target
