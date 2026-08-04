@@ -17,6 +17,7 @@ Book-match and billeting workflow, factory overbuild vs hand voicing, deflection
 | Pack | Path | Notes |
 |------|------|-------|
 | Top bracing history + H / modified-X (Video Journal #6) | [`shop_top_bracing_history_h_brace/`](./shop_top_bracing_history_h_brace/) | TB01–TB20 — ladder/fan/X lore; H-brace + modified X go-bar process |
+| Bashkin JM full build workflow | [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) | BK01–BK48 — end-to-end acoustic process; FRF voicing gates dual-file |
 | Soundboard species & voicing (YouTube explainer) | [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) | SB01–SB22 — top role, Sitka provenance cases, hand vs factory, deflection over tap |
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Y01–Y20 — workshop chronicle |
 | Nicoletti / MB Acoustic Study Set how-to | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | N01–N16 — kit procedure (meters live in physics lane) |
@@ -31,6 +32,7 @@ These carry both lanes; primary filing is noted in each README.
 | Somogyi 01–02 | Physics (doctrine) | Shop (tap / brace stew culture) |
 | Nicoletti Science / Luthier Stories | Physics | Shop (ETS/TPC tooling narrative) |
 | Howman Physics Mind | Physics | Shop anecdotes (kerfing, scallop myth, posture) |
+| Bashkin JM voicing gates (BK33/37–39) | Shop [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) | Physics dual: open/closed FRF + thickness map |
 | Jacob I-beam X application | Physics [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) | Shop dual-file: I-beam X, scallops, laminated center (IB15–IB18) |
 
 ## Shop NO-CALC (standing)

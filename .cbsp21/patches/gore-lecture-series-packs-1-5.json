@@ -92,6 +92,11 @@
       "docs/calculators/acoustics/physics_mind_steel_string_lecture/GAPS_NOT_RECORDED.md",
       "docs/calculators/acoustics/physics_mind_steel_string_lecture/README.md",
       "docs/calculators/acoustics/physics_mind_steel_string_lecture/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/ANNOTATED_WORKFLOW_NOTES.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/README.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/ANNOTATED_WORKFLOW_NOTES.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/GAPS_NOT_RECORDED.md",
@@ -120,7 +125,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds physics vs shop lane indexes; annotated packs (Gore/O'Brien + related schools + shop journals + Jacob I-beam brace physics); series summary; orientation; CBSP21.",
+    "what_changed": "Adds physics vs shop lane indexes; annotated packs (Gore/O'Brien + related schools + shop journals including Bashkin full JM workflow + Jacob I-beam physics); series summary; orientation; CBSP21.",
     "why_not_redundant": "Separates instrument-building physics from shop/building knowledge so calculators are not fed folklore defaults; captures teaching methodology and gaps before UI work."
   },
   "verification": {
@@ -1359,6 +1364,66 @@
       "intent": "Physics-lane I-beam / cube-rule bracing pack (Jacob/Kanaka); shop dual-file application",
       "scan_targets": [
         "docs/calculators/acoustics/jacob_ibeam_bracing_physics/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/ANNOTATED_WORKFLOW_NOTES.md",
+      "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/ANNOTATED_WORKFLOW_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/CROSSWALK_TOOLBOX.md",
+      "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/GAPS_NOT_RECORDED.md",
+      "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/README.md",
+      "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md",
+      "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

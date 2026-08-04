@@ -49,6 +49,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **DH** | Dominic Howman method |
 | **JK** | Jacob / Kanaka method |
 | **SH** | Shop / builder practice (non-school-specific shop lane) |
+| **BK** | Michael Bashkin shop practice |
 | **OH** | Open hypothesis / taste |
 
 ### Processing pipeline used
@@ -83,6 +84,7 @@ transcript paste
 | IB | Jacob/Kanaka I-beam bracing physics | Physics (shop dual) |
 | SB | Shop soundboard species & voicing | Shop |
 | TB | Shop top bracing history / H-brace journal | Shop |
+| BK | Bashkin JM full acoustic build workflow | Shop |
 | G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, …) | — |
 
 ---
@@ -94,7 +96,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 | Lane | Where to look |
 |------|----------------|
 | Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam brace physics (IB), Somogyi doctrine |
-| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing journal (TB), Somogyi apprentice, MB kit how-to/interview |
+| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
 ---
@@ -161,7 +163,7 @@ Select wood (optional metrology)
 1. This file (§0 lanes)  
 2. [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) and/or [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) for your task  
 3. Gore theme map only if working Gore physics: [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md)  
-4. Crosswalks only (skim): Pack 5, Pack 3, Nicoletti EGB 2022, Nicoletti tonewood webinar; shop: SB soundboard  
+4. Crosswalks only (skim): Pack 5, Pack 3, Nicoletti EGB 2022, Nicoletti tonewood webinar; shop: SB soundboard; BK Bashkin full workflow  
 5. Gap registers for anything you plan to implement  
 6. Annotated notes only when a crosswalk row points at a specific ID  
 

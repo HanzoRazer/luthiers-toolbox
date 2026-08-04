@@ -11,6 +11,8 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 **Deliverable for Toolbox:** meters, models, lab SOPs, unit profiles — still **NO-CALC** until gaps close.
 
+**Dual-file (shop primary):** Bashkin open/closed-box FRF voicing gates — [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) BK33/BK37–BK39 (no Hz targets recorded).
+
 **Does not belong here:** factory vs hand process lore, billet storytelling, client interviews, “play the guitar not the label,” species marketing folklore (those → shop lane). Overlap sentences (“light and stiff”) may appear in both; tag by *deliverable*.
 
 ## Packs in this lane

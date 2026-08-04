@@ -244,7 +244,7 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 
 Physics brace-beam (non-Gore): [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) (IB01–IB24; Howman PM19 cousin).
 
-Shop-lane packs (not Gore physics): see [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — e.g. [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) (SB01–SB22); [`shop_top_bracing_history_h_brace/`](./shop_top_bracing_history_h_brace/) (TB01–TB20).
+Shop-lane packs (not Gore physics): see [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — e.g. [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) (SB01–SB22); [`shop_top_bracing_history_h_brace/`](./shop_top_bracing_history_h_brace/) (TB01–TB20); [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) (BK01–BK48).
 
 ### Somogyi 01 — what it adds
 
