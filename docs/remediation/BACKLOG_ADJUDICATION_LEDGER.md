@@ -125,7 +125,7 @@ sweep table above continues to mean "the 2026-07-20 set".
 
 | BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
 | ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
-| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-verified | high | **IMPLEMENTED — AWAITING MERGE** | producer corrected to unscaled `c/rho`; direct scorer coverage added (19 tests). Resolve only after merged-`main` re-verification |
+| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-verified | high | **RESOLVED** | producer corrected to unscaled `c/rho`; direct scorer coverage added (19 tests). Merged PR #245 → `a34b6f5d`, CI 44 pass / 0 fail. Post-merge witness on `a34b6f5d`: Basswood `radiation_ratio` 11.87, `_score_acoustic(soundboard)` **0.9924** (was 0.0) |
 
 **Evidence.** The producer returns `(c/rho)*1e6`; its own docstring, `_ROLE_TARGETS`, and `router.py:88`
 all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with `sigma = 3.0` and no
@@ -133,6 +133,15 @@ inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduc
 `tests/materials/test_tonewood_acoustic_indices.py` (3 × `xfail(strict=True)`).
 
 | BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
+
+| BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | OWNER_DECISION_REQUIRED | code-inspection | med | **QUEUED — NOT AUTHORIZED** | owner rules the published unit, then align one site (recommended `1e6`→`1e3`) and pin both surfaces with one test |
+
+**BR-045 — why `OWNER_DECISION_REQUIRED` and not `CONFIRMED_DEFECT`.** The docstring being false about
+its code is confirmed; *which side moves* is not derivable from the repository, because the frontend
+independently produces the docstring's value. Unlike BR-043 there is no consumer contract to adjudicate
+against — nothing thresholds, sorts or scores on `specific_moe` — so the blocking item is a ruling on
+the published unit, not a code question. Promoted out of BR-043's secondary-index footnote so it carries
+an ID rather than living inside a resolved defect.
 
 **BR-044 evidence label — `STATIC-FACT CONFIRMED`.** The frontend producer computes `(c/ρ)*1000`
 (~9,000–14,000 for normal tonewoods) while `rrColor` and `soundboardRating` threshold at 12.0 / 10.5 /
