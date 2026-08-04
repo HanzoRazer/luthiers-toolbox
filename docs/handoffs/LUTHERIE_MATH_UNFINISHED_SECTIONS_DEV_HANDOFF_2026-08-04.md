@@ -3,9 +3,11 @@
 
 **Date:** 2026-08-04  
 **Status:** DEV-READY orientation — knowledge layer closed on PR #243; math taxonomy evolution continues here  
+**Location:** `docs/handoffs/` (active index: [`CURRENT_ACTIVE.md`](./CURRENT_ACTIVE.md))  
 **Canonical hub:** [`docs/LUTHERIE_MATH.md`](../LUTHERIE_MATH.md)  
 **Related:** Appendix B (measurement → solvers); acoustics packs under `docs/calculators/acoustics/` (inputs/dialect only)  
-**Audience:** Engineers extending calculators / lab UI — not a lecture harvest checklist
+**Audience:** Engineers extending calculators / lab UI — not a lecture harvest checklist  
+**On `main`:** yes (merge commit `5a885f31` / PR #243). If missing locally: `git checkout main && git pull origin main`.
 
 ---
 
