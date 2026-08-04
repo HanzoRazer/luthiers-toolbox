@@ -490,15 +490,15 @@ No falcate classical with elevated fingerboard in his shop, but small-body class
 
 | ID | Heuristic | Class | Notes |
 |----|-----------|-------|-------|
-| H1 | Lower brace height to raise monopole mobility when top is too stiff | **TG** | Fastest stiffness reduction if brace design allows |
-| H2 | CF-capped braces block easy height reduction | **EO**/**TG** | Choose alternate stiffness-reduction paths |
-| H3 | Want symmetric Chladni → start with symmetric bracing | **TG** | Don’t sand asymmetry into a deliberately asymmetric structure expecting miracles |
-| H4 | Want scooped-mid steel-string dialect → asymmetric X is the historical path | **EO** | Cultural/market path dependence, not destiny |
-| H5 | Want mids back / flatter FR → consider symmetric (e.g. falcate) | **TG** | Broad brush |
-| H6 | Live back for tone/peak density; non-live for volume | **TG** | Explicit trade |
-| H7 | Don’t torrefy expecting magic; accept glue risk | **TG** practice | Materials process caveat |
-| H8 | Upper back usually quiet in Gore back systems; stiffen only if it interferes | **EO**/**TG** | |
-| H9 | Nut + saddle compensation together for low intonation error | **TG** | See §7 |
+| H01 | Lower brace height to raise monopole mobility when top is too stiff | **TG** | Fastest stiffness reduction if brace design allows |
+| H02 | CF-capped braces block easy height reduction | **EO**/**TG** | Choose alternate stiffness-reduction paths |
+| H03 | Want symmetric Chladni → start with symmetric bracing | **TG** | Don’t sand asymmetry into a deliberately asymmetric structure expecting miracles |
+| H04 | Want scooped-mid steel-string dialect → asymmetric X is the historical path | **EO** | Cultural/market path dependence, not destiny |
+| H05 | Want mids back / flatter FR → consider symmetric (e.g. falcate) | **TG** | Broad brush |
+| H06 | Live back for tone/peak density; non-live for volume | **TG** | Explicit trade |
+| H07 | Don’t torrefy expecting magic; accept glue risk | **TG** practice | Materials process caveat |
+| H08 | Upper back usually quiet in Gore back systems; stiffen only if it interferes | **EO**/**TG** | |
+| H09 | Nut + saddle compensation together for low intonation error | **TG** | See §7 |
 | H10 | Hit targets by design + closed-box trim; not free-top pitch matching | **TG** | |
 
 ---

@@ -19,6 +19,15 @@ Delineate **instrument-building physics** from **shop / building knowledge**. Sa
 
 **Filing rule:** New transcript → choose lane → pack folder → update **that** lane index (and Gore summary only if Gore/O’Brien physics). Dual-file only when README says so.
 
+**Nothing drops to the sandbox floor:** [`COHORT_GOVERNANCE.md`](./COHORT_GOVERNANCE.md) — intake checklist, annotation bar, search contract, coverage gate.
+
+| Artifact | Role |
+|----------|------|
+| [`cohort_catalog.json`](./cohort_catalog.json) | Machine catalog of every pack + point ID |
+| [`POINT_SEARCH_INDEX.md`](./POINT_SEARCH_INDEX.md) | Human/grep search by prefix, pack, keyword |
+| `python3 scripts/knowledge_packs/build_cohort_catalog.py` | Rebuild catalog + search index |
+| `python3 scripts/knowledge_packs/check_cohort_coverage.py` | **Must PASS** before commit/PR (unfiled / incomplete / zero points / CBSP21 gaps fail) |
+
 ---
 
 ## 1. Pack template (what each folder is)
@@ -61,10 +70,13 @@ transcript paste
   → SOURCE_TRANSCRIPT (clean ASR)
   → ANNOTATED_* (point IDs + class + destination)
   → CROSSWALK (Toolbox mapping + NO-CALC)
-  → GAPS (blockers)
+  → GAPS (blockers; G-* IDs for missing numbers)
   → lane index (PHYSICS_* or SHOP_*)
   → GORE_LECTURE_SERIES_SUMMARY only if Gore physics subset
+  → rebuild cohort_catalog.json + POINT_SEARCH_INDEX.md
+  → python3 scripts/knowledge_packs/check_cohort_coverage.py  # must PASS
   → .cbsp21/patches/gore-lecture-series-packs-1-5.json (manifest)
+  → commit / push / update PR
 ```
 
 **Point ID namespaces (do not renumber casually):**
@@ -72,12 +84,14 @@ transcript paste
 | Prefix | School / pack family | Default lane |
 |--------|----------------------|--------------|
 | P | Gore Shop Talk #20 | Physics |
+| H | Gore Shop Talk #20 heuristics (H01–H10) | Physics |
 | W | Gore wolf mailbag | Physics |
 | M | Gore monopole mobility tip | Physics |
 | S | Gore Shop Talk #25 | Physics |
 | R | Gore responsive objectives | Physics |
 | U | Gore Shop Talk #44 | Physics |
 | A | Gore Shop Talk #51 / Academy apps | Physics |
+| T | Gore Guitar Analysis & Testing (Pack 6 partial); also theory cross-refs | Physics |
 | Y | Somogyi apprentice workflow | Shop |
 | ES | Somogyi primary (01–02) | Physics (doctrine) |
 | N | Nicoletti family (continues across his packs) | Mixed — see pack README |
@@ -87,7 +101,9 @@ transcript paste
 | SB | Shop soundboard species & voicing | Shop |
 | TB | Shop top bracing history / H-brace journal | Shop |
 | BK | Bashkin JM full acoustic build workflow | Shop |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, …) | — |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, …) | — |
+
+**Search tip:** prefixes may collide across packs (e.g. `T##`); always disambiguate with `pack_id` in [`cohort_catalog.json`](./cohort_catalog.json) / [`POINT_SEARCH_INDEX.md`](./POINT_SEARCH_INDEX.md).
 
 ---
 
@@ -176,6 +192,7 @@ Select wood (optional metrology)
 
 - Transcripts ingested → packs on branch / PR #243  
 - CBSP21 manifest: `.cbsp21/patches/gore-lecture-series-packs-1-5.json`  
+- Cohort floor held: `check_cohort_coverage.py` → PASS; catalog + search index current  
 - Independent of MB Sound empirical corpus PR #244 (kit SOP ≠ panel workbooks)
 
 **Not done / not claimed:** runtime calculators, merged “universal” acoustic workflow, closed mobility thresholds, Pack 6 full SOPs.
