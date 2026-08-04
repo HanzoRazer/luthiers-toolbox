@@ -1479,10 +1479,11 @@
         "MB26",
         "MB27",
         "MB28",
+        "MB29",
         "N69",
         "N99"
       ],
-      "point_count": 38,
+      "point_count": 39,
       "has_process_workflow": false,
       "missing_template_files": [],
       "search_keywords": [
@@ -1508,6 +1509,7 @@
         "detailed",
         "dried",
         "duplicate",
+        "engine",
         "evaluation",
         "evidence",
         "fabricate",
@@ -1520,6 +1522,7 @@
         "index",
         "ingest",
         "laboratory",
+        "lutherie",
         "mandatory",
         "master",
         "metadata",
@@ -1530,6 +1533,7 @@
         "numerical",
         "pairing",
         "panel",
+        "parallel",
         "pattern",
         "physics",
         "point",
@@ -1542,10 +1546,7 @@
         "records",
         "retention",
         "schema",
-        "screenshot",
-        "session",
-        "sheet",
-        "signal"
+        "screenshot"
       ],
       "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/",
       "status": "complete"
@@ -3218,7 +3219,7 @@
   ],
   "counts": {
     "packs": 25,
-    "points": 1128,
+    "points": 1129,
     "unfiled": 0,
     "template_incomplete": 0
   }

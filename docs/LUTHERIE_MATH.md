@@ -40,6 +40,7 @@ Challenges and corrections are welcomed — this document is a living record.
 25. [Neck Angle Calculation](#25-neck-angle-calculation)
 26. [Error Log](#26-error-log)
 - [Appendix A — Guitar body as speaker enclosure](#appendix-a--guitar-body-as-speaker-enclosure)
+- [Appendix B — Measurement corpora → canonical solvers (no parallel engines)](#appendix-b--measurement-corpora--canonical-solvers-no-parallel-engines)
 
 **Part II — Design Problems**
 39. [Modal Area Coefficient A_n](#39-modal-area-coefficient-a_n)
@@ -1781,6 +1782,75 @@ const tier = suggestWoodTier(32, 12);
 
 ---
 
+## Appendix B — Measurement corpora → canonical solvers (no parallel engines)
+
+**Rule:** External spreadsheets and vendor analyzers supply **measured inputs**. They do **not** become a second math stack. All equation productization routes through this document’s numbered sections and the **Implementation** paths already named above.
+
+**Knowledge-pack cousins (inputs / dialect only — not alternate engines):**
+- MB Sound / Nicoletti TPC panel labs → `docs/calculators/acoustics/mb_sound_panel_laboratory_records/`
+- Holmberg Gore/Gilet Google Sheets / `.xlsx` → `docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/`
+- Lecture/shop packs → `docs/calculators/acoustics/` lane indexes
+
+### B.1 Universal wiring (MB Specimen Master → this file → code)
+
+MB/TPC screenshot transcriptions make §12–§13 (and related FoMs) **real** by replacing species-average placeholders with billet measurements. Call the existing solvers; do not re-implement Holmberg `top_panel` or TPC UI math in a new module.
+
+| MB / TPC field (Specimen Master) | This document | Canonical implementation | Notes |
+|----------------------------------|---------------|--------------------------|-------|
+| Sample Length / Width (mm) → m | §12 \(a\), \(b\) | `plate_design/thickness_calculator.py → plate_modal_frequency()` | Grain axis = length convention must be stated at intake |
+| Sample Thickness (mm) → m | §12 \(h\); §13 reference \(h\) | same + `inverse_solver.py → solve_for_thickness()` | Measured \(h\) is \(h_\mathrm{ref}\) for inverse checks |
+| Density (kg/m³) | §12 \(\rho\) | `plate_modal_frequency(..., rho=...)` | Prefer detailed-analyzer value; do not write into `wood_species.json` as FPL |
+| Young’s Modulus / Stiffness (GPa) → Pa | §12 \(E_L\) (primary) | `plate_modal_frequency(..., E_L_Pa=...)` | TPC “stiffness” is treated as **longitudinal** unless a cross-grain field is present — see gap below |
+| Resonance Frequency (Hz) | §12 \(f_{mn}\) check; §13 \(f_\mathrm{target}\) / \(f_\mathrm{ref}\) | forward `plate_modal_frequency`; inverse `solve_for_thickness` / `thickness_for_target_frequency` | Free-plate \(\eta\) near 1.0 (§12) |
+| Radiation Coefficient | FoM compare; §41 culture | Display / compare only until `radiation_power.py` exists | Not a substitute for \(P_\mathrm{rad}\) |
+| Q Factor / Sustain | Damping FoM (not yet a numbered § solver) | Intake + QC; no mobility badge | Do not invent \(Y\) from Q |
+| Fitting (%) | QC gate | Reject / warn low-fit rows before solver call | |
+| Capture Audit exclusions | Provenance | Skip missing/invalid specimen IDs | e.g. torrefied 000002 |
+
+**Intake contract (single path):**
+
+```text
+MB/TPC specimen row (measured)
+  → unit normalize (mm→m, GPa→Pa)
+  → docs/LUTHERIE_MATH.md §12 / §13 (and §4–§11 when body V + port known)
+  → services/api/app/calculators/plate_design/*  (+ soundhole_calc.py for air)
+  → UI / lab result
+```
+
+**Forbidden:** cloning Holmberg `freq_db` / Google Sheets as a parallel FRF engine; shipping MB batch averages as cut lists; merging vendor UI formulas into a new “TPC calculator” that bypasses this file.
+
+### B.2 Holmberg modules → existing sections (reference only)
+
+Holmberg workbooks are a **Gore-school wiring diagram** and test vectors. Map intent to what already exists; fill gaps by extending **this** document + named implementations — not by mounting the spreadsheet runtime.
+
+| Holmberg sheet / intent | Canonical home | Status |
+|-------------------------|----------------|--------|
+| `top_panel` / `back_panel` thickness from tap + \(f\) | §12, §13 + `plate_design/` | **Use existing** — feed with MB/TPC or shop tap rows |
+| `body` volume / area → Helmholtz | §4–§8, §11 + `soundhole_calc.py` / `acoustic_body_volume.py` | **Use existing**; outline→V still Appendix A |
+| `fretboard` positions | §1 + `instrument_geometry/neck/fret_math.py` | **Use existing** |
+| `intonation` / `first`…`sixth` | §3 + `nut_compensation_physics.py` (enhance, don’t fork) | Extend existing compensation stack |
+| `model` + `freq_db` 4-DOF | §7 coupling culture; `coupled_2osc.py` / future closed-box FRF | **Do not** re-host Holmberg complex FRF table as product core |
+| `top_braces` / `back_braces` → \(K_t\)/\(K_b\) | §40 \(D(x,y)\); `brace_prescription.py` | Experimental Holmberg sizing ≠ new canon; extend §40 |
+| Wood Properties averages | Comparison UX only | Never override FPL/CIRAD attribution in `wood_species.json` |
+
+### B.3 Open wiring gaps (record here — do not invent)
+
+| Gap | Blocks | Disposition |
+|-----|--------|-------------|
+| TPC stiffness → \(E_L\) only (no \(E_C\) on MB cards) | Full orthotropic §12 term | Intake: require \(E_C\) estimate source or run \(E_C\)-insensitive checks with explicit flag |
+| No raw FFT/IR arrays in MB books | Independent peak re-pick | Keep screenshot \(f\); optional later raw corpus |
+| Mobility unit profile (G-R01 / G-M09) | “Exceptional Y” badges | Unchanged — still blocked |
+| 4-DOF product FRF | Holmberg `model` parity | Evolve `coupled_2osc` / lab FRF against §7 — not Sheets port |
+
+### B.4 Developer checklist
+
+1. Need a number from wood? → measured row (MB/TPC or shop) **or** attributed `wood_species.json` — never silent Holmberg preset.  
+2. Need a formula? → section in **this file** + **Implementation** path.  
+3. Missing formula? → add/extend a § here, then implement beside the named module.  
+4. Lecture/spreadsheet pack? → knowledge layer only until it maps through Appendix B.
+
+---
+
 *Document maintained by Ross Echols, PE #78195*
 *For The Production Shop — luthiers-toolbox-main*
-*Last updated: April 2026*
+*Last updated: August 2026*

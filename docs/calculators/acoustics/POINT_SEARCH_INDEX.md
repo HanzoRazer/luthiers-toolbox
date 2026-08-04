@@ -19,7 +19,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
 - [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (67): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +59
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
-- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (38): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +30
+- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (39): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +31
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
@@ -51,7 +51,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 ### `N` — Nicoletti family
 - [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
-- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (38): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +30
+- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (39): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +31
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
@@ -140,7 +140,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
 
 ### `MB` — MB Sound / Nicoletti TPC panel laboratory records
-- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (38): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +30
+- [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (39): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +31
 
 ### `PM` — Howman Physics Mind
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
@@ -174,7 +174,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 | [gore_wolf_notes_mailbag](./gore_wolf_notes_mailbag/) | physics | 14 | P, W |  | anomaly, architecture, bridge, catalog, class, clearance, close, closed-box |
 | [holmberg_gore_modeling_spreadsheets](./holmberg_gore_modeling_spreadsheets/) | physics | 67 | G, HM, M, R | yes | achievable, across, action, added, affect, after, air-stiffness, attribution |
 | [jacob_ibeam_bracing_physics](./jacob_ibeam_bracing_physics/) | physics+shop | 37 | ES, G, IB, PM, SB, TB |  | acrylic, against, almost, applied, asymmetry, balsa-core, blanks, brace |
-| [mb_sound_panel_laboratory_records](./mb_sound_panel_laboratory_records/) | physics | 38 | G, MB, N |  | absent, adirondack, alpine, analyzer, anecdote, archive, audit, authority |
+| [mb_sound_panel_laboratory_records](./mb_sound_panel_laboratory_records/) | physics | 39 | G, MB, N |  | absent, adirondack, alpine, analyzer, anecdote, archive, audit, authority |
 | [nicoletti_egb_measuring_tuning_2022](./nicoletti_egb_measuring_tuning_2022/) | physics | 57 | G, M, N, R |  | acoustic, already, averages, basic, between, brace, bracing, bridge |
 | [nicoletti_mb_kit_interview](./nicoletti_mb_kit_interview/) | shop | 52 | ES, G, N, R |  | accessible, analogy, around, barber, before, bench, between, board |
 | [nicoletti_mb_sound_acoustic_study_set](./nicoletti_mb_sound_acoustic_study_set/) | shop | 38 | ES, G, M, N, R, T |  | acoustic, adjustable, architecture, barber, basis, bluetooth, bracing, bridge |
@@ -381,6 +381,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **pack**: `gore_shop_talk_25`, `gore_shop_talk_44`
 - **packs**: `gore_monopole_mobility_measurement`, `gore_shop_talk_25`, `gore_shop_talk_44`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`, `somogyi_apprentice_build_workflow`
 - **panel**: `gore_shop_talk_44`, `mb_sound_panel_laboratory_records`
+- **parallel**: `mb_sound_panel_laboratory_records`, `shop_top_bracing_history_h_brace`
 - **partial**: `garrett_lee_soundboard_deflection_ep13`, `gore_guitar_analysis_testing`
 - **pattern**: `jacob_ibeam_bracing_physics`, `mb_sound_panel_laboratory_records`
 - **physics**: `garrett_lee_soundboard_deflection_ep13`, `jacob_ibeam_bracing_physics`, `mb_sound_panel_laboratory_records`, `shop_bashkin_jm_build_workflow`, `shop_soundboard_species_voicing`, `shop_top_bracing_history_h_brace`
@@ -407,7 +408,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - **scale**: `gore_monopole_mobility_measurement`, `gore_wolf_notes_mailbag`, `jacob_ibeam_bracing_physics`, `nicoletti_mb_sound_acoustic_study_set`, `shop_top_bracing_history_h_brace`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`, `somogyi_apprentice_build_workflow`
 - **scallop**: `jacob_ibeam_bracing_physics`, `somogyi_01_air_pump_bracing_tap_tone`
 - **school**: `nicoletti_egb_measuring_tuning_2022`, `nicoletti_mb_sound_acoustic_study_set`, `somogyi_01_air_pump_bracing_tap_tone`, `somogyi_02_top_and_back`, `somogyi_apprentice_build_workflow`
-- **session**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_wolf_notes_mailbag`, `mb_sound_panel_laboratory_records`
+- **session**: `gore_guitar_analysis_testing`, `gore_monopole_mobility_measurement`, `gore_wolf_notes_mailbag`
 - **setup**: `gore_guitar_analysis_testing`, `shop_bashkin_jm_build_workflow`, `somogyi_apprentice_build_workflow`
 - **shop**: `shop_bashkin_jm_build_workflow`, `shop_soundboard_species_voicing`
 - **sides**: `shop_bashkin_jm_build_workflow`, `somogyi_apprentice_build_workflow`

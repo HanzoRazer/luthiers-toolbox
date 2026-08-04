@@ -7,6 +7,7 @@
 **Related packs:** [`../nicoletti_tonewood_parameters_webinar/`](../nicoletti_tonewood_parameters_webinar/), [`../nicoletti_mb_sound_acoustic_study_set/`](../nicoletti_mb_sound_acoustic_study_set/) (kit SOP ≠ these panel books), [`../holmberg_gore_modeling_spreadsheets/`](../holmberg_gore_modeling_spreadsheets/) (separate Gore equation engines — same session uploads)  
 **Point prefix:** `MB`  
 **Status:** Tab-by-tab evaluation complete (2026-08-04). Binaries not committed — SHA-256 in WORKBOOK_INVENTORY.  
+**Canonical math:** [`docs/LUTHERIE_MATH.md`](../../../LUTHERIE_MATH.md) Appendix B — measured inputs only; **no parallel engine**  
 **Parent indexes:** Physics (primary)
 
 ## Contents

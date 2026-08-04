@@ -11,6 +11,8 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 **Deliverable for Toolbox:** meters, models, lab SOPs, unit profiles — still **NO-CALC** until gaps close.
 
+**Canonical equation hub:** [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (Appendix B wires MB/TPC + Holmberg inputs into existing § / `plate_design` / `soundhole_calc` — no parallel engines).
+
 **Dual-file (shop primary):** Bashkin open/closed-box FRF voicing gates — [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) BK33/BK37–BK39 (no Hz targets recorded).
 
 **Shop cross-link (intonation setup, not a physics pack):** Schaefer compensated saddle — [`shop_schaefer_compensated_saddle/`](./shop_schaefer_compensated_saddle/) SC22–SC33 (cents ear band, 12th-fret method, envelope/transient, steel harmonics). Pair with Gore P25–P26 / H09; do not invent break-point mm (**G-SC02**).

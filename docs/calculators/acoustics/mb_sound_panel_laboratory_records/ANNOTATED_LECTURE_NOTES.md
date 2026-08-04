@@ -118,6 +118,10 @@ WORKBOOK_INVENTORY SHA-256 for all six lab uploads (five unique hashes).
 
 Every sheet opened/classified — see [`TAB_BY_TAB_EVALUATION.md`](./TAB_BY_TAB_EVALUATION.md).
 
+## MB29 — Universal wiring through LUTHERIE_MATH (no parallel engine)
+
+MB Specimen Master fields are **inputs** to [`docs/LUTHERIE_MATH.md`](../../../LUTHERIE_MATH.md) §12 / §13 (Appendix B) and existing `plate_design/*` solvers. Do not recreate TPC/Holmberg equation runtimes in product.
+
 ---
 
 ## Point index
@@ -152,3 +156,4 @@ Every sheet opened/classified — see [`TAB_BY_TAB_EVALUATION.md`](./TAB_BY_TAB_
 | MB26 | Dual session corpus |
 | MB27 | Hashes; no binaries in git |
 | MB28 | Tab-by-tab evaluation |
+| MB29 | Wire via LUTHERIE_MATH Appendix B |

@@ -12,7 +12,8 @@
     "paths_in_scope": [
       "docs/calculators/acoustics/",
       "scripts/knowledge_packs/",
-      ".cbsp21/patches/gore-lecture-series-packs-1-5.json"
+      ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
+      "docs/LUTHERIE_MATH.md"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
@@ -157,7 +158,8 @@
       "docs/calculators/acoustics/somogyi_apprentice_build_workflow/README.md",
       "docs/calculators/acoustics/somogyi_apprentice_build_workflow/SOURCE_TRANSCRIPT.md",
       "scripts/knowledge_packs/build_cohort_catalog.py",
-      "scripts/knowledge_packs/check_cohort_coverage.py"
+      "scripts/knowledge_packs/check_cohort_coverage.py",
+      "docs/LUTHERIE_MATH.md"
     ]
   },
   "diff_articulation": {
@@ -1886,6 +1888,18 @@
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
       "verification": [
         "python3 scripts/knowledge_packs/check_cohort_coverage.py"
+      ]
+    },
+    {
+      "path": "docs/LUTHERIE_MATH.md",
+      "intent": "Appendix B: universal MB/Holmberg \u2192 LUTHERIE_MATH \u2192 canonical solvers (no parallel engines)",
+      "scan_targets": [
+        "docs/LUTHERIE_MATH.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
       ]
     }
   ],

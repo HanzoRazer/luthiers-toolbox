@@ -181,6 +181,8 @@ Select wood (optional metrology)
 
 **Standing NO-CALC rules (from packs):** no invented Win7 paths; no falcate geometry from talk alone; no hardcoded 236/275 Hz or 190 Hz mold coincidence as globals; no mobility “responsive” badges until unit profile locked; Holmberg sheets = starting points + measure-your-wood (HM02).
 
+**Universal equation wiring:** All calculator math productization goes through [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (see **Appendix B**). MB/TPC and Holmberg packs supply **inputs / reference maps** only — do not recreate parallel spreadsheet engines.
+
 ---
 
 ## 5. Suggested reading order for developers

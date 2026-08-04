@@ -9,6 +9,7 @@
 **Shop overlap:** Measurement wrappers only (panel tap hold, REW, string measure-rig) — not a build dialect  
 **Point prefix:** `HM`  
 **Status:** Documentation export + V4 `.xlsx` inventory (2026-08-04). Equation cell-by-cell audit still open (**G-HM05**).  
+**Canonical math:** [`docs/LUTHERIE_MATH.md`](../../../LUTHERIE_MATH.md) Appendix B — Sheets are reference wiring / test vectors; **do not re-host as product engine**  
 **Parent indexes:** Physics (primary); Gore summary cross-link; shop index not primary
 
 ## Contents
