@@ -12,12 +12,13 @@
 | Upload filename | Role | Bytes | SHA-256 |
 |-----------------|------|------:|---------|
 | `Classical_nylon_falcate_CF_V4_c015.xlsx` | Classical nylon falcate + CF braces | 1 789 931 | `d702c59978272f828facaafe423627fd72327dd558b82cb59058cc5185160b02` |
+| `Classical_nylon_falcate_noCF_V4_7f90.xlsx` | Classical nylon falcate, Yellow Poplar, no CF | 1 786 329 | `3abdcbb2cf01180be9d03dea40fd53d71fef4390858beb8ba1b99e96f7bd96c4` |
 | `Medium_SS_falcate_noCF_V4_632b.xlsx` | Medium SS falcate, Yellow Poplar, no CF | 1 871 403 | `acad045a1aab0ffd361c60b0cbbdd429efd5e57b1f7c6f59964c8be1b94b44c7` |
 | `Medium_SS_falcate_CF_V4_cdac.xlsx` | Medium SS falcate, KWP+CF | 1 799 126 | `1638c661b3aab3cc1686cb1dadf5d442c5fbcd1e6dd677828151a2823b547ef1` |
 | `OM_SS_Xbrace_noCF_V3_3e4a.xlsx` | OM steel X-brace, Sitka, no CF (**V3**) | 1 786 098 | `15103a3493214e9324318d19db9879cc1fa74294b088c61fe3203236aa8fca68` |
 | `Wood_Properties_V1_cb3a.xlsx` | Companion species database | 2 413 969 | `3f55942d3605944343da60cf4effb67feb684f7d837c000747aa0b4efba18476` |
 
-**Starter set status:** All guitar workbooks supplied from the spreadsheet page are inventoried (3× falcate V4 + OM X V3 + Wood Properties). Docs table also listed a classical falcate “Yellow Poplar no CF” row — **no separate file uploaded**; treat as optional residual if it reappears.
+**Starter set status:** **Complete** vs docs Get-started table — 5 guitar starters + Wood Properties (hashes above).
 
 ---
 
@@ -32,6 +33,7 @@
 | Workbook | Extra / order notes |
 |----------|---------------------|
 | Classical nylon CF | Standard set; `top_braces` before `freq_db` |
+| Classical nylon noCF | Same classical body; Yellow Poplar braces; 325 named ranges |
 | Medium SS noCF | Extra **`deflection`** sheet; 338 named ranges |
 | Medium SS CF | `freq_db` before `top_braces`; 327 named ranges |
 | OM SS X noCF (V3) | Standard set (no `deflection`); **X-brace** sizing (triangle heights); 311 named ranges; neck join **14** fret |
@@ -41,6 +43,7 @@
 | Workbook | Count (approx.) |
 |----------|----------------:|
 | Classical nylon CF | 324 |
+| Classical nylon noCF | 325 |
 | Medium SS noCF | 338 |
 | Medium SS CF | 327 |
 | OM SS X noCF V3 | 311 |
@@ -51,36 +54,34 @@ Examples: `l_body`, `w_lower`, `V_cs`, `t_tp`, `f_air`/`f_top`/`f_back`, `Kt_act
 
 ## 2. Preset summary scalars (from `summary` + named cells)
 
-| Field | Classical nylon CF | Medium SS noCF | Medium SS CF | OM SS X noCF V3 |
-|-------|-------------------:|---------------:|-------------:|----------------:|
-| Name | Neo-classical flat-top | Medium SS flat-top | Medium SS flat-top | OM SS flat-top |
-| Description | 360 mm nylon falcate | OOO steel falcate | OOO steel falcate | OM steel X (Collings OM1 pattern) |
-| Neck join | 12 | 12 | 12 | **14** |
-| Body L×W×D mm | 490×360×126 | 490×390×115 | 490×390×115 | 492.1×381×106.4 |
-| Volume L | 14.06 | 13.86 | 13.85 | 13.30 |
-| Soundhole Ø mm | **84** | **77** | **76** | **97** |
-| Top species | WRC | Engelmann (exceptional) | Engelmann (exceptional) | Sitka (average) |
-| Top braces | KBP+CF | Yellow Poplar | KWP+CF | Sitka (no CF) |
-| Back | EIR | EIR | EIR | EIR |
-| Back braces | Sitka | Yellow Poplar | Sitka | Sitka |
-| Vibrational \(f\) top (Hz) | **60** | **75** | **75** | **75** |
-| \(t_{tp}\) mm | 2.490 | 2.695 | 2.695 | 2.847 |
-| Top mass g (summary) | 116.8 | 190.7 | 192.7 | 231.7 |
-| \(K_t\) N/m | 41 447 | 48 706 | 49 346 | 58 545 |
-| Top MM (book) s/kg·e-3 | **23.80** | **17.18** | **16.98** | **14.22** |
-| Full MM top | 20.33 | 14.67 | 14.52 | 12.40 |
-| Avg SPL dB | 75.32 | 76.94 | 76.75 | 76.13 |
-| \(t_{bp}\) mm | 2.079 | 2.403 | 2.403 | 2.384 |
-| Back mass g | 190.0 | 230.0 | **150.0*** | 225.9 |
-| \(K_b\) N/m | 149 027 | 131 037 | 129 187 | 120 948 |
-| \(K_b/K_t\) | 3.17 | 2.70 | 2.61 | 2.07 |
-| Back MM | 9.00 | 8.73 | 8.85 | 9.16 |
-| Target triad Hz | 95 / 190.5 / 240 | 90 / 169.5 / 214 | 90 / 169.5 / 214 | **101** / 169.5 / 214 |
-| Target IDs | 3 / 15 / 19 | 2 / 13 / 17 | 2 / 13 / 17 | 4 / 13 / 17 |
-| Scale mm | 650 | 645.16 | 645.16 | 645.16 |
-| Major brace w×h mm | 5.0 × 3.88 rect | 3.38 × 8.33 rect | 5.0 × 6.90 rect | 5.75 × **13.79 tri** |
-| Minor brace w×h mm | 5.0 × 2.58 rect | 3.38 × 5.55 rect | 5.0 × 4.60 rect | 3.83 × **9.19 tri** |
-| Safety factor | 0.5 | 0.5 | 0.5 | 0.5 |
+| Field | Classical CF | Classical noCF | Medium SS noCF | Medium SS CF | OM SS X noCF V3 |
+|-------|-------------:|---------------:|---------------:|-------------:|----------------:|
+| Name | Neo-classical flat-top | Neo-classical flat-top | Medium SS flat-top | Medium SS flat-top | OM SS flat-top |
+| Description | 360 mm nylon falcate | 360 mm nylon falcate | OOO steel falcate | OOO steel falcate | OM steel X (Collings OM1) |
+| Neck join | 12 | 12 | 12 | 12 | **14** |
+| Body L×W×D mm | 490×360×126 | 490×360×126 | 490×390×115 | 490×390×115 | 492.1×381×106.4 |
+| Volume L | 14.06 | 14.07 | 13.86 | 13.85 | 13.30 |
+| Soundhole Ø mm | **84** | **80** | **77** | **76** | **97** |
+| Top species | WRC | WRC | Engelmann (exc.) | Engelmann (exc.) | Sitka (avg) |
+| Top braces | KBP+CF | Yellow Poplar | Yellow Poplar | KWP+CF | Sitka (no CF) |
+| Back / braces | EIR / Sitka | EIR / Yellow Poplar | EIR / Y. Poplar | EIR / Sitka | EIR / Sitka |
+| Vibrational \(f\) top Hz | **60** | **60** | **75** | **75** | **75** |
+| \(t_{tp}\) mm | 2.490 | 2.490 | 2.695 | 2.695 | 2.847 |
+| Top mass g | 116.8 | 116.3 | 190.7 | 192.7 | 231.7 |
+| \(K_t\) N/m | 41 447 | 40 744 | 48 706 | 49 346 | 58 545 |
+| Top MM s/kg·e-3 | **23.80** | **24.06** | **17.18** | **16.98** | **14.22** |
+| Full MM top | 20.33 | 20.51 | 14.67 | 14.52 | 12.40 |
+| Avg SPL dB | 75.32 | 75.22 | 76.94 | 76.75 | 76.13 |
+| \(t_{bp}\) mm | 2.079 | 2.079 | 2.403 | 2.403 | 2.384 |
+| Back mass g | 190.0 | 193.2 | 230.0 | **150.0*** | 225.9 |
+| \(K_b\) N/m | 149 027 | 151 941 | 131 037 | 129 187 | 120 948 |
+| \(K_b/K_t\) | 3.17 | 3.73 | 2.70 | 2.61 | 2.07 |
+| Back MM | 9.00 | 8.84 | 8.73 | 8.85 | 9.16 |
+| Target triad Hz | 95 / 190.5 / 240 | 95 / 190.5 / 240 | 90 / 169.5 / 214 | 90 / 169.5 / 214 | **101** / 169.5 / 214 |
+| Scale mm | 650 | 650 | 645.16 | 645.16 | 645.16 |
+| Major brace w×h mm | 5.0×3.88 rect | 3.42×4.72 rect | 3.38×8.33 rect | 5.0×6.90 rect | 5.75×**13.79 tri** |
+| Minor brace w×h mm | 5.0×2.58 rect | 3.42×3.15 rect | 3.38×5.55 rect | 5.0×4.60 rect | 3.83×**9.19 tri** |
+| Safety factor | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 |
 
 \*Medium SS CF `summary` back mass **150 g** looks like a manual override vs noCF’s ~230 g — treat as suspicious until verified (**G-HM10**).
 
@@ -103,6 +104,20 @@ Author note in-sheet: *“ToDo: how to verify these compensations?”*
 | fifth | 3.8 | 0.081 | 0.162 | 0.45 |
 | sixth | 4.0 | 0.082 | 0.171 | 0.50 |
 | **avg/total** | — | **0.153** | **0.382** | **2.30** |
+
+### Classical nylon noCF — total **2.48 ¢** (under nylon &lt;3 ¢)
+
+| String | h₁₂ | Δn | Δs | Error ¢ |
+|--------|----:|---:|---:|--------:|
+| first | 3.0 | 0.362 | 0.879 | 0.21 |
+| second | 3.2 | 0.446 | 1.255 | 0.28 |
+| third | 3.5 | 0.598 | 2.029 | 0.44 |
+| fourth | 3.7 | 0.234 | 0.779 | 0.46 |
+| fifth | 3.8 | 0.285 | 1.030 | 0.50 |
+| sixth | 4.0 | 0.296 | 1.174 | 0.58 |
+| **avg/total** | — | **0.370** | **1.191** | **2.48** |
+
+Note: noCF nylon needs **larger** Δn/Δs than CF nylon for similar error — string/action path differs even with same scale.
 
 ### Medium SS noCF — total **3.18 ¢** (under steel &lt;6 ¢)
 
@@ -193,11 +208,12 @@ Author note in-sheet: *“ToDo: how to verify these compensations?”*
 
 | Finding | Point / gap |
 |---------|-------------|
-| Workbooks inventoried (incl. OM X V3) | HM43, HM47 |
+| Full page starter set inventoried | HM43, HM47, HM48 |
 | Preset triad/mobility/SPL extracted | HM44 |
 | Compensation tables extracted | HM45 |
 | Wood Properties schema | HM46 |
 | OM X: larger hole (97 mm), lower MM (~14.2), triangle X braces | HM47 |
+| Classical noCF: hole 80 mm, MM≈24.1, larger Δ than CF | HM48 |
 | Medium SS CF total error &gt;6¢ | G-HM11 |
 | CF back mass 150 g suspicious | G-HM10 |
-| Classical falcate noCF file (docs row) not uploaded | G-HM01 residual (optional) |
+| G-HM01 starter set | **Closed** |

@@ -344,6 +344,13 @@ Comparison/ranking only — not FPL-attributed Toolbox canonical data.
 
 **Point ID:** HM47  
 
+### 10.6 Classical nylon falcate noCF V4: WRC + Yellow Poplar; hole 80 mm; top MM ≈24.1; error 2.48¢  
+**Classification:** **EO** / **GH**
+
+Same body/triad as CF classical (95/190.5/240) but smaller hole than CF (80 vs 84), slightly higher MM, larger average Δn/Δs. Completes docs Get-started five-guitar set.
+
+**Point ID:** HM48  
+
 ---
 
 ## Point index
@@ -396,3 +403,4 @@ Comparison/ranking only — not FPL-attributed Toolbox canonical data.
 | HM44 | Preset f / triad / MM scalars confirmed |
 | HM45 | Compensation tables + SS CF over-band |
 | HM46 | Wood Properties schema (306 spp) |
+| HM47 | OM X-brace V3 preset (101 Hz air, 97 mm hole) |

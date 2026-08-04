@@ -1226,10 +1226,11 @@
         "HM45",
         "HM46",
         "HM47",
+        "HM48",
         "M09",
         "R01"
       ],
-      "point_count": 62,
+      "point_count": 63,
       "has_process_workflow": true,
       "missing_template_files": [],
       "search_keywords": [
@@ -3090,7 +3091,7 @@
   ],
   "counts": {
     "packs": 24,
-    "points": 1085,
+    "points": 1086,
     "unfiled": 0,
     "template_incomplete": 0
   }

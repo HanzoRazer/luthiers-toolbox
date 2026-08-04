@@ -17,7 +17,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
-- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (62): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +54
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (63): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +55
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
@@ -42,7 +42,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
-- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (62): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +54
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (63): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +55
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
 - [`physics_mind_steel_string_lecture`](./physics_mind_steel_string_lecture/) (62): ES01, ES02, ES03, ES05, ES06, ES10, ES11, ES12 … +54
@@ -73,7 +73,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
 - [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
-- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (62): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +54
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (63): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +55
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
@@ -132,7 +132,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`garrett_lee_soundboard_deflection_ep13`](./garrett_lee_soundboard_deflection_ep13/) (33): G-GL01, G-GL02, G-GL03, G-GL04, G-GL05, GL01, GL02, GL03 … +25
 
 ### `HM` — Holmberg Gore modeling spreadsheets
-- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (62): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +54
+- [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (63): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +55
 
 ### `IB` — Jacob I-beam
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
@@ -167,7 +167,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 | [gore_shop_talk_51_luther_academy_apps](./gore_shop_talk_51_luther_academy_apps/) | physics | 58 | A, G, M, P, R, S, T, U, W |  | academy, altitude, analysis, apps, architecture, audience, autofill, backgrounds |
 | [gore_shop_talk_responsive_objectives](./gore_shop_talk_responsive_objectives/) | physics | 51 | G, M, N, P, R, S, T, W |  | acoustic, against, altitude, architecture, avoidance, braces, bracing, brassy |
 | [gore_wolf_notes_mailbag](./gore_wolf_notes_mailbag/) | physics | 14 | P, W |  | anomaly, architecture, bridge, catalog, class, clearance, close, closed-box |
-| [holmberg_gore_modeling_spreadsheets](./holmberg_gore_modeling_spreadsheets/) | physics | 62 | G, HM, M, R | yes | achievable, across, action, added, affect, after, air-stiffness, attribution |
+| [holmberg_gore_modeling_spreadsheets](./holmberg_gore_modeling_spreadsheets/) | physics | 63 | G, HM, M, R | yes | achievable, across, action, added, affect, after, air-stiffness, attribution |
 | [jacob_ibeam_bracing_physics](./jacob_ibeam_bracing_physics/) | physics+shop | 37 | ES, G, IB, PM, SB, TB |  | acrylic, against, almost, applied, asymmetry, balsa-core, blanks, brace |
 | [nicoletti_egb_measuring_tuning_2022](./nicoletti_egb_measuring_tuning_2022/) | physics | 57 | G, M, N, R |  | acoustic, already, averages, basic, between, brace, bracing, bridge |
 | [nicoletti_mb_kit_interview](./nicoletti_mb_kit_interview/) | shop | 52 | ES, G, N, R |  | accessible, analogy, around, barber, before, bench, between, board |
