@@ -125,7 +125,7 @@ sweep table above continues to mean "the 2026-07-20 set".
 
 | BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
 | ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
-| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-encoded | high | ready | correct the producer to unscaled `c/rho`; add direct scorer coverage |
+| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-verified | high | **IMPLEMENTED — AWAITING MERGE** | producer corrected to unscaled `c/rho`; direct scorer coverage added (19 tests). Resolve only after merged-`main` re-verification |
 
 **Evidence.** The producer returns `(c/rho)*1e6`; its own docstring, `_ROLE_TARGETS`, and `router.py:88`
 all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with `sigma = 3.0` and no

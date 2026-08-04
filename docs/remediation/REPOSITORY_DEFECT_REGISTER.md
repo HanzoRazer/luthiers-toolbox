@@ -365,7 +365,11 @@ authorized for bounded remediation.
 - **Dependencies:** none. **Independent of PR #244** — the MB Sound corpus corroborates the target scale
   (vendor SRC medians 12.28–14.00, all on the unscaled `c/rho` scale) but is evidence only, and must not
   be imported or hard-coded by this repair.
-- **Readiness:** **AUTHORIZED — bounded remediation in progress** under the BR-043 Dev Order.
+- **Readiness:** **IMPLEMENTED — AWAITING MERGE.** Executed under the BR-043 Dev Order on branch
+  `fix/br-043-tonewood-radiation-ratio-scale`, based on `ada33581`. Verification at implementation:
+  19 BR-043 tests pass; 126 pass across `tests/materials` + material/ai/business endpoint smoke, 0 fail;
+  CBSP21 patch-input gate PASS and coverage gate PASS at 100%; governance `--tier ci` OK with all
+  blocking checks green. **Resolved only after merged-`main` re-verification**, per the Dev Order.
 - **Related but out of scope — recorded, not fixed here:**
   1. `TonewoodEntry.specific_moe` — **ruling: `UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`.**
      See the dimensional adjudication below.

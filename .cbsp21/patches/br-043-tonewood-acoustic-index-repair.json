@@ -1,0 +1,91 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_043_TONEWOOD_ACOUSTIC_INDEX_REPAIR",
+  "title": "BR-043: repair tonewood radiation-ratio unit scale and restore acoustic recommendation scoring",
+  "intent": "TonewoodEntry.radiation_ratio returned (c/rho)*1e6. Three independent places in the repository declare the unscaled c/rho value: the property's own docstring (Schelleng 1963 reference species, Adirondack ~11.7 / Sitka ~11.4), _ROLE_TARGETS in the recommendation scorer (soundboard 11.5, bracing 12.0, back_sides 8.0, fretboard 4.0), and materials/router.py:88 ('Schelleng c/rho'). _score_acoustic compares the returned value directly against those targets through exp(-0.5*((rr-target)/3.0)**2) with sigma=3.0 and no inverse scaling, so the exponent underflowed and the function returned 0.0 for every acoustically-populated species in every role -- the acoustic term of score_for_role, recommend_for_role and compare_species was silently inert. The value was also served unrepaired to the client, where InstrumentMaterialSelector.vue:97 renders it directly. This patch removes the spurious factor at the producer (BR-043 Decision 2: correct the producer, not every consumer), adds the direct test coverage whose absence let the defect ship, and records the defect and its secondary-index adjudication in the remediation program. Bounded corrective change: no role targets, no scoring weights, no Gaussian shape, no material source records, no MB Sound import, no plate-design equations, no CAM or machine output.",
+  "change_type": "fix",
+  "behavior_change": "semantic correction to one derived value. TonewoodEntry.radiation_ratio now returns c/rho (approximately 4-15 for common tonewoods) instead of (c/rho)*1e6. API field name, type, nullability and response shape are unchanged; no migration is required because the property is computed, never stored. Recommendation ordering WILL change -- that is the intended repair: the acoustic term was previously 0.0 for every species and now differentiates. speed_of_sound_computed_m_s, specific_moe, ashby_index and acoustic_impedance_mrayl are unchanged. Missing-data behavior (None from the property, 0.5 neutral from _score_acoustic) and the speed_of_sound_m_s override precedence are unchanged. No consumer applied a compensating conversion, so no consumer required editing.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-043-tonewood-acoustic-index-repair.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "services/api/app/materials/schemas.py",
+      "services/api/tests/materials/test_tonewood_acoustic_indices.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/br-043-tonewood-acoustic-index-repair.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "services/api/app/materials/schemas.py",
+      "services/api/tests/materials/test_tonewood_acoustic_indices.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/materials/schemas.py: TonewoodEntry.radiation_ratio changed from `round((c / self.density_kg_m3) * 1e6, 2)` to `round(c / self.density_kg_m3, 2)`. Docstring corrected -- the misleading 'x 10^6' unit wording is removed, the unit is stated as m^4/(kg*s), the approximately 4-15 tonewood scale is named as the same scale _ROLE_TARGETS compares against, and a dated BR-043 note records why the factor was removed. Guard clause, rounding, None-return and speed_of_sound_m_s precedence are untouched. (2) services/api/tests/materials/test_tonewood_acoustic_indices.py: new file, 19 tests. Landed in commit 1 as three xfail(strict=True) proof assertions plus two characterisation tests isolating the defect to the radiation-ratio expression (speed_of_sound_computed_m_s pinned as correct); markers removed in commit 2; extended in commit 3 to the full TC-01..TC-14 matrix -- radiation_ratio contract (reference arithmetic, species-class range, derived-speed path, measured-speed precedence, parametrised missing-input cases), _score_acoustic contract (exact target 1.0, one-sigma exp(-0.5)=0.60653 pinning sigma=3.0, 0.5 neutral fallback, cross-role differentiation), integration (role-score differentiation, recommend_for_role live acoustic contribution against the real curated registry, compare_species on-scale output), and guards (GET /api/registry/tonewoods serves ~11.x not ~11,000,000.x; no module under app/materials rescales radiation_ratio by a million in either direction). (3) docs/remediation/REPOSITORY_DEFECT_REGISTER.md: BR-043 entry in a new dated intake section with per-site evidence on ada33581, plus the Commit 4 secondary-index adjudication table. (4) docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md: BR-043 row as CONFIRMED_DEFECT / Tier A / test-encoded, in its own dated section so the 2026-07-20 sweep table keeps its meaning; notes the pre-existing BR-037..042 register/ledger divergence without altering it. (5) docs/remediation/REMEDIATION_EXECUTION_QUEUE.md: Wave 1 rank 7, explicitly not displacing ranks 1-6. (6) docs/remediation/REMEDIATION_DEPENDENCY_MAP.md: recorded standalone, with no dependency on PR #244 and ordering notes placing it before recommendation-quality evaluation and before generator consumption of material rankings.",
+    "why_not_redundant": "Repairs silent wrong output in a user-facing advisory path and closes the coverage gap that permitted it: _score_acoustic had no direct test and nothing asserted radiation_ratio's magnitude, so the contradiction was reachable only by reading producer and consumer side by side. Not cosmetic -- the acoustic term of the entire materials recommender was returning 0.0 for every species in every role. The repair is at the producer, so no downstream compensation is introduced, and a committed guard test prevents a million-scale factor from reappearing anywhere in the package. Deliberately excluded, with recorded rulings: specific_moe (UNRESOLVED -- AUTHORITY OR UNIT DEFINITION REQUIRED; its docstring is provably false about its code by a factor of 1000, but the intended display unit is not governed and the frontend independently disagrees with the backend code by that same factor); ashby_index (not implicated); acoustic_impedance_mrayl (CORRECT AS IMPLEMENTED); and the frontend StiffnessIndexPanel threshold mismatch, which is an independent local data path, not a compensating conversion for the backend, and needs its own entry."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/materials/test_tonewood_acoustic_indices.py --no-cov -q (commit 1, pre-repair) -> 2 passed, 3 xfailed -- defect proven under xfail(strict=True)",
+      "py -3.11 -m pytest tests/materials/test_tonewood_acoustic_indices.py --no-cov -q (commit 2, post-repair) -> 5 passed",
+      "py -3.11 -m pytest tests/materials/test_tonewood_acoustic_indices.py --no-cov -q (commit 3, full matrix) -> 19 passed",
+      "py -3.11 -m pytest tests/materials/ tests/test_material_endpoint_smoke.py tests/test_ai_routers_smoke.py tests/test_business_endpoint_smoke.py --no-cov -q -> 126 passed, 0 failed",
+      "shipped-reference sanity via TonewoodEntry: American Basswood rho 415.0 E 10.07 -> c 4926 rr 11.87; Western Red Cedar rho 370.0 E 7.78 -> c 4586 rr 12.39; Bubinga rho 890.0 E 18.41 -> c 4548 rr 5.11 (soundboard woods beside the 11.5 soundboard target, Bubinga beside the 8.0 back_sides target)",
+      "consumer sweep for compensating conversion: grep radiation_ratio across services/api/app and packages/client -> useTonewoods.ts:66 declares the field and passes it through; InstrumentMaterialSelector.vue:97 renders it directly; no divide/multiply by 1e6 anywhere. Encoded as a committed guard test.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (to record at PR time)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (to record at PR time)"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/br-043-tonewood-acoustic-index-repair.json",
+      "intent": "CBSP21 patch manifest declaring the full BR-043 change set, including itself.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/materials/schemas.py",
+      "intent": "Remove the spurious *1e6 from TonewoodEntry.radiation_ratio so it returns Schelleng c/rho on the scale its own docstring and the scorer's role targets already declare. Correct the docstring unit wording and record the BR-043 provenance.",
+      "risk": "low",
+      "behavior_change": "semantic: radiation_ratio now ~4-15 instead of ~4e6-15e6. Field name, type and response shape unchanged; no persistence, so no migration. Recommendation ordering changes by design."
+    },
+    {
+      "path": "services/api/tests/materials/test_tonewood_acoustic_indices.py",
+      "intent": "New direct coverage for radiation_ratio magnitude and _score_acoustic behavior -- both previously untested -- plus role-scoring integration against the real registry, API serialization scale, and a guard that no module under app/materials reintroduces a million-scale conversion. Ordering assertions test mathematical relationships, never species quality.",
+      "risk": "low",
+      "behavior_change": "none (test-only)"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "BR-043 defect entry with per-site evidence on ada33581, plus the Commit 4 secondary-index adjudication (specific_moe UNRESOLVED, ashby_index not implicated, acoustic_impedance_mrayl correct, frontend threshold mismatch recorded as a separate finding).",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "BR-043 adjudication record (CONFIRMED_DEFECT, Tier A, test-encoded) in its own dated section, satisfying the rule that no queued item lacks a ledger record.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "intent": "Queue BR-043 at Wave 1 rank 7 without displacing the authorized in-flight ranks 1-6.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "intent": "Record BR-043 as standalone: no dependency on PR #244 (MB Sound corroborates the target scale but is evidence only), and should precede recommendation-quality evaluation and generator consumption of material rankings.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    }
+  ]
+}

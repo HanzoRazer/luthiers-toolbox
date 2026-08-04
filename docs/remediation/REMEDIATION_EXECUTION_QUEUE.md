@@ -30,7 +30,7 @@ Not code fixes — the gates that must clear before/around execution.
 | 4 | BR-033 — `app.openapi()` build failure / `validate` field shadow | CONFIRMED_DEFECT | small (rename field) — confirm on CI stack |
 | 5 | BR-003 — simulation metrics router/schema mismatch (8 xfails) | CONFIRMED_DEFECT | small–medium |
 | 6 | BR-013 — wire RMOS workflow `approve` route | UNFINISHED_SPRINT_WORK | small |
-| 7 | **BR-043** — tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | CONFIRMED_DEFECT | small (producer expression + docstring); substantive work is test coverage. **In progress** — bounded Dev Order; does not displace ranks 1–6 |
+| 7 | **BR-043** — tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | CONFIRMED_DEFECT | **IMPLEMENTED — AWAITING MERGE** on `fix/br-043-tonewood-radiation-ratio-scale`. Producer repaired, 19 tests added, CBSP21 100%. Did not displace ranks 1–6 |
 
 ## Wave 2 — Contract & topology / migration
 
