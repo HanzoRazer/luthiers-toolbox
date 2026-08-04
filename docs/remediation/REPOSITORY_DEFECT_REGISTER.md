@@ -367,12 +367,51 @@ authorized for bounded remediation.
   be imported or hard-coded by this repair.
 - **Readiness:** **AUTHORIZED — bounded remediation in progress** under the BR-043 Dev Order.
 - **Related but out of scope — recorded, not fixed here:**
-  1. `TonewoodEntry.specific_moe` (`schemas.py:158-168`) applies `* 1e6` to a GPa-denominated ratio while
-     its docstring claims *"Same as c²/10⁶"*; those differ by 1e3. Investigate-only under this order —
-     see BR-043 Commit 4 disposition.
+  1. `TonewoodEntry.specific_moe` — **ruling: `UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`.**
+     See the dimensional adjudication below.
   2. The frontend `StiffnessIndexPanel` path is **independent of the API**, computing from hardcoded
      `tonewoodData.ts`. Its `calcRadiationRatio` (`useStiffnessIndex.ts:69-71`) applies `* 1000` and
      labels it `c/ρ ×10³` — self-consistent in display — but `rrColor` and `soundboardRating`
      (`useStiffnessIndex.ts:149-152`, `StiffnessIndexPanel.vue:312-317`) threshold at 12.0 / 10.5 / 9.0,
      the *unscaled* scale, so every wood renders "Excellent". Same defect family, different data path,
      **not** a compensating conversion for the backend. Needs its own entry.
+
+#### BR-043 · secondary-index adjudication (Commit 4, investigate-only)
+
+The BR-043 Dev Order authorizes inspection of `specific_moe` but not its repair unless the intended
+unit is already governed. It is not. Ruling and evidence:
+
+| Index | Ruling | Basis |
+|---|---|---|
+| `radiation_ratio` | **REPAIRED** (this order) | producer contradicted its own docstring *and* a live consumer contract (`_ROLE_TARGETS`) |
+| `specific_moe` | **`UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`** | contradiction confirmed; correct target scale is not determinable from the repository |
+| `ashby_index` | not implicated | docstring states `E^(1/3)/ρ` without fixing E's unit, so the `MPa` basis in code contradicts nothing. No consumer thresholds. Unverified, not defective |
+| `acoustic_impedance_mrayl` | **CORRECT AS IMPLEMENTED** | `ρ·c × 1e-6` is the definition of MRayl (1 MRayl = 10⁶ rayl). Basswood → 2.04 MRayl, physically right |
+
+**`specific_moe` dimensional proof** (`schemas.py`, American Basswood ρ = 415, E = 10.07 GPa, c = 4926 m/s):
+
+```text
+coded:            (E_GPa / rho) * 1e6  =  24265.0602
+                  == c^2 / 1e3          (algebraically, since E_GPa = E_Pa / 1e9)
+docstring claims: "Same as c^2/10^6"    =     24.2651
+ratio                                   =       1000.0
+```
+
+The docstring is provably false about the code it documents — that much is **confirmed**. What is *not*
+determinable is which side should move, and the repository votes against itself:
+
+- `packages/client/.../useStiffnessIndex.ts:78-80` computes `calcSpecificMoe = E_Pa/rho` (= c²), then
+  `computeIndices` divides by `1e6` → **24.265**. The frontend agrees with the backend **docstring**
+  and disagrees with the backend **code**, by the same factor of 1000.
+- `router.py:89` documents it only as `specific_moe (E/ρ)`, fixing no scale.
+
+**Why this is deferred while `radiation_ratio` was repaired.** The radiation-ratio defect violated a
+contract the repository *states*: a consumer (`_ROLE_TARGETS`) compares against declared numeric targets,
+so "correct" was determinable without an owner. `specific_moe` has **no consumer contract to violate** —
+`scorer.py:178` passes it straight into `MaterialCompareResult` and nothing thresholds it, so the
+collapse failure mode does not arise. Choosing between `c²/10³` and `c²/10⁶` is a display-unit decision,
+not a correctness proof.
+
+**Recommended action when scoped:** align on `c²/10⁶` — the value the docstring already claims and the
+frontend already produces — by changing the coded factor `1e6` → `1e3`. Requires an owner ruling on the
+published unit, plus a check for external consumers of the current value. **Not authorized by BR-043.**
