@@ -144,6 +144,22 @@ Each species includes a `guitar_relevance` field indicating its classification:
 
 ---
 
+## Empirical tonewood corpora (separate from species averages)
+
+> **Draft intake only (DO-SIP-013).** Not an Inv-026-A materials-vocabulary ruling.  
+> Does not change plate solvers, generator defaults, or `TonewoodEntry` authority.  
+> ~4 species / ~60 specimens target — versioned empirical dataset, not fixtures.
+
+Measured **individual specimens** (e.g. Maderas Barber **MB Sound**) must not be folded into `wood_species.json` as handbook species means.
+
+| Corpus | Path |
+|--------|------|
+| MB Sound empirical corpus | [`empirical_tonewood/mb_sound/`](./empirical_tonewood/mb_sound/) |
+| Program / process | [`docs/reference/mb-sound/DO_SIP_PROGRAM.md`](../../../../../../docs/reference/mb-sound/DO_SIP_PROGRAM.md) |
+| Draft PR | https://github.com/HanzoRazer/luthiers-toolbox/pull/244 |
+
+---
+
 ## Contact & Corrections
 
 If you identify an error in species data, please:
