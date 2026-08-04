@@ -5,10 +5,26 @@ FROM python:${PYTHON_VERSION}-slim AS base
 
 # system deps (git needed for private repo install)
 # libxcb + libgl1 + libglib required for OpenCV headless operation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates build-essential git \
-      libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
-      libgl1 libglib2.0-0 && \
+# Retry apt up to 3 times to survive a transient mirror sync failure, then fail
+# LOUDLY if it still cannot install. Do NOT use --fix-missing here: it does not
+# retry, it *ignores* unfetchable packages and continues, which would produce an
+# image that builds green while silently missing libgl1/libglib2.0-0 — the
+# OpenCV runtime deps — surfacing later as an ImportError at container start.
+RUN set -eu; \
+    installed=0; \
+    for attempt in 1 2 3; do \
+      if apt-get update && apt-get install -y --no-install-recommends \
+           curl ca-certificates build-essential git \
+           libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0 \
+           libgl1 libglib2.0-0; then \
+        installed=1; break; \
+      fi; \
+      echo "apt attempt ${attempt}/3 failed; retrying in 5s" >&2; \
+      sleep 5; \
+    done; \
+    if [ "$installed" != 1 ]; then \
+      echo "apt failed after 3 attempts — failing the build" >&2; exit 1; \
+    fi; \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
