@@ -412,3 +412,4 @@ Every sheet opened/classified — see [`TAB_BY_TAB_EVALUATION.md`](./TAB_BY_TAB_
 | HM46 | Wood Properties schema (306 spp) |
 | HM47 | OM X-brace V3 preset (101 Hz air, 97 mm hole) |
 | HM48 | Classical nylon falcate noCF preset |
+| HM49 | Full tab-by-tab workbook evaluation |

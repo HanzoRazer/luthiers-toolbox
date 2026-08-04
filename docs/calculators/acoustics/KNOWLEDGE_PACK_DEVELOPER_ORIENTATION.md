@@ -105,7 +105,8 @@ transcript paste
 | BK | Bashkin JM full acoustic build workflow | Shop |
 | SC | Schaefer straight → fully compensated saddle | Shop |
 | HM | Holmberg Gore/Gilet modeling spreadsheets | Physics |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, `G-SC##`, `G-HM##`, …) | — |
+| MB | MB Sound / Nicoletti TPC panel laboratory records | Physics |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, `G-SC##`, `G-HM##`, `G-MB##`, …) | — |
 
 **Search tip:** prefixes may collide across packs (e.g. `T##`); always disambiguate with `pack_id` in [`cohort_catalog.json`](./cohort_catalog.json) / [`POINT_SEARCH_INDEX.md`](./POINT_SEARCH_INDEX.md).
 
@@ -117,7 +118,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 
 | Lane | Where to look |
 |------|----------------|
-| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Holmberg Gore sheets (HM), Somogyi doctrine |
+| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Holmberg Gore sheets (HM), MB Sound TPC panel labs (MB), Somogyi doctrine |
 | Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Schaefer compensated saddle (SC), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
@@ -198,6 +199,6 @@ Select wood (optional metrology)
 - Transcripts ingested → packs on branch / PR #243  
 - CBSP21 manifest: `.cbsp21/patches/gore-lecture-series-packs-1-5.json`  
 - Cohort floor held: `check_cohort_coverage.py` → PASS; catalog + search index current  
-- Independent of MB Sound empirical corpus PR #244 (kit SOP ≠ panel workbooks)
+- MB Sound / TPC **panel laboratory records** ingested as [`mb_sound_panel_laboratory_records/`](./mb_sound_panel_laboratory_records/) (MB01–MB28; tab-by-tab). Still distinct from kit SOP pack (`nicoletti_mb_sound_acoustic_study_set`) and from any future raw-array data track
 
 **Not done / not claimed:** runtime calculators, merged “universal” acoustic workflow, closed mobility thresholds, Pack 6 full SOPs.

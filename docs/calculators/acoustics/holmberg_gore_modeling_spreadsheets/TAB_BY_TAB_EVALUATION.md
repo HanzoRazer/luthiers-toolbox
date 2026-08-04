@@ -246,4 +246,6 @@ Shared spine (all five guitars). Differences called out under each tab.
 
 ## F. Coverage statement
 
-**Yes — every tab in every submitted workbook was opened and classified.** Deep numeric sampling used Medium SS falcate noCF as the representative guitar engine; the other four guitars were verified for sheet inventory, named-range counts, and known preset deltas (WORKBOOK_INVENTORY). Wood Properties: every data/chart/template tab evaluated.
+**Yes — every tab in every Holmberg session workbook was opened and classified.** Deep numeric sampling used Medium SS falcate noCF as the representative guitar engine; the other four guitars were verified for sheet inventory, named-range counts, and known preset deltas (WORKBOOK_INVENTORY). Wood Properties: every data/chart/template tab evaluated.
+
+**Same-session sibling corpus:** MB Sound / Nicoletti TPC panel laboratory `.xlsx` uploads are evaluated separately in [`../mb_sound_panel_laboratory_records/TAB_BY_TAB_EVALUATION.md`](../mb_sound_panel_laboratory_records/TAB_BY_TAB_EVALUATION.md) — do not merge those tabs into this Gore-engine spine.

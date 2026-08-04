@@ -3,7 +3,7 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "gore-lecture-series-packs-1-5",
-  "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1–8 + related schools)",
+  "title": "Annotated Gore/O'Brien lecture knowledge packs (Packs 1\u20138 + related schools)",
   "intent": "Knowledge-layer documentation only: physics vs shop lanes; Gore/O'Brien + related Somogyi/Nicoletti/Howman/shop packs; developer orientation. No executable production code.",
   "change_type": "docs",
   "behavior_change": "none - documentation only, no executable production code changed",
@@ -82,6 +82,13 @@
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/GAPS_NOT_RECORDED.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/README.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/README.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/TAB_BY_TAB_EVALUATION.md",
+      "docs/calculators/acoustics/mb_sound_panel_laboratory_records/WORKBOOK_INVENTORY.md",
       "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/nicoletti_egb_measuring_tuning_2022/GAPS_NOT_RECORDED.md",
@@ -162,7 +169,7 @@
       "python3 scripts/knowledge_packs/check_cohort_coverage.py -> PASS",
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> -> pass"
     ],
-    "known_residual": "Pack 6 SOPs incomplete. G-R01 softening (Nicoletti/Pack5 small-δ class) but Carrico sheet still owed before mobility UI. Nicoletti Excel/SRC/ETS gaps open. Somogyi G-ES09/10/11 open. No runtime code."
+    "known_residual": "Pack 6 SOPs incomplete. G-R01 softening (Nicoletti/Pack5 small-\u03b4 class) but Carrico sheet still owed before mobility UI. Nicoletti Excel/SRC/ETS gaps open. Somogyi G-ES09/10/11 open. No runtime code."
   },
   "files": [
     {
@@ -815,7 +822,7 @@
     },
     {
       "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/ANNOTATED_LECTURE_NOTES.md",
-      "intent": "HM01–HM42 annotated physics/math points",
+      "intent": "HM01\u2013HM42 annotated physics/math points",
       "scan_targets": [
         "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/ANNOTATED_LECTURE_NOTES.md"
       ],
@@ -839,7 +846,7 @@
     },
     {
       "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/GAPS_NOT_RECORDED.md",
-      "intent": "G-HM01–G-HM09 gaps (URLs, verify builds, mobility units)",
+      "intent": "G-HM01\u2013G-HM09 gaps (URLs, verify builds, mobility units)",
       "scan_targets": [
         "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/GAPS_NOT_RECORDED.md"
       ],
@@ -962,6 +969,90 @@
       "intent": "Physics-lane I-beam / cube-rule bracing pack (Jacob/Kanaka); shop dual-file application",
       "scan_targets": [
         "docs/calculators/acoustics/jacob_ibeam_bracing_physics/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "MB01\u2013MB28 annotated panel-lab points",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/CROSSWALK_TOOLBOX.md",
+      "intent": "Toolbox destinations + NO-CALC for MB Sound panel labs",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/GAPS_NOT_RECORDED.md",
+      "intent": "G-MB01\u2013G-MB08 gaps",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/README.md",
+      "intent": "MB Sound / TPC panel laboratory records pack identity",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/SOURCE_TRANSCRIPT.md",
+      "intent": "Provenance of screenshot\u2192xlsx panel lab transcriptions",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/TAB_BY_TAB_EVALUATION.md",
+      "intent": "Tab-by-tab evaluation of all MB Sound session lab xlsx",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/TAB_BY_TAB_EVALUATION.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/mb_sound_panel_laboratory_records/WORKBOOK_INVENTORY.md",
+      "intent": "Lab xlsx inventory: hashes, batch scalars, capture anomalies",
+      "scan_targets": [
+        "docs/calculators/acoustics/mb_sound_panel_laboratory_records/WORKBOOK_INVENTORY.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
@@ -1403,7 +1494,7 @@
     },
     {
       "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/ANNOTATED_WORKFLOW_NOTES.md",
-      "intent": "SC01–SC36 annotated teaching points",
+      "intent": "SC01\u2013SC36 annotated teaching points",
       "scan_targets": [
         "docs/calculators/acoustics/shop_schaefer_compensated_saddle/ANNOTATED_WORKFLOW_NOTES.md"
       ],
@@ -1427,7 +1518,7 @@
     },
     {
       "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/GAPS_NOT_RECORDED.md",
-      "intent": "G-SC01–G-SC07 gaps (URL, mm offsets, gauges)",
+      "intent": "G-SC01\u2013G-SC07 gaps (URL, mm offsets, gauges)",
       "scan_targets": [
         "docs/calculators/acoustics/shop_schaefer_compensated_saddle/GAPS_NOT_RECORDED.md"
       ],
@@ -1439,7 +1530,7 @@
     },
     {
       "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/PROCESS_WORKFLOW.md",
-      "intent": "Extracted carve → strobe verify process spine",
+      "intent": "Extracted carve \u2192 strobe verify process spine",
       "scan_targets": [
         "docs/calculators/acoustics/shop_schaefer_compensated_saddle/PROCESS_WORKFLOW.md"
       ],

@@ -66,6 +66,12 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 |------|------|-------|
 | Holmberg — Gore/Gilet modeling spreadsheets | [`holmberg_gore_modeling_spreadsheets/`](./holmberg_gore_modeling_spreadsheets/) | HM01–HM49 — docs + xlsx inventory + **tab-by-tab evaluation**; **G-HM01/02 closed**; **G-HM03/04/07/10–14** open |
 
+### Panel lab corpora (TPC / MB Sound)
+
+| Pack | Path | Notes |
+|------|------|-------|
+| MB Sound — Nicoletti TPC panel laboratory records | [`mb_sound_panel_laboratory_records/`](./mb_sound_panel_laboratory_records/) | MB01–MB28 — Alpine / Red Cedar / Torrefied ADK / 30-yr cedar; **tab-by-tab**; kit SOP ≠ panel books; **G-MB01–08** |
+
 ## Standing physics blockers
 
 See orientation §4 and Gore summary “Known absence.” Lead item: **G-R01 / G-M09** mobility δ unit profile. Holmberg mobility citations (**HM31**) stay badge-blocked on the same gap (**G-HM04**).
