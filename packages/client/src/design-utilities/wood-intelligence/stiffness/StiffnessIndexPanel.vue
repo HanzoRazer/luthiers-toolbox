@@ -155,7 +155,7 @@
             <div class="sip-idx-card">
               <div class="sip-idx-label">Specific MOE</div>
               <div class="sip-idx-val">{{ selectedIndices.specificMoe?.toFixed(3) ?? '—' }}</div>
-              <div class="sip-idx-unit">E/ρ ×10⁶</div>
+              <div class="sip-idx-unit">c²/10⁶</div>
             </div>
             <div class="sip-idx-card">
               <div class="sip-idx-label">Impedance Z</div>

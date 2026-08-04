@@ -1,0 +1,95 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_045_SPECIFIC_MOE_UNIT_SCALE",
+  "title": "BR-045: adopt c^2/10^6 as the published specific_moe unit and align every surface",
+  "intent": "Owner ruling 2026-08-04 adopted c^2/10^6 as the published scale for TonewoodEntry.specific_moe -- the value its own docstring already claimed and the client's calcSpecificMoe already produced. The backend coded factor was *1e6, returning c^2/10^3, a thousandfold above both. Moving the factor to *1e3 changes one site rather than two. Bounded per the ruling: no scoring redesign, no role targets, no weights, no other index touched. Two stale unit labels surfaced during the mandated consumer sweep and are corrected here because leaving them would perpetuate the exact ambiguity this order settles: StiffnessIndexPanel.vue:158 read 'E/rho x10^6' beside a displayed 24.265 (wrong by 1000x), and router.py:89 documented 'specific_moe (E/rho)' fixing no scale at all.",
+  "change_type": "fix",
+  "behavior_change": "semantic correction to one derived value. specific_moe now returns ~20-30 for common tonewoods instead of ~20000-30000. Field name, type, nullability and response shape unchanged; computed, never stored, so no migration. Nothing thresholds, sorts or scores on specific_moe -- scorer.py:178 and useTonewoods.ts:67 are pass-through -- so no ranking or recommendation behavior changes. Missing-data behavior (None) and rounding (4dp) unchanged. radiation_ratio, speed_of_sound_computed_m_s, ashby_index and acoustic_impedance_mrayl are untouched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-045-specific-moe-unit-scale.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/design-utilities/wood-intelligence/stiffness/StiffnessIndexPanel.vue",
+      "services/api/app/materials/router.py",
+      "services/api/app/materials/schemas.py",
+      "services/api/tests/materials/test_tonewood_acoustic_indices.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/br-045-specific-moe-unit-scale.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/design-utilities/wood-intelligence/stiffness/StiffnessIndexPanel.vue",
+      "services/api/app/materials/router.py",
+      "services/api/app/materials/schemas.py",
+      "services/api/tests/materials/test_tonewood_acoustic_indices.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) schemas.py TonewoodEntry.specific_moe: factor *1e6 -> *1e3, and the docstring rewritten to state the ruled unit (c^2/10^6, i.e. (E_GPa/rho)*10^3), the ~20-30 reference range, the fact that nothing scores on it, and the BR-045 provenance. Guard clause, rounding (4dp) and None-return unchanged. (2) router.py:89: OpenAPI description now states the scale and reference range instead of naming the quantity with no unit. (3) StiffnessIndexPanel.vue:158: unit label 'E/rho x10^6' -> 'c^2/10^6'; display text only, no logic change -- the frontend value was already correct, only its label was wrong. (4) test_tonewood_acoustic_indices.py: 4 tests added -- the dimensional identity c^2/1e6 == (E_GPa/rho)*1e3 pinned against a known species, cross-surface parity reproducing the frontend arithmetic across three species, the published reference range, and unchanged missing-data behavior.",
+    "why_not_redundant": "Settles the unit authority for a metric the repository published at two scales 1000x apart across backend and client. Not a duplicate of BR-043 (radiation_ratio, a different index whose mismatch collapsed _score_acoustic to 0.0) or BR-044 (frontend radiation-ratio rating collapse, client-local). The parity test is the durable part: it fails if either surface drifts again, which prose docstrings did not prevent."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/materials/ --no-cov -q -> 23 passed (19 pre-existing + 4 new)",
+      "parity witness: backend specific_moe vs c^2/1e6 -> Basswood 24.2651/24.2651, W. Red Cedar 21.0270/21.0270, Bubinga 20.6854/20.6854 -- exact",
+      "consumer sweep for specific_moe|specificMoe|calcSpecificMoe across services/api/app and packages/client/src -> scorer.py:178 pass-through, useTonewoods.ts:67 type only, StiffnessIndexPanel.vue:157 display; NO million-scale assumption, nothing thresholded or sorted",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (to record at PR time)"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/br-045-specific-moe-unit-scale.json",
+      "intent": "CBSP21 patch manifest declaring this change set, including itself.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "BR-045 ledger row -> IMPLEMENTED \u2014 AWAITING MERGE with the ruling and parity evidence.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "intent": "BR-045 queue rank 8 -> IMPLEMENTED \u2014 AWAITING MERGE.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "BR-045 register readiness -> IMPLEMENTED, recording the ruling, the parity witness, the two stale labels found by the consumer sweep, and that no consumer assumed the million scale.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "packages/client/src/design-utilities/wood-intelligence/stiffness/StiffnessIndexPanel.vue",
+      "intent": "Correct the stale unit label 'E/rho x10^6' to 'c^2/10^6'. The displayed value was already right; only the label was wrong, by 1000x. Display text only.",
+      "risk": "low",
+      "behavior_change": "none functional"
+    },
+    {
+      "path": "services/api/app/materials/router.py",
+      "intent": "State the ruled unit and reference range in the OpenAPI description instead of naming the quantity with no scale.",
+      "risk": "low",
+      "behavior_change": "none (docs string)"
+    },
+    {
+      "path": "services/api/app/materials/schemas.py",
+      "intent": "Move the coded factor 1e6 -> 1e3 so the returned value is the ruled c^2/10^6, and rewrite the docstring to state the unit, range and provenance.",
+      "risk": "low",
+      "behavior_change": "semantic: specific_moe now ~20-30 instead of ~20000-30000; nothing consumes it for scoring, so no ranking change"
+    },
+    {
+      "path": "services/api/tests/materials/test_tonewood_acoustic_indices.py",
+      "intent": "Pin the dimensional identity and cross-surface parity so backend and client cannot drift apart again.",
+      "risk": "low",
+      "behavior_change": "none (test-only)"
+    }
+  ]
+}

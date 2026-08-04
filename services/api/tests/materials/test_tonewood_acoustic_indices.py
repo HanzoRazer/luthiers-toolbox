@@ -355,3 +355,67 @@ def test_no_consumer_applies_a_million_scale_conversion():
     assert not offenders, "million-scale conversion near radiation_ratio:\n" + "\n".join(
         offenders
     )
+
+
+# ---------------------------------------------------------------------------
+# BR-045 — specific_moe unit authority
+#
+# Owner ruling (2026-08-04): the published scale is c^2 / 10^6, the value the
+# docstring already claimed and the client's calcSpecificMoe already produced.
+# The backend factor moved 1e6 -> 1e3, so one site changed rather than two.
+# ---------------------------------------------------------------------------
+
+def test_specific_moe_equals_c_squared_over_1e6():
+    """
+    The dimensional identity, pinned. c^2 = E_Pa / rho, so with E in GPa:
+
+        c^2 / 1e6 == (E_GPa / rho) * 1e3
+
+    If the factor is ever restored to 1e6 this fails by exactly 1000x.
+    """
+    entry = make_tonewood(
+        density_kg_m3=415.0,
+        speed_of_sound_m_s=None,
+        modulus_of_elasticity_gpa=10.07,
+        name="American Basswood",
+    )
+    c_squared = (10.07 * 1e9) / 415.0
+    assert entry.specific_moe == pytest.approx(round(c_squared / 1e6, 4), abs=1e-4)
+    assert entry.specific_moe == pytest.approx(24.2651, abs=1e-3)
+
+
+def test_specific_moe_matches_the_frontend_computation():
+    """
+    Cross-surface parity. `calcSpecificMoe` returns E_Pa/rho and `computeIndices`
+    divides by 1e6; this reproduces that arithmetic and requires the backend to
+    agree. BR-045 exists because these two disagreed by 1000x.
+    """
+    for rho, e_gpa in ((415.0, 10.07), (370.0, 7.78), (890.0, 18.41)):
+        entry = make_tonewood(
+            density_kg_m3=rho, speed_of_sound_m_s=None, modulus_of_elasticity_gpa=e_gpa
+        )
+        frontend = ((e_gpa * 1e9) / rho) / 1e6  # calcSpecificMoe, then /1e6
+        assert entry.specific_moe == pytest.approx(frontend, abs=1e-3), (
+            f"backend {entry.specific_moe} != frontend {frontend} for rho={rho}"
+        )
+
+
+def test_specific_moe_lands_on_the_published_reference_range():
+    """Typical tonewoods sit near 20-30 on the ruled scale, not near 20,000-30,000."""
+    for rho, e_gpa in ((415.0, 10.07), (370.0, 7.78), (890.0, 18.41)):
+        entry = make_tonewood(
+            density_kg_m3=rho, speed_of_sound_m_s=None, modulus_of_elasticity_gpa=e_gpa
+        )
+        assert 5.0 <= entry.specific_moe <= 60.0, (
+            f"specific_moe {entry.specific_moe} is off the ruled c^2/1e6 scale"
+        )
+
+
+def test_specific_moe_is_none_when_inputs_missing():
+    """Missing-data behavior is unchanged by the unit ruling."""
+    assert make_tonewood(
+        density_kg_m3=None, speed_of_sound_m_s=None, modulus_of_elasticity_gpa=10.5
+    ).specific_moe is None
+    assert make_tonewood(
+        density_kg_m3=415.0, speed_of_sound_m_s=None, modulus_of_elasticity_gpa=None
+    ).specific_moe is None

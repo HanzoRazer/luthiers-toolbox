@@ -515,7 +515,17 @@ ratio backend : (docstring, frontend)    =       1000.0
 - **Blast radius today:** `compare_species` (pass-through), `useTonewoods.ts:67` (type only,
   pass-through), `router.py:89` (documents `specific_moe (E/ρ)` — names the quantity, **fixes no
   scale**, so it does not protect a consumer from the ambiguity).
-- **Readiness:** **QUEUED — NOT AUTHORIZED.** Blocked on an owner ruling.
+- **Readiness:** **IMPLEMENTED — AWAITING MERGE.** ✅ **Owner ruling received 2026-08-04: adopt
+  `c²/10⁶`**, the value the docstring already claimed and the client already produced. Backend factor
+  moved `1e6` → `1e3`, so one site changed rather than two. Parity now exact — backend and the
+  frontend arithmetic both give 24.2651 / 21.0270 / 20.6854 for Basswood / W. Red Cedar / Bubinga.
+  Two stale unit labels found during the consumer sweep and corrected in the same bounded change:
+  `StiffnessIndexPanel.vue:158` read `E/ρ ×10⁶` beside a displayed `24.265` (wrong by exactly 1000×,
+  now `c²/10⁶`), and `router.py:89` documented `specific_moe (E/ρ)` fixing no scale at all (now states
+  the unit and the ~20–30 reference range). Consumer sweep found **no** million-scale assumption:
+  `scorer.py:178` and `useTonewoods.ts:67` are pass-through, nothing thresholds or sorts on it.
+  4 tests added pinning the dimensional identity and cross-surface parity; 23 pass in
+  `tests/materials`. Resolve only after merged-`main` re-verification.
 - **Required before implementation:**
   1. **Owner ruling on the published unit** — this is the blocking item, not a code question;
   2. a consumer inventory for `specific_moe` / `specificMoe` across backend and client, including any
