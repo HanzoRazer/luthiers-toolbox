@@ -80,7 +80,8 @@ transcript paste
 | N | Nicoletti family (continues across his packs) | Mixed — see pack README |
 | PM | Howman *Physics Mind* steel-string seminar | Physics |
 | SB | Shop soundboard species & voicing | Shop |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, …) | — |
+| TB | Shop top bracing history / H-brace journal | Shop |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, …) | — |
 
 ---
 
@@ -91,7 +92,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 | Lane | Where to look |
 |------|----------------|
 | Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, Somogyi doctrine |
-| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard explainer (SB), Somogyi apprentice, MB kit how-to/interview |
+| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing journal (TB), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
 ---

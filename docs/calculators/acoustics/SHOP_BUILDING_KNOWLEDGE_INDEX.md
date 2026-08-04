@@ -16,6 +16,7 @@ Book-match and billeting workflow, factory overbuild vs hand voicing, deflection
 
 | Pack | Path | Notes |
 |------|------|-------|
+| Top bracing history + H / modified-X (Video Journal #6) | [`shop_top_bracing_history_h_brace/`](./shop_top_bracing_history_h_brace/) | TB01–TB20 — ladder/fan/X lore; H-brace + modified X go-bar process |
 | Soundboard species & voicing (YouTube explainer) | [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) | SB01–SB22 — top role, Sitka provenance cases, hand vs factory, deflection over tap |
 | Somogyi apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Y01–Y20 — workshop chronicle |
 | Nicoletti / MB Acoustic Study Set how-to | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | N01–N16 — kit procedure (meters live in physics lane) |

@@ -92,6 +92,11 @@
       "docs/calculators/acoustics/shop_soundboard_species_voicing/GAPS_NOT_RECORDED.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/README.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/shop_top_bracing_history_h_brace/ANNOTATED_WORKFLOW_NOTES.md",
+      "docs/calculators/acoustics/shop_top_bracing_history_h_brace/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/shop_top_bracing_history_h_brace/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/shop_top_bracing_history_h_brace/README.md",
+      "docs/calculators/acoustics/shop_top_bracing_history_h_brace/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/somogyi_01_air_pump_bracing_tap_tone/GAPS_NOT_RECORDED.md",
@@ -110,7 +115,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds physics vs shop lane indexes; annotated packs under docs/calculators/acoustics/ (Gore/O'Brien + related schools + shop soundboard explainer); series summary; developer orientation; CBSP21 manifest.",
+    "what_changed": "Adds physics vs shop lane indexes; annotated packs under docs/calculators/acoustics/ (Gore/O'Brien + related schools + shop soundboard + top-bracing journal); series summary; developer orientation; CBSP21 manifest.",
     "why_not_redundant": "Separates instrument-building physics from shop/building knowledge so calculators are not fed folklore defaults; captures teaching methodology and gaps before UI work."
   },
   "verification": {
@@ -1229,6 +1234,66 @@
       "intent": "Shop-lane soundboard species/voicing knowledge pack",
       "scan_targets": [
         "docs/calculators/acoustics/shop_soundboard_species_voicing/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_top_bracing_history_h_brace/ANNOTATED_WORKFLOW_NOTES.md",
+      "intent": "Shop-lane top bracing history + H-brace/modified-X journal pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_top_bracing_history_h_brace/ANNOTATED_WORKFLOW_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_top_bracing_history_h_brace/CROSSWALK_TOOLBOX.md",
+      "intent": "Shop-lane top bracing history + H-brace/modified-X journal pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_top_bracing_history_h_brace/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_top_bracing_history_h_brace/GAPS_NOT_RECORDED.md",
+      "intent": "Shop-lane top bracing history + H-brace/modified-X journal pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_top_bracing_history_h_brace/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_top_bracing_history_h_brace/README.md",
+      "intent": "Shop-lane top bracing history + H-brace/modified-X journal pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_top_bracing_history_h_brace/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_top_bracing_history_h_brace/SOURCE_TRANSCRIPT.md",
+      "intent": "Shop-lane top bracing history + H-brace/modified-X journal pack",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_top_bracing_history_h_brace/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
