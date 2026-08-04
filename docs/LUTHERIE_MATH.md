@@ -1849,6 +1849,8 @@ Holmberg workbooks are a **Gore-school wiring diagram** and test vectors. Map in
 3. Missing formula? → add/extend a § here, then implement beside the named module.  
 4. Lecture/spreadsheet pack? → knowledge layer only until it maps through Appendix B.
 
+**Unfinished §§ / implementations handoff:** [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md) — executive inventory of Stacks A–D (cabinet loop, §39–§42, shop modules, FoM gaps).
+
 ---
 
 *Document maintained by Ross Echols, PE #78195*
