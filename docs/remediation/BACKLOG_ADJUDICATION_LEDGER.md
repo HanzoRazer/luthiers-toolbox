@@ -117,9 +117,53 @@ authoritative CI-stack run). Tier A/B items only are queue-eligible; Tier C is i
 > which fixes both call sites at once. This sizing confirms the BR-002B scope boundary was
 > correct: it is a bounded Dev Order, not a line-edit.
 
+## Materials-index intake (2026-08-03)
+
+Adjudicated outside the 2026-07-20 sweep, against `origin/main` `ada33581`. Recorded here because the
+execution queue requires a corresponding adjudication record; kept in its own dated section so the
+sweep table above continues to mean "the 2026-07-20 set".
+
+| BR ID | Title | Subsystem | Source ref | Tier | Disposition | Verify | Sev | Readiness | Recommended action |
+| ----- | ----- | --------- | ---------- | ---- | ----------- | ------ | --- | --------- | ------------------ |
+| BR-043 | Tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | materials | `app/materials/schemas.py:148-156` vs `recommendation/scorer.py:33-73` | A | CONFIRMED_DEFECT | test-verified | high | **IMPLEMENTED — AWAITING MERGE** | producer corrected to unscaled `c/rho`; direct scorer coverage added (19 tests). Resolve only after merged-`main` re-verification |
+
+**Evidence.** The producer returns `(c/rho)*1e6`; its own docstring, `_ROLE_TARGETS`, and `router.py:88`
+all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with `sigma = 3.0` and no
+inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduced by
+`tests/materials/test_tonewood_acoustic_indices.py` (3 × `xfail(strict=True)`).
+
+| BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
+
+**BR-044 evidence label — `STATIC-FACT CONFIRMED`.** The frontend producer computes `(c/ρ)*1000`
+(~9,000–14,000 for normal tonewoods) while `rrColor` and `soundboardRating` threshold at 12.0 / 10.5 /
+9.0 on the unscaled scale, so every wood with MOE data takes the top branch. Separate implementation
+and data path from BR-043 — it reads hardcoded `tonewoodData.ts`, not the API. Requires
+rendered-behavior reproduction and an authority decision before remediation.
+
+> **Vocabulary note.** `STATIC-FACT CONFIRMED` is the register's *evidence label* for intake leads
+> (see the scan-intake exception in [REPOSITORY_DEFECT_REGISTER.md](REPOSITORY_DEFECT_REGISTER.md)),
+> not one of the 13 primary dispositions. The nearest primary term is `CONFIRMED_DEFECT` with
+> `code-inspection` verification, which the register explicitly admits as a valid current reproduction
+> basis. Readiness carries the real constraint: the runtime symptom is **unreproduced** and the item
+> is **not authorized**.
+
+**Owner ruling required:** BR-043 no — this is an internal-consistency repair against contracts the
+repository already states; it does not adjudicate physics, role targets, or recommendation philosophy.
+**BR-044 yes** — proof-packet item 5 is an authority decision between correcting the frontend
+calculation and deleting it in favour of the backend canonical value.
+
+**Dependencies:** none. Independent of PR #244 — MB Sound corroborates the scale but is not runtime
+authority and is not imported by this repair.
+
+> **Ledger/register divergence, noted not fixed.** BR-037…BR-042 appear in
+> [REPOSITORY_DEFECT_REGISTER.md](REPOSITORY_DEFECT_REGISTER.md) but have no row in this ledger; both
+> were admitted through dated register sections that did not write back here. BR-043 does write back.
+> Reconciling BR-037…042 is pre-existing and outside this Dev Order.
+
 ## Verification coverage
 
-36 items total: **Tier A 22 · Tier B 13 · Tier C 1**. **BR-001/002/004/035 FIXED by BR-002B** (first
+36 items total in the 2026-07-20 sweep table: **Tier A 22 · Tier B 13 · Tier C 1**. Plus **BR-043**
+(Tier A, `CONFIRMED_DEFECT`, 2026-08-03 materials-index intake, recorded in its own section above). **BR-001/002/004/035 FIXED by BR-002B** (first
 executed code remediation); BR-036 added (deeper batch_tree shape defect, out of BR-002B scope).
 
 - **Tier A items:** 20 (BR-001..007, 010, 012..021, 032, 033). Verified — **code-inspection**: BR-001,

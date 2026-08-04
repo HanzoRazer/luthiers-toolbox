@@ -58,3 +58,27 @@
 BR-006 (8J reconstruction — but high data-loss urgency), BR-010 (NECK-A frontend), BR-011 (three-loop
 doc removal), BR-015 (rmos strict=True), BR-017 (IBG-224 re-land). These can be scheduled on
 consequence alone.
+
+**BR-043** (tonewood radiation-ratio scale) is also standalone, with three ordering notes:
+
+- **No dependency on PR #244.** The MB Sound corpus corroborates the target scale (vendor SRC medians
+  12.28–14.00 on the unscaled `c/rho` scale) but is *evidence only* — not runtime authority, not
+  imported, not hard-coded by the repair. BR-043 may land before, during or after #244.
+- **Should precede** any recommendation-quality evaluation. Scoring the current recommender is
+  meaningless while its acoustic term is uniformly 0.0.
+- **Should precede** any centralized generator system consuming material rankings, for the same reason.
+
+Its two related findings — `specific_moe` scaling, and the frontend `StiffnessIndexPanel` threshold
+mismatch on an independent local data path — are deliberately *not* bundled; see the BR-043 register
+entry. The frontend finding is queued as **BR-044**.
+
+**BR-043 → BR-044** (ordering, not blocking):
+
+- BR-043 establishes the canonical backend scale.
+- BR-044 must use that adjudicated scale.
+- **BR-044 does not block BR-043.** The reverse edge is ordering only — BR-044's authority decision
+  (correct the frontend calculation vs. delete it and consume the backend value) is easier to make
+  once BR-043 has fixed the canonical value it would consume.
+- BR-044 **should be completed before frontend material rankings are consumed by the centralized
+  generator system**, for the same reason BR-043 should precede recommendation-quality evaluation:
+  a degenerate rating that marks every wood "Excellent" carries no signal for a downstream consumer.

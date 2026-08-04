@@ -147,13 +147,22 @@ class TonewoodEntry(BaseModel):
     @property
     def radiation_ratio(self) -> Optional[float]:
         """
-        Schelleng radiation ratio: c / ρ (m/s / kg/m³ × 10⁶).
+        Schelleng radiation ratio: c / ρ, in m⁴/(kg·s).
+
         Primary soundboard quality index. Higher = more projecting.
+        Common tonewoods land on an approximately 4–15 scale — the same scale
+        `_ROLE_TARGETS` in the recommendation scorer compares against.
         Reference: Schelleng (1963) — Adirondack spruce ~11.7, Sitka ~11.4.
+
+        BR-043 (2026-08-03): a spurious ×10⁶ factor was removed from this
+        expression. It made every returned value ~10⁶ larger than both the
+        reference species quoted above and the scorer's role targets, which
+        collapsed `_score_acoustic` to 0.0 for every species in every role.
+        See docs/remediation/REPOSITORY_DEFECT_REGISTER.md · BR-043.
         """
         c = self.speed_of_sound_computed_m_s
         if c and self.density_kg_m3:
-            return round((c / self.density_kg_m3) * 1e6, 2)
+            return round(c / self.density_kg_m3, 2)
         return None
 
     @computed_field  # type: ignore[misc]

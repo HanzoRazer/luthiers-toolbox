@@ -322,3 +322,148 @@ work and are handled Lab-side under Investigation 025.
   intake; this entry defines scope only.
 - **Recovery record:** if `salvage/other-stash8-ingest-audit-binaries` is ever deleted, its content is
   recoverable at `f102380d` until garbage collection.
+
+## Materials-index intake — static unit adjudication (2026-08-03)
+
+Single item, surfaced while grounding an acoustics knowledge-pack SOP against runtime code. Unlike the
+scan intake above, this entry is **not** a detector lead: it is reproduced by committed tests and is
+authorized for bounded remediation.
+
+### BR-043 · Tonewood radiation-ratio scale collapses acoustic recommendation scoring
+- **Subsystem:** materials intelligence (backend schema + recommendation scorer)
+- **Confidence:** **CONFIRMED — reproduced on `origin/main` `ada33581`** by
+  `services/api/tests/materials/test_tonewood_acoustic_indices.py`
+  (3 × `xfail(strict=True)` assertions of the intended scale; they fail against current code).
+  Static contradiction confirmed first by direct read of the four sites below.
+- **Observed vs expected:** `TonewoodEntry.radiation_ratio` returns `(c / rho) * 1e6`. Three
+  independent places in this repository declare the *unscaled* `c / rho` value — including the
+  property's own docstring. The `1e6` is spurious.
+
+| Fact | Evidence on `ada33581` |
+|---|---|
+| Producer applies `*1e6` | `services/api/app/materials/schemas.py:148-156` — `return round((c / self.density_kg_m3) * 1e6, 2)` |
+| Its own docstring contradicts it | same docstring: *"Reference: Schelleng (1963) — Adirondack spruce ~11.7, Sitka ~11.4"*. Shipped code returns ~1.17e7 for those species |
+| Scorer targets are on the unscaled scale | `scorer.py:33-44` `_ROLE_TARGETS` — soundboard 11.5, bracing 12.0, back_sides 8.0, fretboard 4.0 |
+| Consumer applies no inverse scaling | `scorer.py:61-73` `_score_acoustic` = `exp(-0.5*((rr - target)/3.0)**2)`, `sigma = 3.0`, compared directly |
+| Router documents the unscaled form | `services/api/app/materials/router.py:88` — *"radiation_ratio (Schelleng c/ρ)"* |
+| Value is user-visible unrepaired | `packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue:97` renders `RR {{ entry.radiation_ratio.toFixed(1) }}`; `composables/useTonewoods.ts:66` passes the API value through with no rescale |
+| Worked case from shipped reference data | American Basswood `rho = 415`, `E = 10.07 GPa` → `c = 4926 m/s`, `c/rho = 11.87`. Property returns `1.187e+07` |
+
+- **Downstream effect:** with `rr ≈ 1.19e7` against a target of `11.5` and `sigma = 3.0`, the Gaussian
+  exponent is astronomically negative. **`_score_acoustic` returns 0.0 for every acoustically-populated
+  species in every role.** The acoustic term of `score_for_role` / `recommend_for_role` /
+  `compare_species` is silently dead; only the structural and machinability terms differentiate.
+  No consumer compensates, so the API also serves — and the UI displays — a value ~1e6 too large.
+- **Governing contract:** the property's own docstring and the role-target profiles it is compared
+  against. This is an internal-consistency defect, not a physics dispute.
+- **Test gap:** `_score_acoustic` had **no direct test**. No test asserted `radiation_ratio`'s magnitude.
+  The defect was reachable only by reading the producer and consumer side by side.
+- **Severity:** high (silent wrong output in a user-facing advisory path; no data loss, no machine
+  output affected) · **Regression risk:** low-medium — the repair *will* change recommendation ordering,
+  which is the intended effect · **Fix size:** small (producer expression + docstring), with the
+  substantive work in test coverage
+- **Dependencies:** none. **Independent of PR #244** — the MB Sound corpus corroborates the target scale
+  (vendor SRC medians 12.28–14.00, all on the unscaled `c/rho` scale) but is evidence only, and must not
+  be imported or hard-coded by this repair.
+- **Readiness:** **IMPLEMENTED — AWAITING MERGE.** Executed under the BR-043 Dev Order on branch
+  `fix/br-043-tonewood-radiation-ratio-scale`, based on `ada33581`. Verification at implementation:
+  19 BR-043 tests pass; 126 pass across `tests/materials` + material/ai/business endpoint smoke, 0 fail;
+  CBSP21 patch-input gate PASS and coverage gate PASS at 100%; governance `--tier ci` OK with all
+  blocking checks green. **Resolved only after merged-`main` re-verification**, per the Dev Order.
+- **Related but out of scope — recorded, not fixed here:**
+  1. `TonewoodEntry.specific_moe` — **ruling: `UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`.**
+     See the dimensional adjudication below.
+  2. The frontend `StiffnessIndexPanel` path is **independent of the API**, computing from hardcoded
+     `tonewoodData.ts`. Its `calcRadiationRatio` (`useStiffnessIndex.ts:69-71`) applies `* 1000` and
+     labels it `c/ρ ×10³` — self-consistent in display — but `rrColor` and `soundboardRating`
+     (`useStiffnessIndex.ts:149-152`, `StiffnessIndexPanel.vue:312-317`) threshold at 12.0 / 10.5 / 9.0,
+     the *unscaled* scale, so every wood renders "Excellent". Same defect family, different data path,
+     **not** a compensating conversion for the backend. **Queued as BR-044** — see below.
+
+#### BR-043 · secondary-index adjudication (Commit 4, investigate-only)
+
+The BR-043 Dev Order authorizes inspection of `specific_moe` but not its repair unless the intended
+unit is already governed. It is not. Ruling and evidence:
+
+| Index | Ruling | Basis |
+|---|---|---|
+| `radiation_ratio` | **REPAIRED** (this order) | producer contradicted its own docstring *and* a live consumer contract (`_ROLE_TARGETS`) |
+| `specific_moe` | **`UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`** | contradiction confirmed; correct target scale is not determinable from the repository |
+| `ashby_index` | not implicated | docstring states `E^(1/3)/ρ` without fixing E's unit, so the `MPa` basis in code contradicts nothing. No consumer thresholds. Unverified, not defective |
+| `acoustic_impedance_mrayl` | **CORRECT AS IMPLEMENTED** | `ρ·c × 1e-6` is the definition of MRayl (1 MRayl = 10⁶ rayl). Basswood → 2.04 MRayl, physically right |
+
+**`specific_moe` dimensional proof** (`schemas.py`, American Basswood ρ = 415, E = 10.07 GPa, c = 4926 m/s):
+
+```text
+coded:            (E_GPa / rho) * 1e6  =  24265.0602
+                  == c^2 / 1e3          (algebraically, since E_GPa = E_Pa / 1e9)
+docstring claims: "Same as c^2/10^6"    =     24.2651
+ratio                                   =       1000.0
+```
+
+The docstring is provably false about the code it documents — that much is **confirmed**. What is *not*
+determinable is which side should move, and the repository votes against itself:
+
+- `packages/client/.../useStiffnessIndex.ts:78-80` computes `calcSpecificMoe = E_Pa/rho` (= c²), then
+  `computeIndices` divides by `1e6` → **24.265**. The frontend agrees with the backend **docstring**
+  and disagrees with the backend **code**, by the same factor of 1000.
+- `router.py:89` documents it only as `specific_moe (E/ρ)`, fixing no scale.
+
+**Why this is deferred while `radiation_ratio` was repaired.** The radiation-ratio defect violated a
+contract the repository *states*: a consumer (`_ROLE_TARGETS`) compares against declared numeric targets,
+so "correct" was determinable without an owner. `specific_moe` has **no consumer contract to violate** —
+`scorer.py:178` passes it straight into `MaterialCompareResult` and nothing thresholds it, so the
+collapse failure mode does not arise. Choosing between `c²/10³` and `c²/10⁶` is a display-unit decision,
+not a correctness proof.
+
+**Recommended action when scoped:** align on `c²/10⁶` — the value the docstring already claims and the
+frontend already produces — by changing the coded factor `1e6` → `1e3`. Requires an owner ruling on the
+published unit, plus a check for external consumers of the current value. **Not authorized by BR-043.**
+
+### BR-044 · Frontend radiation-ratio scaling makes tonewood ratings degenerate
+
+- **Subsystem:** frontend / wood intelligence / stiffness index
+- **Location:** `packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts`
+  and its consumers, including `StiffnessIndexPanel.vue`.
+- **Reproduction basis:** static producer-to-consumer inspection on `ada33581`.
+  `calcRadiationRatio` (`useStiffnessIndex.ts:69-71`) computes `(speedMs / densityKgM3) * 1000`,
+  producing values near **9,000–14,000** for normal tonewoods. Downstream rating and colour thresholds
+  are `12.0`, `10.5` and `9.0` (`useStiffnessIndex.ts:149-152` `soundboardRating`;
+  `StiffnessIndexPanel.vue:312-317` `rrColor`), expressed on the *unscaled* `c / ρ` reference scale.
+- **Observed mechanism:** producer and thresholds use incompatible scales. Representative tonewoods
+  exceed the highest threshold by roughly three orders of magnitude, so every wood with MOE data takes
+  the top branch — rendered as "Excellent" and the corresponding colour.
+- **Worked case:** American Basswood ρ = 415, E = 10.07 GPa → c = 4926 m/s. `calcRadiationRatio`
+  returns **11,870**; `rrColor`/`soundboardRating` compare that against `>= 12.0`.
+- **Expected behavior:** the calculated value and the rating thresholds must share one documented unit
+  profile. Representative soundboard woods should distribute across rating bands rather than trivially
+  satisfy the highest category.
+- **Relationship to BR-043:** related physical quantity, **separate live implementation and data path**.
+  BR-043 repairs the backend `TonewoodEntry.radiation_ratio` producer. It does **not** repair this
+  frontend-local calculation or rating path, which computes from hardcoded `tonewoodData.ts` rather
+  than from the API. **Do not deduplicate BR-044 into BR-043** unless the frontend is first refactored
+  to consume the backend canonical value.
+- **Current evidence label:** **`STATIC-FACT CONFIRMED`.** The unit mismatch is established by code
+  inspection. The rendered "every wood is Excellent" symptom has **not** been reproduced; a
+  composable/component test is required before this entry is promoted to `CONFIRMED`.
+- **Severity:** high for decision quality; low direct runtime-safety risk. No machine output, no data
+  loss. **Fix size:** small–moderate.
+- **Readiness:** **QUEUED — NOT AUTHORIZED.** Reproduction and consumer inventory required before any
+  mutation. This entry defines scope only.
+- **Required proof packet before implementation:**
+  1. a direct composable test showing `calcRadiationRatio` returns roughly **11,000–13,000** for a
+     normal soundboard wood;
+  2. a threshold test proving values on that scale always exceed `12.0`;
+  3. a component test, or an extracted rating-helper test, reproducing the highest rating for
+     representative low-, medium- and high-radiation-ratio woods;
+  4. a consumer search covering `calcRadiationRatio`, `radiationRatio`, `rrColor`,
+     `soundboardRating`, and the literal `12.0 / 10.5 / 9.0` thresholds;
+  5. an authority decision between **(a)** retaining a frontend calculation corrected to `c / ρ`, or
+     **(b)** deleting the duplicate math and consuming the backend canonical value.
+- **Provisional repair direction:** remove the frontend `×1000` scaling, or replace the local
+  calculation with the canonical backend radiation-ratio contract. The authority/consolidation
+  decision in proof-packet item 5 must be made **before** implementation.
+- **Ecosystem note:** this is one of five implementations of `c/ρ` across the ecosystem. Post-BR-043,
+  the other four — backend `schemas.py`, `tap_tone_pi/bending/gore_spreadsheet.py:578`,
+  `tap_tone_pi/bending/qa_lab_spec.py:477`, and the MB Sound corpus formula — all agree on the
+  unscaled SI scale. This frontend path is the sole outlier, and it disagrees with itself.
