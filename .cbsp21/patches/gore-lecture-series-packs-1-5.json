@@ -110,6 +110,12 @@
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/PROCESS_WORKFLOW.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/README.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/ANNOTATED_WORKFLOW_NOTES.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/PROCESS_WORKFLOW.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/README.md",
+      "docs/calculators/acoustics/shop_schaefer_compensated_saddle/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/ANNOTATED_WORKFLOW_NOTES.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/GAPS_NOT_RECORDED.md",
@@ -140,7 +146,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds physics vs shop lane indexes; annotated packs; cohort governance (catalog + search index + coverage gate) so nothing drops to the sandbox floor; CBSP21.",
+    "what_changed": "Adds physics vs shop lane indexes; annotated packs including Schaefer compensated-saddle shop workflow (SC); cohort governance (catalog + coverage gate); CBSP21.",
     "why_not_redundant": "Separates instrument-building physics from shop/building knowledge so calculators are not fed folklore defaults; captures teaching methodology and gaps before UI work."
   },
   "verification": {
@@ -1284,6 +1290,78 @@
       "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
       "scan_targets": [
         "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/ANNOTATED_WORKFLOW_NOTES.md",
+      "intent": "SC01–SC36 annotated teaching points",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/ANNOTATED_WORKFLOW_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/CROSSWALK_TOOLBOX.md",
+      "intent": "Toolbox mapping + NO-CALC for compensated saddle",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/GAPS_NOT_RECORDED.md",
+      "intent": "G-SC01–G-SC07 gaps (URL, mm offsets, gauges)",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/PROCESS_WORKFLOW.md",
+      "intent": "Extracted carve → strobe verify process spine",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/PROCESS_WORKFLOW.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/README.md",
+      "intent": "Schaefer compensated-saddle shop pack identity + NO-CALC",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_schaefer_compensated_saddle/SOURCE_TRANSCRIPT.md",
+      "intent": "Cleaned ASR extract for Schaefer saddle conversion video",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_schaefer_compensated_saddle/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

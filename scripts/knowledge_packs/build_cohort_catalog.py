@@ -30,6 +30,7 @@ KNOWN_PREFIX = {
     "IB": "Jacob I-beam",
     "BK": "Bashkin JM workflow",
     "GL": "Garrett Lee deflection Ep.13",
+    "SC": "Schaefer compensated saddle",
     "G": "Gap IDs (G-R01, G-GL01, …) — see pack GAPS file",
 }
 
@@ -41,6 +42,7 @@ SHOP_PRIMARY_FORCE = {
     "shop_bashkin_jm_build_workflow",
     "shop_soundboard_species_voicing",
     "shop_top_bracing_history_h_brace",
+    "shop_schaefer_compensated_saddle",
     "somogyi_apprentice_build_workflow",
     "nicoletti_mb_kit_interview",
     "nicoletti_mb_sound_acoustic_study_set",
@@ -57,7 +59,7 @@ def extract_points(text: str) -> list[str]:
         ids.add(f"{m[0]}0{m[1]}")
     ids.update(
         re.findall(
-            r"\b((?:P|H|W|M|S|R|U|A|T|Y|ES|N|PM|SB|TB|IB|BK|GL)\d{2,3})\b",
+            r"\b((?:P|H|W|M|S|R|U|A|T|Y|ES|N|PM|SB|TB|IB|BK|GL|SC)\d{2,3})\b",
             text,
         )
     )

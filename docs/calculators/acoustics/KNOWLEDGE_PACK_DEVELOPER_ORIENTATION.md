@@ -60,6 +60,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **GL** | Garrett Lee method |
 | **SH** | Shop / builder practice (non-school-specific shop lane) |
 | **BK** | Michael Bashkin shop practice |
+| **ESF** | Eric Schaefer shop practice |
 | **OH** | Open hypothesis / taste |
 
 ### Processing pipeline used
@@ -101,7 +102,8 @@ transcript paste
 | SB | Shop soundboard species & voicing | Shop |
 | TB | Shop top bracing history / H-brace journal | Shop |
 | BK | Bashkin JM full acoustic build workflow | Shop |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, …) | — |
+| SC | Schaefer straight → fully compensated saddle | Shop |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, `G-GL01`, `G-SC##`, …) | — |
 
 **Search tip:** prefixes may collide across packs (e.g. `T##`); always disambiguate with `pack_id` in [`cohort_catalog.json`](./cohort_catalog.json) / [`POINT_SEARCH_INDEX.md`](./POINT_SEARCH_INDEX.md).
 
@@ -114,7 +116,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 | Lane | Where to look |
 |------|----------------|
 | Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Somogyi doctrine |
-| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Somogyi apprentice, MB kit how-to/interview |
+| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Schaefer compensated saddle (SC), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
 ---

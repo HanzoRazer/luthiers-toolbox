@@ -13,6 +13,8 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 **Dual-file (shop primary):** Bashkin open/closed-box FRF voicing gates — [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) BK33/BK37–BK39 (no Hz targets recorded).
 
+**Shop cross-link (intonation setup, not a physics pack):** Schaefer compensated saddle — [`shop_schaefer_compensated_saddle/`](./shop_schaefer_compensated_saddle/) SC22–SC33 (cents ear band, 12th-fret method, envelope/transient, steel harmonics). Pair with Gore P25–P26 / H09; do not invent break-point mm (**G-SC02**).
+
 **Does not belong here:** factory vs hand process lore, billet storytelling, client interviews, “play the guitar not the label,” species marketing folklore (those → shop lane). Overlap sentences (“light and stiff”) may appear in both; tag by *deliverable*.
 
 ## Packs in this lane
