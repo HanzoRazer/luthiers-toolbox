@@ -92,7 +92,7 @@
                 <span
                   v-if="entry.radiation_ratio"
                   class="ims-mono ims-rr"
-                  :title="'Radiation ratio (Schelleng c/ρ × 10⁶) — higher = more projecting'"
+                  :title="'Radiation ratio (Schelleng c/ρ, m⁴/(kg·s)) — higher = more projecting'"
                 >
                   RR {{ entry.radiation_ratio.toFixed(1) }}
                 </span>

@@ -15,6 +15,7 @@
       "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
       "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
       "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue",
       "services/api/app/materials/schemas.py",
       "services/api/tests/materials/test_tonewood_acoustic_indices.py"
     ],
@@ -24,6 +25,7 @@
       "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
       "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
       "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue",
       "services/api/app/materials/schemas.py",
       "services/api/tests/materials/test_tonewood_acoustic_indices.py"
     ]
@@ -62,6 +64,12 @@
       "intent": "New direct coverage for radiation_ratio magnitude and _score_acoustic behavior -- both previously untested -- plus role-scoring integration against the real registry, API serialization scale, and a guard that no module under app/materials reintroduces a million-scale conversion. Ordering assertions test mathematical relationships, never species quality.",
       "risk": "low",
       "behavior_change": "none (test-only)"
+    },
+    {
+      "path": "packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue",
+      "intent": "Correct a stale unit label made wrong by this repair. The tooltip read 'Schelleng c/rho x 10^6' while the component renders the API value directly; with the producer corrected that label now contradicts the number beside it. Changed to 'Schelleng c/rho, m^4/(kg*s)'. Display-text only -- no logic, threshold, formatting or sorting change.",
+      "risk": "low",
+      "behavior_change": "none functional; corrects user-facing unit text so it matches the value now served"
     },
     {
       "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",

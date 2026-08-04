@@ -311,16 +311,37 @@ def test_api_serializes_radiation_ratio_on_corrected_scale():
         f"max radiation_ratio {max(values)} is off-scale — a *1e6 has reappeared"
     )
 
+    # Magnitude alone would not catch a wrong-but-still-sub-100 factor. Pin the
+    # served value against c/rho recomputed from the same record's own fields.
+    checked = 0
+    for entry in entries:
+        rr = entry.get("radiation_ratio")
+        rho = entry.get("density_kg_m3")
+        c = entry.get("speed_of_sound_computed_m_s")
+        if rr is None or not rho or not c:
+            continue
+        assert rr == pytest.approx(round(c / rho, 2), abs=0.011), (
+            f"{entry.get('name')}: served {rr} != c/rho {c / rho:.4f} — "
+            "the serialized value is not the unscaled Schelleng ratio"
+        )
+        checked += 1
+    assert checked >= 10, f"only {checked} entries were cross-checkable; expected >= 10"
+
 
 def test_no_consumer_applies_a_million_scale_conversion():
     """
-    TC-14 — no module in the materials package rescales radiation_ratio by a
-    million in either direction. Guards against 'fixing' the symptom downstream
-    instead of the producer (BR-043 Decision 2).
+    TC-14 — no Python module anywhere in the backend app rescales
+    radiation_ratio by a million in either direction. Guards against 'fixing'
+    the symptom downstream instead of the producer (BR-043 Decision 2).
+
+    Scope note: this scans the whole `app/` tree, not just `app/materials`, so a
+    compensating transform added in another backend package is caught too. It
+    cannot see the frontend, which is a different language and an independent
+    data path -- that surface is tracked as BR-044, not guarded here.
     """
     import pathlib
 
-    package = pathlib.Path(__file__).resolve().parents[2] / "app" / "materials"
+    package = pathlib.Path(__file__).resolve().parents[2] / "app"
     offenders: list[str] = []
     for path in package.rglob("*.py"):
         for lineno, line in enumerate(
