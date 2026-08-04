@@ -1,0 +1,106 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "G_R01_CARRICO_DEV_ORDER",
+  "title": "docs(acoustics): G-R01 Carrico evidence developer order + active handoffs index",
+  "intent": "Documentation-only. Adds a system-developer reviewable PR sequence (A–D) to close mobility unit-profile blocker G-R01 / G-M09 with Carrico primary evidence; adds docs/handoffs/CURRENT_ACTIVE.md so 2026-08 handoffs are findable; links from canonical blocker, unfinished-§§ handoff, review guide, and LUTHERIE_MATH Appendix B. No runtime calculator code. Does not close G-R01 and does not enable mobility badges.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation only; no executable production code changed",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/g-r01-carrico-dev-order.json",
+      "docs/LUTHERIE_MATH.md",
+      "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md",
+      "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md",
+      "docs/handoffs/CURRENT_ACTIVE.md",
+      "docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md",
+      "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/g-r01-carrico-dev-order.json",
+      "docs/LUTHERIE_MATH.md",
+      "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md",
+      "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md",
+      "docs/handoffs/CURRENT_ACTIVE.md",
+      "docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md",
+      "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md: separate-PR work order to close G-R01 with Carrico evidence (PRs A–D; badges forbidden until Closed). (2) docs/handoffs/CURRENT_ACTIVE.md: findability index for active 2026-08 handoffs with main vs PR-branch availability. (3) Pointers from CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md, LUTHERIE_MATH_UNFINISHED handoff Stack D, HOW_TO_REVIEW_THIS_CORPUS.md, and LUTHERIE_MATH.md Appendix B. (4) This per-PR CBSP21 manifest so auto-discovery covers the handoff files (avoids gore-lecture-series accumulator coverage miss).",
+    "why_not_redundant": "G-R01 remains OPEN until Carrico sheet arithmetic + unit profile land; this only publishes the reviewable close path. CURRENT_ACTIVE exists because prior-session handoffs were hard to find when only on feature branches. Dedicated CBSP21 manifest is required so docs/handoffs/ additions are not scored against the large gore-lecture-series pack's incomplete files_expected list."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m json.tool .cbsp21/patches/g-r01-carrico-dev-order.json -> valid JSON",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD> -> PASS (selects this manifest)",
+      "ls docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md docs/handoffs/CURRENT_ACTIVE.md -> present"
+    ],
+    "known_residual": "G-R01 / G-M09 remain OPEN until Carrico evidence PRs A–D. No mobility badges. No runtime code in this PR."
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/g-r01-carrico-dev-order.json",
+      "intent": "Per-PR CBSP21 manifest declaring this docs-only change set, including itself.",
+      "scan_targets": [".cbsp21/patches/g-r01-carrico-dev-order.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    },
+    {
+      "path": "docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md",
+      "intent": "System-developer review order: close G-R01 with Carrico evidence via separate PRs A–D.",
+      "scan_targets": ["docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/handoffs/CURRENT_ACTIVE.md",
+      "intent": "Active handoffs index: main vs PR-branch availability and sync commands.",
+      "scan_targets": ["docs/handoffs/CURRENT_ACTIVE.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md",
+      "intent": "Point Stack D mobility row and pointers table at the G-R01 Carrico close order / CURRENT_ACTIVE.",
+      "scan_targets": ["docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md",
+      "intent": "Link OPEN G-R01 blocker to the Carrico close-path dev order and PR map.",
+      "scan_targets": ["docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md",
+      "intent": "Standing productization holds: point reviewers at G-R01 close path.",
+      "scan_targets": ["docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/LUTHERIE_MATH.md",
+      "intent": "Appendix B: link mobility blocker and active handoffs index to G-R01 close path.",
+      "scan_targets": ["docs/LUTHERIE_MATH.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-04-g-r01-carrico-dev-order",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only developer order and handoff index. Does not close G-R01. No executable code. No materials-authority ruling."
+  }
+}

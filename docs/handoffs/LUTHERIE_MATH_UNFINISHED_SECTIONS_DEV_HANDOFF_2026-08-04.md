@@ -3,9 +3,11 @@
 
 **Date:** 2026-08-04  
 **Status:** DEV-READY orientation — knowledge layer closed on PR #243; math taxonomy evolution continues here  
+**Location:** `docs/handoffs/` (active index: [`CURRENT_ACTIVE.md`](./CURRENT_ACTIVE.md))  
 **Canonical hub:** [`docs/LUTHERIE_MATH.md`](../LUTHERIE_MATH.md)  
 **Related:** Appendix B (measurement → solvers); acoustics packs under `docs/calculators/acoustics/` (inputs/dialect only)  
-**Audience:** Engineers extending calculators / lab UI — not a lecture harvest checklist
+**Audience:** Engineers extending calculators / lab UI — not a lecture harvest checklist  
+**On `main`:** yes (merge commit `5a885f31` / PR #243). If missing locally: `git checkout main && git pull origin main`.
 
 ---
 
@@ -104,7 +106,7 @@ Forward analysis (§1–§25) is largely written; Part II turns that into *desig
 | Gap | Blocks | Disposition |
 |-----|--------|-------------|
 | **Q / damping §** | Damping as first-class solver | Appendix B: FoM only today — add numbered § before badges |
-| **Mobility unit profile** (G-R01 / G-M09) | “Exceptional Y” UI | Carrico / SI lock — **outside** unfinished §§ list but blocks badges |
+| **Mobility unit profile** (G-R01 / G-M09) | “Exceptional Y” UI | Carrico / SI lock — **outside** unfinished §§ list but blocks badges. **Dev order:** [`G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](./G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md) (separate PRs A–D) |
 | **4-DOF closed-box FRF** | Holmberg `model` parity | Evolve `coupled_2osc` + lab FRF against §7 — **not** Sheets re-host |
 | **TPC \(E_C\)** | Full orthotropic §12 from MB cards | Intake flag or second measure — Appendix B.3 |
 | **§44 wood tiers** | Qualitative cheap/mid/premium | Bind to measured \(E_L\)/ρ/damping when data exists |
@@ -119,6 +121,7 @@ Forward analysis (§1–§25) is largely written; Part II turns that into *desig
 2. Stack C (parallel-safe): neck_angle_calc (§25); body_geometry_calc sagitta (§16)
 3. Stack B: §39 hardware/research → stiffness_field (§40) → radiation_power (§41) → optimizer (§42)
 4. Q/damping § + mobility unit profile before any “exceptional” badges
+   (mobility: execute [`G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](./G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md) PRs A–D)
 5. 4-DOF product FRF only after §7 contract clear — never clone Holmberg freq_db
 ```
 
@@ -201,6 +204,7 @@ MB/TPC or shop tap row
 | MB panel labs | [`docs/calculators/acoustics/mb_sound_panel_laboratory_records/`](../calculators/acoustics/mb_sound_panel_laboratory_records/) |
 | Holmberg sheets | [`docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/`](../calculators/acoustics/holmberg_gore_modeling_spreadsheets/) |
 | Coverage gate | `python3 scripts/knowledge_packs/check_cohort_coverage.py` |
+| G-R01 Carrico close (separate PRs) | [`G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](./G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md) |
 
 ---
 
