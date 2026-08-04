@@ -11,7 +11,8 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 **Deliverable for Toolbox:** meters, models, lab SOPs, unit profiles — still **NO-CALC** until gaps close.
 
-**Canonical equation hub:** [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (Appendix B wires MB/TPC + Holmberg inputs into existing § / `plate_design` / `soundhole_calc` — no parallel engines).
+**Canonical equation hub:** [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (Appendix B wires MB/TPC + Holmberg inputs into existing § / `plate_design` / `soundhole_calc` — no parallel engines).  
+**Unfinished §§ handoff:** [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](../../handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md)
 
 **Dual-file (shop primary):** Bashkin open/closed-box FRF voicing gates — [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) BK33/BK37–BK39 (no Hz targets recorded).
 

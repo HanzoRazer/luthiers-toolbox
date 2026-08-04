@@ -13,7 +13,8 @@
       "docs/calculators/acoustics/",
       "scripts/knowledge_packs/",
       ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
-      "docs/LUTHERIE_MATH.md"
+      "docs/LUTHERIE_MATH.md",
+      "docs/handoffs/"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
@@ -159,7 +160,8 @@
       "docs/calculators/acoustics/somogyi_apprentice_build_workflow/SOURCE_TRANSCRIPT.md",
       "scripts/knowledge_packs/build_cohort_catalog.py",
       "scripts/knowledge_packs/check_cohort_coverage.py",
-      "docs/LUTHERIE_MATH.md"
+      "docs/LUTHERIE_MATH.md",
+      "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md"
     ]
   },
   "diff_articulation": {
@@ -1895,6 +1897,18 @@
       "intent": "Appendix B: universal MB/Holmberg \u2192 LUTHERIE_MATH \u2192 canonical solvers (no parallel engines)",
       "scan_targets": [
         "docs/LUTHERIE_MATH.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md",
+      "intent": "Executive annotated handoff: unfinished LUTHERIE_MATH \u00a7\u00a7/implementations (Stacks A\u2013D)",
+      "scan_targets": [
+        "docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
