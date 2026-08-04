@@ -19,6 +19,12 @@
       "docs/calculators/acoustics/KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md",
       "docs/calculators/acoustics/PHYSICS_KNOWLEDGE_INDEX.md",
       "docs/calculators/acoustics/SHOP_BUILDING_KNOWLEDGE_INDEX.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/ANNOTATED_LECTURE_NOTES.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/CROSSWALK_TOOLBOX.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/PROCESS_WORKFLOW.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/README.md",
+      "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/gore_guitar_analysis_testing/GAPS_NOT_RECORDED.md",
@@ -126,7 +132,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds physics vs shop lane indexes; annotated packs (Gore/O'Brien + related schools + shop journals including Bashkin full JM workflow + Jacob I-beam physics); series summary; orientation; CBSP21.",
+    "what_changed": "Adds physics vs shop lane indexes; annotated packs including Garrett Lee Ep.13 soundboard deflection SOP/workflow; Gore/O'Brien + related schools; CBSP21.",
     "why_not_redundant": "Separates instrument-building physics from shop/building knowledge so calculators are not fed folklore defaults; captures teaching methodology and gaps before UI work."
   },
   "verification": {
@@ -1437,6 +1443,78 @@
       "intent": "Extracted Bashkin JM process workflow (stages/gates)",
       "scan_targets": [
         "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/PROCESS_WORKFLOW.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/ANNOTATED_LECTURE_NOTES.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/ANNOTATED_LECTURE_NOTES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/CROSSWALK_TOOLBOX.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/CROSSWALK_TOOLBOX.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/GAPS_NOT_RECORDED.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/GAPS_NOT_RECORDED.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/PROCESS_WORKFLOW.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/PROCESS_WORKFLOW.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/README.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/SOURCE_TRANSCRIPT.md",
+      "intent": "Physics-lane Garrett Lee Ep.13 soundboard deflection SOP + process workflow",
+      "scan_targets": [
+        "docs/calculators/acoustics/garrett_lee_soundboard_deflection_ep13/SOURCE_TRANSCRIPT.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

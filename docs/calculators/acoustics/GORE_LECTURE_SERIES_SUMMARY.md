@@ -242,6 +242,8 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Nicoletti EGB measuring/tuning (Jul 2022) | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | FRF+mobility+Chladni practice; REW/miniDSP; δ~0.01–0.02 mm; characterizations; PLG checklist |
 | Howman — Physics Mind (Curtin 2011) | [`physics_mind_steel_string_lecture/`](./physics_mind_steel_string_lecture/) | Steel-string survey: energy path, QS/S/W wood pick, monopole/dipoles, X-brace + cube rule, basswood linings, live back, scale/intonation/bridge center |
 
+Physics plate deflection (non-Gore): [`garrett_lee_soundboard_deflection_ep13/`](./garrett_lee_soundboard_deflection_ep13/) (GL; **G-GL01** targets).
+
 Physics brace-beam (non-Gore): [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) (IB01–IB24; Howman PM19 cousin).
 
 Shop-lane packs (not Gore physics): see [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — e.g. [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) (SB01–SB22); [`shop_top_bracing_history_h_brace/`](./shop_top_bracing_history_h_brace/) (TB01–TB20); [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) (BK01–BK48).

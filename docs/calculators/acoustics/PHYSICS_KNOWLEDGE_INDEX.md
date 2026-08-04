@@ -46,6 +46,12 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 | Somogyi 01 — Air pump / bracing / tap | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | ES01–ES15 — efficiency doctrine |
 | Somogyi 02 — Top & Back | [`somogyi_02_top_and_back/`](./somogyi_02_top_and_back/) | ES16–ES28 — coupled-box doctrine |
 
+
+### Plate flexibility / deflection
+
+| Pack | Path | Notes |
+|------|------|-------|
+| Garrett Lee Ep. 13 — plate deflection | [`garrett_lee_soundboard_deflection_ep13/`](./garrett_lee_soundboard_deflection_ep13/) | GL01–GL28 — deflection SOP; t³ behavior; targets gap G-GL01; shop thinning dual-file |
 ### Brace-beam mechanics
 
 | Pack | Path | Notes |

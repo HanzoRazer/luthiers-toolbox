@@ -48,6 +48,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **MW** | Michael Watts framing |
 | **DH** | Dominic Howman method |
 | **JK** | Jacob / Kanaka method |
+| **GL** | Garrett Lee method |
 | **SH** | Shop / builder practice (non-school-specific shop lane) |
 | **BK** | Michael Bashkin shop practice |
 | **OH** | Open hypothesis / taste |
@@ -82,6 +83,7 @@ transcript paste
 | N | Nicoletti family (continues across his packs) | Mixed — see pack README |
 | PM | Howman *Physics Mind* steel-string seminar | Physics |
 | IB | Jacob/Kanaka I-beam bracing physics | Physics (shop dual) |
+| GL | Garrett Lee soundboard deflection Ep. 13 | Physics (shop dual) |
 | SB | Shop soundboard species & voicing | Shop |
 | TB | Shop top bracing history / H-brace journal | Shop |
 | BK | Bashkin JM full acoustic build workflow | Shop |
@@ -95,7 +97,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 
 | Lane | Where to look |
 |------|----------------|
-| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam brace physics (IB), Somogyi doctrine |
+| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam (IB), Garrett Lee deflection (GL), Somogyi doctrine |
 | Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing (TB), Bashkin JM workflow (BK), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
@@ -153,6 +155,7 @@ Select wood (optional metrology)
 | G-ES09–11 | Somogyi top–back ratio, δ targets, brace-stop | No Somogyi numeric lab |
 | G-N08 | Mode-label map Nicoletti ↔ Gore T11x | Labeling bugs in FRF UI |
 | Unit profiles | Carrico score vs SI \(Y\) | Threshold badges unsafe |
+| **G-GL01** | Garrett Lee on-screen δ targets not in ASR | Can’t ship his deflection band as lab defaults |
 
 **Standing NO-CALC rules (from packs):** no invented Win7 paths; no falcate geometry from talk alone; no hardcoded 236/275 Hz or 190 Hz mold coincidence as globals; no mobility “responsive” badges until unit profile locked.
 

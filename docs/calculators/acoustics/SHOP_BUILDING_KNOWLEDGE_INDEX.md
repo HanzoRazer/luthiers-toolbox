@@ -32,6 +32,7 @@ These carry both lanes; primary filing is noted in each README.
 | Somogyi 01–02 | Physics (doctrine) | Shop (tap / brace stew culture) |
 | Nicoletti Science / Luthier Stories | Physics | Shop (ETS/TPC tooling narrative) |
 | Howman Physics Mind | Physics | Shop anecdotes (kerfing, scallop myth, posture) |
+| Garrett Lee Ep. 13 thinning loop | Physics [`garrett_lee_soundboard_deflection_ep13/`](./garrett_lee_soundboard_deflection_ep13/) | Shop dual: iterative thin/taper to δ (PROCESS_WORKFLOW) |
 | Bashkin JM voicing gates (BK33/37–39) | Shop [`shop_bashkin_jm_build_workflow/`](./shop_bashkin_jm_build_workflow/) | Physics dual: open/closed FRF + thickness map |
 | Jacob I-beam X application | Physics [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) | Shop dual-file: I-beam X, scallops, laminated center (IB15–IB18) |
 
