@@ -8,17 +8,18 @@
 **Content type:** Physics + math workbook documentation (Google Sheets / Excel / LibreOffice)  
 **Shop overlap:** Measurement wrappers only (panel tap hold, REW, string measure-rig) — not a build dialect  
 **Point prefix:** `HM`  
-**Status:** Full documentation export ingested (2026-08-04); live Sheets cells not audited cell-by-cell  
+**Status:** Documentation export + V4 `.xlsx` inventory (2026-08-04). Equation cell-by-cell audit still open (**G-HM05**).  
 **Parent indexes:** Physics (primary); Gore summary cross-link; shop index not primary
 
 ## Contents
 
 | File | Purpose |
 |------|---------|
-| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM42 |
+| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM46 |
+| [`WORKBOOK_INVENTORY.md`](./WORKBOOK_INVENTORY.md) | Sheet lists, named ranges, preset scalars, Wood Properties schema, SHA-256 |
 | [`PROCESS_WORKFLOW.md`](./PROCESS_WORKFLOW.md) | Sheet/module calculation spine |
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Calculator destinations + NO-CALC |
-| [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | Live sheet URLs, δ unit profile, verified builds |
+| [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | G-HM01 partial; G-HM02 closed; G-HM10/11 from inventory |
 | [`SOURCE_TRANSCRIPT.md`](./SOURCE_TRANSCRIPT.md) | Structured extract from public doc export |
 
 ## Classification legend

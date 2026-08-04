@@ -75,6 +75,7 @@
       "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/PROCESS_WORKFLOW.md",
       "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/README.md",
       "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/SOURCE_TRANSCRIPT.md",
+      "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/WORKBOOK_INVENTORY.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/ANNOTATED_LECTURE_NOTES.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/jacob_ibeam_bracing_physics/GAPS_NOT_RECORDED.md",
@@ -876,6 +877,18 @@
       "intent": "Structured extract from public Holmberg docs export",
       "scan_targets": [
         "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/WORKBOOK_INVENTORY.md",
+      "intent": "V4 xlsx workbook inventory: sheets, named ranges, presets, Wood Properties schema, hashes",
+      "scan_targets": [
+        "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/WORKBOOK_INVENTORY.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

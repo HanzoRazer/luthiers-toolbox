@@ -305,6 +305,40 @@ Poplar no-CF can hit stiffness with higher mass/stress fraction.
 
 ---
 
+## 10. Workbook file inventory (V4 `.xlsx` — 2026-08-04)
+
+See [`WORKBOOK_INVENTORY.md`](./WORKBOOK_INVENTORY.md) for hashes, full tables.
+
+### 10.1 Three guitar starters + Wood Properties V1 inventoried on disk  
+**Classification:** **EO** / **GH**
+
+Sheets match docs spine; noCF adds `deflection`; ~324–338 named ranges each.
+
+**Point ID:** HM43  
+
+### 10.2 Preset scalars confirmed: \(f\)=60 nylon / 75 steel; triads 95/190.5/240 vs 90/169.5/214  
+**Classification:** **EO**
+
+Mobility shown as **s/kg e-3** (top MM ~17–24 in these presets).
+
+**Point ID:** HM44  
+
+### 10.3 In-sheet compensation tables: classical 2.30¢; SS noCF 3.18¢; SS CF **6.84¢**  
+**Classification:** **EO**
+
+SS CF exceeds author’s steel &lt;6¢ guidance; sheets mark “ToDo: verify compensations.”
+
+**Point ID:** HM45  
+
+### 10.4 Wood Properties: 306 species on `All`; role sheets Top/Brace/Back/…; 27 named ranges  
+**Classification:** **GH**
+
+Comparison/ranking only — not FPL-attributed Toolbox canonical data.
+
+**Point ID:** HM46  
+
+---
+
 ## Point index
 
 | ID | Title |
@@ -351,3 +385,7 @@ Poplar no-CF can hit stiffness with higher mass/stress fraction.
 | HM40 | Back braces + post-build refit |
 | HM41 | Nicoletti / Molloy interactive cousins |
 | HM42 | CAD auto-coupling roadmap |
+| HM43 | V4 xlsx workbooks inventoried |
+| HM44 | Preset f / triad / MM scalars confirmed |
+| HM45 | Compensation tables + SS CF over-band |
+| HM46 | Wood Properties schema (306 spp) |

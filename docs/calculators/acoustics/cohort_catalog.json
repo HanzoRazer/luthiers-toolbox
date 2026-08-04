@@ -1175,6 +1175,8 @@
         "G-HM07",
         "G-HM08",
         "G-HM09",
+        "G-HM10",
+        "G-HM11",
         "G-M09",
         "G-R01",
         "HM01",
@@ -1219,10 +1221,14 @@
         "HM40",
         "HM41",
         "HM42",
+        "HM43",
+        "HM44",
+        "HM45",
+        "HM46",
         "M09",
         "R01"
       ],
-      "point_count": 55,
+      "point_count": 61,
       "has_process_workflow": true,
       "missing_template_files": [],
       "search_keywords": [
@@ -1288,7 +1294,7 @@
         "green"
       ],
       "path": "docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/",
-      "status": "complete"
+      "status": "partial"
     },
     {
       "pack_id": "jacob_ibeam_bracing_physics",
@@ -3083,7 +3089,7 @@
   ],
   "counts": {
     "packs": 24,
-    "points": 1078,
+    "points": 1084,
     "unfiled": 0,
     "template_incomplete": 0
   }
