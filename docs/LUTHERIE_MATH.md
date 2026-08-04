@@ -40,6 +40,7 @@ Challenges and corrections are welcomed — this document is a living record.
 25. [Neck Angle Calculation](#25-neck-angle-calculation)
 26. [Error Log](#26-error-log)
 - [Appendix A — Guitar body as speaker enclosure](#appendix-a--guitar-body-as-speaker-enclosure)
+- [Appendix B — Measurement corpora → canonical solvers (no parallel engines)](#appendix-b--measurement-corpora--canonical-solvers-no-parallel-engines)
 
 **Part II — Design Problems**
 39. [Modal Area Coefficient A_n](#39-modal-area-coefficient-a_n)
@@ -166,9 +167,9 @@ Any builder who disputes it with measured data is correct to do so.**
 
 ## 3. Saddle Slant Angle
 
-**Source:** Derived from `instrument_geometry/bridge/geometry.py → compute_saddle_positions_mm()`.
-Gibson J-45 measured slant: ~4°. Taylor: varies by model.
-**Implementation:** Add `compute_saddle_slant_angle()` to `bridge/geometry.py` (GEOMETRY-004, not yet built).
+**Source:** Derived from saddle compensation geometry (Gibson J-45 measured slant ~4°; Taylor varies by model).
+**Implementation:** `calculators/acoustic_bridge_calc.py → compute_saddle_slant_angle()` (also used from bridge slot/crown helpers). Related: `instrument_geometry` saddle position helpers.
+**Confidence:** Project approximation (geometry from Δcomp / string spread).
 
 ### Formula
 
@@ -251,6 +252,7 @@ for new code.**
 Perimeter correction: empirical, calibrated in this project. Gore's modified formula.
 
 **Implementation:** `calculators/soundhole_calc.py → compute_port_neck_length()`
+**Confidence:** Exact-theory end correction + **empirical calibration** (project γ / perimeter fit — not universal).
 
 ### Formula
 
@@ -404,6 +406,7 @@ Classical guitars with thinner tops (2.0 mm) may have PMF closer to 0.90.
 Calibration factor derived in this project.
 
 **Implementation:** `calculators/soundhole_calc.py → volume_from_dimensions()`
+**Confidence:** Project approximation (geometric integral × **1.83** calibration on a small set — proxy until Appendix A §37–§38).
 
 ### Formula
 
@@ -560,6 +563,7 @@ needed to achieve the target with the side port present.
 used by Caldersmith, Gore, and in tap-tone practice universally.
 
 **Implementation:** `calculators/plate_design/thickness_calculator.py → plate_modal_frequency()`
+**Confidence:** Exact-theory core (Hearmon-class); \(\eta\) / free→box \(\gamma\) are project approximations.
 
 ### Formula
 
@@ -904,7 +908,8 @@ made of the same material as the top spruce) — which never occurs in practice.
 ## 21. Kerfing Geometry
 
 **Source:** Structural mechanics of thin-walled bending. GEOMETRY-003 in BACKLOG.md.
-**Implementation:** `calculators/kerfing_calc.py` (not yet built).
+**Implementation:** `calculators/kerfing_calc.py` → `compute_kerfing_dimensions()`, `compute_kerfing_schedule()` (**built**).
+**Confidence:** Project approximation / shop rules of thumb.
 
 ### Kerf slot geometry
 
@@ -1781,6 +1786,84 @@ const tier = suggestWoodTier(32, 12);
 
 ---
 
+## Appendix B — Measurement corpora → canonical solvers (no parallel engines)
+
+| Status | Meaning |
+|--------|---------|
+| **Canonical routing policy** | **Final** for this repo — spreadsheet/vendor analyzers are inputs, not alternate product runtimes |
+| **Implementation coverage** | **Partial** — several §§/modules still unfinished |
+| **Unfinished inventory** | [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md) |
+
+**Rule:** External spreadsheets and vendor analyzers supply **measured inputs**. They must not ship as **independent product runtimes** beside this file. Legitimate future parity work re-expresses reference models **only** by extending numbered §§ here and the named modules. Do not mount Holmberg Sheets / TPC UI as a second calculator stack.
+
+**Knowledge-pack cousins (inputs / dialect only):**
+- MB Sound / Nicoletti TPC panel labs → `docs/calculators/acoustics/mb_sound_panel_laboratory_records/`
+- Holmberg Gore/Gilet Google Sheets / `.xlsx` → `docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/`
+- Lecture/shop packs → `docs/calculators/acoustics/` lane indexes
+- **Canonical mobility unit-profile blocker:** [`docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / alias **G-M09**)
+
+### B.1 Universal wiring (MB Specimen Master → this file → code)
+
+MB/TPC screenshot transcriptions make §12–§13 (and related FoMs) **real** by replacing species-average placeholders with billet measurements. Call the existing solvers; do not re-implement Holmberg `top_panel` or TPC UI math in a new module.
+
+| MB / TPC field (Specimen Master) | This document | Canonical implementation | Notes |
+|----------------------------------|---------------|--------------------------|-------|
+| Sample Length / Width (mm) → m | §12 \(a\), \(b\) | `plate_design/thickness_calculator.py → plate_modal_frequency()` | Grain axis = length convention must be stated at intake |
+| Sample Thickness (mm) → m | §12 \(h\); §13 reference \(h\) | same + `inverse_solver.py → solve_for_thickness()` | Measured \(h\) is \(h_\mathrm{ref}\) for inverse checks |
+| Density (kg/m³) | §12 \(\rho\) | `plate_modal_frequency(..., rho=...)` | Prefer detailed-analyzer value; do not write into `wood_species.json` as FPL |
+| Young’s Modulus / Stiffness (GPa) → Pa | §12 \(E_L\) (primary) | `plate_modal_frequency(..., E_L_Pa=...)` | TPC “stiffness” is treated as **longitudinal** unless a cross-grain field is present — see gap below |
+| Resonance Frequency (Hz) | §12 \(f_{mn}\) check; §13 \(f_\mathrm{target}\) / \(f_\mathrm{ref}\) | forward `plate_modal_frequency`; inverse `solve_for_thickness` / `thickness_for_target_frequency` | Free-plate \(\eta\) near 1.0 (§12) |
+| Radiation Coefficient | FoM compare; §41 culture | Display / compare only until `radiation_power.py` exists | Not a substitute for \(P_\mathrm{rad}\) |
+| Q Factor / Sustain | Damping FoM (not yet a numbered § solver) | Intake + QC; no mobility badge | Do not invent \(Y\) from Q |
+| Fitting (%) | QC gate | Reject / warn low-fit rows before solver call | |
+| Capture Audit exclusions | Provenance | Skip missing/invalid specimen IDs | e.g. torrefied 000002 |
+
+**Intake contract (single path):**
+
+```text
+MB/TPC specimen row (measured)
+  → unit normalize (mm→m, GPa→Pa)
+  → docs/LUTHERIE_MATH.md §12 / §13 (and §4–§11 when body V + port known)
+  → services/api/app/calculators/plate_design/*  (+ soundhole_calc.py for air)
+  → UI / lab result
+```
+
+**Forbidden:** cloning Holmberg `freq_db` / Google Sheets as a parallel FRF engine; shipping MB batch averages as cut lists; merging vendor UI formulas into a new “TPC calculator” that bypasses this file.
+
+### B.2 Holmberg modules → existing sections (reference only)
+
+Holmberg workbooks are a **Gore-school wiring diagram** and test vectors. Map intent to what already exists; fill gaps by extending **this** document + named implementations — not by mounting the spreadsheet runtime.
+
+| Holmberg sheet / intent | Canonical home | Status |
+|-------------------------|----------------|--------|
+| `top_panel` / `back_panel` thickness from tap + \(f\) | §12, §13 + `plate_design/` | **Use existing** — feed with MB/TPC or shop tap rows |
+| `body` volume / area → Helmholtz | §4–§8, §11 + `soundhole_calc.py` / `acoustic_body_volume.py` | **Use existing**; outline→V still Appendix A |
+| `fretboard` positions | §1 + `instrument_geometry/neck/fret_math.py` | **Use existing** |
+| `intonation` / `first`…`sixth` | §3 + `nut_compensation_physics.py` (enhance, don’t fork) | Extend existing compensation stack |
+| `model` + `freq_db` 4-DOF | §7 coupling culture; `coupled_2osc.py` / future closed-box FRF | **Do not** re-host Holmberg complex FRF table as product core |
+| `top_braces` / `back_braces` → \(K_t\)/\(K_b\) | §40 \(D(x,y)\) **still missing** (`stiffness_field.py`); nearest helper today: `brace_prescription.py` (style→spec only) | Experimental Holmberg sizing ≠ §40 closure |
+| Wood Properties averages | Comparison UX only | Never override FPL/CIRAD attribution in `wood_species.json` |
+
+### B.3 Open wiring gaps (record here — do not invent)
+
+| Gap | Blocks | Disposition |
+|-----|--------|-------------|
+| TPC stiffness → \(E_L\) only (no \(E_C\) on MB cards) | Full orthotropic §12 term | Intake: require \(E_C\) estimate source or run \(E_C\)-insensitive checks with explicit flag |
+| No raw FFT/IR arrays in MB books | Independent peak re-pick | Keep screenshot \(f\); optional later raw corpus |
+| Mobility unit profile (G-R01 / G-M09) | “Exceptional Y” badges | Unchanged — still blocked |
+| 4-DOF product FRF | Holmberg `model` parity | Evolve `coupled_2osc` / lab FRF against §7 — not Sheets port |
+
+### B.4 Developer checklist
+
+1. Need a number from wood? → measured row (MB/TPC or shop) **or** attributed `wood_species.json` — never silent Holmberg preset.  
+2. Need a formula? → section in **this file** + **Implementation** path.  
+3. Missing formula? → add/extend a § here, then implement beside the named module.  
+4. Lecture/spreadsheet pack? → knowledge layer only until it maps through Appendix B.
+
+**Unfinished §§ / implementations handoff:** [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md) — executive inventory of Stacks A–D (cabinet loop, §39–§42, shop modules, FoM gaps).
+
+---
+
 *Document maintained by Ross Echols, PE #78195*
 *For The Production Shop — luthiers-toolbox-main*
-*Last updated: April 2026*
+*Last updated: August 2026*
