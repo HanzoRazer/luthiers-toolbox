@@ -166,22 +166,24 @@ Select wood (optional metrology)
 
 ---
 
-## 4. Blockers before code (fresh-eyes checklist)
+## 4. Do not implement before resolving these (authoritative blockers)
+
+> Process details for adding packs live in [`COHORT_GOVERNANCE.md`](./COHORT_GOVERNANCE.md). This section is the **implementation safety** surface.
 
 | ID | Issue | Why it blocks UI |
 |----|-------|------------------|
-| **G-R01 / G-M09** | Pack 3 spoken **27 mm** vs Pack 5 ~**0.15 mm** vs Nicoletti typical **~0.01–0.02 mm** | Wrong \(k\) by ~1000× if 27 mm treated as real. Prefer **0.01–0.15 mm class**; still need Carrico sheet for full close. |
+| **G-R01** (alias **G-M09**) | Pack 3 spoken **27 mm** vs Pack 5 ~**0.15 mm** vs Nicoletti **~0.01–0.15 mm** class | **Canonical record:** [`CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](./CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md). δ guidance is **provisional** until Carrico/unit profile closes. |
 | Pack 6 | Guitar Analysis course SOPs incomplete | Win mic / Visual Analyzer click-paths missing |
 | G-N10 / G-N21 | Nicoletti spreadsheet / Schelleng formula cells | Can’t port EMP plate calculator faithfully |
 | G-ES09–11 | Somogyi top–back ratio, δ targets, brace-stop | No Somogyi numeric lab |
 | G-N08 | Mode-label map Nicoletti ↔ Gore T11x | Labeling bugs in FRF UI |
-| Unit profiles | Carrico score vs SI \(Y\) | Threshold badges unsafe |
+| Unit profiles | Carrico score vs SI \(Y\) | Threshold badges unsafe (same family as G-R01) |
 | **G-GL01** | Garrett Lee on-screen δ targets not in ASR | Can’t ship his deflection band as lab defaults |
 | **G-HM03 / G-HM04** | Holmberg presets unverified as builds; Y&gt;14 citations share mobility unit block | No cut lists / no exceptional-Y badges from sheets alone |
 
 **Standing NO-CALC rules (from packs):** no invented Win7 paths; no falcate geometry from talk alone; no hardcoded 236/275 Hz or 190 Hz mold coincidence as globals; no mobility “responsive” badges until unit profile locked; Holmberg sheets = starting points + measure-your-wood (HM02).
 
-**Universal equation wiring:** All calculator math productization goes through [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (see **Appendix B**). MB/TPC and Holmberg packs supply **inputs / reference maps** only — do not recreate parallel spreadsheet engines.
+**Universal equation wiring:** All calculator math productization goes through [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) (**Appendix B**: routing policy final, implementation coverage partial). MB/TPC and Holmberg packs supply **inputs / reference maps** only — no independent spreadsheet product runtimes.
 
 ---
 

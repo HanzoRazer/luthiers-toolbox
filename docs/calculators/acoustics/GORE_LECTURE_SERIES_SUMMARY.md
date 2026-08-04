@@ -2,9 +2,15 @@
 
 Living index for **Gore / O’Brien physics-lane** packs (plus cross-links to related schools). Not the catalog for all acoustics knowledge.
 
+> **Role:** curated **synthesis layer** for human review — not the canonical source of record where conflicts exist.  
+> On conflict, defer to pack-level `GAPS_NOT_RECORDED.md`, [`CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](./CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01**), and [`docs/LUTHERIE_MATH.md`](../../LUTHERIE_MATH.md) / unfinished-§§ handoff.  
+> Related-school digests below are cross-links, not Gore canon.
+
 **Lanes:** [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) · [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md)  
 **Developer entry:** [`KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md`](./KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md)  
 Processing: full-content review → classified teaching points → Toolbox crosswalk (empirical knowledge layer preferred over new calculators).
+
+**Legend for takeaways:** *Established* · *Promising* · *Blocked / unresolved for productization*
 
 ---
 
@@ -195,7 +201,7 @@ Do not ship max-\(Y\) optimization that ignores clearance or intonation.
 
 1. This summary  
 2. **Pack 5** objectives spine + **Pack 7** U04/U05 (mobility priority + side-mass why)  
-3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI (Nicoletti EGB 2022 supports **0.01–0.15 mm** class; Carrico sheet still owed)  
+3. **Pack 5 / Pack 3 gaps** — resolve **0.15 mm vs 27 mm** before mobility UI (**Blocked** until unit profile closes; see [`CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](./CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md). *Current best inference:* **0.01–0.15 mm** class; Carrico sheet still owed)  
 4. **Pack 8** for spreadsheet→app toolchain + \(k_\mathrm{eff}\)/\(m_\mathrm{eff}\)→4DOF intent (after calibration)  
 5. **Pack 6** when complete (setup SOPs)  
 6. **Pack 4** Shop Talk #25  

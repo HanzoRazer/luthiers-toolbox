@@ -77,4 +77,6 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 
 ## Standing physics blockers
 
-See orientation §4 and Gore summary “Known absence.” Lead item: **G-R01 / G-M09** mobility δ unit profile. Holmberg mobility citations (**HM31**) stay badge-blocked on the same gap (**G-HM04**).
+**Canonical mobility record:** [`CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](./CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01**; alias **G-M09**).  
+Also: orientation §4; Gore summary “Known absence.” Holmberg mobility citations (**HM31**) stay badge-blocked (**G-HM04** inherits G-R01).  
+**Review guide:** [`HOW_TO_REVIEW_THIS_CORPUS.md`](./HOW_TO_REVIEW_THIS_CORPUS.md)

@@ -3,7 +3,11 @@
 
 **Lane:** Instrument-building physics (primary) — math/equations for calculator port  
 **Source:** Gregory Holmberg documentation (CC BY-SA 4.0) implementing Gore/Gilet Design volume  
-**NO-CALC:** Not blueprints; measure wood; model fit≠predict; brace sheet experimental; mobility badges blocked on G-R01/G-M09
+**NO-CALC:** Not blueprints; measure wood; model fit≠predict; brace sheet experimental; mobility badges blocked on **G-R01** ([canonical blocker](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md))
+
+> **Role of this pack:** workbook-observed behavior and Gore-school wiring notes.  
+> **Reference only — not accepted as product spec** unless a claim is re-expressed in [`docs/LUTHERIE_MATH.md`](../../../LUTHERIE_MATH.md).  
+> Classification: prefer **GH** for workbook behavior; **TG** only when explicitly Gore-book grounded; **EP** for broad consensus / first principles.
 
 ---
 

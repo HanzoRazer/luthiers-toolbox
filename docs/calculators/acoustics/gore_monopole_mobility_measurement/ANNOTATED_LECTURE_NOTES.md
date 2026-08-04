@@ -92,16 +92,19 @@ Higher \(Y\) ⇒ more responsive instrument (**RO** / **TG** as presented).
 k = \frac{F}{\delta}
 \]
 
-Demo: deflection **27 mm** under 1 kg (as spoken).  
+Demo (as spoken on tip): deflection **27 mm** under 1 kg.
 
-**SI-safe computation (required for Toolbox):**
+> **SOURCE-SPOKEN ONLY — not a canonical physical benchmark.**  
+> Repo-wide blocker: [`../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / **G-M09**). Pack 5 ~0.15 mm and Nicoletti ~0.01–0.15 mm class contradict 27 mm for finished tops. Treat 27 mm as **transcription-dependent / ASR-risk**. The SI walkthrough below is only to show unit conversion on the *spoken* figure — **do not ship 27 mm as a lab default.**
+
+**SI-safe computation on the spoken figure (illustrative only):**
 
 \[
 \delta = 0.027\,\mathrm{m},\quad
 k = \frac{9.81\,\mathrm{N}}{0.027\,\mathrm{m}} \approx 363\,\mathrm{N/m}
 \]
 
-**Verbal hazard in the tip:** “\(k\) equals the force… 1 kilo… divided by the deflection… 27.” That phrasing invites dividing `1/27` or `9.81/27` **without converting mm→m**. Any implementation must **force millimetres → metres** (or use an explicit N/mm profile end-to-end).
+**Verbal hazard in the tip:** “\(k\) equals the force… 1 kilo… divided by the deflection… 27.” That phrasing invites dividing `1/27` or `9.81/27` **without converting mm→m**. Any implementation must **force millimetres → metres** (or use an explicit N/mm profile end-to-end) — and must not accept 27 mm as physical truth until **G-R01** closes.
 
 Measurement technique (**RO**):
 

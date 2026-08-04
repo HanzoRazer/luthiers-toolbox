@@ -167,9 +167,9 @@ Any builder who disputes it with measured data is correct to do so.**
 
 ## 3. Saddle Slant Angle
 
-**Source:** Derived from `instrument_geometry/bridge/geometry.py → compute_saddle_positions_mm()`.
-Gibson J-45 measured slant: ~4°. Taylor: varies by model.
-**Implementation:** Add `compute_saddle_slant_angle()` to `bridge/geometry.py` (GEOMETRY-004, not yet built).
+**Source:** Derived from saddle compensation geometry (Gibson J-45 measured slant ~4°; Taylor varies by model).
+**Implementation:** `calculators/acoustic_bridge_calc.py → compute_saddle_slant_angle()` (also used from bridge slot/crown helpers). Related: `instrument_geometry` saddle position helpers.
+**Confidence:** Project approximation (geometry from Δcomp / string spread).
 
 ### Formula
 
@@ -252,6 +252,7 @@ for new code.**
 Perimeter correction: empirical, calibrated in this project. Gore's modified formula.
 
 **Implementation:** `calculators/soundhole_calc.py → compute_port_neck_length()`
+**Confidence:** Exact-theory end correction + **empirical calibration** (project γ / perimeter fit — not universal).
 
 ### Formula
 
@@ -405,6 +406,7 @@ Classical guitars with thinner tops (2.0 mm) may have PMF closer to 0.90.
 Calibration factor derived in this project.
 
 **Implementation:** `calculators/soundhole_calc.py → volume_from_dimensions()`
+**Confidence:** Project approximation (geometric integral × **1.83** calibration on a small set — proxy until Appendix A §37–§38).
 
 ### Formula
 
@@ -561,6 +563,7 @@ needed to achieve the target with the side port present.
 used by Caldersmith, Gore, and in tap-tone practice universally.
 
 **Implementation:** `calculators/plate_design/thickness_calculator.py → plate_modal_frequency()`
+**Confidence:** Exact-theory core (Hearmon-class); \(\eta\) / free→box \(\gamma\) are project approximations.
 
 ### Formula
 
@@ -905,7 +908,8 @@ made of the same material as the top spruce) — which never occurs in practice.
 ## 21. Kerfing Geometry
 
 **Source:** Structural mechanics of thin-walled bending. GEOMETRY-003 in BACKLOG.md.
-**Implementation:** `calculators/kerfing_calc.py` (not yet built).
+**Implementation:** `calculators/kerfing_calc.py` → `compute_kerfing_dimensions()`, `compute_kerfing_schedule()` (**built**).
+**Confidence:** Project approximation / shop rules of thumb.
 
 ### Kerf slot geometry
 
@@ -1784,12 +1788,19 @@ const tier = suggestWoodTier(32, 12);
 
 ## Appendix B — Measurement corpora → canonical solvers (no parallel engines)
 
-**Rule:** External spreadsheets and vendor analyzers supply **measured inputs**. They do **not** become a second math stack. All equation productization routes through this document’s numbered sections and the **Implementation** paths already named above.
+| Status | Meaning |
+|--------|---------|
+| **Canonical routing policy** | **Final** for this repo — spreadsheet/vendor analyzers are inputs, not alternate product runtimes |
+| **Implementation coverage** | **Partial** — several §§/modules still unfinished |
+| **Unfinished inventory** | [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md) |
 
-**Knowledge-pack cousins (inputs / dialect only — not alternate engines):**
+**Rule:** External spreadsheets and vendor analyzers supply **measured inputs**. They must not ship as **independent product runtimes** beside this file. Legitimate future parity work re-expresses reference models **only** by extending numbered §§ here and the named modules. Do not mount Holmberg Sheets / TPC UI as a second calculator stack.
+
+**Knowledge-pack cousins (inputs / dialect only):**
 - MB Sound / Nicoletti TPC panel labs → `docs/calculators/acoustics/mb_sound_panel_laboratory_records/`
 - Holmberg Gore/Gilet Google Sheets / `.xlsx` → `docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/`
 - Lecture/shop packs → `docs/calculators/acoustics/` lane indexes
+- **Canonical mobility unit-profile blocker:** [`docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / alias **G-M09**)
 
 ### B.1 Universal wiring (MB Specimen Master → this file → code)
 
@@ -1830,7 +1841,7 @@ Holmberg workbooks are a **Gore-school wiring diagram** and test vectors. Map in
 | `fretboard` positions | §1 + `instrument_geometry/neck/fret_math.py` | **Use existing** |
 | `intonation` / `first`…`sixth` | §3 + `nut_compensation_physics.py` (enhance, don’t fork) | Extend existing compensation stack |
 | `model` + `freq_db` 4-DOF | §7 coupling culture; `coupled_2osc.py` / future closed-box FRF | **Do not** re-host Holmberg complex FRF table as product core |
-| `top_braces` / `back_braces` → \(K_t\)/\(K_b\) | §40 \(D(x,y)\); `brace_prescription.py` | Experimental Holmberg sizing ≠ new canon; extend §40 |
+| `top_braces` / `back_braces` → \(K_t\)/\(K_b\) | §40 \(D(x,y)\) **still missing** (`stiffness_field.py`); nearest helper today: `brace_prescription.py` (style→spec only) | Experimental Holmberg sizing ≠ §40 closure |
 | Wood Properties averages | Comparison UX only | Never override FPL/CIRAD attribution in `wood_species.json` |
 
 ### B.3 Open wiring gaps (record here — do not invent)

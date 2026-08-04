@@ -32,7 +32,7 @@
 | MB / TPC panel data + Holmberg Sheets | **Inputs / reference maps only** (Appendix B) |
 | Unfinished math | **This handoff** — missing §§ text, missing modules, product coupling |
 
-**DECISION — No parallel engines.** Do not port Holmberg `freq_db` / Google Sheets or a vendor TPC runtime as product core. Missing capability → add/extend a § in `LUTHERIE_MATH.md`, then implement beside the named module.
+**DECISION — No independent product runtimes.** Do not ship Holmberg Sheets / `freq_db` or a vendor TPC UI as a **parallel calculator stack**. Reference models may later be re-expressed for parity **only** through `LUTHERIE_MATH.md` ownership + named modules. Missing capability → add/extend a § there, then implement beside the named module.
 
 **ANNOTATION:** Book scans (Gore / Nicoletti) were scoped for the LLM layer. For engineering, extract equations **into** `LUTHERIE_MATH.md` §§. Lab values from instruments built this way calibrate and validate — they do not replace unfinished §§.
 
@@ -55,9 +55,7 @@ Call these; wire measured inputs into them.
 | Related | Brace prescription (not full \(D(x,y)\)) | `plate_design/brace_prescription.py` |
 | Related | 2-oscillator couple | `plate_design/coupled_2osc.py` (not Holmberg 4-DOF parity) |
 
-**STALE-DOC (§3):** Math file still says “add to `bridge/geometry.py` (GEOMETRY-004, not yet built).” Update the Implementation line to `acoustic_bridge_calc.py` — do not create a second slant API.
-
-**STALE-DOC (§21):** Math file still says `kerfing_calc.py` not yet built. File exists with `compute_kerfing_dimensions` / schedule helpers — sync the Implementation line.
+**DOC SYNC (§3 / §21):** Implementation lines updated to `acoustic_bridge_calc.py` and built `kerfing_calc.py` (2026-08-04 review remediation). Do not create a second slant API.
 
 ---
 
@@ -183,7 +181,7 @@ MB/TPC or shop tap row
 
 | Non-goal | Why |
 |----------|-----|
-| Re-host Holmberg Google Sheets / `freq_db` | Parallel engine forbidden (Appendix B) |
+| Ship Holmberg Sheets / `freq_db` as an independent product runtime | Forbidden (Appendix B); parity only via LUTHERIE_MATH §§ |
 | New “TPC calculator” bypassing `LUTHERIE_MATH` | Same |
 | Import MB averages into `wood_species.json` as FPL | Wood data policy |
 | Merge Gore / Nicoletti / Somogyi dialects into one UI without modes | Cohort governance |

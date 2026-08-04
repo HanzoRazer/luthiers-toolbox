@@ -2,7 +2,8 @@
 
 **Status:** Knowledge of absence — essential even when shop-floor granularity is not obtainable from the source video.  
 **Policy:** Do **not** invent missing detail. Track gaps here; close only from primary sources (Gore books, Carrico spreadsheet/jig docs, controlled re-measure, or explicit instructor clarification).  
-**Related recorded SOP:** [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) §7 (procedure-complete, tooling-light).
+**Related recorded SOP:** [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) (formula-complete / workflow-outline-complete; measurement-protocol incomplete).  
+**Canonical mobility blocker:** [`../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) — **G-R01** (primary) / **G-M09** (this pack’s alias).
 
 ---
 
@@ -37,7 +38,7 @@ IDs use `G-M##` (mobility gaps). Severity: **Blocker** (must resolve before calc
 
 | ID | Not recorded | Why it matters | Severity | How to close later |
 |----|--------------|----------------|----------|--------------------|
-| G-M09 | Whether 27 mm is typical, exceptional, or ASR-risk (vs 2.7 mm) | Order-of-magnitude \(k\) error | **Blocker** (softening) | **Strong counter-evidence:** Pack 5 ~**0.15 mm**; Nicoletti EGB 2022 N109 ~**0.01–0.02 mm** typical under ~1 kg (+ Taylor ~0.13–0.15). Treat **27 mm as ASR-risk**. Full close still needs Carrico sheet. See **G-R01**; `../nicoletti_egb_measuring_tuning_2022/` |
+| G-M09 | Whether 27 mm is typical, exceptional, or ASR-risk | Order-of-magnitude \(k\) error | **Blocker** (softening) | **Alias of canonical G-R01** — see [`../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md). Do not redefine here. |
 | G-M10 | Official rule for **load-on vs unload** averaging | Robbie mentions both; no rule for disagreement | **Medium** | Written Carrico SOP |
 | G-M11 | Rejection criteria (tilt, binding, uneven rim contact) | Bad \(\delta\) silently accepted | **Medium** | Lab checklist |
 | G-M12 | Sign / direction of deflection (into cup convention) | Spreadsheet sign assumptions | **Low** | Spreadsheet cell docs |

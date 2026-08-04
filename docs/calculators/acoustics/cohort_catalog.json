@@ -222,7 +222,6 @@
       "point_prefix": [
         "G",
         "M",
-        "N",
         "P",
         "R",
         "W"
@@ -299,7 +298,6 @@
         "M33",
         "M34",
         "M35",
-        "N109",
         "P01",
         "P02",
         "P04",
@@ -314,7 +312,7 @@
         "W05",
         "W08"
       ],
-      "point_count": 85,
+      "point_count": 84,
       "has_process_workflow": false,
       "missing_template_files": [],
       "search_keywords": [
@@ -929,7 +927,6 @@
       "point_prefix": [
         "G",
         "M",
-        "N",
         "P",
         "R",
         "S",
@@ -953,7 +950,6 @@
         "G-R13",
         "G-R14",
         "M09",
-        "N109",
         "P03",
         "P05",
         "R01",
@@ -989,7 +985,7 @@
         "W05",
         "W06"
       ],
-      "point_count": 51,
+      "point_count": 50,
       "has_process_workflow": false,
       "missing_template_files": [],
       "search_keywords": [
@@ -3219,7 +3215,7 @@
   ],
   "counts": {
     "packs": 25,
-    "points": 1129,
+    "points": 1127,
     "unfiled": 0,
     "template_incomplete": 0
   }

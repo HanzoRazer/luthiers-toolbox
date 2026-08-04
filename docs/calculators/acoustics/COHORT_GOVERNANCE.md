@@ -38,7 +38,7 @@ Do **not** skip steps. Do **not** commit a pack that fails the coverage gate.
 |------|--------|----------|
 | 1 | **Choose primary lane** by toolbox deliverable (physics meters/models/lab SOP vs shop dialect/process/intake). Dual-file only when both deliverables are real. | Lane index row |
 | 2 | **Create pack folder** under `docs/calculators/acoustics/<pack_id>/` | Directory exists |
-| 3 | **Ship five required files** (see §2). Optional sixth: `PROCESS_WORKFLOW.md` for multi-stage shop builds. | Completeness = complete |
+| 3 | **Ship five required files** (see §2). `PROCESS_WORKFLOW.md` is **optional in the general template** and **conditionally required** when the pack is a full build / multi-stage process. | Completeness = complete |
 | 4 | **Annotate densely** — every durable claim gets a stable `PREFIX##` point ID + short title in the annotated notes | Point count > 0 |
 | 5 | **Crosswalk every point** (or explicit NO-CALC / gap) in `CROSSWALK_TOOLBOX.md` | Crosswalk present |
 | 6 | **Record gaps** in `GAPS_NOT_RECORDED.md` (never invent missing numbers) | Gaps file present |
@@ -61,7 +61,7 @@ Do **not** skip steps. Do **not** commit a pack that fails the coverage gate.
 | `ANNOTATED_*_NOTES.md` | Dense point list (`ID — title` then body) | Prefer `## ID — Title` headings; every claim that could affect a calculator gets an ID |
 | `CROSSWALK_TOOLBOX.md` | Point → toolbox surface + **NO-CALC** | Explicit reject rules for unsafe productization |
 | `GAPS_NOT_RECORDED.md` | Missing numbers / stills / unit profiles | Gap IDs (`G-*`) when they block meters |
-| `PROCESS_WORKFLOW.md` (optional) | Ordered stage spine for shop builds | Required when pack is a full build / multi-stage process |
+| `PROCESS_WORKFLOW.md` | Ordered stage spine for shop / multi-stage builds | **Optional** in general; **mandatory** for full-build / multi-stage process packs |
 
 **Annotation density target:** enough points that a developer can search the catalog by keyword and land on a specific claim — not a 3-bullet “summary” of a 2-hour talk.
 
@@ -110,22 +110,31 @@ Orientation §0 must remain the single entry map. New high-value packs get a row
 
 ---
 
-## 4. Coverage gate (CI-local / pre-push)
+## 4. Durable musts vs current enforcement
+
+**Durable knowledge-governance musts** (keep even if tooling changes):
+
+1. Every cohort is **lane-filed** (physics and/or shop).  
+2. Every cohort is **annotated** with searchable point IDs.  
+3. Every durable claim is **crosswalked** or explicitly NO-CALC.  
+4. Missing numbers are **gapped** (`G-*`), never invented.  
+5. Cohorts are **indexed** so they do not drop to the sandbox floor.
+
+**Current repo enforcement mechanisms** (implementation of the musts — may evolve):
 
 ```bash
-python scripts/knowledge_packs/check_cohort_coverage.py
+python scripts/knowledge_packs/build_cohort_catalog.py   # → cohort_catalog.json + POINT_SEARCH_INDEX.md
+python scripts/knowledge_packs/check_cohort_coverage.py  # fails on unfiled / incomplete / zero points / CBSP21 omissions
 ```
 
-Fails if any of:
-1. Catalog rebuild fails
-2. Any pack is **unfiled** (not in physics or shop index)
-3. Any pack is **incomplete** (missing one of the five required files)
-4. Any pack has **zero annotated points** (empty annotation)
-5. CBSP21 patch file does not list every pack file path present on disk for registered packs
+Coverage gate fails if any of:
+1. Catalog rebuild fails  
+2. Any pack is **unfiled**  
+3. Any pack is **incomplete** (missing one of the five required files)  
+4. Any pack has **zero annotated points**  
+5. CBSP21 patch file does not list every pack file path for registered packs  
 
 Pass criteria printed as `COHORT COVERAGE: PASS`.
-
-Wire this into agent intake and before PR updates on the knowledge-layer branch.
 
 ---
 
@@ -148,7 +157,7 @@ Dual-file when both are real (e.g. Jacob I-beam physics + applied X; Garrett Lee
 
 These prevent false productization while packs stay searchable:
 
-- **G-R01 / G-M09** — mobility δ unit profile unlocked before any mobility badge
+- **G-R01** (alias **G-M09**) — mobility δ unit profile unlocked before any mobility badge; canonical record: [`CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](./CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md)
 - **No invented on-screen numbers** — e.g. Garrett Lee deflection targets → **G-GL01** until still/OCR
 - **No species→tone defaults** from shop folklore packs
 - **No global thickness defaults** from one builder’s map
@@ -158,7 +167,9 @@ Searchability includes gaps: a missing number must be findable as a gap ID, not 
 
 ---
 
-## 7. CBSP21 retention
+## 7. Repository workflow compliance (CBSP21) — not conceptual governance
+
+This section is **repo-local PR/process retention**, not a universal property of the knowledge model.
 
 Patch: `.cbsp21/patches/gore-lecture-series-packs-1-5.json`
 

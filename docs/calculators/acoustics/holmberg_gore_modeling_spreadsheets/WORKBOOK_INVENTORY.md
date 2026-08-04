@@ -54,6 +54,9 @@ Examples: `l_body`, `w_lower`, `V_cs`, `t_tp`, `f_air`/`f_top`/`f_back`, `Kt_act
 
 ## 2. Preset summary scalars (from `summary` + named cells)
 
+> **WARNING — workbook-observed preset values only.**  
+> These are **not** Toolbox defaults, **not** validated build targets, and **not** cut lists. Author warning (HM02): measure *your* wood. Do not copy triad / MM / hole / \(K_t\)/\(K_b\) / compensation rows into product defaults.
+
 | Field | Classical CF | Classical noCF | Medium SS noCF | Medium SS CF | OM SS X noCF V3 |
 |-------|-------------:|---------------:|---------------:|-------------:|----------------:|
 | Name | Neo-classical flat-top | Neo-classical flat-top | Medium SS flat-top | Medium SS flat-top | OM SS flat-top |
@@ -200,7 +203,7 @@ Note: noCF nylon needs **larger** Δn/Δs than CF nylon for similar error — st
 2. Mobility display unit in presets is **s/kg × 10⁻³** — record for unit-profile work; still badge-blocked.  
 3. Classical nylon compensation looks “solved”; Medium SS CF compensation exceeds author’s own steel band — do not ship those Δn/Δs as golden.  
 4. Wood Properties is a **role-sorted species workbook**, not a substitute for per-billet measurement.  
-5. OM X-braced starter still missing from this file set.
+5. OM X-braced starter (**OM_SS_Xbrace_noCF_V3**) is inventoried above (HM47) — five-guitar Get-started set **complete**.
 
 ---
 

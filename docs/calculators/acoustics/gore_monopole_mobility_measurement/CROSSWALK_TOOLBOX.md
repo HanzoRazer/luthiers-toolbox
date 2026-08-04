@@ -34,7 +34,7 @@ Display thresholds **only** when profile ≠ `si_raw` or after explicit calibrat
 
 ## C. Calibration task before shipping thresholds
 
-1. Reproduce Carrico spreadsheet with demo-like inputs (1 kg, 27 mm, 180.7 Hz).  
+1. Reproduce Carrico spreadsheet with **documented** inputs/units (do **not** treat tip-spoken 27 mm as physical truth — see [`../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md)).  
 2. Confirm whether output matches ~31.3.  
 3. Freeze `unit_profile: carrico_gore_v1` constants.  
 4. Publish SI alongside score.  

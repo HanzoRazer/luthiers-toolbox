@@ -2,7 +2,8 @@
 
 **Source pack:** this folder · **Lane:** physics  
 **Author:** Gregory Holmberg implementing Gore/Gilet  
-**Rule:** Measure *your* wood. Presets are examples. Brace sheet experimental.
+**Role:** Describes the **Holmberg workbook process spine** — not the project’s sole approved build workflow and not product acceptance criteria. Canonical math ownership: [`docs/LUTHERIE_MATH.md`](../../../LUTHERIE_MATH.md) Appendix B.  
+**Rule:** Measure *your* wood. Presets are examples. Brace sheet experimental. Target-accuracy norms in the sheets (e.g. ~1 Hz) are **workbook culture**, not Toolbox ship gates.
 
 ---
 

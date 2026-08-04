@@ -18,6 +18,8 @@
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/gore-lecture-series-packs-1-5.json",
+      "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md",
+      "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md",
       "docs/calculators/acoustics/COHORT_GOVERNANCE.md",
       "docs/calculators/acoustics/GORE_LECTURE_SERIES_SUMMARY.md",
       "docs/calculators/acoustics/KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md",
@@ -181,6 +183,30 @@
       "intent": "CBSP21 per-PR manifest covering all knowledge-pack files in this PR",
       "scan_targets": [
         ".cbsp21/patches/gore-lecture-series-packs-1-5.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md",
+      "intent": "Canonical G-R01 mobility unit/deflection blocker",
+      "scan_targets": [
+        "docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md",
+      "intent": "How to review acoustics knowledge corpus (roles + order)",
+      "scan_targets": [
+        "docs/calculators/acoustics/HOW_TO_REVIEW_THIS_CORPUS.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",

@@ -212,6 +212,10 @@ def write_search_index(catalog: dict) -> None:
     packs = catalog["packs"]
     lines = [
         "# Knowledge pack point search index\n",
+        "> **MACHINE-GENERATED / NON-CURATED.** Do not hand-edit. "
+        "Broad or noisy prefix/keyword associations are expected. "
+        "Not a human taxonomy or source of record — use pack `ANNOTATED_*.md` "
+        "and gap registers for decisions.\n\n",
         "**Generated from** [`cohort_catalog.json`](./cohort_catalog.json) · "
         "regenerate via `python scripts/knowledge_packs/build_cohort_catalog.py`\n",
         "**Governance:** [`COHORT_GOVERNANCE.md`](./COHORT_GOVERNANCE.md)\n",

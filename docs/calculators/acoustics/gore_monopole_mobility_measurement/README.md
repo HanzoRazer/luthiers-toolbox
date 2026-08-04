@@ -14,7 +14,7 @@
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Fills Pack 1 critical gap C1 (mobility) |
 | [`SOURCE_TRANSCRIPT.md`](./SOURCE_TRANSCRIPT.md) | Cleaned working transcript |
 
-**Recording fidelity:** procedure-complete, tooling-light. See gaps register before implementing calculators or threshold UI.
+**Recording fidelity:** **formula-complete / workflow-outline-complete; measurement-protocol incomplete.** See gaps register + [`../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](../CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / **G-M09**) before any calculator or threshold UI.
 
 ## Classification legend
 

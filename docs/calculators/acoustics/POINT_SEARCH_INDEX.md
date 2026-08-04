@@ -1,4 +1,6 @@
 # Knowledge pack point search index
+> **MACHINE-GENERATED / NON-CURATED.** Do not hand-edit. Broad or noisy prefix/keyword associations are expected. Not a human taxonomy or source of record — use pack `ANNOTATED_*.md` and gap registers for decisions.
+
 **Generated from** [`cohort_catalog.json`](./cohort_catalog.json) · regenerate via `python scripts/knowledge_packs/build_cohort_catalog.py`
 **Governance:** [`COHORT_GOVERNANCE.md`](./COHORT_GOVERNANCE.md)
 
@@ -12,11 +14,11 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 ### `G` — Gap IDs (G-R01, G-GL01, …) — see pack GAPS file
 - [`garrett_lee_soundboard_deflection_ep13`](./garrett_lee_soundboard_deflection_ep13/) (33): G-GL01, G-GL02, G-GL03, G-GL04, G-GL05, GL01, GL02, GL03 … +25
 - [`gore_guitar_analysis_testing`](./gore_guitar_analysis_testing/) (27): G-R01, G-T01, G-T02, G-T03, G-T04, G-T05, G-T06, G-T07 … +19
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
+- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (84): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +76
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (67): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +59
 - [`jacob_ibeam_bracing_physics`](./jacob_ibeam_bracing_physics/) (37): ES02, G-IB01, G-IB02, G-IB03, G-IB04, G-IB05, IB01, IB02 … +29
 - [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (39): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +31
@@ -39,18 +41,16 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`shop_schaefer_compensated_saddle`](./shop_schaefer_compensated_saddle/) (46): G-SC01, G-SC02, G-SC03, G-SC04, G-SC05, G-SC06, G-SC07, H09 … +38
 
 ### `M` — Gore monopole mobility
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
+- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (84): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +76
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (67): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +59
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
 - [`physics_mind_steel_string_lecture`](./physics_mind_steel_string_lecture/) (62): ES01, ES02, ES03, ES05, ES06, ES10, ES11, ES12 … +54
 
 ### `N` — Nicoletti family
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
 - [`mb_sound_panel_laboratory_records`](./mb_sound_panel_laboratory_records/) (39): G-MB01, G-MB02, G-MB03, G-MB04, G-MB05, G-MB06, G-MB07, G-MB08 … +31
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
@@ -61,20 +61,20 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 
 ### `P` — Gore Shop Talk #20
 - [`gore_guitar_analysis_testing`](./gore_guitar_analysis_testing/) (27): G-R01, G-T01, G-T02, G-T03, G-T04, G-T05, G-T06, G-T07 … +19
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
+- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (84): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +76
 - [`gore_shop_talk_20`](./gore_shop_talk_20/) (48): H01, H02, H03, H04, H05, H06, H07, H08 … +40
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`gore_wolf_notes_mailbag`](./gore_wolf_notes_mailbag/) (14): P02, P03, P05, P11, P33, W01, W02, W03 … +6
 - [`shop_schaefer_compensated_saddle`](./shop_schaefer_compensated_saddle/) (46): G-SC01, G-SC02, G-SC03, G-SC04, G-SC05, G-SC06, G-SC07, H09 … +38
 
 ### `R` — Gore responsive objectives
 - [`gore_guitar_analysis_testing`](./gore_guitar_analysis_testing/) (27): G-R01, G-T01, G-T02, G-T03, G-T04, G-T05, G-T06, G-T07 … +19
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
+- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (84): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +76
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`holmberg_gore_modeling_spreadsheets`](./holmberg_gore_modeling_spreadsheets/) (67): G-HM01, G-HM02, G-HM03, G-HM04, G-HM05, G-HM06, G-HM07, G-HM08 … +59
 - [`nicoletti_egb_measuring_tuning_2022`](./nicoletti_egb_measuring_tuning_2022/) (57): G-M09, G-N01, G-N02, G-N10, G-N17, G-N24, G-N25, G-N26 … +49
 - [`nicoletti_mb_kit_interview`](./nicoletti_mb_kit_interview/) (52): ES03, ES08, G-N01, G-N02, G-N03, G-N04, G-N08, G-N10 … +44
@@ -86,7 +86,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`somogyi_apprentice_build_workflow`](./somogyi_apprentice_build_workflow/) (38): G-Y01, G-Y02, G-Y03, G-Y04, G-Y05, G-Y06, G-Y07, G-Y08 … +30
 
 ### `T` — Gore Guitar Analysis (partial) / theory refs
@@ -94,7 +94,7 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_44`](./gore_shop_talk_44/) (39): G-U01, G-U02, G-U03, G-U04, G-U05, G-U06, G-U07, G-U08 … +31
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`nicoletti_mb_sound_acoustic_study_set`](./nicoletti_mb_sound_acoustic_study_set/) (38): ES27, G-M09, G-N01, G-N02, G-N03, G-N04, G-N05, G-N06 … +30
 
 ### `U` — Gore Shop Talk #44
@@ -104,10 +104,10 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 
 ### `W` — Gore wolf mailbag
 - [`gore_guitar_analysis_testing`](./gore_guitar_analysis_testing/) (27): G-R01, G-T01, G-T02, G-T03, G-T04, G-T05, G-T06, G-T07 … +19
-- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (85): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +77
+- [`gore_monopole_mobility_measurement`](./gore_monopole_mobility_measurement/) (84): G-M01, G-M02, G-M03, G-M04, G-M05, G-M06, G-M07, G-M08 … +76
 - [`gore_shop_talk_25`](./gore_shop_talk_25/) (54): G-S01, G-S02, G-S03, G-S04, G-S05, G-S06, G-S07, G-S08 … +46
 - [`gore_shop_talk_51_luther_academy_apps`](./gore_shop_talk_51_luther_academy_apps/) (58): A01, A02, A03, A04, A05, A06, A07, A08 … +50
-- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (51): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +43
+- [`gore_shop_talk_responsive_objectives`](./gore_shop_talk_responsive_objectives/) (50): G-M09, G-R01, G-R02, G-R03, G-R04, G-R05, G-R06, G-R07 … +42
 - [`gore_wolf_notes_mailbag`](./gore_wolf_notes_mailbag/) (14): P02, P03, P05, P11, P33, W01, W02, W03 … +6
 
 ### `Y` — Somogyi apprentice
@@ -165,12 +165,12 @@ Use this file (or ripgrep over `docs/calculators/acoustics/**/ANNOTATED_*.md`) t
 |------|------|--------|--------|------------|-------------------|
 | [garrett_lee_soundboard_deflection_ep13](./garrett_lee_soundboard_deflection_ep13/) | physics+shop | 33 | G, GL | yes | behavior, bracing, bridge, cedar, context, cube, deflection, doctrine |
 | [gore_guitar_analysis_testing](./gore_guitar_analysis_testing/) | physics | 27 | G, P, R, T, W |  | analysis, analyzer, announced, architecture, awaiting, books, bridge, catalog |
-| [gore_monopole_mobility_measurement](./gore_monopole_mobility_measurement/) | physics | 85 | G, M, N, P, R, W |  | architecture, assemble, bridge, brien, canonical, capture, catalog, common |
+| [gore_monopole_mobility_measurement](./gore_monopole_mobility_measurement/) | physics | 84 | G, M, P, R, W |  | architecture, assemble, bridge, brien, canonical, capture, catalog, common |
 | [gore_shop_talk_20](./gore_shop_talk_20/) | physics | 48 | H, P |  | acoustic, acoustics, across, admittance, after, aging, analogy, analysis |
 | [gore_shop_talk_25](./gore_shop_talk_25/) | physics | 54 | G, M, P, S, T, W |  | after, against, aiming, anecdote, architecture, armrest, back-only, bevel |
 | [gore_shop_talk_44](./gore_shop_talk_44/) | physics | 39 | G, R, S, T, U |  | active, architecture, archtop, asymmetry, baritone, better, brace, braced-plate |
 | [gore_shop_talk_51_luther_academy_apps](./gore_shop_talk_51_luther_academy_apps/) | physics | 58 | A, G, M, P, R, S, T, U, W |  | academy, altitude, analysis, apps, architecture, audience, autofill, backgrounds |
-| [gore_shop_talk_responsive_objectives](./gore_shop_talk_responsive_objectives/) | physics | 51 | G, M, N, P, R, S, T, W |  | acoustic, against, altitude, architecture, avoidance, braces, bracing, brassy |
+| [gore_shop_talk_responsive_objectives](./gore_shop_talk_responsive_objectives/) | physics | 50 | G, M, P, R, S, T, W |  | acoustic, against, altitude, architecture, avoidance, braces, bracing, brassy |
 | [gore_wolf_notes_mailbag](./gore_wolf_notes_mailbag/) | physics | 14 | P, W |  | anomaly, architecture, bridge, catalog, class, clearance, close, closed-box |
 | [holmberg_gore_modeling_spreadsheets](./holmberg_gore_modeling_spreadsheets/) | physics | 67 | G, HM, M, R | yes | achievable, across, action, added, affect, after, air-stiffness, attribution |
 | [jacob_ibeam_bracing_physics](./jacob_ibeam_bracing_physics/) | physics+shop | 37 | ES, G, IB, PM, SB, TB |  | acrylic, against, almost, applied, asymmetry, balsa-core, blanks, brace |

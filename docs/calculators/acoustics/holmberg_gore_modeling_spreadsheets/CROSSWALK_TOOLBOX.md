@@ -15,7 +15,7 @@
 | HM26–HM33 | 4-DOF FRF/SPL | §7 culture; evolve `coupled_2osc.py` / lab FRF — **not** `freq_db` re-host | Gore Packs 1–5 |
 | HM31 | Exceptional Y | Blocked on **G-R01/G-M09** | Pack 3/5 mobility |
 | HM32 | Full monopole mobility | Research flag only | — |
-| HM34–HM40 | Brace → \(K_t\)/\(K_b\) | §40 → `brace_prescription.py` (Holmberg sizing = experimental reference) | Jacob IB |
+| HM34–HM40 | Brace → \(K_t\)/\(K_b\) | §40 \(D(x,y)\) **still open** (`stiffness_field.py` missing). Nearest helper: `brace_prescription.py` (style→spec only — **does not close §40**). Holmberg sizing = experimental reference | Jacob IB |
 | HM41–HM42 | Ecosystem / CAD | Architecture only | Nicoletti tools |
 | HM49 | Tab evaluation | Documents sheet spine for Appendix B.2 map | — |
 
