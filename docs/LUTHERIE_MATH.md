@@ -1800,7 +1800,7 @@ const tier = suggestWoodTier(32, 12);
 - MB Sound / Nicoletti TPC panel labs → `docs/calculators/acoustics/mb_sound_panel_laboratory_records/`
 - Holmberg Gore/Gilet Google Sheets / `.xlsx` → `docs/calculators/acoustics/holmberg_gore_modeling_spreadsheets/`
 - Lecture/shop packs → `docs/calculators/acoustics/` lane indexes
-- **Canonical mobility unit-profile blocker:** [`docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / alias **G-M09**)
+- **Canonical mobility unit-profile blocker:** [`docs/calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md`](calculators/acoustics/CANONICAL_BLOCKER_MOBILITY_UNIT_PROFILE.md) (**G-R01** / alias **G-M09**) — close path: [`docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md)
 
 ### B.1 Universal wiring (MB Specimen Master → this file → code)
 
