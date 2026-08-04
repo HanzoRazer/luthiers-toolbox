@@ -31,6 +31,7 @@ These carry both lanes; primary filing is noted in each README.
 | Somogyi 01–02 | Physics (doctrine) | Shop (tap / brace stew culture) |
 | Nicoletti Science / Luthier Stories | Physics | Shop (ETS/TPC tooling narrative) |
 | Howman Physics Mind | Physics | Shop anecdotes (kerfing, scallop myth, posture) |
+| Jacob I-beam X application | Physics [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) | Shop dual-file: I-beam X, scallops, laminated center (IB15–IB18) |
 
 ## Shop NO-CALC (standing)
 

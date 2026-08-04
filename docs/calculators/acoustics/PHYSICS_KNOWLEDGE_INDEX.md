@@ -44,6 +44,12 @@ Energy budget, radiation paths, modes (monopole / dipoles / air), stiffness–ma
 | Somogyi 01 — Air pump / bracing / tap | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | ES01–ES15 — efficiency doctrine |
 | Somogyi 02 — Top & Back | [`somogyi_02_top_and_back/`](./somogyi_02_top_and_back/) | ES16–ES28 — coupled-box doctrine |
 
+### Brace-beam mechanics
+
+| Pack | Path | Notes |
+|------|------|-------|
+| Jacob / Kanaka — I-beam bracing | [`jacob_ibeam_bracing_physics/`](./jacob_ibeam_bracing_physics/) | IB01–IB24 — cube/height, I-beam demos, steel X application (shop dual-file) |
+
 ## Standing physics blockers
 
 See orientation §4 and Gore summary “Known absence.” Lead item: **G-R01 / G-M09** mobility δ unit profile.

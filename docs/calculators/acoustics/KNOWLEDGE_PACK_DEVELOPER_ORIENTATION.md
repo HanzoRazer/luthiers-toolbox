@@ -47,6 +47,7 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **MB** | Maderas Barber kit / presentation |
 | **MW** | Michael Watts framing |
 | **DH** | Dominic Howman method |
+| **JK** | Jacob / Kanaka method |
 | **SH** | Shop / builder practice (non-school-specific shop lane) |
 | **OH** | Open hypothesis / taste |
 
@@ -79,6 +80,7 @@ transcript paste
 | ES | Somogyi primary (01–02) | Physics (doctrine) |
 | N | Nicoletti family (continues across his packs) | Mixed — see pack README |
 | PM | Howman *Physics Mind* steel-string seminar | Physics |
+| IB | Jacob/Kanaka I-beam bracing physics | Physics (shop dual) |
 | SB | Shop soundboard species & voicing | Shop |
 | TB | Shop top bracing history / H-brace journal | Shop |
 | G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, `G-TB##`, …) | — |
@@ -91,7 +93,7 @@ Canonical catalogs live in the **lane indexes** (§0). Short map:
 
 | Lane | Where to look |
 |------|----------------|
-| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, Somogyi doctrine |
+| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, I-beam brace physics (IB), Somogyi doctrine |
 | Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard (SB), top bracing journal (TB), Somogyi apprentice, MB kit how-to/interview |
 | Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
