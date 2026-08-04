@@ -82,3 +82,19 @@ entry. The frontend finding is queued as **BR-044**.
 - BR-044 **should be completed before frontend material rankings are consumed by the centralized
   generator system**, for the same reason BR-043 should precede recommendation-quality evaluation:
   a degenerate rating that marks every wood "Excellent" carries no signal for a downstream consumer.
+
+**BR-043 → BR-045** (ordering, not blocking). BR-045 is the `specific_moe` cross-surface scale split,
+promoted out of BR-043's secondary-index adjudication. BR-043 is **RESOLVED** (merged `a34b6f5d`);
+BR-045 is blocked on an **owner ruling**, not on engineering.
+
+**BR-044 and BR-045 are siblings, not duplicates** — different metrics (radiation ratio vs specific
+MOE), different failure modes (rating collapse vs latent inconsistency), and BR-045 spans both backend
+and client while BR-044 is client-local. Neither blocks the other; they may be scoped together only if
+an owner rules on a **unit profile for derived acoustic indices as a class**, which would settle both.
+
+**Shared root cause — worth recording once.** BR-043, BR-044 and BR-045 are three instances of the same
+failure mode: a derived acoustic index whose unit is documented in prose, implemented independently per
+surface, and compared against constants written by a third author. Fixing them one at a time works but
+does not stop the fourth. The durable fix is a declared unit profile per index, asserted on every
+surface that publishes it. That is a candidate Dev Order in its own right and should precede any
+centralized generator system consuming material indices.

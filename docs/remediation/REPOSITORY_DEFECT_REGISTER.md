@@ -365,11 +365,21 @@ authorized for bounded remediation.
 - **Dependencies:** none. **Independent of PR #244** — the MB Sound corpus corroborates the target scale
   (vendor SRC medians 12.28–14.00, all on the unscaled `c/rho` scale) but is evidence only, and must not
   be imported or hard-coded by this repair.
-- **Readiness:** **IMPLEMENTED — AWAITING MERGE.** Executed under the BR-043 Dev Order on branch
-  `fix/br-043-tonewood-radiation-ratio-scale`, based on `ada33581`. Verification at implementation:
-  19 BR-043 tests pass; 126 pass across `tests/materials` + material/ai/business endpoint smoke, 0 fail;
-  CBSP21 patch-input gate PASS and coverage gate PASS at 100%; governance `--tier ci` OK with all
-  blocking checks green. **Resolved only after merged-`main` re-verification**, per the Dev Order.
+- **Readiness:** **RESOLVED — verified on merged `main`.** Merged as **PR #245** → `a34b6f5d`
+  (squashed), CI fully green on the final head: 44 pass / 1 skipping / 0 fail, including `api-verify`
+  twice, `build-and-test` twice, Containers, and both Railway previews. Post-merge witness taken
+  directly on `a34b6f5d`:
+
+  | Check on `a34b6f5d` | Result |
+  |---|---|
+  | Producer expression | `schemas.py:165` — `return round(c / self.density_kg_m3, 2)` |
+  | Stale UI label | `InstrumentMaterialSelector.vue:95` — now `Schelleng c/ρ, m⁴/(kg·s)` |
+  | Runtime value (Basswood ρ 415, E 10.07) | `radiation_ratio = 11.87` |
+  | **Runtime scoring** | **`_score_acoustic(soundboard) = 0.9924`** — was `0.0` for every species |
+
+  The last row is the defect's death certificate: the acoustic term is live on `main`.
+  The sole surviving `1e6` in `schemas.py` is `specific_moe`, which is deliberate — tracked as
+  **BR-045**.
 - **Related but out of scope — recorded, not fixed here:**
   1. `TonewoodEntry.specific_moe` — **ruling: `UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`.**
      See the dimensional adjudication below.
@@ -388,7 +398,7 @@ unit is already governed. It is not. Ruling and evidence:
 | Index | Ruling | Basis |
 |---|---|---|
 | `radiation_ratio` | **REPAIRED** (this order) | producer contradicted its own docstring *and* a live consumer contract (`_ROLE_TARGETS`) |
-| `specific_moe` | **`UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`** | contradiction confirmed; correct target scale is not determinable from the repository |
+| `specific_moe` | **`UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`** → promoted to **BR-045** | contradiction confirmed; correct target scale is not determinable from the repository |
 | `ashby_index` | not implicated | docstring states `E^(1/3)/ρ` without fixing E's unit, so the `MPa` basis in code contradicts nothing. No consumer thresholds. Unverified, not defective |
 | `acoustic_impedance_mrayl` | **CORRECT AS IMPLEMENTED** | `ρ·c × 1e-6` is the definition of MRayl (1 MRayl = 10⁶ rayl). Basswood → 2.04 MRayl, physically right |
 
@@ -419,6 +429,7 @@ not a correctness proof.
 **Recommended action when scoped:** align on `c²/10⁶` — the value the docstring already claims and the
 frontend already produces — by changing the coded factor `1e6` → `1e3`. Requires an owner ruling on the
 published unit, plus a check for external consumers of the current value. **Not authorized by BR-043.**
+**Promoted out of this footnote to its own queue entry — see BR-045 below.**
 
 ### BR-044 · Frontend radiation-ratio scaling makes tonewood ratings degenerate
 
@@ -467,3 +478,59 @@ published unit, plus a check for external consumers of the current value. **Not 
   the other four — backend `schemas.py`, `tap_tone_pi/bending/gore_spreadsheet.py:578`,
   `tap_tone_pi/bending/qa_lab_spec.py:477`, and the MB Sound corpus formula — all agree on the
   unscaled SI scale. This frontend path is the sole outlier, and it disagrees with itself.
+
+### BR-045 · `specific_moe` carries two incompatible scales across backend and frontend
+
+- **Subsystem:** materials intelligence (backend derived index) + client wood-intelligence
+- **Location:** `services/api/app/materials/schemas.py` — `TonewoodEntry.specific_moe`;
+  `packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts:78-80`
+  (`calcSpecificMoe`) and `:159` (`computeIndices`).
+- **Reproduction basis:** dimensional analysis plus direct read, on `a34b6f5d`.
+- **Origin:** surfaced as the deferred secondary-index finding of BR-043 and ruled
+  `UNRESOLVED — AUTHORITY OR UNIT DEFINITION REQUIRED`. Promoted here so it is a queue entry with an
+  ID rather than a footnote inside a resolved defect.
+
+**The arithmetic** (American Basswood ρ = 415, E = 10.07 GPa, c = 4926 m/s):
+
+```text
+backend coded:     (E_GPa / rho) * 1e6   =  24265.0602
+                   == c^2 / 1e3           (since E_GPa = E_Pa / 1e9)
+backend docstring: "Same as c^2/10^6"    =     24.2651
+frontend:          (E_Pa / rho) / 1e6    =     24.265
+ratio backend : (docstring, frontend)    =       1000.0
+```
+
+- **Two separable claims.** The docstring is **provably false** about the code it documents — that is
+  `CONFIRMED`. Which side should move is **not** determinable from the repository, and the repo votes
+  against itself: the frontend independently produces the docstring's value, so backend code stands
+  alone against backend docs *and* the client.
+- **Why this is not simply BR-043 again.** `radiation_ratio` violated a contract the repository
+  *states* — `_ROLE_TARGETS` are declared numeric targets, so "correct" was derivable without an owner,
+  and the mismatch collapsed `_score_acoustic` to `0.0`. `specific_moe` has **no consumer contract to
+  violate**: `scorer.py:178` passes it into `MaterialCompareResult` and **nothing thresholds, sorts or
+  scores on it**. There is no live functional failure — this is latent cross-surface inconsistency.
+- **Severity:** medium. No scoring collapse, no machine output, no data loss. The risk is that the
+  `/api/system/materials/compare` response and the client stiffness panel publish the same metric name
+  at scales differing by 1000×, and that a future consumer binds to one of them.
+- **Blast radius today:** `compare_species` (pass-through), `useTonewoods.ts:67` (type only,
+  pass-through), `router.py:89` (documents `specific_moe (E/ρ)` — names the quantity, **fixes no
+  scale**, so it does not protect a consumer from the ambiguity).
+- **Readiness:** **QUEUED — NOT AUTHORIZED.** Blocked on an owner ruling.
+- **Required before implementation:**
+  1. **Owner ruling on the published unit** — this is the blocking item, not a code question;
+  2. a consumer inventory for `specific_moe` / `specificMoe` across backend and client, including any
+     report export or notebook outside the repo;
+  3. a test pinning the chosen scale on both surfaces at once, so they cannot drift apart again;
+  4. an API-contract note if the backend value moves, since — exactly as with BR-043 — this would be a
+     **semantic change with no schema change**.
+- **Recommended direction (not authorized):** align on `c²/10⁶` by changing the coded factor
+  `1e6` → `1e3`. That is the value the docstring already claims *and* the frontend already produces,
+  so it moves one site rather than two.
+- **Relationship to BR-044:** sibling, not duplicate. BR-044 is the frontend *radiation-ratio* scale
+  and rating collapse; BR-045 is the *specific-MOE* cross-surface split. Both are downstream of the
+  same root cause — derived acoustic indices published without a governed unit profile — and both
+  should be settled before frontend material rankings are consumed by the centralized generator system.
+- **Standing lesson:** BR-043, BR-044 and BR-045 are three instances of one failure mode. A derived
+  index whose unit is documented in prose, implemented independently per surface, and compared against
+  constants written by a third author will drift. The durable fix is a declared unit profile per index,
+  asserted on every surface that publishes it — not three separate scale repairs.

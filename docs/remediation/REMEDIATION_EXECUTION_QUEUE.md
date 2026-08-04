@@ -30,7 +30,8 @@ Not code fixes — the gates that must clear before/around execution.
 | 4 | BR-033 — `app.openapi()` build failure / `validate` field shadow | CONFIRMED_DEFECT | small (rename field) — confirm on CI stack |
 | 5 | BR-003 — simulation metrics router/schema mismatch (8 xfails) | CONFIRMED_DEFECT | small–medium |
 | 6 | BR-013 — wire RMOS workflow `approve` route | UNFINISHED_SPRINT_WORK | small |
-| 7 | **BR-043** — tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | CONFIRMED_DEFECT | **IMPLEMENTED — AWAITING MERGE** on `fix/br-043-tonewood-radiation-ratio-scale`. Producer repaired, 19 tests added, CBSP21 100%. Did not displace ranks 1–6 |
+| 7 | **BR-043** — tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | ~~CONFIRMED_DEFECT~~ **RESOLVED** | ✅ **DONE** — merged **PR #245** → `a34b6f5d`, CI 44 pass / 0 fail. Post-merge witness: `_score_acoustic(soundboard)` = **0.9924**, was `0.0` for every species. Producer repaired, stale UI label corrected, 19 tests added, CBSP21 100%. Did not displace ranks 1–6. Spawned **BR-044** and **BR-045** |
+| 8 | **BR-045** — `specific_moe` publishes two scales 1000× apart across backend and client | OWNER_DECISION_REQUIRED | **QUEUED — NOT AUTHORIZED.** Blocked on an owner ruling on the published unit, not on engineering. Small once ruled (`1e6`→`1e3` at one site) plus a test pinning both surfaces |
 
 ## Wave 2 — Contract & topology / migration
 

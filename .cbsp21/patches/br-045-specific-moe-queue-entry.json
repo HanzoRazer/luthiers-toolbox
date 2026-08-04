@@ -1,0 +1,74 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_045_SPECIFIC_MOE_QUEUE_ENTRY",
+  "title": "BR-045: queue the specific_moe cross-surface scale split, and close BR-043 on merged main",
+  "intent": "Documentation-only. Two things. (1) Closes BR-043 against merged main: PR #245 landed as a34b6f5d with CI 44 pass / 1 skipping / 0 fail, and the post-merge witness was taken directly on that commit -- schemas.py:165 carries `return round(c / self.density_kg_m3, 2)`, InstrumentMaterialSelector.vue:95 carries the corrected unit label, and at runtime American Basswood returns radiation_ratio 11.87 with _score_acoustic(soundboard) = 0.9924 where every species previously scored 0.0. The Dev Order permitted marking BR-043 resolved only after exactly this re-verification. (2) Promotes the deferred secondary-index finding out of BR-043's footnote into BR-045, its own queue entry: TonewoodEntry.specific_moe computes (E_GPa/rho)*1e6 == c^2/1e3 = 24265.06 for Basswood, while its own docstring claims 'Same as c^2/10^6' = 24.2651 and the client's calcSpecificMoe independently produces 24.265 -- a 1000x split in which backend code stands alone against backend docs and the client. No code changes.",
+  "change_type": "docs",
+  "behavior_change": "none. No runtime file is touched. Four remediation ledger documents plus this manifest.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-045-specific-moe-queue-entry.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/br-045-specific-moe-queue-entry.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) REPOSITORY_DEFECT_REGISTER.md: BR-043 readiness moves from IMPLEMENTED -- AWAITING MERGE to RESOLVED, carrying a four-row post-merge witness table taken on a34b6f5d, and noting that the sole surviving 1e6 in schemas.py is specific_moe and is deliberate. The secondary-index adjudication row for specific_moe is marked promoted to BR-045. A full BR-045 entry is appended with the dimensional arithmetic, the two separable claims (docstring provably false = CONFIRMED; which side moves = not determinable), the reason it is not simply BR-043 again (no consumer contract to violate; nothing thresholds, sorts or scores on it), blast radius, the four required-before-implementation items with the owner ruling named as the blocking one, the recommended direction, and its sibling relationship to BR-044. (2) BACKLOG_ADJUDICATION_LEDGER.md: BR-043 row set to RESOLVED with the merge SHA and the 0.9924 runtime witness; BR-045 row added as OWNER_DECISION_REQUIRED / code-inspection / QUEUED -- NOT AUTHORIZED, with a note explaining why that disposition rather than CONFIRMED_DEFECT. (3) REMEDIATION_DEPENDENCY_MAP.md: BR-043 -> BR-045 ordering edge; BR-044 and BR-045 recorded as siblings, not duplicates; and the shared root cause recorded once -- three instances of one failure mode, with the durable fix named as a declared unit profile per index rather than three separate scale repairs. (4) REMEDIATION_EXECUTION_QUEUE.md: BR-043 marked DONE at Wave 1 rank 7 with the merge evidence; BR-045 queued at rank 8.",
+    "why_not_redundant": "BR-043's Dev Order required merged-main re-verification before the item could be called resolved; this records that verification with a runtime witness rather than an assertion. The BR-045 promotion exists because the finding was previously a footnote inside a defect that is now closed -- the register's own rule is that queued items carry adjudication records, and a deferred cross-surface inconsistency living inside a RESOLVED entry is how items get lost. It is not a duplicate of BR-044: different metric, different failure mode, different blast radius, and BR-045 spans backend and client while BR-044 is client-local."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr view 245 --json state,mergeCommit -> MERGED, a34b6f5d1efe5d624471119a27db1c113b820788",
+      "git log --oneline origin/main -3 -> a34b6f5d is main HEAD (ada33581 -> a34b6f5d)",
+      "grep -n 'return round(c / self.density_kg_m3, 2)' services/api/app/materials/schemas.py -> line 165 on a34b6f5d",
+      "grep -n Schelleng packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue -> line 95 reads 'Schelleng c/rho, m^4/(kg*s)'",
+      "py -3.11 runtime witness on a34b6f5d: TonewoodEntry(density 415.0, moe 10.07).radiation_ratio -> 11.87; _score_acoustic(entry, _ROLE_TARGETS['soundboard']) -> 0.9924 (was 0.0)",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (to record at PR time)",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (to record at PR time)"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/br-045-specific-moe-queue-entry.json",
+      "intent": "CBSP21 patch manifest declaring this documentation-only change set, including itself.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Close BR-043 as RESOLVED with a post-merge witness table taken on a34b6f5d, and append the BR-045 entry promoted out of its secondary-index footnote.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "Set BR-043 to RESOLVED with merge SHA and runtime witness; add the BR-045 adjudication row as OWNER_DECISION_REQUIRED with the reasoning for that disposition.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "intent": "Record BR-043 -> BR-045 ordering, the BR-044/BR-045 sibling relationship, and the shared root cause across all three with the durable fix named.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "intent": "Mark BR-043 DONE at Wave 1 rank 7 with merge evidence; queue BR-045 at rank 8.",
+      "risk": "low",
+      "behavior_change": "none (docs)"
+    }
+  ]
+}
