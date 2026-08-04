@@ -1793,6 +1793,7 @@ const tier = suggestWoodTier(32, 12);
 | **Canonical routing policy** | **Final** for this repo — spreadsheet/vendor analyzers are inputs, not alternate product runtimes |
 | **Implementation coverage** | **Partial** — several §§/modules still unfinished |
 | **Unfinished inventory** | [`docs/handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md`](handoffs/LUTHERIE_MATH_UNFINISHED_SECTIONS_DEV_HANDOFF_2026-08-04.md) |
+| **Active handoffs index** | [`docs/handoffs/CURRENT_ACTIVE.md`](handoffs/CURRENT_ACTIVE.md) |
 
 **Rule:** External spreadsheets and vendor analyzers supply **measured inputs**. They must not ship as **independent product runtimes** beside this file. Legitimate future parity work re-expresses reference models **only** by extending numbered §§ here and the named modules. Do not mount Holmberg Sheets / TPC UI as a second calculator stack.
 
