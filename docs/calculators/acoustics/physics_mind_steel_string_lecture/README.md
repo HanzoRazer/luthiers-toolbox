@@ -1,11 +1,13 @@
 # Dominic Howman — Making Guitars with a Physics Mind
 
+**Lane:** [`../PHYSICS_KNOWLEDGE_INDEX.md`](../PHYSICS_KNOWLEDGE_INDEX.md) (**instrument-building physics** — seminar survey)  
 **Source:** Curtin University Physics Seminar, 23 March 2011 — *Making Guitars with a Physics Mind*  
 **Presenter:** Dominic Howman (Howman Guitars, Perth WA; Curtin Exploration Geophysics technical officer)  
-**Content type:** Steel-string shop physics survey — energy path, wood selection, modes/bracing, live back, scale/intonation/bridge placement  
+**Content type:** Steel-string physics survey — energy path, wood selection, modes/bracing, live back, scale/intonation/bridge placement  
 **Method school:** Independent Australian steel-string practice (X-brace tradition); **not** Gore modal-tuning / falcate school  
+**Shop overlap:** Anecdotes (kerfing, scallop myth, posture) — secondary; see shop index dual-file note  
 **Status:** Full talk + Q&A ingested (~0:00–~1:00)  
-**Parent indexes:** [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md) (cross-links only)  
+**Parent indexes:** Physics index (primary); [`../GORE_LECTURE_SERIES_SUMMARY.md`](../GORE_LECTURE_SERIES_SUMMARY.md) (cross-links only)  
 **Provenance notes:** Introduced by “Jim”; client Bob Coleman; companion Glenn Lawson on Santa Cruz tour; Chladni stills attributed to UNSW; lattice classical maker referenced in Esperance WA. Contemporary notice: Curtin *Geo Soundings* Mar 2011.
 
 ## Contents

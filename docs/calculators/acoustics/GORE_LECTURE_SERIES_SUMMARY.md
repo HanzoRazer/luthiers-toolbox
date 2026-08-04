@@ -1,8 +1,10 @@
 # Gore Lecture Knowledge Series — Executive Summary
 
-Living index for annotated lecture packs derived from Robbie O’Brien / Trevor Gore teaching video (plus related non-Gore schools). Processing template: full-content review → classified teaching points → Toolbox / Tap Tone Pi crosswalk (empirical knowledge layer preferred over new calculators).
+Living index for **Gore / O’Brien physics-lane** packs (plus cross-links to related schools). Not the catalog for all acoustics knowledge.
 
-**Developer entry (template + catalog + harvested workflows):** [`KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md`](./KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md)
+**Lanes:** [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) · [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md)  
+**Developer entry:** [`KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md`](./KNOWLEDGE_PACK_DEVELOPER_ORIENTATION.md)  
+Processing: full-content review → classified teaching points → Toolbox crosswalk (empirical knowledge layer preferred over new calculators).
 
 ---
 
@@ -239,6 +241,8 @@ These are **separate schools/workflows**. Cross-link; do not merge into Gore cal
 | Nicoletti tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | PLG/EGB webinar: \(\rho\)/\(E\)/SRC/orthotropy/Q; REW+Caldersmith; Gore vibrational stiffness; mold pretune; wolf bands |
 | Nicoletti EGB measuring/tuning (Jul 2022) | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | FRF+mobility+Chladni practice; REW/miniDSP; δ~0.01–0.02 mm; characterizations; PLG checklist |
 | Howman — Physics Mind (Curtin 2011) | [`physics_mind_steel_string_lecture/`](./physics_mind_steel_string_lecture/) | Steel-string survey: energy path, QS/S/W wood pick, monopole/dipoles, X-brace + cube rule, basswood linings, live back, scale/intonation/bridge center |
+
+Shop-lane packs (not Gore physics): see [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — e.g. [`shop_soundboard_species_voicing/`](./shop_soundboard_species_voicing/) (SB01–SB22).
 
 ### Somogyi 01 — what it adds
 

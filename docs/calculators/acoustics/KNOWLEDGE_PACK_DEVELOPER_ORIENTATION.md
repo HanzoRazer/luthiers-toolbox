@@ -1,9 +1,23 @@
 # Knowledge packs — developer orientation
 
-**Purpose of this exercise:** Harvest *remnants of measurable shop workflows* from lecture / webinar transcripts into a knowledge layer **before** calculator or lab UI work.  
+**Purpose of this exercise:** Harvest transcript remnants into a knowledge layer **before** calculator or lab UI work.  
 **PR:** [#243](https://github.com/HanzoRazer/luthiers-toolbox/pull/243) · branch `cursor/gore-shop-talk-20-lecture-notes-83c1`  
-**Living index (theme summaries):** [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md)  
 **Policy:** Documentation only. Cross-link schools; **do not merge** dialects into one calculator. Prefer empirical knowledge / guided labs over inventing thresholds.
+
+---
+
+## 0. Two lanes (sort first)
+
+Delineate **instrument-building physics** from **shop / building knowledge**. Same spine sentence (“light stiff top, finite energy”) may appear in both; tag by **deliverable**, not by vocabulary overlap.
+
+| Lane | Index | Deliverable for Toolbox |
+|------|-------|-------------------------|
+| **Physics** | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) | Meters, models, lab SOPs, unit profiles |
+| **Shop / building** | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) | Dialect cards, stage-gate UX, intake questionnaires, anti-patterns |
+
+**Gore-centric theme summary** (physics subset): [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) — do not use it as the only catalog for non-Gore or shop packs.
+
+**Filing rule:** New transcript → choose lane → pack folder → update **that** lane index (and Gore summary only if Gore/O’Brien physics). Dual-file only when README says so.
 
 ---
 
@@ -33,77 +47,52 @@ Every pack is a folder under `docs/calculators/acoustics/<pack_id>/` with the sa
 | **MB** | Maderas Barber kit / presentation |
 | **MW** | Michael Watts framing |
 | **DH** | Dominic Howman method |
+| **SH** | Shop / builder practice (non-school-specific shop lane) |
 | **OH** | Open hypothesis / taste |
 
 ### Processing pipeline used
 
 ```text
 transcript paste
+  → choose lane (physics vs shop)
   → SOURCE_TRANSCRIPT (clean ASR)
   → ANNOTATED_* (point IDs + class + destination)
   → CROSSWALK (Toolbox mapping + NO-CALC)
   → GAPS (blockers)
-  → GORE_LECTURE_SERIES_SUMMARY (index)
+  → lane index (PHYSICS_* or SHOP_*)
+  → GORE_LECTURE_SERIES_SUMMARY only if Gore physics subset
   → .cbsp21/patches/gore-lecture-series-packs-1-5.json (manifest)
 ```
 
 **Point ID namespaces (do not renumber casually):**
 
-| Prefix | School / pack family |
-|--------|----------------------|
-| P | Gore Shop Talk #20 |
-| W | Gore wolf mailbag |
-| M | Gore monopole mobility tip |
-| S | Gore Shop Talk #25 |
-| R | Gore responsive objectives |
-| U | Gore Shop Talk #44 |
-| A | Gore Shop Talk #51 / Academy apps |
-| Y | Somogyi apprentice workflow |
-| ES | Somogyi primary (01–02) |
-| N | Nicoletti family (continues across his packs) |
-| PM | Howman *Physics Mind* steel-string seminar |
-| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-T##`, …) |
+| Prefix | School / pack family | Default lane |
+|--------|----------------------|--------------|
+| P | Gore Shop Talk #20 | Physics |
+| W | Gore wolf mailbag | Physics |
+| M | Gore monopole mobility tip | Physics |
+| S | Gore Shop Talk #25 | Physics |
+| R | Gore responsive objectives | Physics |
+| U | Gore Shop Talk #44 | Physics |
+| A | Gore Shop Talk #51 / Academy apps | Physics |
+| Y | Somogyi apprentice workflow | Shop |
+| ES | Somogyi primary (01–02) | Physics (doctrine) |
+| N | Nicoletti family (continues across his packs) | Mixed — see pack README |
+| PM | Howman *Physics Mind* steel-string seminar | Physics |
+| SB | Shop soundboard species & voicing | Shop |
+| G-* | Gap IDs (`G-R01`, `G-M09`, `G-ES##`, `G-N##`, `G-PM##`, `G-SB##`, …) | — |
 
 ---
 
 ## 2. Catalog — all packs
 
-### A. Gore / O’Brien (priority-stack school)
+Canonical catalogs live in the **lane indexes** (§0). Short map:
 
-| Pack | Path | Primary notes |
-|------|------|----------------|
-| 1 Shop Talk #20 | [`gore_shop_talk_20/`](./gore_shop_talk_20/) | P01–P38 |
-| 2 Wolf mailbag | [`gore_wolf_notes_mailbag/`](./gore_wolf_notes_mailbag/) | W01–W09 |
-| 3 Monopole mobility tip | [`gore_monopole_mobility_measurement/`](./gore_monopole_mobility_measurement/) | M01–M12 |
-| 4 Shop Talk #25 | [`gore_shop_talk_25/`](./gore_shop_talk_25/) | S01–S21 |
-| 5 Responsive objectives | [`gore_shop_talk_responsive_objectives/`](./gore_shop_talk_responsive_objectives/) | R-points + **G-R01** |
-| 6 Guitar Analysis & Testing | [`gore_guitar_analysis_testing/`](./gore_guitar_analysis_testing/) | **PARTIAL** intro only |
-| 7 Shop Talk #44 | [`gore_shop_talk_44/`](./gore_shop_talk_44/) | U01–U23 |
-| 8 Shop Talk #51 Academy apps | [`gore_shop_talk_51_luther_academy_apps/`](./gore_shop_talk_51_luther_academy_apps/) | A01–A29 |
-
-### B. Somogyi (related non-Gore)
-
-| Pack | Path | Notes |
-|------|------|-------|
-| 01 Air pump / bracing / tap | [`somogyi_01_air_pump_bracing_tap_tone/`](./somogyi_01_air_pump_bracing_tap_tone/) | ES01–ES15 |
-| 02 Top & Back | [`somogyi_02_top_and_back/`](./somogyi_02_top_and_back/) | ES16–ES28 |
-| Apprentice first build | [`somogyi_apprentice_build_workflow/`](./somogyi_apprentice_build_workflow/) | Y01–Y20 |
-
-### C. Nicoletti / MB / Iulius (related non-Gore)
-
-| Pack | Path | Notes |
-|------|------|-------|
-| MB Acoustic Study Set how-to | [`nicoletti_mb_sound_acoustic_study_set/`](./nicoletti_mb_sound_acoustic_study_set/) | N01–N16 |
-| MB kit interview | [`nicoletti_mb_kit_interview/`](./nicoletti_mb_kit_interview/) | N17–N42 |
-| Science / Luthier Stories | [`nicoletti_science_luthier_stories/`](./nicoletti_science_luthier_stories/) | N43–N68 |
-| Tonewood parameters webinar | [`nicoletti_tonewood_parameters_webinar/`](./nicoletti_tonewood_parameters_webinar/) | N69–N99 |
-| EGB measuring/tuning Jul 2022 | [`nicoletti_egb_measuring_tuning_2022/`](./nicoletti_egb_measuring_tuning_2022/) | N100–N130 |
-
-### D. Howman (related non-Gore)
-
-| Pack | Path | Notes |
-|------|------|-------|
-| Physics Mind (Curtin 2011) | [`physics_mind_steel_string_lecture/`](./physics_mind_steel_string_lecture/) | PM01–PM36 |
+| Lane | Where to look |
+|------|----------------|
+| Physics | [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) — Gore, Nicoletti metrology, Howman, Somogyi doctrine |
+| Shop | [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) — soundboard explainer (SB), Somogyi apprentice, MB kit how-to/interview |
+| Gore themes only | [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) |
 
 ---
 
@@ -166,11 +155,12 @@ Select wood (optional metrology)
 
 ## 5. Suggested reading order for developers
 
-1. This file  
-2. [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md) — theme map  
-3. Crosswalks only (skim): Pack 5, Pack 3, Nicoletti EGB 2022, Nicoletti tonewood webinar  
-4. Gap registers for anything you plan to implement  
-5. Annotated notes only when a crosswalk row points at a specific ID  
+1. This file (§0 lanes)  
+2. [`PHYSICS_KNOWLEDGE_INDEX.md`](./PHYSICS_KNOWLEDGE_INDEX.md) and/or [`SHOP_BUILDING_KNOWLEDGE_INDEX.md`](./SHOP_BUILDING_KNOWLEDGE_INDEX.md) for your task  
+3. Gore theme map only if working Gore physics: [`GORE_LECTURE_SERIES_SUMMARY.md`](./GORE_LECTURE_SERIES_SUMMARY.md)  
+4. Crosswalks only (skim): Pack 5, Pack 3, Nicoletti EGB 2022, Nicoletti tonewood webinar; shop: SB soundboard  
+5. Gap registers for anything you plan to implement  
+6. Annotated notes only when a crosswalk row points at a specific ID  
 
 ---
 
