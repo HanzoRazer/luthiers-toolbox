@@ -12,7 +12,8 @@
 
 | File | Purpose |
 |------|---------|
-| [`ANNOTATED_WORKFLOW_NOTES.md`](./ANNOTATED_WORKFLOW_NOTES.md) | BK01–BK48 staged workflow |
+| [`PROCESS_WORKFLOW.md`](./PROCESS_WORKFLOW.md) | **Extracted process workflow** (stages 0–15 + gates) |
+| [`ANNOTATED_WORKFLOW_NOTES.md`](./ANNOTATED_WORKFLOW_NOTES.md) | BK01–BK48 classified points |
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Stage → Toolbox / physics cross-links |
 | [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | Numeric FRF targets, brace schedule, finish brand |
 | [`SOURCE_TRANSCRIPT.md`](./SOURCE_TRANSCRIPT.md) | Cleaned sectional working extract |

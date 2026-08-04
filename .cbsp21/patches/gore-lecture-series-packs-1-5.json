@@ -95,6 +95,7 @@
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/ANNOTATED_WORKFLOW_NOTES.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/CROSSWALK_TOOLBOX.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/GAPS_NOT_RECORDED.md",
+      "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/PROCESS_WORKFLOW.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/README.md",
       "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md",
       "docs/calculators/acoustics/shop_soundboard_species_voicing/ANNOTATED_WORKFLOW_NOTES.md",
@@ -1424,6 +1425,18 @@
       "intent": "Shop-lane Bashkin JM full acoustic build workflow pack",
       "scan_targets": [
         "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/SOURCE_TRANSCRIPT.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
+      "verification": [
+        "file present and readable"
+      ]
+    },
+    {
+      "path": "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/PROCESS_WORKFLOW.md",
+      "intent": "Extracted Bashkin JM process workflow (stages/gates)",
+      "scan_targets": [
+        "docs/calculators/acoustics/shop_bashkin_jm_build_workflow/PROCESS_WORKFLOW.md"
       ],
       "risk": "low",
       "behavior_change": "none - knowledge-layer documentation only; no runtime calculator code",
