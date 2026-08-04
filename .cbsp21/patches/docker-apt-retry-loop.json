@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DOCKER_APT_RETRY_LOOP",
+  "title": "Retry apt install in both API Dockerfiles instead of ignoring missing packages",
+  "intent": "A transient Debian mirror sync failure was breaking container builds. An earlier attempt (copilot-swe-agent, 62d96f01, replaced by this branch) added --fix-missing to both apt-get install lines. That flag does not retry; per apt's documentation it ignores packages that cannot be retrieved and continues. In these two Dockerfiles that is worse than the flake it was meant to absorb: the package list includes libgl1 and libglib2.0-0, the OpenCV runtime dependencies this repo's vectorizer needs for `import cv2`, and in docker/api the cairo/pango/gdk-pixbuf stack behind PDF export. With --fix-missing a mirror hiccup produces an image that builds green and ships without them, surfacing later as an ImportError at container start or a failed export in production -- far from the cause, and after CI has already blessed the build. That is the silent-swallow failure class the defect register tracks as BR-041. Replaced with a bounded retry that keeps the failure loud.",
+  "change_type": "build",
+  "behavior_change": "Build-time only. No application code, no API surface, no schema, no test, no runtime behavior change. The installed package set is identical to the pre-62d96f01 baseline. The difference is failure handling: a transient apt failure is now retried up to 3 times, and an apt failure that persists across all 3 attempts fails the build explicitly instead of either failing on the first attempt (old baseline) or silently producing an image with missing packages (the --fix-missing attempt this replaces).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/docker-apt-retry-loop.json",
+      "docker/api/Dockerfile",
+      "services/api/Dockerfile"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/docker-apt-retry-loop.json",
+      "docker/api/Dockerfile",
+      "services/api/Dockerfile"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Both Dockerfiles: the single-line `RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing ... && rm -rf /var/lib/apt/lists/*` is replaced by a bounded retry under `set -eu` -- up to 3 attempts at `apt-get update && apt-get install`, 5 seconds between attempts, an explicit `installed` flag set on success and checked after the loop, an `exit 1` when all three attempts are exhausted, and the `rm -rf /var/lib/apt/lists/*` cleanup moved so it runs only on success. The --fix-missing flag is removed from both. A comment above each block records why the flag must not be reintroduced and names the specific packages whose silent absence it would allow. The installed package lists are unchanged.",
+    "why_not_redundant": "The post-loop flag check is the load-bearing part and is not cosmetic. A naive `for ... do ... done` returns the exit status of its last command -- the `sleep` -- so a loop that failed every attempt would still report success and silently produce the same broken image the --fix-missing version would have. The explicit flag plus `exit 1` is what makes exhaustion loud. Kept out of PR #247 (BR-045), which is scoped to one unit multiplier and two display labels; a container change that can drop OpenCV's runtime dependencies warrants its own review rather than riding along in an unrelated patch."
+  },
+  "verification": {
+    "commands_run": [
+      "control-flow harness reproducing the loop structure: all-attempts-fail -> exit 1 (build breaks loudly); succeeds-on-second-attempt -> exit 0 and reaches the cleanup step. Both verified before commit.",
+      "grep -rn 'fix-missing' docker/api/Dockerfile services/api/Dockerfile -> only the explanatory comments remain; the flag is gone from both RUN blocks",
+      "NOT YET BUILT at manifest time: neither Dockerfile has been built locally. The 'Containers (Build + Smoke)' check on PR #249 is the first real exercise of the new RUN block and is the acceptance evidence for this patch.",
+      "Known limit of that evidence: if the Debian mirror is healthy the loop succeeds on attempt 1 and the retry path never executes, so a green Containers job proves the block is syntactically valid and the happy path works -- it does not prove the retry recovers from a real fetch failure."
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/docker-apt-retry-loop.json",
+      "intent": "CBSP21 patch manifest declaring this change set, including itself.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/Dockerfile",
+      "intent": "Replace --fix-missing with a bounded 3-attempt apt retry that fails the build explicitly when exhausted. Package list unchanged (curl, ca-certificates, build-essential, git, libxcb*, libgl1, libglib2.0-0).",
+      "risk": "low",
+      "behavior_change": "build-time failure handling only; identical package set installed on success"
+    },
+    {
+      "path": "docker/api/Dockerfile",
+      "intent": "Same retry replacement. This image additionally carries the cairo/pango/gdk-pixbuf/shared-mime-info rendering stack used by PDF export, which is precisely the set --fix-missing could have silently dropped. Package list unchanged.",
+      "risk": "low",
+      "behavior_change": "build-time failure handling only; identical package set installed on success"
+    }
+  ]
+}
