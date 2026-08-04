@@ -4,7 +4,7 @@
 
 | ID | Gap | Severity | Status | Why it matters |
 |----|-----|----------|--------|----------------|
-| **G-HM01** | Public Google Sheet URLs + full starter set | Medium | **Partial** — local V4 xlsx inventoried for Classical nylon CF, Medium SS falcate ±CF (hashes in WORKBOOK_INVENTORY). Still missing OM X-braced + any distinct classical noCF starter from docs table. | Reproducible clone |
+| **G-HM01** | Public Google Sheet URLs + starter workbooks | Medium | **Closed** for user-supplied page set — Classical nylon CF V4, Medium SS falcate ±CF V4, OM SS X noCF **V3**, Wood Properties V1 (hashes in WORKBOOK_INVENTORY). Optional residual: docs-table classical falcate Yellow Poplar noCF if a separate file exists. | Reproducible clone |
 | **G-HM02** | Wood Properties schema not ingested | Medium | **Closed** — see WORKBOOK_INVENTORY §4 (306 spp, role sheets, 27 named ranges) | Species ranking companion |
 | **G-HM03** | No independent build verification of starter dims | High | Open | Author warning (HM02) |
 | **G-HM04** | Mobility unit profile vs book Y&gt;14 / in-sheet s/kg·e-3 | Critical | Open — tied to G-R01/G-M09 | Badge/UI blocked |

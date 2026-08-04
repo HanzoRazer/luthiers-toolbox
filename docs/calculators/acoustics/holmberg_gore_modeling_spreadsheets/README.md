@@ -15,11 +15,11 @@
 
 | File | Purpose |
 |------|---------|
-| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM46 |
-| [`WORKBOOK_INVENTORY.md`](./WORKBOOK_INVENTORY.md) | Sheet lists, named ranges, preset scalars, Wood Properties schema, SHA-256 |
+| [`ANNOTATED_LECTURE_NOTES.md`](./ANNOTATED_LECTURE_NOTES.md) | HM01–HM47 |
+| [`WORKBOOK_INVENTORY.md`](./WORKBOOK_INVENTORY.md) | All page starters + Wood Properties: sheets, presets, SHA-256 (incl. OM X V3) |
 | [`PROCESS_WORKFLOW.md`](./PROCESS_WORKFLOW.md) | Sheet/module calculation spine |
 | [`CROSSWALK_TOOLBOX.md`](./CROSSWALK_TOOLBOX.md) | Calculator destinations + NO-CALC |
-| [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | G-HM01 partial; G-HM02 closed; G-HM10/11 from inventory |
+| [`GAPS_NOT_RECORDED.md`](./GAPS_NOT_RECORDED.md) | G-HM01/02 closed; G-HM10/11 from inventory |
 | [`SOURCE_TRANSCRIPT.md`](./SOURCE_TRANSCRIPT.md) | Structured extract from public doc export |
 
 ## Classification legend

@@ -337,6 +337,13 @@ Comparison/ranking only — not FPL-attributed Toolbox canonical data.
 
 **Point ID:** HM46  
 
+### 10.5 OM SS X-brace noCF V3: Collings OM1-patterned; triad 101/169.5/214; hole 97 mm; top MM ≈14.2  
+**Classification:** **EO** / **GH**
+
+14-fret join; Sitka/Sitka no CF; triangle X brace heights (~5.75×13.8 major); compensation total 3.04¢. Contrasts falcate Medium SS (smaller hole, higher MM).
+
+**Point ID:** HM47  
+
 ---
 
 ## Point index
