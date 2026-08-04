@@ -33,6 +33,7 @@ Do **not** treat `POINT_SEARCH_INDEX.md` keyword noise as taxonomy review failur
 ## Standing productization holds
 
 - No mobility / exceptional badges until **G-R01** closes  
+- Close path (system-dev review): [`docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](../../handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md)  
 - No Holmberg preset cut lists  
 - No parallel spreadsheet engines as product runtimes  
 - Gaps stay searchable (`G-*`); never invent missing numbers

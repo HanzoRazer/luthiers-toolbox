@@ -2,7 +2,8 @@
 
 **Status:** **OPEN — productization blocked**  
 **Canonical IDs:** **G-R01** (primary) · **G-M09** (alias / Pack 3 tip)  
-**Authority:** This file is the **single repo-wide record** for the conflict. Other packs must **cross-reference** here, not redefine the resolution.
+**Authority:** This file is the **single repo-wide record** for the conflict. Other packs must **cross-reference** here, not redefine the resolution.  
+**Dev order (separate PRs A–D):** [`docs/handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md`](../../handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md)
 
 ---
 
@@ -45,3 +46,5 @@
 2. Publish a Toolbox **unit profile** (preferred SI: \(k\) in N/m, \(\delta\) in m; score/display mapping explicit).  
 3. Reconcile Pack 3 spoken 27 mm as ASR error **or** alternate definition (e.g. different load path / scale) with primary-source evidence.  
 4. Update this file’s status to **Closed** with date + evidence links; leave G-R01/G-M09 IDs stable.
+
+**PR map:** criterion 1 → PR-A (+ freeze in PR-B); 2 → PR-B; 3 → PR-C; 4 → PR-D — see the [dev order](../../handoffs/G_R01_MOBILITY_UNIT_PROFILE_CARRICO_DEV_ORDER_2026-08-04.md). Do not ship mobility badges in PRs A–D.
