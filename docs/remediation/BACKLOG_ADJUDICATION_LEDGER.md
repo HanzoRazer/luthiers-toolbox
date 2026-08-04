@@ -132,8 +132,25 @@ all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with
 inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduced by
 `tests/materials/test_tonewood_acoustic_indices.py` (3 × `xfail(strict=True)`).
 
-**Owner ruling required:** no. This is an internal-consistency repair against contracts the repository
-already states; it does not adjudicate physics, role targets, or recommendation philosophy.
+| BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
+
+**BR-044 evidence label — `STATIC-FACT CONFIRMED`.** The frontend producer computes `(c/ρ)*1000`
+(~9,000–14,000 for normal tonewoods) while `rrColor` and `soundboardRating` threshold at 12.0 / 10.5 /
+9.0 on the unscaled scale, so every wood with MOE data takes the top branch. Separate implementation
+and data path from BR-043 — it reads hardcoded `tonewoodData.ts`, not the API. Requires
+rendered-behavior reproduction and an authority decision before remediation.
+
+> **Vocabulary note.** `STATIC-FACT CONFIRMED` is the register's *evidence label* for intake leads
+> (see the scan-intake exception in [REPOSITORY_DEFECT_REGISTER.md](REPOSITORY_DEFECT_REGISTER.md)),
+> not one of the 13 primary dispositions. The nearest primary term is `CONFIRMED_DEFECT` with
+> `code-inspection` verification, which the register explicitly admits as a valid current reproduction
+> basis. Readiness carries the real constraint: the runtime symptom is **unreproduced** and the item
+> is **not authorized**.
+
+**Owner ruling required:** BR-043 no — this is an internal-consistency repair against contracts the
+repository already states; it does not adjudicate physics, role targets, or recommendation philosophy.
+**BR-044 yes** — proof-packet item 5 is an authority decision between correcting the frontend
+calculation and deleting it in favour of the backend canonical value.
 
 **Dependencies:** none. Independent of PR #244 — MB Sound corroborates the scale but is not runtime
 authority and is not imported by this repair.

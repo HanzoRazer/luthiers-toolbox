@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "BR_043_TONEWOOD_ACOUSTIC_INDEX_REPAIR",
   "title": "BR-043: repair tonewood radiation-ratio unit scale and restore acoustic recommendation scoring",
-  "intent": "TonewoodEntry.radiation_ratio returned (c/rho)*1e6. Three independent places in the repository declare the unscaled c/rho value: the property's own docstring (Schelleng 1963 reference species, Adirondack ~11.7 / Sitka ~11.4), _ROLE_TARGETS in the recommendation scorer (soundboard 11.5, bracing 12.0, back_sides 8.0, fretboard 4.0), and materials/router.py:88 ('Schelleng c/rho'). _score_acoustic compares the returned value directly against those targets through exp(-0.5*((rr-target)/3.0)**2) with sigma=3.0 and no inverse scaling, so the exponent underflowed and the function returned 0.0 for every acoustically-populated species in every role -- the acoustic term of score_for_role, recommend_for_role and compare_species was silently inert. The value was also served unrepaired to the client, where InstrumentMaterialSelector.vue:97 renders it directly. This patch removes the spurious factor at the producer (BR-043 Decision 2: correct the producer, not every consumer), adds the direct test coverage whose absence let the defect ship, and records the defect and its secondary-index adjudication in the remediation program. Bounded corrective change: no role targets, no scoring weights, no Gaussian shape, no material source records, no MB Sound import, no plate-design equations, no CAM or machine output.",
+  "intent": "TonewoodEntry.radiation_ratio returned (c/rho)*1e6. Three independent places in the repository declare the unscaled c/rho value: the property's own docstring (Schelleng 1963 reference species, Adirondack ~11.7 / Sitka ~11.4), _ROLE_TARGETS in the recommendation scorer (soundboard 11.5, bracing 12.0, back_sides 8.0, fretboard 4.0), and materials/router.py:88 ('Schelleng c/rho'). _score_acoustic compares the returned value directly against those targets through exp(-0.5*((rr-target)/3.0)**2) with sigma=3.0 and no inverse scaling, so the exponent underflowed and the function returned 0.0 for every acoustically-populated species in every role -- the acoustic term of score_for_role, recommend_for_role and compare_species was silently inert. The value was also served unrepaired to the client, where InstrumentMaterialSelector.vue:97 renders it directly. This patch removes the spurious factor at the producer (BR-043 Decision 2: correct the producer, not every consumer), adds the direct test coverage whose absence let the defect ship, and records the defect and its secondary-index adjudication in the remediation program. Bounded corrective change: no role targets, no scoring weights, no Gaussian shape, no material source records, no MB Sound import, no plate-design equations, no CAM or machine output. A sixth documentation-only commit queues BR-044 (frontend radiation-ratio scale and rating collapse) as a follow-up record in the same three remediation ledgers already declared here; it changes no frontend code and adds no new declared path.",
   "change_type": "fix",
   "behavior_change": "semantic correction to one derived value. TonewoodEntry.radiation_ratio now returns c/rho (approximately 4-15 for common tonewoods) instead of (c/rho)*1e6. API field name, type, nullability and response shape are unchanged; no migration is required because the property is computed, never stored. Recommendation ordering WILL change -- that is the intended repair: the acoustic term was previously 0.0 for every species and now differentiates. speed_of_sound_computed_m_s, specific_moe, ashby_index and acoustic_impedance_mrayl are unchanged. Missing-data behavior (None from the property, 0.5 neutral from _score_acoustic) and the speed_of_sound_m_s override precedence are unchanged. No consumer applied a compensating conversion, so no consumer required editing.",
   "risk_level": "low",
@@ -65,13 +65,13 @@
     },
     {
       "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
-      "intent": "BR-043 defect entry with per-site evidence on ada33581, plus the Commit 4 secondary-index adjudication (specific_moe UNRESOLVED, ashby_index not implicated, acoustic_impedance_mrayl correct, frontend threshold mismatch recorded as a separate finding).",
+      "intent": "BR-043 defect entry with per-site evidence on ada33581, plus the Commit 4 secondary-index adjudication (specific_moe UNRESOLVED, ashby_index not implicated, acoustic_impedance_mrayl correct). Also carries the BR-044 queue-only entry for the frontend radiation-ratio scale and rating collapse: STATIC-FACT CONFIRMED, QUEUED and NOT AUTHORIZED, with the required proof packet and the authority decision it needs. No frontend code is changed.",
       "risk": "low",
       "behavior_change": "none (docs)"
     },
     {
       "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
-      "intent": "BR-043 adjudication record (CONFIRMED_DEFECT, Tier A, test-encoded) in its own dated section, satisfying the rule that no queued item lacks a ledger record.",
+      "intent": "BR-043 adjudication record (CONFIRMED_DEFECT, Tier A, test-encoded) in its own dated section, satisfying the rule that no queued item lacks a ledger record. Adds the BR-044 row (CONFIRMED_DEFECT, code-inspection, QUEUED and NOT AUTHORIZED) with a vocabulary note explaining that STATIC-FACT CONFIRMED is the register's evidence label rather than one of the 13 primary dispositions.",
       "risk": "low",
       "behavior_change": "none (docs)"
     },
@@ -83,7 +83,7 @@
     },
     {
       "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
-      "intent": "Record BR-043 as standalone: no dependency on PR #244 (MB Sound corroborates the target scale but is evidence only), and should precede recommendation-quality evaluation and generator consumption of material rankings.",
+      "intent": "Record BR-043 as standalone: no dependency on PR #244 (MB Sound corroborates the target scale but is evidence only), and should precede recommendation-quality evaluation and generator consumption of material rankings. Adds the BR-043 -> BR-044 ordering edge: BR-044 must use the scale BR-043 adjudicates, does not block BR-043, and should land before frontend material rankings are consumed by the centralized generator system.",
       "risk": "low",
       "behavior_change": "none (docs)"
     }

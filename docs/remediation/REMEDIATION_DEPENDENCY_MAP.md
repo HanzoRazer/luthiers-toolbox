@@ -70,4 +70,15 @@ consequence alone.
 
 Its two related findings — `specific_moe` scaling, and the frontend `StiffnessIndexPanel` threshold
 mismatch on an independent local data path — are deliberately *not* bundled; see the BR-043 register
-entry. Neither blocks nor is blocked by BR-043.
+entry. The frontend finding is queued as **BR-044**.
+
+**BR-043 → BR-044** (ordering, not blocking):
+
+- BR-043 establishes the canonical backend scale.
+- BR-044 must use that adjudicated scale.
+- **BR-044 does not block BR-043.** The reverse edge is ordering only — BR-044's authority decision
+  (correct the frontend calculation vs. delete it and consume the backend value) is easier to make
+  once BR-043 has fixed the canonical value it would consume.
+- BR-044 **should be completed before frontend material rankings are consumed by the centralized
+  generator system**, for the same reason BR-043 should precede recommendation-quality evaluation:
+  a degenerate rating that marks every wood "Excellent" carries no signal for a downstream consumer.

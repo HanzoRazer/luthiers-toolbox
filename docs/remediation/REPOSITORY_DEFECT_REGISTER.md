@@ -378,7 +378,7 @@ authorized for bounded remediation.
      labels it `c/ρ ×10³` — self-consistent in display — but `rrColor` and `soundboardRating`
      (`useStiffnessIndex.ts:149-152`, `StiffnessIndexPanel.vue:312-317`) threshold at 12.0 / 10.5 / 9.0,
      the *unscaled* scale, so every wood renders "Excellent". Same defect family, different data path,
-     **not** a compensating conversion for the backend. Needs its own entry.
+     **not** a compensating conversion for the backend. **Queued as BR-044** — see below.
 
 #### BR-043 · secondary-index adjudication (Commit 4, investigate-only)
 
@@ -419,3 +419,51 @@ not a correctness proof.
 **Recommended action when scoped:** align on `c²/10⁶` — the value the docstring already claims and the
 frontend already produces — by changing the coded factor `1e6` → `1e3`. Requires an owner ruling on the
 published unit, plus a check for external consumers of the current value. **Not authorized by BR-043.**
+
+### BR-044 · Frontend radiation-ratio scaling makes tonewood ratings degenerate
+
+- **Subsystem:** frontend / wood intelligence / stiffness index
+- **Location:** `packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts`
+  and its consumers, including `StiffnessIndexPanel.vue`.
+- **Reproduction basis:** static producer-to-consumer inspection on `ada33581`.
+  `calcRadiationRatio` (`useStiffnessIndex.ts:69-71`) computes `(speedMs / densityKgM3) * 1000`,
+  producing values near **9,000–14,000** for normal tonewoods. Downstream rating and colour thresholds
+  are `12.0`, `10.5` and `9.0` (`useStiffnessIndex.ts:149-152` `soundboardRating`;
+  `StiffnessIndexPanel.vue:312-317` `rrColor`), expressed on the *unscaled* `c / ρ` reference scale.
+- **Observed mechanism:** producer and thresholds use incompatible scales. Representative tonewoods
+  exceed the highest threshold by roughly three orders of magnitude, so every wood with MOE data takes
+  the top branch — rendered as "Excellent" and the corresponding colour.
+- **Worked case:** American Basswood ρ = 415, E = 10.07 GPa → c = 4926 m/s. `calcRadiationRatio`
+  returns **11,870**; `rrColor`/`soundboardRating` compare that against `>= 12.0`.
+- **Expected behavior:** the calculated value and the rating thresholds must share one documented unit
+  profile. Representative soundboard woods should distribute across rating bands rather than trivially
+  satisfy the highest category.
+- **Relationship to BR-043:** related physical quantity, **separate live implementation and data path**.
+  BR-043 repairs the backend `TonewoodEntry.radiation_ratio` producer. It does **not** repair this
+  frontend-local calculation or rating path, which computes from hardcoded `tonewoodData.ts` rather
+  than from the API. **Do not deduplicate BR-044 into BR-043** unless the frontend is first refactored
+  to consume the backend canonical value.
+- **Current evidence label:** **`STATIC-FACT CONFIRMED`.** The unit mismatch is established by code
+  inspection. The rendered "every wood is Excellent" symptom has **not** been reproduced; a
+  composable/component test is required before this entry is promoted to `CONFIRMED`.
+- **Severity:** high for decision quality; low direct runtime-safety risk. No machine output, no data
+  loss. **Fix size:** small–moderate.
+- **Readiness:** **QUEUED — NOT AUTHORIZED.** Reproduction and consumer inventory required before any
+  mutation. This entry defines scope only.
+- **Required proof packet before implementation:**
+  1. a direct composable test showing `calcRadiationRatio` returns roughly **11,000–13,000** for a
+     normal soundboard wood;
+  2. a threshold test proving values on that scale always exceed `12.0`;
+  3. a component test, or an extracted rating-helper test, reproducing the highest rating for
+     representative low-, medium- and high-radiation-ratio woods;
+  4. a consumer search covering `calcRadiationRatio`, `radiationRatio`, `rrColor`,
+     `soundboardRating`, and the literal `12.0 / 10.5 / 9.0` thresholds;
+  5. an authority decision between **(a)** retaining a frontend calculation corrected to `c / ρ`, or
+     **(b)** deleting the duplicate math and consuming the backend canonical value.
+- **Provisional repair direction:** remove the frontend `×1000` scaling, or replace the local
+  calculation with the canonical backend radiation-ratio contract. The authority/consolidation
+  decision in proof-packet item 5 must be made **before** implementation.
+- **Ecosystem note:** this is one of five implementations of `c/ρ` across the ecosystem. Post-BR-043,
+  the other four — backend `schemas.py`, `tap_tone_pi/bending/gore_spreadsheet.py:578`,
+  `tap_tone_pi/bending/qa_lab_spec.py:477`, and the MB Sound corpus formula — all agree on the
+  unscaled SI scale. This frontend path is the sole outlier, and it disagrees with itself.
