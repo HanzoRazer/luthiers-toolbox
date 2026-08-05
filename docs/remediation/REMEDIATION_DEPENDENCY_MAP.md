@@ -84,13 +84,19 @@ entry. The frontend finding is queued as **BR-044**.
   a degenerate rating that marks every wood "Excellent" carries no signal for a downstream consumer.
 
 **BR-043 → BR-045** (ordering, not blocking). BR-045 is the `specific_moe` cross-surface scale split,
-promoted out of BR-043's secondary-index adjudication. BR-043 is **RESOLVED** (merged `a34b6f5d`);
-BR-045 is blocked on an **owner ruling**, not on engineering.
+promoted out of BR-043's secondary-index adjudication. BR-043 is **RESOLVED** (merged `a34b6f5d`).
+BR-045 is **RESOLVED** (implementation merge `f12f88c2` / PR #247; post-merge witness on `969bdbdc`
+via administrative closeout BR-045A). Historical blocker was an owner unit ruling (`c²/10⁶`,
+2026-08-04), not engineering capacity.
 
 **BR-044 and BR-045 are siblings, not duplicates** — different metrics (radiation ratio vs specific
 MOE), different failure modes (rating collapse vs latent inconsistency), and BR-045 spans both backend
 and client while BR-044 is client-local. Neither blocks the other; they may be scoped together only if
 an owner rules on a **unit profile for derived acoustic indices as a class**, which would settle both.
+
+**BR-045 closure does not authorize BR-044.** BR-044 remains **QUEUED — NOT AUTHORIZED** at its
+current evidence level. Closing BR-045 also does **not** complete the broader unit-profile
+consolidation program for derived acoustic indices.
 
 **Shared root cause — worth recording once.** BR-043, BR-044 and BR-045 are three instances of the same
 failure mode: a derived acoustic index whose unit is documented in prose, implemented independently per
