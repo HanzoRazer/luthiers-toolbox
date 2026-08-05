@@ -6,7 +6,7 @@
   "title": "BR-045A: administrative closeout \u2014 mark BR-045 RESOLVED after PR #247 merge and post-merge witness",
   "intent": "Documentation-only governance synchronization. BR-045 engineering landed as PR #247 \u2192 f12f88c2 (owner ruling 2026-08-04: published specific_moe profile c\u00b2/10\u2076; backend factor 1e6\u21921e3). This closeout records RESOLVED across the defect register, adjudication ledger, execution queue, and dependency map, attaching a fresh runtime witness taken on main tip 969bdbdc (not the merge commit). BR-043 remains RESOLVED; BR-044 remains QUEUED \u2014 NOT AUTHORIZED. No production code.",
   "change_type": "docs",
-  "behavior_change": "none. No runtime file is touched. Four remediation ledger documents plus this manifest.",
+  "behavior_change": "none. No runtime file is touched. Four remediation ledger documents, one new closeout witness note, one frontend comment correction (comment text only -- no expression, no logic, no value changes), plus this manifest.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -15,7 +15,8 @@
       "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md",
       "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
       "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
-      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/br-045-closeout.json",
@@ -23,7 +24,8 @@
       "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md",
       "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
       "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
-      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts"
     ]
   },
   "diff_articulation": {
@@ -94,6 +96,12 @@
       ],
       "risk": "low",
       "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts",
+      "intent": "Correct a stale unit comment on calcSpecificMoe. It read 'MOE (GPa) / density (kg/m3) x 10^6 ... identical to radiation ratio squared x 10^-6'. Both halves were wrong: that expression is 1000x below the function's actual return, and c^2 is rho^2 times the squared radiation ratio, not 10^-6 times it. The function returns E_Pa/rho = c^2 exactly and computeIndices divides by 1e6 to publish the governed c^2/10^6 profile. Comment text only.",
+      "risk": "low",
+      "behavior_change": "none -- comment only"
     }
   ],
   "architecture_scan": {

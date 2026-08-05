@@ -28,7 +28,7 @@
 ## Runtime witness on `969bdbdc`
 
 ```text
-species                   backend    c^2/1e6   frontend  (E/rho)*1e3
+species                   backend    c²/10⁶    frontend  (E_GPa/ρ)×10³
 American Basswood         24.2651    24.2651    24.2651      24.2651
 Western Red Cedar         21.0270    21.0270    21.0270      21.0270
 Bubinga                   20.6854    20.6854    20.6854      20.6854

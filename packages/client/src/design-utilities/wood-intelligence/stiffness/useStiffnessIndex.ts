@@ -71,9 +71,17 @@ export function calcRadiationRatio(speedMs: number, densityKgM3: number): number
 }
 
 /**
- * Specific MOE (E/ρ index).
- * MOE (GPa) / density (kg/m³) × 10⁶  (units: m²/s²)
- * = c²  — identical to radiation ratio squared × 10⁻⁶
+ * Specific MOE — raw c², in m²/s².
+ *
+ * Returns E_Pa / ρ, i.e. c² exactly. `computeIndices` then divides by 1e6 to
+ * publish the governed `c²/10⁶` profile (~20–30 for common tonewoods), which is
+ * the same scale the backend `TonewoodEntry.specific_moe` returns.
+ *
+ * BR-045: this comment previously read "MOE (GPa) / density (kg/m³) × 10⁶ …
+ * identical to radiation ratio squared × 10⁻⁶". Both halves were wrong — that
+ * expression is 1000× below this function's actual return, and c² is ρ² times
+ * the squared radiation ratio, not 10⁻⁶ times it. The arithmetic was always
+ * correct; only the prose describing it was not.
  */
 export function calcSpecificMoe(moeGpa: number, densityKgM3: number): number {
   return (moeGpa * 1e9) / densityKgM3

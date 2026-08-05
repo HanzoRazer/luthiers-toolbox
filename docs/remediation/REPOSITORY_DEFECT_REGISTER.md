@@ -512,7 +512,8 @@ queued pending owner unit ruling
 
 - **Readiness:** **RESOLVED.**
 
-> **Resolved on 2026-08-04.** Owner selected the published `specific_moe` profile `c²/10⁶`.
+> **Owner ruling 2026-08-04; administrative closeout 2026-08-05 after post-merge witness.**
+> Owner selected the published `specific_moe` profile `c²/10⁶`.
 > PR #247 implemented the equivalent backend factor change from `1e6` to `1e3` and merged as
 > `f12f88c2`. Post-merge verification on `main` at `969bdbdc` confirmed backend/client numerical
 > parity and confirmed that BR-043 radiation-ratio behavior remained correct.
