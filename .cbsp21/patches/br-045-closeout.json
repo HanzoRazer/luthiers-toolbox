@@ -1,0 +1,111 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_045A_CLOSEOUT",
+  "title": "BR-045A: administrative closeout \u2014 mark BR-045 RESOLVED after PR #247 merge and post-merge witness",
+  "intent": "Documentation-only governance synchronization. BR-045 engineering landed as PR #247 \u2192 f12f88c2 (owner ruling 2026-08-04: published specific_moe profile c\u00b2/10\u2076; backend factor 1e6\u21921e3). This closeout records RESOLVED across the defect register, adjudication ledger, execution queue, and dependency map, attaching a fresh runtime witness taken on main tip 969bdbdc (not the merge commit). BR-043 remains RESOLVED; BR-044 remains QUEUED \u2014 NOT AUTHORIZED. No production code.",
+  "change_type": "docs",
+  "behavior_change": "none. No runtime file is touched. Four remediation ledger documents plus this manifest.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-045-closeout.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/br-045-closeout.json",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md",
+      "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) REPOSITORY_DEFECT_REGISTER.md: BR-045 readiness moves from IMPLEMENTED \u2014 AWAITING MERGE to RESOLVED, with explicit lifecycle (queued \u2192 ruling \u2192 authorized \u2192 PR #247/f12f88c2 \u2192 witness on 969bdbdc \u2192 resolved), durable closeout statement, and witness table (Basswood/WRC/Bubinga specific_moe 24.2651/21.0270/20.6854; BR-043 radiation_ratio 11.87 / score 0.9924 unchanged). BR-043 secondary-index footnotes relabeled historical where they described the pre-fix specific_moe split. (2) BACKLOG_ADJUDICATION_LEDGER.md: BR-045 disposition/readiness \u2192 RESOLVED with merge + witness SHAs; intake OWNER_DECISION_REQUIRED retained only as historical note. (3) REMEDIATION_EXECUTION_QUEUE.md: Wave 1 rank 8 \u2192 DONE/RESOLVED; does not authorize BR-044. (4) REMEDIATION_DEPENDENCY_MAP.md: BR-045 marked RESOLVED; explicit that closure does not authorize BR-044 or complete unit-profile consolidation. (5) this per-PR CBSP21 closeout manifest. (6) docs/remediation/BR-045A_CLOSEOUT_WITNESS.md: permanent witness table and SHA distinction.",
+    "why_not_redundant": "Implementation PR #247 updated code and left governance at IMPLEMENTED \u2014 AWAITING MERGE. Administrative closeout is a separate lifecycle step: it attaches the post-merge witness baseline (969bdbdc, distinct from merge commit f12f88c2) and makes the system of record agree with production before Consolidation Lab queue work. No production behavior changes."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse HEAD on witness checkout -> 969bdbdc76bc5cbf9e3107792e2f21953e7c9d64",
+      "gh pr view 247 --json mergeCommit -> f12f88c27141ecc920429e7a6f1ab5e956c782a1",
+      "runtime witness on 969bdbdc: TonewoodEntry specific_moe Basswood/WRC/Bubinga = 24.2651/21.0270/20.6854; equals c^2/1e6 and frontend arithmetic; Basswood radiation_ratio=11.87; _score_acoustic(soundboard)=0.992423",
+      "rg negative: no authoritative BR-045 row still says QUEUED / NOT AUTHORIZED / AWAITING MERGE / OWNER_DECISION_REQUIRED as current readiness (historical labels only)",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> (recorded at PR time)"
+    ],
+    "known_residual": "BR-044 remains QUEUED \u2014 NOT AUTHORIZED. Broader derived-index unit-profile consolidation remains a future program, not authorized by BR-045A."
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/br-045-closeout.json",
+      "intent": "Per-PR CBSP21 closeout manifest declaring this governance-only change set, including itself.",
+      "scan_targets": [
+        ".cbsp21/patches/br-045-closeout.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "Mark BR-045 RESOLVED with merge SHA f12f88c2, witness tip 969bdbdc, and runtime witness table; keep BR-044 queued.",
+      "scan_targets": [
+        "docs/remediation/REPOSITORY_DEFECT_REGISTER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "Flip BR-045 disposition/readiness to RESOLVED; retain OWNER_DECISION_REQUIRED only as historical intake note.",
+      "scan_targets": [
+        "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md",
+      "intent": "Mark Wave 1 rank 8 BR-045 DONE/RESOLVED with merge and witness evidence; note BR-044 still unauthorized.",
+      "scan_targets": [
+        "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md",
+      "intent": "Record BR-045 RESOLVED; state that closure does not authorize BR-044 or finish unit-profile consolidation.",
+      "scan_targets": [
+        "docs/remediation/REMEDIATION_DEPENDENCY_MAP.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md",
+      "intent": "Permanent post-merge witness record: f12f88c2 merge vs 969bdbdc tip; specific_moe parity table; BR-043 regression check.",
+      "scan_targets": [
+        "docs/remediation/BR-045A_CLOSEOUT_WITNESS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-05-br-045a-closeout",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Governance-only closeout. No executable code. BR-045 engineering already on main via f12f88c2; this PR only synchronizes remediation artifacts and records the 969bdbdc witness."
+  }
+}
