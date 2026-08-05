@@ -31,7 +31,7 @@ Not code fixes — the gates that must clear before/around execution.
 | 5 | BR-003 — simulation metrics router/schema mismatch (8 xfails) | CONFIRMED_DEFECT | small–medium |
 | 6 | BR-013 — wire RMOS workflow `approve` route | UNFINISHED_SPRINT_WORK | small |
 | 7 | **BR-043** — tonewood radiation-ratio `*1e6` collapses `_score_acoustic` to 0.0 for every species | ~~CONFIRMED_DEFECT~~ **RESOLVED** | ✅ **DONE** — merged **PR #245** → `a34b6f5d`, CI 44 pass / 0 fail. Post-merge witness: `_score_acoustic(soundboard)` = **0.9924**, was `0.0` for every species. Producer repaired, stale UI label corrected, 19 tests added, CBSP21 100%. Did not displace ranks 1–6. Spawned **BR-044** and **BR-045** |
-| 8 | **BR-045** — `specific_moe` publishes two scales 1000× apart across backend and client | OWNER_DECISION_REQUIRED | **IMPLEMENTED — AWAITING MERGE.** ✅ Owner ruled `c²/10⁶` 2026-08-04; backend `1e6`→`1e3` at one site, parity now exact across backend and client, 2 stale unit labels corrected, 4 tests pin the identity |
+| 8 | **BR-045** — `specific_moe` publishes two scales 1000× apart across backend and client | ~~OWNER_DECISION_REQUIRED~~ **RESOLVED** | ✅ **DONE** — owner ruled `c²/10⁶` 2026-08-04; merged **PR #247** → `f12f88c2` (`1e6`→`1e3`). Post-merge witness on `main` at `969bdbdc`: Basswood/WRC/Bubinga **24.2651 / 21.0270 / 20.6854** (= `c²/10⁶` = frontend); BR-043 radiation-ratio **11.87** / score **0.9924** unchanged. Does not authorize **BR-044** |
 
 ## Wave 2 — Contract & topology / migration
 

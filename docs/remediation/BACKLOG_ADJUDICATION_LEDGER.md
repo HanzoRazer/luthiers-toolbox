@@ -134,14 +134,21 @@ inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduc
 
 | BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
 
-| BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | OWNER_DECISION_REQUIRED | code-inspection | med | **IMPLEMENTED — AWAITING MERGE** | ✅ owner ruled `c²/10⁶` on 2026-08-04; backend factor `1e6`→`1e3`, one site moved. Parity exact (24.2651 Basswood both surfaces). 2 stale unit labels also corrected. 4 tests pin the identity + parity |
+| BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | ~~OWNER_DECISION_REQUIRED~~ **RESOLVED** | test-verified + runtime witness | med | **RESOLVED** | Owner ruled `c²/10⁶` 2026-08-04; PR #247 → `f12f88c2` (`1e6`→`1e3`). Post-merge witness on `969bdbdc`: Basswood/WRC/Bubinga `specific_moe` = **24.2651 / 21.0270 / 20.6854** (= `c²/10⁶` = frontend); BR-043 `radiation_ratio` 11.87 / score **0.9924** unchanged |
 
-**BR-045 — why `OWNER_DECISION_REQUIRED` and not `CONFIRMED_DEFECT`.** The docstring being false about
-its code is confirmed; *which side moves* is not derivable from the repository, because the frontend
-independently produces the docstring's value. Unlike BR-043 there is no consumer contract to adjudicate
-against — nothing thresholds, sorts or scores on `specific_moe` — so the blocking item is a ruling on
-the published unit, not a code question. Promoted out of BR-043's secondary-index footnote so it carries
-an ID rather than living inside a resolved defect.
+**BR-045 — historical disposition note.** Intake used `OWNER_DECISION_REQUIRED` (not `CONFIRMED_DEFECT`)
+because the docstring contradiction was confirmed but *which side moves* was not repository-derivable
+without a published-unit ruling. That ruling was granted 2026-08-04 (`c²/10⁶`), implemented in PR #247
+(`f12f88c2`), and closed by BR-045A after post-merge witness on `969bdbdc`. Lifecycle:
+
+```text
+queued pending owner unit ruling
+→ owner ruling granted
+→ implementation authorized
+→ PR #247 merged
+→ post-merge runtime witness passed
+→ resolved
+```
 
 **BR-044 evidence label — `STATIC-FACT CONFIRMED`.** The frontend producer computes `(c/ρ)*1000`
 (~9,000–14,000 for normal tonewoods) while `rrColor` and `soundboardRating` threshold at 12.0 / 10.5 /
