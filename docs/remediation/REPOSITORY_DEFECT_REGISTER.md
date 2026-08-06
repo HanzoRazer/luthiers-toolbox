@@ -453,8 +453,26 @@ consumer contract (`_ROLE_TARGETS`); `specific_moe` had no thresholding consumer
   composable/component test is required before this entry is promoted to `CONFIRMED`.
 - **Severity:** high for decision quality; low direct runtime-safety risk. No machine output, no data
   loss. **Fix size:** small–moderate.
-- **Readiness:** **QUEUED — NOT AUTHORIZED.** Reproduction and consumer inventory required before any
-  mutation. This entry defines scope only.
+- **Evidence:** **CONFIRMED — symptom reproduced.** No longer static-only. 7/7 composable
+  characterisation tests (`668ca20e`) and a component witness (`8e01b95c`) on branch `br-044a`,
+  baseline `main` `0179a032`.
+  - producer emits `(c/ρ) × 1000`; canonical BR-043 contract is `c / ρ` — ratio **exactly 1000**
+    (ρ 415 / E 10.07 → **11,870** vs **11.87**);
+  - controlled low/mid/high fixtures that separate across bands canonically **all render
+    "Excellent"** — rating *and* colour discrimination collapse;
+  - **both** hardcoded and API-adapted records recompute locally: the backend value never crosses
+    the adapter (TC-12, `5a38b304`), so the defect is not confined to the hardcoded path;
+  - complete consumer inventory (TC-14, `6e88b7a6`) — one producer, two threshold consumers, three
+    display sites, one comparison surface, one sorter, all within `stiffness/`.
+- **Readiness:** **PROOF COMPLETE — READY FOR BOUNDED DEV ORDER.**
+  **Implementation: NOT AUTHORIZED.**
+- **Bounded BR-044B repair** (settled by the authority analysis, `740bee94`):
+  minimum repair is aligning the **local** producer to `c / ρ`. **Backend-value transport is
+  deferred** — it needs three type-level additions (`ApiTonewoodRecord`, local `TonewoodEntry`,
+  `apiRecordToEntry`) plus precedence and parity rules, and is a separate additive enhancement.
+  **Rounding requires an explicit decision** — `toFixed(3)` is currently applied to the *scaled*
+  value. **Sorting is invariant** under a positive scalar transform and needs regression proof only,
+  not a change.
 - **Required proof packet before implementation:**
   1. a direct composable test showing `calcRadiationRatio` returns roughly **11,000–13,000** for a
      normal soundboard wood;
@@ -538,7 +556,8 @@ queued pending owner unit ruling
   2. Consumer inventory — no million-scale assumption; pass-through only;
   3. Cross-surface parity test — landed in PR #247;
   4. API semantic note — value scale changed with no schema change (documented in PR #247).
-- **Relationship to BR-044:** sibling, not duplicate. BR-044 remains **QUEUED — NOT AUTHORIZED**.
+- **Relationship to BR-044:** sibling, not duplicate. BR-044 is now **PROOF COMPLETE — READY FOR
+  BOUNDED DEV ORDER, NOT AUTHORIZED**.
   Closing BR-045 does **not** authorize BR-044 and does **not** complete the broader unit-profile
   consolidation program for derived acoustic indices.
 - **Standing lesson:** BR-043, BR-044 and BR-045 are three instances of one failure mode. A derived

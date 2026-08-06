@@ -76,9 +76,12 @@ entry. The frontend finding is queued as **BR-044**.
 
 - BR-043 establishes the canonical backend scale.
 - BR-044 must use that adjudicated scale.
-- **BR-044 does not block BR-043.** The reverse edge is ordering only — BR-044's authority decision
-  (correct the frontend calculation vs. delete it and consume the backend value) is easier to make
-  once BR-043 has fixed the canonical value it would consume.
+- **BR-044 does not block BR-043.** The reverse edge is ordering only.
+- **The authority decision is settled** (`740bee94`): correct the local producer to `c/ρ`; do **not**
+  delete it in favour of the backend value, which is not transported to this panel.
+- **BR-044B does not depend on PR #244.** MB Sound is unrelated to this repair.
+- **Backend-value transport is deferred** — a separate additive contract change
+  (`ApiTonewoodRecord` + local `TonewoodEntry` + `apiRecordToEntry` + precedence + parity).
 - BR-044 **should be completed before frontend material rankings are consumed by the centralized
   generator system**, for the same reason BR-043 should precede recommendation-quality evaluation:
   a degenerate rating that marks every wood "Excellent" carries no signal for a downstream consumer.
@@ -94,8 +97,9 @@ MOE), different failure modes (rating collapse vs latent inconsistency), and BR-
 and client while BR-044 is client-local. Neither blocks the other; they may be scoped together only if
 an owner rules on a **unit profile for derived acoustic indices as a class**, which would settle both.
 
-**BR-045 closure does not authorize BR-044.** BR-044 remains **QUEUED — NOT AUTHORIZED** at its
-current evidence level. Closing BR-045 also does **not** complete the broader unit-profile
+**BR-045 closure does not authorize BR-044.** BR-044 is now **CONFIRMED / PROOF COMPLETE /
+NOT AUTHORIZED**. Closing it will **not** complete the broader unit-profile program, and
+**centralized generators must not consume the defective frontend profile** while it stands. Closing BR-045 also does **not** complete the broader unit-profile
 consolidation program for derived acoustic indices.
 
 **Shared root cause — worth recording once.** BR-043, BR-044 and BR-045 are three instances of the same

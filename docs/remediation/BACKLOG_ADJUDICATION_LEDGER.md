@@ -132,7 +132,7 @@ all declare the unscaled `c/rho` scale. `_score_acoustic` compares directly with
 inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduced by
 `tests/materials/test_tonewood_acoustic_indices.py` (3 × `xfail(strict=True)`).
 
-| BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | code-inspection | high | **QUEUED — NOT AUTHORIZED** | reproduce the rendered symptom, inventory consumers, then rule on frontend-corrected vs consume-backend |
+| BR-044 | Frontend radiation-ratio producer and rating thresholds use incompatible scales | client/wood-intelligence | `useStiffnessIndex.ts:69-71` vs `:149-152` + `StiffnessIndexPanel.vue:312-317` | A | CONFIRMED_DEFECT | test-reproduced | high | **proof-complete / needs-authorization** | execute bounded BR-044B local scale repair (align local producer to `c/ρ`); backend transport deferred |
 
 | BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | ~~OWNER_DECISION_REQUIRED~~ **RESOLVED** | test-verified + runtime witness | med | **RESOLVED** | Owner ruled `c²/10⁶` 2026-08-04; PR #247 → `f12f88c2` (`1e6`→`1e3`). Post-merge witness on `969bdbdc`: Basswood/WRC/Bubinga `specific_moe` = **24.2651 / 21.0270 / 20.6854** (= `c²/10⁶` = frontend); BR-043 `radiation_ratio` 11.87 / score **0.9924** unchanged |
 
@@ -150,7 +150,7 @@ queued pending owner unit ruling
 → resolved
 ```
 
-**BR-044 evidence label — `STATIC-FACT CONFIRMED`.** The frontend producer computes `(c/ρ)*1000`
+**BR-044 evidence — `test-reproduced` (was `STATIC-FACT CONFIRMED`; superseded by `br-044a`).** The frontend producer computes `(c/ρ)*1000`
 (~9,000–14,000 for normal tonewoods) while `rrColor` and `soundboardRating` threshold at 12.0 / 10.5 /
 9.0 on the unscaled scale, so every wood with MOE data takes the top branch. Separate implementation
 and data path from BR-043 — it reads hardcoded `tonewoodData.ts`, not the API. Requires
@@ -165,8 +165,11 @@ rendered-behavior reproduction and an authority decision before remediation.
 
 **Owner ruling required:** BR-043 no — this is an internal-consistency repair against contracts the
 repository already states; it does not adjudicate physics, role targets, or recommendation philosophy.
-**BR-044 yes** — proof-packet item 5 is an authority decision between correcting the frontend
-calculation and deleting it in favour of the backend canonical value.
+**BR-044 — settled, no longer outstanding.** Proof-packet item 5 was adjudicated by the authority
+analysis (`740bee94`): the frontend retains a **pure local producer aligned to `c/ρ`**, because the
+backend value is not transported to this panel and both live paths depend on local computation.
+Backend transport is deferred as a separate additive enhancement. What remains is *implementation
+authorization*, not an authority question.
 
 **Dependencies:** none. Independent of PR #244 — MB Sound corroborates the scale but is not runtime
 authority and is not imported by this repair.
