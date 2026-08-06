@@ -1,13 +1,13 @@
 # BR-044A — Frontend radiation-ratio proof packet
 
-> **INCOMPLETE — WORK IN PROGRESS.** This document currently contains **one** completed
-> section: the API data-path finding (TC-12). Every other required section is listed in
-> §Remaining and is **not yet written**. Do not treat this packet as the BR-044A proof
-> until those sections exist. **BR-044 remains `CONFIRMED_DEFECT`, unresolved, and
-> production repair remains unauthorized.**
+> **INCOMPLETE — WORK IN PROGRESS.** Consumer inventory and repair-authority analysis are complete.
+> The baseline, reproduction, fixture, component-witness, remediation-sync, and validation sections
+> still require final assembly before this packet becomes the authoritative BR-044A closeout.
+> **BR-044 remains `CONFIRMED_DEFECT`, unresolved, and production repair remains unauthorized.**
 
 **Branch:** `br-044a` · **Baseline:** `main` `0179a032` · **Evidence commits:** `668ca20e` (unit
-reproduction), `8e01b95c` (component witness)
+reproduction), `8e01b95c` (component witness), `5a38b304` (TC-12 adapter finding), `6e88b7a6`
+(consumer inventory)
 **Production files changed:** none.
 
 ---
@@ -43,7 +43,7 @@ not a restatement of it.)*
    "shared contract, local pure implementation" is right — not merely because fallback operation
    is desirable, but because a corrected local implementation is the **only** thing that works
    today for *either* path.
-3. **The §11 compatibility risk is discharged, and it was real.** The order anticipated that the
+3. **The compatibility risk is discharged, and it was real.** The order anticipated that the
    proof "may assume API records include fields not exposed through the current endpoint or
    adapter." They are not exposed. Recorded here as verified code fact, not inference.
 
@@ -51,10 +51,9 @@ not a restatement of it.)*
 
 - **Verified code fact:** the per-boundary findings, owned by the cited TC-12 record.
 - **Architectural inference:** consequences 1–3 above.
-- **Not established here:** whether the endpoint response would deserialize the field if added;
-  whether any *other* frontend surface consumes the backend value (`useTonewoods.ts` declares
-  `radiation_ratio` on its own separate type — that is a different composable and is **not**
-  evidence about this panel). Both belong to the consumer inventory.
+- **Not established here:** whether any other frontend surface consumes the backend value;
+  `useTonewoods.ts` declares `radiation_ratio` on its own separate type, but it is not on this panel's
+  data path.
 
 ---
 
@@ -81,7 +80,7 @@ classified below; none is unexplained.
 | `StiffnessIndexPanel.vue:255–258` | comparison table: two values, `deltaClass`, `formatDelta` | **COMPARISON** |
 | `StiffnessIndexPanel.vue:312` `rrColor` | thresholds `12.0 / 10.5 / 9.0` | **COLOUR CONSUMER** |
 | `tonewoodData.ts:21` | docstring `radiation_ratio = speed_of_sound / density` | stale prose — see finding 3 |
-| `useTonewoods.ts:66` | `radiation_ratio?: number \| null` | **NOT THIS PANEL** — separate composable/type; no path into `StiffnessIndexPanel` |
+| `useTonewoods.ts:66` | `radiation_ratio?: number | null` | **NOT THIS PANEL** — separate composable/type; no path into `StiffnessIndexPanel` |
 | `__tests__/*.spec.ts` | BR-044A characterisation suites | test (evidence only) |
 
 ### Finding 1 — rounding is applied to the scaled value *(VERIFIED CODE FACT)*
@@ -96,7 +95,7 @@ the panel separately re-rounds to 2dp (`:105`, `:255`) and 3dp (`:146`) at displ
 `×1000` is a positive monotonic transform, so the descending comparator at `:236–237` produces the
 same ordering before and after the repair. This bounds the blast radius: the defect corrupts
 **rating, colour, and displayed magnitude**, but not sort order. BR-044B still needs a sort
-regression test to *prove* invariance, not to fix it.
+regression test to prove invariance, not to fix it.
 
 ### Finding 3 — a third stale prose instance *(VERIFIED CODE FACT)*
 
@@ -116,17 +115,223 @@ panel.
 
 ---
 
-## Remaining — NOT YET WRITTEN
+## Authority analysis
 
-Required by the BR-044A2 order and absent from this document:
+### Recommended authority model *(IMPLEMENTATION RECOMMENDATION)*
 
-1. Executive finding · 2. Baseline and branch evidence · 3. Reproduction commits ·
-4. Formula comparison · 5. Controlled fixture table · 6. Component witness ·
-7. Consumer inventory · 8. Built-in fallback data flow · 9. API-backed data flow ·
-10. Backend/frontend authority comparison · 11. Recommended authority model ·
-12. Rejected alternatives · 13. BR-044B patch plan · 14. Test inversion and migration plan ·
-15. Residual scientific limitations · 16. Explicit non-findings
+BR-044B should make the frontend's pure local producer conform to the canonical BR-043 contract:
 
-Also outstanding: consumer inventory (TC-14), remediation-record synchronization, the CBSP21
-manifest, targeted validation, and the single BR-044A PR. **No PR may be opened until every
-section above exists and all records agree.**
+```text
+radiation_ratio = speed_of_sound_m_s / density_kg_m3
+```
+
+The local producer remains necessary because both built-in and API-adapted records currently arrive
+without a transported derived value. Correcting this producer therefore repairs both live paths in
+one bounded change while preserving offline/fallback behavior.
+
+The authority boundary should be:
+
+```text
+canonical quantity definition and scale  -> backend / shared engineering authority
+pure local fallback implementation       -> frontend stiffness subsystem
+qualitative thresholds                   -> existing advisory UI policy
+rounding and display precision            -> explicit frontend presentation policy
+```
+
+This does **not** make the frontend a competing scientific authority. It is a deterministic local
+implementation of the same contract, required by the current product's fallback design.
+
+### Backend transport disposition *(IMPLEMENTATION RECOMMENDATION)*
+
+Backend-value transport should be deferred from the minimum BR-044B repair unless owner review
+explicitly authorizes the larger contract change. Today there is no field to consume, so adding
+transport requires coordinated changes to:
+
+1. `ApiTonewoodRecord`;
+2. `TonewoodEntry` or a separate adapted-record type;
+3. `apiRecordToEntry`;
+4. precedence rules when both transported and locally computable values exist;
+5. mismatch handling and parity tests.
+
+Those changes are useful for future authority enforcement, but they are not necessary to stop the
+live rating and display collapse. Mixing them into the minimum repair would turn a one-producer
+scale correction into an API/type migration.
+
+### Rounding authority *(IMPLEMENTATION RECOMMENDATION)*
+
+BR-044B must not silently inherit `+rr.toFixed(3)` as a scientific rule. The recommended split is:
+
+- keep the internal calculated value unrounded through classification and sorting;
+- apply explicit rounding only at the presentation boundary;
+- use one documented display precision consistently for table, detail, and comparison surfaces;
+- pin the chosen display precision with tests;
+- compare parity using an unrounded value or a declared tolerance, never display-rounded strings.
+
+If the existing `TonewoodIndices` contract requires a stored rounded number for compatibility,
+BR-044B must document that as a deliberate compatibility constraint and add a precision regression.
+
+### Threshold authority *(ARCHITECTURAL INFERENCE)*
+
+The current `12.0 / 10.5 / 9.0` thresholds are numerically on the canonical unscaled profile and
+will regain discriminating power once the producer is corrected. BR-044B should not change them as
+part of the scale repair.
+
+That conclusion is limited: this proof establishes scale compatibility, not empirical validity of
+the labels `Excellent`, `Good`, `Acceptable`, or `Below average`.
+
+### Sort behavior *(VERIFIED CONSEQUENCE)*
+
+Sorting requires no production repair because multiplying every non-null value by a positive
+constant preserves order. BR-044B still needs a regression proving that the corrected producer does
+not reorder the current fixture set unexpectedly through rounding or null handling.
+
+---
+
+## Rejected alternatives
+
+### Alternative A — backend-only calculation
+
+Rejected for BR-044B. The component intentionally falls back to built-in records when the API is
+unavailable, and the current adapter does not transport `radiation_ratio`. Requiring backend
+availability would be a product-behavior change larger than the defect repair.
+
+### Alternative B — change thresholds to the ×1000 scale
+
+Rejected. That would preserve the frontend's isolated profile, perpetuate divergence from BR-043,
+and leave the visible and documented quantity inconsistent across surfaces.
+
+### Alternative C — divide values only at display time
+
+Rejected. Rating and colour consume the stored scaled value before display. Presentation-only
+conversion would leave the behavioral defect live and create multiple representations of the same
+quantity inside one component.
+
+### Alternative D — add backend transport and remove local calculation in the same repair
+
+Rejected as the minimum repair. It expands scope into API typing, adaptation, precedence, and
+migration while still failing the offline path unless another local fallback is retained.
+
+### Alternative E — postpone BR-044 until a generalized unit-profile platform exists
+
+Rejected. The defect is live, bounded, and repairable under the already-settled BR-043 scale. The
+future authority layer should prevent recurrence, not block a known correction.
+
+---
+
+## BR-044B bounded patch plan
+
+### Required production modifications
+
+#### `packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts`
+
+- change `calcRadiationRatio` from `(speedMs / densityKgM3) * 1000` to
+  `speedMs / densityKgM3`;
+- correct the function and module comments to the canonical unscaled profile;
+- preserve null handling and soundboard-role gating;
+- make rounding authority explicit;
+- retain the existing thresholds unless separately authorized;
+- preserve sort semantics.
+
+#### `packages/client/src/design-utilities/wood-intelligence/stiffness/StiffnessIndexPanel.vue`
+
+- replace stale `c/ρ ×10³` labels with the approved canonical label;
+- align table, detail, and comparison display precision;
+- do not change rating text, threshold values, or colour palette in the scale repair.
+
+#### `packages/client/src/design-utilities/wood-intelligence/stiffness/tonewoodData.ts`
+
+- reconcile the top-level formula prose with the final published label and scale;
+- no material data changes.
+
+### Required test modifications
+
+#### `__tests__/useStiffnessIndex.spec.ts`
+
+- invert TC-01 from ~11,870 to ~11.87;
+- replace TC-02 with the canonical `c/ρ` identity;
+- replace TC-03 with boundary tests at `9.0`, `10.5`, and `12.0`;
+- invert TC-04 so controlled fixtures occupy distinct intended bands;
+- replace TC-05 ratio `1000` with frontend/backend parity `1` within tolerance;
+- retain TC-06 missing-data behavior;
+- add unrounded or tolerance-based parity tests;
+- add a sort-invariance regression.
+
+#### `__tests__/StiffnessIndexPanel.spec.ts`
+
+- invert TC-07 to the canonical displayed magnitude;
+- invert TC-08 so controlled rows do not all render `Excellent`;
+- invert TC-09 so colour bands discriminate where fixture values cross thresholds;
+- invert TC-10 to the approved canonical label;
+- retain the fallback-path witness.
+
+### Deferred optional contract work
+
+The following are **not** part of the minimum BR-044B repair unless separately authorized:
+
+- add `radiation_ratio` to `ApiTonewoodRecord`;
+- add transported-value storage to `TonewoodEntry`;
+- map the field in `apiRecordToEntry`;
+- define transported-versus-computed precedence;
+- add runtime mismatch reporting.
+
+Track these as a follow-on authority/parity improvement rather than silently including them.
+
+---
+
+## Test inversion and migration strategy
+
+1. Preserve the current BR-044A commits as historical evidence.
+2. In BR-044B, rewrite characterization assertions into normative corrected-behavior assertions.
+3. Keep one explicit regression test proving the historical ×1000 path is absent.
+4. Verify hardcoded and API-adapted primitive-input records produce the same canonical result.
+5. Test exact threshold inclusivity:
+   - `12.0` -> `Excellent`;
+   - `10.5` -> `Good`;
+   - `9.0` -> `Acceptable`;
+   - immediately below `9.0` -> `Below average`.
+6. Verify non-soundboard entries still receive `null` rating.
+7. Verify missing-MOE behavior remains unchanged.
+8. Verify sorting order is invariant for the existing fixture set.
+9. Verify all three display surfaces use the same approved label and precision.
+10. Run adjacent frontend and TypeScript regressions before queue closeout.
+
+No persisted user-data migration is identified in this subsystem. The visible numeric magnitude and
+rating/colour results will change immediately after deployment; that is the intended defect repair.
+
+---
+
+## Residual scientific limitations
+
+- The proof validates the numerical scale contract, not the empirical quality of the thresholds.
+- Species-level reference values do not establish specimen-level acoustic quality.
+- The words `Excellent`, `Good`, `Acceptable`, and `Below average` remain advisory UI interpretation.
+- No uncertainty, moisture, grain orientation, damping, or measurement provenance is incorporated.
+- Backend transport and parity enforcement remain absent from this panel.
+- A generalized derived-index unit/profile authority remains future work.
+
+---
+
+## Remaining — NOT YET WRITTEN OR FINALIZED
+
+Required before BR-044A closeout:
+
+1. Executive finding.
+2. Scope and non-goals.
+3. Baseline and branch evidence.
+4. Reproduction commit summary.
+5. Formula comparison.
+6. Controlled fixture table.
+7. Component witness summary.
+8. Built-in fallback data-flow section.
+9. API-backed data-flow section.
+10. Explicit non-findings.
+11. TC-11 fallback verification.
+12. TC-13 API-adapted recomputation verification.
+13. TC-15 exact threshold-boundary characterization.
+14. TC-16 non-soundboard characterization.
+15. Remediation-record synchronization.
+16. CBSP21 manifest and final validation.
+
+The consumer inventory, authority analysis, rejected alternatives, BR-044B patch plan, and test
+inversion strategy are complete. **No PR may be opened until the remaining sections exist, the WIP
+header is removed, and all remediation records agree.**
