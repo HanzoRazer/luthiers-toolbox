@@ -58,6 +58,64 @@ not a restatement of it.)*
 
 ---
 
+## TC-14 — Consumer inventory
+
+Search terms: `calcRadiationRatio`, `radiationRatio`, `radiation_ratio`, `rrColor`,
+`soundboardRating`. Scope: `packages/client/src`, excluding `node_modules`. Every live hit is
+classified below; none is unexplained.
+
+| Site | Role | Classification |
+|---|---|---|
+| `useStiffnessIndex.ts:69` `calcRadiationRatio` | `(c/ρ) × 1000` | **PRODUCER** — the single producer |
+| `useStiffnessIndex.ts:149` | calls producer inside `computeIndices` | producer call site |
+| `useStiffnessIndex.ts:127,132` | `radiationRatio`, `soundboardRating` on `TonewoodIndices` | type surface |
+| `useStiffnessIndex.ts:140,144` | null branch when `moeGpa` absent | null path (TC-06) |
+| `useStiffnessIndex.ts:155–160` | thresholds `12.0 / 10.5 / 9.0` → Excellent/Good/Acceptable/Below average | **QUALITATIVE CONSUMER** |
+| `useStiffnessIndex.ts:166` | `radiationRatio: +rr.toFixed(3)` | **ROUNDING** — see finding 1 |
+| `useStiffnessIndex.ts:217` | `sortBy` default `'radiation_ratio'` | **SORTER (default order)** |
+| `useStiffnessIndex.ts:236–237` | `(b.radiationRatio ?? 0) - (a.radiationRatio ?? 0)` | **SORTER** — see finding 2 |
+| `StiffnessIndexPanel.vue:49` | sort `<option value="radiation_ratio">` | sorter control |
+| `StiffnessIndexPanel.vue:105–108` | table cell, `rrColor(...)`, `.toFixed(2)` | **DISPLAY + COLOUR** |
+| `StiffnessIndexPanel.vue:146–147` | detail card, `rrColor(...)`, `.toFixed(3)` | **DISPLAY + COLOUR** |
+| `StiffnessIndexPanel.vue:168–172` | soundboard-quality badge + CSS class from rating text | **QUALITATIVE DISPLAY** |
+| `StiffnessIndexPanel.vue:255–258` | comparison table: two values, `deltaClass`, `formatDelta` | **COMPARISON** |
+| `StiffnessIndexPanel.vue:312` `rrColor` | thresholds `12.0 / 10.5 / 9.0` | **COLOUR CONSUMER** |
+| `tonewoodData.ts:21` | docstring `radiation_ratio = speed_of_sound / density` | stale prose — see finding 3 |
+| `useTonewoods.ts:66` | `radiation_ratio?: number \| null` | **NOT THIS PANEL** — separate composable/type; no path into `StiffnessIndexPanel` |
+| `__tests__/*.spec.ts` | BR-044A characterisation suites | test (evidence only) |
+
+### Finding 1 — rounding is applied to the scaled value *(VERIFIED CODE FACT)*
+
+`useStiffnessIndex.ts:166` stores `+rr.toFixed(3)` — three decimals of the **×1000** value. On the
+corrected canonical scale, 3dp of ~11.87 retains fewer significant figures than 3dp of ~11870.
+BR-044B must state the rounding authority explicitly rather than inherit `toFixed(3)` unexamined;
+the panel separately re-rounds to 2dp (`:105`, `:255`) and 3dp (`:146`) at display time.
+
+### Finding 2 — sorting is **not** affected by the defect *(ARCHITECTURAL INFERENCE)*
+
+`×1000` is a positive monotonic transform, so the descending comparator at `:236–237` produces the
+same ordering before and after the repair. This bounds the blast radius: the defect corrupts
+**rating, colour, and displayed magnitude**, but not sort order. BR-044B still needs a sort
+regression test to *prove* invariance, not to fix it.
+
+### Finding 3 — a third stale prose instance *(VERIFIED CODE FACT)*
+
+`tonewoodData.ts:21` documents `radiation_ratio = speed_of_sound / density` — the **canonical**
+formula — in the same package whose implementation multiplies by 1000. The prose was right and the
+code diverged from it. This is the same prose-vs-arithmetic drift already corrected in
+`InstrumentMaterialSelector.vue` (BR-043) and `useStiffnessIndex.ts` `calcSpecificMoe` (BR-045).
+BR-044B must align this line with whatever profile it publishes.
+
+### Consumer-count summary
+
+One producer; two threshold consumers (rating, colour) both on `12.0 / 10.5 / 9.0`; three display
+sites; one comparison surface; one sorter (default ordering). All within
+`design-utilities/wood-intelligence/stiffness/`. **No consumer outside that directory** — the
+`useTonewoods.ts` hit is a different composable with its own type and is not evidence about this
+panel.
+
+---
+
 ## Remaining — NOT YET WRITTEN
 
 Required by the BR-044A2 order and absent from this document:
