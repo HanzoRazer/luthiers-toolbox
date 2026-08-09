@@ -70,9 +70,51 @@ Ordered by consequence. Each states the contradiction, the evidence, and an **ad
 witness that has been red for ~100 consecutive days — and the execution queue that is supposed to
 sequence remediation does not list it at all. This is not a deprioritized item; it is an unlisted one.
 
+#### Root cause — diagnosed 2026-08-09 (amendment)
+
+**The health check never runs. This is not an API defect.** Two independent failures compound.
+
+**(a) The verification target is unparseable.** The job declares
+`defaults.run.working-directory: services/api` (`.github/workflows/api_health_check.yml:14-16`), so its
+`make api-verify` step resolves to **`services/api/Makefile`**, not the root `Makefile`. There, lines
+47–49:
+
+```make
+	@$(PYTHON) - <<'PY'
+import sys
+ok=True; errs=[]
+```
+
+Line 47 is tab-indented; **the heredoc body is not**. Every line of a make recipe must begin with a TAB —
+make strips one tab and passes the remainder to the shell. Because `import sys` carries no leading tab,
+make stops treating it as recipe text, attempts to parse it as a rule, finds neither `:` nor `=`, and
+emits precisely what CI reports:
+
+```
+Makefile:48: *** missing separator.  Stop.
+```
+
+`git blame` attributes all three lines to **`9cb9804c` (2025-11-09) — the initial commit**. The target has
+been unparseable for the file's entire history. The step exits 2 before uvicorn starts, which is why every
+run also logs *"No files were found with the provided path: services/api/api_health.json"* — there is no
+health artifact because nothing was ever health-checked.
+
+**(b) The failure alarm is disconnected — this is why ~100 nights passed unnoticed.**
+
+| Notify step | Observed failure | Cause |
+|---|---|---|
+| Slack notify on failure | exit code 3 | `WEBHOOK` resolves **empty** in the step env; `curl` posts to an empty URL |
+| Email notify on failure | `Input required and not supplied: from` | `dawidd6/action-send-mail@v3` invoked without the required `from` input; additionally warns `Unexpected input(s) 'content_type'` |
+
+**Evidence:** run `31291019670` (2026-08-09, head `0179a032`), job `api-health`; failing steps recorded by
+GitHub as *"Verify geometry imports; Slack notify on failure; Email notify on failure"*.
+
 **Advisory disposition:** highest-value candidate surfaced by this audit. A health witness that is
-always red provides no signal, so any regression it would have caught since ~2026-05 is currently
-undetected. Recommend BR-007 be given an explicit wave position in the next adjudication.
+always red provides no signal, so any regression it would have caught is currently undetected.
+**Fix (b) before or with (a):** repairing the Makefile alone restores a witness whose alarm still fires
+into a dead wire, which reproduces the same silent-failure condition on the next regression. Both are
+small, bounded, and independent of BR-007's broader scope — but BR-007 still needs an explicit wave
+position, since it is the item under which this work would be authorized.
 
 ---
 
@@ -86,9 +128,32 @@ No `CI-RED-*` entry in `SPRINTS.md` covers it, and no BR item names it. Per `SPR
 — *"SPRINTS.md is the parking lot — the live index where open work registers at session end
 (`CI-RED-*`…)"* — a permanently-red scheduled workflow is exactly what that index exists to hold.
 
-**Advisory disposition:** register as a new `CI-RED-*` item, or record an explicit decision that this
-workflow is non-blocking and should be disabled. A red check nobody has adjudicated is the worst of
-both states.
+#### Root cause — diagnosed 2026-08-09 (amendment). A different defect from F-01, and a live production 500.
+
+**`Adaptive Pocket (API)` does not share F-01's Makefile cause.** Its `api-smoke` job fails at a single
+step — **"M.3 - Energy endpoint returns totals and segments"** — with:
+
+```
+urllib.error.HTTPError: HTTP Error 500: Internal Server Error
+```
+
+The smoke script reaches the endpoint and the endpoint returns 500 before the segment-shape assertions
+(`code`, `len_mm`, `vol_mm3`, `energy_j`, heat-partition sum) can be evaluated. Unlike F-01, the API
+here **does start** — this is a real server error on a live route, reproduced nightly for 30
+consecutive scheduled runs.
+
+**Evidence:** run `31294738659` (2026-08-09, head `0179a032`), job `api-smoke`.
+
+**This is an unregistered production defect.** It appears in `REPOSITORY_DEFECT_REGISTER.md` under no
+BR ID, and in `SPRINTS.md` under no `CI-RED-*` entry. Under the register's own confidence vocabulary it
+would qualify as **`CONFIRMED`** — the symptom is *reproduced by a scheduled run*, not inferred from a
+code read. It is the only item this audit surfaced that meets the register's admission bar for a new
+defect entry.
+
+**Advisory disposition:** admit to the defect register as a new BR item with the run above as its
+reproduction basis, and register a `CI-RED-*` entry in `SPRINTS.md`. This audit did **not** diagnose
+*why* the energy endpoint 500s — that requires the uvicorn traceback from the run artifacts and is the
+obvious next probe.
 
 ---
 
@@ -448,8 +513,12 @@ failing workflows; targeted `git grep` re-witness of 14 specific BR/sprint claim
 
 1. **No test suites were executed.** CI state is read from GitHub Actions history; test-existence is
    read statically. Nothing here rests on a local run.
-2. **The root cause of F-01 / F-02 was not diagnosed.** This audit establishes *that* the workflows are
-   red and for how long, not *why*. Reading the failure logs is the obvious next step and was not taken.
+2. ~~**The root cause of F-01 / F-02 was not diagnosed.**~~ **LIFTED 2026-08-09 (amendment).** Both were
+   diagnosed from CI logs and confirmed against `origin/main`; see the root-cause subsections under F-01
+   and F-02. They proved to be **three** distinct defects, not two: a Makefile recipe that has never
+   parsed, a notification path that cannot deliver, and an unrelated live 500 on the energy endpoint.
+   **A residual limit remains:** *why* the energy endpoint returns 500 is still undiagnosed — that needs
+   the uvicorn traceback from the run artifacts.
 3. **`docs/governance/` was inventoried, not read.** ~190 files including the C2 arbitration corpus.
    Cross-record contradictions inside that corpus are out of scope here — with one exception already
    surfaced by the register (BR-042 vs `SYSTEM_CONFLATION_AUDIT_2026-06-21.md:123`, which rules that
@@ -472,16 +541,21 @@ failing workflows; targeted `git grep` re-witness of 14 specific BR/sprint claim
 ## 6. Recommended sequencing (advisory only — no authority is claimed)
 
 1. **Adjudicate F-01** — BR-007 / the permanently-red nightly witness. Highest consequence: a blind
-   regression detector, with a ready handoff and no queue position.
-2. **Adjudicate F-03 and F-04 as closure candidates.** Both need a witness pass, not new work. F-04
+   regression detector, with a ready handoff and no queue position. Now diagnosed and **small**: a tab
+   on `services/api/Makefile:48-49+` and a repaired notification path. Fix the notifier **with or
+   before** the Makefile — otherwise the next regression fails silently exactly as this one did.
+2. **Admit F-02 to the defect register** — the energy-endpoint 500 is the only newly-surfaced item that
+   meets the register's `CONFIRMED` bar (reproduced by 30 consecutive scheduled runs), and it is
+   currently tracked nowhere.
+3. **Adjudicate F-03 and F-04 as closure candidates.** Both need a witness pass, not new work. F-04
    additionally unblocks BR-028.
-3. **Correct F-06** — `NEXT_REMEDIATION_CANDIDATE.md`. Pure documentation; highest read-traffic error.
-4. **Resolve F-09 before F-08.** Write-back discipline for intake sections is the mechanism; the
+4. **Correct F-06** — `NEXT_REMEDIATION_CANDIDATE.md`. Pure documentation; highest read-traffic error.
+5. **Resolve F-09 before F-08.** Write-back discipline for intake sections is the mechanism; the
    individual missing queue rows are the symptom.
-5. **Rule on F-07** — BR-036 needs a register entry and ledger row, or the "next candidate"
+6. **Rule on F-07** — BR-036 needs a register entry and ledger row, or the "next candidate"
    designation should move.
-6. **Disambiguate F-10** and decide whether Sprint M6 is superseded by this audit or still owed.
-7. **F-05** — narrow-and-close M4 pending source verification.
+7. **Disambiguate F-10** and decide whether Sprint M6 is superseded by this audit or still owed.
+8. **F-05** — narrow-and-close M4 pending source verification.
 
 `SPRINTS-MAINT-RECON-001` becomes executable **after** this audit is adjudicated, not before — it
 assumes an evidence base, and this document is that base.
@@ -495,6 +569,14 @@ assumes an evidence base, and this document is that base.
 | Audit substrate | `origin/main` @ `0179a032`, verified against live GitHub `main` |
 | Live CI observation window | 2026-07-11 → 2026-08-09 (100 runs sampled on the nightly witness) |
 | Probe method | `git ls-tree` / `git grep` on refs; `git show` only on proven-present paths |
+| CI log evidence (amendment) | runs `31291019670` (api-health) and `31294738659` (api-smoke), both @ `0179a032` |
 | Authorities mutated | **none** |
 | Production code changed | **none** |
 | Supersedes | 2026-08-07 Cursor scan (uncommitted; see F-11) |
+
+### Amendment log
+
+| Date | Change |
+|---|---|
+| 2026-08-09 | Initial audit (`b22e7d5f`). |
+| 2026-08-09 | **Root-cause amendment.** F-01 and F-02 diagnosed from CI logs and confirmed against `origin/main`; §5 limit 2 lifted (one residual noted); §6 resequenced. F-01 resolved into two defects — an unparseable make recipe dating to the initial commit, and a non-delivering notification path. F-02 resolved into a separate live production 500, unregistered anywhere. Still read-only: no Makefile, workflow, register, or `SPRINTS.md` change. |
