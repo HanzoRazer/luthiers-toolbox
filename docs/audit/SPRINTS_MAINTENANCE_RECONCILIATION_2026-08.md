@@ -15,15 +15,24 @@ External Maintenance Backlog Status Audit
 Date: 2026-08-07
 Repository mutation during audit: none
 Source supplied by owner as attached audit artifact
+Owner upload (this sprint): Maintenance_backlog_status_audit___Cursor_c1f8.pdf
 ```
 
-**Provenance note (recovery):** The audit was produced by Cursor cloud agent  
+**Provenance note:** The audit was produced by Cursor cloud agent  
 [Maintenance backlog status audit](https://cursor.com/agents/bc-76cfc2a8-e507-4712-a4ce-244f0d2a42de)  
 (`bc-76cfc2a8-e507-4712-a4ce-244f0d2a42de`) as artifact  
 `/opt/cursor/artifacts/MAINTENANCE_BACKLOG_STATUS_AUDIT_2026-08-07.md`  
-(chat/export titled “Maintenance backlog status audit _ Cursor.pdf”).  
-It was **not** committed to git. Content was recovered from that agent’s transcript for this sprint.  
-**Do not treat the PDF export as a repo path.** The PDF was not copied into this repository.
+(repo untouched during audit; elapsed ~4m 52s).  
+
+**Owner-supplied attachment (2026-08-09):**  
+`Maintenance_backlog_status_audit___Cursor_c1f8.pdf`  
+(Cursor chat/PDF export of that audit’s executive summary + false-open / active-backlog tables).  
+Verified against the full markdown artifact recovered from the agent transcript — same date, same  
+false-open set (BR-006/007/008, NEXT_REMEDIATION_CANDIDATE, Sprint 3 BOE), same active set  
+(BR-036 next, BR-003/013/015/021/032, CI-RED-016, GOV-002/003, M2.5–M5; M6 superseded), same  
+orientation totals (~25–30 / ~20–25).  
+
+**Do not copy the PDF into the repository** (not authorized). The PDF is not a git path.
 
 The audit’s approximate totals (~25–30 active / ~20–25 false) are **orientation only**, not acceptance targets.  
 Counts below are derived from the grounded `SPRINTS.md` population after re-witnessing.
