@@ -1,0 +1,50 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINTENANCE_BACKLOG_AUDIT_002",
+  "title": "docs(audit): MAINTENANCE-BACKLOG-AUDIT-002 - repository-wide maintenance & stranded-work status audit",
+  "intent": "Adds a read-only, repository-wide maintenance / remediation / stranded-work status audit taken against origin/main @ 0179a032. It regenerates the evidence layer lost when the 2026-08-07 maintenance scan was never committed to any branch in any repository and survived only as a browser print-to-PDF. The audit adjudicates the docs/remediation control set, SPRINTS.md, docs/audit, and live GitHub CI state, and records contradictions between them. It mutates no authority: no SPRINTS.md edit, no BR lifecycle change, no queue reorder, no CI-RED closure, no production code change. Every disposition it states is advisory and awaits owner adjudication.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - adds one new file at its native path. No code, schema, route, workflow, manifest, or runtime behaviour is touched. The audit reports on the Makefile and workflow defects it found; it does not repair them.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/maintenance-backlog-audit-002.json",
+      "docs/audit/MAINTENANCE_BACKLOG_AUDIT_002_2026-08-09.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/MAINTENANCE_BACKLOG_AUDIT_002_2026-08-09.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds one new audit document to docs/audit/. It records 13 findings (F-01..F-13) with per-finding evidence, 8 negative controls that were re-witnessed and held, a reconciliation of the prior uncommitted scan's leads, 9 explicit coverage limits, and an advisory sequencing recommendation. Principal findings: the API Nightly Health Check has failed 100 of its last 100 runs, caused by an untabbed heredoc at services/api/Makefile:47-49 dating to the initial commit 9cb9804c plus a failure-notification path that cannot deliver; Adaptive Pocket (API) is red 30/30 from a separate live HTTP 500 on the energy endpoint that is tracked under no BR ID; BR-006 was reconstructed and merged 2026-06-09 (60528f02, PR #97) yet is still queued under data-loss urgency; BR-008's consumer map was materialized (PR #201) and calibrated (PR #204) yet still reads 'map drafted' and is recorded as gating BR-028; Sprint M4's premise is false because all three MOE gaps are filled on main; and NEXT_REMEDIATION_CANDIDATE.md names a Dev Order completed 17 days before the audit.",
+    "why_not_redundant": "No equivalent document exists in git. The 2026-08-07 maintenance scan this supersedes was never committed - verified with `git log --all --oneline --diff-filter=A` across both repositories, all branches, and 14 stashes, which returned nothing. Its findings were unrecoverable, which is itself recorded as finding F-11 (a violation of SPRINTS_MAINTENANCE.md Rule 6, which forbids chat-only notes as the system of record). This commit is the correction to that failure mode."
+  },
+  "verification": {
+    "commands_run": [
+      "Substrate verified: local origin/main resolves to 0179a032; `gh api repos/HanzoRazer/luthiers-toolbox/commits/main` returns the same 0179a032. Audit and worktree share one commit.",
+      "Existence probes used `git ls-tree` and `git grep` against refs, never `git show <ref>:<path>` - heeding the false-absent hazard on Windows that the BR-042 register entry documents.",
+      "Live CI state read via `gh run list` - 100-run sample on API Nightly Health Check (0 successes) and 30-run sample on Adaptive Pocket (API).",
+      "Root causes read from run logs 31291019670 (api-health) and 31294738659 (api-smoke), both at head 0179a032, then confirmed against origin/main by direct file read and `git blame`.",
+      "8 negative controls re-witnessed on origin/main (BR-013, BR-015, BR-021, M2.5, M5, BR-017/#224, CI-RED-018, BR-038) - all held as accurately recorded.",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/MAINTENANCE_BACKLOG_AUDIT_002_2026-08-09.md",
+      "intent": "Durable, committed evidence layer for maintenance/remediation status, replacing an audit that was never committed and could not be recovered.",
+      "scan_targets": ["docs/audit/MAINTENANCE_BACKLOG_AUDIT_002_2026-08-09.md"],
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-09-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only addition with no runtime surface. The audit reports defects (an unparseable make recipe, a non-delivering notification path, a live 500 on the energy endpoint) but repairs none of them; each requires separate owner authorization. Coverage limits are stated explicitly in section 5 - notably that no test suites were run, and that findings F-03 and F-04 establish deliverable existence without verifying acceptance criteria, so neither may be closed on this audit alone."
+  }
+}
