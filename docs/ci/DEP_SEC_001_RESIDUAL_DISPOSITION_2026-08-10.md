@@ -84,11 +84,11 @@ Required vocabulary used in this matrix (aligned to repository practice):
 
 | PR | Title | Actor | created_at | Package | Manifest | from → to | State (at matrix) |
 |----|-------|-------|------------|---------|----------|-----------|-------------------|
-| [#254](https://github.com/HanzoRazer/luthiers-toolbox/pull/254) | bump `@vue/test-utils` 2.4.6 → 2.4.11 | `app/dependabot` | 2026-08-10T16:38:56Z | `@vue/test-utils` | `packages/client` | 2.4.6 → 2.4.11 | OPEN |
-| [#255](https://github.com/HanzoRazer/luthiers-toolbox/pull/255) | bump `@typescript-eslint/eslint-plugin` 6.21.0 → 8.66.0 | `app/dependabot` | 2026-08-10T16:39:21Z | `@typescript-eslint/eslint-plugin` | `packages/client` | 6.21.0 → 8.66.0 | OPEN |
-| [#256](https://github.com/HanzoRazer/luthiers-toolbox/pull/256) | bump `konva` 9.3.22 → 10.3.0 | `app/dependabot` | 2026-08-10T16:39:26Z | `konva` | `packages/client` | 9.3.22 → 10.3.0 | OPEN |
-| [#257](https://github.com/HanzoRazer/luthiers-toolbox/pull/257) | bump `marked` 17.0.1 → 18.0.9 | `app/dependabot` | 2026-08-10T16:39:33Z | `marked` | `packages/client` | 17.0.1 → 18.0.9 | OPEN |
-| [#258](https://github.com/HanzoRazer/luthiers-toolbox/pull/258) | bump `eslint-plugin-vue` 9.33.0 → 10.10.0 | `app/dependabot` | 2026-08-10T16:39:40Z | `eslint-plugin-vue` | `packages/client` | 9.33.0 → 10.10.0 | OPEN |
+| [#254](https://github.com/HanzoRazer/luthiers-toolbox/pull/254) | bump `@vue/test-utils` 2.4.6 → 2.4.11 | `app/dependabot` | 2026-08-10T16:38:56Z | `@vue/test-utils` | `packages/client` | 2.4.6 → 2.4.11 | CLOSED (001B disposition) |
+| [#255](https://github.com/HanzoRazer/luthiers-toolbox/pull/255) | bump `@typescript-eslint/eslint-plugin` 6.21.0 → 8.66.0 | `app/dependabot` | 2026-08-10T16:39:21Z | `@typescript-eslint/eslint-plugin` | `packages/client` | 6.21.0 → 8.66.0 | CLOSED (001B disposition) |
+| [#256](https://github.com/HanzoRazer/luthiers-toolbox/pull/256) | bump `konva` 9.3.22 → 10.3.0 | `app/dependabot` | 2026-08-10T16:39:26Z | `konva` | `packages/client` | 9.3.22 → 10.3.0 | CLOSED (001B disposition) |
+| [#257](https://github.com/HanzoRazer/luthiers-toolbox/pull/257) | bump `marked` 17.0.1 → 18.0.9 | `app/dependabot` | 2026-08-10T16:39:33Z | `marked` | `packages/client` | 17.0.1 → 18.0.9 | CLOSED (001B disposition) |
+| [#258](https://github.com/HanzoRazer/luthiers-toolbox/pull/258) | bump `eslint-plugin-vue` 9.33.0 → 10.10.0 | `app/dependabot` | 2026-08-10T16:39:40Z | `eslint-plugin-vue` | `packages/client` | 9.33.0 → 10.10.0 | CLOSED (001B disposition) |
 
 ### Why these five exist
 
@@ -175,16 +175,16 @@ No alert is blindly dismissed by this sprint.
 
 ## 9. Dispositions (generated PRs)
 
-GitHub action for each: **CLOSE — DEFERRED TO CONSOLIDATED TRANCHE** (with durable comment).  
+GitHub action for each: **CLOSE — DEFERRED TO CONSOLIDATED TRANCHE** (durable comment posted; PRs closed during DEP-SEC-001B).  
 Do **not** merge merely to eliminate the PR.
 
-| PR | Disposition code | Implementation vehicle | Underlying obligation tracked? |
-|----|------------------|------------------------|--------------------------------|
-| #254 | **DEFERRED** → Tranche B | Future bounded residual PR under `DEP-SEC-001` / `MAINT-DEFER-004` | Yes — matrix row + SPRINTS |
-| #255 | **DEFERRED** → Tranche B (lint majors, coordinated with #258 / parser) | Same Tranche B vehicle | Yes |
-| #256 | **DEFERRED** → Tranche B (app major; explicit auth required) | Same Tranche B vehicle | Yes |
-| #257 | **DEFERRED** → Tranche B (app major; explicit auth required) | Same Tranche B vehicle | Yes |
-| #258 | **DEFERRED** → Tranche B (lint majors, coordinated with #255) | Same Tranche B vehicle | Yes |
+| PR | Disposition code | GitHub action | Implementation vehicle | Underlying obligation tracked? |
+|----|------------------|---------------|------------------------|--------------------------------|
+| #254 | **DEFERRED** → Tranche B | CLOSED + comment | Future bounded residual PR under `DEP-SEC-001` / `MAINT-DEFER-004` | Yes — matrix row + SPRINTS |
+| #255 | **DEFERRED** → Tranche B (lint majors, coordinated with #258 / parser) | CLOSED + comment | Same Tranche B vehicle | Yes |
+| #256 | **DEFERRED** → Tranche B (app major; explicit auth required) | CLOSED + comment | Same Tranche B vehicle | Yes |
+| #257 | **DEFERRED** → Tranche B (app major; explicit auth required) | CLOSED + comment | Same Tranche B vehicle | Yes |
+| #258 | **DEFERRED** → Tranche B (lint majors, coordinated with #255) | CLOSED + comment | Same Tranche B vehicle | Yes |
 
 **Rationale:** None is DUPLICATE/SUPERSEDED by #253. None is an automatic security defect. All are version-update evidence that must not become five parallel sprints. Closing without merge preserves sequencing ownership under the parent program.
 
