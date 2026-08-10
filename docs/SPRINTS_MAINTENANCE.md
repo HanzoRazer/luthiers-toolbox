@@ -49,6 +49,26 @@ May 2026 governance sprint **tail** items register as `GOV-CONVERGE-{NNN}` in **
 
 ---
 
+### Rule 8: Residual Obligations Check (added 2026-08-10)
+
+Before a sprint or parent program is marked **resolved** / **COMPLETE** at program level, inspect its Dev Order, implementation notes, tests/witnesses, PR review, closeout, and newly discovered findings (including automation-generated PRs opened by the merge) for deferred, pending, out-of-scope, owner-action, follow-up, unresolved, blocked, remaining, later, or equivalent obligations.
+
+**Every material residual must have a durable disposition** in `SPRINTS.md` and/or an authoritative residual matrix cited from the SPRINTS ID.
+
+Distinguish:
+
+```text
+PR / tranche COMPLETE
+from
+PROGRAM COMPLETE
+```
+
+**Anti-pattern (DEP-SEC-001B / post-#253):** Merging a bounded remediation while residual obligations remain only in prose, review comments, Dependabot PRs, or chat — causing uncontrolled PR fan-out. Generated PRs are evidence requiring adjudication, not automatic one-PR-per-item implementation.
+
+**Origin:** PR #253 (Tier-1 COMPLETE) created Dependabot intake and immediately yielded five version-update PRs (#254–#258). Consolidation: `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md`.
+
+---
+
 ### Rule 5: Commit hash requirement for completion claims (added 2026-04-26)
 
 **Every completion claim requires three elements:**
@@ -145,6 +165,7 @@ Either approach fits. Decision deferred until team size warrants the overhead.
 5. **Five-month drift** — Going multiple months without status audit
 6. **Undocumented completion** — Marking tasks ✅ without commit hash or verification method (added 2026-04-26)
 7. **Untracked deferral** — Holding work out of a merge without a DEFERRED MAINTENANCE entry in SPRINTS.md (added 2026-05-26)
+8. **Unresolved residuals in prose** — Marking a program resolved while deferred/pending/out-of-scope/owner-action items remain only in closeout prose, PR comments, or automation PRs without a durable disposition (added 2026-08-10; see Rule 8)
 
 The Sprint 3 audit (2026-04-23) found examples of patterns 1-4.
 
