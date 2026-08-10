@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-07-05
+Last updated: 2026-08-10
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -917,6 +917,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
+| MAINT-DEFER-004 | Dependency Security / DEP-SEC-001A (Tier-1 now; Vite/Vitest majors deferred) | Process / deps | QUEUED | 2026-08-10 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -995,6 +996,34 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Why:** Conftest early ezdxf import, `_photo_numpy()`, manifest registration order, vectorizer wire shim, `check_execution_class_compliance.py` — defenses work because PR history is remembered.  
 **Restore trigger:** One pass: each load-bearing site gets `DO NOT REMOVE — breaks X (CI run Y)` in the file where it lives.  
 **Path:** HYG — insurance before a cleanup terminal touches these.
+
+---
+
+### MAINT-DEFER-004 — Dependency Security / DEP-SEC-001A
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-10  
+**Program ID:** DEP-SEC-001A  
+**Evidence:** PR #252 / `docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md` (snapshot observed **2026-08-09**: 65 open alerts → 17 packages).  
+**Closeout:** `docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md`  
+**Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge).
+
+**Why this exists:** Dependency security was previously unowned (no BR-*, CI-RED-*, or SPRINTS line). Alerts accumulated without a remediation path.
+
+**Tier-1 (authorized / current — DEP-SEC-001A):**
+- Patch low-risk active JS advisories within existing majors (`axios` 1.x, `postcss` 8.x).
+- Monitor only active client dependency surface via Dependabot config.
+- Dismiss **proven-dead archive** alerts (`archive/**`, `docs/archive/**` package.json) as unused code — not active runtime/build deps. Do **not** rewrite archival manifests.
+- Python `services/api/requirements.txt` remains clean (0 alerts at triage). `requirements-dev.txt` alert is **out of scope** for this tranche.
+
+**Tier-2 (deferred — major toolchain):**
+- `vite` major (5→6) and `vitest` major (2→3) held out.
+- Preferred order if/when authorized: vitest first → stabilize witness → vite.
+- **Restore / authorize trigger:** BR-021 resolution (re-blocking client lint/build gates) **or** explicit owner manual build-witness authorization. Do not couple to Tier-1.
+
+**Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly (config cadence). No alert dismissal for active dependencies solely to reduce counts. Counts are snapshots, not invariants.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
