@@ -9,6 +9,44 @@ reorder, no CI-RED closure, no production code change. Every disposition below i
 
 ---
 
+## 0. Reviewer quick-check (verify these first)
+
+Because this is an evidence record that drives sequencing decisions, spot-check the highest-value
+claims against source before adjudicating. Each row below is falsifiable in one command.
+
+| # | Highest-value claim | Verify against | One-command check |
+|---|---|---|---|
+| F-01 | Nightly witness red 100/100; unparseable Makefile recipe | `services/api/Makefile:47-49`; run `31291019670` | `sed -n '47,49p' services/api/Makefile \| cat -A` → line 48 `import sys` has no leading TAB |
+| F-02 | Energy endpoint 500, red 30/30 | run `31294738659`, job `api-smoke`, step "M.3" | `gh run view 31294738659 --log-failed \| grep "HTTP Error 500"` |
+| F-03 | CAM 8J reconstructed + merged | `60528f02` (PR #97) | `git log --oneline -1 60528f02` |
+| F-04 | Consumer map materialized (2.15 MB) + calibrated | `acadef99` (#201), `a2d24bed` (#204); `services/api/metrics/endpoint_consumer_map.json` | `git cat-file -s 0179a032:services/api/metrics/endpoint_consumer_map.json` → 2154764 |
+| F-05 | **CORRECTED — see finding** | `wood_species.json` species records | `spruce_sitka`/`spruce_engelmann` have **no** `modulus_of_elasticity_gpa` (still null); only `douglas_fir`=12.17 changed |
+
+> **Independent review (2026-08-09):** F-01, F-02, F-03, F-04 were re-verified against source and are
+> accurate to the byte/step/SHA. **F-05 was found factually wrong and is corrected in place** (two
+> misattributed MOE values); **F-07's "no ledger row" claim was corrected** (a BR-036 row exists). See
+> the amendment log (§7).
+
+## 0a. Finding index
+
+| Finding | Evidence type | Primary source | Suggested owner action |
+|---|---|---|---|
+| F-01 | Live CI + static | `api_health_check.yml`, `services/api/Makefile`, run `31291019670` | Fix notifier **with/before** Makefile tab; give BR-007 a wave position |
+| F-02 | Live CI (500) | `adaptive_pocket.yml`, run `31294738659` | Admit new BR + `CI-RED-*`; probe uvicorn traceback |
+| F-03 | Merged commit + files | `60528f02` (#97) | Closure witness vs 8J acceptance, then close |
+| F-04 | Merged commits + artifact | `acadef99`/#201, `a2d24bed`/#204 | Adjudicate BR-008 close → unblock BR-028 |
+| F-05 | Data read (**corrected**) | `wood_species.json` | **Do NOT close M4** — two spruce nulls still unfilled |
+| F-06 | Doc vs doc | `NEXT_REMEDIATION_CANDIDATE.md` | Refresh stale next-candidate (doc-only) |
+| F-07 | Static (grep) | register / ledger | Give BR-036 a register section + wave (ledger row exists) |
+| F-08 | Static set-diff | queue vs ledger | Reconcile unlisted BR-007/034/036/042/044 |
+| F-09 | Self-declared | `BACKLOG_ADJUDICATION_LEDGER.md` | Intake write-back discipline (fixes F-08 root) |
+| F-10 | Absence probe | `docs/audit/` | Disambiguate "M6"; decide Sprint M6 status |
+| F-11 | Absence search | (uncommitted PDF) | This audit landing is the correction |
+| F-12 | Checkout state | local production checkout | Do not use checkout as evidence substrate |
+| F-13 | Static | `SPRINTS.md:2` | Service the parking-lot header |
+
+---
+
 ## 1. Substrate and method
 
 ### Why `origin/main` and not the working tree
@@ -57,6 +95,9 @@ Ordered by consequence. Each states the contradiction, the evidence, and an **ad
 ### F-01 · The nightly API health witness has never been green in the observable window — and its remediation item holds no queue position
 
 **CONFIRMED (live CI observation).**
+
+> **Evidence at a glance** — workflow `.github/workflows/api_health_check.yml` (job `api-health`) ·
+> reproduction run `31291019670` (@ `0179a032`) · root-cause file `services/api/Makefile:47-49`.
 
 | Fact | Evidence |
 |---|---|
@@ -123,6 +164,10 @@ position, since it is the item under which this work would be authorized.
 **CONFIRMED (live CI observation).** `Adaptive Pocket (API)` — **failure on 30 of the last 30 runs**,
 unbroken 2026-07-11 → 2026-08-09. Workflow file `.github/workflows/adaptive_pocket.yml` is present on
 `main`.
+
+> **Evidence at a glance** — workflow `.github/workflows/adaptive_pocket.yml` (job `api-smoke`) ·
+> reproduction run `31294738659` (@ `0179a032`) · failing step "M.3 - Energy endpoint returns totals
+> and segments" → `HTTP Error 500`.
 
 No `CI-RED-*` entry in `SPRINTS.md` covers it, and no BR item names it. Per `SPRINTS.md`'s own framing
 — *"SPRINTS.md is the parking lot — the live index where open work registers at session end
@@ -231,9 +276,18 @@ This audit establishes the artifacts exist and are tested; it did **not** verify
 
 ---
 
-### F-05 · Sprint M4's premise is factually false against current data; all three gaps are filled
+### F-05 · Sprint M4 is only partially satisfied — one of three MOE gaps is filled; the two spruce nulls remain
 
 **CONFIRMED (data read on `main`).**
+
+> **⚠️ Review correction (2026-08-09).** As originally written, this finding claimed *"M4's premise is
+> factually false; all three gaps are filled"* and gave `spruce_sitka = 11.34`, `spruce_engelmann =
+> 9.5`. **Both values were misattributed and are wrong.** Direct inspection of the species records shows
+> `spruce_sitka` and `spruce_engelmann` carry **no `modulus_of_elasticity_gpa` field at all** — the nulls
+> are **not** filled. The `11.34` belongs to **`walnut_black`**; the `9.5` belongs to **`spruce_european`**
+> (a different spruce). Only `douglas_fir` actually changed. The finding, table, and disposition below are
+> corrected; the corrected verdict is the near-opposite of the original — **M4's premise still holds for
+> the two spruces, so M4 must not be closed on this basis.**
 
 `SPRINTS.md` → DATA INTEGRITY → Sprint M4 (**Status: QUEUED**, Priority MEDIUM) states:
 
@@ -243,27 +297,31 @@ This audit establishes the artifacts exist and are tested; it did **not** verify
 | `spruce_engelmann` | `null` | Missing | ~8.9 GPa |
 | `douglas_fir` | 10.0 GPa | Low | ~13.5 GPa old-growth |
 
-Actual, in `services/api/app/data_registry/system/materials/wood_species.json` on `origin/main`:
+Actual, in `services/api/app/data_registry/system/materials/wood_species.json` on `origin/main`
+(`species.<key>.physical.modulus_of_elasticity_gpa`):
 
 | Species | Actual `modulus_of_elasticity_gpa` | Verdict vs the sprint's own target |
 |---|---|---|
-| `spruce_sitka` | **11.34** | null filled; **inside** the stated 10.3–11.9 band |
-| `spruce_engelmann` | **9.5** | null filled; near the stated ~8.9 |
+| `spruce_sitka` | **ABSENT (still null)** | gap **NOT** filled — no MOE field on the record |
+| `spruce_engelmann` | **ABSENT (still null)** | gap **NOT** filled — no MOE field on the record |
 | `douglas_fir` | **12.17** | no longer 10.0; moved toward, not to, the stated ~13.5 |
 
-**The contradiction:** M4 is queued work whose stated starting condition no longer exists. Its "Current
-Value" column describes data that has since changed. The two `null`s the sprint was written to
-eliminate are both populated, one squarely inside the sprint's own acceptance band.
+For reference, the values the original finding misread: `walnut_black` = 11.34, `spruce_european` = 9.5.
+Neither is a target species of M4.
+
+**The (corrected) contradiction:** M4's `douglas_fir` "Current Value" of 10.0 is stale — it is now
+12.17, so that one row describes data that has changed. But the two `null`s M4 was written to eliminate
+are **still null**. M4's core premise is therefore **substantially accurate**, not false.
 
 Note also the **path has moved**: M4 and the surrounding DATA INTEGRITY prose refer to
 `wood_species.json` as though at its historical location; on `main` it lives at
 `services/api/app/data_registry/system/materials/wood_species.json`.
 
-**Advisory disposition:** M4 is substantively satisfied for the two spruces. `douglas_fir` at 12.17 vs
-a stated ~13.5 target is a **residual judgment call**, not a data gap — the growth-type question the
-sprint raises (plantation vs old-growth heritage stock) is unresolved but is a sourcing decision, not
-missing data. Recommend narrow-and-close rather than execute-as-written. This audit did **not** verify
-provenance/source attribution for the new values, which M1's discipline would require before closing.
+**Advisory disposition (corrected):** **Do NOT narrow-and-close M4.** Its primary work — populate MOE for
+`spruce_sitka` and `spruce_engelmann` from an authoritative source (per the wood-data sourcing policy) —
+is **still owed**. The only defensible update is to refresh `douglas_fir`'s stale "Current Value"
+(10.0 → 12.17) in `SPRINTS.md` and re-state the target as a residual judgment call (plantation vs
+old-growth). This audit did **not** verify provenance/source attribution for the `douglas_fir` value.
 
 ---
 
@@ -309,15 +367,22 @@ objects `as_items` actually returns from the real store → empty trees)."*
 But:
 
 - `REPOSITORY_DEFECT_REGISTER.md` has per-defect sections for BR-001, 002, 003, 004, then 037–045.
-  **There is no BR-036 section.** BR-036 appears only as prose inside the BR-002B resolution notes.
-- `BACKLOG_ADJUDICATION_LEDGER.md` has table rows through BR-035 and for BR-043/044/045. **BR-036 has
-  no table row** — only a blockquote note ("BR-036 severity raised med → high (2026-07-22, BR-002B
-  review)").
-- BR-036 holds **no wave position** in the execution queue.
+  **There is no BR-036 section.** BR-036 appears only as prose inside the BR-002B resolution notes
+  (`:56`).
+- `BACKLOG_ADJUDICATION_LEDGER.md` **does carry a BR-036 table row** (`:88`, `CONFIRMED_DEFECT`, severity
+  **high**, readiness `ready`), **plus** a blockquote note (`:90`, "BR-036 severity raised med → high").
+  So in the ledger BR-036 is present, not missing.
+- BR-036 holds **no wave position** in the execution queue (it appears only as prose — "the next bounded
+  candidate is now BR-036" and "surfaced as BR-036 (out of scope)" — never as a ranked wave item).
 
-**The contradiction:** the designated next unit of work is the only queue item with no register entry,
-no ledger row, and no wave. Its severity was formally raised to `high` in a note attached to a
-different item's review.
+> **⚠️ Review correction (2026-08-09).** As originally written this finding asserted BR-036 had *"no
+> table row — only a blockquote note"* in the ledger. That is wrong: a full BR-036 row exists at
+> `BACKLOG_ADJUDICATION_LEDGER.md:88`. Corrected above. The finding's substance survives on the other two
+> legs (no dedicated **register section**, no **wave position**), but the "no ledger row" leg is retracted.
+
+**The (corrected) contradiction:** the designated next unit of work has a ledger row but **no dedicated
+register section and no wave position**. Its severity was formally raised to `high` in a note attached to
+a different item's review, yet it is not sequenced anywhere.
 
 **Advisory disposition:** BR-036 needs a register entry and ledger row before it can be authorized, or
 the "next bounded candidate" designation should point somewhere adjudicated. (A bounded BR-036 Dev
@@ -481,7 +546,7 @@ enumerated by the owner, were independently re-derived from `origin/main`:
 | BR-008 / CI-RED-016B | **REPRODUCED, and stronger than stated** — deliverable materialized *and* calibrated; falsely gates BR-028 | F-04 |
 | BR-007 / CI-RED-020B | **REPRODUCED, and materially escalated** — the witness is red 100/100 runs and BR-007 holds no queue position | F-01 |
 | Sprint 3 BOE | **NOT REPRODUCED as stated** — see below |
-| M2.5 – M5 | **SPLIT:** M2.5 and M5 accurately open (negative controls); **M4 substantively satisfied** | F-05, §3 |
+| M2.5 – M5 | **SPLIT:** M2.5 and M5 accurately open (negative controls); **M4 only partially satisfied** — `douglas_fir` refreshed, but both spruce MOE nulls remain (corrected; see F-05) | F-05, §3 |
 | M6 | **REPRODUCED, plus a new finding** — deliverable absent *and* the identifier collides with C2 M6 | F-10 |
 | Documentation contradictions | **REPRODUCED and extended** | F-06 – F-09 |
 
@@ -530,8 +595,9 @@ failing workflows; targeted `git grep` re-witness of 14 specific BR/sprint claim
 5. **Branch/stranded-work inventory was partial.** Merged-PR history and BR-017/#224 were checked;
    `salvage/*` and `backup/*` branch contents (BR-031) were not enumerated.
 6. **The two untracked handoffs in the production checkout were not assessed** (F-12).
-7. **M4's new MOE values were not source-verified.** They are present and in-band; whether they carry
-   the per-field source attribution M1's discipline requires was not checked.
+7. **M4's one changed MOE value was not source-verified.** Only `douglas_fir` (12.17) actually changed;
+   whether it carries the per-field source attribution M1's discipline requires was not checked. (The two
+   spruce records have no MOE value to verify — see corrected F-05.)
 8. **Sprint M6's own scan was not performed.** This audit overlaps it but does not discharge it (F-10).
 9. **The prior Cursor PDF was not read.** Leads were taken from the owner's enumeration. The full lead
    sheet may contain findings not reconciled in §4.
@@ -555,7 +621,8 @@ failing workflows; targeted `git grep` re-witness of 14 specific BR/sprint claim
 6. **Rule on F-07** — BR-036 needs a register entry and ledger row, or the "next candidate"
    designation should move.
 7. **Disambiguate F-10** and decide whether Sprint M6 is superseded by this audit or still owed.
-8. **F-05** — narrow-and-close M4 pending source verification.
+8. **F-05** — do **not** close M4; its two spruce MOE nulls are still unfilled (corrected). The only
+   safe update is refreshing `douglas_fir`'s stale `SPRINTS.md` value (10.0 → 12.17).
 
 `SPRINTS-MAINT-RECON-001` becomes executable **after** this audit is adjudicated, not before — it
 assumes an evidence base, and this document is that base.
@@ -580,3 +647,4 @@ assumes an evidence base, and this document is that base.
 |---|---|
 | 2026-08-09 | Initial audit (`b22e7d5f`). |
 | 2026-08-09 | **Root-cause amendment.** F-01 and F-02 diagnosed from CI logs and confirmed against `origin/main`; §5 limit 2 lifted (one residual noted); §6 resequenced. F-01 resolved into two defects — an unparseable make recipe dating to the initial commit, and a non-delivering notification path. F-02 resolved into a separate live production 500, unregistered anywhere. Still read-only: no Makefile, workflow, register, or `SPRINTS.md` change. |
+| 2026-08-09 | **Independent review + factual corrections.** F-01–F-04 re-verified against source (byte size, run IDs, Makefile TAB, commit SHAs) — all accurate. **F-05 corrected:** `spruce_sitka`/`spruce_engelmann` MOE are **absent (still null)**, not `11.34`/`9.5` — those values belong to `walnut_black` and `spruce_european`; finding verdict inverted (M4 **not** substantively satisfied; do not close). **F-07 corrected:** a BR-036 ledger row exists (`:88`); the "no ledger row" leg retracted (register-section + wave legs stand). Added §0 reviewer quick-check, §0a finding index, and per-finding "Evidence at a glance" headers for F-01/F-02. Still read-only w.r.t. production/authorities; the only files touched are this audit doc and its manifest. |
