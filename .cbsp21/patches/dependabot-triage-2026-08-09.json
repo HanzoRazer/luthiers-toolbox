@@ -1,0 +1,50 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEPENDABOT_TRIAGE_2026_08_09",
+  "title": "docs(ci): Dependabot alert triage + disposition decision (65 open alerts)",
+  "intent": "Adds a read-only triage of the 65 open Dependabot alerts on the default branch, with four disposition options developed for owner ruling. Lands in docs/ci/ beside CI_HYGIENE_DEBT_PATCH_PLAN.md, the analogous artifact that BR-022 cites as its authoritative source. It bumps no dependency, dismisses no alert, and edits no manifest; the ruling is the owner's.",
+  "change_type": "docs",
+  "behavior_change": "None. Documentation only - adds one new file at its native path. No dependency version, lockfile, package.json, requirements file, workflow, or runtime behaviour is touched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dependabot-triage-2026-08-09.json",
+      "docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md"
+    ],
+    "files_expected_to_change": [
+      "docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds one new triage document to docs/ci/. It establishes that the 65 alerts are 17 packages (axios alone is 29; axios + vite are 41 of 65); that services/api/requirements.txt - the production Python API that generates G-code - has zero alerts, so nothing here is a machine-safety issue; that 9 alerts including 3 rated high are in dead archived code under archive/** and docs/archive/** that builds nowhere; that the single critical (vitest GHSA-5xrq-8626-4rwp) requires the Vitest UI server to be listening and no --ui flag appears in any script or workflow, so its precondition is never met; and that axios is browser-only (20 import sites in packages/client/src, none in scripts/ or services/), so its Node-adapter advisories do not execute here while its prototype-pollution, header-injection and cookie-ReDoS advisories do. It identifies BR-021 as a sequencing blocker: client_lint_build.yml:42 and vue_decomposition_gate.yml:31 are continue-on-error, so a vite 5->6 major bump would break the build with CI still green. Four options are developed; Option A (split by risk, clearing 42 of 65 alerts through three low-risk actions) is recommended.",
+    "why_not_redundant": "No dependency-security triage exists anywhere in this repository. Dependency security is currently owned by nothing - no BR-* entry, no CI-RED-* entry, and no SPRINTS.md line - which section 7 records as the durable finding and the reason the alert count reached 65. CI_HYGIENE_DEBT_PATCH_PLAN.md covers CI workflow hygiene (BR-022 / SG_SPEC_TOKEN rollout), not dependency advisories."
+  },
+  "verification": {
+    "commands_run": [
+      "Alert data pulled live from `gh api repos/HanzoRazer/luthiers-toolbox/dependabot/alerts?state=open&per_page=100` on 2026-08-09 -> 65 open (1 critical / 28 high / 35 medium / 1 low); grouped by severity, manifest, ecosystem, scope, relationship, and package.",
+      "Code substrate origin/main @ 0179a032. Direct dependency versions read from packages/client/package.json: axios ^1.13.2, vite ^5.0.0, vitest ^2.1.0, postcss ^8.5.8.",
+      "Vitest UI precondition checked: all four client test scripts are plain `vitest run` / `vitest`; `git grep -- --ui` across .github/workflows and packages/client/package.json returned no match.",
+      "axios execution context checked: 20 import sites under packages/client/src, zero under scripts/ or services/ - browser-only.",
+      "BR-021 gate suppression re-witnessed on origin/main: client_lint_build.yml:42 and vue_decomposition_gate.yml:31 both continue-on-error: true.",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md",
+      "intent": "Triage the 65 open Dependabot alerts by real exposure rather than advisory severity, and develop the disposition options for owner ruling.",
+      "scan_targets": ["docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md"],
+      "risk": "low",
+      "behavior_change": "None - documentation only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-09-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only addition with no runtime surface. No dependency is bumped and no alert dismissed by this patch. Section 8 states the limits explicitly: the vite 5->6 breaking-change surface was not assessed, so the gated tranche is not authorizable as written, and no exploitability was tested - the triage reasons from advisory preconditions and code-path reachability, which under the defect register's own vocabulary is STATIC-FACT CONFIRMED, not CONFIRMED."
+  }
+}
