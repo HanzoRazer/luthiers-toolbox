@@ -1,0 +1,24 @@
+# DEP-SEC-001A / MAINT-DEFER-004 — active dependency-security intake boundary.
+# Monitors only live workspace surfaces. Archived historical package.json files
+# under archive/** and docs/archive/** are intentionally NOT listed (they are
+# not built, not deployed, and not part of pnpm-workspace packages/*).
+# Auto-merge is disabled. Security alerts for proven-dead archives are dismissed
+# in GitHub UI as "not used" — see docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /packages/client
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    # Do not group broad upgrades; keep PRs reviewable and Tier-2 majors separate.
+    ignore:
+      # Major toolchain migration is DEP-SEC Tier-2 — gated on BR-021 / manual witness.
+      - dependency-name: vite
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]

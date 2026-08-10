@@ -1,0 +1,87 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_001A_TIER1_REMEDIATION",
+  "title": "DEP-SEC-001A: Tier-1 dependency-security remediation (axios/postcss + Dependabot ownership)",
+  "intent": "Owner-authorized Option A from PR #252 triage. Patch low-risk active client advisories within existing majors (axios 1.x → 1.19.0, postcss 8.x → 8.5.26), add .github/dependabot.yml monitoring only /packages/client (archives excluded from update intake; vite/vitest majors ignored), register MAINT-DEFER-004 ownership in SPRINTS.md, and record closeout evidence. Vite/Vitest majors, BR-021, and Python requirements-dev alert are explicitly out of scope. Archive package.json files are retained as history; their Dependabot alerts require GitHub UI dismissal (API 403 in this environment).",
+  "change_type": "fix",
+  "behavior_change": "none intended - dependency patch within existing majors plus governance/config. No API, machine-control, or production Python changes. Frontend HTTP client and PostCSS toolchain versions bump only.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-001a-tier1-remediation.json",
+      ".github/dependabot.yml",
+      "SPRINTS.md",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md"
+    ],
+    "files_expected_to_change": [
+      ".github/dependabot.yml",
+      "SPRINTS.md",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) .github/dependabot.yml created: npm ecosystem at /packages/client, weekly schedule, no auto-merge, ignore vite/vitest semver-major. (2) SPRINTS.md: MAINT-DEFER-004 / DEP-SEC-001A ownership record distinguishing Tier-1 current, Tier-2 deferred (restore = BR-021 or manual witness), ongoing Dependabot ownership. (3) packages/client: axios ^1.13.2→^1.19.0 (resolved 1.19.0), postcss ^8.5.8→^8.5.26 (resolved 8.5.26); lockfile updated via npm. Triage floors were 1.18.0/8.5.18; newer compatible releases chosen. (4) docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md closeout with direct build witnesses and PENDING GITHUB RECALCULATION / OWNER UI WITNESS for alert dismissals.",
+    "why_not_redundant": "Implements the owner-authorized Tier-1 tranche from the #252 triage. Dependency security was previously unowned; this establishes intake configuration, ownership, and the two low-risk patches without coupling to the gated Vite/Vitest major migration."
+  },
+  "verification": {
+    "commands_run": [
+      "Baseline: packages/client lockfile axios 1.13.2, postcss 8.5.8, vite 5.4.21, vitest 2.1.9 on origin/main @ 6ccc664e",
+      "npm view axios@1.19.0 / postcss@8.5.26 -> versions exist; npm install in packages/client -> axios 1.19.0, postcss 8.5.26",
+      "cd packages/client && npm ci --ignore-scripts -> EXIT 0",
+      "cd packages/client && npm test -> EXIT 0 (756 passed / 17 todo)",
+      "cd packages/client && npm run build -> EXIT 0 (vite build ~12.4s)",
+      "Major guard: vite major 5, vitest major 2 -> EXIT 0",
+      "Bundle purity: rg HttpsProxyAgent|https-proxy-agent|agent-base against packages/client/dist -> 0 matches (axios Node proxy subtree not shipped in browser bundle)",
+      "Lockfile review: axios pulls https-proxy-agent@5.0.1 + agent-base@6.0.2; proxy-from-env 2.1.0; debug/ms lose dev:true via that chain — documented expected in closeout §3a",
+      "git diff --stat services/api/requirements.txt services/api/requirements-dev.txt -> empty (unchanged)",
+      "Archive package.json reachability: 3 manifests under archive/** and docs/archive/**; not in pnpm-workspace packages/*",
+      "gh api .../dependabot/alerts -> HTTP 403; archive dismissals recorded as OWNER UI WITNESS",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> (recorded at closeout commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Durable Dependabot intake for active npm client surface only; ignore vite/vitest majors; no auto-merge.",
+      "risk": "low",
+      "behavior_change": "none - automation config only"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register MAINT-DEFER-004 / DEP-SEC-001A ownership (Tier-1 current, Tier-2 deferred, ongoing review).",
+      "risk": "low",
+      "behavior_change": "none - governance record"
+    },
+    {
+      "path": "packages/client/package.json",
+      "intent": "Bump axios and postcss declarations to latest compatible 1.x / 8.x.",
+      "risk": "low",
+      "behavior_change": "none intended - patch/minor within major"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lock axios 1.19.0 and postcss 8.5.26 via npm; no vite/vitest major change.",
+      "risk": "low",
+      "behavior_change": "none intended"
+    },
+    {
+      "path": "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md",
+      "intent": "Closeout evidence: versions, witnesses (command+exit), archive dismissal instructions, pending alert recalculation.",
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-10-DEP-SEC-001A",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Low-risk dependency patch within authorized majors plus governance. BR-021 continues to leave some CI gates non-blocking; direct npm ci/test/build witnesses recorded. Archive alert dismissals require owner GitHub UI action (API 403). Tier-2 vite/vitest majors explicitly held."
+  }
+}
