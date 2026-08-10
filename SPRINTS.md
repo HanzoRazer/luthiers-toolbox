@@ -917,7 +917,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
-| MAINT-DEFER-004 | Dependency Security / DEP-SEC-001A (Tier-1 now; Vite/Vitest majors deferred) | Process / deps | QUEUED | 2026-08-10 |
+| MAINT-DEFER-004 | Dependency Security / DEP-SEC-001A (Tier-1 COMPLETE; Vite/Vitest majors deferred; ongoing Dependabot ownership) | Process / deps | ACTIVE (T1 done; T2 deferred) | 2026-08-10 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1001,20 +1001,21 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ### MAINT-DEFER-004 — Dependency Security / DEP-SEC-001A
 
-**Status:** QUEUED  
+**Status:** ACTIVE — Tier-1 COMPLETE (2026-08-10); Tier-2 DEFERRED; ongoing Dependabot ownership established  
 **last_verified:** 2026-08-10  
 **Program ID:** DEP-SEC-001A  
 **Evidence:** PR #252 / `docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md` (snapshot observed **2026-08-09**: 65 open alerts → 17 packages).  
 **Closeout:** `docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md`  
-**Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge).
+**Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge).  
+**Implementation PR:** #253 (`cursor/dep-sec-001a-tier1-42de`).
 
 **Why this exists:** Dependency security was previously unowned (no BR-*, CI-RED-*, or SPRINTS line). Alerts accumulated without a remediation path.
 
-**Tier-1 (authorized / current — DEP-SEC-001A):**
-- Patch low-risk active JS advisories within existing majors (`axios` 1.x, `postcss` 8.x).
-- Monitor only active client dependency surface via Dependabot config.
-- Dismiss **proven-dead archive** alerts (`archive/**`, `docs/archive/**` package.json) as unused code — not active runtime/build deps. Do **not** rewrite archival manifests.
-- Python `services/api/requirements.txt` remains clean (0 alerts at triage). `requirements-dev.txt` alert is **out of scope** for this tranche.
+**Tier-1 (COMPLETE — DEP-SEC-001A):**
+- Patched low-risk active JS advisories within existing majors (`axios` → 1.19.0, `postcss` → 8.5.26).
+- Active client surface monitored via Dependabot config.
+- Proven-dead archive alerts (`archive/**`, `docs/archive/**` package.json): dismiss as unused code in GitHub UI — not active runtime/build deps. Do **not** rewrite archival manifests. (Agent API 403 → owner UI witness still required for alert ledger closure.)
+- Python `services/api/requirements.txt` clean at triage. `requirements-dev.txt` alert remains **out of scope**.
 
 **Tier-2 (deferred — major toolchain):**
 - `vite` major (5→6) and `vitest` major (2→3) held out.

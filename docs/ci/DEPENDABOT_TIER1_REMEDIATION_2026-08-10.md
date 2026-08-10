@@ -50,8 +50,32 @@ Working directory: `packages/client`. Environment: Node v22.14.0 / npm 10.9.7.
 | Unit tests | `npm test` (`vitest run`) | **0** (756 passed / 17 todo / 1 file skipped) |
 | Production build | `npm run build` (`vite build`) | **0** (built in ~12.4s) |
 | Major guard | vite major=5, vitest major=2 | **0** |
+| Bundle purity (proxy agents) | `rg 'HttpsProxyAgent\|https-proxy-agent\|agent-base' dist` after build | **0 matches** |
 
 Axios import inventory re-witness: **20** files under `packages/client/src` import axios (matches triage browser-only posture).
+
+---
+
+## 3a. Lockfile transitive review (axios / postcss) — PR #253 review follow-up
+
+Top-level declared changes are only `axios` and `postcss`. Lockfile regenerated with **npm 10.9.7**.
+
+### Expected / explained (not blockers)
+
+| Change | Resolved | Assessment |
+|--------|----------|------------|
+| New under axios: `https-proxy-agent` + nested `agent-base` | 5.0.1 / 6.0.2 | **Expected** for axios 1.19.x Node adapter/proxy support. Client usage is browser-only (20 `src/` imports). Vite production `dist/` contains **no** `HttpsProxyAgent` / `https-proxy-agent` / `agent-base` strings — Node proxy path is not shipped in the browser bundle. |
+| `debug` / `ms` lose `dev: true` | 4.4.3 / 2.1.3 | **Expected reclassification** — now reachable via the axios→https-proxy-agent→agent-base→debug chain in the lockfile graph. Does not imply these run in the browser bundle (see purity check above). |
+| `proxy-from-env` | 1.1.0 → **2.1.0** | Axios-tree update; Node/`engines: >=10` only. Low risk for browser SPA; relevant only if axios is later used in Node tooling/SSR. Not used that way today. |
+| `follow-redirects` / `form-data` / `hasown` / `nanoid` | patch bumps | Normal axios/postcss fallout. |
+| Widespread `peer: true` metadata removals | n/a | Lockfile metadata normalization under npm 10.9.7; no matching toolchain version jumps (vite/vitest majors unchanged). |
+
+### Not observed (reassuring)
+
+- No Vite/Vitest major movement  
+- No unrelated top-level dependency additions  
+- No native modules or foreign ecosystem packages  
+- PostCSS side limited to postcss + nanoid patch drift  
 
 ---
 

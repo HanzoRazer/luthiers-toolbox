@@ -37,6 +37,8 @@
       "cd packages/client && npm test -> EXIT 0 (756 passed / 17 todo)",
       "cd packages/client && npm run build -> EXIT 0 (vite build ~12.4s)",
       "Major guard: vite major 5, vitest major 2 -> EXIT 0",
+      "Bundle purity: rg HttpsProxyAgent|https-proxy-agent|agent-base against packages/client/dist -> 0 matches (axios Node proxy subtree not shipped in browser bundle)",
+      "Lockfile review: axios pulls https-proxy-agent@5.0.1 + agent-base@6.0.2; proxy-from-env 2.1.0; debug/ms lose dev:true via that chain — documented expected in closeout §3a",
       "git diff --stat services/api/requirements.txt services/api/requirements-dev.txt -> empty (unchanged)",
       "Archive package.json reachability: 3 manifests under archive/** and docs/archive/**; not in pnpm-workspace packages/*",
       "gh api .../dependabot/alerts -> HTTP 403; archive dismissals recorded as OWNER UI WITNESS",
