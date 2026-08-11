@@ -545,3 +545,65 @@ queued pending owner unit ruling
   index whose unit is documented in prose, implemented independently per surface, and compared against
   constants written by a third author will drift. The durable fix is a declared unit profile per index,
   asserted on every surface that publishes it — not three separate scale repairs.
+
+---
+
+## Tooling-diagnostic intake — CBSP21 gate legibility (2026-08-11)
+
+Surfaced by the DEP-SEC-001B negative-gate witness (PR #259 review). Unlike the scan intake above, this
+entry is **not** a detector lead: the symptom was reproduced on CI and is authorized for bounded repair.
+
+### BR-046 · CBSP21 gate names an unrelated manifest when nothing covers the diff
+
+- **Subsystem:** CI / governance tooling — `scripts/ci/check_cbsp21_gate.py`, `scripts/ci/cbsp21_manifest_discovery.py`
+- **Confidence:** **CONFIRMED — reproduced on CI**, GitHub Actions run
+  [`31466755438`](https://github.com/HanzoRazer/luthiers-toolbox/actions/runs/31466755438)
+  (`workflow_dispatch` on a throwaway branch off `main` @ `25fc189d` carrying exactly one undeclared
+  file). Also reproduced locally.
+- **Observed vs expected:** when **no** manifest declares any changed file, auto-discovery still selects
+  a manifest — an arbitrary stale one from a previously-merged PR — and prints it as *the* manifest at
+  0.0% coverage. Expected: report that **no manifest covers this diff** and name the remedy.
+
+**Verbatim CI output (single undeclared file, no covering manifest):**
+
+```text
+📋 Manifest: .cbsp21/patches/audit-n1-refuted.json     ← unrelated, from a merged PR
+📊 Coverage minimum: 95%
+📁 Declared files: 1
+
+🔍 Changed files: 1
+📈 Coverage: 0.0%
+
+⚠️  Uncovered files (not in manifest):
+  - CBSP21_NEGATIVE_TEST_ARTIFACT.md
+
+❌ CBSP21 Gate: FAILED
+   - Coverage 0.0% < 95% minimum
+```
+
+- **Why it matters:** the failure is correct — it is red, and it names the leaking file. The **diagnosis**
+  is misleading. A developer reads `Manifest: .cbsp21/patches/audit-n1-refuted.json`, does not recognise
+  it, and may go debug an unrelated merged patch instead of reading the real message: *you have not
+  written a manifest yet*. The `.cbsp21/patches/README.md` design intends stale manifests to be
+  **ignored automatically**; at 0% coverage that intent inverts — the stalest match becomes the headline.
+- **Observed twice in practice, not hypothetically:** PRs **#251** and **#252** both failed this gate
+  with `Manifest: .cbsp21/patches/wp-002-a-shim-reconfirmation.json` at 0.0% coverage. In both cases the
+  actual cause was simply that no per-PR manifest existed yet. The misdirection cost a diagnosis step
+  on each.
+- **Governing contract:** `.cbsp21/patches/README.md` — *"Stale manifests from previously-merged PRs
+  declare files that aren't in your diff, so they're ignored automatically."* At 0% coverage they are
+  not ignored; one is promoted to the report header.
+- **Severity:** low — **diagnostic quality only**. Enforcement is unaffected: the gate fails correctly,
+  reports correct coverage, and names the uncovered files. No PR has ever been wrongly admitted or
+  wrongly rejected by this behaviour. · **Regression risk:** low · **Fix size:** small
+- **Not a coverage-enforcement defect.** The DEP-SEC-001B witness proved both directions of the control
+  on the same manifest: declared 5-file patch → 100.0%, exit 0; same patch plus one undeclared file →
+  80.0%, exit 1, offending file named. Enforcement is sound.
+- **Provisional repair direction (not authorized here):** when the best-covering manifest yields 0
+  covered files, suppress the manifest name and emit the no-manifest guidance
+  `.github/workflows/cbsp21_gate.yml` already prints in its summary step —
+  *"Create one under `.cbsp21/patches/<patch-id>.json`"*. That guidance exists but only fires when
+  discovery returns **nothing**, not when it returns an irrelevant match.
+- **Readiness:** **QUEUED — NOT AUTHORIZED.** This entry defines scope only. Deliberately **not** folded
+  into PR #259: that PR's coverage enforcement passed on CI, and repairing tooling inline would
+  contaminate a docs/governance patch — the exact failure mode Rule 8 and this gate exist to prevent.
