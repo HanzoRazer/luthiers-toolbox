@@ -105,7 +105,22 @@ def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> T
     except AmbiguousManifestSelection as e:
         print(f"❌ CBSP21 FAIL: {e}")
         sys.exit(1)
-    path, manifest = selected  # non-None when candidates exist
+    if selected is None:
+        # Auto-discovery only: zero overlap with every candidate (BR-046 /
+        # CBSP21-DIAG-001). Do not attribute the failure to a stale manifest.
+        print("❌ CBSP21 FAIL: No applicable patch manifest found.")
+        print()
+        print("Changed files:")
+        for f in changed_files:
+            if f.strip():
+                print(f"  - {f}")
+        print()
+        print("No manifest under .cbsp21/patches/ declares any changed file.")
+        print("Create or update a patch manifest for this change:")
+        print("  .cbsp21/patches/<patch-id>.json")
+        print("(legacy .cbsp21/patch_input.json is also accepted.)")
+        sys.exit(1)
+    path, manifest = selected
     if manifest.get("schema") != "cbsp21_patch_input_v1":
         print(f"❌ CBSP21 FAIL: Invalid schema in selected manifest {path}. "
               f"Expected 'cbsp21_patch_input_v1', got '{manifest.get('schema')}'")

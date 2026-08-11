@@ -24,6 +24,12 @@ per-manifest checks (coverage_min, behavior_change/why_not_redundant,
 architecture_scan) depend on. Stale manifests from previously-merged PRs declare
 files that are not in the current diff, so they lose the selection automatically.
 
+When the diff has changed files but **no** candidate covers any of them,
+``select_manifest`` returns ``None`` (no applicable manifest) rather than a
+zero-overlap historical winner. An empty changed-file set is a separate case and
+keeps the prior deterministic selection among candidates (CBSP21-DIAG-001 /
+BR-046).
+
 Two design guarantees added after review
 -----------------------------------------
 1. **Both gates select identically.** Selection uses ONE shared matcher
@@ -227,11 +233,21 @@ def select_manifest(
     Selection uses ``default_declared_matcher`` unless a matcher is injected
     (tests). Both production gates use the default, so they always agree.
 
+    Three-way contract (CBSP21-DIAG-001 / BR-046):
+
+    * **empty diff** (no non-internal changed files): preserve prior deterministic
+      selection among candidates (no-op / empty-diff semantics).
+    * **changed files + overlap > 0**: select the best applicable manifest.
+    * **changed files + overlap == 0**: return ``None`` (no applicable manifest).
+      Callers must not infer absence from ``coverage == 0`` alone.
+
     Raises:
         AmbiguousManifestSelection: if >1 manifest ties on (coverage>0,
             specificity) — a real ambiguity that naming order must not resolve.
 
-    Returns None only when there are no candidates at all.
+    Returns:
+        The winning ``(path, manifest)``, or ``None`` when there are no
+        candidates or when the diff has changed files but zero overlap.
     """
     if not candidates:
         return None
@@ -248,17 +264,22 @@ def select_manifest(
     scored.sort(key=lambda s: (-s[0], s[1], s[2]))
     top = scored[0]
 
-    # Only a tie among manifests that actually cover the diff is ambiguous;
-    # when nothing covers it (covered == 0) there is no meaningful selection to
-    # get wrong, so fall through and let downstream coverage checks fail.
-    if top[0] > 0:
-        ties = [s for s in scored if s[0] == top[0] and s[1] == top[1]]
-        if len(ties) > 1:
-            raise AmbiguousManifestSelection(
-                f"{len(ties)} manifests are equally plausible for this diff "
-                f"(covered={top[0]} files, specificity={top[1]}): "
-                + ", ".join(s[2] for s in ties)
-                + ". Make one manifest's scope specific to its PR."
-            )
+    # Empty / internals-only diff: keep deterministic selection (not NOT_FOUND).
+    if not signal:
+        return top[3]
+
+    # Changed files present but nothing covers them → no applicable manifest.
+    if top[0] == 0:
+        return None
+
+    # Only a tie among manifests that actually cover the diff is ambiguous.
+    ties = [s for s in scored if s[0] == top[0] and s[1] == top[1]]
+    if len(ties) > 1:
+        raise AmbiguousManifestSelection(
+            f"{len(ties)} manifests are equally plausible for this diff "
+            f"(covered={top[0]} files, specificity={top[1]}): "
+            + ", ".join(s[2] for s in ties)
+            + ". Make one manifest's scope specific to its PR."
+        )
 
     return top[3]

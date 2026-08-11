@@ -103,10 +103,17 @@ candidate manifests, then select the one that best covers the current diff:
 2. Fewest declared files/prefixes, so the most specific manifest wins.
 3. If two manifests are equally plausible, the gate fails and the PR must narrow
    its manifest scope.
+4. If the diff has changed files but **zero** candidates cover any of them,
+   auto-discovery returns **no applicable manifest** (fail closed with guidance
+   to create `.cbsp21/patches/<patch-id>.json`). The gate does **not** attribute
+   that failure to an unrelated historical manifest at 0% coverage
+   (CBSP21-DIAG-001 / BR-046).
+5. An empty changed-file set is a separate no-op case — not “no applicable
+   manifest.” Explicit `--manifest` always validates the path you name.
 
 This is selection, not union. A stale manifest on `main` should not make an
-unrelated PR pass; the selected manifest must be the one that actually describes
-the current patch.
+unrelated PR pass; when a manifest is selected, it must be one that actually
+overlaps the current patch.
 
 ### Merged Manifest Cleanup
 

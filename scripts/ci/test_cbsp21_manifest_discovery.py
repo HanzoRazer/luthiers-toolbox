@@ -117,13 +117,70 @@ def test_no_candidates_returns_none():
     assert select_manifest([], ["x.py"]) is None
 
 
-def test_no_coverage_does_not_raise_ambiguity(tmp_path: Path):
-    # Two manifests, neither covers the diff -> no meaningful selection, no raise.
+# --------------------------------------------------------------------------- #
+# selection — zero-overlap vs partial vs empty (CBSP21-DIAG-001 / BR-046)
+# --------------------------------------------------------------------------- #
+
+def test_zero_overlap_returns_no_applicable_manifest(tmp_path: Path):
+    """BR-046 characterization: changed files + zero overlap → no selection.
+
+    Previously select_manifest returned a deterministic unrelated historical
+    winner (covered==0), and the coverage gate printed that stale path at 0.0%.
+    Auto-discovery must return None so callers can report "no applicable
+    manifest" instead of attributing the failure to an unrelated patch.
+    """
+    _write(tmp_path / ".cbsp21" / "patches" / "a.json", "A", scope_files=["a.py"])
+    _write(tmp_path / ".cbsp21" / "patches" / "b.json", "B", scope_files=["b.py"])
+    _write(
+        tmp_path / ".cbsp21" / "patches" / "audit-n1-refuted.json",
+        "AUDIT_N1",
+        scope_files=["docs/unrelated/historical.md"],
+    )
+    candidates, _ = load_candidates(tmp_path)
+    selected = select_manifest(candidates, ["CBSP21_NEGATIVE_TEST_ARTIFACT.md"])
+    assert selected is None, (
+        "zero-overlap auto-discovery must not select an unrelated historical "
+        f"manifest; got {selected[0] if selected else None}"
+    )
+
+
+def test_zero_overlap_does_not_raise_ambiguity(tmp_path: Path):
+    """Zero overlap among many stale manifests is absence, not AmbiguousManifestSelection."""
+    _write(tmp_path / ".cbsp21" / "patches" / "a.json", "A", scope_files=["a.py"])
+    _write(tmp_path / ".cbsp21" / "patches" / "b.json", "B", scope_files=["b.py"])
+    _write(tmp_path / ".cbsp21" / "patches" / "c.json", "C", scope_files=["c.py"])
+    candidates, _ = load_candidates(tmp_path)
+    selected = select_manifest(candidates, ["unrelated.py"])
+    assert selected is None
+
+
+def test_partial_overlap_selects_applicable_manifest(tmp_path: Path):
+    """Changed A/B/C with a manifest declaring A/B is FOUND_INCOMPLETE, not NOT_FOUND."""
+    _write(
+        tmp_path / ".cbsp21" / "patches" / "partial.json",
+        "PARTIAL",
+        scope_files=["a.py", "b.py"],
+    )
+    _write(
+        tmp_path / ".cbsp21" / "patches" / "stale.json",
+        "STALE",
+        scope_files=["other.py"],
+    )
+    candidates, _ = load_candidates(tmp_path)
+    selected = select_manifest(candidates, ["a.py", "b.py", "c.py"])
+    assert selected is not None
+    assert selected[1]["patch_id"] == "PARTIAL"
+
+
+def test_empty_diff_preserves_deterministic_selection(tmp_path: Path):
+    """Empty changed_files is not 'no applicable manifest' (CBSP21-DIAG-001 ruling 3A)."""
     _write(tmp_path / ".cbsp21" / "patches" / "a.json", "A", scope_files=["a.py"])
     _write(tmp_path / ".cbsp21" / "patches" / "b.json", "B", scope_files=["b.py"])
     candidates, _ = load_candidates(tmp_path)
-    selected = select_manifest(candidates, ["unrelated.py"])  # covered==0 for both
-    assert selected is not None  # returns the deterministic top; downstream coverage fails
+    selected = select_manifest(candidates, [])
+    assert selected is not None
+    # Deterministic among zero-coverage: lexicographically smallest path.
+    assert selected[0].name == "a.json"
 
 
 # --------------------------------------------------------------------------- #

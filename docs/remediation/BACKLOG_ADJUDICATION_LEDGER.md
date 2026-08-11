@@ -136,7 +136,7 @@ inverse scaling, so the Gaussian underflows to 0.0 for every real wood. Reproduc
 
 | BR-045 | `specific_moe` carries two incompatible scales across backend and frontend (1000×) | materials + client | `schemas.py` `specific_moe` vs `useStiffnessIndex.ts:78-80,159` | A | ~~OWNER_DECISION_REQUIRED~~ **RESOLVED** | test-verified + runtime witness | med | **RESOLVED** | Owner ruled `c²/10⁶` 2026-08-04; PR #247 → `f12f88c2` (`1e6`→`1e3`). Post-merge witness on `969bdbdc`: Basswood/WRC/Bubinga `specific_moe` = **24.2651 / 21.0270 / 20.6854** (= `c²/10⁶` = frontend); BR-043 `radiation_ratio` 11.87 / score **0.9924** unchanged |
 
-| BR-046 | CBSP21 gate names an unrelated stale manifest when nothing covers the diff | ci/governance tooling | `scripts/ci/check_cbsp21_gate.py` + `cbsp21_manifest_discovery.py`; CI run `31466755438` | B | CONFIRMED_DEFECT | ci-reproduced | low | **QUEUED — NOT AUTHORIZED** | at 0 covered files, suppress the manifest name and emit the existing "create one under `.cbsp21/patches/`" guidance instead. **Diagnostic quality only — enforcement is sound** |
+| BR-046 | CBSP21 gate names an unrelated stale manifest when nothing covers the diff | ci/governance tooling | `scripts/ci/check_cbsp21_gate.py` + `cbsp21_manifest_discovery.py`; CI run `31466755438` | B | CONFIRMED_DEFECT | ci-reproduced | low | **IMPLEMENTED — AWAITING MERGE** (CBSP21-DIAG-001) | `select_manifest` → `None` on changed-files + zero overlap; both gates report no applicable manifest; empty-diff + explicit `--manifest` preserved. Close to RESOLVED after merge/witness. **Diagnostic quality only — enforcement was already sound** |
 
 **BR-046 — evidence and boundary.** Reproduced by the DEP-SEC-001B negative-gate witness: a throwaway
 branch off `main` @ `25fc189d` carrying one undeclared file made the gate print
@@ -144,9 +144,10 @@ branch off `main` @ `25fc189d` carrying one undeclared file made the gate print
 The same witness proved enforcement is **correct** in both directions on the real patch (declared 5-file
 set → 100.0%, exit 0; +1 undeclared file → 80.0%, exit 1, file named). Observed in practice on PRs #251
 and #252, which both reported `wp-002-a-shim-reconfirmation.json` at 0.0% when the true cause was that
-no per-PR manifest existed yet. Contradicts `.cbsp21/patches/README.md`, which states stale manifests
-"are ignored automatically". Filed separately from PR #259 rather than repaired inline, since folding a
-tooling fix into a docs/governance patch is the scope contamination Rule 8 exists to prevent.
+no per-PR manifest existed yet. Intake filed separately from PR #259 (#260). **Repair authorized and
+implemented by CBSP21-DIAG-001** on `cursor/cbsp21-diag-001-br-046-42de`: zero-overlap auto-discovery
+returns no selection; gates fail closed with *no applicable manifest* guidance. Pre-merge state:
+**IMPLEMENTED — AWAITING MERGE** (not RESOLVED until merge).
 
 **BR-045 — historical disposition note.** Intake used `OWNER_DECISION_REQUIRED` (not `CONFIRMED_DEFECT`)
 because the docstring contradiction was confirmed but *which side moves* was not repository-derivable

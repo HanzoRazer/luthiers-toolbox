@@ -141,8 +141,15 @@ def main() -> int:
         selected = select_manifest(candidates, changed)
     except AmbiguousManifestSelection as e:
         return _fail(str(e))
-    if selected is None:  # unreachable given the guard above, defensive
-        return _fail("No CBSP21 manifest could be selected for this diff.")
+    if selected is None:
+        # Shared discovery: changed files with zero overlap (CBSP21-DIAG-001 /
+        # BR-046). Distinct from "no candidate files on disk" above.
+        return _fail(
+            "No applicable CBSP21 patch manifest found for this diff. "
+            "No manifest under .cbsp21/patches/ declares any changed file. "
+            "Create or update .cbsp21/patches/<patch-id>.json "
+            "(or legacy .cbsp21/patch_input.json)."
+        )
     manifest_path, manifest = selected
 
     # Required top-level fields

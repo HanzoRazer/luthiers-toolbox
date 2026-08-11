@@ -599,11 +599,14 @@ entry is **not** a detector lead: the symptom was reproduced on CI and is author
 - **Not a coverage-enforcement defect.** The DEP-SEC-001B witness proved both directions of the control
   on the same manifest: declared 5-file patch → 100.0%, exit 0; same patch plus one undeclared file →
   80.0%, exit 1, offending file named. Enforcement is sound.
-- **Provisional repair direction (not authorized here):** when the best-covering manifest yields 0
-  covered files, suppress the manifest name and emit the no-manifest guidance
-  `.github/workflows/cbsp21_gate.yml` already prints in its summary step —
-  *"Create one under `.cbsp21/patches/<patch-id>.json`"*. That guidance exists but only fires when
-  discovery returns **nothing**, not when it returns an irrelevant match.
-- **Readiness:** **QUEUED — NOT AUTHORIZED.** This entry defines scope only. Deliberately **not** folded
-  into PR #259: that PR's coverage enforcement passed on CI, and repairing tooling inline would
-  contaminate a docs/governance patch — the exact failure mode Rule 8 and this gate exist to prevent.
+- **Provisional repair direction (intake):** when the best-covering manifest yields 0 covered files,
+  suppress the manifest name and emit no-manifest guidance under `.cbsp21/patches/<patch-id>.json`.
+- **Repair authorization:** **CBSP21-DIAG-001** (implementation order for this defect).
+- **Repair (pre-merge):** `select_manifest` returns `None` when the diff has non-internal changed
+  files and max overlap is 0; empty diffs keep prior deterministic selection; explicit `--manifest`
+  unchanged. Coverage gate and patch-input gate both emit actionable *no applicable manifest*
+  diagnostics. Unit characterization + local negative witness green on branch
+  `cursor/cbsp21-diag-001-br-046-42de`. Real CI negative witness recorded in the repair PR description
+  (workflow_dispatch throwaway branch; no committed artifact).
+- **Readiness:** **IMPLEMENTED — AWAITING MERGE** (CBSP21-DIAG-001 / BR-046). Not marked RESOLVED
+  until merge + post-merge witness vocabulary apply. Deliberately **not** folded into PR #259.
