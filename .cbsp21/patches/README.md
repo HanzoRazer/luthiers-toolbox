@@ -22,10 +22,25 @@ their manifests merge cleanly. The footgun is gone.
 Both gates (`scripts/ci/check_cbsp21_gate.py` and
 `scripts/ci/check_cbsp21_patch_input.py`) auto-discover every manifest here,
 plus the legacy `.cbsp21/patch_input.json` if present, and validate the diff
-against the **single** manifest that best covers the changed files. Stale
-manifests from previously-merged PRs declare files that aren't in your diff, so
-they're ignored automatically — no cleanup required (though pruning old ones is
-welcome housekeeping).
+against the **single** manifest that best covers the changed files.
+
+Three outcomes matter (CBSP21-DIAG-001 / BR-046):
+
+1. **Applicable + complete** — a manifest covers the changed files and meets
+   `coverage_min` → pass.
+2. **Applicable + incomplete** — a related manifest wins selection but leaves
+   uncovered files → fail, naming that manifest and the uncovered paths.
+3. **No applicable manifest** — changed files exist but **no** candidate covers
+   any of them → fail with an explicit *no applicable manifest* message. Stale
+   historical manifests are **not** printed as the governing manifest at 0%
+   coverage.
+
+Empty diffs (no non-internal changed files) keep the prior no-op selection
+semantics and are not treated as a missing-manifest failure. Explicit
+`--manifest` always uses the path you supply, even if coverage is 0%.
+
+Pruning old manifests remains welcome housekeeping; selection no longer depends
+on cleanup to avoid false attribution.
 
 ## Authoring
 

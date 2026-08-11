@@ -1,0 +1,107 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_DIAG_001_BR_046_NO_APPLICABLE_MANIFEST",
+  "title": "CBSP21-DIAG-001 / BR-046: report no applicable manifest on zero-overlap auto-discovery",
+  "intent": "Authorized repair for BR-046. When auto-discovery finds changed files but no candidate manifest covers any of them, select_manifest returns None and both CBSP21 gates fail closed with an actionable no-applicable-manifest diagnostic instead of naming an unrelated historical manifest at 0% coverage. Empty diffs and explicit --manifest behavior are preserved. Enforcement threshold (95%) and fail-closed semantics are unchanged.",
+  "change_type": "fix",
+  "behavior_change": "none intended for application/runtime. Governance tooling diagnostics only: zero-overlap auto-discovery no longer attributes failure to a stale manifest path. Exit codes remain non-zero for uncovered / missing-manifest patches.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cbsp21-diag-001-br-046-no-applicable-manifest.json",
+      ".cbsp21/patches/README.md",
+      "docs/CBSP21.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/check_cbsp21_gate.py",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/README.md",
+      "docs/CBSP21.md",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/check_cbsp21_gate.py",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) select_manifest: empty non-internal changed-file signal keeps deterministic selection; non-empty signal with max overlap 0 returns None. (2) check_cbsp21_gate.resolve_manifest and check_cbsp21_patch_input fail with no-applicable-manifest guidance when selection is None. (3) Unit tests characterize zero-overlap / partial / empty boundaries. (4) README + docs/CBSP21.md document the three discovery outcomes. (5) BR-046 register/ledger moved to IMPLEMENTED — AWAITING MERGE under CBSP21-DIAG-001.",
+    "why_not_redundant": "Implements the authorized repair for BR-046 (#260 intake). Intake explicitly did not change tooling; this sprint is the diagnostic correction without weakening fail-closed enforcement."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q → 18 passed (after fix; Commit 1 characterization showed 2 failed on zero-overlap)",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files CBSP21_NEGATIVE_TEST_ARTIFACT.md → exit 1, 'No applicable patch manifest found', no Manifest: stale path",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <br-046 files> → exit 0, 100% (complete applicable)",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <partial> UNDECLARED_EXTRA.md → exit 1, Manifest: br-046…, uncovered named (not no-applicable)",
+      "python3 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patches/audit-n1-refuted.json --changed-files CBSP21_NEGATIVE_TEST_ARTIFACT.md → exit 1, Manifest: audit-n1-refuted.json @ 0% (explicit preserved)",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <sprint files> → positive pass",
+      "CI negative witness: workflow_dispatch throwaway branch (run URL in PR description)"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/cbsp21_manifest_discovery.py",
+      "intent": "Return None on changed-files + zero overlap; preserve empty-diff selection.",
+      "risk": "low",
+      "behavior_change": "none - discovery diagnostic contract"
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_gate.py",
+      "intent": "Fail closed with no-applicable-manifest message when auto-discovery returns None.",
+      "risk": "low",
+      "behavior_change": "none - diagnostic text; still exit 1"
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_patch_input.py",
+      "intent": "Consume shared None selection with consistent missing-manifest failure.",
+      "risk": "low",
+      "behavior_change": "none - diagnostic text; still exit 1"
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "intent": "Characterize zero-overlap, partial overlap, and empty-diff boundaries.",
+      "risk": "low",
+      "behavior_change": "none - tests"
+    },
+    {
+      "path": ".cbsp21/patches/README.md",
+      "intent": "Document applicable/incomplete vs no-applicable-manifest outcomes.",
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "docs/CBSP21.md",
+      "intent": "Document zero-overlap → no applicable manifest selection rule.",
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "docs/remediation/REPOSITORY_DEFECT_REGISTER.md",
+      "intent": "BR-046 readiness → IMPLEMENTED — AWAITING MERGE under CBSP21-DIAG-001.",
+      "risk": "low",
+      "behavior_change": "none - governance record"
+    },
+    {
+      "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "intent": "Align BR-046 ledger with authorized/implemented pre-merge state.",
+      "risk": "low",
+      "behavior_change": "none - governance record"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-11-CBSP21-DIAG-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Diagnostic-only repair for BR-046. Fail-closed preserved; 95% threshold unchanged; no workflow/branch-protection/Dependabot/runtime changes. Explicit --manifest still attributes the named file."
+  }
+}
