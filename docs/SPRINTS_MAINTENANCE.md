@@ -49,26 +49,6 @@ May 2026 governance sprint **tail** items register as `GOV-CONVERGE-{NNN}` in **
 
 ---
 
-### Rule 8: Residual Obligations Check (added 2026-08-10)
-
-Before a sprint or parent program is marked **resolved** / **COMPLETE** at program level, inspect its Dev Order, implementation notes, tests/witnesses, PR review, closeout, and newly discovered findings (including automation-generated PRs opened by the merge) for deferred, pending, out-of-scope, owner-action, follow-up, unresolved, blocked, remaining, later, or equivalent obligations.
-
-**Every material residual must have a durable disposition** in `SPRINTS.md` and/or an authoritative residual matrix cited from the SPRINTS ID.
-
-Distinguish:
-
-```text
-PR / tranche COMPLETE
-from
-PROGRAM COMPLETE
-```
-
-**Anti-pattern (DEP-SEC-001B / post-#253):** Merging a bounded remediation while residual obligations remain only in prose, review comments, Dependabot PRs, or chat — causing uncontrolled PR fan-out. Generated PRs are evidence requiring adjudication, not automatic one-PR-per-item implementation.
-
-**Origin:** PR #253 (Tier-1 COMPLETE) created Dependabot intake and immediately yielded five version-update PRs (#254–#258). Consolidation: `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md`.
-
----
-
 ### Rule 5: Commit hash requirement for completion claims (added 2026-04-26)
 
 **Every completion claim requires three elements:**
@@ -101,6 +81,40 @@ and flagged for re-verification before any work depends on them.
 **Origin:** This rule was added after the 2026-04-26 verification audit found
 10/12 DXF migration claims in Sprint 3 were false — status was entered without
 work being performed. See docs/audit/sprints_md_verification_2026-04-25.md.
+
+---
+
+### Rule 8: Residual Obligations Check (added 2026-08-10)
+
+> **Rule placement:** new rules append here, at the end of the rule list, in the order they were added.
+> Rules 1–7 are historically out of numeric order; do not insert into that sequence — appending keeps
+> `git blame` legible and stops a new rule displacing an older one.
+
+**The rule.** A tranche or PR completing does **not** complete its parent program. Before marking any
+sprint or program `RESOLVED` / `COMPLETE` **at program level**, every material residual obligation must
+already have a durable disposition in `SPRINTS.md` and/or an authoritative residual matrix cited from
+the SPRINTS ID.
+
+```text
+PR / tranche COMPLETE   ≠   PROGRAM COMPLETE
+```
+
+**Checklist.** Inspect each of these for residual language — *deferred, pending, out-of-scope,
+owner-action, follow-up, unresolved, blocked, remaining, later*, or equivalent:
+
+- [ ] Dev Order and implementation notes
+- [ ] Tests and witnesses (including what was *not* run)
+- [ ] PR review threads and closeout documents
+- [ ] Findings discovered during the work, including automation PRs opened *by the merge*
+- [ ] Each residual mapped to a durable disposition — never left only in prose
+
+**Anti-pattern.** Merging a bounded remediation while residuals live only in prose, review comments,
+automation PRs, or chat. Generated PRs are **evidence requiring adjudication**, not one-PR-per-item
+implementation authorization.
+
+**Origin.** PR #253 (Tier-1 `COMPLETE`) created Dependabot intake and its merge immediately produced
+five version-update PRs, #254–#258. Consolidated in
+`docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` under `DEP-SEC-001B`.
 
 ---
 

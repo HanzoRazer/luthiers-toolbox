@@ -15,6 +15,11 @@ Tier-1 closeout  ≠  DEP-SEC parent-program closeout
 Authoritative residual matrix (post-merge fan-out + remaining obligations):  
 `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` (`DEP-SEC-001B`).
 
+**Precedence.** This document is authoritative for **Tier-1 / `DEP-SEC-001A` only**. Where it conflicts
+with the residual matrix on parent-program state, residual disposition, or current alert counts, **the
+matrix is authoritative** — see its §0. In particular, alert figures below are the 2026-08-10 closeout
+witness and have since been superseded by the live witness in matrix §8.
+
 ---
 
 ## 1. Baseline (pre-patch)

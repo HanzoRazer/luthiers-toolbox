@@ -1011,7 +1011,9 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge; `open-pull-requests-limit: 5`).  
 **Implementation PR (Tier-1):** #253 (`cursor/dep-sec-001a-tier1-42de`) — **COMPLETE** at tranche level.
 
-**Why this exists:** Dependency security was previously unowned. #253 completed Tier-1 and created Dependabot intake; merge immediately generated five version-update PRs (#254–#258). Parent program owns adjudication so one bounded remediation does not recursively spawn uncontrolled PR fan-out. **Historical boundary:** archive dismissals, alert recalculation, residual `npm audit`, Python `requirements-dev`, Vite/Vitest majors, and BR-021 were **already known at #253 completion** (inherited obligations) — they are not newly discovered defects caused by #253. PR #253 remains `DEP-SEC-001 / Tier 1 — COMPLETE`.
+**Why this exists:** Dependency security was previously unowned. #253 completed Tier-1 and created Dependabot intake; merge immediately generated five version-update PRs (#254–#258). The parent program owns adjudication so one bounded remediation does not recursively spawn uncontrolled PR fan-out.
+
+**Historical boundary:** archive dismissals, alert recalculation, residual `npm audit`, Python `requirements-dev`, Vite/Vitest majors and BR-021 were all **known at #253 completion** — inherited obligations, not defects caused by #253. Rationale and per-item evidence: residual matrix §1. PR #253 remains `DEP-SEC-001 / Tier 1 — COMPLETE`.
 
 **Tier-1 (COMPLETE — DEP-SEC-001A / #253):**
 - Patched low-risk active JS advisories within existing majors (`axios` → 1.19.0, `postcss` → 8.5.26).
@@ -1019,21 +1021,15 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 - Proven-dead archive alerts: **OWNER ACTION** — dismiss unused in GitHub UI (agent API 403). Do **not** rewrite archival manifests.
 - Python `requirements-dev.txt` alert: **OUT OF SCOPE** (standing).
 
-**Post-#253 generated PRs (dispositioned — do not merge as five sprints):**
+**Post-#253 generated PRs:** #254–#258 (five version updates; `open-pull-requests-limit: 5`) — **all CLOSED, DEFERRED → Tranche B**, durable comment on each. None duplicates axios/postcss; none is a security defect merely by existing. Per-PR evidence and dispositions: residual matrix §5–§9.
 
-| PR | Package | from → to | Disposition |
-|----|---------|-----------|-------------|
-| #254 | `@vue/test-utils` | 2.4.6 → 2.4.11 | DEFERRED → Tranche B (close PR) |
-| #255 | `@typescript-eslint/eslint-plugin` | 6.21.0 → 8.66.0 | DEFERRED → Tranche B (close PR; coordinate lint majors) |
-| #256 | `konva` | 9.3.22 → 10.3.0 | DEFERRED → Tranche B (close PR; app major) |
-| #257 | `marked` | 17.0.1 → 18.0.9 | DEFERRED → Tranche B (close PR; app major) |
-| #258 | `eslint-plugin-vue` | 9.33.0 → 10.10.0 | DEFERRED → Tranche B (close PR; coordinate with #255) |
-
-Fan-out cause: #253 **created** `dependabot.yml`; Dependabot opened exactly five version updates (limit=5). None duplicate axios/postcss. None are automatic security defects solely by existing.
+**Alert witness (2026-08-11):** open alerts **65 → 32**; `axios` + `postcss` → **0**. Tier-1 witnessed effective. Remaining: 9 archive (owner dismissal) · 4 Tranche C · 1 out-of-scope Python · 18 Tranche B, only `ws` runtime-scope. Detail: residual matrix §8.
 
 **Future implementation (≤2 tranches — no recursive PR creation during adjudication):**
-- **Tranche B** — remaining bounded residual security remediation (post alert witness) + authorized version hygiene from #254–#258 when explicitly ordered.
+- **Tranche B** — residual security remediation + authorized version hygiene from #254–#258 when explicitly ordered. **Must ship as one consolidated PR** — Dependabot-authored PRs cannot pass `api-verify` (no `SG_SPEC_TOKEN`), so they cannot be CI-verified before merge. See matrix R-11.
 - **Tranche C** — major toolchain: `vitest` 2→3 → witness → `vite` 5→6. **Restore trigger:** BR-021 resolution **or** explicit manual build-witness authorization. Do not silently bypass BR-021.
+
+**Open owner action:** dismiss the 9 archive alerts, and add `archive/**` / `docs/archive/**` exclusions to `.github/dependabot.yml` so they stop regenerating (matrix §11).
 
 **Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly. Generated PRs enter residual adjudication before implementation. No alert dismissal for active dependencies solely to reduce counts.
 
