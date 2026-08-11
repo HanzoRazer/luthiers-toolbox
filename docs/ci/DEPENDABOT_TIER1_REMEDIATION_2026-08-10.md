@@ -1,10 +1,24 @@
 # Dependabot Tier-1 Remediation — 2026-08-10
 
-**Program:** DEP-SEC-001A  
+**Program tranche:** DEP-SEC-001A (Tier-1 implementation)  
+**Parent program:** DEP-SEC-001 — **not** closed by this document  
 **SPRINTS ownership:** `MAINT-DEFER-004`  
 **Upstream evidence:** PR #252 / `docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md`  
 **Owner ruling:** Option A authorized 2026-08-10 (Tier-1 now; Vite/Vitest majors held)  
-**Branch:** `cursor/dep-sec-001a-tier1-42de`
+**Branch:** `cursor/dep-sec-001a-tier1-42de`  
+**Merged:** PR #253 → `main` @ `25fc189d` (`2026-08-10T16:37:37Z`)
+
+```text
+Tier-1 closeout  ≠  DEP-SEC parent-program closeout
+```
+
+Authoritative residual matrix (post-merge fan-out + remaining obligations):  
+`docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` (`DEP-SEC-001B`).
+
+**Precedence.** This document is authoritative for **Tier-1 / `DEP-SEC-001A` only**. Where it conflicts
+with the residual matrix on parent-program state, residual disposition, or current alert counts, **the
+matrix is authoritative** — see its §0. In particular, alert figures below are the 2026-08-10 closeout
+witness and have since been superseded by the live witness in matrix §8.
 
 ---
 
@@ -154,3 +168,21 @@ Restore trigger (from `MAINT-DEFER-004`): BR-021 resolution **or** explicit manu
 2. `fix(deps): patch axios and postcss security advisories` — versions + lockfile  
 3. *(omitted)* — no repo patch for archive dismissals  
 4. This closeout + CBSP21 manifest
+
+---
+
+## 9. Residual obligations (parent program — not closed here)
+
+This document closes **Tier-1 / DEP-SEC-001A only**. After merge of #253, Dependabot opened five version-update PRs (#254–#258) because this sprint **created** `.github/dependabot.yml` (`open-pull-requests-limit: 5`). Those PRs and all other material residuals are dispositioned in:
+
+`docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md`
+
+| Residual class | Standing (see matrix) |
+|----------------|------------------------|
+| Generated PRs #254–#258 | DEFERRED → Tranche B (close; do not merge as five sprints) |
+| Archive alert dismissals | OWNER ACTION (UI witness; API 403) |
+| Python `requirements-dev.txt` | OUT OF SCOPE |
+| Vite / Vitest majors | DEFERRED → Tranche C (BR-021 or manual witness) |
+| BR-021 | NOT APPLICABLE to DEP-SEC implementation boundary |
+
+Do **not** treat a green Tier-1 closeout as `DEP-SEC-001 STATUS: RESOLVED`.

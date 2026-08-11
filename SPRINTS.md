@@ -917,7 +917,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | ART-STUDIO-DEFER-001 | Design-first-workflow + promotion intent export | API / Art Studio | QUEUED | 2026-05-26 |
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
-| MAINT-DEFER-004 | Dependency Security / DEP-SEC-001A (Tier-1 COMPLETE; Vite/Vitest majors deferred; ongoing Dependabot ownership) | Process / deps | ACTIVE (T1 done; T2 deferred) | 2026-08-10 |
+| MAINT-DEFER-004 | Dependency Security / DEP-SEC-001 (ACTIVE — Tier-1 COMPLETE; residuals dispositioned; Tranche B/C deferred) | Process / deps | ACTIVE — T1 COMPLETE | 2026-08-10 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -999,30 +999,39 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 ---
 
-### MAINT-DEFER-004 — Dependency Security / DEP-SEC-001A
+### MAINT-DEFER-004 — Dependency Security / DEP-SEC-001
 
-**Status:** ACTIVE — Tier-1 COMPLETE (2026-08-10); Tier-2 DEFERRED; ongoing Dependabot ownership established  
+**Status:** ACTIVE — TIER 1 COMPLETE (2026-08-10); parent program **not** RESOLVED; remaining work durably deferred/dispositioned  
 **last_verified:** 2026-08-10  
-**Program ID:** DEP-SEC-001A  
-**Evidence:** PR #252 / `docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md` (snapshot observed **2026-08-09**: 65 open alerts → 17 packages).  
-**Closeout:** `docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md`  
-**Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge).  
-**Implementation PR:** #253 (`cursor/dep-sec-001a-tier1-42de`).
+**Program ID:** `DEP-SEC-001` (parent)  
+**Tranche IDs:** `DEP-SEC-001A` (Tier-1 COMPLETE via #253); `DEP-SEC-001B` (residual consolidation — this record sync)  
+**Evidence:** PR #252 / `docs/ci/DEPENDABOT_TRIAGE_AND_DECISION_2026-08-09.md` (snapshot **2026-08-09**: 65 open alerts → 17 packages).  
+**Tier-1 closeout:** `docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md` (**tranche** closeout ≠ parent closeout).  
+**Residual matrix (authoritative):** `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md`  
+**Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge; `open-pull-requests-limit: 5`).  
+**Implementation PR (Tier-1):** #253 (`cursor/dep-sec-001a-tier1-42de`) — **COMPLETE** at tranche level.
 
-**Why this exists:** Dependency security was previously unowned (no BR-*, CI-RED-*, or SPRINTS line). Alerts accumulated without a remediation path.
+**Why this exists:** Dependency security was previously unowned. #253 completed Tier-1 and created Dependabot intake; merge immediately generated five version-update PRs (#254–#258). The parent program owns adjudication so one bounded remediation does not recursively spawn uncontrolled PR fan-out.
 
-**Tier-1 (COMPLETE — DEP-SEC-001A):**
+**Historical boundary:** archive dismissals, alert recalculation, residual `npm audit`, Python `requirements-dev`, Vite/Vitest majors and BR-021 were all **known at #253 completion** — inherited obligations, not defects caused by #253. Rationale and per-item evidence: residual matrix §1. PR #253 remains `DEP-SEC-001 / Tier 1 — COMPLETE`.
+
+**Tier-1 (COMPLETE — DEP-SEC-001A / #253):**
 - Patched low-risk active JS advisories within existing majors (`axios` → 1.19.0, `postcss` → 8.5.26).
 - Active client surface monitored via Dependabot config.
-- Proven-dead archive alerts (`archive/**`, `docs/archive/**` package.json): dismiss as unused code in GitHub UI — not active runtime/build deps. Do **not** rewrite archival manifests. (Agent API 403 → owner UI witness still required for alert ledger closure.)
-- Python `services/api/requirements.txt` clean at triage. `requirements-dev.txt` alert remains **out of scope**.
+- Proven-dead archive alerts: **OWNER ACTION** — dismiss unused in GitHub UI (agent API 403). Do **not** rewrite archival manifests.
+- Python `requirements-dev.txt` alert: **OUT OF SCOPE** (standing).
 
-**Tier-2 (deferred — major toolchain):**
-- `vite` major (5→6) and `vitest` major (2→3) held out.
-- Preferred order if/when authorized: vitest first → stabilize witness → vite.
-- **Restore / authorize trigger:** BR-021 resolution (re-blocking client lint/build gates) **or** explicit owner manual build-witness authorization. Do not couple to Tier-1.
+**Post-#253 generated PRs:** #254–#258 (five version updates; `open-pull-requests-limit: 5`) — **all CLOSED, DEFERRED → Tranche B**, durable comment on each. None duplicates axios/postcss; none is a security defect merely by existing. Per-PR evidence and dispositions: residual matrix §5–§9.
 
-**Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly (config cadence). No alert dismissal for active dependencies solely to reduce counts. Counts are snapshots, not invariants.
+**Alert witness (2026-08-11):** open alerts **65 → 32**; `axios` + `postcss` → **0**. Tier-1 witnessed effective. Remaining: 9 archive (owner dismissal) · 4 Tranche C · 1 out-of-scope Python · 18 Tranche B, only `ws` runtime-scope. Detail: residual matrix §8.
+
+**Future implementation (≤2 tranches — no recursive PR creation during adjudication):**
+- **Tranche B** — residual security remediation + authorized version hygiene from #254–#258 when explicitly ordered. **Must ship as one consolidated PR** — Dependabot-authored PRs cannot pass `api-verify` (no `SG_SPEC_TOKEN`), so they cannot be CI-verified before merge. See matrix R-11.
+- **Tranche C** — major toolchain: `vitest` 2→3 → witness → `vite` 5→6. **Restore trigger:** BR-021 resolution **or** explicit manual build-witness authorization. Do not silently bypass BR-021.
+
+**Open owner action:** dismiss the 9 archive alerts, and add `archive/**` / `docs/archive/**` exclusions to `.github/dependabot.yml` so they stop regenerating (matrix §11).
+
+**Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly. Generated PRs enter residual adjudication before implementation. No alert dismissal for active dependencies solely to reduce counts.
 
 **Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
 

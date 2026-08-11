@@ -84,6 +84,40 @@ work being performed. See docs/audit/sprints_md_verification_2026-04-25.md.
 
 ---
 
+### Rule 8: Residual Obligations Check (added 2026-08-10)
+
+> **Rule placement:** new rules append here, at the end of the rule list, in the order they were added.
+> Rules 1–7 are historically out of numeric order; do not insert into that sequence — appending keeps
+> `git blame` legible and stops a new rule displacing an older one.
+
+**The rule.** A tranche or PR completing does **not** complete its parent program. Before marking any
+sprint or program `RESOLVED` / `COMPLETE` **at program level**, every material residual obligation must
+already have a durable disposition in `SPRINTS.md` and/or an authoritative residual matrix cited from
+the SPRINTS ID.
+
+```text
+PR / tranche COMPLETE   ≠   PROGRAM COMPLETE
+```
+
+**Checklist.** Inspect each of these for residual language — *deferred, pending, out-of-scope,
+owner-action, follow-up, unresolved, blocked, remaining, later*, or equivalent:
+
+- [ ] Dev Order and implementation notes
+- [ ] Tests and witnesses (including what was *not* run)
+- [ ] PR review threads and closeout documents
+- [ ] Findings discovered during the work, including automation PRs opened *by the merge*
+- [ ] Each residual mapped to a durable disposition — never left only in prose
+
+**Anti-pattern.** Merging a bounded remediation while residuals live only in prose, review comments,
+automation PRs, or chat. Generated PRs are **evidence requiring adjudication**, not one-PR-per-item
+implementation authorization.
+
+**Origin.** PR #253 (Tier-1 `COMPLETE`) created Dependabot intake and its merge immediately produced
+five version-update PRs, #254–#258. Consolidated in
+`docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` under `DEP-SEC-001B`.
+
+---
+
 ## Timestamps
 
 Every sprint section includes:
@@ -145,6 +179,7 @@ Either approach fits. Decision deferred until team size warrants the overhead.
 5. **Five-month drift** — Going multiple months without status audit
 6. **Undocumented completion** — Marking tasks ✅ without commit hash or verification method (added 2026-04-26)
 7. **Untracked deferral** — Holding work out of a merge without a DEFERRED MAINTENANCE entry in SPRINTS.md (added 2026-05-26)
+8. **Unresolved residuals in prose** — Marking a program resolved while deferred/pending/out-of-scope/owner-action items remain only in closeout prose, PR comments, or automation PRs without a durable disposition (added 2026-08-10; see Rule 8)
 
 The Sprint 3 audit (2026-04-23) found examples of patterns 1-4.
 

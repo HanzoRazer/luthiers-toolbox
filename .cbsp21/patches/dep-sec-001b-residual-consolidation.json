@@ -1,0 +1,86 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_001B_RESIDUAL_CONSOLIDATION",
+  "title": "DEP-SEC-001B: Post-#253 residual consolidation and PR fan-out control",
+  "intent": "After PR #253 (Tier-1 COMPLETE) created Dependabot intake, five version-update PRs (#254-#258) opened within minutes. This sprint inventories those PRs, builds an authoritative DEP-SEC-001 residual disposition matrix, syncs MAINT-DEFER-004 parent state (ACTIVE \u2014 TIER 1 COMPLETE, not program RESOLVED), clarifies Tier-1 closeout \u2260 parent closeout, adds Residual Obligations Check (Rule 8) to docs/SPRINTS_MAINTENANCE.md, and closes #254-#258 with durable disposition comments deferring work to at most two future tranches (B residual/hygiene, C vitest\u2192vite). No dependency or production code mutation.",
+  "change_type": "docs",
+  "behavior_change": "none - governance and documentation only. No package, lockfile, Python requirements, Dependabot config, or production source changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-001b-residual-consolidation.json",
+      "SPRINTS.md",
+      "docs/SPRINTS_MAINTENANCE.md",
+      "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md",
+      "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      "docs/SPRINTS_MAINTENANCE.md",
+      "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md",
+      "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Created docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md \u2014 parent residual matrix inventorying #254-#258, #252/#253 relationships, dispositions, Tranche B/C grouping, closure conditions, Residual Obligations Check. (2) SPRINTS.md MAINT-DEFER-004 updated to DEP-SEC-001 parent ACTIVE \u2014 TIER 1 COMPLETE with generated-PR disposition table. (3) Tier-1 closeout clarified as tranche-only; \u00a79 residual pointer added. (4) docs/SPRINTS_MAINTENANCE.md Rule 8 Residual Obligations Check + anti-pattern 8. GitHub: closed #254-#258 with disposition comments (external to git). (5) Historical-boundary clarification: inherited residuals (archive dismissals, alert recalc, npm audit residual, Python requirements-dev, Vite/Vitest, BR-021) are accounted in the matrix as INHERITED \u2014 not newly discovered defects caused by #253; fan-out trigger remains PRs #254\u2013#258; added R-10 for npm audit residual surface.",
+    "why_not_redundant": "Repairs the post-#253 fan-out failure mode: residuals and automation PRs existed without a single parent-program disposition boundary. Does not re-implement Tier-1 or bump dependencies."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr list --state all --json ... \u2192 exactly 5 PRs created after #253 merge: #254-#258 by app/dependabot",
+      "main lockfile: axios 1.19.0, postcss 8.5.26; generated PR packages still at from-versions",
+      "gh api .../dependabot/alerts \u2192 HTTP 403 in the authoring agent environment (superseded \u2014 see review-fix entry below)",
+      "git diff origin/main -- packages/client/package.json package-lock.json requirements*.txt .github/dependabot.yml \u2192 empty (0 bytes)",
+      "gh pr view 254..258 \u2192 state CLOSED after disposition comments",
+      "rg Residual Obligations Check docs/SPRINTS_MAINTENANCE.md \u2192 Rule 8 once",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "Clarification sync 2026-08-11: matrix \u00a71 historical boundary + \u00a710 Origin column (INHERITED/FAN-OUT/ONGOING) + R-10; SPRINTS MAINT-DEFER-004 historical boundary sentence",
+      "REVIEW FIX 2026-08-11 \u2014 cited items: (1) \u00a70 added declaring source-of-truth precedence (matrix > SPRINTS.md > Tier-1 closeout > #252 snapshot) and labelling every section DESCRIPTIVE / NORMATIVE / PLANNING; precedence sentence also added to the Tier-1 closeout header. (2) SPRINTS.md duplication reduced \u2014 the five-row generated-PR table and fan-out prose collapsed to a one-line summary plus matrix pointer. (3) Evidence-dependent claims re-grounded rather than merely softened. (4) Rule 8 refactored into normative rule + checklist + anti-pattern + origin, and MOVED to append after Rule 5 (it had been inserted between Rule 7 and Rule 5, displacing an older rule); an explicit append-only placement note now prevents recurrence.",
+      "REVIEW FIX 2026-08-11 \u2014 factual corrections found during verification: the matrix's \u00a78 'HTTP 403 / ledger PENDING OWNER UI WITNESS' was FALSE as a repository claim. `gh api repos/HanzoRazer/luthiers-toolbox/dependabot/alerts?state=open` returns 200 with owner credentials. Live witness taken: open alerts 65 \u2192 32 (1 critical / 15 high / 16 medium); axios + postcss \u2192 0; follow-redirects and form-data cleared transitively. R-02 therefore DISCHARGED, not BLOCKED. R-07 re-grounded to 18 alerts / 10 packages (only `ws` x2 runtime-scope). R-01 re-confirmed still open at exactly 9 archive alerts. Alert DISMISSAL was still not performed (needs write scope), so R-01 correctly remains OWNER ACTION.",
+      "REVIEW FIX 2026-08-11 \u2014 new residual R-11 added: Dependabot-authored PRs structurally cannot pass `api-verify`. Observed on #254 head a9dc78b3 \u2014 `SG_SPEC_TOKEN not configured \u2014 cannot clone private sg-spec`; GitHub withholds repository secrets from Dependabot PRs. This upgrades \u00a712's 'prefer one consolidated PR' to a REQUIREMENT, since a Dependabot PR can never be CI-verified pre-merge. Adjacent to BR-022 and CI-RED-001. Replaces the earlier unexplained 'failures appear infra/shared' characterization in \u00a76.",
+      "REVIEW FIX 2026-08-11 \u2014 \u00a711 owner action 5 added: `.github/dependabot.yml` still lacks archive path exclusions, so the 9 archive alerts regenerate after dismissal. Recommended in #252 \u00a77, not yet implemented. \u00a715 corrected: the missing stockpile audit is confirmed absent by exhaustive search, not conditionally out of scope; and R-10's `npm audit` 21-issue figure is flagged as an un-re-verified closeout claim (no install was run this sprint).",
+      "Re-verified unchanged and correct: main @ 25fc189d; lockfile axios 1.19.0 / postcss 8.5.26 / vite 5.4.21 / vitest 2.1.9 / @vue-test-utils 2.4.6 / @typescript-eslint-eslint-plugin 6.21.0 / konva 9.3.22 / marked 17.0.1 / eslint-plugin-vue 9.33.0 (all \u00a77 rows accurate); durable disposition comments confirmed present on all five of #254-#258 before closure.",
+      "scripts/ci/check_cbsp21_gate.py and scripts/ci/check_cbsp21_patch_input.py run locally after the review fix -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md",
+      "intent": "Authoritative DEP-SEC-001 residual matrix and fan-out dispositions.",
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Parent program state ACTIVE \u2014 TIER 1 COMPLETE; record #254-#258 dispositions and Tranche B/C.",
+      "risk": "low",
+      "behavior_change": "none - governance record"
+    },
+    {
+      "path": "docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md",
+      "intent": "Clarify Tier-1 closeout \u2260 parent closeout; point to residual matrix.",
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "docs/SPRINTS_MAINTENANCE.md",
+      "intent": "Add Rule 8 Residual Obligations Check once to existing maintenance authority.",
+      "risk": "low",
+      "behavior_change": "none - process discipline"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-10-DEP-SEC-001B",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Docs/governance only. Closing Dependabot version PRs retains obligations in the residual matrix. No dependabot.yml suppression, no dependency mutation, no alert dismissal. Post-review-fix status: the alert ledger was successfully read with owner credentials (the prior 403 was agent-environment-scoped), so the Tier-1 patch is now witnessed effective (65 -> 32 open; axios/postcss -> 0) and R-02 is discharged in-document. Two obligations are deliberately left open and are NOT closed here: R-01 archive-alert dismissal plus the dependabot.yml path exclusion that would stop regeneration, and R-11, the structural inability of Dependabot-authored PRs to pass api-verify, which constrains how Tranche B may ship."
+  }
+}
