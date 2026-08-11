@@ -1011,7 +1011,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Intake boundary:** `.github/dependabot.yml` (npm → `/packages/client` only; no auto-merge; `open-pull-requests-limit: 5`).  
 **Implementation PR (Tier-1):** #253 (`cursor/dep-sec-001a-tier1-42de`) — **COMPLETE** at tranche level.
 
-**Why this exists:** Dependency security was previously unowned. #253 completed Tier-1 and created Dependabot intake; merge immediately generated five version-update PRs (#254–#258). Parent program owns adjudication so one bounded remediation does not recursively spawn uncontrolled PR fan-out.
+**Why this exists:** Dependency security was previously unowned. #253 completed Tier-1 and created Dependabot intake; merge immediately generated five version-update PRs (#254–#258). Parent program owns adjudication so one bounded remediation does not recursively spawn uncontrolled PR fan-out. **Historical boundary:** archive dismissals, alert recalculation, residual `npm audit`, Python `requirements-dev`, Vite/Vitest majors, and BR-021 were **already known at #253 completion** (inherited obligations) — they are not newly discovered defects caused by #253. PR #253 remains `DEP-SEC-001 / Tier 1 — COMPLETE`.
 
 **Tier-1 (COMPLETE — DEP-SEC-001A / #253):**
 - Patched low-risk active JS advisories within existing majors (`axios` → 1.19.0, `postcss` → 8.5.26).
