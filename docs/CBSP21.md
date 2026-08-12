@@ -160,12 +160,99 @@ python scripts/cbsp21/cbsp21_coverage_check.py \
 
 ## CI Workflows
 
-| Workflow | Purpose |
-|----------|---------|
-| `cbsp21_gate.yml` | Validates patch_input.json against schema |
-| `cbsp21_coverage_gate.yml` | Enforces coverage threshold |
-| `cbsp21_patch_input_gate.yml` | Validates patch input format |
-| `cbsp21_patch_packet_format.yml` | Validates patch packet structure |
+The **emitted check context** — not the workflow filename — is what branch protection targets. Get these
+wrong and a ruleset silently requires a check that never reports.
+
+| Workflow | Emitted check context | Trigger | Draft behaviour | Required for merge? |
+|---|---|---|---|---|
+| `cbsp21_gate.yml` | **`CBSP21 Patch Manifest Gate`** | `pull_request → main`, `workflow_dispatch` | runs (no condition) | **YES — blocking** |
+| `cbsp21_patch_input_gate.yml` | `cbsp21-patch-input` | `pull_request: [opened, synchronize, reopened, ready_for_review]` | **skipped** via `if: !draft` | no — observational |
+| `cbsp21_coverage_gate.yml` | `CBSP21 Coverage Gate` | paths `cbsp21/**`, `scripts/cbsp21/**`; push to `main` | n/a | no — path-filtered |
+| `cbsp21_patch_packet_format.yml` | `CBSP21 Patch Packet Format` | paths `cbsp21/patch_packets/**`, `scripts/cbsp21/**` | n/a | no — path-filtered |
+
+> **Why only one is required.** `CBSP21 Patch Manifest Gate` is the only CBSP21 workflow that runs
+> unconditionally on every PR to `main`. The bottom two are path-filtered to directories that are empty
+> or near-empty (`cbsp21/` and `cbsp21/patch_packets/` hold **zero** files; the live manifests are under
+> `.cbsp21/`). **A required check that never runs stays pending forever and blocks the PR permanently** —
+> so requiring either of those would deadlock every PR that does not touch `scripts/cbsp21/`.
+> `cbsp21-patch-input` is left observational until its skipped-check semantics are characterised
+> separately.
+
+---
+
+## Merge Enforcement
+
+**Enforcement mechanism:** repository **ruleset** `May 2 2026` (id `15875552`), `enforcement: active`,
+targeting `~DEFAULT_BRANCH`. Classic branch protection is **not** used on this repository — querying
+`/branches/main/protection` returns HTTP 404, which is expected and is not a misconfiguration.
+
+### The contract
+
+```text
+READY PR + covered patch     → CBSP21 Patch Manifest Gate SUCCESS → CBSP21 does not block merge
+READY PR + uncovered patch   → CBSP21 Patch Manifest Gate FAILURE → MERGE BLOCKED
+READY PR + no CBSP21 result  → required check never reports       → MERGE BLOCKED (pending)
+```
+
+Required contexts on `main`:
+
+| Context | Owner |
+|---|---|
+| `Fence Checks (Blocking)` | fence architecture |
+| **`CBSP21 Patch Manifest Gate`** | CBSP21 admission / coverage |
+
+Adjacent ruleset settings, deliberately **unchanged** by CBSP21 enforcement:
+`strict_required_status_checks_policy: false` (branches need not be current with `main`),
+`required_approving_review_count: 0`, `bypass_actors: []`.
+
+**`bypass_actors` is empty, so the gate binds administrators too.** There is no bypass flag in
+`check_cbsp21_gate.py`, and `cbsp21_gate.yml` sets no `continue-on-error`. A failing gate is not
+overridable through the ordinary merge path.
+
+### Draft behaviour
+
+Draft PRs **do** run `CBSP21 Patch Manifest Gate` — GitHub fires `pull_request` events for drafts, and
+that workflow declares no draft condition. So the blocking gate is never absent merely because a PR is
+a draft.
+
+`cbsp21-patch-input` is skipped on drafts by design. Its workflow lists `ready_for_review` in its
+trigger types, so the draft → ready transition re-fires it. That skip is intentional, not enforcement
+drift, and it is safe precisely because that context is **not** required.
+
+### Diagnosing a missing or skipped check
+
+| Symptom | Meaning |
+|---|---|
+| `CBSP21 Patch Manifest Gate` — **fail** | your diff contains files no manifest declares. The log names them. Add or extend `.cbsp21/patches/<patch-id>.json` |
+| `CBSP21 Patch Manifest Gate` — **absent / pending** | the workflow did not run. Check the PR targets `main` and the workflow file exists on **your branch** |
+| `cbsp21-patch-input` — **skipping** | the PR is a draft. Expected; not a failure. Mark ready for review and it runs |
+| `mergeStateStatus: BLOCKED` with all checks green | something other than CBSP21 blocks — inspect the other required context |
+
+### Enforcement witness (CBSP21-GATE-002, 2026-08-11)
+
+Requiring a check is not the same as proving it blocks. Both directions were witnessed on the real PR
+path against ruleset `15875552`:
+
+**Negative — an uncovered patch cannot merge.** Disposable PR #264, base `428649c0`, head `65c0982c`,
+carrying exactly one file declared by no manifest (`CBSP21_TC16_UNDECLARED_ARTIFACT.md`, +1/-0).
+`CBSP21 Patch Manifest Gate` **failed** while `Fence Checks (Blocking)` **passed** and the branch had no
+conflicts (`mergeable: MERGEABLE`), so the block is attributable to CBSP21 alone rather than to branch
+history or a stale base. `mergeStateStatus: BLOCKED`. A real merge attempt was refused:
+
+```text
+HTTP 405 — Repository rule violations found
+Required status check "CBSP21 Patch Manifest Gate" is failing.
+```
+
+`main` stayed at `428649c0` before and after the attempt. PR closed unmerged; branch deleted, not reused.
+
+**Positive — a covered patch is not blocked.** The CBSP21-GATE-002 patch itself declares its own file
+set, passes `CBSP21 Patch Manifest Gate`, and reaches a mergeable state. The sprint eats its own dog
+food: the patch that makes the gate blocking is admitted by that same gate.
+
+**Gate-logic witness (prior).** `workflow_dispatch` run `31466755438` on a throwaway branch proved the
+gate fails closed and names the uncovered file. That established the script's behaviour; it did **not**
+establish merge protection, which is why the PR-path witness above exists.
 
 ---
 
@@ -180,6 +267,7 @@ python scripts/cbsp21/cbsp21_coverage_check.py \
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1 | 2026-08 | CBSP21-GATE-002 — `CBSP21 Patch Manifest Gate` made a required context in ruleset `15875552`; merge-enforcement contract, draft behaviour, and blocking witness documented |
 | 2.1 | 2026-01 | Added architecture_scan integration |
 | 2.0 | 2025-12 | Added risk assessment fields |
 | 1.0 | 2025-11 | Initial protocol |
