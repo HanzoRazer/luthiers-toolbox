@@ -553,7 +553,7 @@ queued pending owner unit ruling
 Surfaced by the DEP-SEC-001B negative-gate witness (PR #259 review). Unlike the scan intake above, this
 entry is **not** a detector lead: the symptom was reproduced on CI and is authorized for bounded repair.
 
-### BR-046 · CBSP21 gate names an unrelated manifest when nothing covers the diff
+### BR-046 · CBSP21 gate names an unrelated manifest when nothing covers the diff — ✅ RESOLVED
 
 - **Subsystem:** CI / governance tooling — `scripts/ci/check_cbsp21_gate.py`, `scripts/ci/cbsp21_manifest_discovery.py`
 - **Confidence:** **CONFIRMED — reproduced on CI**, GitHub Actions run
@@ -564,7 +564,7 @@ entry is **not** a detector lead: the symptom was reproduced on CI and is author
   a manifest — an arbitrary stale one from a previously-merged PR — and prints it as *the* manifest at
   0.0% coverage. Expected: report that **no manifest covers this diff** and name the remedy.
 
-**Verbatim CI output (single undeclared file, no covering manifest):**
+**Verbatim CI output (single undeclared file, no covering manifest) — pre-repair:**
 
 ```text
 📋 Manifest: .cbsp21/patches/audit-n1-refuted.json     ← unrelated, from a merged PR
@@ -599,14 +599,12 @@ entry is **not** a detector lead: the symptom was reproduced on CI and is author
 - **Not a coverage-enforcement defect.** The DEP-SEC-001B witness proved both directions of the control
   on the same manifest: declared 5-file patch → 100.0%, exit 0; same patch plus one undeclared file →
   80.0%, exit 1, offending file named. Enforcement is sound.
-- **Provisional repair direction (intake):** when the best-covering manifest yields 0 covered files,
-  suppress the manifest name and emit no-manifest guidance under `.cbsp21/patches/<patch-id>.json`.
-- **Repair authorization:** **CBSP21-DIAG-001** (implementation order for this defect).
-- **Repair (pre-merge):** `select_manifest` returns `None` when the diff has non-internal changed
-  files and max overlap is 0; empty diffs keep prior deterministic selection; explicit `--manifest`
-  unchanged. Coverage gate and patch-input gate both emit actionable *no applicable manifest*
-  diagnostics. Unit characterization + local negative witness green on branch
-  `cursor/cbsp21-diag-001-br-046-42de`. Real CI negative witness recorded in the repair PR description
-  (workflow_dispatch throwaway branch; no committed artifact).
-- **Readiness:** **IMPLEMENTED — AWAITING MERGE** (CBSP21-DIAG-001 / BR-046). Not marked RESOLVED
-  until merge + post-merge witness vocabulary apply. Deliberately **not** folded into PR #259.
+- **Repair authorization:** **CBSP21-DIAG-001**.
+- **Repair (merged):** `select_manifest` returns `None` when the diff has non-internal changed files and
+  max overlap is 0; empty diffs keep prior deterministic selection; explicit `--manifest` unchanged.
+  Coverage gate and patch-input gate both emit actionable *no applicable manifest* diagnostics.
+  Shared-discovery unit characterization + local NOT_FOUND CLI witness recorded on the repair PR.
+- **Lifecycle:** intake #260 (`QUEUED — NOT AUTHORIZED`) → authorized/implemented by CBSP21-DIAG-001 →
+  merged **PR #261** → `428649c0` → administrative closeout (this record).
+- **Readiness:** **RESOLVED** on `main` via **PR #261** → merge SHA **`428649c0`**. No further
+  CBSP21 discovery work under this defect. Deliberately **not** folded into PR #259.
