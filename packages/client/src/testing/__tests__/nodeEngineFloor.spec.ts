@@ -225,6 +225,9 @@ describe("client Node engine floor", () => {
         expect(text, "Railway Dockerfile must default to Node 22").toMatch(
           /ARG NODE_VERSION=22/,
         );
+        // Railway cannot pull node:22-alpine on this service (build never
+        // starts). Debian slim is the verified Node 22 base for this path.
+        expect(text).toMatch(/node:\$\{NODE_VERSION\}-bookworm-slim/);
         continue;
       }
       expect(text, `${name} must invoke the shared engine check`).toContain(
