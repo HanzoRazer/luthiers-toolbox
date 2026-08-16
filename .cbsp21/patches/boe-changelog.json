@@ -1,0 +1,67 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BOE_CHANGELOG_RECONSTRUCTION",
+  "title": "docs(boe): reconstruct the v3.1.0-v3.5.0 changelog and correct the Jumbo template row",
+  "intent": "The Body Outline Editor has no changelog. Its only version marker is an HTML comment on line 7 of hostinger/body-outline-editor.html reading 'v3.5.0 - Final Polish (Precision Tier Complete)', and no git tags exist for any editor version, so the release history was recoverable only from commit messages. This adds docs/Body_Outline_Editor_CHANGELOG.md, reconstructed from git history and verified against per-commit diffs and line counts, covering the pre-tier v3.1.0 baseline and the Precision Tier v3.2.0-v3.5.0. It also corrects the Jumbo row in the User Manual, which has been wrong since commit f25bb949 (2026-05-27) realigned the editor to the canonical IBG source. Documentation only.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation only. No code, schema, route, workflow, data file, test, or runtime behavior is touched. Adds one markdown file under docs/ and edits one existing markdown file under docs/.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/boe-changelog.json",
+      "docs/Body_Outline_Editor_CHANGELOG.md",
+      "docs/Body_Outline_Editor_User_Manual.md"
+    ],
+    "files_expected_to_change": [
+      "docs/Body_Outline_Editor_CHANGELOG.md",
+      "docs/Body_Outline_Editor_User_Manual.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) New docs/Body_Outline_Editor_CHANGELOG.md: per-version entries for v3.1.0 (pre-tier baseline), v3.2.0 Precision Controls + Workflow, v3.3.0 Image Tools & Templates, v3.4.0 Measurement & Enhanced Export, and v3.5.0 Final Polish, plus an Unreleased section for the three commits that changed the editor after the v3.5.0 stamp without a version bump (70a0d3ee IBG API configuration, c971d7a4 JSON import, f25bb949 jumbo alignment). Includes a namespace-and-boundary section recording five overlaps with systems that evolved around the editor. (2) docs/Body_Outline_Editor_User_Manual.md Chapter 7: Jumbo template row corrected from 530/432/304/280 to 530/432/305/254, with an inline note explaining the realignment and naming the consistency test that does not cover this file.",
+    "why_not_redundant": "No changelog exists for this artifact and no git tags record its versions; the release history was otherwise only recoverable by reading commit messages one at a time. The root CHANGELOG.md tracks the platform on an independent toolbox-vX.Y.Z line and does not cover the editor's v3.x line - the new file states that distinction explicitly so the two are not conflated. The Jumbo correction fixes a real 26mm waist discrepancy between the manual and shipped behavior."
+  },
+  "verification": {
+    "commands_run": [
+      "git log/show over hostinger/body-outline-editor.html for every commit touching the artifact; version entries reconstructed from commit bodies.",
+      "Per-version line counts verified via 'git show <sha>:hostinger/body-outline-editor.html | wc -l' - 4247, 4469, 5071, 5875, 5957, 6150; deltas reconcile to the stated diffstats.",
+      "Canonical jumbo read from FAMILY_DEFAULTS['jumbo'] in services/api/app/instrument_geometry/body/ibg/body_contour_solver.py -> 530/432/305/254, waist_y_norm 0.44.",
+      "py -3.11 -m pytest tests/test_jumbo_dimension_consistency.py -q --no-cov -> 4 passed, 1 skipped (the four guarded paths agree; catalog.json is explicitly skipped).",
+      "All 8 template dimension sets extracted from hostinger/body-outline-editor.html and compared field-by-field with User Manual Chapter 7 - Jumbo was the only mismatch; the other seven match exactly.",
+      "Divergence check: tools/body-outline-editor.html is 5979 lines vs hostinger 6150 and still carries the pre-f25bb949 jumbo values - recorded as an open item, deliberately NOT changed here.",
+      "Facts re-verified against main @ c8b0b549 after main advanced during the work.",
+      "Documentation-only; no test suite affected."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/Body_Outline_Editor_CHANGELOG.md",
+      "intent": "New reconstructed changelog for the Body Outline Editor covering v3.1.0 through v3.5.0, an Unreleased section for the post-stamp commits, namespace/boundary notes, and open items.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/Body_Outline_Editor_User_Manual.md",
+      "intent": "Chapter 7: correct the Jumbo template row to the canonical 530/432/305/254 and add an inline note on the realignment and the gap in test coverage.",
+      "risk": "low",
+      "behavior_change": "None (documentation). Corrects a stated dimension to match shipped behavior."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-BOE-CHANGELOG",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "tools/body-outline-editor.html is 171 lines behind hostinger/ and retains pre-f25bb949 jumbo dimensions. MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md marks it Production / MEDIUM / 'Avoid collision', so resync is a governed change. Recorded as an open item; not performed in this patch.",
+      "test_jumbo_dimension_consistency.py guards four paths and does not cover the User Manual or the tools/ mirror, which is how this drift went unnoticed. Extending it is recorded as an open item."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only - one new markdown file and one corrected line plus an explanatory note in an existing markdown file. No runtime, API, workflow, data-file, or CBSP21 algorithm changes. Patch id boe-changelog does not collide with the existing boe-landing-page-entry (PR #268). The editor's v3.x version line is explicitly distinguished from the platform's toolbox-vX.Y.Z line in the new document."
+  }
+}

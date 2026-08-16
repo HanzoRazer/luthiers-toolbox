@@ -373,7 +373,7 @@ Use numeric entry for exact placement. Don't eyeball.
 
 **Acoustic:**
 - Dreadnought — 508/394/286/254 (length/lower/upper/waist)
-- Jumbo — 530/432/304/280
+- Jumbo — 530/432/305/254
 - OM/000 — 482/380/280/254
 - Classical — 482/362/280/242
 - Parlor — 400/304/228/204
@@ -384,6 +384,20 @@ Use numeric entry for exact placement. Don't eyeball.
 - Telecaster — 394/318/204/240
 
 All dimensions in mm.
+
+> **Jumbo corrected 2026-08-16.** This row previously read `530/432/304/280`.
+> The editor was realigned to the canonical IBG source in commit `f25bb949`
+> (`FAMILY_DEFAULTS["jumbo"]` in `body_contour_solver.py`), changing upper bout
+> 304 → 305 and waist 280 → **254**; `waistYNorm` also moved 0.45 → 0.44. The
+> manual was not updated at the time, so it understated the waist change by
+> 26 mm. The other seven templates were re-verified against the editor and are
+> unchanged.
+>
+> Jumbo is guarded by `services/api/tests/test_jumbo_dimension_consistency.py`
+> across four paths — the canonical solver, `jumbo_j200.py`,
+> `instrument_model_registry.json`, and `hostinger/body-outline-editor.html`.
+> **This manual is not one of them**, which is why the drift went unnoticed. See
+> [Body_Outline_Editor_CHANGELOG.md](Body_Outline_Editor_CHANGELOG.md).
 
 ### Loading a template
 
