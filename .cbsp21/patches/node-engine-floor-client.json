@@ -77,7 +77,11 @@
       "npx vue-tsc --noEmit -> 156, unchanged from the branch baseline",
       "npm run check:node -> Node 22.14.0 satisfies >=22.12.0",
       "vitest nodeEngineFloor.spec.ts -> 6 passed",
-      "Local npm run build -> success (rules out app module graph as Railway cause)"
+      "Local npm run build -> success (rules out app module graph as Railway cause)",
+      "Railway bisect: NODE_VERSION=22 alpine/bookworm-slim FAIL; NODE_VERSION=20 SUCCESS",
+      "Railway bot @luthiers-toolbox/client Success on 87dd6cc7",
+      "vitest nodeEngineFloor.spec.ts -> 6 passed after dual-lane floor + Railway exception",
+      "npm run check:node in client_lint_build.yml added"
     ]
   },
   "files": [
