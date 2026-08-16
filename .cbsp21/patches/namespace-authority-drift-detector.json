@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "NAMESPACE_AUTHORITY_DRIFT_DETECTOR",
+  "title": "feat(governance): namespace/authority drift detector (advisory v1) + synthetic fixtures",
+  "intent": "Build the repeatable adjudication instrument specified by the pre-governance asset-recovery archaeology (detector requirements R1-R7). Advisory-only v1. Adjudicates whether a candidate change (a git ref vs a base) introduces/revives/duplicates/bypasses/alters an authority-bearing namespace inconsistently with the current DECLARED authority topology, read from docs/governance/ontology/authority_chain_registry.json. Non-duplication grounded first: distinct from detect_semantic_drift.py (vocabulary/term drift) and audit_authority_chains.py (registry internal self-consistency); reuses the lib.py Severity vocabulary and the shared REPO_ROOT/ontology conventions. Core boundary rule: the detector MAY CONSUME authority but MAY NOT CREATE it - no path/keyword inference of namespace->domain ownership; where no declared binding exists the honest deterministic verdict is INSUFFICIENT_EVIDENCE (evidence the topology is incomplete at the namespace-binding layer, which the current registry confirms - it has no namespace_bindings).",
+  "change_type": "feature",
+  "behavior_change": "Adds a new advisory governance tool and its tests. Not wired into check_all.py and not a blocking gate (advisory v1: always exit 0; each verdict carries an independent Severity so a later governance sprint can make selected verdicts blocking without redesigning the engine). No existing code, route, schema, data file, or governance authority record is modified. No namespace->domain binding authority is authored (deferred to a governance increment).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/namespace-authority-drift-detector.json",
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py"
+    ],
+    "files_expected_to_change": [
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) scripts/governance/check_namespace_authority_drift.py - three separable layers: git/ref adapter (build_candidate_change: git diff --name-status base...candidate -> candidate-change model; sets FACTUAL fields only - namespace, path, change, is_code_namespace, touches_authority_artifacts - never a declared_domain/concept), candidate-change model (NamespaceChange/CandidateChange dataclasses; authority-derived fields set ONLY by a binding source, never inferred), and a Git-independent authority analysis engine (AuthorityTopology reads domain_ownership + chains + optional namespace_bindings; adjudicate() returns one of NO_AUTHORITY_IMPACT/DECLARED_EXTENSION/NOVEL_VALID/INSUFFICIENT_EVIDENCE/DUPLICATE_AUTHORITY/PARALLEL_AUTHORITY/OBSOLETE_AUTHORITY/AUTHORITY_BYPASS with evidence). CLI: --base/--candidate refs, --json, --quiet; advisory (always exit 0). (2) tests/governance/test_namespace_authority_drift.py - 16 tests: all verdict families via a synthetic topology WITH bindings (proves engine correctness when bindings exist), engine invariants (evidence-on-every-verdict, determinism, advisory-no-nonzero-exit), and real-registry FACTUAL-CONDITION dogfoods (retopo -> INSUFFICIENT_EVIDENCE because no binding; BOE control -> not flagged by age; BOE-if-bound -> DECLARED_EXTENSION).",
+    "why_not_redundant": "No existing tool adjudicates candidate-change namespace/authority drift (detect_semantic_drift = vocabulary; audit_authority_chains = registry self-consistency). Reuses shared conventions rather than creating a parallel authority. Builds the missing instrument while preserving the archaeology's evidence boundary: the detector observes authority; governance defines authority."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/governance/test_namespace_authority_drift.py -q -> 16 passed",
+      "Real retopo dogfood: py -3.11 scripts/governance/check_namespace_authority_drift.py --base origin/main --candidate origin/feature/mesh-pipeline-scaffold -> retopo = INSUFFICIENT_EVIDENCE, 0 flagged, exit 0 (binding gap exposed on real registry).",
+      "Real BOE control: --base dd86866c~1 --candidate dd86866c (BOE code introduction) -> cam namespace = INSUFFICIENT_EVIDENCE, 0 flagged (not flagged by age).",
+      "JSON mode + exit-code smoke: --json emits structured findings; exit code 0 (advisory).",
+      "Non-duplication grounded: detect_semantic_drift.py / audit_authority_chains.py / list_semantic_owners.py / lib.py inspected; responsibility boundary drawn; loader + Severity conventions reused.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    { "path": "scripts/governance/check_namespace_authority_drift.py", "intent": "New advisory namespace/authority drift detector (git adapter + candidate-change model + Git-independent authority engine). Consumes authority; never authors it.", "risk": "low", "behavior_change": "New advisory tool; not a gate; not registered in check_all.py." },
+    { "path": "tests/governance/test_namespace_authority_drift.py", "intent": "16 tests: all verdict families (synthetic bindings), engine invariants, and real-registry factual-condition dogfoods (retopo/BOE).", "risk": "low", "behavior_change": "New tests." }
+  ]
+}
