@@ -57,6 +57,13 @@ Core boundary rule (from the archaeology):
 Architecture (three separable layers - the analysis engine is Git-independent):
       git/ref adapter  ->  candidate-change model  ->  authority analysis engine
 
+Portability:
+  Luthiers-specific roots/paths live on ``DetectorConfig`` (defaults = today's
+  Luthiers layout). The Git-independent engine consumes ``CandidateChange`` +
+  ``AuthorityTopology`` only — it does not invent authority and does not require
+  a Luthiers checkout. Vendors should copy the engine surface, not the CLI/git
+  adapter.
+
 Usage:
     python scripts/governance/check_namespace_authority_drift.py \
         --base origin/main --candidate feature/mesh-pipeline-scaffold [--json] [--quiet]
@@ -74,11 +81,31 @@ import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, FrozenSet, List, Optional, Tuple, Union
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-ONTOLOGY_DIR = REPO_ROOT / "docs" / "governance" / "ontology"
-AUTHORITY_REGISTRY = ONTOLOGY_DIR / "authority_chain_registry.json"
+# ---------------------------------------------------------------------------
+# Default Luthiers layout (preserved for CLI + existing tests).
+# Injectable via DetectorConfig for portability / vendoring.
+# ---------------------------------------------------------------------------
+_DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_ONTOLOGY_DIR = _DEFAULT_REPO_ROOT / "docs" / "governance" / "ontology"
+_DEFAULT_AUTHORITY_REGISTRY = _DEFAULT_ONTOLOGY_DIR / "authority_chain_registry.json"
+_DEFAULT_AUTHORITY_ARTIFACT_PATHS = frozenset({
+    "contracts/schema_registry.json",
+    "docs/governance/ontology/authority_chain_registry.json",
+    "docs/governance/ontology/semantic_registry.json",
+    "docs/governance/governance_manifest.json",
+})
+_DEFAULT_CODE_ROOTS = ("services/api/app/", "services/")
+_DEFAULT_NON_CODE_HINTS = ("docs/", "tests/", "test/", "examples/", "presets/", ".github/")
+
+# Backward-compatible module aliases (same values as pre-portability constants).
+REPO_ROOT = _DEFAULT_REPO_ROOT
+ONTOLOGY_DIR = _DEFAULT_ONTOLOGY_DIR
+AUTHORITY_REGISTRY = _DEFAULT_AUTHORITY_REGISTRY
+AUTHORITY_ARTIFACT_PATHS = set(_DEFAULT_AUTHORITY_ARTIFACT_PATHS)
+CODE_ROOTS = _DEFAULT_CODE_ROOTS
+NON_CODE_HINTS = _DEFAULT_NON_CODE_HINTS
 
 # Reuse the shared governance Severity vocabulary (lib.py) when importable; else inline.
 try:  # pragma: no cover - import path resolution
@@ -92,17 +119,29 @@ except Exception:  # pragma: no cover
         BLOCKING = "blocking"
 
 
-# Factual list of authority-bearing artifact paths (a file-path fact, NOT authority inference).
-AUTHORITY_ARTIFACT_PATHS = {
-    "contracts/schema_registry.json",
-    "docs/governance/ontology/authority_chain_registry.json",
-    "docs/governance/ontology/semantic_registry.json",
-    "docs/governance/governance_manifest.json",
-}
+@dataclass(frozen=True)
+class DetectorConfig:
+    """Injectable layout facts for the git/ref adapter and registry loader.
 
-# Code roots (factual classification of "is this a code namespace" vs docs/tests/config).
-CODE_ROOTS = ("services/api/app/", "services/")
-NON_CODE_HINTS = ("docs/", "tests/", "test/", "examples/", "presets/", ".github/")
+    These are *path classification* and *file location* facts — not authority.
+    The analysis engine never reads this object; it only sees CandidateChange +
+    AuthorityTopology. Defaults match the Luthiers-Toolbox layout.
+    """
+
+    repo_root: Path = _DEFAULT_REPO_ROOT
+    code_roots: Tuple[str, ...] = _DEFAULT_CODE_ROOTS
+    non_code_hints: Tuple[str, ...] = _DEFAULT_NON_CODE_HINTS
+    authority_artifact_paths: FrozenSet[str] = _DEFAULT_AUTHORITY_ARTIFACT_PATHS
+    authority_registry_path: Path = _DEFAULT_AUTHORITY_REGISTRY
+
+    @classmethod
+    def luthiers_defaults(cls) -> "DetectorConfig":
+        """Explicit constructor for the preserved Luthiers layout."""
+        return cls()
+
+
+# Module-level default used by CLI and loaders when no config is passed.
+DEFAULT_CONFIG = DetectorConfig.luthiers_defaults()
 
 
 class Verdict(str, Enum):
@@ -206,8 +245,21 @@ class AuthorityTopology:
         )
 
     @classmethod
-    def load(cls, registry_path: Path = AUTHORITY_REGISTRY) -> "AuthorityTopology":
-        data = json.loads(registry_path.read_text(encoding="utf-8"))
+    def load(
+        cls,
+        registry_path: Optional[Path] = None,
+        *,
+        config: Optional[DetectorConfig] = None,
+    ) -> "AuthorityTopology":
+        """Load topology from a registry file.
+
+        ``registry_path`` wins when given. Otherwise ``config.authority_registry_path``
+        (defaulting to the Luthiers registry) is used. No namespace bindings are
+        invented here.
+        """
+        cfg = config or DEFAULT_CONFIG
+        path = registry_path if registry_path is not None else cfg.authority_registry_path
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls(data)
 
     def operational_owners(self, domain: str) -> set:
@@ -301,21 +353,56 @@ def adjudicate(nc: NamespaceChange, topo: AuthorityTopology) -> DriftFinding:
 
 
 def analyze(change: CandidateChange, topo: AuthorityTopology) -> List[DriftFinding]:
+    """Git-independent analysis: CandidateChange + AuthorityTopology → findings."""
     return [adjudicate(nc, topo) for nc in change.namespace_changes]
 
 
+def analyze_namespace_authority_drift(
+    change: CandidateChange,
+    topology: Union[AuthorityTopology, Dict, Path],
+    *,
+    namespace_bindings: Optional[Dict] = None,
+) -> List[DriftFinding]:
+    """Portable engine entrypoint for vendors / code-analysis-tool adapters.
+
+    Accepts an ``AuthorityTopology``, a registry dict, or a path to a
+    registry-shaped JSON file. Optional ``namespace_bindings`` are honored only
+    when ``topology`` is a dict or path (injected binding source); when an
+    ``AuthorityTopology`` is passed, its existing bindings are used unchanged.
+
+    Does not invent authority. Does not touch git.
+    """
+    if isinstance(topology, AuthorityTopology):
+        topo = topology
+    elif isinstance(topology, Path):
+        data = json.loads(topology.read_text(encoding="utf-8"))
+        topo = AuthorityTopology(data, namespace_bindings=namespace_bindings)
+    elif isinstance(topology, dict):
+        topo = AuthorityTopology(topology, namespace_bindings=namespace_bindings)
+    else:
+        raise TypeError(
+            "topology must be AuthorityTopology | dict | Path, "
+            f"got {type(topology).__name__}"
+        )
+    return analyze(change, topo)
+
+
 # --------------------------- git/ref adapter (the ONLY Git-coupled layer) ---------------------------
-def _git(args: List[str]) -> str:
+def _git(args: List[str], *, config: Optional[DetectorConfig] = None) -> str:
+    cfg = config or DEFAULT_CONFIG
     return subprocess.run(
-        ["git", *args], cwd=str(REPO_ROOT), check=True,
+        ["git", *args], cwd=str(cfg.repo_root), check=True,
         capture_output=True, text=True,
     ).stdout
 
 
-def _namespace_of(path: str) -> Tuple[str, bool]:
+def _namespace_of(
+    path: str, *, config: Optional[DetectorConfig] = None
+) -> Tuple[str, bool]:
     """(namespace_identifier, is_code_namespace) - a FACTUAL path classification only."""
+    cfg = config or DEFAULT_CONFIG
     p = path.replace("\\", "/")
-    for root in CODE_ROOTS:
+    for root in cfg.code_roots:
         if p.startswith(root):
             rest = p[len(root):]
             seg = rest.split("/", 1)[0]
@@ -324,33 +411,40 @@ def _namespace_of(path: str) -> Tuple[str, bool]:
                 return seg, True
             # a bare file directly under the root
             return seg or rest, True
-    if any(h in p for h in NON_CODE_HINTS) or p.startswith("contracts/"):
+    if any(h in p for h in cfg.non_code_hints) or p.startswith("contracts/"):
         top = p.split("/", 1)[0]
         return top, False
     return p.split("/", 1)[0], False
 
 
-def build_candidate_change(base: str, candidate: str) -> CandidateChange:
+def build_candidate_change(
+    base: str,
+    candidate: str,
+    *,
+    config: Optional[DetectorConfig] = None,
+) -> CandidateChange:
     """Build the candidate-change model from a real diff. Sets FACTUAL fields only -
     never a declared_domain/concept (that would be authority inference)."""
-    out = _git(["diff", "--name-status", f"{base}...{candidate}"])
+    cfg = config or DEFAULT_CONFIG
+    out = _git(["diff", "--name-status", f"{base}...{candidate}"], config=cfg)
     # aggregate per namespace
     agg: Dict[str, Dict] = {}
+    primary_code_root = cfg.code_roots[0] if cfg.code_roots else ""
     for line in out.splitlines():
         if not line.strip():
             continue
         parts = line.split("\t")
         status = parts[0][0]  # A/M/D/R...
         path = parts[-1]
-        ns, is_code = _namespace_of(path)
+        ns, is_code = _namespace_of(path, config=cfg)
         rec = agg.setdefault(ns, {
-            "path": f"{CODE_ROOTS[0]}{ns}" if is_code else ns,
+            "path": f"{primary_code_root}{ns}" if is_code else ns,
             "is_code": is_code, "statuses": set(), "arts": set(),
         })
         rec["statuses"].add(status)
         rec["is_code"] = rec["is_code"] or is_code
         norm = path.replace("\\", "/")
-        if norm in AUTHORITY_ARTIFACT_PATHS:
+        if norm in cfg.authority_artifact_paths:
             rec["arts"].add(norm)
 
     changes: List[NamespaceChange] = []
@@ -366,7 +460,15 @@ def build_candidate_change(base: str, candidate: str) -> CandidateChange:
 
 
 # --------------------------- CLI ---------------------------
-def _render(findings: List[DriftFinding], change: CandidateChange, as_json: bool, quiet: bool) -> None:
+def _render(
+    findings: List[DriftFinding],
+    change: CandidateChange,
+    as_json: bool,
+    quiet: bool,
+    *,
+    config: Optional[DetectorConfig] = None,
+) -> None:
+    cfg = config or DEFAULT_CONFIG
     if as_json:
         print(json.dumps({
             "base": change.base_ref, "candidate": change.candidate_ref,
@@ -376,7 +478,11 @@ def _render(findings: List[DriftFinding], change: CandidateChange, as_json: bool
         return
     print(f"Namespace/Authority Drift Detector (advisory v1)")
     print(f"  base={change.base_ref}  candidate={change.candidate_ref}")
-    print(f"  authority topology: {AUTHORITY_REGISTRY.relative_to(REPO_ROOT)}")
+    try:
+        reg_disp = cfg.authority_registry_path.relative_to(cfg.repo_root)
+    except ValueError:
+        reg_disp = cfg.authority_registry_path
+    print(f"  authority topology: {reg_disp}")
     print()
     if not findings:
         print("  No namespace changes detected.")
@@ -400,12 +506,27 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--candidate", required=True, help="candidate ref to adjudicate")
     ap.add_argument("--json", action="store_true", help="emit JSON")
     ap.add_argument("--quiet", action="store_true", help="suppress NO_AUTHORITY_IMPACT lines")
+    ap.add_argument(
+        "--registry",
+        default=None,
+        help="optional path to authority_chain_registry.json (defaults to Luthiers ontology)",
+    )
     args = ap.parse_args(argv)
 
-    topo = AuthorityTopology.load()
-    change = build_candidate_change(args.base, args.candidate)
-    findings = analyze(change, topo)
-    _render(findings, change, args.json, args.quiet)
+    cfg = DEFAULT_CONFIG
+    if args.registry:
+        cfg = DetectorConfig(
+            repo_root=cfg.repo_root,
+            code_roots=cfg.code_roots,
+            non_code_hints=cfg.non_code_hints,
+            authority_artifact_paths=cfg.authority_artifact_paths,
+            authority_registry_path=Path(args.registry),
+        )
+
+    topo = AuthorityTopology.load(config=cfg)
+    change = build_candidate_change(args.base, args.candidate, config=cfg)
+    findings = analyze_namespace_authority_drift(change, topo)
+    _render(findings, change, args.json, args.quiet, config=cfg)
     # v1 ADVISORY: always exit 0. Severity is carried per finding for a future gate.
     return 0
 
