@@ -1,0 +1,177 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TONEWOOD_LIBRARY_RECOVERY",
+  "title": "docs(tonewood): recover + consolidate the tonewood reference library under docs/tonewood/",
+  "intent": "Bring the tonewood reference library under version control as a single coherent unit. The library existed only as untracked local content (docs/tonewood/) plus seven already-tracked top-level analyses (docs/tonewood_*.md). This consolidates all of it under docs/tonewood/ with a README index: seven pure renames of the tracked analyses into the folder, the previously-untracked catalogs/comparisons added, the American-hardwoods guide expanded (Pecan callout, Elm family, Gum group, Plane/Sycamore + London Plane), and a new cypress back/sides executive brief. Documentation only.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation only. No code, schema, route, workflow, data file, or runtime behavior is touched. Adds/moves markdown under docs/tonewood/.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/tonewood-library.json",
+      "docs/tonewood/README.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md",
+      "docs/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood_viability_emerging_species.md"
+    ],
+    "files_expected_to_change": [
+      "docs/tonewood/README.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Seven tracked top-level analyses (docs/tonewood_*.md) renamed into docs/tonewood/ (R100 pure moves). (2) Previously-untracked catalogs/comparisons and the README index added under docs/tonewood/. (3) tonewood_american_hardwoods_comprehensive.md expanded: dedicated Pecan (Carya illinoinensis) callout; new Elm family (Ulmaceae, 5 US species) and Gum group (Sweetgum + Tupelo/Blackgum) subsections; Plane/Sycamore section enriched with American Sycamore + London Plane; density-tier, regional, sustainability, and summary tables updated for consistency; all values sourced from wood_species.json (FPL-grade). (4) New cypress_back_sides_brief.md - annotated executive brief on Bald Cypress as a back/sides tonewood for cuatros, flat/round-back mandolins, and lutes, with cypress-species comparison and recommended-tops tables (radiation ratios computed R = sqrt(E/rho)/rho).",
+    "why_not_redundant": "Places a real, cross-referencing reference library under version control instead of leaving it as untracked local content (the F-11 anti-pattern). Pure-rename consolidation preserves history; additions are net-new domestic-species coverage and a build-decision brief. No production or data-file change."
+  },
+  "verification": {
+    "commands_run": [
+      "Species mechanical values (density/Janka/MOE/MOR) for all added/edited entries verified against services/api/app/data_registry/system/materials/wood_species.json (FPL GTR-282-grade).",
+      "Radiation ratios in the cypress brief computed as R = sqrt(E/rho)/rho from DB density/MOE; Sitka/Engelmann acoustic gaps flagged (not fabricated).",
+      "Non-domestic species deliberately excluded from the American-hardwoods guide (Australian eucalyptus 'gums'; European elms); Sycamore Maple flagged as a false friend (Acer, not Platanus).",
+      "Documentation-only; no test suite affected.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <branch file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/tonewood/README.md",
+      "intent": "Library index for the consolidated tonewood reference set.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/cypress_back_sides_brief.md",
+      "intent": "New annotated executive brief: Bald Cypress as back/sides for cuatros, flat/round-back mandolins, lutes; cypress-species + recommended-tops tables.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "intent": "Expanded domestic-species coverage: Pecan callout, Elm family, Gum group, Plane/Sycamore + London Plane, consistency table updates.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_viability_emerging_species.md",
+      "intent": "Tonewood analysis consolidated under docs/tonewood/ (added or pure-rename move; documentation only).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    }
+  ]
+}
