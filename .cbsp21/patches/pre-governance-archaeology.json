@@ -1,0 +1,42 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PRE_GOVERNANCE_ARCHAEOLOGY",
+  "title": "docs(audit): pre-governance boundary scan + asset-recovery archaeology (read-only evidence baseline)",
+  "intent": "Commit the read-only pre-governance archaeology evidence baseline. Two companion audit artifacts: (1) PRE_GOVERNANCE_SCAN establishes the governance-sprint boundary witnessed from git (soft start 2026-05-11; C0-C2 constitutional baseline 2026-05-18 c597c8a7/c12a9485, merged PR #16 e9644dc6 - correcting a remembered 'May 12' which is GOV-2/3 authority docs, a ramp milestone) and classifies transition-zone commits and dormant branches by reachability. (2) PRE_GOVERNANCE_ASSET_RECOVERY establishes a four-family recovery taxonomy (STRANDED / PRESERVED-TRANSITION / SET-ASIDE / ARCHITECTURAL-DNA) with a specimen matrix using explicit epistemic states, deep-works retopo and BOE/IBG, structures the remaining specimens with named next-archaeology steps, and specifies detector REQUIREMENTS only (no implementation). Read-only; classifies, builds nothing.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation only. Read-only forensic audit. No code, schema, route, workflow, data file, branch, or governance authority modified. The Consolidation Lab and CONV-002 are cited, not re-adjudicated. No SYSENG-CONVERGE-001 program created. No namespace-authority detector built (requirements only).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/pre-governance-archaeology.json",
+      "docs/audit/PRE_GOVERNANCE_SCAN_c8b0b549.md",
+      "docs/audit/PRE_GOVERNANCE_ASSET_RECOVERY_c8b0b549.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/PRE_GOVERNANCE_SCAN_c8b0b549.md",
+      "docs/audit/PRE_GOVERNANCE_ASSET_RECOVERY_c8b0b549.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) docs/audit/PRE_GOVERNANCE_SCAN_c8b0b549.md - the witnessed boundary (3 dates + SHAs), transition-zone commit set, dormant-branch table with commits-ahead-of-main discriminator (13/17 are 0-ahead stale pointers), per-candidate classification, the BOE row, and a §7 amendment cross-referencing the recovery pass (retopo schema_registry corrected to non-conflict; CONV-002 provenance pinned Lab-side; provisional-status upgrade). (2) docs/audit/PRE_GOVERNANCE_ASSET_RECOVERY_c8b0b549.md - four-family recovery taxonomy; deep specimens retopo (ADR-002 Accepted; sibling branches mesh-pipeline-scaffold/adapter-guide; app/retopo code namespace absent from main while presets/examples landed via f288065b; schema_registry byte-identical to main) and BOE/IBG (transition-era authorship re-governed post-baseline via IBG constitutional runtime + BLOCKED_PROVENANCE ratification timeline + IBG_BOE_BOUNDARY_MODEL + BOE_IBG_FAMILY_CONFLATION); structured specimens (CAM, MRP, photo vectorizer, feedback loops L1/L2/L3, GEN, copilot dead origin, historical models) each with epistemic state and next-archaeology step; recovery matrix; detector requirements R1-R7 (requirements only); the three formal amendment sentences; downstream-use disclaimer that this audit neither creates nor authorizes a convergence program.",
+    "why_not_redundant": "Produces an evidence baseline that did not exist under version control, plus bounded, evidence-backed requirements for a future (separately authorized) namespace/authority detector. Read-only: recovers, builds, and authorizes nothing. Every STRANDED/TIER-D-shaped finding is explicitly provisional pending the deferred authority check."
+  },
+  "verification": {
+    "commands_run": [
+      "Boundary SHAs (c9da01bd/64ad3a57 soft start; 7a57555b/825d2af2 GOV-2/3 ramp; c597c8a7/c12a9485 C0-C2 baseline; e9644dc6 PR #16 merge) verified reachable on origin/main via git merge-base --is-ancestor.",
+      "Dormant-branch commits-ahead-of-main computed with git rev-list --count origin/main..<branch>; 13/17 confirmed 0-ahead.",
+      "Retopo: app/retopo absence on main confirmed via git ls-tree; presets/examples landing via f288065b and byte-identical schema_registry confirmed via git diff --stat; ADR-002 status read from origin/main.",
+      "BOE/IBG post-baseline governance surfaces enumerated via git ls-tree over docs/governance/.",
+      "CONV-002 provenance read from docs/remediation/REPOSITORY_DEFECT_REGISTER.md (Lab-side Dev Order; TD-1 = BR-042).",
+      "Read-only: no production code, branch, Lab artifact, or governance authority modified.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    { "path": "docs/audit/PRE_GOVERNANCE_SCAN_c8b0b549.md", "intent": "Witnessed governance-sprint boundary + transition-zone + dormant-branch classification + recovery-pass amendment.", "risk": "low", "behavior_change": "None (read-only audit doc)." },
+    { "path": "docs/audit/PRE_GOVERNANCE_ASSET_RECOVERY_c8b0b549.md", "intent": "Four-family recovery taxonomy, specimen matrix, detector requirements (requirements only).", "risk": "low", "behavior_change": "None (read-only audit doc)." }
+  ]
+}
