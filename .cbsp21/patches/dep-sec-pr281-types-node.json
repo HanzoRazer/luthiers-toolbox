@@ -1,0 +1,69 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_PR281_TYPES_NODE",
+  "title": "DEP-SEC: land @types/node 25→26 with proven vue-tsc no-op (close Dependabot #281)",
+  "intent": "Re-land the Dependabot #281 types-only bump on a human-authored branch so secret-gated CI can run (R-11). Witness that vue-tsc diagnostic keys are identical to main (150/150, 0 delta), vite node project check passes, tests and production build pass. Record disposition correcting Copilot CI narrative (lint-build already green on #281).",
+  "change_type": "chore",
+  "behavior_change": "None at runtime. DevDependency typings only: @types/node ^25.0.9→^26.2.0 (resolved 26.2.0) and transitive undici-types ~7.16.0→~8.3.0.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-pr281-types-node.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_PR281_TYPES_NODE_DISPOSITION_2026-08-18.md"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_PR281_TYPES_NODE_DISPOSITION_2026-08-18.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client package.json + lockfile bump @types/node to ^26.2.0 / 26.2.0 with undici-types 8.3.0. Disposition doc records risk table, Copilot corrections, evidence, and sibling issues.",
+    "why_not_redundant": "Dependabot #281 cannot be merged under R-11 (secret-gated jobs). Human re-land is the required vehicle. Labels hygiene is #285, not duplicated here."
+  },
+  "verification": {
+    "commands_run": [
+      "vue-tsc key set on main (@types/node@25.0.9): 150 keys, exit 2",
+      "vue-tsc key set after bump (@types/node@26.2.0): 150 keys, exit 2; diff vs main empty; 0 deltas in main.ts/sdk/http.ts/vite.config/fetch/undici",
+      "npx tsc -p tsconfig.node.json --noEmit → exit 0",
+      "npm test → 756 passed / 17 todo",
+      "npm run build → exit 0",
+      "gh pr checks 281 → lint-build pass (corrects Copilot 'lint-build failed' claim)",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Raise @types/node major for client tooling typings.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none - typings only"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lock @types/node@26.2.0 and undici-types@8.3.0.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "none - typings only"
+    },
+    {
+      "path": "docs/ci/DEP_SEC_PR281_TYPES_NODE_DISPOSITION_2026-08-18.md",
+      "intent": "Durable risk disposition and evidence for #281.",
+      "scan_targets": ["docs/ci/DEP_SEC_PR281_TYPES_NODE_DISPOSITION_2026-08-18.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-DEP-SEC-281",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Types-only bump with identical vue-tsc key set. Does not address BR-021 soft-fail debt. Does not merge Dependabot #281 (closed with defer-to-human-land comment). Sibling majors #280/#282/#283 remain out of scope."
+  }
+}
