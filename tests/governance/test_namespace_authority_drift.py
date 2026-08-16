@@ -39,10 +39,12 @@ import check_namespace_authority_drift as det  # noqa: E402
 from check_namespace_authority_drift import (  # noqa: E402
     AuthorityTopology,
     CandidateChange,
+    DetectorConfig,
     NamespaceChange,
     Verdict,
     adjudicate,
     analyze,
+    analyze_namespace_authority_drift,
 )
 
 
@@ -359,3 +361,69 @@ def test_real_topology_declares_the_domains_that_make_the_bait_real():
             f"production registry no longer declares a '{domain}' domain — the "
             f"anti-inference tests were baited against it; re-check their premise"
         )
+
+# ───────────────────────── portability / config injection ─────────────────────────
+def test_default_config_matches_luthiers_module_aliases():
+    """DetectorConfig defaults must equal the preserved module-level Luthiers aliases."""
+    cfg = DetectorConfig.luthiers_defaults()
+    assert cfg.repo_root == det.REPO_ROOT
+    assert cfg.code_roots == det.CODE_ROOTS
+    assert cfg.non_code_hints == det.NON_CODE_HINTS
+    assert set(cfg.authority_artifact_paths) == set(det.AUTHORITY_ARTIFACT_PATHS)
+    assert cfg.authority_registry_path == det.AUTHORITY_REGISTRY
+
+
+def test_analyze_entrypoint_matches_analyze(synth_topo):
+    """analyze_namespace_authority_drift is a portable alias of analyze()."""
+    change = CandidateChange("b", "c", [
+        _nc(namespace="retopo"),
+        _nc(namespace="boe"),
+        _nc(namespace="notes", path="docs/notes.md", is_code_namespace=False),
+    ])
+    via_analyze = analyze(change, synth_topo)
+    via_entry = analyze_namespace_authority_drift(change, synth_topo)
+    assert [(f.namespace, f.verdict, f.evidence) for f in via_entry] == [
+        (f.namespace, f.verdict, f.evidence) for f in via_analyze
+    ]
+
+
+def test_analyze_entrypoint_accepts_registry_dict_with_bindings():
+    """Vendors may pass a registry dict + optional bindings without AuthorityTopology."""
+    change = CandidateChange("b", "c", [_nc(namespace="boe")])
+    findings = analyze_namespace_authority_drift(
+        change, SYNTH_REGISTRY, namespace_bindings=SYNTH_BINDINGS
+    )
+    assert len(findings) == 1
+    assert findings[0].verdict is Verdict.DECLARED_EXTENSION
+
+
+def test_injected_registry_path_equivalent_to_default(tmp_path, real_topo):
+    """Loading via an explicit registry path must match default AuthorityTopology.load()."""
+    src = det.AUTHORITY_REGISTRY
+    copy = tmp_path / "authority_chain_registry.json"
+    copy.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    via_path = AuthorityTopology.load(copy)
+    via_cfg = AuthorityTopology.load(
+        config=DetectorConfig(authority_registry_path=copy)
+    )
+    # Same factual binding gap on the same constructed change.
+    nc = _nc(namespace="retopo", path="services/api/app/retopo")
+    assert adjudicate(nc, via_path).verdict is adjudicate(nc, real_topo).verdict
+    assert adjudicate(nc, via_cfg).verdict is adjudicate(nc, real_topo).verdict
+    assert adjudicate(nc, via_path).evidence == adjudicate(nc, real_topo).evidence
+
+
+def test_namespace_classification_uses_injected_code_roots():
+    """Path classification is config-driven; adjudication still never invents bindings."""
+    foreign = DetectorConfig(
+        code_roots=("pkg/",),
+        non_code_hints=("docs/",),
+        authority_artifact_paths=frozenset(),
+    )
+    ns, is_code = det._namespace_of("pkg/retopo/mesh.py", config=foreign)
+    assert ns == "retopo" and is_code is True
+    # Same NamespaceChange still yields INSUFFICIENT_EVIDENCE under binding-less topo —
+    # config changes classification facts, not invented authority.
+    topo = AuthorityTopology({"domain_ownership": {}, "chains": {}})
+    v = adjudicate(_nc(namespace=ns, path="pkg/retopo", is_code_namespace=is_code), topo)
+    assert v.verdict is Verdict.INSUFFICIENT_EVIDENCE
