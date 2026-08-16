@@ -58,20 +58,34 @@ editor by 1,710 lines (+40%).
 
 ## Namespace and boundary notes
 
-The editor is legacy relative to the systems that have grown around it. Five
+The editor is legacy relative to the systems that have grown around it. Six
 points where its namespace now overlaps something newer:
 
-### 1. `tools/body-outline-editor.html` is a stale mirror — ⚠️ unresolved
+### 1. Two files claim to be v3.5.0 and are different builds — ⚠️ unresolved
 
-The V2 handoff describes `tools/` as a mirror of `hostinger/`. It is no longer
-in sync:
+**Both** `hostinger/body-outline-editor.html` and `tools/body-outline-editor.html`
+carry the identical stamp on line 7:
 
-| | Lines | Jumbo (L/LB/UB/W) | Last synced |
+```html
+<!-- v3.5.0 - Final Polish (Precision Tier Complete) -->
+```
+
+They are not the same file:
+
+| | Lines | Jumbo (L/LB/UB/W) | Content is |
 |---|--:|---|---|
-| `hostinger/body-outline-editor.html` | 6,150 | 530/432/**305**/**254** ✅ | current |
-| `tools/body-outline-editor.html` | 5,979 | 530/432/**304**/**280** ❌ | `70a0d3ee`, 2026-05-12 |
+| `hostinger/body-outline-editor.html` | 6,150 | 530/432/**305**/**254** ✅ | current `main` |
+| `tools/body-outline-editor.html` | 5,979 | 530/432/**304**/**280** ❌ | `hostinger` @ `70a0d3ee`, 2026-05-12 |
 
-The mirror is **171 lines behind** and missing `c971d7a4` (JSON import) and
+So the version stamp does not identify a build. It is stale on `hostinger/`
+(193 lines behind, see the warning above) **and** duplicated onto a second,
+different artifact — meaning "v3.5.0" currently names two distinct files whose
+Jumbo dimensions disagree by 26 mm at the waist.
+
+**The mirror is a clean lag, not a fork.** `tools/` is byte-identical to
+`hostinger/` at commit `70a0d3ee` once CRLF/LF is normalised (`diff` → 0 lines);
+the raw hash difference is line endings only. It carries no independent edits.
+It is **171 lines behind**, missing exactly two commits: `c971d7a4` (JSON import) and
 `f25bb949` (jumbo alignment). `docs/governance/MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md`
 marks it **Production**, risk **MEDIUM**, disposition *"Avoid collision"* — so
 resyncing it is a governed change, not a copy. **Not addressed here.**
@@ -120,6 +134,21 @@ the URL should be; the hub card is now the intended route in.
 
 Existing BOE patch id: `boe-landing-page-entry` (PR #268). This change uses
 `boe-changelog`. No collision.
+
+### 6. `"Final Polish"` also exists in the estimator — harmless
+
+A repo-wide search for the release name returns a second, unrelated hit:
+
+```
+services/api/app/business/estimator/work_breakdown.py:158
+    WBSTaskTemplate("FIN_004", "Final Polish", 2.0, "finish", "finish"),
+```
+
+That is a lutherie **finishing** work-breakdown task, not a software release
+name. Different domain, no shared identifier, nothing to reconcile — recorded
+only so a future search for the release name is not misread. Outside those two,
+`"Final Polish"` and `"Precision Tier"` appear nowhere else in the repository
+(excluding build artifacts: `__pycache__`, `htmlcov/`).
 
 ---
 
@@ -310,9 +339,14 @@ is derived from a release tag.
 **Open items** — none of these is done here:
 
 1. Bump the line-7 version stamp, or roll the three unreleased commits into a
-   v3.6.0. The stamp currently misidentifies the build.
-2. Resync `tools/body-outline-editor.html` (171 lines behind, stale jumbo).
-   Governed — Production, MEDIUM, *"Avoid collision"*.
+   v3.6.0. The stamp currently misidentifies the build **and is duplicated onto
+   `tools/`**, so "v3.5.0" names two different files (namespace note 1). If the
+   two artifacts are meant to stay separate, they need distinguishable stamps.
+2. Resync `tools/body-outline-editor.html` — 171 lines behind, stale jumbo.
+   Mechanically simple: it is a clean, unmodified snapshot of `hostinger/` at
+   `70a0d3ee`, so the resync is a copy plus line-ending normalisation, with no
+   edits to reconcile. **Governed, though** — Production, MEDIUM,
+   *"Avoid collision"* — so it wants its own change and its own approval.
 3. Extend `test_jumbo_dimension_consistency.py` to cover the manual and the
    `tools/` mirror, so this class of drift fails loudly.
 4. Document JSON import in Manual Chapter 8.

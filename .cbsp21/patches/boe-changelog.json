@@ -20,7 +20,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) New docs/Body_Outline_Editor_CHANGELOG.md: per-version entries for v3.1.0 (pre-tier baseline), v3.2.0 Precision Controls + Workflow, v3.3.0 Image Tools & Templates, v3.4.0 Measurement & Enhanced Export, and v3.5.0 Final Polish, plus an Unreleased section for the three commits that changed the editor after the v3.5.0 stamp without a version bump (70a0d3ee IBG API configuration, c971d7a4 JSON import, f25bb949 jumbo alignment). Includes a namespace-and-boundary section recording five overlaps with systems that evolved around the editor. (2) docs/Body_Outline_Editor_User_Manual.md Chapter 7: Jumbo template row corrected from 530/432/304/280 to 530/432/305/254, with an inline note explaining the realignment and naming the consistency test that does not cover this file.",
+    "what_changed": "(1) New docs/Body_Outline_Editor_CHANGELOG.md: per-version entries for v3.1.0 (pre-tier baseline), v3.2.0 Precision Controls + Workflow, v3.3.0 Image Tools & Templates, v3.4.0 Measurement & Enhanced Export, and v3.5.0 Final Polish, plus an Unreleased section for the three commits that changed the editor after the v3.5.0 stamp without a version bump (70a0d3ee IBG API configuration, c971d7a4 JSON import, f25bb949 jumbo alignment). Includes a namespace-and-boundary section recording six overlaps with systems that evolved around the editor. (2) docs/Body_Outline_Editor_User_Manual.md Chapter 7: Jumbo template row corrected from 530/432/304/280 to 530/432/305/254, with an inline note explaining the realignment and naming the consistency test that does not cover this file.",
     "why_not_redundant": "No changelog exists for this artifact and no git tags record its versions; the release history was otherwise only recoverable by reading commit messages one at a time. The root CHANGELOG.md tracks the platform on an independent toolbox-vX.Y.Z line and does not cover the editor's v3.x line - the new file states that distinction explicitly so the two are not conflated. The Jumbo correction fixes a real 26mm waist discrepancy between the manual and shipped behavior."
   },
   "verification": {
@@ -30,9 +30,12 @@
       "Canonical jumbo read from FAMILY_DEFAULTS['jumbo'] in services/api/app/instrument_geometry/body/ibg/body_contour_solver.py -> 530/432/305/254, waist_y_norm 0.44.",
       "py -3.11 -m pytest tests/test_jumbo_dimension_consistency.py -q --no-cov -> 4 passed, 1 skipped (the four guarded paths agree; catalog.json is explicitly skipped).",
       "All 8 template dimension sets extracted from hostinger/body-outline-editor.html and compared field-by-field with User Manual Chapter 7 - Jumbo was the only mismatch; the other seven match exactly.",
-      "Divergence check: tools/body-outline-editor.html is 5979 lines vs hostinger 6150 and still carries the pre-f25bb949 jumbo values - recorded as an open item, deliberately NOT changed here.",
+      "Divergence check: tools/body-outline-editor.html is 5979 lines vs hostinger 6150 and still carries the pre-f25bb949 jumbo values - recorded as an open item, deliberately NOT changed here (governed artifact).",
       "Facts re-verified against main @ c8b0b549 after main advanced during the work.",
-      "Documentation-only; no test suite affected."
+      "Documentation-only; no test suite affected.",
+      "Repo-wide search for 'Final Polish' / 'Precision Tier' (excluding .venv, node_modules, .git, site-packages) completed: the version stamp appears on line 7 of BOTH hostinger/body-outline-editor.html and tools/body-outline-editor.html.",
+      "diff <(tr -d '\r' < tools/body-outline-editor.html) <(git show 70a0d3ee:hostinger/body-outline-editor.html | tr -d '\r') -> 0 lines. The tools/ mirror is a clean unmodified snapshot of hostinger@70a0d3ee; the raw hash difference is CRLF vs LF only, not content.",
+      "Only unrelated hit for 'Final Polish' is a lutherie finishing WBS task in services/api/app/business/estimator/work_breakdown.py:158 - different domain, no shared identifier."
     ]
   },
   "files": [
@@ -55,11 +58,12 @@
       "critical": 0,
       "high": 0,
       "medium": 0,
-      "low": 2
+      "low": 3
     },
     "findings": [
-      "tools/body-outline-editor.html is 171 lines behind hostinger/ and retains pre-f25bb949 jumbo dimensions. MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md marks it Production / MEDIUM / 'Avoid collision', so resync is a governed change. Recorded as an open item; not performed in this patch.",
-      "test_jumbo_dimension_consistency.py guards four paths and does not cover the User Manual or the tools/ mirror, which is how this drift went unnoticed. Extending it is recorded as an open item."
+      "The v3.5.0 version stamp is duplicated: it appears on line 7 of BOTH hostinger/body-outline-editor.html (6150 lines) and tools/body-outline-editor.html (5979 lines), which are different builds whose Jumbo waist differs by 26mm. The mirror is a clean snapshot of hostinger@70a0d3ee (0-line diff after CRLF normalisation), 171 lines behind, missing c971d7a4 and f25bb949. MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md marks it Production / MEDIUM / 'Avoid collision', so resync is a governed change. Recorded as an open item; not performed in this patch.",
+      "test_jumbo_dimension_consistency.py guards four paths and does not cover the User Manual or the tools/ mirror, which is how this drift went unnoticed. Extending it is recorded as an open item.",
+      "'Final Polish' also occurs as an unrelated lutherie finishing WBS task in work_breakdown.py:158. Coincidental string match across domains; nothing to reconcile. Recorded so future searches for the release name are not misread."
     ],
     "acknowledged": true,
     "acknowledgement_notes": "Documentation only - one new markdown file and one corrected line plus an explanatory note in an existing markdown file. No runtime, API, workflow, data-file, or CBSP21 algorithm changes. Patch id boe-changelog does not collide with the existing boe-landing-page-entry (PR #268). The editor's v3.x version line is explicitly distinguished from the platform's toolbox-vX.Y.Z line in the new document."
