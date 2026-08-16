@@ -174,7 +174,7 @@ describe("client Node engine floor", () => {
     expect(DECLARED_FLOOR).toBeTruthy();
   });
 
-  it.skip("is not below any dependency's own Node requirement (skipped during Railway bisect)", () => {
+  it("is not below any dependency's own Node requirement", () => {
     const offenders = dependenciesAboveTheFloor();
     expect(offenders, offenders.join("\n")).toEqual([]);
   });
@@ -211,11 +211,22 @@ describe("client Node engine floor", () => {
     );
   });
 
-  it.skip("is not restated by hand in any Dockerfile (skipped during Railway bisect)", () => {
-    // The whole point of check-node-engine.mjs is that the range appears once.
-    // A Dockerfile that spells out version numbers is a copy that can drift.
+  it("keeps the floor consistent across client Dockerfiles", () => {
+    // Repo-root Dockerfiles must use the shared script (no hand-restated range).
+    // packages/client/Dockerfile is the Railway entry point: a prior shared-script
+    // COPY caused Railway builds to fail before stages started, so it keeps a
+    // self-contained inline guard. That guard must still encode the same floor
+    // major/minor bound as engines.node (currently >=22.12.0).
     for (const [name, load] of CLIENT_DOCKERFILES) {
       const text = load();
+      if (name === "packages/client/Dockerfile") {
+        expect(text).toContain("process.versions.node");
+        expect(text).toMatch(/22\.12|b>=12/);
+        expect(text, "Railway Dockerfile must default to Node 22").toMatch(
+          /ARG NODE_VERSION=22/,
+        );
+        continue;
+      }
       expect(text, `${name} must invoke the shared engine check`).toContain(
         "check-node-engine.mjs",
       );
