@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/toolbox/prediction_residual.schema.json",
+  "title": "Prediction Residual Report",
+  "description": "Research-only measured-vs-predicted modal residual sidecar (MESH-MAT-001). Does not mutate qa_core or cam_policy.",
+  "type": "object",
+  "required": [
+    "specimen_id",
+    "predicted_modes",
+    "measured_modes",
+    "residuals",
+    "epistemic_status",
+    "research_only"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_id": { "type": "string", "const": "prediction_residual" },
+    "schema_version": { "type": "string" },
+    "specimen_id": { "type": "string" },
+    "predicted_modes": { "type": "array" },
+    "measured_modes": { "type": "array" },
+    "residuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "predicted_frequency_hz": { "type": ["number", "null"] },
+          "measured_frequency_hz": { "type": ["number", "null"] },
+          "absolute_error_hz": { "type": ["number", "null"] },
+          "relative_error": { "type": ["number", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["MATCHED", "MISMATCHED", "NO_MEASUREMENT", "NO_PREDICTION"]
+          },
+          "mode_indices": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer" }
+          },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "tolerance_hz": { "type": "number" },
+    "epistemic_status": { "type": "string", "const": "predicted" },
+    "research_only": { "type": "boolean", "const": true }
+  }
+}

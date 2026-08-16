@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/toolbox/material_evidence.schema.json",
+  "title": "Material Evidence Bundle",
+  "description": "ToolBox-local specimen material evidence envelope (MESH-MAT-001). Research ingestion only; no CAM authority. Epistemic statuses follow ADR-0012.",
+  "type": "object",
+  "required": ["specimen_id", "values"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_id": { "type": "string", "const": "material_evidence" },
+    "schema_version": { "type": "string" },
+    "research_only": { "type": "boolean", "default": true },
+    "specimen_id": { "type": "string", "minLength": 1 },
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/evidence_value" }
+    },
+    "modal_evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/modal_evidence" }
+    },
+    "environment": { "type": "object" },
+    "provenance": {
+      "type": "object",
+      "description": "Opaque provenance bag. Caller-supplied HARDWARE=true is rejected by the importer."
+    }
+  },
+  "$defs": {
+    "epistemic_status": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "derived",
+        "estimated",
+        "predicted",
+        "heuristic",
+        "operator_annotated",
+        "externally_sourced"
+      ]
+    },
+    "evidence_value": {
+      "type": "object",
+      "required": ["property", "value", "unit", "epistemic_status"],
+      "additionalProperties": false,
+      "properties": {
+        "property": { "type": "string" },
+        "value": { "type": "number" },
+        "unit": { "type": "string" },
+        "epistemic_status": { "$ref": "#/$defs/epistemic_status" },
+        "uncertainty": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "std_dev": { "type": "number" },
+            "relative": { "type": "number" },
+            "notes": { "type": "string" }
+          }
+        },
+        "source_artifact_id": { "type": "string" },
+        "source_hash": { "type": "string" },
+        "method": { "type": "string" }
+      }
+    },
+    "modal_evidence": {
+      "type": "object",
+      "required": ["frequency_hz"],
+      "additionalProperties": false,
+      "properties": {
+        "frequency_hz": { "type": "number", "exclusiveMinimum": 0 },
+        "mode_indices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "q_factor": { "type": "number" },
+        "epistemic_status": { "$ref": "#/$defs/epistemic_status" },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

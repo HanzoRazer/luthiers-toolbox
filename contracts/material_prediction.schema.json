@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/toolbox/material_prediction.schema.json",
+  "title": "Material Plate Prediction",
+  "description": "Research-only orthotropic plate prediction sidecar (MESH-MAT-001). epistemic_status is always predicted; research_only must be true. Does not mutate qa_core or cam_policy.",
+  "type": "object",
+  "required": [
+    "model_version",
+    "specimen_id",
+    "material_state",
+    "geometry",
+    "boundary_condition",
+    "assumptions",
+    "predicted_modes",
+    "epistemic_status",
+    "research_only"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_id": { "type": "string", "const": "material_prediction" },
+    "schema_version": { "type": "string" },
+    "model_version": { "type": "string" },
+    "specimen_id": { "type": "string" },
+    "material_state": { "type": "object" },
+    "geometry": { "type": "object" },
+    "boundary_condition": { "type": "object" },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "value", "unit", "rationale", "assumption"],
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "number" },
+          "unit": { "type": "string" },
+          "rationale": { "type": "string" },
+          "assumption": { "type": "boolean", "const": true }
+        }
+      }
+    },
+    "predicted_modes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["frequency_hz"],
+        "properties": {
+          "mode_number": { "type": "integer" },
+          "frequency_hz": { "type": "number" },
+          "mode_indices": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "measured_modes": { "type": "array" },
+    "residuals": { "type": "array" },
+    "epistemic_status": { "type": "string", "const": "predicted" },
+    "research_only": { "type": "boolean", "const": true }
+  }
+}

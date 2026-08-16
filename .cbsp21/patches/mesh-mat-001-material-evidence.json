@@ -1,0 +1,233 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH",
+  "title": "feat(mesh): MESH-MAT-001 fixture-only material evidence + orthotropic research sidecars",
+  "intent": "Implement the amended MESH-MAT-001 rulings against current main: ToolBox-local MaterialEvidenceBundle under app.mesh.materials, ADR-0012 epistemic vocabulary, explicit OrthotropicPlate construction (no from_wood default, no inverse_solver), and research-only prediction/residual sidecars. Do not restore deleted fields/retopo scaffold; do not mutate qa_core or cam_policy; do not accept caller HARDWARE=true.",
+  "change_type": "feat",
+  "behavior_change": "Adds a new research-only material evidence → orthotropic state → Rayleigh–Ritz prediction → residual comparison surface under services/api/app/mesh/materials/. New JSON contracts material_evidence, material_prediction, and prediction_residual are registered. No manufacturing-policy or qa_core behavior changes. Missing E_C fails closed. Assumptions (G_LC, Poisson) serialize as ModelAssumption metadata, not as EpistemicStatus.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "contracts/material_evidence.schema.json",
+      "contracts/material_evidence.schema.sha256",
+      "contracts/material_prediction.schema.json",
+      "contracts/material_prediction.schema.sha256",
+      "contracts/prediction_residual.schema.json",
+      "contracts/prediction_residual.schema.sha256",
+      "contracts/schema_registry.json",
+      "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "services/api/app/mesh/__init__.py",
+      "services/api/app/mesh/materials/",
+      "services/api/tests/fixtures/materials/",
+      "services/api/tests/mesh/materials/"
+    ],
+    "files_expected_to_change": [
+      "contracts/material_evidence.schema.json",
+      "contracts/material_evidence.schema.sha256",
+      "contracts/material_prediction.schema.json",
+      "contracts/material_prediction.schema.sha256",
+      "contracts/prediction_residual.schema.json",
+      "contracts/prediction_residual.schema.sha256",
+      "contracts/schema_registry.json",
+      "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "services/api/app/mesh/__init__.py",
+      "services/api/app/mesh/materials/__init__.py",
+      "services/api/app/mesh/materials/evidence.py",
+      "services/api/app/mesh/materials/orthotropic.py",
+      "services/api/app/mesh/materials/predictor.py",
+      "services/api/app/mesh/materials/residuals.py",
+      "services/api/tests/fixtures/materials/complete_spruce_evidence.json",
+      "services/api/tests/fixtures/materials/incomplete_missing_ec.json",
+      "services/api/tests/fixtures/materials/plate_geometry.json",
+      "services/api/tests/mesh/materials/__init__.py",
+      "services/api/tests/mesh/materials/_helpers.py",
+      "services/api/tests/mesh/materials/test_evidence.py",
+      "services/api/tests/mesh/materials/test_orthotropic.py",
+      "services/api/tests/mesh/materials/test_predictor.py",
+      "services/api/tests/mesh/materials/test_residuals.py",
+      "services/api/tests/mesh/materials/test_schemas_and_boundaries.py",
+      ".cbsp21/patches/mesh-mat-001-material-evidence.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) New app.mesh.materials package: evidence importer with ADR-0012 EpistemicStatus, HARDWARE=true rejection, SI canonicalization; OrthotropicMaterialState.from_evidence with ModelAssumption serialization and fail-closed missing E_C; predict_plate_modes wrapping solve_rayleigh_ritz with epistemic_status=predicted and research_only=true; compare_modal_prediction residual sidecar. (2) Contracts + schema_registry entries for material_evidence, material_prediction, prediction_residual. (3) Fixture-only spruce evidence + incomplete E_C fixture. (4) 19 unit tests covering import rules, orthotropic assumptions, prediction, residuals, schema validation, and package boundaries (no from_wood, no inverse_solver import, not under app.materials, no qa_core/cam_policy touch). (5) Handoff documenting amended Q1–Q7 rulings.",
+    "why_not_redundant": "app.materials is the curated tonewood registry; this is specimen-specific research evidence. Mesh Pipeline v0.1.0 fields/retopo were deliberately removed and are not restored. DO-103 Stage 3 HARDWARE provenance is deferred behind an adapter seam."
+  },
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=services/api /usr/bin/python3 -m pytest services/api/tests/mesh/materials/ -q --noconftest -o addopts= -> 19 passed",
+      "Static AST guards: no OrthotropicPlate.from_wood calls; no inverse_solver imports in app.mesh.materials",
+      "jsonschema validation of fixtures + prediction/residual sidecars against new contracts"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/mesh/materials/evidence.py",
+      "intent": "ToolBox-local MaterialEvidenceBundle importer; ADR-0012 statuses; reject HARDWARE=true",
+      "risk": "low",
+      "behavior_change": "New research ingestion surface only"
+    },
+    {
+      "path": "services/api/app/mesh/materials/orthotropic.py",
+      "intent": "Explicit OrthotropicPlate inputs + ModelAssumption serialization; fail closed without E_C",
+      "risk": "low",
+      "behavior_change": "New research state builder; does not use from_wood()"
+    },
+    {
+      "path": "services/api/app/mesh/materials/predictor.py",
+      "intent": "Rayleigh–Ritz plate prediction wrapper; research_only + predicted epistemic status",
+      "risk": "low",
+      "behavior_change": "New research sidecar producer"
+    },
+    {
+      "path": "services/api/app/mesh/materials/residuals.py",
+      "intent": "Measured-vs-predicted residual report",
+      "risk": "low",
+      "behavior_change": "New research sidecar producer"
+    },
+    {
+      "path": "services/api/app/mesh/materials/__init__.py",
+      "intent": "Public exports for mesh materials research package",
+      "risk": "low",
+      "behavior_change": "Package surface"
+    },
+    {
+      "path": "services/api/app/mesh/__init__.py",
+      "intent": "Document separation from tonewood registry",
+      "risk": "low",
+      "behavior_change": "Docstring only"
+    },
+    {
+      "path": "contracts/material_evidence.schema.json",
+      "intent": "JSON Schema for MaterialEvidenceBundle",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/material_evidence.schema.sha256",
+      "intent": "Integrity hash for material_evidence schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/material_prediction.schema.json",
+      "intent": "JSON Schema for research plate prediction sidecar",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/material_prediction.schema.sha256",
+      "intent": "Integrity hash for material_prediction schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/prediction_residual.schema.json",
+      "intent": "JSON Schema for residual report sidecar",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/prediction_residual.schema.sha256",
+      "intent": "Integrity hash for prediction_residual schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/schema_registry.json",
+      "intent": "Register MESH-MAT-001 research schemas",
+      "risk": "low",
+      "behavior_change": "Registry entries added; qa_core/cam_policy untouched"
+    },
+    {
+      "path": "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "intent": "Record amended Q1–Q7 rulings and pipeline",
+      "risk": "low",
+      "behavior_change": "Documentation"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/complete_spruce_evidence.json",
+      "intent": "Complete fixture with E_L/E_C/density + modal peaks",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/incomplete_missing_ec.json",
+      "intent": "Fail-closed fixture missing E_C",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/plate_geometry.json",
+      "intent": "Bounded plate geometry for prediction tests",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/__init__.py",
+      "intent": "Test package marker",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/_helpers.py",
+      "intent": "Fixture/schema load helpers",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_evidence.py",
+      "intent": "Evidence import + HARDWARE/epistemic rejection tests",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_orthotropic.py",
+      "intent": "Assumption serialization + missing E_C + from_wood guard",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_predictor.py",
+      "intent": "Prediction sidecar + inverse_solver/thickness guards",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_residuals.py",
+      "intent": "Residual report research_only contract",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_schemas_and_boundaries.py",
+      "intent": "Schema validation + namespace/package boundary guards",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "intent": "CBSP21 covering patch for MESH-MAT-001",
+      "risk": "low",
+      "behavior_change": "Coverage manifest"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-19-MESH-MAT-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "Importing OrthotropicPlate still loads app.calculators.plate_design package __init__, which transitively imports inverse_solver. MESH-MAT code does not call inverse_solver; AST guard pins that. A future cleanup could slim plate_design/__init__ lazy exports.",
+      "DO-103 Stage 3 HARDWARE provenance adapter is intentionally deferred; fixture-only path is the authorized parallel track."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Amended rulings Q1–Q7 followed. Mesh Pipeline v0.1.0 is design ancestry only; fields/retopo not restored. Research sidecars only."
+  }
+}

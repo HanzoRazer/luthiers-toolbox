@@ -1,0 +1,58 @@
+{
+  "schema_id": "material_evidence",
+  "schema_version": "1.0",
+  "research_only": true,
+  "specimen_id": "FIXTURE-SPRUCE-001",
+  "values": [
+    {
+      "property": "E_L",
+      "value": 11.5,
+      "unit": "GPa",
+      "epistemic_status": "observed",
+      "source_artifact_id": "fixture://spruce-001/flitch-moe",
+      "source_hash": "sha256:fixture-spruce-001-el",
+      "method": "fixture_import",
+      "uncertainty": { "relative": 0.03, "notes": "fixture uncertainty band" }
+    },
+    {
+      "property": "E_C",
+      "value": 0.85,
+      "unit": "GPa",
+      "epistemic_status": "observed",
+      "source_artifact_id": "fixture://spruce-001/crossgrain-moe",
+      "source_hash": "sha256:fixture-spruce-001-ec",
+      "method": "fixture_import"
+    },
+    {
+      "property": "density",
+      "value": 420.0,
+      "unit": "kg/m3",
+      "epistemic_status": "observed",
+      "source_artifact_id": "fixture://spruce-001/density",
+      "source_hash": "sha256:fixture-spruce-001-rho",
+      "method": "fixture_import"
+    }
+  ],
+  "modal_evidence": [
+    {
+      "frequency_hz": 95.0,
+      "mode_indices": [1, 1],
+      "epistemic_status": "observed",
+      "label": "fixture_m11"
+    },
+    {
+      "frequency_hz": 145.0,
+      "mode_indices": [2, 1],
+      "epistemic_status": "observed",
+      "label": "fixture_m21"
+    }
+  ],
+  "environment": {
+    "temperature_c": 21.0,
+    "relative_humidity_pct": 45.0
+  },
+  "provenance": {
+    "fixture": true,
+    "note": "Synthetic MESH-MAT-001 fixture; not hardware provenance"
+  }
+}
