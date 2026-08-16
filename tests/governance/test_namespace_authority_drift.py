@@ -506,3 +506,67 @@ def test_adapter_ignores_blank_and_malformed_rows(fake_git):
     """Defensive: blank lines and a status-only row must not raise or fabricate entries."""
     change = fake_git("\n" "   \n" "A\n" "M\tservices/api/app/foo/a.py\n")
     assert [nc.namespace for nc in change.namespace_changes] == ["foo"]
+
+
+def test_adapter_surfaces_source_side_evidence_when_authority_artifact_is_renamed(fake_git):
+    """Renaming a declared authority artifact away from its canonical path must still
+    record the *source* path as touched — that is the declared artifact that moved.
+
+    Without an explicit pin, destination-only recording would drop the only path that
+    is in AUTHORITY_ARTIFACT_PATHS whenever the file is renamed to a non-canonical name.
+    """
+    old = "docs/governance/ontology/authority_chain_registry.json"
+    new = "docs/governance/ontology/authority_chain_MOVED.json"
+    change = fake_git(f"R100\t{old}\t{new}\n")
+    (nc,) = change.namespace_changes
+    assert nc.change == "modified"  # delete+add in the same non-code namespace
+    assert old in nc.touches_authority_artifacts
+    assert new not in nc.touches_authority_artifacts
+
+
+def test_adapter_surfaces_source_artifact_when_authority_artifact_is_copied(fake_git):
+    """A copy leaves the source file in place, so _parse_name_status emits destination
+    only. The source is still a declared authority artifact and must appear in evidence
+    on the destination finding — otherwise copy silently under-reports artifact touch.
+    """
+    src = "docs/governance/ontology/authority_chain_registry.json"
+    dst = "docs/governance/ontology/authority_chain_COPY.json"
+    change = fake_git(f"C100\t{src}\t{dst}\n")
+    (nc,) = change.namespace_changes
+    assert nc.change == "added"
+    assert src in nc.touches_authority_artifacts
+
+
+def test_under_code_root_requires_path_boundary(monkeypatch):
+    """Classification must not treat a textual prefix as a directory root."""
+    # Simulate a future mis-edit that drops the trailing slash — import-time guard
+    # already rejects that for CODE_ROOTS; the helper itself must still refuse.
+    with pytest.raises(ValueError):
+        det._under_code_root("services/foo/bar.py", "services")
+
+    assert det._under_code_root("services/foo/bar.py", "services/") is True
+    assert det._under_code_root("services_backup/foo/bar.py", "services/") is False
+    assert det._under_code_root("services", "services/") is True
+
+
+def test_non_code_hints_match_path_segments_not_substrings():
+    """'test' as a segment hint must not fire inside 'contest' or 'testdata'."""
+    assert det._has_non_code_hint("docs/governance/ontology/x.md") is True
+    assert det._has_non_code_hint("foo/tests/unit/x.py") is True
+    assert det._has_non_code_hint("contracts/schema_registry.json") is True
+    assert det._has_non_code_hint("vendor/contest/runner.py") is False
+    assert det._has_non_code_hint("src/testdata/runner.py") is False
+    assert det._has_non_code_hint("services/api/app/mydocs/tool.py") is False
+
+
+def test_authority_artifact_evidence_string_is_sorted_not_list_repr(fake_git, real_topo):
+    """Operator-facing evidence must list artifacts as a stable comma-separated string."""
+    change = fake_git(
+        "M\tdocs/governance/ontology/authority_chain_registry.json\n"
+        "M\tcontracts/schema_registry.json\n"
+    )
+    findings = analyze(change, real_topo)
+    surfaced = " ".join(f.evidence for f in findings)
+    assert "['" not in surfaced and '["' not in surfaced
+    assert "authority_chain_registry.json" in surfaced
+    assert "schema_registry.json" in surfaced
