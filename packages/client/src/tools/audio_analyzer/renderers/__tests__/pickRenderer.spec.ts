@@ -1,5 +1,5 @@
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  *
  * Tests for pickRenderer dispatch logic.
  * Validates that all kinds route to appropriate renderer components.
