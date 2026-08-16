@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION",
+  "title": "DEP-SEC: defer #279 @vitejs/plugin-vue major to Tranche C; fix Dependabot labels",
+  "intent": "Close the actionable risk surface on Dependabot PR #279 without merging the major. Remove invalid dependabot.yml labels that Dependabot cannot apply, ignore @vitejs/plugin-vue semver-major alongside vite/vitest (Tranche C coupling), and record a durable disposition document with landing criteria and sibling-PR findings (#280-#283).",
+  "change_type": "chore",
+  "behavior_change": "Intake-only. No packages/client version or lockfile mutation. Dependabot will no longer open @vitejs/plugin-vue major PRs; label application errors stop because labels are omitted.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-pr279-plugin-vue-disposition.json",
+      ".github/dependabot.yml",
+      "docs/ci/DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION_2026-08-18.md"
+    ],
+    "files_expected_to_change": [
+      ".github/dependabot.yml",
+      "docs/ci/DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION_2026-08-18.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) .github/dependabot.yml: remove labels dependencies/javascript (repo labels do not exist; Dependabot cited this on #279). (2) Add ignore for @vitejs/plugin-vue semver-major with Tranche C rationale. (3) Add docs/ci/DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION_2026-08-18.md risk table, fixes, additional issues (#280-#283), and landing criteria.",
+    "why_not_redundant": "vite/vitest majors were already ignored, but plugin-vue majors were not — producing #279 while vite remains held. Labels were invalid since dependabot.yml creation. No prior document dispositioned #279."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr view 279 → open Dependabot bump @vitejs/plugin-vue 5.2.4→6.0.8; comment cites missing labels dependencies/javascript",
+      "gh label list → neither dependencies nor javascript exists",
+      "npm view @vitejs/plugin-vue@6.0.8 peerDependencies engines → node ^20.19.0||>=22.12.0; vite ^5||^6||^7||^8",
+      "python3 -c 'import yaml; yaml.safe_load(open(\".github/dependabot.yml\"))' → yaml ok",
+      "rg vue\\(\\) packages/client/vite.config.ts packages/client/vitest.config.ts → default options only (filter API break not hit)",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Stop invalid label requests; ignore plugin-vue majors with vite/vitest Tranche C.",
+      "scan_targets": [".github/dependabot.yml"],
+      "risk": "low",
+      "behavior_change": "Dependabot intake only — no runtime change."
+    },
+    {
+      "path": "docs/ci/DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION_2026-08-18.md",
+      "intent": "Authoritative #279 risk disposition and sibling findings.",
+      "scan_targets": ["docs/ci/DEP_SEC_PR279_PLUGIN_VUE_DISPOSITION_2026-08-18.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-DEP-SEC-279",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Does not merge #279. Does not bump client deps. Additional open Dependabot majors #280-#283 are inventoried but not closed by this patch; #280 remains unlandable per #284 analysis. Closing #279 on GitHub is an external disposition action mirroring DEP-SEC-001B."
+  }
+}
