@@ -36,6 +36,11 @@ jobs:
           cache: npm
           cache-dependency-path: packages/client/package-lock.json
 
+      - name: Assert Node engine floor
+        # Non-container path: Dockerfiles assert via check-node-engine.mjs;
+        # this job must assert the same floor before npm ci / vite build.
+        run: npm run check:node
+
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi

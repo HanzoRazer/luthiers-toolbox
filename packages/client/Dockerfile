@@ -1,4 +1,6 @@
 # Railway Dockerfile for Vue Client
+# NODE_VERSION must satisfy packages/client/package.json "engines.node".
+# Bare major floats to newest 22.x; do not pin an older patch here.
 ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine AS builder
 
@@ -7,8 +9,8 @@ ARG CACHEBUST=1
 RUN echo "Cache bust: ${CACHEBUST}"
 
 WORKDIR /app
-COPY package*.json ./
-COPY scripts/check-node-engine.mjs ./scripts/
+COPY package.json package-lock.json ./
+COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 # --- Node engine floor (do not remove) ---------------------------------------
 # The floor lives in ONE place: "engines.node" in packages/client/package.json.
 # check-node-engine.mjs reads it rather than restating it, so this Dockerfile

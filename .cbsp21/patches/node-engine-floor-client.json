@@ -17,7 +17,11 @@
       "SPRINTS.md",
       "packages/client/scripts/",
       "packages/client/src/testing/",
-      ".github/"
+      ".github/",
+      "packages/client/railway.toml",
+      "packages/client/README.md",
+      "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "railway.toml"
     ],
     "files_expected_to_change": [
       "packages/client/package.json",
@@ -36,7 +40,11 @@
       "packages/client/scripts/check-node-engine.mjs",
       "packages/client/src/testing/__tests__/nodeEngineFloor.spec.ts",
       ".github/dependabot.yml",
-      "packages/client/railway.json"
+      "packages/client/railway.json",
+      "packages/client/railway.toml",
+      "packages/client/README.md",
+      "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "railway.toml"
     ]
   },
   "diff_articulation": {
@@ -66,7 +74,10 @@
       "mutation: restored the previous floor -> the broadened dependency scan still fails on the @supabase family",
       "measured skip rate of the OLD dependency scan: 210 checked / 11 skipped (6x '*', 5x '>=16 || 14 >=14.17')",
       "npx vitest run (full client suite) -> 771 passed",
-      "npx vue-tsc --noEmit -> 156, unchanged from the branch baseline"
+      "npx vue-tsc --noEmit -> 156, unchanged from the branch baseline",
+      "npm run check:node -> Node 22.14.0 satisfies >=22.12.0",
+      "vitest nodeEngineFloor.spec.ts -> 6 passed",
+      "Local npm run build -> success (rules out app module graph as Railway cause)"
     ]
   },
   "files": [
@@ -222,6 +233,30 @@
       ],
       "risk": "low",
       "behavior_change": "watchPatterns gains scripts/** and package-lock.json. Both are now part of the client build (the engine guard lives in scripts/, and npm ci reads the lockfile), so a change to either had to be able to trigger a redeploy."
+    },
+    {
+      "path": "packages/client/railway.toml",
+      "intent": "Pin DOCKERFILE builder as config-as-code for Railway client service",
+      "risk": "low",
+      "behavior_change": "Forces Dockerfile builder for packages/client Railway deploys"
+    },
+    {
+      "path": "packages/client/README.md",
+      "intent": "Document engines.node as SSoT and check:node",
+      "risk": "low",
+      "behavior_change": "Docs only"
+    },
+    {
+      "path": "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "intent": "Disposition for Railway client red on #307",
+      "risk": "low",
+      "behavior_change": "Docs only"
+    },
+    {
+      "path": "railway.toml",
+      "intent": "Correct stale Node 20 comment to Node 22",
+      "risk": "low",
+      "behavior_change": "Comment only"
     }
   ],
   "architecture_scan": {

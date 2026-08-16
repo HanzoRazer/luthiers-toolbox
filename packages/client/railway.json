@@ -9,6 +9,7 @@
       "*.vue",
       "*.json",
       "Dockerfile",
+      "railway.toml",
       "scripts/**",
       "package-lock.json",
       "start.sh",
