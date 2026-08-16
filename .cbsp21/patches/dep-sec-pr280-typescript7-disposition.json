@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION",
+  "title": "DEP-SEC: close #280 TS7 bump; ignore typescript >=7; keep TS6 path",
+  "intent": "Dependabot #280 (typescript 5.9.3→7.0.2) is unlandable on the current client toolchain (vue-tsc/@volar/typescript ERR_PACKAGE_PATH_NOT_EXPORTED for ./lib/tsc; @typescript-eslint v6 Intrinsic failure; Vue SFC regressions). Close it, ignore only typescript >=7.0.0 so a future typescript@6 upgrade prepared by #284 remains possible, and record durable disposition.",
+  "change_type": "chore",
+  "behavior_change": "Intake-only. No packages/client TypeScript version change. Dependabot will not open typescript >=7 PRs.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-pr280-typescript7-disposition.json",
+      ".github/dependabot.yml",
+      "docs/ci/DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION_2026-08-18.md"
+    ],
+    "files_expected_to_change": [
+      ".github/dependabot.yml",
+      "docs/ci/DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION_2026-08-18.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Add dependabot ignore for dependency-name typescript versions >=7.0.0. Add disposition document with Copilot risk completion, @volar/typescript chain, landing criteria, and sibling issues (#282/#283).",
+    "why_not_redundant": "Ignoring all typescript majors would also block the intentional TS6 path from #284. Version-scoped ignore is the minimal durable control. #280 itself cannot be merged."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr view 280 → OPEN, mergeStateStatus UNSTABLE; typescript 5.9.3→7.0.2",
+      "main lockfile: vue-tsc@2.2.12 → @volar/typescript@2.4.15; @typescript-eslint ^6.21.0; typescript 5.9.3",
+      "rg typescript/lib/tsc in packages/client (excl lock) → no repo-local importer",
+      "PR #284 body already records #280 unlandable (vue-tsc / eslint / compiler-sfc)",
+      "python3 -c 'import yaml; yaml.safe_load(open(\".github/dependabot.yml\"))' → ok",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Stop Dependabot from regenerating typescript >=7 bumps while allowing TS6.",
+      "scan_targets": [".github/dependabot.yml"],
+      "risk": "low",
+      "behavior_change": "Dependabot intake only."
+    },
+    {
+      "path": "docs/ci/DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION_2026-08-18.md",
+      "intent": "Authoritative #280 risk disposition and migration criteria.",
+      "scan_targets": ["docs/ci/DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION_2026-08-18.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-DEP-SEC-280",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Does not upgrade TypeScript. Does not upgrade vue-tsc or eslint. Closing #280 retains the TS6 migration path from #284. Sibling Dependabot majors #282/#283 remain out of scope for this patch."
+  }
+}

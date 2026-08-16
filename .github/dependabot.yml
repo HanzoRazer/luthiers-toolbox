@@ -28,3 +28,8 @@ updates:
       # filter API). Keep majors with Tranche C — see #279 disposition.
       - dependency-name: "@vitejs/plugin-vue"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7+ is unlandable on the current client toolchain
+      # (vue-tsc/@volar/typescript + @typescript-eslint v6). Keep the #284
+      # typescript@6 path open — ignore only >=7, not all majors. See #280.
+      - dependency-name: typescript
+        versions: [">=7.0.0"]
