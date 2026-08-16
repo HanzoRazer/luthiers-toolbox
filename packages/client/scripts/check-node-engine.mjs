@@ -98,17 +98,14 @@ export function satisfies(version, range) {
     .some((clause) => satisfiesClause(version, clause));
 }
 
-/** Fallback used only when package.json has no engines.node (diagnostic / bootstrap). */
-export const FALLBACK_FLOOR = ">=22.12.0";
-
 export function readDeclaredFloor(manifestPath = DEFAULT_MANIFEST) {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const range = manifest?.engines?.node;
   if (!range) {
-    console.warn(
-      `WARN: ${manifestPath} has no "engines.node"; using FALLBACK_FLOOR=${FALLBACK_FLOOR}.`
+    throw new Error(
+      `${manifestPath} declares no "engines.node". The client build refuses to run ` +
+        "without a declared floor - add one rather than removing this check."
     );
-    return FALLBACK_FLOOR;
   }
   return range;
 }

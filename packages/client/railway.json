@@ -8,18 +8,14 @@
       "*.ts",
       "*.vue",
       "*.json",
-      "Dockerfile",
-      "scripts/**",
-      "package-lock.json",
-      "start.sh",
-      ".nvmrc"
+      "Dockerfile"
     ]
   },
   "deploy": {
     "numReplicas": 1,
     "startCommand": "/bin/sh /start.sh",
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 63,
+    "healthcheckTimeout": 64,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

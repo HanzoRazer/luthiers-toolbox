@@ -1,24 +1,21 @@
 # Railway Dockerfile for Vue Client
-# NODE_VERSION must satisfy packages/client/package.json "engines.node".
-# Bare major floats to newest 22.x; do not pin an older patch here.
-ARG NODE_VERSION=22
+ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-alpine AS builder
+
+# --- Node engine floor (do not remove) ---------------------------------------
+# packages/client/package.json declares: "node": "^20.19.0 || >=22.12.0"
+# (required by @vitejs/plugin-vue 6.x). NODE_VERSION=20 floats to the latest
+# 20.x tag, which already satisfies this -- the check exists so that lowering
+# NODE_VERSION, or a stale cached base image, fails HERE with a clear message
+# instead of surfacing as an opaque Vite/ESM error during `npm run build`.
+RUN node -e "const v=process.versions.node,[a,b]=v.split('.').map(Number);if(!((a===20&&b>=19)||(a===22&&b>=12)||a>22)){console.error('FATAL: Node '+v+' is below the client engine floor ^20.19.0 || >=22.12.0');process.exit(1)}console.log('Node '+v+' satisfies the client engine floor')"
 
 # Force rebuild - DO NOT CACHE
 ARG CACHEBUST=1
 RUN echo "Cache bust: ${CACHEBUST}"
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
-# --- Node engine floor (do not remove) ---------------------------------------
-# The floor lives in ONE place: "engines.node" in packages/client/package.json.
-# check-node-engine.mjs reads it rather than restating it, so this Dockerfile
-# cannot drift from the manifest or from its three siblings. Runs before
-# `npm ci` so a wrong base image fails HERE with a clear message instead of as
-# an opaque Vite/ESM error minutes later.
-RUN node scripts/check-node-engine.mjs
-
+COPY package*.json ./
 RUN npm ci --production=false
 COPY . ./
 
