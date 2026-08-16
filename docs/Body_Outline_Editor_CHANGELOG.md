@@ -336,20 +336,72 @@ is derived from a release tag.
 `docs/handoffs/BODY_OUTLINE_EDITOR_V2_HANDOFF.md` records an earlier V2 era at
 2,461 → 3,567 lines, but that period's version numbering was not recovered.
 
-**Open items** — none of these is done here:
+**Open items** — none of these is done here.
 
-1. Bump the line-7 version stamp, or roll the three unreleased commits into a
-   v3.6.0. The stamp currently misidentifies the build **and is duplicated onto
-   `tools/`**, so "v3.5.0" names two different files (namespace note 1). If the
-   two artifacts are meant to stay separate, they need distinguishable stamps.
-2. Resync `tools/body-outline-editor.html` — 171 lines behind, stale jumbo.
+### Root cause — do this one first
+
+**1. Extend `test_jumbo_dimension_consistency.py` to cover all six paths.**
+
+The Jumbo drift did not survive because anyone missed it. It survived because
+**the guard's coverage set was narrower than the namespace's member set.** Six
+artifacts assert Jumbo dimensions; the test asserts four. The drift lived in the
+two it does not look at — the User Manual and the `tools/` mirror — and was
+invisible to CI for 81 days (`f25bb949`, 2026-05-27 → 2026-08-16).
+
+Fixing the manual (done in this change) fixes *this* instance. It does not stop
+the next one. The durable fix is closing the coverage gap, so a Jumbo dimension
+cannot drift in any member without failing loudly:
+
+| Path | Guarded today | After |
+|------|:---:|:---:|
+| `body_contour_solver.py` → `FAMILY_DEFAULTS["jumbo"]` (canonical) | ✅ | ✅ |
+| `jumbo_j200.py` | ✅ | ✅ |
+| `instrument_model_registry.json` | ✅ | ✅ |
+| `hostinger/body-outline-editor.html` | ✅ | ✅ |
+| `docs/Body_Outline_Editor_User_Manual.md` | ❌ | **add** |
+| `tools/body-outline-editor.html` | ❌ | **add** |
+| `catalog.json` | skipped | resolve or document why it is out of scope |
+
+Note the manual states dimensions in prose (`Jumbo — 530/432/305/254`), so
+covering it means parsing that line — the test already does regex extraction for
+the HTML artifact, so the shape exists. The general principle: **a consistency
+guard should enumerate its namespace, not a subset of it.** Any new artifact
+that asserts Jumbo dimensions should be added to the test in the same change
+that introduces it.
+
+### Remaining
+
+2. **Resync `tools/body-outline-editor.html`** — 171 lines behind, stale jumbo.
    Mechanically simple: it is a clean, unmodified snapshot of `hostinger/` at
    `70a0d3ee`, so the resync is a copy plus line-ending normalisation, with no
    edits to reconcile. **Governed, though** — Production, MEDIUM,
-   *"Avoid collision"* — so it wants its own change and its own approval.
-3. Extend `test_jumbo_dimension_consistency.py` to cover the manual and the
-   `tools/` mirror, so this class of drift fails loudly.
+   *"Avoid collision"* — so it wants its own change and its own approval, and
+   must not be bundled into a documentation change. Mechanical ≠ ungoverned.
+3. Bump the line-7 version stamp, or roll the three unreleased commits into a
+   v3.6.0. The stamp currently misidentifies the build **and is duplicated onto
+   `tools/`**, so "v3.5.0" names two different files (namespace note 1). If the
+   two artifacts are meant to stay separate, they need distinguishable stamps.
 4. Document JSON import in Manual Chapter 8.
 5. Document the `IBG_CONFIG` / URL-param overrides in Manual Chapter 9.
 6. Replace the `[INTERNAL_ACCESS_NOTE]` placeholders — 7 across 3 documents —
    now that PR #268 has given the editor a hub entry point.
+
+---
+
+## Method note — don't trust a raw hash across a line-ending boundary
+
+While preparing this document, `tools/body-outline-editor.html` was initially
+reported as **diverged** from `hostinger/` on an MD5 comparison. That was wrong.
+The two files' content is identical at `70a0d3ee`; the hash gap was **CRLF vs
+LF** and nothing else:
+
+```
+md5 (raw)                     tools 370a413f29b7   ≠   hostinger@70a0d3ee 05b4d5029702
+diff (line-endings normalised)                     → 0 lines
+```
+
+A raw hash comparison across a CRLF boundary reports divergence where there is
+none, and it inflated the assessed difficulty of open item 2 from "copy" to
+"reconcile a fork". When comparing text artifacts in this repository, normalise
+line endings before concluding anything from a hash — or diff the content
+directly.
