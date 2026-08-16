@@ -53,6 +53,12 @@
       "intent": "16 tests: all verdict families (synthetic bindings), engine invariants, and real-registry factual-condition dogfoods (retopo/BOE).",
       "risk": "low",
       "behavior_change": "New tests."
+    },
+    {
+      "path": "docs/governance/ontology/NAMESPACE_BINDING_GAP.md",
+      "intent": "Concise deferred-gap note: namespace->domain bindings are absent from the authority topology; closing the gap is a governance act, not a detector change. Records why inference is forbidden rather than merely unimplemented, the JSON shape the detector already consumes, and which dogfood tests are expected to change when bindings land.",
+      "risk": "low",
+      "behavior_change": "None (documentation). Authors no binding and confers no authority."
     }
   ]
 }
