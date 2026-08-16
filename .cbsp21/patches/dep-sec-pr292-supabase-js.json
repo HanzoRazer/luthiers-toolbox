@@ -1,0 +1,69 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_PR292_SUPABASE_JS",
+  "title": "DEP-SEC: land @supabase/supabase-js 2.98→2.112 with Node 20 CI witness (close #292)",
+  "intent": "Re-land Dependabot #292. Copilot flagged engines.node >=22 in the Supabase package set while client CI/Docker remain on Node 20. Live #292 checks prove npm ci/test/build and Railway client succeed on Node 20 with EBADENGINE warnings only. Land the bump; document engines skew as accepted residual (Node 22 migration separate).",
+  "change_type": "chore",
+  "behavior_change": "Client auth SDK dependency upgrade. createClient/auth APIs remain the usage surface; no app source changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-pr292-supabase-js.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_PR292_SUPABASE_JS_DISPOSITION_2026-08-18.md"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_PR292_SUPABASE_JS_DISPOSITION_2026-08-18.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Bump @supabase/supabase-js to ^2.112.3 and lockfile (auth/functions/postgrest/realtime/storage 2.112.3 + phoenix). Add disposition with Node 20 CI witness and residual Node 22 note.",
+    "why_not_redundant": "Dependabot #292 is green but engines metadata raised a false hard-blocker narrative. Human land carries CBSP21 + durable evidence that Node 20 remains viable."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr checks 292 → lint-build/containers/Railway client pass",
+      "gh run log lint-build → node v20.20.2; npm warn EBADENGINE; job pass",
+      "lockfile engines.node >=22.0.0 on @supabase/*@2.112.3",
+      "npm test → 761 passed",
+      "npm run build → exit 0",
+      "node import createClient smoke → ok",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Raise @supabase/supabase-js to ^2.112.3.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "Auth SDK minor-line upgrade."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lock Supabase 2.112.3 family.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "lockfile only"
+    },
+    {
+      "path": "docs/ci/DEP_SEC_PR292_SUPABASE_JS_DISPOSITION_2026-08-18.md",
+      "intent": "Durable risk disposition: engines skew vs Node 20 witness.",
+      "scan_targets": ["docs/ci/DEP_SEC_PR292_SUPABASE_JS_DISPOSITION_2026-08-18.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-DEP-SEC-292",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Does not migrate CI/Docker to Node 22. EBADENGINE warnings remain until that migration. Closing Dependabot #292 after human land."
+  }
+}
