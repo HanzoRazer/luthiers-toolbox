@@ -359,3 +359,150 @@ def test_real_topology_declares_the_domains_that_make_the_bait_real():
             f"production registry no longer declares a '{domain}' domain — the "
             f"anti-inference tests were baited against it; re-check their premise"
         )
+
+
+# ───────────────────────── GIT ADAPTER (previously untested) ─────────────────────────
+#
+# Everything above exercises the Git-independent engine. The adapter — the layer that
+# turns `git diff --name-status` rows into the candidate-change model — had no direct
+# coverage, which is where a namespace-identity bug lived undetected: the aggregation
+# key was the bare namespace segment, so unrelated trees merged into one finding.
+#
+# These drive build_candidate_change() through a stubbed _git so the parsing and
+# aggregation are pinned without touching a real repository.
+
+
+@pytest.fixture()
+def fake_git(monkeypatch):
+    """Return a helper that stubs the git layer with canned --name-status output."""
+
+    def _run(diff_output: str):
+        monkeypatch.setattr(det, "_git", lambda args: diff_output)
+        return det.build_candidate_change("base", "candidate")
+
+    return _run
+
+
+def _by_path(change):
+    return {nc.path: nc for nc in change.namespace_changes}
+
+
+def test_adapter_does_not_merge_same_named_namespaces_from_different_roots(fake_git):
+    """CODE_ROOTS holds both 'services/api/app/' and 'services/', so the segment 'foo'
+    is ambiguous. Two unrelated trees must stay two findings.
+
+    Regression: keying aggregation on the bare segment collapsed them into ONE finding
+    whose change type was the synthesised union of an add and a delete ('modified'),
+    and whose path pointed at only one of the two trees.
+    """
+    change = fake_git(
+        "A\tservices/api/app/foo/new.py\n"
+        "D\tservices/foo/old.py\n"
+    )
+
+    assert len(change.namespace_changes) == 2, (
+        "unrelated trees sharing a segment name were merged into one finding"
+    )
+    by_path = _by_path(change)
+    assert by_path["services/api/app/foo"].change == "added"
+    assert by_path["services/foo"].change == "removed"
+    # both still report the same namespace identifier — that is expected and factual
+    assert {nc.namespace for nc in change.namespace_changes} == {"foo"}
+
+
+def test_adapter_reconstructs_the_path_from_the_matched_root(fake_git):
+    """The emitted path must reflect the root that actually matched.
+
+    Regression: the path was built from CODE_ROOTS[0] unconditionally, so a change
+    under 'services/' was reported at a 'services/api/app/...' path that does not exist.
+    """
+    change = fake_git("M\tservices/blueprint-import/vectorizer_phase3.py\n")
+    (nc,) = change.namespace_changes
+    assert nc.namespace == "blueprint-import"
+    assert nc.path == "services/blueprint-import"
+
+
+def test_adapter_keeps_a_same_namespace_rename_as_one_modified_finding(fake_git):
+    change = fake_git(
+        "R100\tservices/api/app/foo/a.py\tservices/api/app/foo/b.py\n"
+    )
+    (nc,) = change.namespace_changes
+    assert (nc.namespace, nc.change) == ("foo", "modified")
+
+
+def test_adapter_surfaces_both_sides_of_a_namespace_move(fake_git):
+    """A rename that moves code between namespaces must show the vacated source.
+
+    Regression: only the last tab-separated field was read, so the source namespace
+    never appeared and a move looked like an unexplained addition.
+    """
+    change = fake_git(
+        "R100\tservices/api/app/foo/a.py\tservices/api/app/bar/a.py\n"
+    )
+    by_ns = {nc.namespace: nc for nc in change.namespace_changes}
+    assert set(by_ns) == {"foo", "bar"}
+    assert by_ns["foo"].change == "removed"
+    assert by_ns["bar"].change == "added"
+
+
+def test_adapter_treats_a_copy_as_destination_only(fake_git):
+    """Unlike a rename, a copy leaves the source in place — it must not report a removal."""
+    change = fake_git(
+        "C75\tservices/api/app/foo/a.py\tservices/api/app/baz/a.py\n"
+    )
+    by_ns = {nc.namespace: nc for nc in change.namespace_changes}
+    assert set(by_ns) == {"baz"}
+    assert by_ns["baz"].change == "added"
+
+
+def test_adapter_emits_no_empty_code_namespace(fake_git):
+    """A bare root path names no namespace and must not adjudicate as a code namespace.
+
+    Regression: 'services/api/app/' produced namespace '' with is_code_namespace=True,
+    yielding INSUFFICIENT_EVIDENCE for a namespace that does not exist.
+    """
+    change = fake_git("A\tservices/api/app/\n")
+    for nc in change.namespace_changes:
+        assert not (nc.is_code_namespace and not nc.namespace), (
+            "emitted an empty code namespace"
+        )
+
+
+def test_adapter_records_touched_authority_artifacts(fake_git):
+    change = fake_git(
+        "M\tdocs/governance/ontology/authority_chain_registry.json\n"
+    )
+    (nc,) = change.namespace_changes
+    assert nc.touches_authority_artifacts == (
+        "docs/governance/ontology/authority_chain_registry.json",
+    )
+
+
+def test_authority_artifact_edits_are_surfaced_not_swallowed(fake_git, real_topo):
+    """Editing the authority registry is the most authority-relevant change there is.
+
+    The verdict stays NO_AUTHORITY_IMPACT — a docs/config edit introduces no code
+    namespace, and promoting it on the strength of a file path would be the very
+    inference this detector forbids. But the touched artifact MUST reach the operator.
+
+    Regression: touches_authority_artifacts was collected and then dropped on the
+    non-code branch, so this rendered as a bare "no code namespace" line.
+    """
+    change = fake_git(
+        "M\tdocs/governance/ontology/authority_chain_registry.json\n"
+        "M\tcontracts/schema_registry.json\n"
+    )
+    findings = analyze(change, real_topo)
+
+    assert findings, "no findings produced"
+    for f in findings:
+        assert f.verdict is Verdict.NO_AUTHORITY_IMPACT
+    surfaced = " ".join(f.evidence for f in findings)
+    assert "authority_chain_registry.json" in surfaced
+    assert "schema_registry.json" in surfaced
+
+
+def test_adapter_ignores_blank_and_malformed_rows(fake_git):
+    """Defensive: blank lines and a status-only row must not raise or fabricate entries."""
+    change = fake_git("\n" "   \n" "A\n" "M\tservices/api/app/foo/a.py\n")
+    assert [nc.namespace for nc in change.namespace_changes] == ["foo"]

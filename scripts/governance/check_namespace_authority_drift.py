@@ -238,7 +238,26 @@ def adjudicate(nc: NamespaceChange, topo: AuthorityTopology) -> DriftFinding:
         return DriftFinding(nc.namespace, nc.path, v, _SEVERITY[v], ev)
 
     # A pure non-code change bears no authority-bearing namespace.
+    #
+    # It may still TOUCH an authority artifact - editing authority_chain_registry.json
+    # itself is the clearest case. The verdict is unchanged (a docs/config edit
+    # introduces no code namespace, and inferring authority impact from a file path
+    # would be exactly the inference this detector forbids), but the touched artifacts
+    # must be surfaced as evidence. Previously they were collected and then silently
+    # dropped on this branch, so the most authority-relevant change in the repository
+    # rendered as a bare "no code namespace" line with nothing to act on.
     if not nc.is_code_namespace:
+        if nc.touches_authority_artifacts:
+            return finding(
+                Verdict.NO_AUTHORITY_IMPACT,
+                (
+                    "change introduces no code namespace (docs/tests/config only), but "
+                    f"it MODIFIES declared authority artifact(s) "
+                    f"{list(nc.touches_authority_artifacts)} - review the topology change "
+                    f"itself; this tool adjudicates candidate namespaces against the "
+                    f"topology and does not adjudicate edits to the topology"
+                ),
+            )
         return finding(
             Verdict.NO_AUTHORITY_IMPACT,
             "change introduces no code namespace (docs/tests/config only)",
@@ -312,49 +331,93 @@ def _git(args: List[str]) -> str:
     ).stdout
 
 
-def _namespace_of(path: str) -> Tuple[str, bool]:
-    """(namespace_identifier, is_code_namespace) - a FACTUAL path classification only."""
+def _namespace_of(path: str) -> Tuple[str, bool, Optional[str]]:
+    """(namespace_identifier, is_code_namespace, matched_code_root).
+
+    A FACTUAL path classification only - it says where code lives, never who owns it.
+
+    The matched code root is returned because the namespace segment alone is NOT a
+    unique identity: CODE_ROOTS contains both 'services/api/app/' and 'services/', so
+    'services/api/app/foo/...' and 'services/foo/...' both yield the segment 'foo'
+    while being unrelated trees. Callers must key on (root, namespace), not namespace.
+    Returns None for the root on non-code paths.
+    """
     p = path.replace("\\", "/")
     for root in CODE_ROOTS:
         if p.startswith(root):
             rest = p[len(root):]
             seg = rest.split("/", 1)[0]
-            if seg and not seg.endswith(".py") or "/" in rest:
-                # top-level package/service segment
-                return seg, True
-            # a bare file directly under the root
-            return seg or rest, True
+            # Parenthesised deliberately. This reads as: the first segment names a
+            # package (not a bare .py file), OR there is a deeper path below it - in
+            # either case the first segment is the namespace.
+            is_package_segment = bool(seg) and not seg.endswith(".py")
+            has_subpath = "/" in rest
+            if is_package_segment or has_subpath:
+                ns = seg
+            else:
+                # a bare file directly under the root
+                ns = seg or rest
+            if not ns:
+                # A bare root path ('services/api/app/') names no namespace. Emitting
+                # '' here previously produced an empty code namespace that adjudicated
+                # as INSUFFICIENT_EVIDENCE for a namespace that does not exist.
+                return "", False, None
+            return ns, True, root
     if any(h in p for h in NON_CODE_HINTS) or p.startswith("contracts/"):
         top = p.split("/", 1)[0]
-        return top, False
-    return p.split("/", 1)[0], False
+        return top, False, None
+    return p.split("/", 1)[0], False, None
+
+
+def _parse_name_status(line: str) -> List[Tuple[str, str]]:
+    """One `git diff --name-status` row -> [(status, path), ...]. FACTUAL parsing only.
+
+    Rename/copy rows carry BOTH sides: 'R100\\told\\tnew', 'C75\\told\\tnew'. Taking
+    only the last field loses the source, which silently under-models a namespace
+    MOVE - the destination shows up as touched while the vacated source never appears
+    at all. Both sides are returned so the source namespace is visible:
+
+      R (rename)  -> source is deleted, destination added
+      C (copy)    -> source is unchanged, destination added
+    """
+    parts = line.split("\t")
+    if len(parts) < 2:
+        return []
+    status = parts[0][0]  # A/M/D/R/C/T/U...
+    if status in ("R", "C") and len(parts) >= 3:
+        old_path, new_path = parts[1], parts[-1]
+        if status == "R":
+            return [("D", old_path), ("A", new_path)]
+        return [("A", new_path)]  # copy leaves the source untouched
+    return [(status, parts[-1])]
 
 
 def build_candidate_change(base: str, candidate: str) -> CandidateChange:
     """Build the candidate-change model from a real diff. Sets FACTUAL fields only -
     never a declared_domain/concept (that would be authority inference)."""
     out = _git(["diff", "--name-status", f"{base}...{candidate}"])
-    # aggregate per namespace
-    agg: Dict[str, Dict] = {}
+    # Aggregate per (matched_code_root, namespace). The namespace segment alone is not
+    # a unique identity - see _namespace_of - so keying on it merged unrelated trees
+    # into a single finding and synthesised a bogus combined change type.
+    agg: Dict[Tuple[Optional[str], str], Dict] = {}
     for line in out.splitlines():
         if not line.strip():
             continue
-        parts = line.split("\t")
-        status = parts[0][0]  # A/M/D/R...
-        path = parts[-1]
-        ns, is_code = _namespace_of(path)
-        rec = agg.setdefault(ns, {
-            "path": f"{CODE_ROOTS[0]}{ns}" if is_code else ns,
-            "is_code": is_code, "statuses": set(), "arts": set(),
-        })
-        rec["statuses"].add(status)
-        rec["is_code"] = rec["is_code"] or is_code
-        norm = path.replace("\\", "/")
-        if norm in AUTHORITY_ARTIFACT_PATHS:
-            rec["arts"].add(norm)
+        for status, path in _parse_name_status(line):
+            ns, is_code, root = _namespace_of(path)
+            norm = path.replace("\\", "/")
+            key = (root, ns)
+            rec = agg.setdefault(key, {
+                "path": f"{root}{ns}" if is_code and root else ns,
+                "is_code": is_code, "statuses": set(), "arts": set(),
+            })
+            rec["statuses"].add(status)
+            rec["is_code"] = rec["is_code"] or is_code
+            if norm in AUTHORITY_ARTIFACT_PATHS:
+                rec["arts"].add(norm)
 
     changes: List[NamespaceChange] = []
-    for ns, rec in sorted(agg.items()):
+    for (_root, ns), rec in sorted(agg.items(), key=lambda kv: (kv[0][1], kv[0][0] or "")):
         statuses = rec["statuses"]
         change = "added" if statuses <= {"A"} else ("removed" if statuses <= {"D"} else "modified")
         changes.append(NamespaceChange(
