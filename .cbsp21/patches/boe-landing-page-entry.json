@@ -1,0 +1,58 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BOE_LANDING_PAGE_ENTRY",
+  "title": "Add Body Outline Editor card to Hostinger Free Tools landing page",
+  "intent": "Expose the existing hostinger/body-outline-editor.html from production-shop-hub.html Free Tools grid. Tighten card copy and place the card after Blueprint Reader (scan/import → edit progression).",
+  "change_type": "docs",
+  "behavior_change": "none. Static HTML landing-page link only. BOE itself is unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "hostinger/production-shop-hub.html",
+      ".cbsp21/patches/boe-landing-page-entry.json"
+    ],
+    "files_expected_to_change": [
+      "hostinger/production-shop-hub.html",
+      ".cbsp21/patches/boe-landing-page-entry.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Add Body Outline Editor Free Tools card linking to ./body-outline-editor.html. (2) Place card after Blueprint Reader. (3) Use compressed copy matching peer cards: Create body outlines. Export DXF, SVG, or JSON.",
+    "why_not_redundant": "BOE existed as a sibling HTML page with no hub entry point. Without this card users cannot discover or open it from the web landing page."
+  },
+  "verification": {
+    "commands_run": [
+      "test -f hostinger/body-outline-editor.html",
+      "rg -n 'Body Outline Editor|body-outline-editor.html' hostinger/production-shop-hub.html",
+      "python3 scripts/ci/check_cbsp21_gate.py --manifest .cbsp21/patches/boe-landing-page-entry.json --changed-files hostinger/production-shop-hub.html .cbsp21/patches/boe-landing-page-entry.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "hostinger/production-shop-hub.html",
+      "intent": "Add Free Tools card for Body Outline Editor after Blueprint Reader with tightened copy.",
+      "risk": "low",
+      "behavior_change": "none - static landing-page HTML"
+    },
+    {
+      "path": ".cbsp21/patches/boe-landing-page-entry.json",
+      "intent": "CBSP21 patch coverage for this PR.",
+      "risk": "low",
+      "behavior_change": "none - governance metadata"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-BOE-LANDING",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Static Hostinger landing-page card only. Target body-outline-editor.html already present in hostinger/. No runtime, API, workflow, or CBSP21 algorithm changes."
+  }
+}
