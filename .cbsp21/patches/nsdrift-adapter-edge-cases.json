@@ -1,0 +1,66 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "NSDRIFT_ADAPTER_EDGE_CASES",
+  "title": "fix(governance): namespace-identity, rename, and authority-artifact defects in the drift detector's git adapter",
+  "intent": "Review of PR #271 raised three defects in the git/ref adapter of check_namespace_authority_drift.py; all three were reproduced, and five further defects were found in the same layer. The adapter had no direct test coverage - every existing test drove the Git-independent engine - which is why namespace-identity bugs survived. This fixes the adapter and adds nine tests that drive build_candidate_change() through a stubbed git layer. The analysis engine, the verdict vocabulary, the advisory posture, and the anti-inference guard are all untouched.",
+  "change_type": "fix",
+  "behavior_change": "Adjudication logic is unchanged; verdicts are still produced by the same engine from the same rules. The candidate-change MODEL is now more accurate: unrelated trees sharing a path segment produce separate findings instead of one merged finding with a synthesised change type; emitted paths reflect the code root that actually matched; rename rows contribute both sides so a namespace move shows its vacated source; copy rows contribute only the destination; bare root paths no longer emit an empty code namespace; malformed rows no longer fabricate a namespace; and touched authority artifacts are surfaced in NO_AUTHORITY_IMPACT evidence instead of being collected and dropped. No namespace->domain binding is authored and the tool remains advisory (exit 0).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/nsdrift-adapter-edge-cases.json",
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py"
+    ],
+    "files_expected_to_change": [
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) _namespace_of() now returns (namespace, is_code, matched_code_root). CODE_ROOTS contains both 'services/api/app/' and 'services/', so the segment alone is not a unique identity; callers key on (root, namespace). It also returns a non-code result for a bare root path instead of an empty code namespace, and the overloaded condition is parenthesised into named booleans (is_package_segment / has_subpath) with no behaviour change. (2) build_candidate_change() aggregates on (matched_root, namespace) instead of the bare segment, and reconstructs the emitted path from the root that actually matched rather than CODE_ROOTS[0]. (3) New _parse_name_status() helper: rename rows ('R100 old new') contribute a delete on the source and an add on the destination; copy rows ('C75 old new') contribute only the destination, since a copy leaves its source in place; rows with fewer than two fields are ignored rather than treated as a path. (4) adjudicate() surfaces touches_authority_artifacts in the NO_AUTHORITY_IMPACT evidence string as a sorted comma-separated list (not Python list repr). The verdict is deliberately NOT promoted - inferring authority impact from a file path is precisely the inference this detector forbids - but the operator now sees which declared artifact was modified. (5) Review follow-up: path-boundary-safe CODE_ROOTS matching (_under_code_root + import-time trailing-slash guard); NON_CODE_HINTS matched as path segments rather than substrings; _authority_paths_named_on_row so copy/rename rows that name a declared artifact still attach that evidence to the touched namespace bucket (copy previously dropped source-side artifact evidence because only the destination path was emitted). (6) Adapter tests expanded (42 → 47) pinning artifact rename/copy evidence, root-boundary safety, segment hints, and evidence formatting.",
+    "why_not_redundant": "All prior tests exercise the Git-independent engine; the adapter that builds the model the engine consumes had no direct coverage. That is exactly where these defects lived. The new tests pin the adapter contract rather than re-testing the engine."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m pytest tests/governance/test_namespace_authority_drift.py -q -> 47 passed (was 33 on main / 42 after first adapter fix).",
+      "REPRODUCTION before fixing - stubbed git adapter probe confirmed every cited defect: 'A services/api/app/foo/new.py' + 'D services/foo/old.py' produced ONE finding, namespace 'foo', change 'modified' (a synthesised union of an add and a delete), path 'services/api/app/foo' with the services/foo side invisible.",
+      "REPRODUCTION of the additional defects: 'services/api/app/' -> namespace '' with is_code_namespace=True; 'services/api/tests/test_x.py' -> path fabricated as 'services/api/app/api' which does not exist; a rename moving foo->bar reported only 'bar'; a status-only row 'A' fabricated a namespace named 'A'; and a change modifying docs/governance/ontology/authority_chain_registry.json adjudicated NO_AUTHORITY_IMPACT with the touched artifact collected and then dropped from the evidence string.",
+      "REVIEW FOLLOW-UP: copy of authority_chain_registry.json to a non-canonical path previously produced touches_authority_artifacts=(); after _authority_paths_named_on_row the source artifact is recorded on the destination finding. Rename-away of the same artifact already recorded the source via D-side membership; now pinned by an explicit test.",
+      "NEGATIVE CONTROL - the detector was reverted to its pre-fix state with the new tests in place: 7 of the 9 new adapter tests FAILED, one per distinct defect (namespace merge, path reconstruction, namespace-move source, copy semantics, empty namespace, artifact evidence, malformed rows). Restored -> 42 passed. The two that pass on old code (same-namespace rename, artifact recording) were never broken and are pinned as controls.",
+      "Anti-inference guard re-run unchanged: all bait tests still pass, so namespace identity did not become a binding source.",
+      "Advisory posture unchanged: CLI still exits 0."
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/governance/check_namespace_authority_drift.py",
+      "intent": "Git-adapter fixes: (root, namespace) identity, path reconstruction from the matched root, rename/copy both-sides parsing, no empty code namespace, malformed-row guard, authority-artifact evidence on non-code branch, path-boundary-safe roots, segment-based non-code hints, and copy/rename artifact evidence attachment.",
+      "risk": "low",
+      "behavior_change": "Candidate-change model accuracy only. No change to the analysis engine, verdict vocabulary, advisory posture, or the no-inference rule."
+    },
+    {
+      "path": "tests/governance/test_namespace_authority_drift.py",
+      "intent": "Adapter tests driving build_candidate_change() through a stubbed git layer, each pinning a reproduced defect (including artifact rename/copy evidence and classifier boundary safety).",
+      "risk": "low",
+      "behavior_change": "New tests."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-NSDRIFT-ADAPTER",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "SEQUENCING: this patch modifies scripts/governance/check_namespace_authority_drift.py, the same file the pending portability commit a368652f rewrites (+187/-56 against e25c7390). It is deliberately held on its own branch off e25c7390 so the portability patch still applies cleanly to feat/namespace-authority-drift-detector. This work must rebase onto the portability commit once that lands; it must NOT be merged into the detector branch first.",
+      "NOT FIXED, reported only: paths under services/api/tests/ are still classified as a CODE namespace ('api') because the CODE_ROOTS match returns before NON_CODE_HINTS is consulted, so the declared 'tests/' hint is defeated. Correcting it changes verdicts (INSUFFICIENT_EVIDENCE -> NO_AUTHORITY_IMPACT) and the pending portability refactor parameterizes code-root classification, so the fix belongs there rather than here. The fabricated path for those entries IS fixed."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Adapter-layer correctness only. The analysis engine, verdict vocabulary, advisory exit-0 posture, and the anti-inference guard are untouched, and no namespace->domain binding is authored. Every fix was reproduced before being made and negative-controlled after."
+  }
+}

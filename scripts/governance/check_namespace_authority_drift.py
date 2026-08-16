@@ -99,6 +99,14 @@ _DEFAULT_AUTHORITY_ARTIFACT_PATHS = frozenset({
 _DEFAULT_CODE_ROOTS = ("services/api/app/", "services/")
 _DEFAULT_NON_CODE_HINTS = ("docs/", "tests/", "test/", "examples/", "presets/", ".github/")
 
+# Every default code root MUST end with "/" so matching is path-boundary-safe.
+if not all(isinstance(r, str) and r.endswith("/") for r in _DEFAULT_CODE_ROOTS):
+    raise RuntimeError(
+        "CODE_ROOTS entries must be strings ending with '/'; "
+        "raw startswith matching without a trailing slash silently broadens "
+        "classification (e.g. 'services' would match 'services_backup/...')."
+    )
+
 # Backward-compatible module aliases (same values as pre-portability constants).
 REPO_ROOT = _DEFAULT_REPO_ROOT
 ONTOLOGY_DIR = _DEFAULT_ONTOLOGY_DIR
@@ -106,6 +114,7 @@ AUTHORITY_REGISTRY = _DEFAULT_AUTHORITY_REGISTRY
 AUTHORITY_ARTIFACT_PATHS = set(_DEFAULT_AUTHORITY_ARTIFACT_PATHS)
 CODE_ROOTS = _DEFAULT_CODE_ROOTS
 NON_CODE_HINTS = _DEFAULT_NON_CODE_HINTS
+_NON_CODE_SEGMENTS = tuple(h.strip("/") for h in NON_CODE_HINTS)
 
 # Reuse the shared governance Severity vocabulary (lib.py) when importable; else inline.
 try:  # pragma: no cover - import path resolution
@@ -126,6 +135,9 @@ class DetectorConfig:
     These are *path classification* and *file location* facts — not authority.
     The analysis engine never reads this object; it only sees CandidateChange +
     AuthorityTopology. Defaults match the Luthiers-Toolbox layout.
+
+    ``code_roots`` entries should end with ``/`` so classification stays
+    path-boundary-safe (see ``_under_code_root``).
     """
 
     repo_root: Path = _DEFAULT_REPO_ROOT
@@ -142,7 +154,6 @@ class DetectorConfig:
 
 # Module-level default used by CLI and loaders when no config is passed.
 DEFAULT_CONFIG = DetectorConfig.luthiers_defaults()
-
 
 class Verdict(str, Enum):
     # Advisory-clear (exit 0, informational):
@@ -290,7 +301,27 @@ def adjudicate(nc: NamespaceChange, topo: AuthorityTopology) -> DriftFinding:
         return DriftFinding(nc.namespace, nc.path, v, _SEVERITY[v], ev)
 
     # A pure non-code change bears no authority-bearing namespace.
+    #
+    # It may still TOUCH an authority artifact - editing authority_chain_registry.json
+    # itself is the clearest case. The verdict is unchanged (a docs/config edit
+    # introduces no code namespace, and inferring authority impact from a file path
+    # would be exactly the inference this detector forbids), but the touched artifacts
+    # must be surfaced as evidence. Previously they were collected and then silently
+    # dropped on this branch, so the most authority-relevant change in the repository
+    # rendered as a bare "no code namespace" line with nothing to act on.
     if not nc.is_code_namespace:
+        if nc.touches_authority_artifacts:
+            artifacts = ", ".join(sorted(nc.touches_authority_artifacts))
+            return finding(
+                Verdict.NO_AUTHORITY_IMPACT,
+                (
+                    "change introduces no code namespace (docs/tests/config only), but "
+                    f"it MODIFIES declared authority artifact(s) "
+                    f"{artifacts} - review the topology change "
+                    f"itself; this tool adjudicates candidate namespaces against the "
+                    f"topology and does not adjudicate edits to the topology"
+                ),
+            )
         return finding(
             Verdict.NO_AUTHORITY_IMPACT,
             "change introduces no code namespace (docs/tests/config only)",
@@ -299,7 +330,8 @@ def adjudicate(nc: NamespaceChange, topo: AuthorityTopology) -> DriftFinding:
     binding = topo.resolve(nc)
     if binding is None:
         art = (
-            f"; touches authority artifact(s) {list(nc.touches_authority_artifacts)}"
+            f"; touches authority artifact(s) "
+            f"{', '.join(sorted(nc.touches_authority_artifacts))}"
             if nc.touches_authority_artifacts
             else ""
         )
@@ -396,25 +428,124 @@ def _git(args: List[str], *, config: Optional[DetectorConfig] = None) -> str:
     ).stdout
 
 
+def _under_code_root(path: str, root: str) -> bool:
+    """True iff `path` is the root directory itself or a descendant of it.
+
+    Requires `root` to end with '/' (enforced for default CODE_ROOTS at import). A plain
+    startswith without that invariant would treat 'services' as a prefix of
+    'services_backup/...'.
+    """
+    if not root.endswith("/"):
+        raise ValueError(f"code root must end with '/': {root!r}")
+    return path == root[:-1] or path.startswith(root)
+
+
+def _has_non_code_hint(path: str, *, config: Optional[DetectorConfig] = None) -> bool:
+    """True when a non-code hint appears as a path segment (or contracts/ prefix).
+
+    Segment matching avoids incidental substring hits inside longer names
+    (e.g. a future hint 'test' must not match 'contest/' or 'testdata/').
+    """
+    cfg = config or DEFAULT_CONFIG
+    if path.startswith("contracts/") or path == "contracts":
+        return True
+    segments = [s for s in path.split("/") if s]
+    hint_segs = tuple(h.strip("/") for h in cfg.non_code_hints)
+    return any(seg in hint_segs for seg in segments)
+
+
 def _namespace_of(
     path: str, *, config: Optional[DetectorConfig] = None
-) -> Tuple[str, bool]:
-    """(namespace_identifier, is_code_namespace) - a FACTUAL path classification only."""
+) -> Tuple[str, bool, Optional[str]]:
+    """(namespace_identifier, is_code_namespace, matched_code_root).
+
+    A FACTUAL path classification only - it says where code lives, never who owns it.
+
+    The matched code root is returned because the namespace segment alone is NOT a
+    unique identity: default CODE_ROOTS contains both 'services/api/app/' and
+    'services/', so 'services/api/app/foo/...' and 'services/foo/...' both yield the
+    segment 'foo' while being unrelated trees. Callers must key on (root, namespace),
+    not namespace. Returns None for the root on non-code paths.
+    """
     cfg = config or DEFAULT_CONFIG
     p = path.replace("\\", "/")
     for root in cfg.code_roots:
-        if p.startswith(root):
-            rest = p[len(root):]
+        if _under_code_root(p, root):
+            rest = p[len(root):] if p.startswith(root) else ""
             seg = rest.split("/", 1)[0]
-            if seg and not seg.endswith(".py") or "/" in rest:
-                # top-level package/service segment
-                return seg, True
-            # a bare file directly under the root
-            return seg or rest, True
-    if any(h in p for h in cfg.non_code_hints) or p.startswith("contracts/"):
+            # Parenthesised deliberately. This reads as: the first segment names a
+            # package (not a bare .py file), OR there is a deeper path below it - in
+            # either case the first segment is the namespace.
+            is_package_segment = bool(seg) and not seg.endswith(".py")
+            has_subpath = "/" in rest
+            if is_package_segment or has_subpath:
+                ns = seg
+            else:
+                # a bare file directly under the root
+                ns = seg or rest
+            if not ns:
+                # A bare root path ('services/api/app/') names no namespace. Emitting
+                # '' here previously produced an empty code namespace that adjudicated
+                # as INSUFFICIENT_EVIDENCE for a namespace that does not exist.
+                return "", False, None
+            return ns, True, root
+    if _has_non_code_hint(p, config=cfg):
         top = p.split("/", 1)[0]
-        return top, False
-    return p.split("/", 1)[0], False
+        return top, False, None
+    return p.split("/", 1)[0], False, None
+
+
+def _parse_name_status(line: str) -> List[Tuple[str, str]]:
+    """One `git diff --name-status` row -> [(status, path), ...]. FACTUAL parsing only.
+
+    Rename/copy rows carry BOTH sides: 'R100\\told\\tnew', 'C75\\told\\tnew'. Taking
+    only the last field loses the source, which silently under-models a namespace
+    MOVE - the destination shows up as touched while the vacated source never appears
+    at all. Both sides are returned so the source namespace is visible:
+
+      R (rename)  -> source is deleted, destination added
+      C (copy)    -> source is unchanged, destination added
+
+    Other statuses (M, T type-change, U unmerged, etc.) are intentionally coarse:
+    the adapter emits a single (status, path) pair and build_candidate_change maps
+    anything that is not all-A or all-D to change='modified'. Exotic statuses are
+    not modelled beyond that collapse.
+    """
+    parts = line.split("\t")
+    if len(parts) < 2:
+        return []
+    status = parts[0][0]  # A/M/D/R/C/T/U...
+    if status in ("R", "C") and len(parts) >= 3:
+        old_path, new_path = parts[1], parts[-1]
+        if status == "R":
+            return [("D", old_path), ("A", new_path)]
+        return [("A", new_path)]  # copy leaves the source untouched
+    return [(status, parts[-1])]
+
+
+def _authority_paths_named_on_row(
+    line: str, *, config: Optional[DetectorConfig] = None
+) -> List[str]:
+    """Declared authority-artifact paths appearing on either side of a name-status row.
+
+    Rename contributes both sides. Copy contributes both sides even though the adapter
+    only emits a destination change — a copy of a declared artifact must still surface
+    that artifact in evidence (the source file is unchanged, but it *is* the artifact).
+    """
+    cfg = config or DEFAULT_CONFIG
+    parts = line.split("\t")
+    if len(parts) < 2 or not parts[0]:
+        return []
+    status = parts[0][0]
+    candidates = [parts[-1]]
+    if status in ("R", "C") and len(parts) >= 3:
+        candidates = [parts[1], parts[-1]]
+    named: List[str] = []
+    for raw in candidates:
+        norm = raw.replace("\\", "/")
+        if norm in cfg.authority_artifact_paths and norm not in named:
+            named.append(norm)
+    return named
 
 
 def build_candidate_change(
@@ -427,28 +558,39 @@ def build_candidate_change(
     never a declared_domain/concept (that would be authority inference)."""
     cfg = config or DEFAULT_CONFIG
     out = _git(["diff", "--name-status", f"{base}...{candidate}"], config=cfg)
-    # aggregate per namespace
-    agg: Dict[str, Dict] = {}
-    primary_code_root = cfg.code_roots[0] if cfg.code_roots else ""
+    # Aggregate per (matched_code_root, namespace). The namespace segment alone is not
+    # a unique identity - see _namespace_of - so keying on it merged unrelated trees
+    # into a single finding and synthesised a bogus combined change type.
+    agg: Dict[Tuple[Optional[str], str], Dict] = {}
     for line in out.splitlines():
         if not line.strip():
             continue
-        parts = line.split("\t")
-        status = parts[0][0]  # A/M/D/R...
-        path = parts[-1]
-        ns, is_code = _namespace_of(path, config=cfg)
-        rec = agg.setdefault(ns, {
-            "path": f"{primary_code_root}{ns}" if is_code else ns,
-            "is_code": is_code, "statuses": set(), "arts": set(),
-        })
-        rec["statuses"].add(status)
-        rec["is_code"] = rec["is_code"] or is_code
-        norm = path.replace("\\", "/")
-        if norm in cfg.authority_artifact_paths:
-            rec["arts"].add(norm)
+        row_arts = _authority_paths_named_on_row(line, config=cfg)
+        touched_keys: List[Tuple[Optional[str], str]] = []
+        for status, path in _parse_name_status(line):
+            ns, is_code, root = _namespace_of(path, config=cfg)
+            norm = path.replace("\\", "/")
+            key = (root, ns)
+            rec = agg.setdefault(key, {
+                "path": f"{root}{ns}" if is_code and root else ns,
+                "is_code": is_code, "statuses": set(), "arts": set(),
+            })
+            rec["statuses"].add(status)
+            rec["is_code"] = rec["is_code"] or is_code
+            if norm in cfg.authority_artifact_paths:
+                rec["arts"].add(norm)
+            touched_keys.append(key)
+
+        # Attach every declared artifact named on this row to every namespace bucket
+        # the row already touched. Critical for copy (C): the source path is not
+        # emitted as a change (file unchanged), but if it is a declared authority
+        # artifact the destination finding must still carry that evidence.
+        if row_arts and touched_keys:
+            for key in touched_keys:
+                agg[key]["arts"].update(row_arts)
 
     changes: List[NamespaceChange] = []
-    for ns, rec in sorted(agg.items()):
+    for (_root, ns), rec in sorted(agg.items(), key=lambda kv: (kv[0][1], kv[0][0] or "")):
         statuses = rec["statuses"]
         change = "added" if statuses <= {"A"} else ("removed" if statuses <= {"D"} else "modified")
         changes.append(NamespaceChange(
