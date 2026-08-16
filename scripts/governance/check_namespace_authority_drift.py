@@ -21,6 +21,39 @@ Core boundary rule (from the archaeology):
   verdict is INSUFFICIENT_EVIDENCE - which is itself evidence that the governance
   topology is incomplete at the namespace-binding layer.
 
+  WHY NOT HEURISTICS  (read this before "improving" the tool)
+  -----------------------------------------------------------
+  The production authority registry declares NO namespace_bindings today, so almost
+  every code namespace adjudicates to INSUFFICIENT_EVIDENCE. That looks like a tool
+  that isn't trying. It is the opposite: it is the tool refusing to invent the fact
+  it was asked to check against.
+
+  Inferring a binding - matching a namespace to a same-named domain, to a declared
+  owner, or to the module path it happens to live under - would make this detector
+  MANUFACTURE ownership that no governance record ever asserted. Every downstream
+  verdict would then inherit a fabricated premise, and the failure is asymmetric:
+  a wrong DECLARED_EXTENSION silently blesses real drift, while an honest
+  INSUFFICIENT_EVIDENCE merely says "governance has not decided yet". One of those
+  is recoverable.
+
+  The bait is real and specific: production declares both a `geometry` and a
+  `topology` domain, so namespaces like `body_outline` and `retopo` look obviously
+  bindable to a human and to a regex. They are not bound. Until governance binds
+  them, "we do not know" is the true answer.
+
+  This rule is enforced executably, not by convention. See the ANTI-INFERENCE GUARD
+  section of tests/governance/test_namespace_authority_drift.py: a bait topology whose
+  domain and owner names collide head-on with the probed namespace names, asserting
+  none of them resolves. Four heuristics (exact domain-name match, fuzzy substring
+  match, owner-name match, path sniffing) were each injected during development and
+  each was caught. If you add inference, those tests fail - by design.
+
+  Closing the gap is a GOVERNANCE action, not a detector change: bindings declare
+  ownership and therefore carry authority. This module already consumes a
+  `namespace_bindings` map the moment one is declared - no code change needed.
+  Rationale, expected consequences, and the deferred-work note:
+      docs/governance/ontology/NAMESPACE_BINDING_GAP.md
+
 Architecture (three separable layers - the analysis engine is Git-independent):
       git/ref adapter  ->  candidate-change model  ->  authority analysis engine
 
