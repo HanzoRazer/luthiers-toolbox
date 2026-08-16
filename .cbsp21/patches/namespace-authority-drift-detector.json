@@ -1,0 +1,64 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "NAMESPACE_AUTHORITY_DRIFT_DETECTOR",
+  "title": "feat(governance): namespace/authority drift detector (advisory v1) + anti-inference guard + deferred binding-gap note",
+  "intent": "Build the repeatable adjudication instrument specified by the pre-governance asset-recovery archaeology (detector requirements R1-R7). Advisory-only v1. Adjudicates whether a candidate change (a git ref vs a base) introduces/revives/duplicates/bypasses/alters an authority-bearing namespace inconsistently with the current DECLARED authority topology, read from docs/governance/ontology/authority_chain_registry.json. Non-duplication grounded first: distinct from detect_semantic_drift.py (vocabulary/term drift) and audit_authority_chains.py (registry internal self-consistency); reuses the lib.py Severity vocabulary and the shared REPO_ROOT/ontology conventions. Core boundary rule: the detector MAY CONSUME authority but MAY NOT CREATE it - no path/keyword inference of namespace->domain ownership; where no declared binding exists the honest deterministic verdict is INSUFFICIENT_EVIDENCE (evidence the topology is incomplete at the namespace-binding layer, which the current registry confirms - it has no namespace_bindings). PRE-MERGE HARDENING: the semantic boundary is now stated with its rationale in the module header (why inference is forbidden, not merely unimplemented), documented as a deferred governance action in docs/governance/ontology/NAMESPACE_BINDING_GAP.md, and enforced executably by an ANTI-INFERENCE GUARD test group. No namespace->domain bindings are authored here and the tool remains advisory - both deliberately deferred so detector implementation stays separated from governance-authority creation.",
+  "change_type": "feature",
+  "behavior_change": "Adds a new advisory governance tool and its tests. Not wired into check_all.py and not a blocking gate (advisory v1: always exit 0; each verdict carries an independent Severity so a later governance sprint can make selected verdicts blocking without redesigning the engine). No existing code, route, schema, data file, or governance authority record is modified. No namespace->domain binding authority is authored (deferred to a governance increment).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/namespace-authority-drift-detector.json",
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py",
+      "docs/governance/ontology/NAMESPACE_BINDING_GAP.md"
+    ],
+    "files_expected_to_change": [
+      "scripts/governance/check_namespace_authority_drift.py",
+      "tests/governance/test_namespace_authority_drift.py",
+      "docs/governance/ontology/NAMESPACE_BINDING_GAP.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) scripts/governance/check_namespace_authority_drift.py - three separable layers: git/ref adapter (build_candidate_change: git diff --name-status base...candidate -> candidate-change model; sets FACTUAL fields only - namespace, path, change, is_code_namespace, touches_authority_artifacts - never a declared_domain/concept), candidate-change model (NamespaceChange/CandidateChange dataclasses; authority-derived fields set ONLY by a binding source, never inferred), and a Git-independent authority analysis engine (AuthorityTopology reads domain_ownership + chains + optional namespace_bindings; adjudicate() returns one of NO_AUTHORITY_IMPACT/DECLARED_EXTENSION/NOVEL_VALID/INSUFFICIENT_EVIDENCE/DUPLICATE_AUTHORITY/PARALLEL_AUTHORITY/OBSOLETE_AUTHORITY/AUTHORITY_BYPASS with evidence). CLI: --base/--candidate refs, --json, --quiet; advisory (always exit 0). (2) tests/governance/test_namespace_authority_drift.py - 16 tests: all verdict families via a synthetic topology WITH bindings (proves engine correctness when bindings exist), engine invariants (evidence-on-every-verdict, determinism, advisory-no-nonzero-exit), and real-registry FACTUAL-CONDITION dogfoods (retopo -> INSUFFICIENT_EVIDENCE because no binding; BOE control -> not flagged by age; BOE-if-bound -> DECLARED_EXTENSION). (3) PRE-MERGE HARDENING. Module header gains a 'WHY NOT HEURISTICS' rationale block: the failure is asymmetric (a wrong DECLARED_EXTENSION silently blesses drift; an honest INSUFFICIENT_EVIDENCE only says governance has not decided), and the bait is concrete (production declares both `geometry` and `topology` domains, so `body_outline` and `retopo` look bindable to any human or regex). (4) New ANTI-INFERENCE GUARD test group: a bait topology whose domain names AND owner names collide head-on with the probed namespace names while binding none of them, parametrized over exact-domain-name, exact-owner-name, and lexically-suggestive namespaces; plus path-bait, authority-artifact-bait, a positive control proving the bait topology still resolves declared bindings, and the same guard run against the REAL production registry. Tests 16 -> 33. (5) New docs/governance/ontology/NAMESPACE_BINDING_GAP.md - concise deferred-gap note recording that namespace->domain bindings are absent, that closing the gap is a governance act rather than a detector change, the JSON shape the detector already consumes, and which dogfood tests are EXPECTED to change when bindings land (versus the anti-inference guard, which is not). (6) Test module docstring now separates the three test groups by lifetime: permanent engine proofs, temporary current-topology dogfoods, and the permanent anti-inference guard.",
+    "why_not_redundant": "No existing tool adjudicates candidate-change namespace/authority drift (detect_semantic_drift = vocabulary; audit_authority_chains = registry self-consistency). Reuses shared conventions rather than creating a parallel authority. Builds the missing instrument while preserving the archaeology's evidence boundary: the detector observes authority; governance defines authority. The anti-inference guard is not redundant with the existing unbound-namespace tests: those run against topologies where nothing is bound, so 'unbound -> INSUFFICIENT_EVIDENCE' and 'does not infer' are indistinguishable - there is nothing to infer FROM. The bait topology supplies something to infer from, which is what makes the guard load-bearing."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/governance/test_namespace_authority_drift.py -q --no-cov -> 33 passed (was 16).",
+      "NEGATIVE CONTROL of the anti-inference guard - four inference heuristics were each injected into AuthorityTopology.resolve() and each was caught, then reverted with the suite green: exact name match namespace==domain -> 4 failed; fuzzy substring match against domain names -> 4 failed; owner-name match namespace==declared owner -> 3 failed; path sniffing on domain name in path -> 6 failed. Clean tree 33 passed before and after every injection.",
+      "Positive control included so the bait tests cannot pass trivially: test_declared_binding_still_resolves_in_bait_topology asserts the bait topology DOES resolve a genuinely declared binding to ('geometry','IBG') -> DECLARED_EXTENSION.",
+      "Premise pin: test_real_topology_declares_the_domains_that_make_the_bait_real asserts production still declares `geometry` and `topology`, so the bait cannot silently lose teeth.",
+      "Binding-gap re-witnessed on current main (c8b0b549): authority_chain_registry.json top-level keys are [$schema, title, version, date, description, chains, domain_ownership] - no namespace_bindings key. Declared domains include both geometry and topology.",
+      "CLI smoke after edits: --base origin/main --candidate HEAD --quiet -> 3 findings, 0 flagged, exit 0 (advisory posture unchanged).",
+      "Real retopo dogfood: py -3.11 scripts/governance/check_namespace_authority_drift.py --base origin/main --candidate origin/feature/mesh-pipeline-scaffold -> retopo = INSUFFICIENT_EVIDENCE, 0 flagged, exit 0 (binding gap exposed on real registry).",
+      "Real BOE control: --base dd86866c~1 --candidate dd86866c (BOE code introduction) -> cam namespace = INSUFFICIENT_EVIDENCE, 0 flagged (not flagged by age).",
+      "JSON mode + exit-code smoke: --json emits structured findings; exit code 0 (advisory).",
+      "Non-duplication grounded: detect_semantic_drift.py / audit_authority_chains.py / list_semantic_owners.py / lib.py inspected; responsibility boundary drawn; loader + Severity conventions reused.",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/governance/check_namespace_authority_drift.py",
+      "intent": "New advisory namespace/authority drift detector (git adapter + candidate-change model + Git-independent authority engine). Consumes authority; never authors it.",
+      "risk": "low",
+      "behavior_change": "New advisory tool; not a gate; not registered in check_all.py."
+    },
+    {
+      "path": "tests/governance/test_namespace_authority_drift.py",
+      "intent": "16 tests: all verdict families (synthetic bindings), engine invariants, and real-registry factual-condition dogfoods (retopo/BOE).",
+      "risk": "low",
+      "behavior_change": "New tests."
+    },
+    {
+      "path": "docs/governance/ontology/NAMESPACE_BINDING_GAP.md",
+      "intent": "Concise deferred-gap note: namespace->domain bindings are absent from the authority topology; closing the gap is a governance act, not a detector change. Records why inference is forbidden rather than merely unimplemented, the JSON shape the detector already consumes, and which dogfood tests are expected to change when bindings land.",
+      "risk": "low",
+      "behavior_change": "None (documentation). Authors no binding and confers no authority."
+    }
+  ]
+}
