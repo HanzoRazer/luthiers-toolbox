@@ -1,0 +1,64 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DO_103_STAGE3_ACTIVE_AUTHORIZATION",
+  "title": "Authorize DO-103 Stage 3 as active order; queue DO-101B",
+  "intent": "Record the 2026-08-19 authorization call: promote DO-103 Stage 3 (grant_readiness ingestion + provenance-derived HARDWARE) as the next active order ahead of DO-101B empirical registry work. Docs-only; no runtime code.",
+  "change_type": "docs",
+  "behavior_change": "None at runtime. Sequencing and scope authority only.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/do-103-stage3-active-authorization.json",
+      "docs/handoffs/DO_103_STAGE3_ACTIVE_AUTHORIZATION_2026-08-19.md",
+      "docs/handoffs/DO_101B_QUEUED_EMPIRICAL_REGISTRY_2026-08-19.md",
+      "docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/DO_103_STAGE3_ACTIVE_AUTHORIZATION_2026-08-19.md",
+      "docs/handoffs/DO_101B_QUEUED_EMPIRICAL_REGISTRY_2026-08-19.md",
+      "docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New active-order handoff for DO-103 Stage 3, queued DO-101B handoff, and crosswalk §11 sequencing table.",
+    "why_not_redundant": "No prior DO-103/DO-101B authorization existed in-repo; this freezes sequencing before hardware campaign or registry schema work."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <paths>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/DO_103_STAGE3_ACTIVE_AUTHORIZATION_2026-08-19.md",
+      "intent": "Active authorization + narrow Stage 3 scope and acceptance criteria.",
+      "scan_targets": ["docs/handoffs/DO_103_STAGE3_ACTIVE_AUTHORIZATION_2026-08-19.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "docs/handoffs/DO_101B_QUEUED_EMPIRICAL_REGISTRY_2026-08-19.md",
+      "intent": "Queue empirical registry work immediately behind Stage 3.",
+      "scan_targets": ["docs/handoffs/DO_101B_QUEUED_EMPIRICAL_REGISTRY_2026-08-19.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    },
+    {
+      "path": "docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md",
+      "intent": "Register Material Evidence / Mesh Pipeline sequencing in crosswalk §11.",
+      "scan_targets": ["docs/governance/CROSS_REPO_AUTHORITY_CROSSWALK.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-19-DO-103-STAGE3-AUTH",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Docs-only authorization. Stage 3 code remains in tap_tone_pi. Explicitly excludes DO-101B, hardware acquisition, and Mesh Pipeline interpretation from Stage 3 scope."
+  }
+}
