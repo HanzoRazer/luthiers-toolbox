@@ -33,3 +33,11 @@ updates:
       # typescript@6 path open — ignore only >=7, not all majors. See #280.
       - dependency-name: typescript
         versions: [">=7.0.0"]
+      # Lint majors must move with a coordinated TS/eslint migration
+      # (Copilot #280 companions; same class as closed #255/#258). See #282/#283.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/eslint-plugin"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/parser"
+        update-types: ["version-update:semver-major"]

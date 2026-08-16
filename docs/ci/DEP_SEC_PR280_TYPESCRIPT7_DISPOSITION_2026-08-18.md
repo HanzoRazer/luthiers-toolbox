@@ -37,7 +37,8 @@ Invalid `dependencies` / `javascript` labels were already removed in #285. No fu
 
 1. **Ignore only `typescript` `>=7.0.0`** in `.github/dependabot.yml` — stops regeneration of TS7 bumps **without** blocking an intentional `typescript@6.x` upgrade prepared by #284.
 2. **Close #280** with durable deferral comment pointing here.
-3. Record coordinated migration landing criteria (below).
+3. **Close companion Dependabot majors #282 / #283** (same Copilot “upgrade together” set) and ignore `eslint` / `@typescript-eslint/*` semver-majors until a coordinated migration PR.
+4. Record coordinated migration landing criteria (below).
 
 No `packages/client` version/lockfile mutation in this change (TS stays on 5.9.3).
 
@@ -47,7 +48,8 @@ No `packages/client` version/lockfile mutation in this change (TS stays on 5.9.3
 
 | Item | Notes | Action |
 |------|-------|--------|
-| #282 / #283 | `@typescript-eslint` 6→8 and `eslint` 8→10 majors | Still open; **required companions** for any TS major that needs a new eslint stack — defer to Tranche B / coordinated migration, do not merge alone |
+| #282 | `@typescript-eslint/eslint-plugin` 6.21.0 → 8.67.0 | **CLOSED** — defer to coordinated lint/TS migration; ignore majors |
+| #283 | `eslint` 8.57.1 → 10.8.1 | **CLOSED** — pairs with #282; ignore majors |
 | `vue-tsc` peer | Declares `typescript: '>=5.0.0'` but **runtime** breaks on TS7 `exports` | Peer range is insufficient evidence of compatibility |
 | TS6 vs TS7 | #284 cleared `baseUrl` for **TS6**; Dependabot jumped to **TS7** | Ignore `>=7` preserves TS6 intake |
 | R-11 | Dependabot PRs withhold secrets | Irrelevant to close decision — #280 fails on **client** tooling before secret gates matter |
