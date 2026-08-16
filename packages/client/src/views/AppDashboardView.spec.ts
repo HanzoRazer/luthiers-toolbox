@@ -15,23 +15,12 @@ vi.mock("@/instrument-workspace/shared-state/useInstrumentProject", () => ({
   useInstrumentProject: () => ({ projectId: ref("SINGLETON-ID") }),
 }));
 
-// The Dashboard's unrelated AI Assistant link targets route name `AiAssistantProject`,
-// which the production router does not define (a pre-existing mismatch LAB-023 recorded and
-// SPINE-005 leaves untouched). Provide it in the test fixture only so the component mounts;
-// this does not alter production routing or that link's behavior.
-const testRoutes = [
-  ...routes,
-  {
-    path: "/ai/assistant/project/:projectId",
-    name: "AiAssistantProject",
-    component: { template: "<div />" },
-  },
-];
-
+// LAB-023: AI Assistant link uses production route name `AiAssistant` only
+// (`/ai/assistant/:project_id?`). No fixture route injection required.
 async function mountAt(query: string) {
   const router: Router = createRouter({
     history: createMemoryHistory(),
-    routes: testRoutes,
+    routes,
   });
   await router.replace(query);
   await router.isReady();
@@ -96,5 +85,31 @@ describe("SPINE-005 Dashboard Instrument Hub navigation", () => {
     expect(project!.text()).not.toContain("Instrument Geometry");
     expect(legacy!.text()).toContain("Instrument Geometry");
     expect(legacy!.text()).not.toContain("Instrument Hub");
+  });
+});
+
+describe("LAB-023 Dashboard AI Assistant navigation", () => {
+  function assistantLink(wrapper: Awaited<ReturnType<typeof mountAt>>) {
+    return wrapper
+      .findAll("a.quick-link-card")
+      .find((a) => a.text().includes("AI Assistant"));
+  }
+
+  it("uses production AiAssistant route with project_id param when a Project is known", async () => {
+    const wrapper = await mountAt("/?project_id=A");
+    const link = assistantLink(wrapper);
+    expect(link).toBeTruthy();
+    expect(link!.attributes("href")).toBe("/ai/assistant/A");
+  });
+
+  it("uses production AiAssistant route without param when no Project is in the query", async () => {
+    // Hub singleton is mocked to SINGLETON-ID — assistant link may still deep-link via hub.
+    // Clear that by mounting without query; singleton still applies. Assert named path shape.
+    const wrapper = await mountAt("/");
+    const link = assistantLink(wrapper);
+    expect(link).toBeTruthy();
+    const href = link!.attributes("href") || "";
+    expect(href.startsWith("/ai/assistant")).toBe(true);
+    expect(href).not.toContain("/ai/assistant/project/");
   });
 });

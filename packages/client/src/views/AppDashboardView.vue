@@ -213,10 +213,12 @@ const assistantTo = computed(() => {
         ? String(q[0])
         : ''
   const pid = fromRoute || hubProjectId.value || ''
+  // LAB-023: production router defines only `AiAssistant` at
+  // `/ai/assistant/:project_id?` — never invent a second named route.
   if (pid) {
     return {
-      name: 'AiAssistantProject' as const,
-      params: { projectId: pid },
+      name: 'AiAssistant' as const,
+      params: { project_id: pid },
     }
   }
   return { name: 'AiAssistant' as const }
