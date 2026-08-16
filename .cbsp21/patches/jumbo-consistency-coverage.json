@@ -1,0 +1,58 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "JUMBO_CONSISTENCY_COVERAGE",
+  "title": "test(ibg): close the jumbo consistency coverage gap and guard the namespace",
+  "intent": "test_jumbo_dimension_consistency.py guarded four of the artifacts that assert jumbo body dimensions. Commit f25bb949 (2026-05-27) realigned jumbo to canonical FAMILY_DEFAULTS, and the drift then survived for 81 days in the two members the test did not look at - the Body Outline Editor User Manual and the tools/ mirror. The root cause is that the guard's coverage set was narrower than the namespace's member set. This extends the test to every known definition path, and adds a completeness check that fails when a NEW artifact starts asserting jumbo dimensions without being declared. A repo scan run while writing this found a seventh path nobody had identified by hand: instrument_body_generator.py INSTRUMENT_SPECS['jumbo']['expected_dimensions'], an undeclared duplicate of all four canonical values. It is currently correct and is now guarded. Test-only change.",
+  "change_type": "test",
+  "behavior_change": "none - test-only. No production code, schema, route, workflow, or data file is modified. Adds assertions and a namespace-completeness scan to an existing test module.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/jumbo-consistency-coverage.json",
+      "services/api/tests/test_jumbo_dimension_consistency.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/tests/test_jumbo_dimension_consistency.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Coverage extended from 4 to 7 definition paths. New: User Manual Chapter 7 (prose row, parsed by regex), tools/body-outline-editor.html (xfail strict - known stale, governed artifact), and instrument_body_generator.py INSTRUMENT_SPECS['jumbo']['expected_dimensions'] (found by the new scan). (2) New TestJumboNamespaceCompleteness: scans a bounded set of roots for files mentioning jumbo alongside >=3 of the 4 canonical magnitudes, and fails if any is neither in DECLARED_JUMBO_ARTIFACTS nor in ACKNOWLEDGED_NON_DIMENSION_FILES; plus checks that declared paths exist and that every acknowledgement carries a real reason. (3) HTML template parsing refactored into a shared _parse_editor_template helper used by both editor copies, and assertions routed through _assert_matches_canonical so failures name the canonical source. (4) A pin that test_jumbo_family_regression.py still agrees with the canonical constants, since it hardcodes them independently. (5) catalog.json downgraded from 'needs investigation' to a resolved diagnosis with a regression pin on the observed values.",
+    "why_not_redundant": "Fixing the manual's Jumbo row (PR #269) fixes one instance. It does not stop the next drift, because the coverage gap that hid this one is still open. This closes the gap and makes the namespace self-declaring: an eighth artifact cannot join silently. The completeness scan is not redundant with the per-path assertions - the per-path tests verify known members, the scan discovers unknown ones, which is exactly the failure mode that occurred here."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/test_jumbo_dimension_consistency.py -v --no-cov -> 11 passed, 1 skipped, 1 xfailed.",
+      "NEGATIVE CONTROL - manual drift: reverted the manual's Jumbo row to the stale 530/432/304/280 -> test_user_manual_matches_canonical FAILED as required; restored -> passes.",
+      "NEGATIVE CONTROL - generator drift: set INSTRUMENT_SPECS['jumbo'] waist_mm to 999.0 -> test_instrument_body_generator_matches_canonical FAILED as required; restored -> passes.",
+      "NEGATIVE CONTROL - completeness scan: wrote a decoy module asserting the four canonical values -> test_no_undeclared_jumbo_dimension_artifacts FAILED and named the decoy; removed -> passes.",
+      "NEGATIVE CONTROL - xfail handshake: applied the pending tools/ resync in the working tree -> test_tools_mirror_matches_canonical XPASSed and failed the run under strict=True, confirming the marker must be removed by the resync change; restored -> xfails.",
+      "Post-verification cleanliness: git diff --quiet HEAD confirmed the manual, the generator, and the tools/ mirror are byte-identical to HEAD; the decoy module was removed.",
+      "catalog.json diagnosis derived by comparing DXF bbox ratios across families: dreadnought w/lower_bout 1.025 h/body_length 1.004; classical 1.025 / 1.017; jumbo 1.098 / 0.727, but axis-swapped 0.895 / 0.891 - consistent with a 90-degree rotation and ~89.3% uniform scale in the source DXF."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_jumbo_dimension_consistency.py",
+      "intent": "Extend coverage from four to seven jumbo definition paths, add a namespace-completeness guard that fails on undeclared artifacts, share the HTML parser between both editor copies, and record the resolved catalog.json diagnosis.",
+      "risk": "low",
+      "behavior_change": "None (test-only). Adds assertions; changes no production behavior."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-JUMBO-COVERAGE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "instrument_body_generator.py INSTRUMENT_SPECS['jumbo']['expected_dimensions'] was an undeclared seventh copy of the canonical jumbo dimensions. It is currently correct, so this is a latent risk rather than an active defect. Now guarded.",
+      "tools/body-outline-editor.html remains stale and is covered by xfail(strict=True) rather than a passing assertion, because resyncing it is a governed change (Production / MEDIUM / 'Avoid collision') that must not ride along with a test change. strict=True makes the resync PR fail until it also removes the marker, which is the intended handshake."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test-only change; no production code or data modified. The one intentionally non-green outcome is the tools/ mirror xfail, which encodes a known-stale governed artifact rather than hiding a failure. All four new guards were negative-controlled: each was shown to fail on injected drift and to pass again after restoration, and the working tree was verified byte-identical to HEAD afterwards. Depends on PR #269, which corrects the User Manual row this patch now asserts; base is docs/boe-changelog for that reason."
+  }
+}
