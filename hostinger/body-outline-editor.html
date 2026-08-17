@@ -1517,17 +1517,19 @@ function updateActiveModeIndicator() {
                      distanceMeasureActive ? 'Distance' :
                      angleMeasureActive ? 'Angle' :
                      arcMeasureActive ? 'Arc Length' :
+                     scalingActive ? 'Scale' :
                      state.editorMode === 'empty' ? 'Empty' : 'Ready';
     document.getElementById('status-active-mode').textContent = modeText;
 
     const exitBtn = document.getElementById('btn-exit-mode');
-    const anyMeasureActive = state.calibrating || state.measuring || distanceMeasureActive || angleMeasureActive || arcMeasureActive;
+    const anyMeasureActive = state.calibrating || state.measuring || distanceMeasureActive || angleMeasureActive || arcMeasureActive || scalingActive;
     exitBtn.style.display = anyMeasureActive ? 'inline-block' : 'none';
 }
 
 function exitCurrentMode() {
     if (state.calibrating) cancelCalibration();
     if (state.measuring) cancelMeasure();
+    if (scalingActive) cancelScaleMode(null);
 
     // v3.4.0: Cancel new measurement modes
     if (distanceMeasureActive) {
@@ -1626,6 +1628,9 @@ function setActiveLayer(layerId) {
 function deleteLayer(layerId) {
     const index = state.imageLayers.findIndex(l => l.id === layerId);
     if (index >= 0) {
+        if (scaleLayer && scaleLayer.id === layerId) {
+            cancelScaleMode('Scale cancelled — layer deleted');
+        }
         state.imageLayers[index].raster.remove();
         state.imageLayers.splice(index, 1);
 
@@ -1781,9 +1786,23 @@ function applyLayerTransform(layer) {
 // v3.3.0: NON-UNIFORM SCALING
 // ============================================================
 
+// scalingActive means the mode is ARMED (awaiting a drag). scaleDragging means a
+// drag is actually in progress. They are separate because arming happens on the
+// toolbar click and must not itself transform anything.
 let scalingActive = false;
+let scaleDragging = false;
+let scaleLayer = null;
+let scaleStartPoint = null;
+let scaleOriginX = 1;
+let scaleOriginY = 1;
 
 function startNonUniformScale() {
+    // Toggle off if already armed — the toolbar button is the way back out.
+    if (scalingActive) {
+        cancelScaleMode('Scale cancelled');
+        return;
+    }
+
     const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
     if (!layer) {
         showToast('No active layer to scale', '#ff6600');
@@ -1795,45 +1814,64 @@ function startNonUniformScale() {
     }
 
     scalingActive = true;
-    const originalScaleX = layer.scaleX;
-    const originalScaleY = layer.scaleY;
-    const startPoint = view.center;
+    scaleDragging = false;
+    scaleLayer = layer;
 
-    showToast('Drag: horizontal=X scale, vertical=Y scale. Shift=uniform. Release to finish.', '#00aa5a');
+    updateActiveModeIndicator();
+    showToast('Drag on the canvas: horizontal = X, vertical = Y. Shift = uniform. Esc to cancel.', '#00aa5a');
+}
 
-    function onMouseMove(event) {
-        if (!scalingActive) return;
+function cancelScaleMode(message) {
+    scalingActive = false;
+    scaleDragging = false;
+    scaleLayer = null;
+    scaleStartPoint = null;
+    updateActiveModeIndicator();
+    if (message) showToast(message, '#ff6600');
+}
 
-        const delta = event.point.subtract(startPoint);
+// Called from view.onMouseDown while the mode is armed. Returns true when it has
+// consumed the event, so the caller suppresses node placement/selection.
+function handleScaleMouseDown(point) {
+    if (!scalingActive || !scaleLayer) return false;
+    scaleDragging = true;
+    scaleStartPoint = point;
+    scaleOriginX = scaleLayer.scaleX;
+    scaleOriginY = scaleLayer.scaleY;
+    return true;
+}
 
-        if (event.modifiers.shift) {
-            // Uniform scale
-            const scaleFactor = 1 + (delta.x + delta.y) / 500;
-            layer.scaleX = originalScaleX * scaleFactor;
-            layer.scaleY = originalScaleY * scaleFactor;
-        } else {
-            // Non-uniform
-            layer.scaleX = originalScaleX * (1 + delta.x / 300);
-            layer.scaleY = originalScaleY * (1 - delta.y / 300);
-        }
+function handleScaleMouseDrag(event) {
+    if (!scaleDragging || !scaleLayer || !scaleStartPoint) return false;
 
-        // Clamp to reasonable values
-        layer.scaleX = Math.max(0.1, Math.min(10, layer.scaleX));
-        layer.scaleY = Math.max(0.1, Math.min(10, layer.scaleY));
+    const delta = event.point.subtract(scaleStartPoint);
 
-        applyLayerTransform(layer);
+    if (event.modifiers.shift) {
+        const scaleFactor = 1 + (delta.x + delta.y) / 500;
+        scaleLayer.scaleX = scaleOriginX * scaleFactor;
+        scaleLayer.scaleY = scaleOriginY * scaleFactor;
+    } else {
+        scaleLayer.scaleX = scaleOriginX * (1 + delta.x / 300);
+        scaleLayer.scaleY = scaleOriginY * (1 - delta.y / 300);
     }
 
-    function onMouseUp() {
-        scalingActive = false;
-        view.off('mousemove', onMouseMove);
-        view.off('mouseup', onMouseUp);
-        logOperation('SCALE_LAYER', { scaleX: layer.scaleX, scaleY: layer.scaleY, layerId: layer.id });
-        showToast(`Scale: ${layer.scaleX.toFixed(2)}x × ${layer.scaleY.toFixed(2)}x`, '#00aa5a');
-    }
+    scaleLayer.scaleX = Math.max(0.1, Math.min(10, scaleLayer.scaleX));
+    scaleLayer.scaleY = Math.max(0.1, Math.min(10, scaleLayer.scaleY));
 
-    view.on('mousemove', onMouseMove);
-    view.on('mouseup', onMouseUp);
+    applyLayerTransform(scaleLayer);
+    return true;
+}
+
+function handleScaleMouseUp() {
+    if (!scaleDragging || !scaleLayer) return false;
+
+    const layer = scaleLayer;
+    logOperation('SCALE_LAYER', { scaleX: layer.scaleX, scaleY: layer.scaleY, layerId: layer.id });
+    showToast(`Scale: ${layer.scaleX.toFixed(2)}x × ${layer.scaleY.toFixed(2)}x — drag again or Esc to finish`, '#00aa5a');
+
+    scaleDragging = false;
+    scaleStartPoint = null;
+    return true;
 }
 
 // ============================================================
@@ -3742,6 +3780,15 @@ function setupCanvasEvents() {
             return;
         }
 
+        // Layer scaling consumes the press so it does not also place or select a
+        // node. Previously scaling listened on a separate view.on('mousemove')
+        // channel, which Paper does not emit while a button is held — so it
+        // responded to hover instead of drag, and the click needed to end it fell
+        // straight through into node placement.
+        if (handleScaleMouseDown(event.point)) {
+            return;
+        }
+
         // v3.1.0: Empty mode handling
         if (state.editorMode === 'empty') {
             const hitDot = findDotAtPoint(event.point);
@@ -3921,6 +3968,10 @@ function setupCanvasEvents() {
     view.onMouseDrag = function(event) {
         if (state.calibrating) return;
 
+        // Paper emits mousedrag (not mousemove) while a button is held — this is
+        // the channel scaling has to use.
+        if (handleScaleMouseDrag(event)) return;
+
         // v3.1.0: Empty mode dot dragging
         if (state.editorMode === 'empty' && state.draggingDot) {
             const newPoint = snapToGrid(event.point);
@@ -3993,6 +4044,8 @@ function setupCanvasEvents() {
 
     // Mouse up
     view.onMouseUp = function(event) {
+        if (handleScaleMouseUp()) return;
+
         hideSnapIndicator();
 
         // v2.1.0: Clean up dimension label
@@ -5017,6 +5070,9 @@ function clearImage() {
     // function predates the v3.3.0 layer system and used to clear only the legacy
     // raster, which left every layered image on canvas — "Clear Image" visibly
     // dimmed the reference but did not remove it.
+    // Scale mode holds a layer reference; disarm before the layers are disposed.
+    if (scalingActive) cancelScaleMode(null);
+
     const aliasOwnedByLayer = state.imageLayers.some(l => l.raster === state.raster);
 
     for (const layer of state.imageLayers) {
