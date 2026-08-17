@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BOE_BUILD_RESUMPTION_HANDOFF",
+  "title": "docs(boe): developer handoff for resuming Body Outline Editor work",
+  "intent": "Body Outline Editor development is resuming. This is the entry document for the developer picking it up: verified artifact inventory, a prioritised work queue, architecture orientation, backend integration reality, governance constraints, and the decisions the owner must make before P1 can start. Every figure was re-verified against main @ 114cef1a rather than carried from prior notes, which surfaced two records that disagree with reality - see below. Documentation only.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation only. Adds one markdown file under docs/handoffs/. No code, schema, route, workflow, data file, or test is touched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/boe-build-resumption-handoff.json",
+      "docs/handoffs/BOE_BUILD_RESUMPTION_DEV_HANDOFF_2026-08-16.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/BOE_BUILD_RESUMPTION_DEV_HANDOFF_2026-08-16.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New docs/handoffs/BOE_BUILD_RESUMPTION_DEV_HANDOFF_2026-08-16.md. Sections: (0) two repository records that disagree with reality; (1) verified artifact inventory including the duplicated v3.5.0 stamp across two different builds; (2) prioritised work queue P0-P4; (3) architecture orientation - entry dialog, key structures with line numbers, localStorage keys, panels and modals; (4) backend integration, which exists and is mounted; (5) governance constraints incl. the tools/ mirror disposition and the deferred lineage-tier taxonomy; (6) build and verify commands; (7) recommended sequence; (8) four decisions needed from the owner; (9) provenance of every verified claim.",
+    "why_not_redundant": "The changelog records what happened; this records what to do next and what is currently true. It also carries findings that exist in no other document: that PR #270's coverage work never reached main, that SPRINTS.md's 'backend endpoint MISSING' claim is stale, and that jumbo is the only aligned family of the three that appear in both the canonical solver and the editor."
+  },
+  "verification": {
+    "commands_run": [
+      "All figures verified against main @ 114cef1a: hostinger 6150 lines, tools/ 5979 (delta 171), main's jumbo guard 120 lines, INTERNAL_ACCESS_NOTE placeholders 2+4+1=7, cam_manifest.py:364 router registration, InstrumentBodyAPI at line 918.",
+      "FINDING - PR #270 lost: git merge-base --is-ancestor b510ae54 origin/main -> false. #270 merged into docs/boe-changelog at 20:57Z, after that base had already merged to main at 19:10Z. main's test_jumbo_dimension_consistency.py is the original 120-line 4-path version with zero coverage markers. Work intact at origin/test/jumbo-consistency-coverage @ 7c62ad2f.",
+      "FINDING - family dimension drift beyond jumbo: FAMILY_DEFAULTS compared NUMERICALLY (not as strings) against the editor's INSTRUMENT_TEMPLATES. jumbo ALIGNED; dreadnought differs on all four fields up to 13mm; stratocaster upper_bout differs by 145mm (311 canonical vs 166 editor), which is too large to be drift and is flagged as a probable definitional difference requiring a decision before any alignment.",
+      "FINDING - SPRINTS.md:2323 stale: it records the BOE backend endpoint as MISSING. services/api/app/routers/body_solver_router.py exists and is mounted via the router registry; four endpoints confirmed from source.",
+      "tools/ mirror re-confirmed as a clean snapshot of hostinger/ @ 70a0d3ee - diff is 0 lines after CRLF normalisation, so it carries no independent edits.",
+      "All three relative document links resolved from docs/handoffs/.",
+      "Documentation-only; no test suite affected."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/BOE_BUILD_RESUMPTION_DEV_HANDOFF_2026-08-16.md",
+      "intent": "Entry document for resuming BOE development: verified state, prioritised queue, architecture orientation, governance constraints, and owner decisions.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-BOE-RESUMPTION",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 3
+    },
+    "findings": [
+      "PR #270's jumbo coverage work is absent from main - a stacked PR merged into an already-merged base. Recorded as P0 with the recovery path; not performed in this docs patch.",
+      "dreadnought and stratocaster body dimensions disagree between the canonical FAMILY_DEFAULTS and the editor's templates, and nothing guards them. jumbo is aligned only because a test exists for it. Recorded as P1; the stratocaster case needs a definitional decision before any code change.",
+      "SPRINTS.md:2323 records the BOE backend endpoint as MISSING when it is live and mounted. The stale ledger entry is reported in the handoff; SPRINTS.md is not edited here, since correcting the sprint ledger is a separate governed act."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only - one new markdown file under docs/handoffs/. No code, data, or ledger is modified. The three findings are recorded for action rather than acted on, so that each lands as its own reviewable change."
+  }
+}
