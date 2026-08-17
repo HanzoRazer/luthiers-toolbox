@@ -104,6 +104,10 @@ ACKNOWLEDGED_NON_DIMENSION_FILES = {
     "docs/Body_Outline_Editor_CHANGELOG.md":
         "Historical record. Deliberately cites the superseded 304/280 values, "
         "so it must not be asserted against canonical.",
+    "docs/handoffs/BOE_BUILD_RESUMPTION_DEV_HANDOFF_2026-08-16.md":
+        "Build handoff. Quotes canonical dimensions alongside the mismatched "
+        "dreadnought and stratocaster template values while documenting the drift; "
+        "asserting it against canonical would defeat its purpose.",
     "docs/handoffs/BODY_OUTLINE_EDITOR_V2_HANDOFF.md":
         "Historical handoff narrative.",
     "docs/handoffs/IBG_FUNCTIONAL_CAPABILITY_ASSESSMENT_2026-05-11.md":
