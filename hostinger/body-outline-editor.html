@@ -5786,7 +5786,11 @@ function saveSession() {
     };
 
     const session = {
-        version: 2,  // MRP-2C: bumped for ibgContext
+        // v3: added layers[] + activeLayerIndex (multi-layer image persistence).
+        // Nothing reads this field on load — restore branches on the presence of
+        // layers[] / referenceImage instead, so old and new files both open. The
+        // number is recorded for provenance and for any future reader that needs it.
+        version: 3,  // v2: MRP-2C ibgContext · v3: multi-layer images
         viewport: {
             zoom: state.zoom,
             center: [state.viewCenter.x, state.viewCenter.y]
@@ -5797,9 +5801,27 @@ function saveSession() {
             role: v.role,
             segments: serializePath(v.path)
         })),
-        // The layer owns the authoritative transform; read from it where possible.
-        // `scale` is retained as the legacy uniform field so sessions written here
-        // still load in older builds — scaleX/scaleY/rotation are the new truth.
+        // ALL image layers, in array order — index 0 is the topmost, matching
+        // updateImageOrder(). Previously only one image was persisted, so every
+        // layer but the active one was silently dropped on save.
+        layers: state.imageLayers.map(function (l) {
+            return {
+                name: l.name,
+                data: l.raster.toDataURL(),
+                position: [l.raster.position.x, l.raster.position.y],
+                scaleX: l.scaleX,
+                scaleY: l.scaleY,
+                rotation: l.rotation,
+                opacity: l.opacity,
+                locked: l.locked,
+                visible: l.visible
+            };
+        }),
+        activeLayerIndex: state.imageLayers.findIndex(l => l.id === state.activeLayerId),
+
+        // Retained so sessions written here still open in builds that predate the
+        // layers[] field — those read referenceImage and get the active image.
+        // Newer builds prefer layers[] and ignore this.
         referenceImage: state.raster ? (function () {
             const layer = state.imageLayers.find(l => l.raster === state.raster);
             const scaleX = layer ? layer.scaleX : state.raster.scaling.x;
@@ -5901,7 +5923,49 @@ function loadSession(session) {
     // a bare raster the Layers panel knows nothing about. Previously a reloaded
     // session produced an image that could not be listed, locked, reordered or
     // deleted, and that Clear Image could not fully dispose of.
-    if (session.referenceImage) {
+    if (Array.isArray(session.layers) && session.layers.length > 0) {
+        // Multi-layer restore. addImageLayer pushes synchronously and assigns ids
+        // in call order, so iterating the saved array in order reproduces the
+        // z-order; only the bitmap load is async, and updateImageOrder() re-sorts
+        // by array position on each completion.
+        session.layers.forEach(function (saved) {
+            addImageLayer(saved.data, saved.name || null, function (layer) {
+                layer.scaleX = (saved.scaleX !== undefined) ? saved.scaleX : 1;
+                layer.scaleY = (saved.scaleY !== undefined) ? saved.scaleY : 1;
+                layer.rotation = saved.rotation || 0;
+                layer.opacity = (saved.opacity !== undefined) ? saved.opacity : 0.5;
+                layer.locked = !!saved.locked;
+                layer.visible = (saved.visible !== undefined) ? !!saved.visible : true;
+
+                if (Array.isArray(saved.position)) {
+                    layer.raster.position = new Point(saved.position[0], saved.position[1]);
+                }
+                layer.raster.opacity = layer.opacity;
+                layer.raster.visible = layer.visible;
+                applyLayerTransform(layer);
+
+                updateImageOrder();
+                if (gridLayer) gridLayer.sendToBack();
+                updateLayerList();
+            });
+        });
+
+        // Ids are assigned in call order, so the saved index maps directly.
+        const activeIdx = (typeof session.activeLayerIndex === 'number' && session.activeLayerIndex >= 0)
+            ? Math.min(session.activeLayerIndex, state.imageLayers.length - 1)
+            : 0;
+        const activeLayer = state.imageLayers[activeIdx];
+        if (activeLayer) {
+            setActiveLayer(activeLayer.id);
+            state.raster = activeLayer.raster;   // alias, see importImage
+            document.getElementById('image-opacity').value = Math.round(activeLayer.opacity * 100);
+            document.getElementById('opacity-value').textContent =
+                Math.round(activeLayer.opacity * 100) + '%';
+        }
+        document.getElementById('image-panel').style.display = 'block';
+
+    } else if (session.referenceImage) {
+        // Single-image fallback for sessions written before layers[] existed.
         // The saved transform must be applied AFTER the bitmap is attached, or the
         // scaling multiplies against a zero-sized raster.
         addImageLayer(session.referenceImage.data, 'Reference', (layer) => {
