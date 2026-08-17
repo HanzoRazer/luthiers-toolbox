@@ -372,18 +372,31 @@ Use numeric entry for exact placement. Don't eyeball.
 ### Built-in templates (8)
 
 **Acoustic:**
-- Dreadnought — 508/394/286/254 (length/lower/upper/waist)
+- Dreadnought — 520/381/292/241 (length/lower/upper/waist)
 - Jumbo — 530/432/305/254
 - OM/000 — 482/380/280/254
 - Classical — 482/362/280/242
 - Parlor — 400/304/228/204
 
 **Electric:**
-- Stratocaster — 400/318/166/220
+- Stratocaster — 406/325/248/245
 - Les Paul — 400/342/166/230
 - Telecaster — 394/318/204/240
 
 All dimensions in mm.
+
+> **These are starting points, not specifications.** A template gives you a
+> plausible body to begin from when you have nothing else. If you are working
+> from your own measurements — a real instrument, a plan, a customer's spec —
+> enter those instead. Nothing downstream treats a template as authoritative:
+> the solver accepts your landmarks directly (Chapter 9), and every node stays
+> editable. Where a template and your measurements disagree, your measurements
+> are right.
+>
+> Templates are also only defined for the four families the geometry solver
+> knows (dreadnought, jumbo, stratocaster, cuatro venezolano). The other four
+> rows exist in the editor alone and have no canonical counterpart to check
+> against — see the Les Paul note below.
 
 > **Jumbo corrected 2026-08-16.** This row previously read `530/432/304/280`.
 > The editor was realigned to the canonical IBG source in commit `f25bb949`
@@ -398,6 +411,31 @@ All dimensions in mm.
 > `instrument_model_registry.json`, and `hostinger/body-outline-editor.html`.
 > **This manual is not one of them**, which is why the drift went unnoticed. See
 > [Body_Outline_Editor_CHANGELOG.md](Body_Outline_Editor_CHANGELOG.md).
+
+> **Dreadnought and Stratocaster reconciled 2026-08-16.** Jumbo was aligned only
+> because a test existed for it; the other two families the solver knows were
+> both adrift. Three sources held three different numbers, so each field was set
+> to the **median** of the canonical solver, `instrument_body_generator`, and the
+> editor:
+>
+> | | was (manual/editor) | now |
+> |---|---|---|
+> | Dreadnought | 508/394/286/254 | **520/381/292/241** |
+> | Stratocaster | 400/318/166/220 | **406/325/248/245** |
+>
+> The Stratocaster upper bout had spanned 145 mm across sources (311 / 248 /
+> 166). The median, 248, is corroborated independently: `specs/stratocaster.json`
+> — sourced from Fender figures verified against blueprint scans — gives a
+> `width_mm_range` of [310, 340] whose midpoint is 325, matching the median lower
+> bout, and the DXF bounding box measures 322.3.
+>
+> All three families now agree exactly across canonical, generator and editor.
+
+> **Les Paul is a known gap.** Its upper bout of `166` is the same placeholder
+> the Stratocaster carried — the identical value in two unrelated bodies. Les
+> Paul has no entry in the geometry solver and no spec file, so there is no
+> second source to take a median from. It needs a real measurement. Until then,
+> treat that row as unverified.
 
 ### Loading a template
 

@@ -189,19 +189,37 @@ FAMILY_DEFAULTS = {
         "upper_ratio": 0.628,
         "length_ratio": 1.40,
     },
+    # Reconciled 2026-08-16 to the median of the three code-held sources
+    # (this file, instrument_body_generator.INSTRUMENT_SPECS, and the Body Outline
+    # Editor's INSTRUMENT_TEMPLATES). Previously 332 / 311 / 250; the three sources
+    # disagreed by up to 145 mm on upper bout.
+    #
+    # Corroboration for the median rather than the prior values:
+    #   specs/stratocaster.json  width_mm_range  [310, 340] -> midpoint 325.0
+    #   specs/stratocaster.json  length_mm_range [390, 420] -> midpoint 405.0
+    #   body/catalog.json        DXF bbox width              322.3
+    # That spec is sourced from Fender American Standard figures verified against
+    # blueprint scans, and it agrees with 325 rather than with 332.
+    #
+    # NOTE ON AUTHORITY: these are FAMILY DEFAULTS - the starting geometry used when
+    # the caller supplies none. They are not a claim about any particular instrument.
+    # A builder working from their own measurements should override them; the solver
+    # accepts user landmarks (POST /api/body/solve-from-landmarks, PUT
+    # /api/body/session/{id}/landmarks) precisely so that measured dimensions win
+    # over these defaults.
     "stratocaster": {
-        "lower_bout_mm": 332.0,
-        "upper_bout_mm": 311.0,
-        "waist_mm": 250.0,
+        "lower_bout_mm": 325.0,
+        "upper_bout_mm": 248.0,
+        "waist_mm": 245.0,
         "waist_y_norm": 0.47,
         "body_length_mm": 406.0,
         "back_radius_mm": 999999.0,  # Flat back
         "butt_depth_mm": 44.5,
         "shoulder_depth_mm": 44.5,
-        # Ratios
-        "waist_ratio": 0.753,
-        "upper_ratio": 0.937,
-        "length_ratio": 1.223,
+        # Ratios (dimension / lower_bout, 3dp)
+        "waist_ratio": 0.754,
+        "upper_ratio": 0.763,
+        "length_ratio": 1.249,
     },
     "jumbo": {
         "lower_bout_mm": 432.0,

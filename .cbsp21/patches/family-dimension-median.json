@@ -1,0 +1,76 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "FAMILY_DIMENSION_MEDIAN",
+  "title": "fix(ibg): reconcile dreadnought and stratocaster body dimensions to the median of the three sources",
+  "intent": "Three code-held sources carry body dimensions for the families the geometry solver knows - FAMILY_DEFAULTS in body_contour_solver.py, INSTRUMENT_SPECS.expected_dimensions in instrument_body_generator.py, and INSTRUMENT_TEMPLATES in the Body Outline Editor. Only jumbo agreed across all three, and it agreed only because a consistency test had been written for it. Dreadnought differed on all four fields, and stratocaster's upper bout spanned 145mm across sources (311 / 248 / 166). Each field is set to the MEDIAN of the three, which independent sources corroborate. All three families now agree exactly across canonical, generator, editor, and the User Manual.",
+  "change_type": "fix",
+  "behavior_change": "Changes the default starting geometry the solver produces for the stratocaster family when the caller supplies no dimensions: lower bout 332->325, upper bout 311->248, waist 250->245 (body length and waist_y_norm unchanged). Derived ratios recomputed to match. Dreadnought canonical is UNCHANGED - the median equals the values already there; only the editor template and the manual moved to it. Jumbo is untouched. No API shape, route, schema, or workflow changes. User-supplied landmarks continue to override defaults entirely.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/family-dimension-median.json",
+      "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
+      "hostinger/body-outline-editor.html",
+      "docs/Body_Outline_Editor_User_Manual.md"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
+      "hostinger/body-outline-editor.html",
+      "docs/Body_Outline_Editor_User_Manual.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) FAMILY_DEFAULTS['stratocaster'] in body_contour_solver.py set to the median 406/325/248/245, with waist_ratio, upper_ratio and length_ratio recomputed as dimension/lower_bout to 3dp (0.754 / 0.763 / 1.249). The block carries a comment recording the reconciliation, the corroborating sources, and an explicit statement that these are family DEFAULTS which user-supplied landmarks override. (2) hostinger/body-outline-editor.html INSTRUMENT_TEMPLATES: dreadnought 508/394/286/254 -> 520/381/292/241 and stratocaster 400/318/166/220 -> 406/325/248/245; waistYNorm already matched canonical for both and is unchanged. (3) User Manual Chapter 7 template table updated to match, plus a note that templates are starting points rather than specifications and that the builder's own measurements take precedence, a reconciliation note recording the before/after and the corroborating evidence, and a note flagging Les Paul's upper bout as an unresolved placeholder. instrument_body_generator.py is NOT modified - its values were already the median for all three families.",
+    "why_not_redundant": "The jumbo consistency guard covers one family. This reconciles the other two the solver knows, so that a guard generalised to all families has aligned data to assert. Without it, extending the guard would simply turn an existing silent disagreement into a red build."
+  },
+  "verification": {
+    "commands_run": [
+      "Median computed per field across the three code-held sources. Before: dreadnought spread 6-13mm on every field; stratocaster spread 6mm length, 14mm lower bout, 145mm upper bout, 30mm waist. After: spread 0.0 on every field for all three families.",
+      "CORROBORATION for the stratocaster median rather than the prior canonical values: specs/stratocaster.json (sourced from Fender American Standard specifications verified against blueprint scans) gives width_mm_range [310,340] with midpoint 325.0, matching the median lower bout, and length_mm_range [390,420] with midpoint 405.0 against a median length of 406; body/catalog.json DXF bounding-box width is 322.3. The prior canonical 332 is outside that agreement.",
+      "EVIDENCE that 166 was a placeholder: stratocaster and les_paul both carried upper_bout 166 exactly, in two unrelated body outlines, while the telecaster - a far closer shape to the stratocaster - carried 204.",
+      "Ratio convention verified before editing: stored ratios equal dimension/lower_bout to 3dp across all four families (two pre-existing rounding slips of 0.001 noted in dreadnought and cuatro_venezolano, left alone). Stratocaster ratios recomputed accordingly.",
+      "REGRESSION BASELINE established BEFORE the change: tests/test_body_solver_integration.py + test_body_generator_router.py + test_body_curvature_correction.py -> 12 failed, 23 passed. The 12 failures are a pre-existing environment problem (pydantic PydanticUserError on Annotated[UploadFile, File] - multipart), unrelated to dimensions. AFTER the change: identical 12 failed, 23 passed.",
+      "py -3.11 -m pytest tests/test_jumbo_dimension_consistency.py -> 4 passed, 1 skipped (jumbo untouched).",
+      "py -3.11 -m pytest tests/test_jumbo_family_regression.py tests/test_cavity_position_validator.py tests/test_body_export_bridge.py -> 76 passed.",
+      "Post-change cross-check: manual Chapter 7 rows for dreadnought, jumbo and stratocaster all equal FAMILY_DEFAULTS exactly. The five manual rows with no canonical counterpart (om/000, classical, parlor, les_paul, telecaster) are unchanged and identified as such."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/body/ibg/body_contour_solver.py",
+      "intent": "FAMILY_DEFAULTS['stratocaster'] reconciled to the median with recomputed ratios, and an authority note recording that these are defaults which user landmarks override.",
+      "risk": "medium",
+      "behavior_change": "Default stratocaster geometry changes when no dimensions are supplied. User-supplied landmarks are unaffected."
+    },
+    {
+      "path": "hostinger/body-outline-editor.html",
+      "intent": "Dreadnought and stratocaster INSTRUMENT_TEMPLATES reconciled to the median.",
+      "risk": "low",
+      "behavior_change": "Template starting outlines change for two families. Every node remains editable."
+    },
+    {
+      "path": "docs/Body_Outline_Editor_User_Manual.md",
+      "intent": "Chapter 7 table updated to match, with notes on template authority, the reconciliation evidence, and the unresolved Les Paul placeholder.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-FAMILY-DIMENSION-MEDIAN",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 2
+    },
+    "findings": [
+      "MEDIUM - this modifies FAMILY_DEFAULTS, the declared canonical source consumed by body_contour_solver, so default solver output changes for the stratocaster family. It is a data reconciliation, not a behaviour change: the solver's logic is untouched and user-supplied landmarks continue to override defaults entirely. No test asserted the prior stratocaster values; the one range assertion on upper_bout (250 < x < 330) belongs to a dreadnought test and is unaffected.",
+      "LOW - tools/body-outline-editor.html still carries the pre-reconciliation dreadnought and stratocaster values. It is a stale mirror already 171 lines behind and is marked Production / MEDIUM / 'Avoid collision' in MORPHOLOGY_HARVEST_GOVERNANCE_AUDIT.md, so it is deliberately untouched here and folded into the existing governed resync item.",
+      "LOW - les_paul retains upper_bout 166, the same placeholder the stratocaster carried. It has no FAMILY_DEFAULTS entry and no spec file, so no median exists to reconcile it against; it needs a real measurement. Flagged in the User Manual and left unchanged rather than guessed at."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Data reconciliation across three sources that already disagreed. The regression baseline was captured before the change and is byte-identical after, isolating the 12 pre-existing environment failures from this patch. instrument_body_generator.py needed no edit because its values were already the median throughout."
+  }
+}
