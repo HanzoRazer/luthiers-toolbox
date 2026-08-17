@@ -24,7 +24,7 @@ from typing import Any, Optional
 from .repository_change_proposal import RepositoryChangeProposal
 from .repository_execution_plan import RepositoryExecutionPlan
 from .repository_proposal_evaluation import RepositoryProposalEvaluation
-from .proposal_evaluator import GOVERNED_PROVENANCE_FIELDS
+from .proposal_checks import GOVERNED_PROVENANCE_FIELDS
 from .repository_readiness_report import (
     READINESS_REPORT_ID_PREFIX,
     REPORT_SECTION_ORDER,
