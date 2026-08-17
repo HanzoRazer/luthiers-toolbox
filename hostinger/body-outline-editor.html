@@ -5389,17 +5389,36 @@ function applyCalibration() {
         if (!confirm(msg)) return;
     }
 
-    // Validation 5: Warn if scale makes image extreme
+    // Validation 5: Warn if the calibration produces an implausible body size.
+    //
+    // This measured raster.width — Paper's SOURCE pixel width, which does not
+    // change when the raster is scaled. So the guard ignored any scaling already
+    // applied and got progressively more wrong with each recalibration: a photo
+    // already scaled 4x was still judged against its original pixel dimensions.
+    //
+    // Measure the DISPLAYED size instead: source dimensions times the layer's own
+    // scale factors. Deliberately not raster.bounds, which is the axis-aligned box
+    // and inflates with rotation — a rotated reference would trip the guard purely
+    // for being rotated.
+    //
+    // Post-calibration the canvas works in millimetres, so these figures are mm,
+    // not pixels. The thresholds are unchanged and read sensibly in mm: under
+    // 50 mm or over 5,000 mm is not a plausible instrument body.
     if (state.raster) {
-        const newWidth = state.raster.width * scale;
-        const newHeight = state.raster.height * scale;
+        const calLayer = state.imageLayers.find(l => l.raster === state.raster);
+        const curScaleX = calLayer ? calLayer.scaleX : state.raster.scaling.x;
+        const curScaleY = calLayer ? calLayer.scaleY : state.raster.scaling.y;
+
+        const newWidth = state.raster.width * curScaleX * scale;
+        const newHeight = state.raster.height * curScaleY * scale;
+
         if (newWidth < 50 || newHeight < 50) {
-            if (!confirm(`Warning: Image will become very small (${newWidth.toFixed(0)}x${newHeight.toFixed(0)}px). Continue?`)) {
+            if (!confirm(`Warning: image will become very small (${newWidth.toFixed(0)} x ${newHeight.toFixed(0)} mm). Continue?`)) {
                 return;
             }
         }
         if (newWidth > 5000 || newHeight > 5000) {
-            if (!confirm(`Warning: Image will become very large (${newWidth.toFixed(0)}x${newHeight.toFixed(0)}px). This may slow down the editor. Continue?`)) {
+            if (!confirm(`Warning: image will become very large (${newWidth.toFixed(0)} x ${newHeight.toFixed(0)} mm). This may slow down the editor. Continue?`)) {
                 return;
             }
         }
