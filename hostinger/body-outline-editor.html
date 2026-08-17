@@ -5367,9 +5367,27 @@ function applyCalibration() {
         }
     }
 
-    // Apply calibration
+    // Apply calibration THROUGH the layer model, not directly to the raster.
+    //
+    // applyLayerTransform() assigns raster.scaling absolutely from layer.scaleX/
+    // scaleY, so a calibration written straight onto the raster was silently
+    // discarded by the next rotate or drag-scale — an ordinary next action when
+    // fitting a reference photo. Multiplying the layer's own factors keeps the
+    // layer authoritative and makes the calibration survive.
     if (state.raster) {
-        state.raster.scale(scale);
+        const layer = state.imageLayers.find(l => l.raster === state.raster);
+
+        if (layer) {
+            layer.scaleX *= scale;
+            layer.scaleY *= scale;
+            applyLayerTransform(layer);
+            updateLayerList();
+        } else {
+            // No owning layer (e.g. a session written by an older build). Fall back
+            // to transforming the raster directly.
+            state.raster.scale(scale);
+        }
+
         state.imagePixelsPerMM = 1 / scale;
         console.log(`Calibration applied: ${pixelDist.toFixed(1)}px = ${knownDist}mm, scale=${scale.toFixed(4)}`);
     }
@@ -5779,12 +5797,23 @@ function saveSession() {
             role: v.role,
             segments: serializePath(v.path)
         })),
-        referenceImage: state.raster ? {
-            data: state.raster.toDataURL(),
-            position: [state.raster.position.x, state.raster.position.y],
-            scale: state.raster.scaling.x,
-            opacity: state.raster.opacity
-        } : null,
+        // The layer owns the authoritative transform; read from it where possible.
+        // `scale` is retained as the legacy uniform field so sessions written here
+        // still load in older builds — scaleX/scaleY/rotation are the new truth.
+        referenceImage: state.raster ? (function () {
+            const layer = state.imageLayers.find(l => l.raster === state.raster);
+            const scaleX = layer ? layer.scaleX : state.raster.scaling.x;
+            const scaleY = layer ? layer.scaleY : state.raster.scaling.y;
+            return {
+                data: state.raster.toDataURL(),
+                position: [state.raster.position.x, state.raster.position.y],
+                scale: scaleX,          // legacy, uniform — kept for older readers
+                scaleX: scaleX,
+                scaleY: scaleY,         // was lost: non-uniform scaling collapsed to uniform
+                rotation: layer ? layer.rotation : (state.raster.rotation || 0),  // was not saved at all
+                opacity: state.raster.opacity
+            };
+        })() : null,
         calibration: state.imagePixelsPerMM,
         // MRP-2C: Preserve IBG context through session save/load
         ibgContext: state.ibgContext
@@ -5876,21 +5905,27 @@ function loadSession(session) {
         // The saved transform must be applied AFTER the bitmap is attached, or the
         // scaling multiplies against a zero-sized raster.
         addImageLayer(session.referenceImage.data, 'Reference', (layer) => {
-            layer.raster.position = new Point(
-                session.referenceImage.position[0],
-                session.referenceImage.position[1]
-            );
-            layer.raster.scaling = new Point(
-                session.referenceImage.scale,
-                session.referenceImage.scale
-            );
-            layer.raster.opacity = session.referenceImage.opacity;
-            layer.opacity = session.referenceImage.opacity;
-            layer.scaleX = session.referenceImage.scale;
-            layer.scaleY = session.referenceImage.scale;
+            const ri = session.referenceImage;
+
+            // Sessions written before v3.6.0 carry only a uniform `scale` and no
+            // rotation. Fall back to those so older files still load correctly.
+            const legacyScale = (ri.scale !== undefined) ? ri.scale : 1;
+            layer.scaleX = (ri.scaleX !== undefined) ? ri.scaleX : legacyScale;
+            layer.scaleY = (ri.scaleY !== undefined) ? ri.scaleY : legacyScale;
+            layer.rotation = ri.rotation || 0;
+            layer.opacity = ri.opacity;
+
+            layer.raster.position = new Point(ri.position[0], ri.position[1]);
+            layer.raster.opacity = ri.opacity;
+
+            // Drive rotation and scaling from the layer fields so the restored
+            // state matches what a later rotate or drag-scale will re-apply.
+            applyLayerTransform(layer);
+
             layer.raster.sendToBack();
             if (gridLayer) gridLayer.sendToBack();
             state.raster = layer.raster;   // alias, see importImage
+            setActiveLayer(layer.id);
             updateLayerList();
         });
 
