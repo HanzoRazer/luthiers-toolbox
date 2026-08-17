@@ -1622,6 +1622,17 @@ function setActiveLayer(layerId) {
         document.getElementById('btn-lock-image').textContent = layer.locked ? '🔒' : '🔓';
         document.getElementById('rotation-slider').value = layer.rotation;
         document.getElementById('rotation-value').textContent = `${Math.round(layer.rotation)}°`;
+
+        // The opacity slider was never synced here, so switching layers left it
+        // showing the previous layer's value — and the next drag jumped the image
+        // to that stale starting point.
+        const opacityPct = Math.round((layer.opacity !== undefined ? layer.opacity : 0.5) * 100);
+        document.getElementById('image-opacity').value = opacityPct;
+        document.getElementById('opacity-value').textContent = opacityPct + '%';
+
+        // Keep the legacy alias pointing at whatever is now active, so calibration,
+        // session save and Clear all address the selected layer.
+        state.raster = layer.raster;
     }
 }
 
@@ -1635,7 +1646,16 @@ function deleteLayer(layerId) {
         state.imageLayers.splice(index, 1);
 
         if (state.activeLayerId === layerId) {
-            state.activeLayerId = state.imageLayers[0]?.id || null;
+            const next = state.imageLayers[0];
+            if (next) {
+                // Through setActiveLayer so state.raster follows; assigning
+                // activeLayerId directly left the alias pointing at the removed
+                // raster.
+                setActiveLayer(next.id);
+            } else {
+                state.activeLayerId = null;
+                state.raster = null;
+            }
         }
 
         logOperation('DELETE_LAYER', { layerId });
@@ -4451,9 +4471,24 @@ function setupToolbarEvents() {
 
     document.getElementById('image-opacity').addEventListener('input', function() {
         const val = parseInt(this.value);
+        const opacity = val / 100;
         document.getElementById('opacity-value').textContent = val + '%';
-        if (state.raster) {
-            state.raster.opacity = val / 100;
+
+        // Write through the layer model, not just the raster. Setting only
+        // raster.opacity left layer.opacity stale, so the Layers panel row kept
+        // showing the old percentage and any later re-apply of layer state
+        // silently reverted the slider.
+        //
+        // Not gated on layer.locked: lock guards transforms (rotate, scale), the
+        // same way toggleLayerVisibility is ungated.
+        const layer = state.imageLayers.find(l => l.id === state.activeLayerId);
+        if (layer) {
+            layer.opacity = opacity;
+            layer.raster.opacity = opacity;
+            updateLayerList();
+        } else if (state.raster) {
+            // No owning layer (session from an older build).
+            state.raster.opacity = opacity;
         }
     });
 
@@ -5050,14 +5085,17 @@ function importImage() {
             // session save operating on the same raster the Layers panel manages.
             const layer = state.imageLayers.find(l => l.id === layerId);
             if (layer) {
-                state.raster = layer.raster;
-                state.raster.sendToBack();
+                // Make the newly imported layer active. setActiveLayer re-points
+                // state.raster and syncs the panel controls, so the alias and
+                // activeLayerId can never disagree — otherwise the opacity slider
+                // (which targets activeLayerId) and calibration (which targets the
+                // alias) would act on different layers.
+                setActiveLayer(layer.id);
+                layer.raster.sendToBack();
                 if (gridLayer) gridLayer.sendToBack();
             }
 
             document.getElementById('image-panel').style.display = 'block';
-            document.getElementById('image-opacity').value = 50;
-            document.getElementById('opacity-value').textContent = '50%';
         };
         reader.readAsDataURL(file);
     };
