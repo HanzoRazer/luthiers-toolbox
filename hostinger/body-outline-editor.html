@@ -1559,7 +1559,10 @@ function exitCurrentMode() {
 
 const USER_TEMPLATES_KEY = 'body_outline_user_templates';
 
-function addImageLayer(imageDataUrl = null, name = null) {
+// onReady fires once the bitmap is actually attached to the raster. Paper's own
+// 'load' event only fires for raster.source assignment, and this sets raster.image
+// directly, so callers that need the loaded dimensions must use this callback.
+function addImageLayer(imageDataUrl = null, name = null, onReady = null) {
     const layerId = state.nextLayerId++;
 
     const raster = new Raster();
@@ -1588,6 +1591,7 @@ function addImageLayer(imageDataUrl = null, name = null) {
             layer.originalHeight = img.height;
             raster.position = view.center;
             updateImageOrder();
+            if (onReady) onReady(layer);
         };
         img.src = imageDataUrl;
     }
@@ -4679,12 +4683,10 @@ function resetEditor() {
     // v3.1.0: Clear empty mode dots
     clearEmptyMode();
 
-    if (state.raster) {
-        state.raster.remove();
-        state.raster = null;
-    }
-    state.imagePixelsPerMM = null;
-    document.getElementById('image-panel').style.display = 'none';
+    // Delegate to clearImage so layers are disposed too. Removing only the aliased
+    // raster left orphaned layer entries pointing at a removed object, and New
+    // therefore appeared to leave the reference image behind.
+    clearImage();
 
     state.undoStack = [];
     state.redoStack = [];
@@ -4978,26 +4980,31 @@ function importImage() {
 
         const reader = new FileReader();
         reader.onload = function(ev) {
-            // v3.3.0: Also create a layer for multi-layer support
             const layerName = file.name.replace(/\.[^.]+$/, '');
-            addImageLayer(ev.target.result, layerName);
 
-            // Legacy: keep state.raster for backward compatibility
-            if (state.raster) state.raster.remove();
+            // Drop any previously-aliased raster reference before re-pointing it.
+            // Do NOT remove() here — the object is owned by its layer, and the
+            // layer's own lifecycle (deleteLayer / clearImage) disposes of it.
+            state.raster = null;
 
-            const img = new Image();
-            img.onload = function() {
-                state.raster = new Raster(img);
-                state.raster.position = state.viewCenter;
-                state.raster.opacity = 0.5;
+            const layerId = addImageLayer(ev.target.result, layerName);
+
+            // state.raster is an ALIAS for the active layer's raster, not a second
+            // object. Before v3.5.x this built an independent Raster from the same
+            // file, so every import rendered the image twice at 0.5 opacity, and the
+            // two copies then diverged: calibration scaled this one while rotation
+            // moved the layer's. Aliasing keeps calibration, opacity, clear and
+            // session save operating on the same raster the Layers panel manages.
+            const layer = state.imageLayers.find(l => l.id === layerId);
+            if (layer) {
+                state.raster = layer.raster;
                 state.raster.sendToBack();
                 if (gridLayer) gridLayer.sendToBack();
+            }
 
-                document.getElementById('image-panel').style.display = 'block';
-                document.getElementById('image-opacity').value = 50;
-                document.getElementById('opacity-value').textContent = '50%';
-            };
-            img.src = ev.target.result;
+            document.getElementById('image-panel').style.display = 'block';
+            document.getElementById('image-opacity').value = 50;
+            document.getElementById('opacity-value').textContent = '50%';
         };
         reader.readAsDataURL(file);
     };
@@ -5005,14 +5012,45 @@ function importImage() {
 }
 
 function clearImage() {
-    if (state.raster) {
-        state.raster.remove();
-        state.raster = null;
+    // state.raster is an alias for the active layer's raster (see importImage), so
+    // clear the layers first and drop the alias without a second remove(). This
+    // function predates the v3.3.0 layer system and used to clear only the legacy
+    // raster, which left every layered image on canvas — "Clear Image" visibly
+    // dimmed the reference but did not remove it.
+    const aliasOwnedByLayer = state.imageLayers.some(l => l.raster === state.raster);
+
+    for (const layer of state.imageLayers) {
+        if (layer.raster) layer.raster.remove();
     }
+    state.imageLayers = [];
+    state.activeLayerId = null;
+    state.nextLayerId = 1;
+
+    // Only dispose the alias if no layer owned it — e.g. a session saved by an older
+    // build that stored a bare raster. Removing a layer-owned raster twice would be
+    // a no-op, but being explicit keeps the ownership rule visible.
+    if (state.raster && !aliasOwnedByLayer) {
+        state.raster.remove();
+    }
+    state.raster = null;
+
     state.imagePixelsPerMM = null;
-    document.getElementById('image-panel').style.display = 'none';
+
+    // Calibration is meaningless without an image. Leaving it armed stranded the
+    // editor in calibrate mode with the orange prompt still painted on canvas.
+    if (state.calibrating) {
+        state.calibrating = false;
+    }
+    state.calPoints = [];
     state.calMarkers.forEach(m => m.remove());
     state.calMarkers = [];
+    hideCalibrationStatus();
+
+    updateLayerList();
+    hideLayersPanel();
+    document.getElementById('image-panel').style.display = 'none';
+    updateActiveModeIndicator();
+    logOperation('CLEAR_IMAGE', {});
 }
 
 function startCalibration() {
@@ -5729,7 +5767,9 @@ function loadSession(session) {
     if (state.outerPath) state.outerPath.remove();
     state.voids.forEach(v => v.path.remove());
     state.voids = [];
-    if (state.raster) state.raster.remove();
+    // Dispose layers as well as the alias, otherwise loading a session over an open
+    // one leaves the previous reference image on canvas.
+    clearImage();
 
     // Restore viewport
     if (session.viewport) {
@@ -5771,30 +5811,38 @@ function loadSession(session) {
         });
     }
 
-    // Restore reference image
+    // Restore reference image.
+    // Routed through addImageLayer so a restored image is a real layer rather than
+    // a bare raster the Layers panel knows nothing about. Previously a reloaded
+    // session produced an image that could not be listed, locked, reordered or
+    // deleted, and that Clear Image could not fully dispose of.
     if (session.referenceImage) {
-        const img = new Image();
-        img.onload = function() {
-            state.raster = new Raster(img);
-            state.raster.position = new Point(
+        // The saved transform must be applied AFTER the bitmap is attached, or the
+        // scaling multiplies against a zero-sized raster.
+        addImageLayer(session.referenceImage.data, 'Reference', (layer) => {
+            layer.raster.position = new Point(
                 session.referenceImage.position[0],
                 session.referenceImage.position[1]
             );
-            state.raster.scaling = new Point(
+            layer.raster.scaling = new Point(
                 session.referenceImage.scale,
                 session.referenceImage.scale
             );
-            state.raster.opacity = session.referenceImage.opacity;
-            state.raster.sendToBack();
+            layer.raster.opacity = session.referenceImage.opacity;
+            layer.opacity = session.referenceImage.opacity;
+            layer.scaleX = session.referenceImage.scale;
+            layer.scaleY = session.referenceImage.scale;
+            layer.raster.sendToBack();
             if (gridLayer) gridLayer.sendToBack();
+            state.raster = layer.raster;   // alias, see importImage
+            updateLayerList();
+        });
 
-            document.getElementById('image-panel').style.display = 'block';
-            document.getElementById('image-opacity').value =
-                Math.round(session.referenceImage.opacity * 100);
-            document.getElementById('opacity-value').textContent =
-                Math.round(session.referenceImage.opacity * 100) + '%';
-        };
-        img.src = session.referenceImage.data;
+        document.getElementById('image-panel').style.display = 'block';
+        document.getElementById('image-opacity').value =
+            Math.round(session.referenceImage.opacity * 100);
+        document.getElementById('opacity-value').textContent =
+            Math.round(session.referenceImage.opacity * 100) + '%';
     }
 
     state.imagePixelsPerMM = session.calibration;

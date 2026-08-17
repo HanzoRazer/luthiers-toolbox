@@ -1,0 +1,56 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BOE_IMAGE_LAYER_ALIAS",
+  "title": "fix(boe): stop double-rendering the reference image; make Clear Image actually clear",
+  "intent": "Clear Image did not clear. Tracing it found three compounding bugs on the seam of the unfinished v3.3.0 layer migration. importImage() built TWO independent Paper.js rasters from one file - one for state.imageLayers (the Layers panel model) and a second for state.raster (the legacy model) - so every import rendered the image twice at 0.5 opacity. clearImage() predated the layer system and removed only the legacy raster, leaving the layer copy on canvas. Worst for the actual tracing workflow, calibration scaled only the legacy raster while rotation moved only the layer's, so after calibrating you had two mismatched copies of the reference diverging on separate axes. Fixed by making state.raster an ALIAS for the active layer's raster rather than a parallel object.",
+  "change_type": "fix",
+  "behavior_change": "A reference image import now creates one raster instead of two, so the image renders at the 50% opacity the panel reports rather than two stacked 50% copies. Clear Image and New now remove layered images and reset calibration state. Loading a session over an open one disposes the previous image. A session-restored image is registered as a real layer, so it can be listed, locked, reordered and deleted. Calibration, opacity, clear and session save now act on the same raster the Layers panel manages. No API, export format, or session file format change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/boe-image-layer-alias.json",
+      "hostinger/body-outline-editor.html"
+    ],
+    "files_expected_to_change": [
+      "hostinger/body-outline-editor.html"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) importImage(): removed the second `new Raster(img)` construction; state.raster is now assigned from the layer that addImageLayer created. (2) clearImage(): disposes state.imageLayers rasters, resets imageLayers/activeLayerId/nextLayerId, drops the alias without a double remove (guarded by an ownership check), resets calibrating/calPoints/calMarkers, hides the calibration prompt, refreshes and hides the Layers panel, and logs the operation. (3) addImageLayer(): gained an optional onReady(layer) callback fired once the bitmap is attached - Paper's own 'load' event does not fire here because the function assigns raster.image directly rather than raster.source. (4) loadSession(): reference-image restore routed through addImageLayer with onReady applying the saved position/scale/opacity, so a restored image is a real layer; the pre-restore teardown now calls clearImage() instead of removing only the alias. (5) resetEditor(): delegates image teardown to clearImage() for the same reason.",
+    "why_not_redundant": "state.raster was traced across all 11 call sites before changing anything and is NOT redundant - calibration, the opacity slider, image scaling, session save and the calibration guard all read it, while rotation and the Layers panel read state.imageLayers. Retiring it would mean re-pointing five consumers at the active layer, which is finishing the v3.3.0 migration and carries session-format implications. Aliasing fixes all three observed bugs without that refactor, and makes the eventual retirement mechanical because every consumer is then already touching the layer's raster."
+  },
+  "verification": {
+    "commands_run": [
+      "Structural proof of the double-render fix: `new Raster(` now appears exactly ONCE in the file, inside addImageLayer. importImage() constructs zero rasters. Two copies of one image are therefore no longer constructible.",
+      "clearImage() verified to dispose both models: iterates state.imageLayers removing each raster, resets the three layer state fields, drops the alias under an ownership guard, clears calibration state and hides both panels.",
+      "JavaScript syntax validated by extracting the single inline <script> block (179,048 chars) and running `node --check` -> OK, before and after the ownership-guard refinement.",
+      "Governance checked BEFORE editing: hostinger/body-outline-editor.html carries no governance header and is not listed in scripts/check_protected_paths.py.",
+      "NOT VERIFIED IN A BROWSER: the Claude-in-Chrome extension is not connected in this environment, so the three flows (import renders once, Clear removes everything, calibrate+rotate stay in sync) have not been exercised interactively. They are verified structurally only and need a manual pass."
+    ]
+  },
+  "files": [
+    {
+      "path": "hostinger/body-outline-editor.html",
+      "intent": "Make state.raster an alias for the active layer's raster; repair clearImage, resetEditor and session restore to dispose and register layers correctly; add an onReady callback to addImageLayer.",
+      "risk": "low",
+      "behavior_change": "Single raster per import; Clear Image and New fully clear; restored sessions register a layer."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-16-BOE-IMAGE-ALIAS",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "The v3.3.0 layer migration remains unfinished. state.raster is now a deliberate alias rather than a parallel object, but calibration, the opacity slider, image scaling and session save still address it by that name rather than through the active layer. Completing the migration - and deciding whether a multi-layer session should persist more than one image - is separate follow-up work, not attempted here.",
+      "The line-7 version stamp still reads v3.5.0 and is now further from identifying the build. Bumping it is a release decision and is deliberately left alone; it is already recorded as an open item in the BOE changelog."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Client-side editor only - no API, export format, or session file format change. state.raster was traced across all 11 call sites before any edit and deliberately retained rather than retired, because five consumers still read it. Structural verification only; a manual browser pass is still owed."
+  }
+}
