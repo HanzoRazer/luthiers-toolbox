@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -1026,7 +1026,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Alert witness (2026-08-11):** open alerts **65 → 32**; `axios` + `postcss` → **0**. Tier-1 witnessed effective. Remaining: 9 archive (owner dismissal) · 4 Tranche C · 1 out-of-scope Python · 18 Tranche B, only `ws` runtime-scope. Detail: residual matrix §8.
 
-**R-11 scope extension — container lane (witnessed 2026-08-17, PR #279):** R-11 records the
+**R-11 scope extension — container lane (witnessed 2026-08-17, PR #279) — ⚠️ SUPERSEDED 2026-08-18, see the RESOLUTION note that follows; retained as the historical state:** R-11 records the
 constraint as scoped to `api-verify`. It is broader. The same withheld `SG_SPEC_TOKEN` fails
 `docker/api/Dockerfile` at its sg-spec install step, and that image is built **first** in
 `containers.yml`, `core_ci.yml`, `proxy_parity.yml` and `proxy_adaptive.yml` — so the client
@@ -1039,12 +1039,47 @@ step 8/13 of the API image, `Containers (Build + Smoke)` red, client image never
 Dependabot PR, `mergeStateStatus: UNSTABLE` and the red container checks are **structural
 and carry no information about the bump** — do not read them as a verdict on its content.
 
-**#279 classification (2026-08-17):** `@vitejs/plugin-vue` 5.2.4 → 6.0.8 is a **client major
-toolchain bump**, the same family as R-04 (`vite` 5→6) and R-05 (`vitest` 2→3). Per the
-matrix it is **Tranche C**, trigger *BR-021 resolved or explicit manual build-witness
-authorization*; per R-11/§12 any authorized version hygiene must ship as **one consolidated
-PR**, not a merged Dependabot PR. Compatibility is not the open question — it was witnessed
-green on `lint-build` — the open question is tranche authorization. Toolchain-floor
+**✅ RESOLUTION — R-11 remedied by the Dependabot secret store (witnessed 2026-08-18):**
+The blockage was **not** terminal, and both the addendum above and R-11 itself overstated it.
+GitHub withholds *repository Actions* secrets from Dependabot-authored PRs — that premise was
+correct — but it exposes a **separate Dependabot secret store**, which R-11 never named.
+`SG_SPEC_TOKEN` was added there on **2026-08-18T04:22:13Z** (`gh api repos/.../dependabot/secrets`
+→ `total_count: 1`). Re-running every failed run on PR #279 under the new condition:
+**all 25 runs on the branch green, PR `mergeStateStatus` UNSTABLE → CLEAN, 35 pass / 1 skip /
+0 fail.** The decisive witness is `Containers (Build + Smoke)` run `32015898628`, where the
+previously unreachable steps now pass in order — step 4 `Build API image` ✅, step 5
+**`Build Client image` ✅**, step 10 **`Smoke - Client container` ✅**. A Dependabot PR touching
+`packages/client` therefore now has **full container-path coverage**, and the "structural,
+carries no information" corollary above **no longer holds** — red checks on a Dependabot PR
+are once again a real signal to read.
+
+**Consequences left OPEN for the owner (deliberately not actioned here):** R-11's disposition
+in `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` §10 is still recorded as
+**ACCEPTED CONSTRAINT** with the claim *"merging any Dependabot PR directly can never be
+CI-verified"* — that claim is now **falsified**, but flipping an accepted constraint to
+RESOLVED is a DEP-SEC-001 program decision. Downstream, Tranche B's *"one consolidated PR is
+**required**, not preferred"* was derived **solely** from R-11, so that derivation collapses;
+whether the requirement should actually relax is a separate judgement (there may be
+independent reasons to batch dependency work) and is **not** settled by this witness.
+
+**Intake posture now unthrottled — 5 open Dependabot PRs (2026-08-18):** #279 (`plugin-vue`
+5→6), #280 (`typescript` 5.9.3→7.0.2), #281 (`@types/node` 25→26), #282
+(`@typescript-eslint/eslint-plugin` 6→8), #283 (`eslint` 8.57.1→10.8.1). All are now
+CI-verifiable, i.e. they will start *looking* mergeable. Note the gap this exposes:
+`client_lint_build.yml` runs `type-check` with `continue-on-error: true` against ~400 known
+pre-existing type errors, so a `typescript` 5→7 major would **not** be caught by the lane
+that should catch it. Decide intake posture before green checks are mistaken for authorization.
+
+**#279 classification (2026-08-17, updated 2026-08-18):** `@vitejs/plugin-vue` 5.2.4 → 6.0.8
+is a **client major toolchain bump**, the same family as R-04 (`vite` 5→6) and R-05 (`vitest`
+2→3). Per the matrix it is **Tranche C**, trigger *BR-021 resolved or explicit manual
+build-witness authorization*. **This classification is UNCHANGED by the 2026-08-18
+resolution** — Tranche C rests on major-toolchain-migration risk (BR-021), not on CI
+verifiability; the two are independent axes. What the secret-store fix removed is the
+*verification* obstacle, not the *authorization* one. Neither compatibility nor CI coverage is
+now an open question (35/35 green, container + smoke included); the open question is solely
+**tranche authorization**. Whether a green container+smoke witness satisfies the trigger's
+"explicit manual build-witness authorization" is an owner reading, not an agent inference. Toolchain-floor
 prerequisite shipped separately: `chore/node-engine-floor-20.19` (`cbe39b4a`) declares
 `engines.node = ^20.19.0 || >=22.12.0` and asserts it on all five client build paths.
 
