@@ -22,8 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
 
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping: paths are resolved relative to this tsconfig.
+       No baseUrl - TypeScript 6 errors on it (TS5101) and TS 7 removes it. */
     "paths": {
       "@/*": ["./src/*"]
     },
