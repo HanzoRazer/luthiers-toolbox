@@ -64,7 +64,8 @@
       "new type-check step logic under typescript@5.9.3 -> step exit 0 ('150 pre-existing type diagnostics (non-blocking, BR-021)')",
       "new lint step logic under typescript@5.9.3 -> step exit 0 (findings tolerated)",
       "npm run <script> exit-code propagation confirmed for child exit 1 and exit 2",
-      "python -c 'yaml.safe_load(.github/dependabot.yml)' -> parses, 4 ignore entries (vite, vitest, typescript, vue-tsc), labels intact"
+      "python -c 'yaml.safe_load(.github/dependabot.yml)' -> parses, 4 ignore entries (vite, vitest, typescript, vue-tsc), labels intact",
+      "2026-08-18 re-run of PR #280 with SG_SPEC_TOKEN placed in BOTH the Actions and Dependabot secret stores: api-verify PASS (20m28s), server-env-check PASS; lint-build, Containers, build-and-test, proxy-adaptive, proxy-parity, Core CI Summary and the Railway client service all FAIL identically on '[@vue/compiler-sfc] ScriptCompileContext.error' during 'npm run build' -> six CI jobs plus the deploy, one root cause"
     ]
   },
   "architecture_scan": {

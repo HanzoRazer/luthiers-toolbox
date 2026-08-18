@@ -86,6 +86,33 @@ typescript@7.0.2 -> npx vite build
 `reliable-elegance - @luthiers-toolbox/client` deployment failure reported on the PR. The
 Railway failure and the vitest failure are **one bug**, not two.
 
+### 2.3 Re-run with `SG_SPEC_TOKEN` in place (2026-08-18) — the blast radius is wider than it looked
+
+The first CI pass on this PR was not a clean read. `api-verify` and `server-env-check` died in
+~10s at a secrets preflight (`##[error]SG_SPEC_TOKEN not configured — cannot clone private
+sg-spec`), and the container jobs died early at a compose `.env` step — none of them reached the
+client build at all. `main` was green on the same workflows the same day, because **a Dependabot
+PR does not read the Actions secret store; it reads the separate Dependabot store.**
+
+With `SG_SPEC_TOKEN` placed in **both** stores and the failed runs re-triggered, the attribution
+is unambiguous:
+
+| Now passing | Now failing |
+|---|---|
+| `api-verify` (20m28s), `server-env-check`, `API Tests`, `Geometry Parity`, `api-smoke`, `guard`, `debt-gates`, `verify-policy`, governance + CBSP21 gates, Railway **API** service | `lint-build`, `Containers (Build + Smoke)`, `build-and-test`, `proxy-adaptive`, `proxy-parity`, `Core CI Summary`, Railway **client** service |
+
+**Every remaining failure is the same bug.** `Containers`, `build-and-test`, `proxy-adaptive`
+and `proxy-parity` all now reach the client Docker build and all die identically:
+
+```
+#16 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+  [@vue/compiler-sfc] ... at ScriptCompileContext.error (/app/node_modules/@vue/compiler-sfc/...)
+```
+
+So `typescript@7.0.2` takes down **six CI jobs and the Railway client deploy**, not the two it
+appeared to. Four of those were previously masked by an environment gap that had nothing to do
+with the bump. Nothing else on this PR is red.
+
 ### 2.3 Local probe — `typescript@6.0.3` is clean
 
 Same worktree, same source, only the compiler swapped:
