@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-10
+Last updated: 2026-08-17
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -918,6 +918,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | MAINT-DEFER-004 | Dependency Security / DEP-SEC-001 (ACTIVE — Tier-1 COMPLETE; residuals dispositioned; Tranche B/C deferred) | Process / deps | ACTIVE — T1 COMPLETE | 2026-08-10 |
+| MAINT-DEFER-005 | GitHub Actions runtime deprecation (Node 20 actions force-run on Node 24) | Process / CI infra | DEFERRED | 2026-08-17 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1025,6 +1026,28 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Alert witness (2026-08-11):** open alerts **65 → 32**; `axios` + `postcss` → **0**. Tier-1 witnessed effective. Remaining: 9 archive (owner dismissal) · 4 Tranche C · 1 out-of-scope Python · 18 Tranche B, only `ws` runtime-scope. Detail: residual matrix §8.
 
+**R-11 scope extension — container lane (witnessed 2026-08-17, PR #279):** R-11 records the
+constraint as scoped to `api-verify`. It is broader. The same withheld `SG_SPEC_TOKEN` fails
+`docker/api/Dockerfile` at its sg-spec install step, and that image is built **first** in
+`containers.yml`, `core_ci.yml`, `proxy_parity.yml` and `proxy_adaptive.yml` — so the client
+image step never executes. **Consequence not previously recorded: a Dependabot PR touching
+only `packages/client` has zero container-path coverage.** `lint-build` (which needs no
+secret) is the only client witness that runs. Witness: PR #279 run `32015893727` job
+`95345157189` — `ERROR: SG_SPEC_TOKEN required to install declared dependency sg-spec` at
+step 8/13 of the API image, `Containers (Build + Smoke)` red, client image never reached;
+`lint-build` green in 3m19s; both Railway previews green. Corollary for triage: on any
+Dependabot PR, `mergeStateStatus: UNSTABLE` and the red container checks are **structural
+and carry no information about the bump** — do not read them as a verdict on its content.
+
+**#279 classification (2026-08-17):** `@vitejs/plugin-vue` 5.2.4 → 6.0.8 is a **client major
+toolchain bump**, the same family as R-04 (`vite` 5→6) and R-05 (`vitest` 2→3). Per the
+matrix it is **Tranche C**, trigger *BR-021 resolved or explicit manual build-witness
+authorization*; per R-11/§12 any authorized version hygiene must ship as **one consolidated
+PR**, not a merged Dependabot PR. Compatibility is not the open question — it was witnessed
+green on `lint-build` — the open question is tranche authorization. Toolchain-floor
+prerequisite shipped separately: `chore/node-engine-floor-20.19` (`cbe39b4a`) declares
+`engines.node = ^20.19.0 || >=22.12.0` and asserts it on all five client build paths.
+
 **Future implementation (≤2 tranches — no recursive PR creation during adjudication):**
 - **Tranche B** — residual security remediation + authorized version hygiene from #254–#258 when explicitly ordered. **Must ship as one consolidated PR** — Dependabot-authored PRs cannot pass `api-verify` (no `SG_SPEC_TOKEN`), so they cannot be CI-verified before merge. See matrix R-11.
 - **Tranche C** — major toolchain: `vitest` 2→3 → witness → `vite` 5→6. **Restore trigger:** BR-021 resolution **or** explicit manual build-witness authorization. Do not silently bypass BR-021.
@@ -1032,6 +1055,58 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Open owner action:** dismiss the 9 archive alerts, and add `archive/**` / `docs/archive/**` exclusions to `.github/dependabot.yml` so they stop regenerating (matrix §11).
 
 **Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly. Generated PRs enter residual adjudication before implementation. No alert dismissal for active dependencies solely to reduce counts.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+### MAINT-DEFER-005 — GitHub Actions runtime deprecation (Node 20 → Node 24)
+
+**Status:** DEFERRED  
+**last_verified:** 2026-08-17  
+**Category:** Process / CI infra  
+**Priority:** LOW now, becomes BLOCKING when GitHub removes the compatibility shim  
+
+**Why deferred:** Nothing is broken today. GitHub is **force-running** Node-20-runtime actions
+on Node 24 and emitting a warning; the shim keeps every workflow green. The work is a
+mechanical version bump with no product value until the shim is withdrawn, and bumping 174
+pins across 54 workflow files is a large blast radius to absorb while CI-RED-016 and
+CI-RED-021 are open.
+
+**Witness (2026-08-17, PR #279 run `32015893727` job `95345157189`):**
+
+```
+Node.js 20 is deprecated. The following actions target Node.js 20 but are being
+forced to run on Node.js 24: actions/checkout@v4, docker/build-push-action@v6.
+```
+
+Reference: <https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/>
+
+**Scope (measured, not estimated — `.github/workflows/`, 54 files, 174 `uses:` pins):**
+
+| Pin | Occurrences | Node-20 runtime? |
+|-----|-------------|------------------|
+| `actions/checkout@v4` | 63 | **witnessed yes** (named in the warning) |
+| `actions/setup-python@v5` | 50 | not witnessed — confirm before bumping |
+| `actions/upload-artifact@v4` | 23 | not witnessed — confirm |
+| `docker/build-push-action@v6` | 12 | **witnessed yes** (named in the warning) |
+| all 14 other distinct pins (`docker/setup-buildx@v3`, `docker/login@v3`, `docker/metadata@v5`, `github-script@v7`, `cache@v4`, `download-artifact@v4`, `setup-node@v4`, the three pages actions, `attest-build-provenance@v1`, 3 third-party) | 26 | not witnessed — confirm |
+
+**53 of 54 workflow files** carry at least one of the two witnessed pins. Only the two named
+in the warning are confirmed Node-20; the rest are **candidates to verify**, not established
+findings — do not bump them on the assumption that a `@v4` implies a Node 20 runtime.
+
+**Restore trigger (any one):**
+- GitHub announces a removal date for the Node 24 force-run shim, **or**
+- a workflow actually fails with a runtime error attributable to the action runtime, **or**
+- an unrelated sprint is already editing a given workflow — bump that file's pins opportunistically.
+
+**Done-condition:** every `uses:` pin in `.github/workflows/` resolves to an action release
+whose `runs.using` is `node24` or a container/composite action, and a full CI cycle on `main`
+emits no Node-runtime deprecation warning.
+
+**Sequencing note:** do **not** open this as one 53-file PR while CI-RED-021 is OPEN — with a
+single collaborator and `Fence Checks (Blocking)` as the only required check, a sweep that
+touches every workflow has no meaningful review gate. Prefer per-lane batches, or hold until
+CI-RED-021's second-owner prerequisite lands.
 
 **Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
 
