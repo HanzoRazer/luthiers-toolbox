@@ -37,13 +37,50 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
+      # Non-blocking for the pre-existing type diagnostics tracked by BR-021
+      # (150 on 2026-08-17, not the "400+" the previous TODO claimed), but the
+      # type-checker itself must actually RUN. A toolchain crash emits no
+      # "error TS" diagnostic at all, and the previous blanket
+      # `continue-on-error: true` made that indistinguishable from type debt.
+      # That is exactly how the typescript 5.9.3 -> 7.0.2 bump (PR #280) walked
+      # past this gate: vue-tsc died with ERR_PACKAGE_PATH_NOT_EXPORTED and the
+      # step was still reported green.
       - name: Type check (vue-tsc)
-        run: npm run type-check
-        continue-on-error: true  # TODO: Fix 400+ pre-existing type errors then remove this
+        run: |
+          set +e
+          npm run type-check 2>&1 | tee "$RUNNER_TEMP/vue-tsc.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          count=$(grep -cE 'error TS[0-9]+' "$RUNNER_TEMP/vue-tsc.log" || true)
+          if [ "$count" -gt 0 ]; then
+            echo "::notice::vue-tsc reported $count pre-existing type diagnostics (non-blocking, BR-021)"
+            exit 0
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "::error::vue-tsc exited $status without emitting a single TS diagnostic."
+            echo "::error::This is a TOOLCHAIN failure (compiler could not load), not pre-existing type debt."
+            exit 1
+          fi
+          echo "::notice::vue-tsc clean - BR-021 may be closeable; drop the tolerance below."
 
+      # ESLint exit codes are unambiguous: 1 = lint findings (tolerated during
+      # adoption), 2 = fatal error such as an unloadable config or plugin.
+      # Under typescript@7 this step exited 2 (@typescript-eslint could not read
+      # the compiler API) and the old `continue-on-error: true` hid it.
       - name: Lint (ESLint)
-        run: npm run lint
-        continue-on-error: true  # Allow warnings during initial adoption
+        run: |
+          set +e
+          npm run lint
+          status=$?
+          set -e
+          if [ "$status" -ge 2 ]; then
+            echo "::error::ESLint exited $status - fatal configuration/plugin error, not lint findings."
+            exit 1
+          fi
+          if [ "$status" -eq 1 ]; then
+            echo "::notice::ESLint reported findings above the --max-warnings budget (non-blocking, BR-021)"
+          fi
+          exit 0
 
       - name: Run tests (Vitest)
         run: npm test

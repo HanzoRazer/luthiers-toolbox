@@ -22,3 +22,23 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: vitest
         update-types: ["version-update:semver-major"]
+      # TypeScript type-check/lint toolchain. These four move as ONE unit;
+      # a lone major bump of any of them breaks the client build.
+      # Witnessed on PR #280 (typescript 5.9.3 -> 7.0.2): TypeScript 7 replaced
+      # the package-root export with a version stub
+      # ("." -> "./lib/version.cjs") and dropped the tsserver bin, so every
+      # consumer that does require('typescript') loses the compiler API:
+      #   vue-tsc@2            -> ERR_PACKAGE_PATH_NOT_EXPORTED ('./lib/tsc')
+      #   @typescript-eslint@6 -> TypeError reading 'Intrinsic'
+      #   @vue/compiler-sfc    -> "No fs option provided to compileScript",
+      #                           which fails `vite build` and broke the
+      #                           Railway @luthiers-toolbox/client deploy.
+      # Evidence: docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vue-tsc
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typescript-eslint/*"
+        update-types: ["version-update:semver-major"]

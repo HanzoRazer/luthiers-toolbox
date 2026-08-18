@@ -1,0 +1,82 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TOOLCHAIN_GATE_HARDENING",
+  "title": "ci(client): fail the client gate on toolchain crashes, pin TS type-check/lint majors to manual review",
+  "intent": "PR #280 (dependabot: typescript 5.9.3 -> 7.0.2) broke vue-tsc, @typescript-eslint and @vue/compiler-sfc, failing vitest and the Railway client deploy — yet the type-check and lint steps both reported green because they carried blanket continue-on-error. This change makes the client gate distinguish a tool that RAN and reported known debt from a tool that could not run at all, and adds the TypeScript type-check/lint toolchain to the DEP-SEC Tier-2 semver-major ignore list so a lone major bump of any of the four is not proposed automatically. BR-021's 150 pre-existing type diagnostics remain deferred debt and are still non-blocking.",
+  "change_type": "ci",
+  "behavior_change": "ci-gate-strictness",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/",
+      ".github/dependabot.yml",
+      "docs/ci/"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/client_lint_build.yml",
+      ".github/dependabot.yml",
+      "docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Replace blanket continue-on-error on the type-check and lint steps with crash-vs-diagnostics discrimination.",
+      "scan_targets": [
+        ".github/workflows/client_lint_build.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "vue-tsc is tolerated only when it emits at least one 'error TS<n>' diagnostic; a non-zero exit with no diagnostic now fails the job. ESLint exit 1 (findings) is tolerated; exit >= 2 (fatal config/plugin error) now fails the job. On the current main toolchain (typescript 5.9.3) both steps still pass, so no new red is introduced; under typescript 7.0.2 both steps correctly fail."
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Add typescript, vue-tsc, eslint and @typescript-eslint/* semver-major to the existing DEP-SEC Tier-2 ignore list.",
+      "scan_targets": [
+        ".github/dependabot.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "Dependabot no longer opens standalone semver-major PRs for the four coupled TypeScript type-check/lint packages, and will close PR #280 on its next run. Minor and patch updates for all four are unaffected. Manual coordinated upgrades are unaffected."
+    },
+    {
+      "path": "docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md",
+      "intent": "Record the TS 7 incompatibility witness, the reproduced Railway root cause, the validated TS 6.0.3 replacement, and the gate defect.",
+      "scan_targets": [
+        "docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md"
+      ],
+      "risk": "low",
+      "behavior_change": "Documentation only. No runtime or CI behavior."
+    }
+  ],
+  "diff_articulation": {
+    "what_changed": "(1) client_lint_build.yml: the 'Type check (vue-tsc)' step now captures vue-tsc's output and exit code and tolerates failure ONLY when the log contains at least one 'error TS<n>' diagnostic (the BR-021 debt case); a non-zero exit with zero diagnostics is reported as a toolchain failure and fails the job. The 'Lint (ESLint)' step now keys off ESLint's documented exit codes: 1 = lint findings (tolerated during adoption), >= 2 = fatal configuration/plugin error (fails the job). The stale '400+ pre-existing type errors' comment is corrected to the measured 150. (2) dependabot.yml: typescript, vue-tsc, eslint and @typescript-eslint/* semver-major are added to the ignore list alongside the existing vite/vitest Tier-2 entries, with an inline record of the TS 7 breakage mechanism. (3) A new docs/ci/ evidence record documents the incompatibility, the reproduced Railway build failure, the validated typescript@6.0.3 replacement, and the gate defect that let this through.",
+    "why_not_redundant": "The continue-on-error tolerance was added for a specific, tracked debt (BR-021's pre-existing type errors) but was written as a blanket, so it also suppressed the compiler failing to load. DEP-SEC-001A section 5 predicted exactly this failure mode for major toolchain bumps; PR #280 is the first realisation of it. Narrowing the tolerance preserves the deferred debt while restoring signal for the case it was never meant to cover. The dependabot ignore entries are the recurrence control: without them the same unmergeable PR is reopened on the next weekly run. Neither change fixes BR-021, and neither is a cosmetic refactor."
+  },
+  "verification": {
+    "commands_run": [
+      "probe worktree at origin/main 3e925c50, packages/client, npm ci -> 417 packages",
+      "typescript@5.9.3 (lockfile state): vue-tsc --noEmit -> exit 2, 150 'error TS' diagnostics; eslint . --ext .ts,.vue --max-warnings=1200 -> exit 1, 34 errors / 7683 warnings",
+      "typescript@7.0.2: vue-tsc --noEmit -> exit 1, ERR_PACKAGE_PATH_NOT_EXPORTED './lib/tsc', 0 diagnostics; eslint -> exit 2, plugin load TypeError; vite build -> exit 1, no dist/index.html",
+      "typescript@6.0.3 (+ baseUrl removed from tsconfig): vue-tsc -> exit 2, 150 diagnostics, diff vs 5.9.3 output EMPTY; eslint -> exit 1, identical 34/7683; vitest run -> exit 0, 41 files / 756 passed; vite build -> exit 0, dist/index.html produced",
+      "new type-check step logic under typescript@7.0.2 -> step exit 1 ('vue-tsc exited 1 without emitting a single TS diagnostic')",
+      "new lint step logic under typescript@7.0.2 -> step exit 1 ('ESLint exited 2 - fatal configuration/plugin error')",
+      "new type-check step logic under typescript@5.9.3 -> step exit 0 ('150 pre-existing type diagnostics (non-blocking, BR-021)')",
+      "new lint step logic under typescript@5.9.3 -> step exit 0 (findings tolerated)",
+      "npm run <script> exit-code propagation confirmed for child exit 1 and exit 2",
+      "python -c 'yaml.safe_load(.github/dependabot.yml)' -> parses, 6 ignore entries, labels intact"
+    ]
+  },
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-17-280",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 2
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Medium: the client gate becomes stricter, so a future toolchain regression that previously reported green will now block the PR — that is the intent, and it is verified not to fire on the current main toolchain. Low: dependabot will stop proposing four semver-majors automatically, which trades update latency for reviewability, consistent with the existing vite/vitest Tier-2 posture. Low: docs-only addition. BR-021 and the --max-warnings=1200 budget are deliberately NOT changed here; both are owner decisions."
+  }
+}
