@@ -60,6 +60,61 @@ No `vue-router` version bump in this change.
 
 ---
 
+## 3a. LAB-023 severity — measured, and higher than "wrong link"
+
+`assistantTo` feeds `<RouterLink :to="assistantTo">`. `RouterLink` calls `router.resolve()`
+during render, and Vue Router **throws** on an unknown route name rather than degrading to a
+dead href. Reverting the fix in a probe worktree and re-running the spec against the production
+route table:
+
+```
+src/views/AppDashboardView.spec.ts (8 tests | 8 failed)
+  → No match for {"name":"AiAssistantProject", ...}
+```
+
+**All eight tests fail, including the six SPINE-005 ones**, because the render of the whole
+component aborts. So the pre-fix behaviour was not a mis-targeted link — **the entire Dashboard
+failed to render for any user with a Project id in scope**, i.e. `?project_id=` present *or* an
+Instrument Project loaded into the singleton. On a cold session with no Project the fallback
+returned the bare `AiAssistant` route and the page rendered, which is why the defect survived.
+
+The fixture route the spec previously injected was masking exactly this.
+
+## 3b. Review pass on the fix (2026-08-18)
+
+Reviewer caution — the second LAB-023 test was named *"without param when no Project is in the
+query"* but the singleton mock was hard-coded to `SINGLETON-ID`, so the case it actually exercised
+was the singleton fallback (`/ai/assistant/SINGLETON-ID`). Its assertions
+(`startsWith("/ai/assistant")`, `not.toContain("/ai/assistant/project/")`) passed either way.
+**Confirmed and fixed**, not merely renamed:
+
+- The singleton mock now reads a mutable `vi.hoisted` box, reset in `afterEach`, so a genuinely
+  Project-less case can be expressed at all.
+- Three behavioural tests replace the vague one: query beats singleton → `/ai/assistant/A`;
+  no query, singleton present → **exactly** `/ai/assistant/SINGLETON-ID`; nothing anywhere →
+  **exactly** `/ai/assistant`.
+- A contract test pins the route table itself: `hasRoute("AiAssistant")` true,
+  `hasRoute("AiAssistantProject")` false, and both resolved path shapes.
+
+Verified non-vacuous by mutation: deleting the `|| hubProjectId.value` fallback now fails the
+singleton test (`expected '/ai/assistant' to be '/ai/assistant/SINGLETON-ID'`). Under the previous
+assertions that mutation passed silently.
+
+Also applied: the identical `route.query.project_id` parsing block was duplicated across
+`assistantTo` and `instrumentHubLink`; it is now one `projectIdFromQuery()` helper. Behaviour is
+unchanged and covered on both call sites (net −1 line).
+
+**Not changed, deliberately:** the two links read the query identically but treat it differently —
+the assistant falls back to the singleton, the Instrument Hub link must not (SPINE-005). That
+asymmetry is now asserted rather than implied. The differing param names (`project_id` for
+`AiAssistant`, `projectId` for `InstrumentHub`) match their respective route definitions and are
+correct as written.
+
+Client suite after the change: **41 files, 760 passed, 1 skipped**; `vue-tsc` 150 pre-existing
+diagnostics with none in `AppDashboardView`; ESLint 0 errors on both files.
+
+---
+
 ## 4. Landing criteria (future)
 
 Authorize only via Dev Order / human PR that moves together:

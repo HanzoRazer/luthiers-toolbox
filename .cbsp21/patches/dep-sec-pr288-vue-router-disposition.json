@@ -33,42 +33,61 @@
       "Railway client deployment failed on #288",
       "npx vitest run src/views/AppDashboardView.spec.ts",
       "python3 -c 'import yaml; yaml.safe_load(open(\".github/dependabot.yml\"))'",
-      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "review pass 2026-08-18 (probe worktree at PR head): npx vitest run src/views/AppDashboardView.spec.ts -> 10 passed (was 8)",
+      "severity probe: reverted assistantTo to name 'AiAssistantProject' -> 8/8 tests FAIL with 'No match for' (RouterLink resolve throws, whole Dashboard render aborts) -> LAB-023 is a render-crash for any session with a Project id, not a mis-targeted href",
+      "mutation probe: removed the '|| hubProjectId.value' fallback -> the new singleton test FAILS ('expected /ai/assistant to be /ai/assistant/SINGLETON-ID'); the previous prefix-only assertions passed under that mutation",
+      "npx vitest run (full client suite) -> exit 0, 41 files passed / 1 skipped, 760 passed",
+      "npx vue-tsc --noEmit -> 150 pre-existing diagnostics, none in AppDashboardView",
+      "npx eslint src/views/AppDashboardView.vue src/views/AppDashboardView.spec.ts -> 0 errors (1 pre-existing max-lines warning; file 672 -> 671 lines)"
     ]
   },
   "files": [
     {
       "path": ".github/dependabot.yml",
       "intent": "Stop freestanding vue-router/pinia major fan-out until Tranche C.",
-      "scan_targets": [".github/dependabot.yml"],
+      "scan_targets": [
+        ".github/dependabot.yml"
+      ],
       "risk": "low",
       "behavior_change": "Dependabot intake only."
     },
     {
       "path": "docs/ci/DEP_SEC_PR288_VUE_ROUTER_DISPOSITION_2026-08-18.md",
       "intent": "Durable #288 risk disposition and landing criteria.",
-      "scan_targets": ["docs/ci/DEP_SEC_PR288_VUE_ROUTER_DISPOSITION_2026-08-18.md"],
+      "scan_targets": [
+        "docs/ci/DEP_SEC_PR288_VUE_ROUTER_DISPOSITION_2026-08-18.md"
+      ],
       "risk": "low",
       "behavior_change": "none - documentation"
     },
     {
       "path": "packages/client/src/views/AppDashboardView.vue",
       "intent": "LAB-023: point AI Assistant link at AiAssistant + project_id.",
-      "scan_targets": ["packages/client/src/views/AppDashboardView.vue"],
+      "scan_targets": [
+        "packages/client/src/views/AppDashboardView.vue"
+      ],
       "risk": "low",
       "behavior_change": "Fixes broken named-route navigation when a Project id is present."
     },
     {
       "path": "packages/client/src/views/AppDashboardView.spec.ts",
       "intent": "Remove fake route; assert LAB-023 hrefs.",
-      "scan_targets": ["packages/client/src/views/AppDashboardView.spec.ts"],
+      "scan_targets": [
+        "packages/client/src/views/AppDashboardView.spec.ts"
+      ],
       "risk": "low",
       "behavior_change": "tests only"
     }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-08-18-DEP-SEC-288",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Does not upgrade vue-router. Closes #288. Guard/query hotspots remain deferred to Tranche C migration PR."
