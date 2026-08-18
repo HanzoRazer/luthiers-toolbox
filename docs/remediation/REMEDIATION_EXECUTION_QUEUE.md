@@ -47,7 +47,7 @@ Not code fixes — the gates that must clear before/around execution.
 
 | Rank | Item | Disposition |
 | ---- | ---- | ----------- |
-| 1 | BR-021 — burn down 400+ TS errors, then re-block `client_lint_build` + `vue_decomposition` gates | MAINTAINABILITY_DEBT |
+| 1 | BR-021 — **type-check lane ratcheted** (`ci/type_error_gate.py`, frozen at 150, fails on increase; not "burn down first"). Remaining: apply the same ratchet to the `client_lint_build` **eslint** lane and `vue_decomposition_gate` | MAINTAINABILITY_DEBT |
 | 2 | BR-022 — complete SG_SPEC_TOKEN env-guard rollout | MAINTAINABILITY_DEBT |
 | 3 | BR-005 — finish CAM 7D/7E/7F (tests + commit) | UNFINISHED_SPRINT_WORK |
 | 4 | BR-010 — NECK-A frontend migration completion | UNFINISHED_SPRINT_WORK |

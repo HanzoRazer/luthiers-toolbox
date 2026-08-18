@@ -1,0 +1,10 @@
+{
+  "schema": "type_error_baseline_v1",
+  "tool": "vue-tsc --noEmit",
+  "scope": "packages/client",
+  "max_errors": 150,
+  "measured_at": "2026-08-18",
+  "measured_env": "local (Node 20 / npm ci against packages/client/package-lock.json on origin/main)",
+  "reconciliation_note": "Seeded from a local main measurement (150). The '400+' in the old workflow comment was stale. The authoritative reconciliation is the PR's own client_lint_build run: Linux is case-sensitive and may surface a few more module-resolution errors than a Windows/macOS measurement, so if the PR CI reports > 150 the gate reds the PR (not main) and the baseline is bumped to the CI-observed count before merge, so main passes at parity. Only INCREASES above this ceiling fail thereafter.",
+  "_comment": "BR-021 type-error ratchet. Ceiling for `vue-tsc --noEmit` errors in packages/client; the gate (ci/type_error_gate.py) FAILS when the count EXCEEDS max_errors. Ratchet DOWN as debt is fixed (rerun: python ci/type_error_gate.py --report <out> --update); never raise without justification."
+}

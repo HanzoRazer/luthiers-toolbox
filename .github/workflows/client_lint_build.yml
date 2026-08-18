@@ -37,9 +37,18 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-      - name: Type check (vue-tsc)
-        run: npm run type-check
-        continue-on-error: true  # TODO: Fix 400+ pre-existing type errors then remove this
+      # BR-021: the type-check lane no longer runs under `continue-on-error: true`
+      # (a hollow guarantee — it reported errors but always went green). It is now
+      # ratcheted: the known pre-existing errors are frozen as a baseline and the
+      # step FAILS on any INCREASE, so a regression (e.g. a TS major-version bump)
+      # can no longer pass green. vue-tsc's own non-zero exit is captured (set +e)
+      # because the gate — not tsc's exit — decides pass/fail against the baseline.
+      - name: Type check (vue-tsc) — ratcheted
+        run: |
+          set +e
+          npm run type-check > /tmp/tsc_report.txt 2>&1
+          set -e
+          python3 "$GITHUB_WORKSPACE/ci/type_error_gate.py" --report /tmp/tsc_report.txt
 
       - name: Lint (ESLint)
         run: npm run lint

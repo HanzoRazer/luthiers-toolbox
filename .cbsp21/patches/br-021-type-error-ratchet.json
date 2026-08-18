@@ -1,0 +1,51 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "BR_021_TYPE_ERROR_RATCHET",
+  "title": "ci(br-021): ratchet client type-check lane so it can fail again (remove hollow-guarantee continue-on-error)",
+  "intent": "Repair the BR-021 hollow-guarantee in packages/client's CI. The `Type check (vue-tsc)` step in client_lint_build.yml ran under `continue-on-error: true`, so it reported type errors but the check went green unconditionally - a guard that structurally cannot fail. A TypeScript major-version bump (e.g. the open TS 5->7 Dependabot PR #280) would sail through green with the one lane that should catch breakage physically unable to report failure. Replace the suppression with a ratchet mirroring ci/router_count_gate.py: freeze the known error count as a baseline ceiling and FAIL on any increase, so the guard can fail again on exactly a type regression - without requiring the full debt to be burned down first.",
+  "change_type": "ci",
+  "behavior_change": "The client_lint_build `Type check` lane is no longer non-failing. `continue-on-error: true` is removed from that step; the step now runs vue-tsc (its non-zero exit captured), then ci/type_error_gate.py enforces the count against ci/type_error_baseline.json (max_errors=150). A change that raises the client type-error count above the baseline now FAILS this lane (exit 1). Counts at or below the baseline pass; a drop suggests ratcheting the baseline down. No application/runtime code changes; the eslint lane (:46) and vue_decomposition_gate remain unchanged (flagged as the remaining BR-021 work).",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/br-021-type-error-ratchet.json",
+      "ci/type_error_gate.py",
+      "ci/type_error_baseline.json",
+      ".github/workflows/client_lint_build.yml",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+    ],
+    "files_expected_to_change": [
+      "ci/type_error_gate.py",
+      "ci/type_error_baseline.json",
+      ".github/workflows/client_lint_build.yml",
+      "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md",
+      "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) ci/type_error_gate.py (new, force-added like the sibling ci/*_gate.py) - count-based ratchet gate mirroring router_count_gate.py: counts `error TS####` lines from a captured vue-tsc report (or runs vue-tsc), compares to the baseline ceiling, exits 1 on increase / 0 at-or-below, with --update to regenerate and --strict for exact parity. Count-based on purpose: a signature/message allowlist would be invalidated by the tsc-major bump it guards against. (2) ci/type_error_baseline.json (new) - max_errors=150, MEASURED from a real main run (npm ci + vue-tsc); the workflow's old '400+' comment was stale. Carries a reconciliation note: the PR's own client_lint_build run is authoritative (Linux case-sensitivity may surface a few more module-resolution errors), so any discrepancy reds the PR (not main) and the baseline is bumped before merge. (3) client_lint_build.yml - `Type check` step: removed `continue-on-error: true`; now captures vue-tsc output (set +e) then runs the gate, which decides pass/fail. (4) BACKLOG_ADJUDICATION_LEDGER.md + REMEDIATION_EXECUTION_QUEUE.md - BR-021 reconciled: type-check lane RESOLVED-BY-RATCHET; readiness -> partial; remaining = eslint lane + vue_decomposition_gate.",
+    "why_not_redundant": "Removes a Family-III hollow guarantee (a check that reports success unconditionally) at the CI level, restoring the type-check lane's ability to fail - directly relevant to five open Dependabot bumps (esp. TS 5->7 #280) whose green is otherwise meaningless for type-safety. Reuses the repo's established ratchet pattern rather than inventing one; no runtime code touched; register kept honest (BR-021 no longer claims 'suppressed' when it is now ratcheted)."
+  },
+  "verification": {
+    "commands_run": [
+      "Measured real main count: npm ci + vue-tsc --noEmit in packages/client on origin/main -> 150 errors across 27 files (the '400+' workflow comment was stale).",
+      "Gate PASS at baseline: py ci/type_error_gate.py --report <main tsc> -> observed 150 == baseline 150 -> exit 0.",
+      "Gate FAIL on regression: injected one extra `error TS9999` line -> 151 > 150 -> [FAIL] exit 1.",
+      "Gate DOWN case: fewer errors -> [OK] + 'consider ratcheting the baseline down' -> exit 0.",
+      "Workflow YAML validates (yaml.safe_load).",
+      "ci gate + baseline force-added to match the existing tracked-despite-/ci/-ignore convention (ci/file_size_gate.py, ci/router_count_gate.py).",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR file set> -> to run in CI"
+    ]
+  },
+  "files": [
+    { "path": "ci/type_error_gate.py", "intent": "New count-based type-error ratchet gate (mirrors router_count_gate.py); fails on increase above baseline.", "risk": "medium", "behavior_change": "New CI gate; makes the type-check lane able to fail." },
+    { "path": "ci/type_error_baseline.json", "intent": "Frozen ceiling max_errors=150 (measured on main); reconciliation note for the PR-CI bootstrap.", "risk": "low", "behavior_change": "New baseline data." },
+    { "path": ".github/workflows/client_lint_build.yml", "intent": "Remove continue-on-error from the type-check step; wire vue-tsc capture -> ratchet gate.", "risk": "medium", "behavior_change": "Type-check lane can now fail on type-error increase." },
+    { "path": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md", "intent": "Reconcile BR-021: type-check lane resolved-by-ratchet; eslint + vue_decomposition remain.", "risk": "low", "behavior_change": "None (register)." },
+    { "path": "docs/remediation/REMEDIATION_EXECUTION_QUEUE.md", "intent": "Update BR-021 queue item to the ratchet approach + remaining lanes.", "risk": "low", "behavior_change": "None (queue)." }
+  ]
+}
