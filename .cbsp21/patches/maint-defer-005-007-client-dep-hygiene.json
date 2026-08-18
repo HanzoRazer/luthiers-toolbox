@@ -10,7 +10,6 @@
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      ".cbsp21/patches/maint-defer-005-007-client-dep-hygiene.json",
       "SPRINTS.md"
     ],
     "files_expected_to_change": [
@@ -36,14 +35,21 @@
     {
       "path": "SPRINTS.md",
       "intent": "Register three client dependency/build hygiene findings in the DEFERRED MAINTENANCE parking lot with restore triggers.",
-      "scan_targets": ["SPRINTS.md"],
+      "scan_targets": [
+        "SPRINTS.md"
+      ],
       "risk": "low",
       "behavior_change": "None - ledger entry only."
     }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-08-18-002",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Documentation-only ledger addition. Scope limits stated plainly: this patch does NOT add the dependabot `groups:` block, does NOT write any 3D test, and does NOT add a bundle-size gate - each is registered with a restore trigger for separate authorization. .github/dependabot.yml is deliberately untouched because it is MAINT-DEFER-004's intake boundary and is concurrently edited by the ci/client-toolchain-gate-hardening branch; editing it here would conflict with in-flight work. Per the maintenance-audit boundary, no CI-RED-* or BR-* entry is adjudicated."
