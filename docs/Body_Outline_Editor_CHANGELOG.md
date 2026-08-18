@@ -190,6 +190,28 @@ real layer instead of a bare raster the panel cannot see.
 opacity, scaling, session save, the calibration guard). Retiring it means
 finishing the v3.3.0 migration — see the open items.
 
+### Fixed — review pass (2026-08-17)
+
+Three follow-up fixes from PR review, all in `hostinger/body-outline-editor.html`:
+
+- **Multi-layer restore synced the sliders from default state.** `loadSession()`
+  applied each saved layer's `opacity`/`rotation`/scale asynchronously in the
+  bitmap `onReady` callback, but selected the active layer and synced the
+  rotation/opacity sliders **synchronously right after** the load loop — before
+  any callback ran. The canvas restored correctly, but the sliders read the
+  layer's construction defaults (0.5 opacity, 0°) and stayed stale, so the next
+  slider drag jumped from the wrong baseline. The layer's plain model fields need
+  no bitmap, so they are now set synchronously; only position and the
+  rotation/scale matrix remain in `onReady`.
+- **Two canvas modes could be armed at once.** Arming Scale did not disarm
+  Calibrate/Measure (and vice-versa), so both could be "on" while their handlers
+  competed for the same mouse events (calibration short-circuits `onMouseDrag`
+  while scale is also armed → a swallowed drag). A shared `disarmAllCanvasModes()`
+  (extracted from `exitCurrentMode()`) now enforces one armed canvas mode at a
+  time, called when Scale or Calibrate is armed.
+- **Startup modal still said `v3.5`** while the file stamp was bumped to
+  `v3.6.0`. Modal text corrected.
+
 ---
 
 ### Rolled up from before the bump

@@ -699,7 +699,7 @@
     <!-- v3.1.0: MODE DIALOG (shown on page load) -->
     <div id="mode-dialog-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="background:#1e1e1e; border:1px solid #00ff88; border-radius:8px; padding:32px; max-width:500px; text-align:center;">
-            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.5</h2>
+            <h2 style="color:#00ff88; margin-bottom:16px;">Body Outline Editor v3.6.0</h2>
             <p style="color:#888; margin-bottom:24px;">Choose how you want to start</p>
 
             <button id="mode-default-btn" style="background:#00aa5a; color:#000; padding:12px 24px; margin:0 8px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
@@ -1526,7 +1526,12 @@ function updateActiveModeIndicator() {
     exitBtn.style.display = anyMeasureActive ? 'inline-block' : 'none';
 }
 
-function exitCurrentMode() {
+// Disarm every armed canvas tool. Used both by Exit Mode and, for mutual
+// exclusivity, when a new tool is armed — only one canvas mode may be armed at a
+// time, otherwise two handlers compete for the same mouse events (e.g. calibration
+// short-circuits onMouseDrag while scale is also armed) and the mode indicator /
+// Exit Mode reflect only one of them.
+function disarmAllCanvasModes() {
     if (state.calibrating) cancelCalibration();
     if (state.measuring) cancelMeasure();
     if (scalingActive) cancelScaleMode(null);
@@ -1549,6 +1554,10 @@ function exitCurrentMode() {
     }
 
     updateActiveModeIndicator();
+}
+
+function exitCurrentMode() {
+    disarmAllCanvasModes();
 
     if (state.editorMode === 'empty') {
         showEmptyModeToast('Ready for dot placement');
@@ -1832,6 +1841,10 @@ function startNonUniformScale() {
         showToast('Layer is locked', '#ff6600');
         return;
     }
+
+    // One armed canvas mode at a time: drop calibration/measurement before arming
+    // scale, so their handlers cannot swallow the scale drag.
+    disarmAllCanvasModes();
 
     scalingActive = true;
     scaleDragging = false;
@@ -5153,6 +5166,9 @@ function startCalibration() {
         return;
     }
 
+    // One armed canvas mode at a time: drop scale/measurement before calibrating.
+    disarmAllCanvasModes();
+
     state.calibrating = true;
     state.calPoints = [];
     state.calMarkers.forEach(m => m.remove());
@@ -5986,14 +6002,9 @@ function loadSession(session) {
         // z-order; only the bitmap load is async, and updateImageOrder() re-sorts
         // by array position on each completion.
         session.layers.forEach(function (saved) {
-            addImageLayer(saved.data, saved.name || null, function (layer) {
-                layer.scaleX = (saved.scaleX !== undefined) ? saved.scaleX : 1;
-                layer.scaleY = (saved.scaleY !== undefined) ? saved.scaleY : 1;
-                layer.rotation = saved.rotation || 0;
-                layer.opacity = (saved.opacity !== undefined) ? saved.opacity : 0.5;
-                layer.locked = !!saved.locked;
-                layer.visible = (saved.visible !== undefined) ? !!saved.visible : true;
-
+            const newId = addImageLayer(saved.data, saved.name || null, function (layer) {
+                // Bitmap-dependent restore — needs the loaded raster. Position and the
+                // rotation/scale matrix can only be applied once the image is attached.
                 if (Array.isArray(saved.position)) {
                     layer.raster.position = new Point(saved.position[0], saved.position[1]);
                 }
@@ -6005,6 +6016,22 @@ function loadSession(session) {
                 if (gridLayer) gridLayer.sendToBack();
                 updateLayerList();
             });
+
+            // The layer object is pushed synchronously by addImageLayer; only the
+            // bitmap load is async. Its plain model fields (opacity/rotation/scale/
+            // visibility/lock) need no bitmap, so set them NOW — otherwise the active
+            // -layer selection and slider sync below run before the async onReady and
+            // read the layer's construction defaults (0.5 opacity, 0deg), leaving the
+            // sliders permanently stale even though the canvas restores correctly.
+            const layer = state.imageLayers.find(l => l.id === newId);
+            if (layer) {
+                layer.scaleX = (saved.scaleX !== undefined) ? saved.scaleX : 1;
+                layer.scaleY = (saved.scaleY !== undefined) ? saved.scaleY : 1;
+                layer.rotation = saved.rotation || 0;
+                layer.opacity = (saved.opacity !== undefined) ? saved.opacity : 0.5;
+                layer.locked = !!saved.locked;
+                layer.visible = (saved.visible !== undefined) ? !!saved.visible : true;
+            }
         });
 
         // Ids are assigned in call order, so the saved index maps directly.
@@ -6013,11 +6040,10 @@ function loadSession(session) {
             : 0;
         const activeLayer = state.imageLayers[activeIdx];
         if (activeLayer) {
+            // Model fields are already restored above, so setActiveLayer syncs the
+            // rotation/opacity sliders to the saved values, not the defaults.
             setActiveLayer(activeLayer.id);
             state.raster = activeLayer.raster;   // alias, see importImage
-            document.getElementById('image-opacity').value = Math.round(activeLayer.opacity * 100);
-            document.getElementById('opacity-value').textContent =
-                Math.round(activeLayer.opacity * 100) + '%';
         }
         document.getElementById('image-panel').style.display = 'block';
 
