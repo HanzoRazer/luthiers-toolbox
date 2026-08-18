@@ -1,0 +1,77 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TYPESCRIPT_6",
+  "title": "build(deps-dev): upgrade packages/client to typescript 6.0.3 (replaces the TS 7 bump in PR #280)",
+  "intent": "Replacement for PR #280, which bumped typescript 5.9.3 -> 7.0.2 and broke vue-tsc, @typescript-eslint, vitest and the Railway client build. TypeScript 6.0.3 is the bridge release: it keeps the legacy package shape (no exports restriction, tsserver bin retained, engines node >=14.17), so the existing vue-tsc@2 / @typescript-eslint@6 / @vue/compiler-sfc toolchain keeps working unchanged, and it is the version TypeScript 7 expects a project to migrate from. Evidence: docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md.",
+  "change_type": "build",
+  "behavior_change": "build-toolchain-version",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "packages/client/"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/tsconfig.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Pin typescript to an exact 6.0.3 instead of the ^5.3.0 range.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "Exact pin rather than a caret range. TypeScript does not follow semver for minor releases (a minor can introduce new diagnostics), and this repository's type gate is non-blocking for the BR-021 debt, so a silent minor drift would not be surfaced. Patch updates remain available via Dependabot; majors are Tier-2 manual per .github/dependabot.yml."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Regenerate for typescript 6.0.3.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "Single dependency version change; no transitive graph restructuring, and none of the platform-specific @typescript/typescript-* optional packages that typescript 7 introduces."
+    },
+    {
+      "path": "packages/client/tsconfig.json",
+      "intent": "Remove the deprecated baseUrl option, which is a hard error under TypeScript 6.",
+      "scan_targets": [
+        "packages/client/tsconfig.json"
+      ],
+      "risk": "low",
+      "behavior_change": "Without this, TS 6 aborts with TS5101 before type-checking anything. Path mapping is unaffected: the single paths entry is already tsconfig-relative (\"@/*\": [\"./src/*\"]), verified by the diagnostics being byte-identical to the 5.9.3 baseline, including the 33 pre-existing 'Cannot find module @/...' entries. Preferred over silencing with ignoreDeprecations: \"6.0\", which would only defer the same work."
+    }
+  ],
+  "diff_articulation": {
+    "what_changed": "packages/client devDependency typescript moves from ^5.3.0 (locked 5.9.3) to an exact 6.0.3, the lockfile is regenerated, and the deprecated \"baseUrl\": \".\" compiler option is removed from tsconfig.json because TypeScript 6 rejects it (TS5101). No application source changes. No other dependency moves — vue-tsc stays ^2.1.0 and @typescript-eslint stays ^6.21.0, both verified compatible with 6.0.3.",
+    "why_not_redundant": "PR #280 attempted the same axis and is unmergeable: typescript 7 replaced its package-root export with a version stub, so vue-tsc, @typescript-eslint and @vue/compiler-sfc all lose the compiler API, failing the test suite and the Railway client deploy. 6.0.3 moves the package off 5.x without that breakage and is the prerequisite for any eventual TS 7 adoption. The tsconfig edit is not cosmetic — without it the type-checker does not run at all under TS 6."
+  },
+  "verification": {
+    "commands_run": [
+      "probe worktree at origin/main 3e925c50, packages/client, npm ci then npm install --save-dev --save-exact typescript@6.0.3",
+      "node -e require('typescript/package.json').version -> 6.0.3; lockfile node_modules/typescript -> 6.0.3",
+      "npx vue-tsc --noEmit -> exit 2, 150 'error TS' diagnostics; diff against the typescript@5.9.3 baseline output is EMPTY (byte-identical, zero new diagnostics)",
+      "npx vitest run -> exit 0, 41 test files passed / 1 skipped, 756 tests passed, 17 todo",
+      "npx vite build -> exit 0, dist/index.html produced",
+      "npx eslint . --ext .ts,.vue --max-warnings=1200 -> exit 1, 34 errors / 7683 warnings, identical to the 5.9.3 baseline (pre-existing BR-021 lint debt, unchanged)",
+      "control: the same tree with typescript@7.0.2 -> vue-tsc exit 1 (ERR_PACKAGE_PATH_NOT_EXPORTED), eslint exit 2 (plugin load TypeError), vite build exit 1 (no dist/index.html)"
+    ]
+  },
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-17-TS6",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 2
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Medium: a compiler major is a build-toolchain change, so it is witnessed end to end (type-check, lint, unit tests, production bundle) rather than by CI alone — particularly because the type-check and lint steps are non-blocking for BR-021 on branches that predate the companion gate-hardening change. Low: exact pin narrows automatic update range. Low: tsconfig option removal, verified diagnostics-neutral. BR-021's 150 type diagnostics and 7683 lint warnings are carried forward unchanged and are not addressed here."
+  }
+}

@@ -22,8 +22,8 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
 
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping - paths are tsconfig-relative; baseUrl removed, it is
+       deprecated in TS 6 (TS5101) and removed in TS 7 */
     "paths": {
       "@/*": ["./src/*"]
     },
