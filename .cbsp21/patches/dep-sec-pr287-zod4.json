@@ -1,0 +1,78 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_PR287_ZOD4",
+  "title": "DEP-SEC: land zod 3→4 with compare_types schema witnesses (close #287)",
+  "intent": "Re-land Dependabot #287 (zod 3.25.76→4.4.3) on a human branch. Copilot risk is medium for a major, but the only packages/client Zod import is cam/compare/compare_types.ts using standard APIs. Add focused schema tests; witness pass on Zod 3 and Zod 4; full test suite and build green. Correct Copilot claim that lint-build fails on #287 (job passes; BR-021 soft-fail).",
+  "change_type": "chore",
+  "behavior_change": "Runtime dependency zod major. Parsing behavior for compare baselines/candidates/diff results remains covered by new unit tests (defaults, unions, tuple loops).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-pr287-zod4.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/cam/compare/__tests__/compare_types.test.ts",
+      "docs/ci/DEP_SEC_PR287_ZOD4_DISPOSITION_2026-08-18.md"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/cam/compare/__tests__/compare_types.test.ts",
+      "docs/ci/DEP_SEC_PR287_ZOD4_DISPOSITION_2026-08-18.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Bump zod to ^4.4.3 / 4.4.3. Add compare_types Vitest coverage. Add disposition documenting usage search, CI correction, and evidence.",
+    "why_not_redundant": "Dependabot #287 should not be the merge vehicle when a human land can carry tests + CBSP21. No prior schema tests existed for the only Zod call site."
+  },
+  "verification": {
+    "commands_run": [
+      "rg from ['\"]zod['\"] packages/client → only compare_types.ts",
+      "gh pr checks 287 → lint-build pass; 33 SUCCESS (corrects Copilot red-CI claim)",
+      "vitest compare_types.test.ts on zod@3.25.76 → 5/5",
+      "vitest compare_types.test.ts on zod@4.4.3 → 5/5",
+      "npm test → 761 passed / 17 todo",
+      "npm run build → exit 0",
+      "py -3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Raise zod major to ^4.4.3.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "Runtime validation library major; schemas unchanged."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lock zod@4.4.3.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "lockfile only"
+    },
+    {
+      "path": "packages/client/src/cam/compare/__tests__/compare_types.test.ts",
+      "intent": "Smoke-test the only Zod call site across the major.",
+      "scan_targets": ["packages/client/src/cam/compare/__tests__/compare_types.test.ts"],
+      "risk": "low",
+      "behavior_change": "tests only"
+    },
+    {
+      "path": "docs/ci/DEP_SEC_PR287_ZOD4_DISPOSITION_2026-08-18.md",
+      "intent": "Durable risk disposition and evidence for #287.",
+      "scan_targets": ["docs/ci/DEP_SEC_PR287_ZOD4_DISPOSITION_2026-08-18.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-DEP-SEC-287",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Single Zod import site; no preprocess/transform/catch. Closing Dependabot #287 after human land. Does not address BR-021 soft-fail debt."
+  }
+}

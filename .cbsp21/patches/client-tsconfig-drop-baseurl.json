@@ -1,0 +1,51 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TSCONFIG_DROP_BASEURL",
+  "title": "chore(client): drop deprecated baseUrl from tsconfig so the TypeScript 6 upgrade is unblocked",
+  "intent": "Removes the compilerOption `baseUrl` from packages/client/tsconfig.json. It is a no-op under the currently pinned TypeScript 5.9.3, but under TypeScript 6 it raises TS5101 at the tsconfig level, which aborts type-checking before a single source file is read. Landing this ahead of the typescript@6.0.3 upgrade means that upgrade is a pure dependency bump with no config coupling.",
+  "change_type": "chore",
+  "behavior_change": "None. `paths` ({\"@/*\": [\"./src/*\"]}) is already tsconfig-relative and keeps resolving without baseUrl (supported since TypeScript 4.4). Runtime and bundler resolution of the `@` alias never consulted tsconfig at all - it is configured independently in vite.config.ts (resolve.alias via fileURLToPath) and vitest.config.ts (resolve.alias via path.resolve), neither of which is touched. Proven no-op: the vue-tsc diagnostic set is byte-for-byte identical before and after.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-tsconfig-drop-baseurl.json",
+      "packages/client/tsconfig.json"
+    ],
+    "files_expected_to_change": [
+      "packages/client/tsconfig.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Deletes the line `\"baseUrl\": \".\",` from packages/client/tsconfig.json and replaces the `/* Path mapping */` comment with one recording why baseUrl is absent (TS 6 errors TS5101 on it; TS 7 removes it outright). No other compilerOption, include, or reference is altered.",
+    "why_not_redundant": "Nothing else in the repository sets or reads this compiler option. A repository-wide search for `baseUrl` outside node_modules returns exactly one compilerOption occurrence - this line - and roughly forty unrelated application-level identifiers (API base-URL parameters in src/sdk/**, src/services/**, and RMOS/rosette components) which are ordinary function parameters and interface fields, not TypeScript configuration."
+  },
+  "verification": {
+    "commands_run": [
+      "Baseline, TypeScript 5.9.3 with baseUrl present: `npm run type-check` -> exit 2, 150 diagnostics, 66 of them TS2307, 0 TS5101.",
+      "This patch, TypeScript 5.9.3 with baseUrl removed: `npm run type-check` -> exit 2, 150 diagnostics, 66 TS2307, 0 TS5101.",
+      "Diagnostic sets diffed as sorted `file(line,col): error TSnnnn` tuples -> `diff` reports NO differences. The change is a proven no-op on the pinned toolchain; the 150 diagnostics are pre-existing BR-021 debt and are neither added to nor reduced by this patch.",
+      "Forward check, typescript@6.0.3 with baseUrl still present: `npm run type-check` -> exit 2 with exactly ONE diagnostic, `tsconfig.json(26,5): error TS5101: Option 'baseUrl' is deprecated`. Because it is a tsconfig-level error, type-checking never runs.",
+      "Forward check, typescript@6.0.3 with baseUrl removed (the state this patch creates): `npm run type-check` -> 150 diagnostics, 0 TS5101, matching the 5.9.3 baseline exactly. ESLint unchanged at 38 errors / 7693 warnings; `npm run build` exit 0; `npm test` 756 passed / 0 failed.",
+      "Alias independence confirmed by reading vite.config.ts and vitest.config.ts: both define the `@` alias themselves, so bundler and test resolution cannot regress from a tsconfig-only edit.",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/tsconfig.json",
+      "intent": "Drop the deprecated baseUrl compilerOption so the client type-checker keeps working across the TypeScript 5 -> 6 boundary.",
+      "scan_targets": ["packages/client/tsconfig.json"],
+      "risk": "low",
+      "behavior_change": "None - proven by an identical vue-tsc diagnostic set before and after."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Single-line configuration change with no runtime surface. Scope limit stated plainly: this patch does NOT upgrade TypeScript and does NOT close PR #280 (typescript 7.0.2), which is independently unlandable because TS 7 breaks vue-tsc@2, @typescript-eslint at any version, and @vue/compiler-sfc. It only removes the one config-level blocker standing between this repository and a typescript@6.0.3 upgrade, so that upgrade can be evaluated on its own merits."
+  }
+}

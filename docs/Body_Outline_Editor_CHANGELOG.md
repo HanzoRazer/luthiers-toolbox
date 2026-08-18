@@ -24,19 +24,24 @@
 
 ---
 
-## ⚠️ Current state: shipped file is ahead of its version stamp
+## ✅ Resolved: the stamp identifies the build again
 
-The file still reads **v3.5.0**, but three commits have changed it since that
-release — **+193 lines**, including a behavioural change to API configuration and
-a template dimension correction.
+For three months the file carried a **v3.5.0** stamp while four commits changed
+it underneath — 241 lines, including two features. Anything identifying the build
+from the line-7 comment was wrong, and the same stamp additionally sat on
+`tools/body-outline-editor.html`, a *different* build.
+
+**v3.6.0 closes both.** The four unreleased changes are rolled up and the stamp
+is bumped, so `hostinger/` and `tools/` no longer claim the same version.
 
 | | Lines | |
 |---|--:|---|
-| v3.5.0 as released (`8c3be18b`) | 5,957 | version stamp set here |
-| Current on `main` (`c8b0b549`) | 6,150 | stamp still says v3.5.0 |
+| v3.5.0 as released (`8c3be18b`) | 5,957 | previous stamp |
+| **v3.6.0** | **6,198** | stamp now matches the build |
 
-Anything identifying the build from the line-7 comment will be wrong. See
-[Unreleased](#unreleased--after-v350).
+*Standing rule, learned the hard way: a change that alters editor behaviour bumps
+the stamp in the same commit. Three of the four rolled up here were behavioural,
+and each left the marker further from the truth.*
 
 ---
 
@@ -49,7 +54,7 @@ Anything identifying the build from the line-7 comment will be wrong. See
 | **v3.3.0** | 04-22 00:52 | `a0d5f216` | 5,071 | +602 | Image Tools & Templates |
 | **v3.4.0** | 04-22 01:17 | `b79e29f5` | 5,875 | +804 | Measurement & Enhanced Export |
 | **v3.5.0** | 04-22 01:23 | `8c3be18b` | 5,957 | +82 | Final Polish — *Precision Tier complete* |
-| *(unversioned)* | 05-12 → 05-27 | 3 commits | 6,150 | +193 | IBG config, JSON import, jumbo fix |
+| **v3.6.0** | 08-16 | 4 commits | 6,198 | +241 | Integration & Image Layer Repair |
 
 The entire Precision Tier landed in **64 minutes** on 2026-04-22, growing the
 editor by 1,710 lines (+40%).
@@ -152,10 +157,67 @@ only so a future search for the release name is not misread. Outside those two,
 
 ---
 
-## Unreleased — after v3.5.0
+## v3.6.0 — Integration & Image Layer Repair · 2026-08-16
 
-Three commits changed the editor without a version bump. None is documented in
-the User Manual.
+`d32a3a57` + 3 earlier commits · 6,198 lines (+241 since v3.5.0)
+
+Four changes had accumulated without a version bump — three of them behavioural.
+This rolls them up and re-synchronises the line-7 stamp with the build. Only the
+last is documented in the User Manual; the other three are still owed doc work
+(Manual Chapters 8 and 9).
+
+### Fixed — reference image rendered twice, and Clear Image did not clear
+
+`d32a3a57`. `importImage()` built **two** independent Paper.js rasters from one
+file — one for `state.imageLayers` (the Layers panel model added in v3.3.0) and a
+second for the legacy `state.raster` — both at 0.5 opacity, stacked. Three
+consequences:
+
+- an imported reference rendered darker than the 50% the panel reported;
+- **Clear Image** removed only the legacy copy, so the image dimmed but stayed;
+- **calibration desynchronised the two** — `applyCalibration` scaled the legacy
+  raster while `rotateActiveLayer` moved the layer's, leaving two mismatched
+  copies of the reference diverging on separate axes. In a tool whose purpose is
+  tracing over a calibrated reference, that was the damaging one.
+
+`state.raster` is now an **alias** for the active layer's raster rather than a
+parallel object. `new Raster(` appears exactly once in the file, so two copies of
+one image are no longer constructible. `clearImage()`, `resetEditor()` and
+`loadSession()` all dispose layers properly, and a restored session registers a
+real layer instead of a bare raster the panel cannot see.
+
+`state.raster` was **not** retired: five consumers still read it (calibration,
+opacity, scaling, session save, the calibration guard). Retiring it means
+finishing the v3.3.0 migration — see the open items.
+
+### Fixed — review pass (2026-08-17)
+
+Three follow-up fixes from PR review, all in `hostinger/body-outline-editor.html`:
+
+- **Multi-layer restore synced the sliders from default state.** `loadSession()`
+  applied each saved layer's `opacity`/`rotation`/scale asynchronously in the
+  bitmap `onReady` callback, but selected the active layer and synced the
+  rotation/opacity sliders **synchronously right after** the load loop — before
+  any callback ran. The canvas restored correctly, but the sliders read the
+  layer's construction defaults (0.5 opacity, 0°) and stayed stale, so the next
+  slider drag jumped from the wrong baseline. The layer's plain model fields need
+  no bitmap, so they are now set synchronously; only position and the
+  rotation/scale matrix remain in `onReady`.
+- **Two canvas modes could be armed at once.** Arming Scale did not disarm
+  Calibrate/Measure (and vice-versa), so both could be "on" while their handlers
+  competed for the same mouse events (calibration short-circuits `onMouseDrag`
+  while scale is also armed → a swallowed drag). A shared `disarmAllCanvasModes()`
+  (extracted from `exitCurrentMode()`) now enforces one armed canvas mode at a
+  time, called when Scale or Calibrate is armed.
+- **Startup modal still said `v3.5`** while the file stamp was bumped to
+  `v3.6.0`. Modal text corrected.
+
+---
+
+### Rolled up from before the bump
+
+The three commits below shipped between 2026-05-12 and 05-27 without a version
+change. None is documented in the User Manual.
 
 ### `f25bb949` — 2026-05-27 · fix(ibg): align jumbo dimensions across four definition paths
 
@@ -377,10 +439,12 @@ that introduces it.
    edits to reconcile. **Governed, though** — Production, MEDIUM,
    *"Avoid collision"* — so it wants its own change and its own approval, and
    must not be bundled into a documentation change. Mechanical ≠ ungoverned.
-3. Bump the line-7 version stamp, or roll the three unreleased commits into a
-   v3.6.0. The stamp currently misidentifies the build **and is duplicated onto
-   `tools/`**, so "v3.5.0" names two different files (namespace note 1). If the
-   two artifacts are meant to stay separate, they need distinguishable stamps.
+3. ~~Bump the line-7 version stamp.~~ **DONE — v3.6.0.** The four unreleased
+   changes are rolled up and the stamp matches the build. The duplicate-stamp
+   collision is resolved as a side effect: `tools/` still reads v3.5.0, so the
+   two artifacts no longer claim the same version. Note that v3.5.0 is *also*
+   not strictly accurate for `tools/` — it is a snapshot of `hostinger/` at
+   `70a0d3ee`, one commit past that release — which item 2 settles.
 4. Document JSON import in Manual Chapter 8.
 5. Document the `IBG_CONFIG` / URL-param overrides in Manual Chapter 9.
 6. Replace the `[INTERNAL_ACCESS_NOTE]` placeholders — 7 across 3 documents —
