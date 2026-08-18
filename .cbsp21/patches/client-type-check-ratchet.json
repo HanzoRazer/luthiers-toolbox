@@ -1,0 +1,79 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TYPE_CHECK_RATCHET",
+  "title": "ci(client): make the vue-tsc type-check gate real via a regression ratchet",
+  "intent": "The type-check step in client_lint_build.yml ran with continue-on-error: true and a stale TODO (\"400+ pre-existing type errors\"), so vue-tsc could never fail the job. The measured count on main a48e9002 is 150, not 400+. Because the errors were emitted into a log nobody gated on, a reviewer of PR #290 (typescript 5.9.3 -> 6.0.3) read them as evidence the bump had broken type-checking. It had not: typescript 5.9.3 and 6.0.3 produce byte-identical error sets on the same tree. This patch converts the decorative step into a ratchet - the count may fall freely but may not rise - which is the pattern the repo already uses in ci/file_size_baseline.json and ci/router_count_baseline.json. No source files and no dependency versions are touched.",
+  "change_type": "ci",
+  "behavior_change": "new-gate",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/",
+      "scripts/ci/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/client_lint_build.yml",
+      "scripts/ci/client_type_check_baseline.json",
+      "scripts/ci/check_client_type_check_ratchet.py",
+      ".cbsp21/patches/client-type-check-ratchet.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "scripts/ci/check_client_type_check_ratchet.py (new) parses a vue-tsc log, counts `file(line,col): error TSxxxx` occurrences, and compares the total against a committed ceiling; it fails on any increase, names the files that rose, prints a nudge to lower the ceiling when the count falls, and supports --write-baseline for regeneration. scripts/ci/client_type_check_baseline.json (new) records total_errors 150 plus per-code and per-file breakdowns, the dual-TypeScript witness, and a note that 63 of the 150 come from an orphaned directory. client_lint_build.yml: the type-check step now tees its output to $RUNNER_TEMP/vue-tsc.log and keeps continue-on-error (it is not the gate); a new non-continue-on-error 'Type-check regression ratchet' step runs the checker and IS the gate. The stale '400+' TODO comment is replaced with the measured 150 and the reason the step stays non-gating.",
+    "why_not_redundant": "Nothing in the repo gated on client type errors: the only step that ran vue-tsc was continue-on-error, and no baseline file for it existed (ci/ held file_size and router_count baselines only). The ratchet is not redundant with the existing lint step either - lint is separately continue-on-error and is NOT type-aware (packages/client/.eslintrc.cjs sets no parserOptions.project, so @typescript-eslint/parser runs syntax-only and never builds a TS program), so ESLint cannot observe type errors at all."
+  },
+  "verification": {
+    "commands_run": [
+      "BASELINE EXPERIMENT on a clean worktree at main a48e9002: npm ci -> typescript 5.9.3 -> npx vue-tsc --noEmit -> exit 2, 150 errors. Then npm i -D typescript@6.0.3 -> npx vue-tsc --noEmit -> exit 2, 150 errors. comm(3) over normalized `file(line,col): error TScode` keys: 0 lines only-in-TS5, 0 lines only-in-TS6 -> the error sets are IDENTICAL and no error is attributable to the TypeScript 6 bump",
+      "npx eslint . --ext .ts,.vue --max-warnings=1200 under typescript 6.0.3 -> 34 errors / 7683 warnings, matching the numbers observed in CI; no parser crash and no @typescript-eslint unsupported-version warning",
+      "grep for parserOptions.project in packages/client/.eslintrc.cjs -> ABSENT, confirming lint is syntax-only and structurally cannot be affected by the TypeScript version",
+      "ratchet PASS path: --log <ts6 log, 150> vs ceiling 150 -> exit 0",
+      "ratchet FAIL path: synthetic +1 error appended -> exit 1, reports 150 -> 151 and names src/views/NewThing.vue 0 -> 1",
+      "anti-bless-the-void: missing log -> exit 1; empty log -> exit 1; log with no recognizable vue-tsc output -> exit 1 (a gate that passes on absent input is worse than no gate)",
+      "clean-run path: synthetic 'Found 0 errors.' log -> exit 0 plus a nudge to lower the ceiling",
+      "CI-equivalent end-to-end: exported GITHUB_WORKSPACE and RUNNER_TEMP and ran the exact command block from the workflow verbatim -> exit 0",
+      "yaml.safe_load over client_lint_build.yml -> OK; step wiring asserted: 'Type check (vue-tsc)' continue-on-error=True, 'Type-check regression ratchet' continue-on-error=False",
+      "orphan evidence: zero inbound imports to src/views/cam/headstock/ from anywhere outside that directory; router/index.ts 'WorkspaceView' hit resolves to CamWorkspaceView.vue, a different file; all 11 aliased import targets confirmed absent on disk"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/check_client_type_check_ratchet.py",
+      "intent": "Parse a vue-tsc log, compare the error count against a committed ceiling, fail on increase, refuse to pass on absent or unrecognizable input.",
+      "scan_targets": ["scripts/ci/check_client_type_check_ratchet.py"],
+      "risk": "low",
+      "behavior_change": "New CI checker. Read-only against the repo except under --write-baseline."
+    },
+    {
+      "path": "scripts/ci/client_type_check_baseline.json",
+      "intent": "Committed ceiling (150) plus per-code/per-file breakdown, the dual-TypeScript witness, and the orphaned-directory hotspot note.",
+      "scan_targets": ["scripts/ci/client_type_check_baseline.json"],
+      "risk": "low",
+      "behavior_change": "New data file; sits alongside the existing ci/file_size_baseline.json and ci/router_count_baseline.json."
+    },
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Tee vue-tsc output to a log and add a gating ratchet step; correct the stale 400+ TODO.",
+      "scan_targets": [".github/workflows/client_lint_build.yml"],
+      "risk": "low",
+      "behavior_change": "The job can now FAIL when client type errors increase above 150. It cannot fail any PR that does not add type errors, and the pre-existing 150 continue to pass. The lint step is deliberately left continue-on-error in this patch - see acknowledgement notes."
+    },
+    {
+      "path": ".cbsp21/patches/client-type-check-ratchet.json",
+      "intent": "Per-PR CBSP21 patch manifest for this change set.",
+      "scan_targets": [".cbsp21/patches/client-type-check-ratchet.json"],
+      "risk": "low",
+      "behavior_change": "none - manifest only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 4 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI-only change; no source, no dependency versions, no runtime behavior. The new gate is strictly one-directional (fails only on an increase above the current measured state), so it cannot break an existing PR that adds no type errors. Deliberately NOT done in this patch: (1) fixing the 150 errors - 87 are in live code and need domain judgement, 63 are in an orphaned directory whose removal is an owner call under FEATURE_PARITY_MIGRATION_POLICY; (2) an equivalent ratchet for ESLint - the numbers are measured (34 errors / 7683 warnings against a --max-warnings=1200 threshold) but that gate needs its own baseline and end-to-end validation, and shipping a second unvalidated gate alongside a validated one would weaken both; (3) deleting src/views/cam/headstock/ - the dead-code evidence is strong (unreachable, plus imports of 11 nonexistent modules) but source deletion is an owner decision, and the baseline file records the expected post-deletion ceiling so the follow-up is mechanical."
+  }
+}

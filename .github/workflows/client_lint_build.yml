@@ -38,8 +38,17 @@ jobs:
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Type check (vue-tsc)
-        run: npm run type-check
-        continue-on-error: true  # TODO: Fix 400+ pre-existing type errors then remove this
+        # Intentionally non-gating on its own: 150 type errors pre-date this
+        # workflow and are unrelated to any one PR. The ratchet step below is
+        # the real gate -- the count may fall freely, but it may not rise.
+        # (The former TODO here said "400+"; the measured count on main
+        # a48e9002 is 150, identical under typescript 5.9.3 and 6.0.3.)
+        continue-on-error: true
+        run: npm run type-check 2>&1 | tee "$RUNNER_TEMP/vue-tsc.log"
+
+      - name: Type-check regression ratchet
+        run: |
+          python3 "$GITHUB_WORKSPACE/scripts/ci/check_client_type_check_ratchet.py"             --log "$RUNNER_TEMP/vue-tsc.log"             --baseline "$GITHUB_WORKSPACE/scripts/ci/client_type_check_baseline.json"
 
       - name: Lint (ESLint)
         run: npm run lint
