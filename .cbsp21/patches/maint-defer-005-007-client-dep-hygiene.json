@@ -1,0 +1,51 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINT_DEFER_005_007_CLIENT_DEP_HYGIENE",
+  "title": "docs(sprints): register MAINT-DEFER-005/006/007 — dependabot grouping, 3D test coverage, bundle budget",
+  "intent": "Registers three client-side maintenance findings surfaced while reviewing PR #291 (three 0.183.2 -> 0.185.1) into the SPRINTS.md DEFERRED MAINTENANCE parking lot, so they are owned rather than remembered. Ledger-only: it adjudicates no CI-RED-* or BR-* entry and changes no runtime, workflow, or dependency.",
+  "change_type": "docs",
+  "behavior_change": "None. SPRINTS.md is a documentation ledger. No code, workflow, dependency manifest, or configuration file is touched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/maint-defer-005-007-client-dep-hygiene.json",
+      "SPRINTS.md"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds three index rows after the MAINT-DEFER-004 row and three detail sections between the MAINT-DEFER-004 and CI-RED-001 sections, following the existing *-DEFER-* record shape (Status / last_verified / Why deferred / Restore trigger / Path). MAINT-DEFER-005: .github/dependabot.yml declares no `groups:`, so packages that are only correct together arrive as separate PRs - witnessed twice, silently on #291 (three vs @types/three) and loudly on #282 (@typescript-eslint plugin vs parser, npm ci ERESOLVE). MAINT-DEFER-006: the three `three` consumers have no spec/test file, so every three upgrade is CI-green by construction and 761 passing tests are not evidence about 3D. MAINT-DEFER-007: no gate observes client bundle size; #291 measured +17.1 kB with nothing recording it. Also updates the file's `Last updated` header from 2026-08-10 to 2026-08-18.",
+    "why_not_redundant": "None of the three is registered anywhere. MAINT-DEFER-004 (DEP-SEC-001) owns dependency *security* remediation and names .github/dependabot.yml as its intake boundary, but records no grouping defect; its open dependabot.yml action is the separate archive/** exclusion item (residual matrix section 11). MAINT-DEFER-005 cross-references that boundary and the in-flight ci/client-toolchain-gate-hardening branch so the three dependabot.yml edits land together rather than conflicting. BR-021 covers pre-existing type/lint gate suppression, not bundle size and not 3D coverage."
+  },
+  "verification": {
+    "commands_run": [
+      "Coverage gap confirmed by search: no .spec.ts or .test.ts under packages/client/src references CamBackplot3D, ToolpathCanvas3D, or ToolpathPreview3D. Those three files are the complete set of `three` importers (two static `import * as THREE from 'three'`, one dynamic `await import('three')`).",
+      "Grouping gap confirmed by reading .github/dependabot.yml on main (a48e9002): no `groups:` key present.",
+      "three ships no types: node_modules/three@0.185.1 package.json has no `types`/`typings` field and no `types` condition in its `exports` map; `find node_modules/three -name '*.d.ts'` returns 0 files. @types/three is therefore mandatory, which is why the pair must be grouped.",
+      "Bundle datum measured from two real `npm run build` runs in isolated worktrees - main a48e9002 vs the PR head: dist/assets totals 3231.8 kB -> 3248.8 kB (+17.1 kB), DxfToGcodeView chunk 764.3 -> 781.4 kB, chunk count 114 both sides.",
+      "Type-check evidence behind the MAINT-DEFER-005 'silent failure' claim: vue-tsc diagnostics diffed as sorted `file(line,col): error TSnnnn` tuples across main, PR #291 as opened, and PR #291 with @types/three aligned - all three sets 150 and byte-for-byte identical, i.e. the skew produced no diagnostic at all.",
+      "Section placement verified: MAINT-DEFER-005/006/007 render between MAINT-DEFER-004 and CI-RED-001, inside DEFERRED MAINTENANCE.",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register three client dependency/build hygiene findings in the DEFERRED MAINTENANCE parking lot with restore triggers.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "None - ledger entry only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only ledger addition. Scope limits stated plainly: this patch does NOT add the dependabot `groups:` block, does NOT write any 3D test, and does NOT add a bundle-size gate - each is registered with a restore trigger for separate authorization. .github/dependabot.yml is deliberately untouched because it is MAINT-DEFER-004's intake boundary and is concurrently edited by the ci/client-toolchain-gate-hardening branch; editing it here would conflict with in-flight work. Per the maintenance-audit boundary, no CI-RED-* or BR-* entry is adjudicated."
+  }
+}
