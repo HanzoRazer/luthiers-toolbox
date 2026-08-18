@@ -38,7 +38,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: vue-tsc
         update-types: ["version-update:semver-major"]
-      - dependency-name: eslint
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@typescript-eslint/*"
-        update-types: ["version-update:semver-major"]
+      # NOT ignored here, deliberately: eslint (#283) and @typescript-eslint
+      # (#282) have live majors in flight, and #282 already carries a manual
+      # repair. Adding them would make Dependabot close that work. Their real
+      # defect is a different one — #282 bumped @typescript-eslint/eslint-plugin
+      # without @typescript-eslint/parser, so npm ci died on ERESOLVE. The fix
+      # for that class is a `groups:` entry keeping the two in one PR, which is
+      # left for whoever lands #282/#283.

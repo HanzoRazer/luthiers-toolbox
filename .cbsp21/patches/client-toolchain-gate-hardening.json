@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "CLIENT_TOOLCHAIN_GATE_HARDENING",
   "title": "ci(client): fail the client gate on toolchain crashes, pin TS type-check/lint majors to manual review",
-  "intent": "PR #280 (dependabot: typescript 5.9.3 -> 7.0.2) broke vue-tsc, @typescript-eslint and @vue/compiler-sfc, failing vitest and the Railway client deploy — yet the type-check and lint steps both reported green because they carried blanket continue-on-error. This change makes the client gate distinguish a tool that RAN and reported known debt from a tool that could not run at all, and adds the TypeScript type-check/lint toolchain to the DEP-SEC Tier-2 semver-major ignore list so a lone major bump of any of the four is not proposed automatically. BR-021's 150 pre-existing type diagnostics remain deferred debt and are still non-blocking.",
+  "intent": "PR #280 (dependabot: typescript 5.9.3 -> 7.0.2) broke vue-tsc, @typescript-eslint and @vue/compiler-sfc, failing vitest and the Railway client deploy — yet the type-check and lint steps both reported green because they carried blanket continue-on-error. This change makes the client gate distinguish a tool that RAN and reported known debt from a tool that could not run at all, and adds typescript and vue-tsc to the DEP-SEC Tier-2 semver-major ignore list so this bump is not re-proposed automatically. BR-021's 150 pre-existing type diagnostics remain deferred debt and are still non-blocking.",
   "change_type": "ci",
   "behavior_change": "ci-gate-strictness",
   "risk_level": "low",
@@ -32,12 +32,12 @@
     },
     {
       "path": ".github/dependabot.yml",
-      "intent": "Add typescript, vue-tsc, eslint and @typescript-eslint/* semver-major to the existing DEP-SEC Tier-2 ignore list.",
+      "intent": "Add typescript and vue-tsc semver-major to the existing DEP-SEC Tier-2 ignore list.",
       "scan_targets": [
         ".github/dependabot.yml"
       ],
       "risk": "low",
-      "behavior_change": "Dependabot no longer opens standalone semver-major PRs for the four coupled TypeScript type-check/lint packages, and will close PR #280 on its next run. Minor and patch updates for all four are unaffected. Manual coordinated upgrades are unaffected."
+      "behavior_change": "Dependabot no longer opens standalone semver-major PRs for typescript or vue-tsc, and will close PR #280 on its next run. Minor and patch updates are unaffected, as are manual coordinated upgrades. eslint and @typescript-eslint/* are deliberately excluded because PRs #283 and #282 are in flight and #282 already carries a manual repair; ignoring their majors would make Dependabot close that work."
     },
     {
       "path": "docs/ci/DEPENDABOT_TS7_INCOMPATIBILITY_2026-08-17.md",
@@ -50,8 +50,8 @@
     }
   ],
   "diff_articulation": {
-    "what_changed": "(1) client_lint_build.yml: the 'Type check (vue-tsc)' step now captures vue-tsc's output and exit code and tolerates failure ONLY when the log contains at least one 'error TS<n>' diagnostic (the BR-021 debt case); a non-zero exit with zero diagnostics is reported as a toolchain failure and fails the job. The 'Lint (ESLint)' step now keys off ESLint's documented exit codes: 1 = lint findings (tolerated during adoption), >= 2 = fatal configuration/plugin error (fails the job). The stale '400+ pre-existing type errors' comment is corrected to the measured 150. (2) dependabot.yml: typescript, vue-tsc, eslint and @typescript-eslint/* semver-major are added to the ignore list alongside the existing vite/vitest Tier-2 entries, with an inline record of the TS 7 breakage mechanism. (3) A new docs/ci/ evidence record documents the incompatibility, the reproduced Railway build failure, the validated typescript@6.0.3 replacement, and the gate defect that let this through.",
-    "why_not_redundant": "The continue-on-error tolerance was added for a specific, tracked debt (BR-021's pre-existing type errors) but was written as a blanket, so it also suppressed the compiler failing to load. DEP-SEC-001A section 5 predicted exactly this failure mode for major toolchain bumps; PR #280 is the first realisation of it. Narrowing the tolerance preserves the deferred debt while restoring signal for the case it was never meant to cover. The dependabot ignore entries are the recurrence control: without them the same unmergeable PR is reopened on the next weekly run. Neither change fixes BR-021, and neither is a cosmetic refactor."
+    "what_changed": "(1) client_lint_build.yml: the 'Type check (vue-tsc)' step now captures vue-tsc's output and exit code and tolerates failure ONLY when the log contains at least one 'error TS<n>' diagnostic (the BR-021 debt case); a non-zero exit with zero diagnostics is reported as a toolchain failure and fails the job. The 'Lint (ESLint)' step now keys off ESLint's documented exit codes: 1 = lint findings (tolerated during adoption), >= 2 = fatal configuration/plugin error (fails the job). The stale '400+ pre-existing type errors' comment is corrected to the measured 150. (2) dependabot.yml: typescript and vue-tsc semver-major are added to the ignore list alongside the existing vite/vitest Tier-2 entries, with an inline record of the TS 7 breakage mechanism and an inline note on why eslint/@typescript-eslint/* are deliberately left out while PRs #282/#283 are in flight. (3) A new docs/ci/ evidence record documents the incompatibility, the reproduced Railway build failure, the validated typescript@6.0.3 replacement, and the gate defect that let this through.",
+    "why_not_redundant": "The continue-on-error tolerance was added for a specific, tracked debt (BR-021's pre-existing type errors) but was written as a blanket, so it also suppressed the compiler failing to load. DEP-SEC-001A section 5 predicted exactly this failure mode for major toolchain bumps; PR #280 is the first realisation of it. Narrowing the tolerance preserves the deferred debt while restoring signal for the case it was never meant to cover. The dependabot ignore entries are the recurrence control: without them the same unmergeable PR is reopened on the next weekly run. The ignore list is scoped to typescript and vue-tsc so it does not supersede the live eslint/@typescript-eslint majors (#283, #282). Neither change fixes BR-021, and neither is a cosmetic refactor."
   },
   "verification": {
     "commands_run": [
@@ -64,7 +64,7 @@
       "new type-check step logic under typescript@5.9.3 -> step exit 0 ('150 pre-existing type diagnostics (non-blocking, BR-021)')",
       "new lint step logic under typescript@5.9.3 -> step exit 0 (findings tolerated)",
       "npm run <script> exit-code propagation confirmed for child exit 1 and exit 2",
-      "python -c 'yaml.safe_load(.github/dependabot.yml)' -> parses, 6 ignore entries, labels intact"
+      "python -c 'yaml.safe_load(.github/dependabot.yml)' -> parses, 4 ignore entries (vite, vitest, typescript, vue-tsc), labels intact"
     ]
   },
   "architecture_scan": {
@@ -77,6 +77,6 @@
     },
     "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "Medium: the client gate becomes stricter, so a future toolchain regression that previously reported green will now block the PR — that is the intent, and it is verified not to fire on the current main toolchain. Low: dependabot will stop proposing four semver-majors automatically, which trades update latency for reviewability, consistent with the existing vite/vitest Tier-2 posture. Low: docs-only addition. BR-021 and the --max-warnings=1200 budget are deliberately NOT changed here; both are owner decisions."
+    "acknowledgement_notes": "Medium: the client gate becomes stricter, so a future toolchain regression that previously reported green will now block the PR — that is the intent, and it is verified not to fire on the current main toolchain. Low: dependabot will stop proposing two semver-majors automatically, which trades update latency for reviewability, consistent with the existing vite/vitest Tier-2 posture. Low: docs-only addition. BR-021 and the --max-warnings=1200 budget are deliberately NOT changed here; both are owner decisions."
   }
 }

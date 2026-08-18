@@ -115,10 +115,11 @@ pre-existing `Cannot find module '@/…'` diagnostics, which are unchanged in bo
 ## 3. Disposition
 
 1. **Close PR #280.** Merging it red-lines the client build and the Railway deploy.
-2. **`.github/dependabot.yml`** — `typescript`, `vue-tsc`, `eslint`, `@typescript-eslint/*`
-   majors added to `ignore`, joining `vite`/`vitest` as DEP-SEC Tier-2. These four move as one
-   unit; a lone major of any of them is unmergeable by construction. Dependabot will close
-   #280 itself once this lands.
+2. **`.github/dependabot.yml`** — `typescript` and `vue-tsc` majors added to `ignore`, joining
+   `vite`/`vitest` as DEP-SEC Tier-2. Dependabot will close #280 itself once this lands.
+   `eslint` and `@typescript-eslint/*` are **deliberately left out** even though they belong to
+   the same coupled cluster: #283 and #282 are live, and #282 already carries a manual repair.
+   Ignoring their majors would make Dependabot close that work. See §5.
 3. **Replacement upgrade — `typescript@6.0.3`** (branch `deps/client-typescript-6`), which is
    validated above and is also the compiler TS 7 expects you to migrate *from*.
 4. **TypeScript 7 is not scheduled.** Re-open it only when `vue-tsc`/Volar and
@@ -176,6 +177,19 @@ BR-021 itself is untouched: the 150 diagnostics remain deferred debt.
   gh label create javascript   --color f1e05a --description "JavaScript/TypeScript ecosystem"
   ```
   Removing them from the config, as review suggested, would discard working intent.
+- **This is one of five simultaneous client dependabot majors, and they are not independent.**
+  Open at the time of writing: #279 `@vitejs/plugin-vue` 5→6, **#280 `typescript` 5→7**,
+  #281 `@types/node` 25→26, #282 `@typescript-eslint/eslint-plugin` 6→8, #283 `eslint` 8→10.
+  #282 already failed for a sibling reason — the plugin was bumped without
+  `@typescript-eslint/parser`, so `npm ci` aborted on ERESOLVE. The durable control for that
+  class is a Dependabot **`groups:`** entry that keeps `@typescript-eslint/*` (and, when it
+  moves, `eslint`) in a single PR, rather than a major-version `ignore`. That is left to
+  whoever lands #282/#283, because adding it here would supersede and close their in-flight
+  work.
+- **Lockfile conflict is expected between the client dependency branches.** #282's repair and
+  the `deps/client-typescript-6` branch both regenerate
+  `packages/client/package-lock.json`. Whichever merges second must re-run `npm install` on top
+  of the new `main` rather than resolving the lockfile by hand.
 - **`.eslint-rules/package.json` is an unmonitored npm manifest.** `.github/dependabot.yml`
   watches only `/packages/client`. Low-value (local rule package, no runtime reach) but it is a
   real gap in the "active dependency-security intake boundary" the config header claims.
