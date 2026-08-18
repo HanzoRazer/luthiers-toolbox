@@ -204,19 +204,26 @@ import { useInstrumentProject } from '@/instrument-workspace/shared-state/useIns
 const route = useRoute()
 const { projectId: hubProjectId } = useInstrumentProject()
 
+/**
+ * Read a Project id from the canonical `?project_id=` query. A repeated query key
+ * arrives as an array; the first non-empty entry wins. Returns '' when absent so
+ * callers can branch on truthiness. Shared by both Project-addressed links below —
+ * they differ in what they do with the result, not in how they read it.
+ */
+function projectIdFromQuery(q: unknown): string {
+  if (typeof q === 'string' && q) return q
+  if (Array.isArray(q) && q[0]) return String(q[0])
+  return ''
+}
+
 const assistantTo = computed(() => {
-  const q = route.query.project_id
-  const fromRoute =
-    typeof q === 'string' && q
-      ? q
-      : Array.isArray(q) && q[0]
-        ? String(q[0])
-        : ''
-  const pid = fromRoute || hubProjectId.value || ''
+  const pid = projectIdFromQuery(route.query.project_id) || hubProjectId.value || ''
+  // LAB-023: production router defines only `AiAssistant` at
+  // `/ai/assistant/:project_id?` — never invent a second named route.
   if (pid) {
     return {
-      name: 'AiAssistantProject' as const,
-      params: { projectId: pid },
+      name: 'AiAssistant' as const,
+      params: { project_id: pid },
     }
   }
   return { name: 'AiAssistant' as const }
@@ -230,13 +237,7 @@ const activeMenu = ref<string | null>(null)
 // absent, the link stays on the unchanged legacy Instrument Geometry route, and the
 // label follows the destination so one label never names two different workflows.
 const instrumentHubLink = computed(() => {
-  const q = route.query.project_id
-  const projectId =
-    typeof q === 'string' && q
-      ? q
-      : Array.isArray(q) && q[0]
-        ? String(q[0])
-        : ''
+  const projectId = projectIdFromQuery(route.query.project_id)
   return projectId
     ? {
         to: { name: 'InstrumentHub' as const, params: { projectId } },
