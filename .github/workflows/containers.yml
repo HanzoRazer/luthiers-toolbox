@@ -36,6 +36,9 @@ jobs:
           file: docker/client/Dockerfile
           load: true
           tags: ${{ env.CLIENT_IMAGE }}
+          # NODE_VERSION floats to the newest 20.x, which satisfies the client
+          # engine floor (^20.19.0 || >=22.12.0). docker/client/Dockerfile
+          # asserts the floor at build time.
           build-args: |
             NODE_VERSION=20
 

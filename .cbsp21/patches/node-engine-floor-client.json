@@ -1,0 +1,142 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "NODE_ENGINE_FLOOR_CLIENT",
+  "title": "chore(client): declare and assert the Node engine floor across every client build path",
+  "intent": "PR #279 raises @vitejs/plugin-vue to 6.0.8, whose declared engine is ^20.19.0 || >=22.12.0 (up from ^18.0.0 || >=20.0.0). The repo had no machine-readable Node floor anywhere: packages/client/package.json had no engines field, and there is no .nvmrc, .node-version, or .npmrc. Every client build path resolved Node from a bare major (setup-node 20, ARG NODE_VERSION=20), which satisfies the new floor today only because floating tags resolve upward. This patch declares the floor once and asserts it at every build entry point, so a downward change or a stale cached base image fails with a named error instead of an opaque Vite/ESM failure. It does not change the resolved Node version on any current build path.",
+  "change_type": "chore",
+  "behavior_change": "build-time-guard",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "packages/client/",
+      "docker/client/",
+      ".github/workflows/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/.nvmrc",
+      "packages/client/Dockerfile",
+      "docker/client/Dockerfile",
+      "docker/client/Dockerfile.production",
+      "docker/client/Dockerfile.railway",
+      ".github/workflows/client_lint_build.yml",
+      ".github/workflows/containers.yml",
+      "docker-compose.yml",
+      "docker-compose.production.yml",
+      ".env.example",
+      ".cbsp21/patches/node-engine-floor-client.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json gains engines.node = '^20.19.0 || >=22.12.0', the single declared source of truth, mirroring @vitejs/plugin-vue 6.x. packages/client/.nvmrc (new) pins 20.19.0 for local shells. The four client Dockerfiles (docker/client/Dockerfile, .production, .railway, and packages/client/Dockerfile - the last of which is live via packages/client/railway.json dockerfilePath) each gain one RUN node -e assertion immediately after the builder FROM, exiting 1 with a named message when the base image is below the floor. client_lint_build.yml changes node-version from the bare major 20 to the range '^20.19.0' - still resolving the newest 20.x so security patches land, but now failing at setup-node rather than mid-build if the floor is ever unmet. containers.yml, docker-compose.yml, docker-compose.production.yml and .env.example keep NODE_VERSION=20 (which floats above the floor) and gain comments naming the floor and its source; docker-compose.yml's stale '20+ required for Vite 5' comment is corrected.",
+    "why_not_redundant": "No existing mechanism encodes a Node floor for this workspace - no engines field, no .nvmrc, no .npmrc, no CI assertion - so nothing today would catch a regression to Node 18 or 20.9 except an opaque downstream build failure. The Dockerfile assertion is not redundant with the workflow change: four of the five client-image call sites (core_ci.yml:181, proxy_parity.yml:44, proxy_adaptive.yml:43, publish-images.yml:159) pass no NODE_VERSION build-arg at all and silently inherit the Dockerfile ARG default, so a workflow-only fix would leave them uncovered."
+  },
+  "verification": {
+    "commands_run": [
+      "node -e <guard expression> over 18.20.8 / 20.9.0 / 20.18.3 / 20.19.0 / 20.20.1 / 21.7.3 / 22.11.0 / 22.12.0 / 24.11.0 -> FAIL,FAIL,FAIL,PASS,PASS,FAIL,FAIL,PASS,PASS - exactly matches ^20.19.0 || >=22.12.0",
+      "sh -c with the RUN payload extracted verbatim from docker/client/Dockerfile -> exit 0 on Node 24.11.0; confirms the quoting survives Dockerfile RUN shell form",
+      "npm ci --dry-run --no-audit --no-fund in packages/client -> added 459 packages, exit 0, no EBADENGINE",
+      "json.load(packages/client/package.json) -> OK, engines == {'node': '^20.19.0 || >=22.12.0'}",
+      "yaml.safe_load over client_lint_build.yml, containers.yml, docker-compose.yml, docker-compose.production.yml -> all OK",
+      "assertion that no build-args block-scalar line starts with '#' or lacks '=' -> PASS (an earlier draft leaked a comment into containers.yml build-args; corrected before commit)",
+      "python scripts/check_protected_paths.py -> exit 0",
+      "docker build NOT run - the local Docker daemon is not running; the Dockerfile assertion is verified by executing its exact payload through sh -c, not by an image build"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declare the Node engine floor as the single machine-readable source of truth.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "Adds an engines field. With npm's default engine-strict=false this warns (EBADENGINE) rather than failing; hard enforcement comes from the Dockerfile assertion and the setup-node range."
+    },
+    {
+      "path": "packages/client/.nvmrc",
+      "intent": "Give contributors and nvm a local signal for the floor.",
+      "scan_targets": ["packages/client/.nvmrc"],
+      "risk": "low",
+      "behavior_change": "New file; not read by CI or any Docker build."
+    },
+    {
+      "path": "docker/client/Dockerfile",
+      "intent": "Assert the floor at the CI and docker-compose client image entry point.",
+      "scan_targets": ["docker/client/Dockerfile"],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor. No effect on current builds - node:20-alpine resolves above the floor."
+    },
+    {
+      "path": "docker/client/Dockerfile.production",
+      "intent": "Assert the floor on the published-image path (publish-images.yml, docker-compose.production.yml).",
+      "scan_targets": ["docker/client/Dockerfile.production"],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": "docker/client/Dockerfile.railway",
+      "intent": "Assert the floor on the Railway client path.",
+      "scan_targets": ["docker/client/Dockerfile.railway"],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": "packages/client/Dockerfile",
+      "intent": "Assert the floor on the live Railway client service build (referenced by packages/client/railway.json dockerfilePath).",
+      "scan_targets": ["packages/client/Dockerfile"],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Resolve Node from an explicit floor range instead of a bare major.",
+      "scan_targets": [".github/workflows/client_lint_build.yml"],
+      "risk": "low",
+      "behavior_change": "node-version 20 -> '^20.19.0'. Resolves the same newest-20.x release today; fails at setup-node instead of mid-build if the floor is ever unmet."
+    },
+    {
+      "path": ".github/workflows/containers.yml",
+      "intent": "Document why the NODE_VERSION build-arg satisfies the floor.",
+      "scan_targets": [".github/workflows/containers.yml"],
+      "risk": "low",
+      "behavior_change": "none - YAML comments only; the build-args block scalar is byte-identical."
+    },
+    {
+      "path": "docker-compose.yml",
+      "intent": "Correct the stale '20+ required for Vite 5' comment to name the real floor.",
+      "scan_targets": ["docker-compose.yml"],
+      "risk": "low",
+      "behavior_change": "none - comments only."
+    },
+    {
+      "path": "docker-compose.production.yml",
+      "intent": "Name the floor beside the NODE_VERSION build arg.",
+      "scan_targets": ["docker-compose.production.yml"],
+      "risk": "low",
+      "behavior_change": "none - comments only."
+    },
+    {
+      "path": ".env.example",
+      "intent": "Name the floor beside the NODE_VERSION build arg for local operators.",
+      "scan_targets": [".env.example"],
+      "risk": "low",
+      "behavior_change": "none - comments only; NODE_VERSION=20 is unchanged."
+    },
+    {
+      "path": ".cbsp21/patches/node-engine-floor-client.json",
+      "intent": "Per-PR CBSP21 patch manifest for this change set.",
+      "scan_targets": [".cbsp21/patches/node-engine-floor-client.json"],
+      "risk": "low",
+      "behavior_change": "none - manifest only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-17-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 12 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Build-time guard only; no application code, no runtime behavior, and no resolved-version change on any current build path. The single non-comment functional edit outside the guards is client_lint_build.yml node-version 20 -> ^20.19.0, which resolves to the same Node release today. Deliberately NOT done: hard-pinning NODE_VERSION to the literal floor 20.19.0, which would have moved every image from the newest 20.x down to an older patch level and dropped security fixes for no safety gain."
+  }
+}

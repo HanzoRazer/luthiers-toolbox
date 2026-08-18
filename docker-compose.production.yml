@@ -35,6 +35,7 @@ services:
       context: .
       dockerfile: docker/client/Dockerfile.production
       args:
+        # Floor: ^20.19.0 || >=22.12.0 (packages/client/package.json "engines")
         NODE_VERSION: ${NODE_VERSION:-20}
     image: ${CLIENT_IMAGE:-ghcr.io/yourorg/luthiers-toolbox-client:latest}
     depends_on:

@@ -26,10 +26,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Floor declared in packages/client/package.json "engines"
+          # (^20.19.0 || >=22.12.0, required by @vitejs/plugin-vue 6.x).
+          # A range, not a hard pin: resolves to the newest 20.x at or above
+          # the floor so security patches still land.
+          node-version: "^20.19.0"
           cache: npm
           cache-dependency-path: packages/client/package-lock.json
 
