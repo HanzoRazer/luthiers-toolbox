@@ -4,6 +4,10 @@
 # not built, not deployed, and not part of pnpm-workspace packages/*).
 # Auto-merge is disabled. Security alerts for proven-dead archives are dismissed
 # in GitHub UI as "not used" — see docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md.
+#
+# Labels: do not request labels that are not created in the repository.
+# Dependabot #279 (and siblings) failed to apply `dependencies` / `javascript`
+# because those labels do not exist — omit labels until they are created.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -12,13 +16,15 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
-    labels:
-      - dependencies
-      - javascript
     # Do not group broad upgrades; keep PRs reviewable and Tier-2 majors separate.
     ignore:
-      # Major toolchain migration is DEP-SEC Tier-2 — gated on BR-021 / manual witness.
+      # Major toolchain migration is DEP-SEC Tier-2 / Tranche C — gated on
+      # BR-021 or explicit manual build-witness authorization.
       - dependency-name: vite
         update-types: ["version-update:semver-major"]
       - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      # Coupled to vite major (Node engines floor 20.19+/22.12+, CJS drop,
+      # filter API). Keep majors with Tranche C — see #279 disposition.
+      - dependency-name: "@vitejs/plugin-vue"
         update-types: ["version-update:semver-major"]
