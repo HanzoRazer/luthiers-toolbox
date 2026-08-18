@@ -37,7 +37,7 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.27",
-    "eslint": "^8.57.0",
+    "eslint": "^10.8.1",
     "eslint-plugin-vue": "^9.23.0",
     "jsdom": "^25.0.0",
     "postcss": "^8.5.26",
