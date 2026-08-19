@@ -73,7 +73,10 @@
       "python scripts/ci/check_contracts_governance.py --base-ref origin/main -> PASS (was CHANGELOG_REQUIRED)",
       "sha256 of each schema re-derived and asserted by test_contract_hashes_match_schema_bytes",
       "Hardening pass: `py -3.11 -m pytest tests/mesh/materials/ --no-cov -q` -> 84 passed (was 48). Seven previously-accepted invalid inputs now rejected, verified by direct probe before and after: mode_indices='12' coerced to (1,2); frequency_hz NaN and inf; EvidenceValue inf; density -500; E_L -1e9; q_factor NaN.",
-      "Adjacent-suite regression sweep: `pytest tests/ -k 'calculator or plate or rayleigh or mesh or contract or schema'` -> 398 passed, 1 failed. The failure is tests/test_openapi.py::test_openapi_schema_builds, a known LOCAL env trap (local fastapi 0.121.0 vs the repo's pinned 0.137+ crashes app.openapi()); unrelated to this patch and green on CI. Three further collection errors are a missing local 'defusedxml' dep, also environmental."
+      "Adjacent-suite regression sweep: `pytest tests/ -k 'calculator or plate or rayleigh or mesh or contract or schema'` -> 398 passed, 1 failed. The failure is tests/test_openapi.py::test_openapi_schema_builds, a known LOCAL env trap (local fastapi 0.121.0 vs the repo's pinned 0.137+ crashes app.openapi()); unrelated to this patch and green on CI. Three further collection errors are a missing local 'defusedxml' dep, also environmental.",
+      "Core CI run 32278117183 disproved the conftest warm-up premise: with the broad `except Exception: pass` narrowed, the warm-up surfaced RuntimeWarning \"gauss_legendre(32) warm-up failed during conftest import: TypeError(... '_NoValueType')\". The warm-up was ALREADY failing silently, and three plate tests were failing because of it. gauss_legendre now uses Golub-Welsch (np.diag + np.linalg.eigh, no reduction sentinel); the obsolete warm-up block is removed from conftest.",
+      "Golub-Welsch validated against np.polynomial.legendre.leggauss for n in {4,8,16,32,64}: max node delta 5.6e-16, max weight delta 2.2e-15, sum(w)=2 to 1e-15. Exactness pinned independently by test for degrees <= 2n-1. `pytest tests/mesh/materials/` -> 99 passed; `pytest -k 'rayleigh or plate_design or plate'` -> 43 passed, 2 skipped.",
+      "CRLF trap corrected: prediction_residual.schema.sha256 was first computed from a Windows CRLF working copy and did not match the LF blob git stores, failing test_contract_hashes_match_schema_bytes on CI. The schema file is normalized to LF (.gitattributes declares `* text=auto`) and the hash recomputed -> 84011a40..., matching the value CI derives."
     ]
   },
   "files": [
@@ -259,6 +262,15 @@
       "intent": "Domain-validation regressions: every case in this file was ACCEPTED by the importer before the hardening commit (NaN/inf values, non-positive density and moduli, NaN q_factor, string-like mode_indices).",
       "scan_targets": [
         "services/api/tests/mesh/materials/test_evidence_domain_validation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_gauss_legendre_exactness.py",
+      "intent": "Pin the quadrature rule by its DEFINING property (an n-point Gauss-Legendre rule integrates polynomials of degree <= 2n-1 exactly) rather than by agreement with numpy's leggauss, so the pin stays meaningful when that reference is itself broken by the numpy sentinel issue.",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_gauss_legendre_exactness.py"
       ],
       "risk": "low",
       "behavior_change": "None - test-only."

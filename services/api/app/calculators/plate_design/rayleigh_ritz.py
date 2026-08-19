@@ -303,19 +303,39 @@ def gauss_legendre(n_quad: int):
     They are constants for a given ``n_quad`` but were recomputed four times per
     solve (twice each while assembling the stiffness and mass matrices).
 
-    Memoizing also pins the computation to the first call in a process, which
-    matters under the full ``api-verify`` suite: ``leggauss`` performs an ndarray
-    reduction (``np.abs(fm).max()``), and once numpy has been re-imported
-    mid-session the reduction sentinel ``np._NoValue`` is no longer the object the
-    C ufunc recognises, so the call raises ``TypeError: float() argument must be a
-    string or a real number, not '_NoValueType'``.
-    ``services/api/tests/conftest.py`` warms this cache while numpy is still
-    pristine, alongside the existing numpy/ezdxf import-order guard.
+    Nodes and weights come from the Golub-Welsch algorithm — the eigendecomposition
+    of the symmetric tridiagonal Jacobi matrix for Legendre polynomials — rather than
+    ``np.polynomial.legendre.leggauss``.
+
+    ``leggauss`` performs an ndarray reduction (``np.abs(fm).max()``) whose default
+    argument is the module-level sentinel ``np._NoValue``. Once numpy has been
+    re-imported mid-session that sentinel is no longer the object the C ufunc
+    recognises, and the call raises ``TypeError: float() argument must be a string
+    or a real number, not '_NoValueType'``. An earlier attempt to dodge this by
+    warming the cache from ``tests/conftest.py`` "while numpy is still pristine"
+    does NOT hold: under Core CI the warm-up itself raises that TypeError at
+    conftest-import time, so the fix depended on an import ordering that is not
+    actually guaranteed.
+
+    Golub-Welsch touches no reduction sentinel — only ``np.diag`` and
+    ``np.linalg.eigh`` — so it is correct regardless of numpy import history. It
+    agrees with ``leggauss`` to ~1e-15 for every ``n_quad`` used here, and its
+    exactness is pinned directly by test (an n-point rule integrates polynomials
+    of degree <= 2n-1 exactly).
 
     The returned arrays are shared and marked read-only; callers must not mutate
     them in place.
     """
-    xi, w = np.polynomial.legendre.leggauss(n_quad)
+    # Jacobi matrix off-diagonal for Legendre: b_k = k / sqrt(4k^2 - 1).
+    k = np.arange(1, n_quad, dtype=np.float64)
+    beta = k / np.sqrt(4.0 * k * k - 1.0)
+    jacobi = np.diag(beta, -1) + np.diag(beta, 1)
+    xi, eigenvectors = np.linalg.eigh(jacobi)
+    # Weight = 2 * (first component of the normalized eigenvector)^2; 2 is the
+    # integral of the Legendre weight function w(x)=1 over [-1, 1].
+    w = 2.0 * (eigenvectors[0, :] ** 2)
+    xi = np.ascontiguousarray(xi)
+    w = np.ascontiguousarray(w)
     xi.flags.writeable = False
     w.flags.writeable = False
     return xi, w

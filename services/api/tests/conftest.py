@@ -12,7 +12,6 @@ Part of P3.1 - Test Coverage to 80% (A_N roadmap requirement)
 
 import pytest
 import sys
-import warnings
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -36,37 +35,6 @@ try:
     import ezdxf as _ezdxf  # noqa: F401
 except ImportError:
     pass
-
-# Same hazard, one layer deeper. np.polynomial.legendre.leggauss() runs an
-# ndarray reduction internally; once numpy has been re-imported mid-session the
-# reduction sentinel np._NoValue is no longer the object the C ufunc recognises,
-# and the call raises "TypeError: float() argument ... not '_NoValueType'"
-# (CI: api-verify, MESH-MAT-001 plate prediction). The nodes are constants, so
-# compute them here — while numpy is still pristine — and let the lru_cache in
-# rayleigh_ritz.gauss_legendre serve every later solve.
-# The import is genuinely optional — environments that do not ship the plate
-# calculators simply have nothing to warm. Everything else is NOT optional:
-# a warm-up that raises means the sentinel workaround itself failed, and the
-# solver tests are about to fail for a reason this file would otherwise hide.
-# Collection must still not be blocked, so surface it as a warning instead of
-# swallowing it (repo rule: no silent broad excepts).
-try:
-    from app.calculators.plate_design.rayleigh_ritz import gauss_legendre as _gauss_legendre
-except ImportError:  # pragma: no cover - calculators absent in this environment
-    _gauss_legendre = None
-
-if _gauss_legendre is not None:
-    try:
-        _gauss_legendre(32)  # default n_quad for stiffness/mass assembly
-    except Exception as _warmup_exc:  # noqa: BLE001 - re-raised as a visible warning
-        warnings.warn(
-            "gauss_legendre(32) warm-up failed during conftest import: "
-            f"{_warmup_exc!r}. The numpy reduction-sentinel guard did not take "
-            "effect; plate-solver tests may fail with _NoValueType errors.",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-
 
 # =============================================================================
 # MODULE IMPORT ISOLATION (numpy / ezdxf)
