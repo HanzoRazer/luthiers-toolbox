@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "status": "relocated",
+    "canonical_corpus": "../empirical_tonewood/mb_sound/",
+    "note": "Do not add panels here. Use empirical_tonewood/mb_sound/specimens/ + manifest.json (DO-SIP-013 intake)."
+  },
+  "panels": []
+}

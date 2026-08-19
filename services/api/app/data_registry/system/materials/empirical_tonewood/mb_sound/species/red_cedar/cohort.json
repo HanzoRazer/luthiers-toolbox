@@ -1,0 +1,107 @@
+{
+  "cohort_id": "mb_sound_red_cedar",
+  "species_id": "cedar_western_red",
+  "species_label": "Red cedar (plain / untreated)",
+  "treatment": "plain",
+  "treatments_seen": [
+    "plain"
+  ],
+  "target_batch_size_stated": 22,
+  "specimen_ids": [
+    "mb-rc-000001",
+    "mb-rc-000002",
+    "mb-rc-000003",
+    "mb-rc-000004",
+    "mb-rc-000005",
+    "mb-rc-000006",
+    "mb-rc-000007",
+    "mb-rc-000008",
+    "mb-rc-000009",
+    "mb-rc-000010",
+    "mb-rc-000011",
+    "mb-rc-000012",
+    "mb-rc-000013",
+    "mb-rc-000014",
+    "mb-rc-000015",
+    "mb-rc-000016",
+    "mb-rc-000017",
+    "mb-rc-000018",
+    "mb-rc-000019",
+    "mb-rc-000020",
+    "mb-rc-000021",
+    "mb-rc-000022"
+  ],
+  "catalog_gaps": [],
+  "status": "intake_batch_complete",
+  "specimen_id_prefix": "mb-rc-",
+  "record_schema": "mb_sound_lab_procedure_v1",
+  "laboratory_workbook": "source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
+  "primary_numerical_source": "detailed_analyzer",
+  "capture_audit": [
+    {
+      "issue_id": "RC-001",
+      "severity": "Medium",
+      "affected": "000005",
+      "finding": "Summary card displays Q = 132.8; detailed analyzer displays Q = 134.4.",
+      "disposition": "Both values retained; detailed value remains primary."
+    },
+    {
+      "issue_id": "RC-002",
+      "severity": "Low",
+      "affected": "000021",
+      "finding": "Summary card displays resonance = 50.5 Hz; detailed analyzer displays 50.4 Hz.",
+      "disposition": "Treated as run/rounding variation and preserved."
+    },
+    {
+      "issue_id": "RC-003",
+      "severity": "Low",
+      "affected": "000020",
+      "finding": "Analyzer sample name is partly obscured in the detailed screenshot.",
+      "disposition": "Recorded as CED-W-10 from sequence; verify against original source if available."
+    },
+    {
+      "issue_id": "RC-004",
+      "severity": "Medium",
+      "affected": "All samples",
+      "finding": "Graphs are available only as rendered screenshots, not numeric signal arrays.",
+      "disposition": "Embedded image archive preserves visual evidence; no digitized values are presented as raw data."
+    }
+  ],
+  "readme_notes": [
+    "Primary numerical source: detailed analyzer screen (Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti).",
+    "Summary-card values retained separately for audit comparison.",
+    "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
+    "22/22 specimens recovered (000001\u2013000022)."
+  ],
+  "notes": "Rebuilt from Red_Cedar_Complete_Laboratory_Record.xlsx (22/22). Full laboratory analysis: 352/352 primary measurements (100%). Detailed analyzer primary; summary cards audited. Dual-ID: 000001\u2013000010 \u2194 CED-C-##; 000011\u2013000022 \u2194 CED-W-01\u202612. Distinct from red_cedar_30yr_naturally_dried.",
+  "dataset_statistics": {
+    "specimen_count": 22,
+    "catalog_range": "000001-000022",
+    "primary_measurement_fields_per_specimen": 16,
+    "max_possible_primary_measurements": 352,
+    "populated_primary_measurements": 352,
+    "blank_primary_measurements": 0,
+    "primary_data_completeness_pct": 100.0,
+    "populated_record_cells_incl_ids_material": 418,
+    "primary_fields": [
+      "Sample Length (mm)",
+      "Sample Width (mm)",
+      "Sample Thickness (mm)",
+      "Sample Mass (g)",
+      "Sample Density (kg/m\u00b3)",
+      "Sample Nodal Lines (mm)",
+      "Resonance Frequency (Hz)",
+      "Time Constant (ms)",
+      "Log Decrement",
+      "Q Factor / Sustain",
+      "Fitting (%)",
+      "Young's Modulus / Stiffness (GPa)",
+      "Radiation Coefficient",
+      "Total Recording Length (s)",
+      "Visualized Length (s)",
+      "Peak Amplitude (dBFS)"
+    ],
+    "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+  },
+  "laboratory_analysis_complete": true
+}

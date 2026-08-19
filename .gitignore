@@ -215,6 +215,8 @@ CAM_Roadmap_AlphaNightingale/
 # Large Data Files
 # ------------------------------------------
 *.xlsx
+# MB Sound laboratory procedural workbooks (intake source-of-truth)
+!services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/*.xlsx
 *.f3d
 ExportedParameters*.csv
 FenderNeckParameters.xlsx
