@@ -29,7 +29,7 @@
   "services/api/app/calculators/plate_design/calibration.py": 590,
   "services/api/app/calculators/plate_design/coupled_2osc.py": 535,
   "services/api/app/calculators/plate_design/inverse_solver.py": 731,
-  "services/api/app/calculators/plate_design/rayleigh_ritz.py": 692,
+  "services/api/app/calculators/plate_design/rayleigh_ritz.py": 734,
   "services/api/app/calculators/plate_design/thickness_calculator.py": 1096,
   "services/api/app/calculators/saddle_compensation.py": 685,
   "services/api/app/calculators/saddle_compensation_calc.py": 748,

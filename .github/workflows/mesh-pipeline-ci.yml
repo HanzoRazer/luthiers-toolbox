@@ -47,7 +47,7 @@ jobs:
           pip install open3d || true
 
       - name: Run unit tests (topology helpers)
-        run: pytest -q tests/test_o3d_heal_topology.py
+        run: PYTHONPATH=. pytest -q tests/test_o3d_heal_topology.py
 
       - name: Run example (QRM preset)
         run: bash examples/retopo/run.sh qrm

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/toolbox/prediction_residual.schema.json",
+  "title": "Prediction Residual Report",
+  "description": "Research-only measured-vs-predicted modal residual sidecar (MESH-MAT-001). Does not mutate qa_core or cam_policy.",
+  "type": "object",
+  "required": [
+    "specimen_id",
+    "predicted_modes",
+    "measured_modes",
+    "residuals",
+    "epistemic_status",
+    "research_only"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_id": { "type": "string", "const": "prediction_residual" },
+    "schema_version": { "type": "string" },
+    "specimen_id": { "type": "string" },
+    "predicted_modes": { "type": "array" },
+    "measured_modes": { "type": "array" },
+    "residuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "predicted_frequency_hz": { "type": ["number", "null"] },
+          "measured_frequency_hz": { "type": ["number", "null"] },
+          "absolute_error_hz": {
+            "type": ["number", "null"],
+            "description": "SIGNED error in absolute units: predicted_frequency_hz - measured_frequency_hz. Negative means the prediction is flat of the measurement. 'absolute' names the unit basis (Hz) as opposed to 'relative_error', which is the same quantity divided by the measurement; it does NOT mean magnitude. Consumers wanting magnitude must apply abs()."
+          },
+          "relative_error": {
+            "type": ["number", "null"],
+            "description": "SIGNED dimensionless error: absolute_error_hz / measured_frequency_hz. Null when the measured frequency is zero."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["MATCHED", "MISMATCHED", "NO_MEASUREMENT", "NO_PREDICTION"]
+          },
+          "mode_indices": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer" }
+          },
+          "label": { "type": "string" },
+          "match_basis": {
+            "type": "string",
+            "enum": ["mode_indices", "nearest_frequency"],
+            "description": "How the pairing was made. Absent when there is no pairing (NO_MEASUREMENT / NO_PREDICTION). nearest_frequency is a proximity guess, not a labelled match."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tolerance_hz": { "type": "number" },
+    "epistemic_status": { "type": "string", "const": "predicted" },
+    "research_only": { "type": "boolean", "const": true }
+  }
+}
