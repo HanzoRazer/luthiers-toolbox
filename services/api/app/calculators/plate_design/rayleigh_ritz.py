@@ -303,25 +303,15 @@ def gauss_legendre(n_quad: int):
     They are constants for a given ``n_quad`` but were recomputed four times per
     solve (twice each while assembling the stiffness and mass matrices).
 
-    Nodes and weights come from the Golub-Welsch algorithm — the eigendecomposition
-    of the symmetric tridiagonal Jacobi matrix for Legendre polynomials — rather than
-    ``np.polynomial.legendre.leggauss``.
-
-    ``leggauss`` performs an ndarray reduction (``np.abs(fm).max()``) whose default
-    argument is the module-level sentinel ``np._NoValue``. Once numpy has been
-    re-imported mid-session that sentinel is no longer the object the C ufunc
-    recognises, and the call raises ``TypeError: float() argument must be a string
-    or a real number, not '_NoValueType'``. An earlier attempt to dodge this by
-    warming the cache from ``tests/conftest.py`` "while numpy is still pristine"
-    does NOT hold: under Core CI the warm-up itself raises that TypeError at
-    conftest-import time, so the fix depended on an import ordering that is not
-    actually guaranteed.
-
-    Golub-Welsch touches no reduction sentinel — only ``np.diag`` and
-    ``np.linalg.eigh`` — so it is correct regardless of numpy import history. It
-    agrees with ``leggauss`` to ~1e-15 for every ``n_quad`` used here, and its
-    exactness is pinned directly by test (an n-point rule integrates polynomials
-    of degree <= 2n-1 exactly).
+    Built by Golub-Welsch (eigendecomposition of the Legendre Jacobi matrix), NOT
+    ``np.polynomial.legendre.leggauss``. leggauss runs a reduction defaulted to the
+    module sentinel ``np._NoValue``; after numpy is re-imported mid-session that is
+    no longer the object the C ufunc recognises and it raises ``TypeError: float()
+    argument ... not '_NoValueType'``. Warming the cache from conftest did not fix
+    that — the warm-up itself raised at conftest-import time under Core CI.
+    Golub-Welsch touches only ``np.diag`` / ``np.linalg.eigh``, so it is correct
+    regardless of numpy import history. Rationale and exactness proof:
+    ``tests/mesh/materials/test_gauss_legendre_exactness.py``.
 
     The returned arrays are shared and marked read-only; callers must not mutate
     them in place.
