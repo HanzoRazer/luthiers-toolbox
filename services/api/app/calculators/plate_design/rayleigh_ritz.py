@@ -316,6 +316,11 @@ def gauss_legendre(n_quad: int):
     The returned arrays are shared and marked read-only; callers must not mutate
     them in place.
     """
+    if not isinstance(n_quad, int) or isinstance(n_quad, bool) or n_quad < 1:
+        # Without this, n_quad <= 0 silently returned a degenerate 1-point rule
+        # (np.arange(1, 0) is empty -> a 0x0 Jacobi matrix), so the solver would
+        # integrate with one node and report plausible-looking garbage.
+        raise ValueError(f"n_quad must be a positive int, got {n_quad!r}")
     # Jacobi matrix off-diagonal for Legendre: b_k = k / sqrt(4k^2 - 1).
     k = np.arange(1, n_quad, dtype=np.float64)
     beta = k / np.sqrt(4.0 * k * k - 1.0)

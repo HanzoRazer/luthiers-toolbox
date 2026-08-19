@@ -25,7 +25,10 @@
       "services/api/tests/mesh/materials/",
       "contracts/",
       "services/api/app/calculators/plate_design/",
-      "services/api/tests/"
+      "services/api/tests/",
+      "ci/file_size_baseline.json",
+      ".github/workflows/mesh-pipeline-ci.yml",
+      ".github/workflows/smart_guitar_export_gate.yml"
     ],
     "files_expected_to_change": [
       "contracts/material_evidence.schema.json",
@@ -76,7 +79,9 @@
       "Adjacent-suite regression sweep: `pytest tests/ -k 'calculator or plate or rayleigh or mesh or contract or schema'` -> 398 passed, 1 failed. The failure is tests/test_openapi.py::test_openapi_schema_builds, a known LOCAL env trap (local fastapi 0.121.0 vs the repo's pinned 0.137+ crashes app.openapi()); unrelated to this patch and green on CI. Three further collection errors are a missing local 'defusedxml' dep, also environmental.",
       "Core CI run 32278117183 disproved the conftest warm-up premise: with the broad `except Exception: pass` narrowed, the warm-up surfaced RuntimeWarning \"gauss_legendre(32) warm-up failed during conftest import: TypeError(... '_NoValueType')\". The warm-up was ALREADY failing silently, and three plate tests were failing because of it. gauss_legendre now uses Golub-Welsch (np.diag + np.linalg.eigh, no reduction sentinel); the obsolete warm-up block is removed from conftest.",
       "Golub-Welsch validated against np.polynomial.legendre.leggauss for n in {4,8,16,32,64}: max node delta 5.6e-16, max weight delta 2.2e-15, sum(w)=2 to 1e-15. Exactness pinned independently by test for degrees <= 2n-1. `pytest tests/mesh/materials/` -> 99 passed; `pytest -k 'rayleigh or plate_design or plate'` -> 43 passed, 2 skipped.",
-      "CRLF trap corrected: prediction_residual.schema.sha256 was first computed from a Windows CRLF working copy and did not match the LF blob git stores, failing test_contract_hashes_match_schema_bytes on CI. The schema file is normalized to LF (.gitattributes declares `* text=auto`) and the hash recomputed -> 84011a40..., matching the value CI derives."
+      "CRLF trap corrected: prediction_residual.schema.sha256 was first computed from a Windows CRLF working copy and did not match the LF blob git stores, failing test_contract_hashes_match_schema_bytes on CI. The schema file is normalized to LF (.gitattributes declares `* text=auto`) and the hash recomputed -> 84011a40..., matching the value CI derives.",
+      "Second hardening pass (external file-by-file review): 12 further invalid inputs were accepted and are now rejected, each probed before/after — residuals dict frequency_hz NaN/inf/0/negative and q_factor NaN; _indices_key(bytearray(b'12')) which returned the BYTE VALUES (49, 50) rather than failing; PlateGeometry NaN/inf dimensions (min(...) <= 0 has the NaN blind spot); caller overrides g_lc_pa NaN/inf/non-positive and Poisson nu_LC/nu_CL NaN/inf/out-of-bounds; gauss_legendre(n_quad <= 0) which returned a degenerate 1-point rule. pytest tests/mesh/materials/ -> 149 passed (was 99).",
+      "Three-gate triage. (1) CBSP21 Patch Manifest Gate coverage 93.3% -> MINE: ci/file_size_baseline.json and .github/workflows/mesh-pipeline-ci.yml were undeclared; both now in files[], gate PASSES locally. (2) demo-and-validate -> PRE-EXISTING and NOT fixable here: examples/retopo/run.sh:16 does `from app.retopo.run import run_pipeline` and services/api/app/retopo does not exist anywhere in the repo (only synthetic references in tests/governance/test_namespace_authority_drift.py). The PYTHONPATH fix in 184670a7 cleared the earlier collection error and surfaced this deeper one. (3) Smart Guitar Export Boundary Gate -> PRE-EXISTING (red on main since 2026-06-11, run on 69e9ec59); root cause is that workflow installing no numpy while conftest.py:32 imports it. Fixed in the workflow."
     ]
   },
   "files": [
@@ -274,6 +279,42 @@
       ],
       "risk": "low",
       "behavior_change": "None - test-only."
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Ratchet bump for rayleigh_ritz.py (692 -> 734). Single-key edit, NOT `file_size_gate.py --update`: that rewrites every entry and would silently lock in an unrelated improvement (app/services/body_geometry_repair.py 723 < baseline 725) that belongs to nobody in this PR.",
+      "scan_targets": [
+        "ci/file_size_baseline.json"
+      ],
+      "risk": "low",
+      "behavior_change": "None - CI baseline data."
+    },
+    {
+      "path": ".github/workflows/mesh-pipeline-ci.yml",
+      "intent": "Adds PYTHONPATH=. so tests/test_o3d_heal_topology.py can import `services.api.app.mesh.o3d_heal`. Authored by a parallel push (184670a7), declared here so manifest coverage matches the real diff.",
+      "scan_targets": [
+        ".github/workflows/mesh-pipeline-ci.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: changes how pytest resolves imports in that workflow. No application code."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_boundary_domain_validation.py",
+      "intent": "Regressions for the three routes that BYPASS the evidence importer (residuals dict path, orthotropic caller overrides, PlateGeometry) plus bytearray mode_indices and non-positive n_quad. Every case was accepted before this commit.",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_boundary_domain_validation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
+    },
+    {
+      "path": ".github/workflows/smart_guitar_export_gate.yml",
+      "intent": "Add numpy to the install list. services/api/tests/conftest.py imports numpy unconditionally at module scope as the numpy/ezdxf import-order guard, so every pytest run under services/api needs it; this workflow installed only pydantic/pytest/fastapi/httpx/pytest-cov. Fixing the environment rather than guarding the import, which would defeat the guard's purpose.",
+      "scan_targets": [
+        ".github/workflows/smart_guitar_export_gate.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: installs one additional package in that workflow. No application code."
     }
   ],
   "architecture_scan": {

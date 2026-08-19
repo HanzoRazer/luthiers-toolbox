@@ -11,6 +11,8 @@ closed until E_C is OBSERVED/ESTIMATED/etc. via evidence.
 
 from __future__ import annotations
 
+import math
+
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -50,8 +52,14 @@ class PlateGeometry:
     width_m: float  # across grain (b)
 
     def __post_init__(self) -> None:
-        if min(self.thickness_m, self.length_m, self.width_m) <= 0:
-            raise MaterialEvidenceError("PlateGeometry dimensions must be positive")
+        # NaN defeats `min(...) <= 0`: comparisons against NaN are all False, so a
+        # NaN dimension passed straight into the solver. Check finiteness first.
+        for name in ("thickness_m", "length_m", "width_m"):
+            v = getattr(self, name)
+            if not math.isfinite(v) or v <= 0:
+                raise MaterialEvidenceError(
+                    f"PlateGeometry.{name} must be finite and positive, got {v!r}"
+                )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -79,10 +87,29 @@ def _override_assumptions(
         ("nu_CL", nu_cl, "1"),
     ):
         if override is not None:
+            override = float(override)
+            # Overrides bypass the evidence layer entirely, so they bypass its
+            # validation too. Re-assert the same domain rules here or an
+            # unphysical value reaches the solver wearing an "assumption" label.
+            if not math.isfinite(override):
+                raise MaterialEvidenceError(
+                    f"{name} override must be finite, got {override!r}"
+                )
+            if unit == "Pa" and override <= 0:
+                raise MaterialEvidenceError(
+                    f"{name} override must be strictly positive, got {override!r}"
+                )
+            if unit == "1" and not (-1.0 < override < 1.0):
+                # Thermodynamic bound on a Poisson ratio. Orthotropic media admit
+                # a looser bound (|nu_ij| < sqrt(E_i/E_j)), so this is a sanity
+                # rail, not the exact admissibility condition.
+                raise MaterialEvidenceError(
+                    f"{name} override must satisfy -1 < nu < 1, got {override!r}"
+                )
             out.append(
                 ModelAssumption(
                     name=name,
-                    value=float(override),
+                    value=override,
                     unit=unit,
                     rationale="Caller-supplied override (not evidence, not a default)",
                 )

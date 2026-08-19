@@ -6,6 +6,8 @@ Does not interpret wood quality. Does not overwrite measured values.
 
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -81,7 +83,13 @@ class PredictionResidualReport:
 def _indices_key(indices: Optional[Sequence[int]]) -> Optional[Tuple[int, int]]:
     if indices is None:
         return None
-    if not isinstance(indices, Sequence) or isinstance(indices, (str, bytes)):
+    # bytearray must be excluded alongside str/bytes: it is a Sequence of length 2
+    # for b"12", and int(bytearray(b"12")[0]) is the BYTE VALUE 49 — so the pair
+    # (49, 50) would be fabricated silently. evidence._parse_modal already
+    # excludes all three; this is the matching guard.
+    if not isinstance(indices, Sequence) or isinstance(
+        indices, (str, bytes, bytearray)
+    ):
         raise MaterialEvidenceError("mode_indices must be a [m, n] pair")
     if len(indices) != 2:
         raise MaterialEvidenceError(
@@ -104,8 +112,21 @@ def _normalize_measured(
         if "frequency_hz" not in d:
             raise MaterialEvidenceError("measured mode requires frequency_hz")
         freq = float(d["frequency_hz"])
-        if freq <= 0:
-            raise MaterialEvidenceError("measured frequency_hz must be positive")
+        # `freq <= 0` alone lets NaN through — every comparison against NaN is
+        # False. ModalEvidence.__post_init__ guards its own path with isfinite;
+        # this dict path is the same contract and must agree, or a NaN reaches
+        # the residual arithmetic and reports MISMATCHED instead of failing.
+        if not math.isfinite(freq) or freq <= 0:
+            raise MaterialEvidenceError(
+                f"measured frequency_hz must be finite and positive, got {freq!r}"
+            )
+        q = d.get("q_factor")
+        if q is not None:
+            q = float(q)
+            if not math.isfinite(q) or q <= 0:
+                raise MaterialEvidenceError(
+                    f"measured q_factor must be finite and positive, got {q!r}"
+                )
         dicts.append(d)
         objs.append((_indices_key(d.get("mode_indices")), freq, d.get("label")))
     return dicts, objs

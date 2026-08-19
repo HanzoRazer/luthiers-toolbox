@@ -35,7 +35,11 @@ jobs:
         working-directory: services/api
         run: |
           python -m pip install --upgrade pip
-          pip install pydantic pytest fastapi httpx pytest-cov
+          # numpy is required: services/api/tests/conftest.py imports it
+          # unconditionally at module scope as the numpy/ezdxf import-order guard.
+          # Guarding that import instead would defeat its purpose — it exists to
+          # pin one numpy binding suite-wide before any test module binds its own.
+          pip install pydantic pytest fastapi httpx pytest-cov numpy
 
       - name: Validate JSON Schema is valid
         run: |
