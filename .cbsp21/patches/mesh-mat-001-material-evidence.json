@@ -28,7 +28,8 @@
       "services/api/tests/",
       "ci/file_size_baseline.json",
       ".github/workflows/mesh-pipeline-ci.yml",
-      ".github/workflows/smart_guitar_export_gate.yml"
+      ".github/workflows/smart_guitar_export_gate.yml",
+      "examples/retopo/run.sh"
     ],
     "files_expected_to_change": [
       "contracts/material_evidence.schema.json",
@@ -58,7 +59,8 @@
       ".cbsp21/patches/mesh-mat-001-material-evidence.json",
       "contracts/CHANGELOG.md",
       "services/api/app/calculators/plate_design/rayleigh_ritz.py",
-      "services/api/tests/conftest.py"
+      "services/api/tests/conftest.py",
+      "examples/retopo/run.sh"
     ]
   },
   "diff_articulation": {
@@ -315,6 +317,15 @@
       ],
       "risk": "low",
       "behavior_change": "CI-only: installs one additional package in that workflow. No application code."
+    },
+    {
+      "path": "examples/retopo/run.sh",
+      "intent": "Emit schema-valid scaffold artifacts when app.retopo is absent, so the demo steps and their downstream schema validation can run. Authored by a parallel push (3e0cbc46/b8c1f88a/c944b809); declared here so manifest coverage matches the real diff.",
+      "scan_targets": [
+        "examples/retopo/run.sh"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only demo script. When app.retopo is importable the original path is unchanged; when it is not, the script now writes labelled placeholder artifacts instead of failing."
     }
   ],
   "architecture_scan": {
