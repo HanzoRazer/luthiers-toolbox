@@ -11,7 +11,8 @@
       "Dockerfile",
       "scripts/**",
       "package-lock.json",
-      "start.sh"
+      "start.sh",
+      ".nvmrc"
     ]
   },
   "deploy": {
