@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -921,6 +921,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-005 | Dependabot intake has no `groups:` — runtime/types pairs arrive as separate PRs | Process / deps | QUEUED | 2026-08-18 |
 | MAINT-DEFER-006 | Client 3D components (`three` consumers) have zero automated coverage | Client / test coverage | QUEUED | 2026-08-18 |
 | MAINT-DEFER-007 | No client bundle-size budget — growth accrues unobserved | Client / build hygiene | QUEUED | 2026-08-18 |
+| MAINT-DEFER-008 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1085,6 +1086,26 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Restore trigger:** a CI step that records total `dist` bytes and largest-chunk bytes, ratcheted like the existing debt gates, so a bump that materially grows the bundle has to be acknowledged rather than discovered later.
 
 **Path:** HYG — build hygiene; not on the CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-008 — Client container smoke has no readiness wait
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md`
+
+**Why deferred:** `.github/workflows/containers.yml` polls the **API** container for up to 60s (`:56-58`, 30 x 2s against `${SERVER_PORT}/health`) and then curls the **client** container single-shot at `:100-106` — no wait, no `--retry`, no `--retry-connrefused`. `${CLIENT_PORT}` appears nowhere in the readiness loop. Client readiness is assumed, on the incidental basis that the API poll usually runs long enough for nginx to come up too.
+
+**Symptom when the assumption fails:** `curl: (56) Recv failure: Connection reset by peer` on the first client request — a listening-but-not-serving socket. Observed on PR #297 (run `32183393779`, job `95861446559`). Established as a flake before re-run: the PR changed only `SPRINTS.md` + a CBSP21 manifest and cannot affect a container image; the workflow was green on main's preceding six commits and on all four runs of a sibling branch; and it passed on re-run with no code change.
+
+**Why it matters more than one re-run:** this is CI-RED-020's defect shape on the client side. That sprint replaced a blind reachable-check with a real readiness gate and produced `scripts/ci/wait_for_api_ready.py`, now used by `api_health_check.yml`, `api_tests.yml`, and `api_health_and_smoke.yml`. `containers.yml` never adopted it and still hand-rolls the older pattern — for the API only. The cost is an ambiguous red that takes a re-run to classify, which trains readers to dismiss reds in this job as flaky; that habit is indistinguishable from how a genuine client-container regression would first present.
+
+**Restore trigger:** client readiness asserted before the first client curl — either extend the existing loop to poll `${CLIENT_PORT}` alongside the API health check, or give the client curls a bounded `--retry`/`--retry-connrefused`. Preferred: reuse `wait_for_api_ready.py` so both containers gate through one witness rather than two divergent patterns. Done-condition: a deliberate cold-start run where the client is slower than the API still passes the smoke step.
+
+**Not established:** failure rate. One occurrence is recorded; no history sweep was run, so this says nothing about how often the race is lost.
+
+**Path:** HYG — CI signal quality; not on the CAM MVP cut path.
 
 ---
 

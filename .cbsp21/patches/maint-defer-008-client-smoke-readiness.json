@@ -1,0 +1,58 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINT_DEFER_008_CLIENT_SMOKE_READINESS",
+  "title": "docs(sprints): register MAINT-DEFER-008 — client container smoke has no readiness wait",
+  "intent": "Registers a CI signal-quality defect found while re-running a flaky check on PR #297: containers.yml waits for the API container to become ready and then curls the client container single-shot, so client readiness is assumed rather than asserted. Ledger + evidence only; containers.yml is not edited.",
+  "change_type": "docs",
+  "behavior_change": "None. Adds one evidence document and one SPRINTS.md record. No workflow, script, dependency, or runtime file is touched — in particular .github/workflows/containers.yml is deliberately NOT modified.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds MAINT-DEFER-008 as an index row after the MAINT-DEFER-007 row and a detail section between MAINT-DEFER-007 and CI-RED-001, following the existing *-DEFER-* record shape, plus a supporting evidence document under docs/ci/. The record states the asymmetry precisely: containers.yml:56-58 polls ${SERVER_PORT}/health for up to 60s (30 x 2s) while ${CLIENT_PORT} appears nowhere in that loop, and containers.yml:100-106 then curls the client single-shot with no --retry or --retry-connrefused. Also updates the SPRINTS.md `Last updated` header from 2026-08-18 to 2026-08-19.",
+    "why_not_redundant": "No record covers containers.yml smoke readiness. CI-RED-020 is CLOSED and covered the API-side blind reachable-check; its remedy produced scripts/ci/wait_for_api_ready.py, which containers.yml never adopted — MAINT-DEFER-008 records that unadopted tail on the client side rather than reopening the closed sprint. CI-RED-005 concerns the container build swallowing an sg-spec install failure, a build-time defect, not a smoke-time readiness race. MAINT-DEFER-005/006/007 (merged via #297) cover dependabot grouping, 3D test coverage, and bundle size respectively."
+  },
+  "verification": {
+    "commands_run": [
+      "Asymmetry read directly from .github/workflows/containers.yml on main 47a5d485: the readiness loop at lines 56-58 references only ${SERVER_PORT}; a grep for CLIENT_PORT in the job returns first use at line 103, inside the smoke step itself.",
+      "Failure witnessed on PR #297 run 32183393779 job 95861446559: 'Testing client container...' followed by 'curl: (56) Recv failure: Connection reset by peer' and exit code 1.",
+      "Flake-not-regression established before re-running: the failing PR changed only SPRINTS.md and a CBSP21 manifest (cannot affect a container image); `gh run list --branch main --workflow containers.yml` shows success on the preceding six commits; the same workflow shows 4/4 success on branch cursor/supabase-js-2112-42de; and the job passed on re-run with no code change.",
+      "CI-RED-020 precedent confirmed present: scripts/ci/wait_for_api_ready.py exists and is invoked by api_health_check.yml, api_tests.yml and api_health_and_smoke.yml; no reference to it exists in containers.yml.",
+      "CBSP21 selection checked before push with the gate's own function: this manifest declares 2 tokens and covers 2 changed files, versus the landed maint-defer-005-007 manifest which covers 1 — so selection resolves on coverage (ranked first) rather than tying on specificity.",
+      "manifest JSON parse -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register MAINT-DEFER-008 in the DEFERRED MAINTENANCE parking lot with a restore trigger.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "None - ledger entry only."
+    },
+    {
+      "path": "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md",
+      "intent": "Record the workflow evidence, the observed failure, and why it is CI-RED-020's defect shape on the client side.",
+      "scan_targets": ["docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"],
+      "risk": "low",
+      "behavior_change": "None - new documentation file."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-19-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only. Scope limit stated plainly: no fix is applied and .github/workflows/containers.yml is untouched, so the race remains live until the restore trigger is authorized. The failure RATE is explicitly not established - one occurrence is recorded and no history sweep was run - so this record must not be read as evidence about frequency. CI-RED-020 is CLOSED and is not reopened or re-adjudicated here."
+  }
+}
