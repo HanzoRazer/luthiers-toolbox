@@ -30,7 +30,7 @@ timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 try:
     from app.retopo.run import run_pipeline  # type: ignore
-except ModuleNotFoundError:
+except ImportError:
     qa_core_path = out_dir / "qa_core.json"
     cam_policy_path = out_dir / "cam_policy.json"
     qa_core = {
