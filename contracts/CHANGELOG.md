@@ -23,6 +23,18 @@ authority: each pins `research_only` to `true` and is explicitly separate from
   is fixed at `predicted`.
 - **`prediction_residual`** — measured-vs-predicted modal residual sidecar.
 
+### Changed (hardening pass, same sprint)
+
+- **`prediction_residual`** — `absolute_error_hz` and `relative_error` now carry
+  `description` text pinning their sign convention. Both are **signed**
+  (`predicted - measured`); "absolute" names the *unit basis* (Hz) against
+  "relative" (dimensionless), and does **not** mean magnitude. Documented because the
+  field name reads as `abs()` to a first-time consumer, and because the sign is the
+  physically interesting part — it says whether a prediction is sharp or flat of the
+  measurement. Annotation only: no field added, removed, renamed, or retyped, so this
+  is non-breaking and the contract stays at version `1.0`. `prediction_residual.schema.sha256`
+  is regenerated to match the new bytes.
+
 ### Notes on the shape of these three
 
 - `material_evidence` encodes the provenance requirement **conditionally**: an

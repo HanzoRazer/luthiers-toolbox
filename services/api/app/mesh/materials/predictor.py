@@ -79,7 +79,14 @@ def _parse_bc(name: str) -> BoundaryCondition:
         "free": BoundaryCondition.FREE,
     }
     if key not in mapping:
-        raise IncompleteMaterialStateError(f"Unsupported boundary condition {name!r}")
+        # Input validation, not an incomplete material state. IncompleteMaterialStateError
+        # subclasses MaterialEvidenceError so callers catching the parent are unaffected,
+        # but the taxonomy now distinguishes "you passed a bad name" from "the evidence
+        # bundle lacks E_C".
+        raise MaterialEvidenceError(
+            f"Unsupported boundary condition {name!r}; "
+            f"expected one of {sorted(mapping)}"
+        )
     return mapping[key]
 
 

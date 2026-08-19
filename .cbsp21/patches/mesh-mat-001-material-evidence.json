@@ -71,7 +71,9 @@
       "pytest tests/ -k 'plate or rayleigh or ritz' -q --no-cov -> 43 passed (rayleigh_ritz memoization is numerically identical)",
       "radon cc -n C app/mesh/materials/ -> max block C(11); import_material_evidence 16->under, compare_modal_prediction 21->8, from_evidence 15->11 (gate threshold >15)",
       "python scripts/ci/check_contracts_governance.py --base-ref origin/main -> PASS (was CHANGELOG_REQUIRED)",
-      "sha256 of each schema re-derived and asserted by test_contract_hashes_match_schema_bytes"
+      "sha256 of each schema re-derived and asserted by test_contract_hashes_match_schema_bytes",
+      "Hardening pass: `py -3.11 -m pytest tests/mesh/materials/ --no-cov -q` -> 84 passed (was 48). Seven previously-accepted invalid inputs now rejected, verified by direct probe before and after: mode_indices='12' coerced to (1,2); frequency_hz NaN and inf; EvidenceValue inf; density -500; E_L -1e9; q_factor NaN.",
+      "Adjacent-suite regression sweep: `pytest tests/ -k 'calculator or plate or rayleigh or mesh or contract or schema'` -> 398 passed, 1 failed. The failure is tests/test_openapi.py::test_openapi_schema_builds, a known LOCAL env trap (local fastapi 0.121.0 vs the repo's pinned 0.137+ crashes app.openapi()); unrelated to this patch and green on CI. Three further collection errors are a missing local 'defusedxml' dep, also environmental."
     ]
   },
   "files": [
@@ -251,6 +253,15 @@
       ],
       "risk": "low",
       "behavior_change": "Adds a guarded gauss_legendre(32) call at conftest import. Wrapped in try/except so it can never block collection. Extends the guard that already exists in this file for the same class of numpy re-import hazard."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_evidence_domain_validation.py",
+      "intent": "Domain-validation regressions: every case in this file was ACCEPTED by the importer before the hardening commit (NaN/inf values, non-positive density and moduli, NaN q_factor, string-like mode_indices).",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_evidence_domain_validation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
     }
   ],
   "architecture_scan": {

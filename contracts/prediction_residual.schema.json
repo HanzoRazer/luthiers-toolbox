@@ -27,8 +27,14 @@
         "properties": {
           "predicted_frequency_hz": { "type": ["number", "null"] },
           "measured_frequency_hz": { "type": ["number", "null"] },
-          "absolute_error_hz": { "type": ["number", "null"] },
-          "relative_error": { "type": ["number", "null"] },
+          "absolute_error_hz": {
+            "type": ["number", "null"],
+            "description": "SIGNED error in absolute units: predicted_frequency_hz - measured_frequency_hz. Negative means the prediction is flat of the measurement. 'absolute' names the unit basis (Hz) as opposed to 'relative_error', which is the same quantity divided by the measurement; it does NOT mean magnitude. Consumers wanting magnitude must apply abs()."
+          },
+          "relative_error": {
+            "type": ["number", "null"],
+            "description": "SIGNED dimensionless error: absolute_error_hz / measured_frequency_hz. Null when the measured frequency is zero."
+          },
           "status": {
             "type": "string",
             "enum": ["MATCHED", "MISMATCHED", "NO_MEASUREMENT", "NO_PREDICTION"]

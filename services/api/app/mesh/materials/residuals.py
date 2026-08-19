@@ -28,6 +28,7 @@ _Measured = Tuple[Optional[Tuple[int, int]], float, Optional[str]]
 class ModeResidual:
     predicted_frequency_hz: Optional[float]
     measured_frequency_hz: Optional[float]
+    # Signed: predicted - measured, in Hz. See prediction_residual.schema.json.
     absolute_error_hz: Optional[float]
     relative_error: Optional[float]
     status: MatchStatus
@@ -159,13 +160,17 @@ def _paired_residual(
     tolerance_hz: float,
 ) -> ModeResidual:
     m_idx, m_hz, label = measurement
-    abs_err = pred_hz - m_hz
+    # SIGNED, deliberately. "absolute" names the unit basis (Hz) against
+    # "relative_error" (dimensionless), not magnitude — the sign carries the
+    # physics: negative means the prediction is flat of the measurement.
+    # Magnitude is taken explicitly below where it is actually wanted.
+    signed_err = pred_hz - m_hz
     return ModeResidual(
         predicted_frequency_hz=pred_hz,
         measured_frequency_hz=m_hz,
-        absolute_error_hz=abs_err,
-        relative_error=abs_err / m_hz if m_hz != 0 else None,
-        status="MATCHED" if abs(abs_err) <= tolerance_hz else "MISMATCHED",
+        absolute_error_hz=signed_err,
+        relative_error=signed_err / m_hz if m_hz != 0 else None,
+        status="MATCHED" if abs(signed_err) <= tolerance_hz else "MISMATCHED",
         mode_indices=pred_idx or m_idx,
         label=label,
         match_basis=basis,

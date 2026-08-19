@@ -132,3 +132,45 @@ def test_malformed_mode_indices_rejected():
             _response([{"frequency_hz": 100.0}]),
             [{"frequency_hz": 100.0, "mode_indices": [1]}],
         )
+
+
+def test_absolute_error_hz_is_signed_not_magnitude():
+    """
+    `absolute_error_hz` names the UNIT basis (Hz) against `relative_error`
+    (dimensionless) — it is not a magnitude. The sign is load-bearing: it says
+    whether the prediction is sharp or flat of the measurement, which is the
+    physically interesting direction. Pinned because the name invites an abs()
+    "fix" that would destroy that information, and because `relative_error` is
+    signed for the same reason.
+    """
+    from app.mesh.materials.residuals import _paired_residual
+
+    flat = _paired_residual(170.0, (1, 1), ((1, 1), 180.0, None), "mode_indices", 1.0)
+    assert flat.absolute_error_hz == pytest.approx(-10.0)
+    assert flat.relative_error is not None and flat.relative_error < 0
+
+    sharp = _paired_residual(190.0, (1, 1), ((1, 1), 180.0, None), "mode_indices", 1.0)
+    assert sharp.absolute_error_hz == pytest.approx(10.0)
+    assert sharp.relative_error is not None and sharp.relative_error > 0
+
+    # status uses magnitude explicitly, so both directions are MISMATCHED here
+    assert flat.status == "MISMATCHED" and sharp.status == "MISMATCHED"
+
+
+def test_boundary_condition_name_error_is_input_validation_not_incompleteness():
+    """
+    A bad boundary-condition name is a caller mistake, not an incomplete
+    material state. IncompleteMaterialStateError subclasses
+    MaterialEvidenceError, so this distinction is only observable by asserting
+    the narrower type is NOT raised.
+    """
+    from app.mesh.materials.evidence import MaterialEvidenceError
+    from app.mesh.materials.orthotropic import IncompleteMaterialStateError
+    from app.mesh.materials.predictor import _parse_bc
+
+    with pytest.raises(MaterialEvidenceError) as exc:
+        _parse_bc("hinged_on_tuesdays")
+    assert not isinstance(exc.value, IncompleteMaterialStateError)
+
+    # supported names still resolve, including the hyphen spelling
+    assert _parse_bc("simply-supported") is _parse_bc("simply_supported")

@@ -12,6 +12,7 @@ ASSUMED model inputs are tracked separately as ``ModelAssumption``
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Mapping, Optional, Sequence
 
@@ -45,6 +46,14 @@ _UNIT_ALIASES: Dict[str, str] = {
 }
 
 
+# Canonical properties that are physically strictly positive. Applied only to
+# the canonicalized names, so an unrecognised property is left un-constrained
+# rather than being silently assigned a sign convention it may not have.
+_STRICTLY_POSITIVE_PROPERTIES: frozenset[str] = frozenset(
+    {"density_kg_m3", "E_L_Pa", "E_C_Pa", "G_LC_Pa"}
+)
+
+
 class MaterialEvidenceError(ValueError):
     """Raised when material evidence fails validation."""
 
@@ -56,6 +65,16 @@ class UncertaintyDescriptor:
     std_dev: Optional[float] = None
     relative: Optional[float] = None  # fraction (0.05 = 5%)
     notes: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        for name in ("std_dev", "relative"):
+            v = getattr(self, name)
+            if v is None:
+                continue
+            if not math.isfinite(v) or v < 0:
+                raise MaterialEvidenceError(
+                    f"uncertainty.{name} must be finite and non-negative, got {v!r}"
+                )
 
     def to_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in asdict(self).items() if v is not None}
@@ -108,8 +127,19 @@ class EvidenceValue:
                 f"Property {self.property!r} with epistemic_status={status!r} "
                 "requires source_artifact_id or source_hash (no silent provenance)"
             )
-        if self.value != self.value:  # NaN
-            raise MaterialEvidenceError(f"Property {self.property!r} value is NaN")
+        # isfinite rejects NaN *and* both infinities. The former `v != v` test
+        # caught only NaN, so inf flowed through canonicalization into the
+        # solver; both also serialize as bare NaN/Infinity tokens, which are
+        # not valid JSON and would detach the sidecar from its schema.
+        if not math.isfinite(self.value):
+            raise MaterialEvidenceError(
+                f"Property {self.property!r} value must be finite, got {self.value!r}"
+            )
+        if self.property in _STRICTLY_POSITIVE_PROPERTIES and self.value <= 0:
+            raise MaterialEvidenceError(
+                f"Property {self.property!r} must be strictly positive, "
+                f"got {self.value!r}"
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {
@@ -146,8 +176,20 @@ class ModalEvidence:
             raise MaterialEvidenceError(
                 f"Unsupported modal epistemic_status {self.epistemic_status!r}"
             )
-        if self.frequency_hz <= 0:
-            raise MaterialEvidenceError("modal frequency_hz must be positive")
+        # NaN defeats a bare `<= 0` guard: every comparison against NaN is
+        # False, so the old check passed it through. A NaN measurement then
+        # produced a NaN residual reported as MISMATCHED rather than an error.
+        if not math.isfinite(self.frequency_hz) or self.frequency_hz <= 0:
+            raise MaterialEvidenceError(
+                f"modal frequency_hz must be finite and positive, "
+                f"got {self.frequency_hz!r}"
+            )
+        if self.q_factor is not None and (
+            not math.isfinite(self.q_factor) or self.q_factor <= 0
+        ):
+            raise MaterialEvidenceError(
+                f"modal q_factor must be finite and positive, got {self.q_factor!r}"
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {
@@ -291,8 +333,16 @@ def _parse_modal(raw: Mapping[str, Any]) -> ModalEvidence:
     indices = raw.get("mode_indices")
     mode_indices: Optional[tuple[int, int]] = None
     if indices is not None:
-        if not isinstance(indices, Sequence) or len(indices) != 2:
-            raise MaterialEvidenceError("mode_indices must be [m, n]")
+        # str/bytes are Sequences: "12" has len 2 and would coerce to (1, 2).
+        # residuals._indices_key already excludes them; match it here.
+        if not isinstance(indices, Sequence) or isinstance(
+            indices, (str, bytes, bytearray)
+        ):
+            raise MaterialEvidenceError("mode_indices must be a [m, n] pair")
+        if len(indices) != 2:
+            raise MaterialEvidenceError(
+                f"mode_indices must be a [m, n] pair, got {list(indices)!r}"
+            )
         mode_indices = (int(indices[0]), int(indices[1]))
     return ModalEvidence(
         frequency_hz=float(raw["frequency_hz"]),
