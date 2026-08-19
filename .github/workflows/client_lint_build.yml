@@ -51,8 +51,18 @@ jobs:
           python3 "$GITHUB_WORKSPACE/scripts/ci/check_client_type_check_ratchet.py"             --log "$RUNNER_TEMP/vue-tsc.log"             --baseline "$GITHUB_WORKSPACE/scripts/ci/client_type_check_baseline.json"
 
       - name: Lint (ESLint)
-        run: npm run lint
-        continue-on-error: true  # Allow warnings during initial adoption
+        # Non-gating on its own, and deliberately NOT `npm run lint`: that
+        # script carries --max-warnings=1200 against a tree with thousands of
+        # warnings, so it failed on warning count every single run and told
+        # nobody anything. `lint:report` is the same file selection without
+        # the dead threshold; the ratchet step below is the real gate and
+        # renders the human-readable summary.
+        continue-on-error: true
+        run: npm run lint:report -- --output-file "$RUNNER_TEMP/eslint.json"
+
+      - name: Lint regression ratchet
+        run: |
+          python3 "$GITHUB_WORKSPACE/scripts/ci/check_client_lint_ratchet.py"             --report "$RUNNER_TEMP/eslint.json"             --baseline "$GITHUB_WORKSPACE/scripts/ci/client_lint_baseline.json"
 
       - name: Run tests (Vitest)
         run: npm test

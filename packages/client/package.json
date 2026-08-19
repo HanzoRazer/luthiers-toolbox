@@ -8,6 +8,7 @@
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .ts,.vue --max-warnings=1200",
+    "lint:report": "eslint . --ext .ts,.vue --format json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:request-id": "vitest run src/sdk/core/__tests__/assertRequestId.test.ts src/sdk/core/__tests__/apiFetch.requestIdGuard.test.ts",

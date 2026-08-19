@@ -1,0 +1,50 @@
+{
+  "_comment": "Regression ratchet for ESLint in packages/client. total_errors and total_warnings are CEILINGS, not targets, and are enforced INDEPENDENTLY so a new error cannot hide behind removed warnings. Lower them whenever you fix things; never raise one without saying why in the PR. Regenerate with scripts/ci/check_client_lint_ratchet.py --report <json> --write-baseline.",
+  "total_errors": 34,
+  "total_warnings": 7683,
+  "files_linted": 1477,
+  "errors_by_rule": {
+    "vue/no-mutating-props": 19,
+    "no-case-declarations": 4,
+    "no-extra-semi": 3,
+    "no-redeclare": 2,
+    "prefer-const": 2,
+    "no-empty": 1,
+    "vue/no-dupe-keys": 1,
+    "vue/no-unused-vars": 1,
+    "vue/return-in-computed-property": 1
+  },
+  "errors_by_file": {
+    "src/components/cam/toolpath-player/ControlsBarWrapper.vue": 10,
+    "src/components/cam/toolpath-player/PanelsLayer.vue": 9,
+    "src/components/generators/neck/strat_neck/composables/useStratNeckPresets.ts": 2,
+    "src/composables/useDxfImport.ts": 3,
+    "src/design-utilities/lutherie/neck/useCamSpec.ts": 1,
+    "src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue": 1,
+    "src/utils/strat_neck_generator.ts": 5,
+    "src/views/art-studio/InlayWorkspaceShell.vue": 1,
+    "src/views/calculators/acoustics/SoundholeCalculator.vue": 2
+  },
+  "warnings_by_rule": {
+    "vue/max-attributes-per-line": 2927,
+    "vue/singleline-html-element-content-newline": 1820,
+    "@typescript-eslint/no-explicit-any": 971,
+    "vue/html-self-closing": 341,
+    "vue/html-indent": 317,
+    "vue/attributes-order": 294,
+    "@typescript-eslint/no-unused-vars": 283,
+    "vue/multiline-html-element-content-newline": 139,
+    "max-lines-per-function": 138,
+    "vue/first-attribute-linebreak": 132,
+    "vue/html-closing-bracket-newline": 130,
+    "vue/html-closing-bracket-spacing": 77,
+    "max-lines": 45,
+    "vue/no-v-html": 29,
+    "vue/no-multi-spaces": 17,
+    "vue/require-default-prop": 11,
+    "vue/one-component-per-file": 8,
+    "vue/no-template-shadow": 2,
+    "vue/attribute-hyphenation": 1,
+    "vue/require-explicit-emits": 1
+  }
+}
