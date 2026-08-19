@@ -22,6 +22,7 @@ sys.path.insert(0, "services/api")
 
 preset = os.environ["PRESET_ENV"]
 out_dir = Path(os.environ["OUT_ENV"])
+out_dir.mkdir(parents=True, exist_ok=True)
 input_mesh = "examples/retopo/intake.obj"
 model_id = "DEMO_MODEL"
 session_id = "demo_session_001"
