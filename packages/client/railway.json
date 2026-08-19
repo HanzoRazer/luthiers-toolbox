@@ -10,7 +10,8 @@
       "*.json",
       "Dockerfile",
       "scripts/**",
-      "package-lock.json"
+      "package-lock.json",
+      "start.sh"
     ]
   },
   "deploy": {
