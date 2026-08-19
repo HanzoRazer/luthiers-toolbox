@@ -59,6 +59,30 @@ jobs:
           build-args: |
             NODE_VERSION=22
 
+      # The remaining two client Dockerfiles. Nothing built these either, so a
+      # change valid for the other two could still break a deploy that uses one
+      # of them -- which is the shape of the failure this PR is chasing. Both
+      # take the repo root as context.
+      - name: Build Client image (railway variant)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile.railway
+          load: false
+          tags: toolbox/client-railwayvariant:ci
+          build-args: |
+            NODE_VERSION=22
+
+      - name: Build Client image (production variant)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile.production
+          load: false
+          tags: toolbox/client-production:ci
+          build-args: |
+            NODE_VERSION=22
+
       - name: Launch stack
         run: |
           cat > .env <<EOF
