@@ -2,20 +2,22 @@
   "schema": "cbsp21_patch_input_v1",
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
-  "patch_id": "MAINT_DEFER_008_CLIENT_SMOKE_READINESS",
-  "title": "docs(sprints): register MAINT-DEFER-008 — client container smoke has no readiness wait",
-  "intent": "Registers a CI signal-quality defect found while re-running a flaky check on PR #297: containers.yml waits for the API container to become ready and then curls the client container single-shot, so client readiness is assumed rather than asserted. Ledger + evidence only; containers.yml is not edited.",
+  "patch_id": "MAINT_DEFER_008_010_CI_SIGNAL_DEBT",
+  "title": "docs(sprints): register MAINT-DEFER-008/009/010 — CI signal-quality and numerics debt",
+  "intent": "Registers a CI signal-quality defect found while re-running a flaky check on PR #297: containers.yml waits for the API container to become ready and then curls the client container single-shot, so client readiness is assumed rather than asserted. Ledger + evidence only; containers.yml is not edited. Extended to also register MAINT-DEFER-009 and MAINT-DEFER-010, both surfaced by the PR #305 review and neither caused by it.",
   "change_type": "docs",
   "behavior_change": "None. Adds one evidence document and one SPRINTS.md record. No workflow, script, dependency, or runtime file is touched — in particular .github/workflows/containers.yml is deliberately NOT modified.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       "SPRINTS.md",
-      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"
+      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md",
+      "docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md"
     ],
     "files_expected_to_change": [
       "SPRINTS.md",
-      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"
+      "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md",
+      "docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md"
     ]
   },
   "diff_articulation": {
@@ -29,28 +31,48 @@
       "Flake-not-regression established before re-running: the failing PR changed only SPRINTS.md and a CBSP21 manifest (cannot affect a container image); `gh run list --branch main --workflow containers.yml` shows success on the preceding six commits; the same workflow shows 4/4 success on branch cursor/supabase-js-2112-42de; and the job passed on re-run with no code change.",
       "CI-RED-020 precedent confirmed present: scripts/ci/wait_for_api_ready.py exists and is invoked by api_health_check.yml, api_tests.yml and api_health_and_smoke.yml; no reference to it exists in containers.yml.",
       "CBSP21 selection checked before push with the gate's own function: this manifest declares 2 tokens and covers 2 changed files, versus the landed maint-defer-005-007 manifest which covers 1 — so selection resolves on coverage (ranked first) rather than tying on specificity.",
-      "manifest JSON parse -> PASS"
+      "manifest JSON parse -> PASS",
+      "MAINT-DEFER-009 evidence: `git show --stat ee36ddf1` deleted services/api/app/retopo/{__init__,miq_adapter,qrm_adapter,run,util}.py (612 lines) on 2026-02-10, commit body calling them 'unused retopology tools'; `git ls-tree -r origin/main` confirms the package is absent; examples/retopo/run.sh:16 still imports app.retopo.run and .github/workflows/mesh-pipeline-ci.yml:52-56 still runs it. mesh-pipeline-ci is failure on every main run back through 2026-01-21 — i.e. already red BEFORE the deletion, so the deletion is not the origin of the red but does make these two steps structurally unfixable.",
+      "MAINT-DEFER-010 evidence: rayleigh_ritz.py:650-657 read directly — `np.linalg.eig(np.linalg.inv(M) @ K)` under a comment declaring a generalized eigenproblem, an except branch commented 'Fallback to scipy if available' that imports no scipy and instead computes np.diag(K)/np.diag(M) with np.eye() mode shapes, and no signal in the result that the fallback ran; :660-661 then discards any imaginary part via np.real without flagging. All present before PR #305, which touched only gauss_legendre in this file."
     ]
   },
   "files": [
     {
       "path": "SPRINTS.md",
       "intent": "Register MAINT-DEFER-008 in the DEFERRED MAINTENANCE parking lot with a restore trigger.",
-      "scan_targets": ["SPRINTS.md"],
+      "scan_targets": [
+        "SPRINTS.md"
+      ],
       "risk": "low",
       "behavior_change": "None - ledger entry only."
     },
     {
       "path": "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md",
       "intent": "Record the workflow evidence, the observed failure, and why it is CI-RED-020's defect shape on the client side.",
-      "scan_targets": ["docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"],
+      "scan_targets": [
+        "docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md"
+      ],
+      "risk": "low",
+      "behavior_change": "None - new documentation file."
+    },
+    {
+      "path": "docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md",
+      "intent": "Evidence for MAINT-DEFER-009 (mesh-pipeline-ci demo steps import app.retopo, deleted in ee36ddf1) and MAINT-DEFER-010 (solve_rayleigh_ritz explicit inv(M) and a fallback whose comment claims scipy while it computes diagonal ratios with identity mode shapes).",
+      "scan_targets": [
+        "docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md"
+      ],
       "risk": "low",
       "behavior_change": "None - new documentation file."
     }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-08-19-001",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Documentation-only. Scope limit stated plainly: no fix is applied and .github/workflows/containers.yml is untouched, so the race remains live until the restore trigger is authorized. The failure RATE is explicitly not established - one occurrence is recorded and no history sweep was run - so this record must not be read as evidence about frequency. CI-RED-020 is CLOSED and is not reopened or re-adjudicated here."

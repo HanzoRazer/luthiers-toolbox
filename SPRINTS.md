@@ -922,6 +922,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-006 | Client 3D components (`three` consumers) have zero automated coverage | Client / test coverage | QUEUED | 2026-08-18 |
 | MAINT-DEFER-007 | No client bundle-size budget — growth accrues unobserved | Client / build hygiene | QUEUED | 2026-08-18 |
 | MAINT-DEFER-008 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
+| MAINT-DEFER-009 | `mesh-pipeline-ci` demo steps import `app.retopo`, deleted in `ee36ddf1` | CI / mesh pipeline | QUEUED | 2026-08-19 |
+| MAINT-DEFER-010 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1106,6 +1108,46 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Not established:** failure rate. One occurrence is recorded; no history sweep was run, so this says nothing about how often the race is lost.
 
 **Path:** HYG — CI signal quality; not on the CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-009 — `mesh-pipeline-ci` demo steps import a deleted module
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-009
+
+**Why deferred:** `ee36ddf1` (2026-02-10, "refactor(api): remove orphaned feature modules (Phase 4)") deleted `services/api/app/retopo/` — 612 lines, five files, including the `run.py` that defined `run_pipeline` — describing it as "unused retopology tools". It was not unused. `examples/retopo/run.sh:16` still does `from app.retopo.run import run_pipeline`, and `.github/workflows/mesh-pipeline-ci.yml:52-56` runs that script twice (`qrm`, `miq`) before validating its outputs at `:58-59`. The deletion removed the callee and left both callers in place.
+
+**Symptom:** `ModuleNotFoundError: No module named 'app.retopo'` at the **Run example (QRM preset)** step (PR #305, job `96184751868`). The earlier symptom in that job was a collection error (`No module named 'services'`), fixed by `PYTHONPATH=.` in `184670a7`; that fix was correct and exposed this deeper one.
+
+**Older and broader than the PR that surfaced it:** `mesh-pipeline-ci` is **failure on every run on `main`** back through 2026-03-08, 2026-02-10 (x2), 2026-02-07 (x2), 2026-01-21. Note the ordering — it was already red *before* the 2026-02-10 deletion, so the deletion is not the origin of the red, but it did make these two demo steps structurally unfixable: the code they call exists at no commit reachable from `main`.
+
+**Restore trigger — a disposition, not a bug fix.** Either (a) restore `services/api/app/retopo/` from `ee36ddf1^` if the retopology lane is still wanted, or (b) retire the scaffold: delete `examples/retopo/` and drop the three demo steps from the workflow. Done-condition either way: `mesh-pipeline-ci` reaches terminal green on `main`, or it stops claiming to exercise a pipeline this repo does not contain.
+
+**Path:** HYG — CI signal quality; not on the CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-010 — `solve_rayleigh_ritz` eigensolver and its mislabelled fallback
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-010
+
+**Why deferred:** `services/api/app/calculators/plate_design/rayleigh_ritz.py:650-657` carries three distinct defects, all **predating** PR #305 (which touched only `gauss_legendre` in this file):
+
+1. **Explicit inverse.** `np.linalg.eig(np.linalg.inv(M) @ K)` forms `inv(M)` and multiplies, which is less accurate and less stable than solving directly. `K` and `M` are symmetric, so the natural call is a symmetric-definite generalized solver; `inv(M) @ K` is not symmetric, which is why the general `eig` is needed at all.
+2. **The fallback comment is false.** It says "Fallback to scipy if available"; scipy is never imported or called. What runs is `np.diag(K) / np.diag(M)` — every off-diagonal coupling discarded — with `np.eye(...)` for mode shapes, i.e. every mode shape replaced by a unit vector. That is not a degraded solve of the stated problem, it is a different calculation returning the same shape.
+3. **The degradation is silent.** Nothing in the result records that the fallback ran, so a caller cannot tell a real solve from diagonal ratios with identity mode shapes. `:660-661` then takes `np.real(eigenvalues)`, discarding any imaginary part non-symmetric `eig` can produce, without flagging it.
+
+**Why now:** recorded because PR #305 put the file under review, and because MESH-MAT-001's predictor is a new consumer — the first whose outputs are published as governed sidecars.
+
+**Restore trigger:** solve the generalized problem directly (`scipy.linalg.eigh(K, M)` if scipy is acceptable here, else symmetric handling via `np.linalg.solve`), and make any fallback **observable in the result** rather than silent — raise, or return a flag the caller must read. Correct the comment to describe what the fallback actually does. Done-condition: a test against closed-form simply-supported isotropic modal frequencies to a stated tolerance, plus a test proving the fallback is externally detectable.
+
+**Explicitly NOT to be batched into a feature branch:** changing an eigensolver can move every existing plate-prediction number. It needs its own PR, its own witnesses, and a ruling on whether scipy may be added as a dependency.
+
+**Path:** HYG — numerics quality; feeds MESH-MAT-001 prediction confidence.
 
 ---
 
