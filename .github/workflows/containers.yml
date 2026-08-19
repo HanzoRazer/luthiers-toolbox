@@ -42,6 +42,23 @@ jobs:
           build-args: |
             NODE_VERSION=22
 
+      # packages/client/Dockerfile is what Railway actually builds for the
+      # @luthiers-toolbox/client service (see packages/client/railway.json), with
+      # packages/client as the build CONTEXT rather than the repo root. Until now
+      # nothing in CI built it, so a change that broke only that entry point --
+      # a COPY whose path is valid from the repo root but not from the package
+      # directory, say -- surfaced as a red Railway deploy and nowhere else.
+      # Build it here so that failure mode is reproducible.
+      - name: Build Client image (Railway entry point)
+        uses: docker/build-push-action@v6
+        with:
+          context: packages/client
+          file: packages/client/Dockerfile
+          load: false
+          tags: toolbox/client-railway:ci
+          build-args: |
+            NODE_VERSION=22
+
       - name: Launch stack
         run: |
           cat > .env <<EOF

@@ -3,7 +3,15 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
-    "watchPatterns": ["src/**", "*.ts", "*.vue", "*.json", "Dockerfile"]
+    "watchPatterns": [
+      "src/**",
+      "*.ts",
+      "*.vue",
+      "*.json",
+      "Dockerfile",
+      "scripts/**",
+      "package-lock.json"
+    ]
   },
   "deploy": {
     "numReplicas": 1,

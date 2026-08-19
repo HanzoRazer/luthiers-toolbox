@@ -52,6 +52,6 @@ EXPOSE 80
 # Labels for metadata
 LABEL org.opencontainers.image.title="The Production Shop - Client"
 LABEL org.opencontainers.image.description="Vue 3 + Vite frontend with nginx"
-LABEL org.opencontainers.image.source="https://github.com/yourorg/luthiers-toolbox"
+LABEL org.opencontainers.image.source="https://github.com/HanzoRazer/luthiers-toolbox"
 
 CMD ["nginx", "-g", "daemon off;"]

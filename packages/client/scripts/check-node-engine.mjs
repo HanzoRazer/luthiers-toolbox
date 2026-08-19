@@ -11,6 +11,14 @@
  * wrong base image fails with this message instead of an opaque Vite/ESM error
  * several minutes later.
  *
+ * Why this rather than npm's own `engine-strict=true`: that setting makes npm
+ * refuse to install when ANY package in the tree declares an unmet engines
+ * range, including transitive dev dependencies whose ranges are stale or
+ * narrower than reality. This tree already carries such a case (an optional
+ * @napi-rs binary asking for ^22.20 || ^24.12 || >=25), so engine-strict would
+ * fail installs that are in fact fine. This guard checks only the floor the
+ * client itself declares, which is the constraint we actually mean.
+ *
  * Usage:  node scripts/check-node-engine.mjs [path/to/package.json]
  */
 
@@ -62,8 +70,26 @@ export function satisfiesClause(version, clause) {
   if (operator === undefined) return compare(version, bound) === 0; // exact pin
   if (operator === ">=") return compare(version, bound) >= 0;
   if (operator === ">") return compare(version, bound) > 0;
-  // ^x.y.z — same major, at or above the bound.
-  return version[0] === bound[0] && compare(version, bound) >= 0;
+  return satisfiesCaret(version, bound);
+}
+
+/**
+ * npm's caret: "compatible with", i.e. no change to the leftmost non-zero part.
+ *
+ *   ^1.2.3 -> >=1.2.3 <2.0.0
+ *   ^0.2.3 -> >=0.2.3 <0.3.0
+ *   ^0.0.3 -> >=0.0.3 <0.0.4
+ *
+ * A 0-major is unreachable for a Node engine range, but this helper is exported
+ * and unit-tested, so it implements the rule rather than the convenient
+ * approximation "same major". Treating ^0.2.3 as "any 0.x" would accept 0.9.0.
+ */
+export function satisfiesCaret(version, bound) {
+  if (compare(version, bound) < 0) return false;
+  const [bMajor, bMinor] = bound;
+  if (bMajor !== 0) return version[0] === bMajor;
+  if (bMinor !== 0) return version[0] === 0 && version[1] === bMinor;
+  return version[0] === 0 && version[1] === 0 && version[2] === bound[2];
 }
 
 export function satisfies(version, range) {

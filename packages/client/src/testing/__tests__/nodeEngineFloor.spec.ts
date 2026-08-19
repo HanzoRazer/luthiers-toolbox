@@ -17,6 +17,23 @@ import { parseVersion, satisfies } from "../../../scripts/check-node-engine.mjs"
 const CLIENT_ROOT = resolve(__dirname, "..", "..", "..");
 const REPO_ROOT = resolve(CLIENT_ROOT, "..", "..");
 
+/**
+ * Drop YAML comments before scanning. A `# node-version: 18` line is dead text,
+ * and a drift gate that reads dead text is reading the wrong file — it would
+ * fail on a note or, worse, be satisfied by one.
+ *
+ * Deliberately conservative: only a `#` that starts a line (after whitespace)
+ * or follows whitespace is treated as a comment, so a `#` inside a quoted
+ * string is left alone.
+ */
+function stripYamlComments(text: string): string {
+  const NEWLINE = String.fromCharCode(10);
+  return text
+    .split(NEWLINE)
+    .map((line) => line.replace(/(^|\s)#.*$/, "$1"))
+    .join(NEWLINE);
+}
+
 const read = (rel: string, from = REPO_ROOT) =>
   readFileSync(resolve(from, rel), "utf8");
 
@@ -56,6 +73,44 @@ function laneStarts(range: string): string[] {
 }
 
 /**
+ * The lowest Node version a dependency's range could ever accept.
+ *
+ * Any lane of a `||` range can satisfy it, so the range's floor is the LOWEST
+ * lane floor. Within a lane the lowest version token is the conservative floor.
+ * A lane with no version token at all (`*`) means unconstrained.
+ *
+ * This deliberately does not require a tidy `>=x` shape. An earlier version
+ * skipped anything it did not recognise, which quietly turned "checked every
+ * dependency" into "checked the 210 with convenient syntax and ignored 11" —
+ * exactly the kind of silent narrowing this gate exists to catch.
+ */
+function lowestAcceptedBy(range: string): string | null {
+  const laneFloors: string[] = [];
+  for (const lane of range.split("||")) {
+    const tokens = [...lane.matchAll(/v?(\d+(?:\.\d+){0,2})/g)].map((m) => m[1]);
+    if (tokens.length === 0) return null; // this lane accepts anything
+    laneFloors.push(
+      tokens.reduce((lo, t) =>
+        compareVersionStrings(t, lo) < 0 ? t : lo,
+      ),
+    );
+  }
+  if (laneFloors.length === 0) return null;
+  return laneFloors.reduce((lo, t) =>
+    compareVersionStrings(t, lo) < 0 ? t : lo,
+  );
+}
+
+function compareVersionStrings(a: string, b: string): number {
+  const av = parseVersion(a);
+  const bv = parseVersion(b);
+  for (let i = 0; i < 3; i += 1) {
+    if (av[i] !== bv[i]) return av[i] < bv[i] ? -1 : 1;
+  }
+  return 0;
+}
+
+/**
  * Dependencies that require more Node than the declared floor admits.
  *
  * The floor exists to describe what the tree actually needs. If a dependency
@@ -74,14 +129,11 @@ function dependenciesAboveTheFloor(): string[] {
     // Optional packages are skipped by npm when they do not apply.
     if (!required || meta?.optional) continue;
 
-    // Only a single-lane ">=x" range expresses one unambiguous floor.
-    const bound = /(?:^|\|\|)\s*>=\s*v?(\d+(?:\.\d+){0,2})\s*$/.exec(
-      required.trim(),
-    );
-    if (!bound) continue;
+    const needs = lowestAcceptedBy(required.trim());
+    if (needs === null) continue; // unconstrained
 
     const weakest = starts.find(
-      (start) => !satisfies(parseVersion(start), `>=${bound[1]}`),
+      (start) => compareVersionStrings(start, needs) < 0,
     );
     if (weakest) {
       offenders.push(
@@ -122,7 +174,7 @@ describe("client Node engine floor", () => {
     expect(DECLARED_FLOOR).toBeTruthy();
   });
 
-  it("is satisfied by every dependency that declares one", () => {
+  it("is not below any dependency's own Node requirement", () => {
     const offenders = dependenciesAboveTheFloor();
     expect(offenders, offenders.join("\n")).toEqual([]);
   });
@@ -134,7 +186,7 @@ describe("client Node engine floor", () => {
   it("is satisfied by every NODE_VERSION default", () => {
     let seen = 0;
     for (const [name, load] of NODE_VERSION_SOURCES) {
-      for (const m of load().matchAll(
+      for (const m of stripYamlComments(load()).matchAll(
         /NODE_VERSION(?:\s*[:=]\s*|\s*:\s*\$\{NODE_VERSION:-)\s*"?(\d+(?:\.\d+)*)"?/g,
       )) {
         seen += 1;
@@ -148,7 +200,7 @@ describe("client Node engine floor", () => {
     const dir = resolve(REPO_ROOT, ".github", "workflows");
     let seen = 0;
     for (const file of readdirSync(dir).filter((f) => f.endsWith(".yml"))) {
-      const text = readFileSync(resolve(dir, file), "utf8");
+      const text = stripYamlComments(readFileSync(resolve(dir, file), "utf8"));
       for (const m of text.matchAll(/node-version:\s*"?(\d+(?:\.\d+)*)"?/g)) {
         seen += 1;
         expectSatisfiesFloor(m[1], `.github/workflows/${file}`);
