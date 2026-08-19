@@ -256,5 +256,30 @@ Sprint targeted **tap_tone_pi**; luthiers is downstream consumer per handoff.
 
 ---
 
-*Crosswalk version: 2026-05-24*  
-*Next update trigger: first cross-repo integration Dev Order or IBG provenance ratification.*
+## 11. Material Evidence / Mesh Pipeline sequencing (authorized 2026-08-19)
+
+Program direction:
+
+```text
+Tap Tone Pi → Material Evidence → ToolBox Mesh Pipeline → physical validation
+```
+
+| Priority | Order | Status | Owner repo | Notes |
+|----------|-------|--------|------------|-------|
+| **NOW** | **DO-103 Stage 3** | **ACTIVE** | tap_tone_pi | Phase-2 `grant_readiness` ingestion + provenance-derived HARDWARE; negative tests; freeze before physical campaign. Narrow — no hardware acquisition, no empirical registry, no Mesh interpretation. |
+| NEXT | DO-101B | QUEUED | tap_tone_pi | Empirical registry + schema + `ttp empirical` CLI — after Stage 3 freeze so registry can carry evidence-origin fields honestly. |
+| LATER | DO-103 hardware stages | blocked on Stage 3 | tap_tone_pi | Shaker / stinger / transducer campaigns. |
+| LATER | ToolBox material-evidence integration | blocked on Stage 3 (+ registry helpful) | luthiers-toolbox | Orthotropic model validation → Mesh Pipeline experimental phase. |
+
+Authoritative handoffs:
+
+- `docs/handoffs/DO_103_STAGE3_ACTIVE_AUTHORIZATION_2026-08-19.md`
+- `docs/handoffs/DO_101B_QUEUED_EMPIRICAL_REGISTRY_2026-08-19.md`
+
+Rationale (short): Stage 3 is campaign-blocking provenance discipline; DO-101B is discoverability infrastructure that becomes better-defined once HARDWARE cannot be a caller assertion.
+
+---
+
+*Crosswalk version: 2026-08-19*  
+*Prior version: 2026-05-24*  
+*Next update trigger: DO-103 Stage 3 freeze, or first ToolBox material-evidence consumption PR.*
