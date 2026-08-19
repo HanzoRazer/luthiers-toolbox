@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-10
+Last updated: 2026-08-18
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -918,6 +918,9 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-001 | SPRINTS.md CI enforcement (pre-commit / PR advisory) | Process | DEFERRED | 2026-04-23 |
 | MAINT-DEFER-003 | Load-bearing code comments (`DO NOT REMOVE`) | Process | QUEUED | 2026-05-28 |
 | MAINT-DEFER-004 | Dependency Security / DEP-SEC-001 (ACTIVE — Tier-1 COMPLETE; residuals dispositioned; Tranche B/C deferred) | Process / deps | ACTIVE — T1 COMPLETE | 2026-08-10 |
+| MAINT-DEFER-005 | Dependabot intake has no `groups:` — runtime/types pairs arrive as separate PRs | Process / deps | QUEUED | 2026-08-18 |
+| MAINT-DEFER-006 | Client 3D components (`three` consumers) have zero automated coverage | Client / test coverage | QUEUED | 2026-08-18 |
+| MAINT-DEFER-007 | No client bundle-size budget — growth accrues unobserved | Client / build hygiene | QUEUED | 2026-08-18 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1034,6 +1037,56 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Ongoing ownership:** Ross / engineer reviews Dependabot PRs weekly. Generated PRs enter residual adjudication before implementation. No alert dismissal for active dependencies solely to reduce counts.
 
 **Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+### MAINT-DEFER-005 — Dependabot intake: no dependency `groups:`
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-18  
+**Why deferred:** `.github/dependabot.yml` defines no `groups:` block, so packages that are only correct *together* are proposed as independent PRs. Each such PR is individually well-formed and individually broken.
+
+**Witnessed twice, two different failure modes:**
+- **PR #291** — `three` 0.183.2 → 0.185.1 while `@types/three` stayed `^0.182.0`. `three` ships **no** type declarations of its own (0 `.d.ts` files; no `types` condition in its `exports` map), so `@types/three` is the sole type source and the pair must move as a unit. Silent failure: type surface stops describing the runtime, with **no** diagnostic (measured — vue-tsc set identical at 150 either way). Repaired in-PR by `c05704be`.
+- **PR #282** — `@typescript-eslint/eslint-plugin` 6 → 8 while `@typescript-eslint/parser` stayed `^6.21.0`. Plugin v8 peer-requires parser `^8`, so `npm ci` aborted on ERESOLVE, failing `client_lint_build` **and** the Railway client Docker build (`npm ci --production=false`). Loud failure.
+
+**Restore trigger:** a `groups:` block in `.github/dependabot.yml` covering at minimum (a) `three` + `@types/three`, (b) `@typescript-eslint/*`, (c) `typescript` + `vue-tsc`; witnessed by one Dependabot PR that carries a runtime+types pair in a single PR.
+
+**Coordination — do not land blind:** `.github/dependabot.yml` is MAINT-DEFER-004's declared **intake boundary**, already carries an open owner action there (`archive/**` exclusions, matrix §11), and is edited by branch `ci/client-toolchain-gate-hardening` (typescript/vue-tsc major ignores). Land the `groups:` edit **with** those, not against them.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-006 — Client 3D components have zero automated coverage
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-18  
+**Why deferred:** The three `three` consumers — `packages/client/src/components/cam/CamBackplot3D.vue`, `packages/client/src/components/cam/ToolpathCanvas3D.vue`, `packages/client/src/components/ToolpathPreview3D.vue` — have no `.spec.ts` / `.test.ts` anywhere. The client suite (761 passing) never constructs a scene.
+
+**Consequence — this is the load-bearing part:** every `three` upgrade is CI-green *by construction*. A rendering regression cannot be caught by any existing gate, so "npm test passed" is not evidence about 3D and must not be cited as such in a dependency review. Witnessed on PR #291, where 761 tests passed while exercising zero of the changed dependency's consumers.
+
+**Restore trigger:** one jsdom/headless smoke per component asserting scene construction and teardown without throwing — renderer/scene/camera built, `OrbitControls` attached, dispose path runs clean. Not pixel comparison; the bar is "does it still initialise."
+
+**First place to look on regression:** `ToolpathPreview3D.vue` is the loosest of the three — `let renderer:any, scene:any, camera:any, controls:any`, and it removes line objects (`if((o as any).isLine) scene.remove(o)`) without disposing geometry or materials.
+
+**Path:** HYG — insurance around an untested rendering surface.
+
+---
+
+### MAINT-DEFER-007 — No client bundle-size budget
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-18  
+**Why deferred:** No gate observes client bundle size, so growth accrues unobserved across dependency bumps. `client_lint_build.yml` builds and uploads `dist` but asserts nothing about it.
+
+**Measured datum (PR #291, `three` 0.183.2 → 0.185.1):** total `dist/assets` **3231.8 kB → 3248.8 kB (+17.1 kB)** uncompressed; largest chunk `DxfToGcodeView` **764.3 → 781.4 kB**; chunk count unchanged at 114. Small in isolation — the point is that nothing recorded it.
+
+**Standing context:** Vite already prints its >500 kB chunk warning on every build, and `DxfToGcodeView` has been over that line for some time. The warning is advisory and nothing consumes it.
+
+**Restore trigger:** a CI step that records total `dist` bytes and largest-chunk bytes, ratcheted like the existing debt gates, so a bump that materially grows the bundle has to be acknowledged rather than discovered later.
+
+**Path:** HYG — build hygiene; not on the CAM MVP cut path.
+
+---
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 

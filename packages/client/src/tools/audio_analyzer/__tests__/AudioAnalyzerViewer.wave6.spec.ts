@@ -1,5 +1,5 @@
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  *
  * Wave 6A + 6B.1 acceptance test stubs.
  * These document the expected behaviors; implementation deferred.
