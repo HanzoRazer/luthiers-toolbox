@@ -1,0 +1,169 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TYPE_CHECK_RATCHET",
+  "title": "ci(client): make the type-check AND lint gates real via regression ratchets",
+  "intent": "The type-check step in client_lint_build.yml ran with continue-on-error: true and a stale TODO (\"400+ pre-existing type errors\"), so vue-tsc could never fail the job. The measured count on main a48e9002 is 150, not 400+. Because the errors were emitted into a log nobody gated on, a reviewer of PR #290 (typescript 5.9.3 -> 6.0.3) read them as evidence the bump had broken type-checking. It had not: typescript 5.9.3 and 6.0.3 produce byte-identical error sets on the same tree. This patch converts the decorative step into a ratchet - the count may fall freely but may not rise - which is the pattern the repo already uses in ci/file_size_baseline.json and ci/router_count_baseline.json. No source files and no dependency versions are touched.",
+  "change_type": "ci+fix",
+  "behavior_change": "new-gate",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/",
+      "scripts/ci/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/client_lint_build.yml",
+      "scripts/ci/client_type_check_baseline.json",
+      "scripts/ci/check_client_type_check_ratchet.py",
+      ".cbsp21/patches/client-type-check-ratchet.json",
+      "packages/client/src/components/cam/CamOffsetVisualizer.vue",
+      "packages/client/src/components/compare/CompareModeButton.vue",
+      "packages/client/src/components/compare/DualSvgDisplay.vue",
+      "packages/client/src/components/compare/PanZoomSvg.vue",
+      "scripts/ci/check_client_lint_ratchet.py",
+      "scripts/ci/client_lint_baseline.json",
+      "packages/client/package.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "scripts/ci/check_client_type_check_ratchet.py (new) parses a vue-tsc log, counts `file(line,col): error TSxxxx` occurrences, and compares the total against a committed ceiling; it fails on any increase, names the files that rose, prints a nudge to lower the ceiling when the count falls, and supports --write-baseline for regeneration. scripts/ci/client_type_check_baseline.json (new) records total_errors 150 plus per-code and per-file breakdowns, the dual-TypeScript witness, and a note that 63 of the 150 come from an orphaned directory. client_lint_build.yml: the type-check step now tees its output to $RUNNER_TEMP/vue-tsc.log and keeps continue-on-error (it is not the gate); a new non-continue-on-error 'Type-check regression ratchet' step runs the checker and IS the gate. The stale '400+' TODO comment is replaced with the measured 150 and the reason the step stays non-gating. LINT RATCHET: scripts/ci/check_client_lint_ratchet.py + scripts/ci/client_lint_baseline.json add the sibling gate for ESLint. The workflow's lint step no longer runs `npm run lint` - that script carries --max-warnings=1200 against a tree with 7683 warnings, so it failed on warning count on EVERY run, which is why it was made continue-on-error and then ignored. It now runs a new `lint:report` script (identical file selection, JSON formatter, no dead threshold) and the ratchet gates on the report. One ESLint run, not two; the ratchet renders the summary and on failure names the offending files and rules instead of emitting 7000+ lines of warnings.",
+    "why_not_redundant": "Nothing in the repo gated on client type errors: the only step that ran vue-tsc was continue-on-error, and no baseline file for it existed (ci/ held file_size and router_count baselines only). The ratchet is not redundant with the existing lint step either - lint is separately continue-on-error and is NOT type-aware (packages/client/.eslintrc.cjs sets no parserOptions.project, so @typescript-eslint/parser runs syntax-only and never builds a TS program), so ESLint cannot observe type errors at all. The lint ratchet is not redundant with the type-check ratchet: ESLint here is NOT type-aware (.eslintrc.cjs sets no parserOptions.project), so the two gates observe disjoint defect classes - neither can see the other's findings."
+  },
+  "verification": {
+    "commands_run": [
+      "BASELINE EXPERIMENT on a clean worktree at main a48e9002: npm ci -> typescript 5.9.3 -> npx vue-tsc --noEmit -> exit 2, 150 errors. Then npm i -D typescript@6.0.3 -> npx vue-tsc --noEmit -> exit 2, 150 errors. comm(3) over normalized `file(line,col): error TScode` keys: 0 lines only-in-TS5, 0 lines only-in-TS6 -> the error sets are IDENTICAL and no error is attributable to the TypeScript 6 bump",
+      "npx eslint . --ext .ts,.vue --max-warnings=1200 under typescript 6.0.3 -> 34 errors / 7683 warnings, matching the numbers observed in CI; no parser crash and no @typescript-eslint unsupported-version warning",
+      "grep for parserOptions.project in packages/client/.eslintrc.cjs -> ABSENT, confirming lint is syntax-only and structurally cannot be affected by the TypeScript version",
+      "ratchet PASS path: --log <ts6 log, 150> vs ceiling 150 -> exit 0",
+      "ratchet FAIL path: synthetic +1 error appended -> exit 1, reports 150 -> 151 and names src/views/NewThing.vue 0 -> 1",
+      "anti-bless-the-void: missing log -> exit 1; empty log -> exit 1; log with no recognizable vue-tsc output -> exit 1 (a gate that passes on absent input is worse than no gate)",
+      "clean-run path: synthetic 'Found 0 errors.' log -> exit 0 plus a nudge to lower the ceiling",
+      "CI-equivalent end-to-end: exported GITHUB_WORKSPACE and RUNNER_TEMP and ran the exact command block from the workflow verbatim -> exit 0",
+      "yaml.safe_load over client_lint_build.yml -> OK; step wiring asserted: 'Type check (vue-tsc)' continue-on-error=True, 'Type-check regression ratchet' continue-on-error=False",
+      "orphan evidence: zero inbound imports to src/views/cam/headstock/ from anywhere outside that directory; router/index.ts 'WorkspaceView' hit resolves to CamWorkspaceView.vue, a different file; all 11 aliased import targets confirmed absent on disk",
+      "RE-BASELINE 2026-08-19 after main moved (typescript 6.0.3 via #290, vue-tsc ^2.1.0 -> ^3.3.10, node-version 20 -> 22): ceiling 150 -> 156. Cause isolated on ONE tree with TypeScript held at 6.0.3 -- vue-tsc 2.2.12 -> 150 errors / 0 TS2440; vue-tsc 3.3.10 -> 156 / 6 TS2440. Attributable to the vue-tsc MAJOR, not TS6 and not new source (all 4 affected files unchanged since a48e9002). Caught before merge: the un-rebased 150 ceiling would have failed the job on landing",
+      "MACRO-IMPORT FIX 2026-08-19: removed defineProps/defineEmits/defineExpose from 'vue' imports in 4 SFCs. Verified under the REAL toolchain after a full npm ci (vue-tsc 3.3.10 confirmed reinstalled from the 2.2.12 pin used during isolation - 2.2.12 does not detect TS2440 at all and would have produced a false pass): 150 errors, 0 TS2440. Set comparison: exactly the 6 TS2440 removed, 0 introduced, and the resulting set is IDENTICAL to the original vue-tsc-2 150-set (0 differences both directions). Repo-wide sweep for other macro imports: none (control: 753 files match a vue import, so the empty result is real, not a bad pattern).",
+      "LINT RATCHET baseline: npx eslint . --ext .ts,.vue --format json over 1477 files -> 34 errors / 7683 warnings, unchanged from the pre-fix measurement (so the macro-import fix did not move lint). Errors concentrate in 9 files / 9 rules, led by vue/no-mutating-props (19)",
+      "LINT RATCHET behaviour matrix, all 9 paths: real report -> exit 0 PASS; errors 34->35 -> exit 1 naming files and rules; warnings 7683->7684 -> exit 1; both counts improved -> exit 0 with a lower-the-ceiling nudge; missing / empty / malformed-JSON / zero-files-linted / non-array report -> exit 1 each",
+      "INDEPENDENCE PROVEN: the +1-error fixture carried ZERO warnings and still failed; the +1-warning fixture carried ZERO errors and still failed. A new error cannot be offset by shed warnings",
+      "LINT RATCHET end-to-end, exact CI commands with RUNNER_TEMP/GITHUB_WORKSPACE exported: `npm run lint:report -- --output-file $RUNNER_TEMP/eslint.json` -> exit 1 (expected; step is continue-on-error) and an 8.15MB report written, confirming npm forwards the arg correctly; then the ratchet step verbatim -> exit 0 PASS",
+      "Workflow step wiring asserted via yaml.safe_load: producers 'Type check (vue-tsc)' and 'Lint (ESLint)' are continue-on-error; both ratchet steps are gating"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/check_client_type_check_ratchet.py",
+      "intent": "Parse a vue-tsc log, compare the error count against a committed ceiling, fail on increase, refuse to pass on absent or unrecognizable input.",
+      "scan_targets": [
+        "scripts/ci/check_client_type_check_ratchet.py"
+      ],
+      "risk": "low",
+      "behavior_change": "New CI checker. Read-only against the repo except under --write-baseline."
+    },
+    {
+      "path": "scripts/ci/client_type_check_baseline.json",
+      "intent": "Committed ceiling (150) plus per-code/per-file breakdown, the dual-TypeScript witness, and the orphaned-directory hotspot note.",
+      "scan_targets": [
+        "scripts/ci/client_type_check_baseline.json"
+      ],
+      "risk": "low",
+      "behavior_change": "New data file; sits alongside the existing ci/file_size_baseline.json and ci/router_count_baseline.json."
+    },
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Tee vue-tsc output to a log and add a gating ratchet step; correct the stale 400+ TODO.",
+      "scan_targets": [
+        ".github/workflows/client_lint_build.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "The job can now FAIL when client type errors increase above 150. It cannot fail any PR that does not add type errors, and the pre-existing 150 continue to pass. The lint step is deliberately left continue-on-error in this patch - see acknowledgement notes."
+    },
+    {
+      "path": ".cbsp21/patches/client-type-check-ratchet.json",
+      "intent": "Per-PR CBSP21 patch manifest for this change set.",
+      "scan_targets": [
+        ".cbsp21/patches/client-type-check-ratchet.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - manifest only."
+    },
+    {
+      "path": "packages/client/src/components/cam/CamOffsetVisualizer.vue",
+      "intent": "Stop importing <script setup> compiler macros from 'vue' (defineExpose).",
+      "scan_targets": [
+        "packages/client/src/components/cam/CamOffsetVisualizer.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "None at runtime. defineProps/defineEmits/defineExpose are compiler macros that the SFC compiler transforms; the import was inert and is what vue-tsc 3 flags as TS2440."
+    },
+    {
+      "path": "packages/client/src/components/compare/CompareModeButton.vue",
+      "intent": "Stop importing <script setup> compiler macros from 'vue' (defineProps (sole import on the line - statement removed)).",
+      "scan_targets": [
+        "packages/client/src/components/compare/CompareModeButton.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "None at runtime. defineProps/defineEmits/defineExpose are compiler macros that the SFC compiler transforms; the import was inert and is what vue-tsc 3 flags as TS2440."
+    },
+    {
+      "path": "packages/client/src/components/compare/DualSvgDisplay.vue",
+      "intent": "Stop importing <script setup> compiler macros from 'vue' (defineProps, defineEmits).",
+      "scan_targets": [
+        "packages/client/src/components/compare/DualSvgDisplay.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "None at runtime. defineProps/defineEmits/defineExpose are compiler macros that the SFC compiler transforms; the import was inert and is what vue-tsc 3 flags as TS2440."
+    },
+    {
+      "path": "packages/client/src/components/compare/PanZoomSvg.vue",
+      "intent": "Stop importing <script setup> compiler macros from 'vue' (defineProps, defineEmits).",
+      "scan_targets": [
+        "packages/client/src/components/compare/PanZoomSvg.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "None at runtime. defineProps/defineEmits/defineExpose are compiler macros that the SFC compiler transforms; the import was inert and is what vue-tsc 3 flags as TS2440."
+    },
+    {
+      "path": "scripts/ci/check_client_lint_ratchet.py",
+      "intent": "Parse an ESLint JSON report and enforce SEPARATE ceilings for errors and warnings; refuse to pass on absent, empty, malformed, non-array, or zero-file input.",
+      "scan_targets": [
+        "scripts/ci/check_client_lint_ratchet.py"
+      ],
+      "risk": "low",
+      "behavior_change": "New CI checker. Read-only except under --write-baseline."
+    },
+    {
+      "path": "scripts/ci/client_lint_baseline.json",
+      "intent": "Committed ESLint ceilings (34 errors / 7683 warnings over 1477 files) plus per-rule and per-file error breakdowns.",
+      "scan_targets": [
+        "scripts/ci/client_lint_baseline.json"
+      ],
+      "risk": "low",
+      "behavior_change": "New data file; sibling of client_type_check_baseline.json."
+    },
+    {
+      "path": "packages/client/package.json",
+      "intent": "Add a `lint:report` script - same file selection as `lint`, JSON formatter, no dead --max-warnings threshold.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds one npm script. `lint` is unchanged and still available for humans."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-18-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 11
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI-only change; no source, no dependency versions, no runtime behavior. The new gate is strictly one-directional (fails only on an increase above the current measured state), so it cannot break an existing PR that adds no type errors. Deliberately NOT done in this patch: (1) fixing the 150 errors - 87 are in live code and need domain judgement, 63 are in an orphaned directory whose removal is an owner call under FEATURE_PARITY_MIGRATION_POLICY; (2) an equivalent ratchet for ESLint - the numbers are measured (34 errors / 7683 warnings against a --max-warnings=1200 threshold) but that gate needs its own baseline and end-to-end validation, and shipping a second unvalidated gate alongside a validated one would weaken both; (3) deleting src/views/cam/headstock/ - the dead-code evidence is strong (unreachable, plus imports of 11 nonexistent modules) but source deletion is an owner decision, and the baseline file records the expected post-deletion ceiling so the follow-up is mechanical. RESOLVED (was RE-BASELINE NOTE): the ceiling is 156, but 6 of those are TS2440 macro-import defects (defineProps/defineEmits/defineExpose imported from 'vue' in <script setup>, where they are compiler macros) newly surfaced by vue-tsc 3. They are real and each is a one-line fix; the baseline records this so the ceiling returns to 150 rather than the debt being blessed at 156. Now fixed under explicit owner authorization; ceiling is back to 150 and the baseline carries no TS2440. The source edit is inert at runtime - the imports were of compiler macros. LINT RATCHET added under explicit owner authorization (closes MAINT-DEFER-009, which is recorded on the sibling branch chore/node-engine-floor-20.19 and not edited from here). Errors and warnings are ratcheted separately per that entry's own implementation note. Still deliberately NOT done: fixing the 34 lint errors or the 7683 warnings, and re-basing the dead --max-warnings=1200 on the `lint` script, which is left untouched for human use."
+  }
+}
