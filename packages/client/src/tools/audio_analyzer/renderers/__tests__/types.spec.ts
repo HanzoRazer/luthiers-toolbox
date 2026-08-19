@@ -1,5 +1,5 @@
 /**
- * @vitest-environment jsdom
+ * @vitest-environment happy-dom
  *
  * Tests for audio_analyzer/renderers/types.ts
  * Validates kind → category mapping matches contract.
