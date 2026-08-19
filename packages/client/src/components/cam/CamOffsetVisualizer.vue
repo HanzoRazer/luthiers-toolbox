@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, defineExpose } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 type Pt = [number, number]
 type Pass = { idx: number; pts: Pt[] }
