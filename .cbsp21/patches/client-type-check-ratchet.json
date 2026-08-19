@@ -36,44 +36,58 @@
       "clean-run path: synthetic 'Found 0 errors.' log -> exit 0 plus a nudge to lower the ceiling",
       "CI-equivalent end-to-end: exported GITHUB_WORKSPACE and RUNNER_TEMP and ran the exact command block from the workflow verbatim -> exit 0",
       "yaml.safe_load over client_lint_build.yml -> OK; step wiring asserted: 'Type check (vue-tsc)' continue-on-error=True, 'Type-check regression ratchet' continue-on-error=False",
-      "orphan evidence: zero inbound imports to src/views/cam/headstock/ from anywhere outside that directory; router/index.ts 'WorkspaceView' hit resolves to CamWorkspaceView.vue, a different file; all 11 aliased import targets confirmed absent on disk"
+      "orphan evidence: zero inbound imports to src/views/cam/headstock/ from anywhere outside that directory; router/index.ts 'WorkspaceView' hit resolves to CamWorkspaceView.vue, a different file; all 11 aliased import targets confirmed absent on disk",
+      "RE-BASELINE 2026-08-19 after main moved (typescript 6.0.3 via #290, vue-tsc ^2.1.0 -> ^3.3.10, node-version 20 -> 22): ceiling 150 -> 156. Cause isolated on ONE tree with TypeScript held at 6.0.3 -- vue-tsc 2.2.12 -> 150 errors / 0 TS2440; vue-tsc 3.3.10 -> 156 / 6 TS2440. Attributable to the vue-tsc MAJOR, not TS6 and not new source (all 4 affected files unchanged since a48e9002). Caught before merge: the un-rebased 150 ceiling would have failed the job on landing"
     ]
   },
   "files": [
     {
       "path": "scripts/ci/check_client_type_check_ratchet.py",
       "intent": "Parse a vue-tsc log, compare the error count against a committed ceiling, fail on increase, refuse to pass on absent or unrecognizable input.",
-      "scan_targets": ["scripts/ci/check_client_type_check_ratchet.py"],
+      "scan_targets": [
+        "scripts/ci/check_client_type_check_ratchet.py"
+      ],
       "risk": "low",
       "behavior_change": "New CI checker. Read-only against the repo except under --write-baseline."
     },
     {
       "path": "scripts/ci/client_type_check_baseline.json",
       "intent": "Committed ceiling (150) plus per-code/per-file breakdown, the dual-TypeScript witness, and the orphaned-directory hotspot note.",
-      "scan_targets": ["scripts/ci/client_type_check_baseline.json"],
+      "scan_targets": [
+        "scripts/ci/client_type_check_baseline.json"
+      ],
       "risk": "low",
       "behavior_change": "New data file; sits alongside the existing ci/file_size_baseline.json and ci/router_count_baseline.json."
     },
     {
       "path": ".github/workflows/client_lint_build.yml",
       "intent": "Tee vue-tsc output to a log and add a gating ratchet step; correct the stale 400+ TODO.",
-      "scan_targets": [".github/workflows/client_lint_build.yml"],
+      "scan_targets": [
+        ".github/workflows/client_lint_build.yml"
+      ],
       "risk": "low",
       "behavior_change": "The job can now FAIL when client type errors increase above 150. It cannot fail any PR that does not add type errors, and the pre-existing 150 continue to pass. The lint step is deliberately left continue-on-error in this patch - see acknowledgement notes."
     },
     {
       "path": ".cbsp21/patches/client-type-check-ratchet.json",
       "intent": "Per-PR CBSP21 patch manifest for this change set.",
-      "scan_targets": [".cbsp21/patches/client-type-check-ratchet.json"],
+      "scan_targets": [
+        ".cbsp21/patches/client-type-check-ratchet.json"
+      ],
       "risk": "low",
       "behavior_change": "none - manifest only."
     }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-08-18-001",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 4 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 4
+    },
     "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "CI-only change; no source, no dependency versions, no runtime behavior. The new gate is strictly one-directional (fails only on an increase above the current measured state), so it cannot break an existing PR that adds no type errors. Deliberately NOT done in this patch: (1) fixing the 150 errors - 87 are in live code and need domain judgement, 63 are in an orphaned directory whose removal is an owner call under FEATURE_PARITY_MIGRATION_POLICY; (2) an equivalent ratchet for ESLint - the numbers are measured (34 errors / 7683 warnings against a --max-warnings=1200 threshold) but that gate needs its own baseline and end-to-end validation, and shipping a second unvalidated gate alongside a validated one would weaken both; (3) deleting src/views/cam/headstock/ - the dead-code evidence is strong (unreachable, plus imports of 11 nonexistent modules) but source deletion is an owner decision, and the baseline file records the expected post-deletion ceiling so the follow-up is mechanical."
+    "acknowledgement_notes": "CI-only change; no source, no dependency versions, no runtime behavior. The new gate is strictly one-directional (fails only on an increase above the current measured state), so it cannot break an existing PR that adds no type errors. Deliberately NOT done in this patch: (1) fixing the 150 errors - 87 are in live code and need domain judgement, 63 are in an orphaned directory whose removal is an owner call under FEATURE_PARITY_MIGRATION_POLICY; (2) an equivalent ratchet for ESLint - the numbers are measured (34 errors / 7683 warnings against a --max-warnings=1200 threshold) but that gate needs its own baseline and end-to-end validation, and shipping a second unvalidated gate alongside a validated one would weaken both; (3) deleting src/views/cam/headstock/ - the dead-code evidence is strong (unreachable, plus imports of 11 nonexistent modules) but source deletion is an owner decision, and the baseline file records the expected post-deletion ceiling so the follow-up is mechanical. RE-BASELINE NOTE: the ceiling is 156, but 6 of those are TS2440 macro-import defects (defineProps/defineEmits/defineExpose imported from 'vue' in <script setup>, where they are compiler macros) newly surfaced by vue-tsc 3. They are real and each is a one-line fix; the baseline records this so the ceiling returns to 150 rather than the debt being blessed at 156. Not fixed here because it is a source change outside this CI-only patch."
   }
 }
