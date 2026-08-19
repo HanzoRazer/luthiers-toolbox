@@ -24,7 +24,7 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: vitest
         update-types: ["version-update:semver-major"]
-      # Coupled to vite major (Node engines floor 20.19+/22.12+, CJS drop,
+      # Coupled to vite major (raises the Node engines floor, CJS drop,
       # filter API). Keep majors with Tranche C — see #279 disposition.
       - dependency-name: "@vitejs/plugin-vue"
         update-types: ["version-update:semver-major"]

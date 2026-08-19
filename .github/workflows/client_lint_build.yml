@@ -29,9 +29,9 @@ jobs:
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          # 22 floats to the newest 22.x, which clears the floor declared in
-          # packages/client/package.json "engines" (^20.19.0 || >=22.12.0).
-          # Keep it at or above that floor; the client Dockerfiles assert it.
+          # Must satisfy "engines.node" in packages/client/package.json. This
+          # job runs npm outside Docker, so nothing asserts the floor for it at
+          # runtime — the nodeEngineFloor spec below is what keeps it honest.
           node-version: 22
           cache: npm
           cache-dependency-path: packages/client/package-lock.json

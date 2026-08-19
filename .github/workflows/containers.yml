@@ -36,11 +36,11 @@ jobs:
           file: docker/client/Dockerfile
           load: true
           tags: ${{ env.CLIENT_IMAGE }}
-          # NODE_VERSION floats to the newest 20.x, which satisfies the client
-          # engine floor (^20.19.0 || >=22.12.0). docker/client/Dockerfile
-          # asserts the floor at build time.
+          # Must satisfy "engines.node" in packages/client/package.json;
+          # docker/client/Dockerfile asserts it from that manifest before
+          # `npm ci`, and the nodeEngineFloor spec keeps this value in sync.
           build-args: |
-            NODE_VERSION=20
+            NODE_VERSION=22
 
       - name: Launch stack
         run: |
