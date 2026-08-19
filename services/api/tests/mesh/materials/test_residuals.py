@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.mesh.materials.evidence import import_material_evidence
+import pytest
+
+from app.mesh.materials.evidence import (
+    MaterialEvidenceError,
+    import_material_evidence,
+)
 from app.mesh.materials.orthotropic import OrthotropicMaterialState, PlateGeometry
-from app.mesh.materials.predictor import predict_plate_modes
+from app.mesh.materials.predictor import PredictedPlateResponse, predict_plate_modes
 from app.mesh.materials.residuals import compare_modal_prediction
 
 from ._helpers import fixture, load_json
@@ -30,3 +35,100 @@ def test_residual_report_research_only():
     assert len(d["residuals"]) >= 1
     statuses = {r["status"] for r in d["residuals"]}
     assert statuses <= {"MATCHED", "MISMATCHED", "NO_MEASUREMENT", "NO_PREDICTION"}
+
+
+def _response(modes):
+    """Minimal PredictedPlateResponse standing in for a solver run."""
+    return PredictedPlateResponse(
+        model_version="test",
+        specimen_id="SPEC-1",
+        material_state={},
+        geometry={},
+        boundary_condition={"x": "simply_supported", "y": "simply_supported"},
+        assumptions=[],
+        predicted_modes=modes,
+        epistemic_status="predicted",
+        research_only=True,
+    )
+
+
+def test_match_basis_distinguishes_labelled_pairing_from_proximity():
+    """
+    A residual paired by explicit mode indices and one paired by frequency
+    proximity are not equally trustworthy; the report has to say which it did.
+    """
+    pred = _response(
+        [
+            {"mode_number": 1, "frequency_hz": 100.0, "mode_indices": [1, 1]},
+            {"mode_number": 2, "frequency_hz": 200.0},
+        ]
+    )
+    report = compare_modal_prediction(
+        pred,
+        [
+            {"frequency_hz": 101.0, "mode_indices": [1, 1]},
+            {"frequency_hz": 205.0},
+        ],
+        tolerance_hz=10.0,
+    )
+    bases = [r.get("match_basis") for r in report.to_dict()["residuals"]]
+    assert bases == ["mode_indices", "nearest_frequency"]
+
+
+def test_index_match_is_not_stolen_by_an_earlier_proximity_guess():
+    """
+    Mode-index pairing runs as a first pass across ALL predictions.
+
+    Interleaved, the unlabelled 150 Hz prediction is processed first and claims
+    the 149 Hz measurement by proximity — even though that measurement is
+    explicitly labelled (2,1) and belongs to the second prediction. The labelled
+    pairing must win regardless of prediction order.
+    """
+    pred = _response(
+        [
+            {"mode_number": 1, "frequency_hz": 150.0},
+            {"mode_number": 2, "frequency_hz": 400.0, "mode_indices": [2, 1]},
+        ]
+    )
+    report = compare_modal_prediction(
+        pred,
+        [
+            {"frequency_hz": 149.0, "mode_indices": [2, 1]},
+            {"frequency_hz": 152.0},
+        ],
+        tolerance_hz=5.0,
+    )
+    residuals = report.to_dict()["residuals"]
+    labelled = [r for r in residuals if r.get("match_basis") == "mode_indices"]
+    assert len(labelled) == 1
+    assert labelled[0]["predicted_frequency_hz"] == 400.0
+    assert labelled[0]["measured_frequency_hz"] == 149.0
+    # The unlabelled prediction falls back to what remains, not to the (2,1) peak.
+    guessed = [r for r in residuals if r.get("match_basis") == "nearest_frequency"]
+    assert len(guessed) == 1
+    assert guessed[0]["measured_frequency_hz"] == 152.0
+
+
+def test_unpaired_residuals_carry_no_match_basis():
+    report = compare_modal_prediction(_response([{"frequency_hz": 100.0}]), [])
+    residuals = report.to_dict()["residuals"]
+    assert residuals[0]["status"] == "NO_MEASUREMENT"
+    assert "match_basis" not in residuals[0]
+
+
+def test_negative_tolerance_rejected():
+    """A negative tolerance silently marks every pairing MISMATCHED."""
+    with pytest.raises(MaterialEvidenceError, match="tolerance_hz"):
+        compare_modal_prediction(
+            _response([{"frequency_hz": 100.0}]),
+            [{"frequency_hz": 100.0}],
+            tolerance_hz=-1.0,
+        )
+
+
+def test_malformed_mode_indices_rejected():
+    with pytest.raises(MaterialEvidenceError, match="mode_indices"):
+        compare_modal_prediction(
+            _response([{"frequency_hz": 100.0}]),
+            [{"frequency_hz": 100.0, "mode_indices": [1]}],
+        )

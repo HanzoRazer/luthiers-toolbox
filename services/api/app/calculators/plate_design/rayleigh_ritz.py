@@ -39,6 +39,7 @@ References:
 from __future__ import annotations
 
 import math
+from functools import lru_cache
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, List, Tuple
@@ -294,6 +295,32 @@ def get_basis_function(
 # =============================================================================
 
 
+@lru_cache(maxsize=8)
+def gauss_legendre(n_quad: int):
+    """
+    Gauss-Legendre nodes and weights for ``n_quad`` points, memoized.
+
+    They are constants for a given ``n_quad`` but were recomputed four times per
+    solve (twice each while assembling the stiffness and mass matrices).
+
+    Memoizing also pins the computation to the first call in a process, which
+    matters under the full ``api-verify`` suite: ``leggauss`` performs an ndarray
+    reduction (``np.abs(fm).max()``), and once numpy has been re-imported
+    mid-session the reduction sentinel ``np._NoValue`` is no longer the object the
+    C ufunc recognises, so the call raises ``TypeError: float() argument must be a
+    string or a real number, not '_NoValueType'``.
+    ``services/api/tests/conftest.py`` warms this cache while numpy is still
+    pristine, alongside the existing numpy/ezdxf import-order guard.
+
+    The returned arrays are shared and marked read-only; callers must not mutate
+    them in place.
+    """
+    xi, w = np.polynomial.legendre.leggauss(n_quad)
+    xi.flags.writeable = False
+    w.flags.writeable = False
+    return xi, w
+
+
 def compute_stiffness_matrix(
     plate: OrthotropicPlate,
     n_modes_x: int,
@@ -323,8 +350,8 @@ def compute_stiffness_matrix(
     n_total = n_modes_x * n_modes_y
 
     # Quadrature points and weights (Gauss-Legendre)
-    xi_x, w_x = np.polynomial.legendre.leggauss(n_quad)
-    xi_y, w_y = np.polynomial.legendre.leggauss(n_quad)
+    xi_x, w_x = gauss_legendre(n_quad)
+    xi_y, w_y = gauss_legendre(n_quad)
 
     # Map to physical coordinates [0, a] and [0, b]
     x = 0.5 * plate.a * (xi_x + 1)
@@ -438,8 +465,8 @@ def compute_mass_matrix(
     n_total = n_modes_x * n_modes_y
 
     # Quadrature points
-    xi_x, w_x = np.polynomial.legendre.leggauss(n_quad)
-    xi_y, w_y = np.polynomial.legendre.leggauss(n_quad)
+    xi_x, w_x = gauss_legendre(n_quad)
+    xi_y, w_y = gauss_legendre(n_quad)
 
     x = 0.5 * plate.a * (xi_x + 1)
     y = 0.5 * plate.b * (xi_y + 1)

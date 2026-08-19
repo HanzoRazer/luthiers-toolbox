@@ -36,6 +36,20 @@ try:
 except ImportError:
     pass
 
+# Same hazard, one layer deeper. np.polynomial.legendre.leggauss() runs an
+# ndarray reduction internally; once numpy has been re-imported mid-session the
+# reduction sentinel np._NoValue is no longer the object the C ufunc recognises,
+# and the call raises "TypeError: float() argument ... not '_NoValueType'"
+# (CI: api-verify, MESH-MAT-001 plate prediction). The nodes are constants, so
+# compute them here — while numpy is still pristine — and let the lru_cache in
+# rayleigh_ritz.gauss_legendre serve every later solve.
+try:
+    from app.calculators.plate_design.rayleigh_ritz import gauss_legendre as _gauss_legendre
+
+    _gauss_legendre(32)  # default n_quad for stiffness/mass assembly
+except Exception:  # pragma: no cover - warm-up must never block collection
+    pass
+
 
 # =============================================================================
 # MODULE IMPORT ISOLATION (numpy / ezdxf)

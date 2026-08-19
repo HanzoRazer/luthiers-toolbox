@@ -62,3 +62,46 @@ def test_materials_package_never_calls_from_wood():
                 func = node.func
                 if isinstance(func, ast.Attribute) and func.attr == "from_wood":
                     pytest.fail(f"{path.name} calls from_wood")
+
+
+def test_incomplete_state_omits_nu_cl_rather_than_publishing_zero():
+    """
+    Without E_C, Poisson reciprocity is undefined — nu_CL is unknown, not zero.
+
+    A serialized ``"nu_CL": 0.0`` would read as a known measurement of zero,
+    which is a different and false claim than "unavailable".
+    """
+    bundle = import_material_evidence(fixture("incomplete_missing_ec.json"))
+    state = OrthotropicMaterialState.from_evidence(bundle)
+    d = state.to_dict()
+    assert state.nu_cl is None
+    assert "nu_CL" not in d
+    assert d["complete_for_prediction"] is False
+    assert all(a["name"] != "nu_CL" for a in d["assumptions"])
+
+
+def test_complete_state_publishes_nu_cl_from_reciprocity():
+    bundle = import_material_evidence(fixture("complete_spruce_evidence.json"))
+    d = OrthotropicMaterialState.from_evidence(bundle).to_dict()
+    assert d["nu_CL"] > 0
+    assert any(
+        a["name"] == "nu_CL" and "Reciprocity" in a["rationale"]
+        for a in d["assumptions"]
+    )
+
+
+def test_caller_overrides_are_recorded_as_assumptions():
+    """
+    An override bypasses evidence and the literature defaults alike. If it did
+    not surface in ``assumptions`` it would be indistinguishable from measured
+    evidence in the serialized state.
+    """
+    bundle = import_material_evidence(fixture("complete_spruce_evidence.json"))
+    state = OrthotropicMaterialState.from_evidence(
+        bundle, g_lc_pa=7.0e8, nu_lc=0.42, nu_cl=0.05
+    )
+    by_name = {a["name"]: a for a in state.to_dict()["assumptions"]}
+    for name, value in (("G_LC_Pa", 7.0e8), ("nu_LC", 0.42), ("nu_CL", 0.05)):
+        assert by_name[name]["value"] == value
+        assert "override" in by_name[name]["rationale"].lower()
+        assert by_name[name]["assumption"] is True

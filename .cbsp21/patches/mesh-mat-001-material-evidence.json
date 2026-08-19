@@ -22,7 +22,10 @@
       "services/api/app/mesh/__init__.py",
       "services/api/app/mesh/materials/",
       "services/api/tests/fixtures/materials/",
-      "services/api/tests/mesh/materials/"
+      "services/api/tests/mesh/materials/",
+      "contracts/",
+      "services/api/app/calculators/plate_design/",
+      "services/api/tests/"
     ],
     "files_expected_to_change": [
       "contracts/material_evidence.schema.json",
@@ -49,18 +52,26 @@
       "services/api/tests/mesh/materials/test_predictor.py",
       "services/api/tests/mesh/materials/test_residuals.py",
       "services/api/tests/mesh/materials/test_schemas_and_boundaries.py",
-      ".cbsp21/patches/mesh-mat-001-material-evidence.json"
+      ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "contracts/CHANGELOG.md",
+      "services/api/app/calculators/plate_design/rayleigh_ritz.py",
+      "services/api/tests/conftest.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) New app.mesh.materials package: evidence importer with ADR-0012 EpistemicStatus, HARDWARE=true rejection, SI canonicalization; OrthotropicMaterialState.from_evidence with ModelAssumption serialization and fail-closed missing E_C; predict_plate_modes wrapping solve_rayleigh_ritz with epistemic_status=predicted and research_only=true; compare_modal_prediction residual sidecar. (2) Contracts + schema_registry entries for material_evidence, material_prediction, prediction_residual. (3) Fixture-only spruce evidence + incomplete E_C fixture. (4) 19 unit tests covering import rules, orthotropic assumptions, prediction, residuals, schema validation, and package boundaries (no from_wood, no inverse_solver import, not under app.materials, no qa_core/cam_policy touch). (5) Handoff documenting amended Q1–Q7 rulings.",
+    "what_changed": "(1) New app.mesh.materials package: evidence importer with ADR-0012 EpistemicStatus, HARDWARE=true rejection, SI canonicalization; OrthotropicMaterialState.from_evidence with ModelAssumption serialization and fail-closed missing E_C; predict_plate_modes wrapping solve_rayleigh_ritz with epistemic_status=predicted and research_only=true; compare_modal_prediction residual sidecar. (2) Contracts + schema_registry entries for material_evidence, material_prediction, prediction_residual. (3) Fixture-only spruce evidence + incomplete E_C fixture. (4) 19 unit tests covering import rules, orthotropic assumptions, prediction, residuals, schema validation, and package boundaries (no from_wood, no inverse_solver import, not under app.materials, no qa_core/cam_policy touch). (5) Handoff documenting amended Q1–Q7 rulings. REVIEW HARDENING: (a) evidence.py rejects research_only=false (was silently accepted on a surface defined as research-only) and rejects duplicate properties, including the canonicalization collision where E_L and E_L_Pa both normalize onto E_L_Pa and MaterialEvidenceBundle.get() would silently keep the first; values must be a JSON array, not any Sequence (str qualified). (b) orthotropic.py makes nu_cl Optional and omits it from to_dict() when E_C is absent, instead of publishing a placeholder 0.0 that reads as a known measurement of zero; caller-supplied g_lc_pa/nu_lc/nu_cl overrides are now recorded as ModelAssumption instead of silently bypassing evidence. (c) predictor.py validates positive integer mode counts and documents that boundary_condition applies to both axes. (d) residuals.py matches mode_indices in a first pass across ALL predictions before any frequency fallback (previously an earlier prediction's nearest-frequency guess could consume a measurement that a later prediction named explicitly, making pairing depend on prediction order), emits match_basis so a consumer can tell a labelled pairing from a proximity guess, rejects negative tolerance_hz, validates measured frequencies and mode_indices shape, and the docstring now describes the algorithm actually implemented. (e) material_evidence.schema.json encodes the observed/derived provenance requirement as an if/then so schema-valid payloads cannot fail at import, and pins research_only to const true; prediction/residual schemas are additionalProperties:false at the top level and declare match_basis. All three hashes regenerated. (f) import_material_evidence and compare_modal_prediction were decomposed to clear the complexity ratchet, which this PR was failing at 16 and 21 against a threshold of 15.",
     "why_not_redundant": "app.materials is the curated tonewood registry; this is specimen-specific research evidence. Mesh Pipeline v0.1.0 fields/retopo were deliberately removed and are not restored. DO-103 Stage 3 HARDWARE provenance is deferred behind an adapter seam."
   },
   "verification": {
     "commands_run": [
       "PYTHONPATH=services/api /usr/bin/python3 -m pytest services/api/tests/mesh/materials/ -q --noconftest -o addopts= -> 19 passed",
       "Static AST guards: no OrthotropicPlate.from_wood calls; no inverse_solver imports in app.mesh.materials",
-      "jsonschema validation of fixtures + prediction/residual sidecars against new contracts"
+      "jsonschema validation of fixtures + prediction/residual sidecars against new contracts",
+      "pytest tests/mesh/materials/ -q --no-cov -> 48 passed (was 19)",
+      "pytest tests/ -k 'plate or rayleigh or ritz' -q --no-cov -> 43 passed (rayleigh_ritz memoization is numerically identical)",
+      "radon cc -n C app/mesh/materials/ -> max block C(11); import_material_evidence 16->under, compare_modal_prediction 21->8, from_evidence 15->11 (gate threshold >15)",
+      "python scripts/ci/check_contracts_governance.py --base-ref origin/main -> PASS (was CHANGELOG_REQUIRED)",
+      "sha256 of each schema re-derived and asserted by test_contract_hashes_match_schema_bytes"
     ]
   },
   "files": [
@@ -213,6 +224,33 @@
       "intent": "CBSP21 covering patch for MESH-MAT-001",
       "risk": "low",
       "behavior_change": "Coverage manifest"
+    },
+    {
+      "path": "contracts/CHANGELOG.md",
+      "intent": "Create the contracts changelog and record the three new MESH-MAT-001 contracts.",
+      "scan_targets": [
+        "contracts/CHANGELOG.md"
+      ],
+      "risk": "low",
+      "behavior_change": "Documentation. Required by scripts/ci/check_contracts_governance.py (CHANGELOG_REQUIRED / CHANGELOG_MISSING_MENTIONS), which was failing on this PR because the file did not exist."
+    },
+    {
+      "path": "services/api/app/calculators/plate_design/rayleigh_ritz.py",
+      "intent": "Memoize Gauss-Legendre quadrature nodes behind gauss_legendre().",
+      "scan_targets": [
+        "services/api/app/calculators/plate_design/rayleigh_ritz.py"
+      ],
+      "risk": "low",
+      "behavior_change": "leggauss(n_quad) was called four times per solve with identical arguments (twice each in stiffness and mass assembly); it is now computed once per n_quad and cached. Numerically identical - 43 plate/rayleigh tests unchanged. The cache also pins the computation to the first call in a process, which is what makes the conftest warm-up able to avoid the api-verify _NoValueType failure."
+    },
+    {
+      "path": "services/api/tests/conftest.py",
+      "intent": "Warm the quadrature cache while numpy is still pristine, alongside the existing numpy/ezdxf import-order guard.",
+      "scan_targets": [
+        "services/api/tests/conftest.py"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds a guarded gauss_legendre(32) call at conftest import. Wrapped in try/except so it can never block collection. Extends the guard that already exists in this file for the same class of numpy re-import hazard."
     }
   ],
   "architecture_scan": {

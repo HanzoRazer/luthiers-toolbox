@@ -11,13 +11,12 @@ closed until E_C is OBSERVED/ESTIMATED/etc. via evidence.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.calculators.plate_design.rayleigh_ritz import OrthotropicPlate
-from app.governance.confidence_envelope import EpistemicStatus
 
-from .evidence import EvidenceValue, MaterialEvidenceBundle, MaterialEvidenceError
+from .evidence import MaterialEvidenceBundle, MaterialEvidenceError
 
 # Softwood literature defaults — ALWAYS serialized as ModelAssumption.
 DEFAULT_G_OVER_EL = 0.06
@@ -62,12 +61,67 @@ class PlateGeometry:
         }
 
 
+def _override_assumptions(
+    g_lc_pa: Optional[float], nu_lc: Optional[float], nu_cl: Optional[float]
+) -> List[ModelAssumption]:
+    """
+    Record caller-supplied overrides as assumptions.
+
+    An override bypasses both evidence and the literature defaults. If it did
+    not appear in ``assumptions`` it would be indistinguishable from measured
+    evidence in the serialized state — the exact silent-authority failure this
+    package exists to prevent.
+    """
+    out: List[ModelAssumption] = []
+    for name, override, unit in (
+        ("G_LC_Pa", g_lc_pa, "Pa"),
+        ("nu_LC", nu_lc, "1"),
+        ("nu_CL", nu_cl, "1"),
+    ):
+        if override is not None:
+            out.append(
+                ModelAssumption(
+                    name=name,
+                    value=float(override),
+                    unit=unit,
+                    rationale="Caller-supplied override (not evidence, not a default)",
+                )
+            )
+    return out
+
+
+def _from_evidence_or_default(
+    bundle: MaterialEvidenceBundle,
+    property_name: str,
+    default_value: float,
+    unit: str,
+    rationale: str,
+    assumptions: List[ModelAssumption],
+) -> float:
+    """Prefer evidence; fall back to the literature default, recorded as an assumption."""
+    found = bundle.get(property_name)
+    if found is not None:
+        return float(found.value)
+    assumptions.append(
+        ModelAssumption(
+            name=property_name, value=default_value, unit=unit, rationale=rationale
+        )
+    )
+    return default_value
+
+
 @dataclass(frozen=True)
 class OrthotropicMaterialState:
     """
     Research orthotropic material state.
 
     ``e_crossgrain_pa`` may be None when evidence does not provide E_C.
+
+    ``nu_cl`` is likewise Optional: Poisson reciprocity is nu_LC x E_C / E_L, so
+    without E_C the value is *unknown*, not zero. Serializing a placeholder 0.0
+    would publish "we know nu_CL and it is zero", which is a different and
+    false claim. Absence is the honest encoding, matching how the evidence
+    layer represents UNKNOWN.
     """
 
     specimen_id: str
@@ -76,7 +130,7 @@ class OrthotropicMaterialState:
     e_crossgrain_pa: Optional[float]
     g_lc_pa: float
     nu_lc: float
-    nu_cl: float
+    nu_cl: Optional[float]
     density_origin: str
     e_longitudinal_origin: str
     e_crossgrain_origin: Optional[str]
@@ -88,7 +142,7 @@ class OrthotropicMaterialState:
         return self.e_crossgrain_pa is not None and self.e_crossgrain_pa > 0
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        out: Dict[str, Any] = {
             "specimen_id": self.specimen_id,
             "research_only": self.research_only,
             "density_kg_m3": self.density_kg_m3,
@@ -99,10 +153,13 @@ class OrthotropicMaterialState:
             "E_C_origin": self.e_crossgrain_origin,
             "G_LC_Pa": self.g_lc_pa,
             "nu_LC": self.nu_lc,
-            "nu_CL": self.nu_cl,
             "assumptions": [a.to_dict() for a in self.assumptions],
             "complete_for_prediction": self.is_complete_for_prediction,
         }
+        # Omitted rather than zero-filled when reciprocity is unavailable.
+        if self.nu_cl is not None:
+            out["nu_CL"] = self.nu_cl
+        return out
 
     def to_orthotropic_plate(self, geometry: PlateGeometry) -> OrthotropicPlate:
         """Build OrthotropicPlate with explicit fields only (no from_wood)."""
@@ -110,6 +167,11 @@ class OrthotropicMaterialState:
             raise IncompleteMaterialStateError(
                 "Cannot build OrthotropicPlate without E_C; "
                 "cross-grain stiffness is unavailable (absence ≠ assumed)"
+            )
+        if self.nu_cl is None:
+            raise IncompleteMaterialStateError(
+                "Cannot build OrthotropicPlate without nu_CL; Poisson reciprocity "
+                "is undefined while E_C is absent"
             )
         assert self.e_crossgrain_pa is not None
         return OrthotropicPlate(
@@ -144,54 +206,39 @@ class OrthotropicMaterialState:
 
         assumptions: List[ModelAssumption] = []
 
+        assumptions.extend(_override_assumptions(g_lc_pa, nu_lc, nu_cl))
+
         e_c_value: Optional[float] = e_c.value if e_c is not None else None
         e_c_origin: Optional[str] = e_c.epistemic_status if e_c is not None else None
 
         if g_lc_pa is None:
-            g_ev = bundle.get("G_LC_Pa")
-            if g_ev is not None:
-                g_lc_pa = g_ev.value
-            else:
-                g_lc_pa = DEFAULT_G_OVER_EL * e_l.value
-                assumptions.append(
-                    ModelAssumption(
-                        name="G_LC_Pa",
-                        value=g_lc_pa,
-                        unit="Pa",
-                        rationale=f"DEFAULT_G_OVER_EL={DEFAULT_G_OVER_EL} × E_L (not evidence)",
-                    )
-                )
+            g_lc_pa = _from_evidence_or_default(
+                bundle,
+                "G_LC_Pa",
+                DEFAULT_G_OVER_EL * e_l.value,
+                "Pa",
+                f"DEFAULT_G_OVER_EL={DEFAULT_G_OVER_EL} × E_L (not evidence)",
+                assumptions,
+            )
 
         if nu_lc is None:
-            nu_ev = bundle.get("nu_LC")
-            if nu_ev is not None:
-                nu_lc = nu_ev.value
-            else:
-                nu_lc = DEFAULT_NU_LC
-                assumptions.append(
-                    ModelAssumption(
-                        name="nu_LC",
-                        value=nu_lc,
-                        unit="1",
-                        rationale=f"DEFAULT_NU_LC={DEFAULT_NU_LC} (not evidence)",
-                    )
-                )
+            nu_lc = _from_evidence_or_default(
+                bundle,
+                "nu_LC",
+                DEFAULT_NU_LC,
+                "1",
+                f"DEFAULT_NU_LC={DEFAULT_NU_LC} (not evidence)",
+                assumptions,
+            )
 
         if nu_cl is None:
             nu_cl_ev = bundle.get("nu_CL")
             if nu_cl_ev is not None:
                 nu_cl = nu_cl_ev.value
             elif e_c_value is None:
-                # Reciprocity needs E_C; leave placeholder 0 and note incompleteness.
-                nu_cl = 0.0
-                assumptions.append(
-                    ModelAssumption(
-                        name="nu_CL",
-                        value=0.0,
-                        unit="1",
-                        rationale="Unavailable until E_C is present (reciprocity deferred)",
-                    )
-                )
+                # Reciprocity needs E_C. Leave nu_CL ABSENT rather than 0.0 —
+                # a placeholder number would be serialized as a known value.
+                nu_cl = None
             else:
                 nu_cl = nu_lc * e_c_value / e_l.value
                 assumptions.append(
@@ -210,7 +257,7 @@ class OrthotropicMaterialState:
             e_crossgrain_pa=e_c_value,
             g_lc_pa=float(g_lc_pa),
             nu_lc=float(nu_lc),
-            nu_cl=float(nu_cl),
+            nu_cl=None if nu_cl is None else float(nu_cl),
             density_origin=density.epistemic_status,
             e_longitudinal_origin=e_l.epistemic_status,
             e_crossgrain_origin=e_c_origin,

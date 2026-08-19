@@ -62,3 +62,60 @@ def test_unknown_status_rejected_use_absence():
 def test_empty_values_rejected():
     with pytest.raises(MaterialEvidenceError, match="non-empty"):
         import_material_evidence({"specimen_id": "x", "values": []})
+
+
+def test_research_only_false_rejected():
+    """
+    research_only is constitutional for MESH-MAT-001, not a caller preference.
+
+    Accepting false would let a payload mint a non-research bundle out of a
+    package whose whole premise is that it carries no CAM authority.
+    """
+    payload = copy.deepcopy(fixture("complete_spruce_evidence.json"))
+    payload["research_only"] = False
+    with pytest.raises(MaterialEvidenceError, match="research_only"):
+        import_material_evidence(payload)
+
+
+def test_research_only_true_and_absent_both_accepted():
+    payload = copy.deepcopy(fixture("complete_spruce_evidence.json"))
+    payload["research_only"] = True
+    assert import_material_evidence(payload).research_only is True
+    payload.pop("research_only", None)
+    assert import_material_evidence(payload).research_only is True
+
+
+def test_duplicate_property_rejected():
+    """``bundle.get()`` returns the first match, so a duplicate is silent precedence."""
+    payload = copy.deepcopy(fixture("complete_spruce_evidence.json"))
+    first = copy.deepcopy(payload["values"][0])
+    first["value"] = float(first["value"]) * 2.0
+    payload["values"].append(first)
+    with pytest.raises(MaterialEvidenceError, match="Duplicate evidence"):
+        import_material_evidence(payload)
+
+
+def test_duplicate_after_canonicalization_rejected():
+    """
+    E_L (GPa) and E_L_Pa (Pa) both normalize onto E_L_Pa, so a bundle carrying
+    both is a duplicate even though the payload names look distinct.
+    """
+    payload = copy.deepcopy(fixture("complete_spruce_evidence.json"))
+    payload["values"].append(
+        {
+            "property": "E_L",
+            "value": 9.0,
+            "unit": "GPa",
+            "epistemic_status": "estimated",
+        }
+    )
+    with pytest.raises(MaterialEvidenceError, match="Duplicate evidence"):
+        import_material_evidence(payload)
+
+
+def test_values_string_rejected_not_treated_as_sequence():
+    """``str`` satisfies ``Sequence``; a JSON array is what is actually required."""
+    payload = copy.deepcopy(fixture("complete_spruce_evidence.json"))
+    payload["values"] = "E_L_Pa"
+    with pytest.raises(MaterialEvidenceError, match="non-empty list"):
+        import_material_evidence(payload)

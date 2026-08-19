@@ -15,7 +15,7 @@
     "epistemic_status",
     "research_only"
   ],
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "schema_id": { "type": "string", "const": "material_prediction" },
     "schema_version": { "type": "string" },

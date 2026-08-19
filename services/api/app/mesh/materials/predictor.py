@@ -8,7 +8,7 @@ assumptions. No ``inverse_solver`` imports. No thickness recommendations.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 from app.calculators.plate_design.rayleigh_ritz import (
     BoundaryCondition,
@@ -16,6 +16,7 @@ from app.calculators.plate_design.rayleigh_ritz import (
 )
 from app.governance.confidence_envelope import EpistemicStatus
 
+from .evidence import MaterialEvidenceError
 from .orthotropic import (
     IncompleteMaterialStateError,
     OrthotropicMaterialState,
@@ -45,6 +46,9 @@ class PredictedPlateResponse:
     specimen_id: str
     material_state: Dict[str, Any]
     geometry: Dict[str, Any]
+    # Same condition on both plate axes: predict_plate_modes takes a single
+    # boundary_condition and applies it to bc_x and bc_y. The per-axis shape is
+    # kept so an anisotropic-BC solver call can be added without a schema break.
     boundary_condition: Dict[str, str]
     assumptions: List[Dict[str, Any]]
     predicted_modes: List[Dict[str, Any]]
@@ -79,6 +83,16 @@ def _parse_bc(name: str) -> BoundaryCondition:
     return mapping[key]
 
 
+def _require_positive_int(name: str, value: int) -> None:
+    """
+    Mode counts size the Ritz basis. Zero or negative silently yields an empty
+    or malformed eigenproblem rather than an error, so reject at the boundary
+    instead of inferring intent from an empty result.
+    """
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise MaterialEvidenceError(f"{name} must be a positive integer, got {value!r}")
+
+
 def predict_plate_modes(
     material: OrthotropicMaterialState,
     geometry: PlateGeometry,
@@ -92,7 +106,13 @@ def predict_plate_modes(
     Predict plate modes using Rayleigh–Ritz orthotropic solver.
 
     Requires complete material state (including E_C). Fail closed otherwise.
+
+    ``boundary_condition`` is applied to BOTH plate axes; per-axis conditions
+    are not exposed by this wrapper.
     """
+    _require_positive_int("n_modes_return", n_modes_return)
+    _require_positive_int("n_modes_x", n_modes_x)
+    _require_positive_int("n_modes_y", n_modes_y)
     if not material.is_complete_for_prediction:
         raise IncompleteMaterialStateError(
             "predict_plate_modes requires E_C; missing cross-grain stiffness "

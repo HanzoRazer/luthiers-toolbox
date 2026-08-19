@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.mesh.materials.evidence import import_material_evidence
+from app.mesh.materials.evidence import MaterialEvidenceError, import_material_evidence
 from app.mesh.materials.orthotropic import (
     IncompleteMaterialStateError,
     OrthotropicMaterialState,
@@ -72,3 +72,18 @@ def test_no_thickness_recommendation_surface():
         src = path.read_text(encoding="utf-8").lower()
         assert "recommend_thickness" not in src
         assert "thickness_recommendation" not in src
+
+
+@pytest.mark.parametrize("bad", [0, -1, 2.5, True])
+@pytest.mark.parametrize("arg", ["n_modes_return", "n_modes_x", "n_modes_y"])
+def test_non_positive_mode_counts_rejected(arg, bad):
+    """
+    Mode counts size the Ritz basis. A zero or negative count yields an empty or
+    malformed eigenproblem rather than an error, so reject at the boundary
+    instead of inferring intent from an empty result.
+    """
+    bundle = import_material_evidence(fixture("complete_spruce_evidence.json"))
+    state = OrthotropicMaterialState.from_evidence(bundle)
+    geom = PlateGeometry(thickness_m=0.003, length_m=0.4, width_m=0.28)
+    with pytest.raises(MaterialEvidenceError, match=arg):
+        predict_plate_modes(state, geom, **{arg: bad})

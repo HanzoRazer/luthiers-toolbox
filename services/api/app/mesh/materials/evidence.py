@@ -13,7 +13,7 @@ ASSUMED model inputs are tracked separately as ``ModelAssumption``
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from app.governance.confidence_envelope import EpistemicStatus
 
@@ -303,29 +303,56 @@ def _parse_modal(raw: Mapping[str, Any]) -> ModalEvidence:
     )
 
 
-def import_material_evidence(payload: Mapping[str, Any]) -> MaterialEvidenceBundle:
-    """
-    Validate and import a ToolBox-local material evidence envelope.
-
-    Accepts fixture / adapter dicts. Does not import Analyzer runtime.
-    """
-    if not isinstance(payload, Mapping):
-        raise MaterialEvidenceError("payload must be a mapping")
+def _require_specimen_id(payload: Mapping[str, Any]) -> str:
     specimen_id = payload.get("specimen_id")
     if not specimen_id or not isinstance(specimen_id, str):
         raise MaterialEvidenceError("specimen_id is required")
+    return specimen_id
 
-    raw_values = payload.get("values")
-    if not isinstance(raw_values, Sequence) or not raw_values:
+
+def _is_json_array(value: Any) -> bool:
+    """JSON arrays only. ``str``/``bytes`` are Sequences but are not arrays."""
+    return isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
+
+
+def _parse_values(raw_values: Any) -> tuple[EvidenceValue, ...]:
+    if not _is_json_array(raw_values) or not raw_values:
         raise MaterialEvidenceError("values must be a non-empty list")
+    values = tuple(_parse_evidence_value(v) for v in raw_values)
+    _reject_duplicate_properties(values)
+    return values
 
-    values = tuple(_parse_evidence_value(v) for v in raw_values)  # type: ignore[arg-type]
 
-    raw_modes = payload.get("modal_evidence") or []
-    if not isinstance(raw_modes, Sequence):
+def _reject_duplicate_properties(values: Sequence[EvidenceValue]) -> None:
+    """
+    One evidence entry per property.
+
+    ``MaterialEvidenceBundle.get()`` returns the first match, so a duplicate is
+    silently order-dependent — the later value would be ignored without a word.
+    Canonicalization makes this easy to hit by accident: ``E_L`` (GPa) and
+    ``E_L_Pa`` (Pa) both normalize to ``E_L_Pa``, so a bundle carrying both
+    would quietly keep whichever came first in the payload.
+    """
+    seen: Dict[str, int] = {}
+    for item in values:
+        if item.property in seen:
+            raise MaterialEvidenceError(
+                f"Duplicate evidence for property {item.property!r}; "
+                "one value per property (note that E_L/E_C/G_LC/density "
+                "canonicalize onto their _Pa / _kg_m3 names)"
+            )
+        seen[item.property] = 1
+
+
+def _parse_modes(raw_modes: Any) -> tuple[ModalEvidence, ...]:
+    if raw_modes is None:
+        return ()
+    if not _is_json_array(raw_modes):
         raise MaterialEvidenceError("modal_evidence must be a list")
-    modes = tuple(_parse_modal(m) for m in raw_modes)  # type: ignore[arg-type]
+    return tuple(_parse_modal(m) for m in raw_modes)
 
+
+def _parse_context(payload: Mapping[str, Any]) -> tuple[Dict[str, Any], Dict[str, Any]]:
     environment = payload.get("environment") or {}
     provenance = payload.get("provenance") or {}
     if not isinstance(environment, Mapping) or not isinstance(provenance, Mapping):
@@ -337,12 +364,42 @@ def import_material_evidence(payload: Mapping[str, Any]) -> MaterialEvidenceBund
             "Caller-supplied HARDWARE=true is forbidden; "
             "hardware provenance belongs to DO-103 Stage 3 adapters"
         )
+    return dict(environment), dict(provenance)
 
+
+def _require_research_only(payload: Mapping[str, Any]) -> bool:
+    """
+    ``research_only`` is constitutional for this surface, not a caller preference.
+
+    Absent means True. Present means it must *be* True — accepting False would
+    let a payload mint a non-research bundle from a package whose entire premise
+    is that it carries no CAM or manufacturing authority.
+    """
+    if "research_only" not in payload:
+        return True
+    if payload["research_only"] is not True:
+        raise MaterialEvidenceError(
+            "research_only must be true or omitted; MESH-MAT-001 evidence carries "
+            "no CAM authority and cannot be downgraded out of research posture"
+        )
+    return True
+
+
+def import_material_evidence(payload: Mapping[str, Any]) -> MaterialEvidenceBundle:
+    """
+    Validate and import a ToolBox-local material evidence envelope.
+
+    Accepts fixture / adapter dicts. Does not import Analyzer runtime.
+    """
+    if not isinstance(payload, Mapping):
+        raise MaterialEvidenceError("payload must be a mapping")
+
+    environment, provenance = _parse_context(payload)
     return MaterialEvidenceBundle(
-        specimen_id=specimen_id,
-        values=values,
-        modal_evidence=modes,
-        environment=dict(environment),
-        provenance=dict(provenance),
-        research_only=bool(payload.get("research_only", True)),
+        specimen_id=_require_specimen_id(payload),
+        values=_parse_values(payload.get("values")),
+        modal_evidence=_parse_modes(payload.get("modal_evidence")),
+        environment=environment,
+        provenance=provenance,
+        research_only=_require_research_only(payload),
     )

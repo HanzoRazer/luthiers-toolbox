@@ -12,7 +12,7 @@
     "epistemic_status",
     "research_only"
   ],
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "schema_id": { "type": "string", "const": "prediction_residual" },
     "schema_version": { "type": "string" },
@@ -39,8 +39,14 @@
             "maxItems": 2,
             "items": { "type": "integer" }
           },
-          "label": { "type": "string" }
-        }
+          "label": { "type": "string" },
+          "match_basis": {
+            "type": "string",
+            "enum": ["mode_indices", "nearest_frequency"],
+            "description": "How the pairing was made. Absent when there is no pairing (NO_MEASUREMENT / NO_PREDICTION). nearest_frequency is a proximity guess, not a labelled match."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "tolerance_hz": { "type": "number" },

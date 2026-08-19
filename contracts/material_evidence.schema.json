@@ -9,7 +9,7 @@
   "properties": {
     "schema_id": { "type": "string", "const": "material_evidence" },
     "schema_version": { "type": "string" },
-    "research_only": { "type": "boolean", "default": true },
+    "research_only": { "type": "boolean", "const": true },
     "specimen_id": { "type": "string", "minLength": 1 },
     "values": {
       "type": "array",
@@ -43,6 +43,23 @@
       "type": "object",
       "required": ["property", "value", "unit", "epistemic_status"],
       "additionalProperties": false,
+      "description": "OBSERVED / DERIVED values claim measurement authority and therefore require provenance. That rule is enforced conditionally below so a schema-valid payload cannot be rejected at import.",
+      "allOf": [
+        {
+          "if": {
+            "required": ["epistemic_status"],
+            "properties": {
+              "epistemic_status": { "enum": ["observed", "derived"] }
+            }
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["source_artifact_id"] },
+              { "required": ["source_hash"] }
+            ]
+          }
+        }
+      ],
       "properties": {
         "property": { "type": "string" },
         "value": { "type": "number" },
@@ -57,8 +74,8 @@
             "notes": { "type": "string" }
           }
         },
-        "source_artifact_id": { "type": "string" },
-        "source_hash": { "type": "string" },
+        "source_artifact_id": { "type": "string", "minLength": 1 },
+        "source_hash": { "type": "string", "minLength": 1 },
         "method": { "type": "string" }
       }
     },
