@@ -1,6 +1,6 @@
 # DO-103 Stage 3 — Active Authorization (Provenance Freeze)
 
-**Status:** ACTIVE — authorized next order  
+**Status:** ACTIVE — designated as the next active order  
 **Authorized:** 2026-08-19  
 **Authorizing call:** Promote DO-103 Stage 3 ahead of DO-101B  
 **Program chain:** Tap Tone Pi → Material Evidence → ToolBox Mesh Pipeline → physical validation  
@@ -14,7 +14,7 @@
 
 > **DO-103 Stage 3 is the next active order. DO-101B remains queued immediately behind it.**
 
-Stage 3 is **time-order sensitive** in a way DO-101B is not. Hardware campaigns must not begin until:
+Stage 3 is **sequencing-critical** in a way DO-101B is not. Hardware campaigns must not begin until:
 
 1. Phase-2 `grant_readiness` ingestion exists, and  
 2. `HARDWARE` origin cannot be a caller assertion — it must be **derived from measurement provenance**.
@@ -54,7 +54,8 @@ Without Stage 3, later claims of the form:
 
 > “This orthotropic material model was validated against physical specimens”
 
-cannot prove the source data left a physical acquisition path rather than a demo/simulator run.
+cannot prove that the source data came from a physical acquisition chain rather than a
+demo/simulator run.
 
 ---
 
@@ -81,14 +82,14 @@ cannot prove the source data left a physical acquisition path rather than a demo
 
 ## 4. Acceptance criteria (Stage 3 done when…)
 
-1. **Ingestion:** Phase-2 path accepts governed Tap Tone Pi artifacts and emits `grant_readiness` evidence records (or equivalent contract artifact) without Toolbox imports into `tap_tone_pi`.
+1. **Ingestion:** Phase-2 path accepts governed Tap Tone Pi artifacts and emits `grant_readiness` evidence records (or equivalent contract artifact) without ToolBox imports into `tap_tone_pi`.
 2. **Derived HARDWARE:** `EvidenceOrigin.HARDWARE` (or equivalent) is computed from provenance fields; API/call sites that pass a free-form HARDWARE flag without supporting provenance **fail closed**.
-3. **Negative witnesses:** Tests cover at least:
+3. **Negative witnesses (negative-path tests):** Tests cover at least:
    - demo/simulator provenance → cannot classify as HARDWARE  
    - missing provenance → cannot classify as HARDWARE  
    - caller-asserted HARDWARE without acquisition chain → rejected  
 4. **Freeze note:** A short freeze statement exists naming Stage 3 complete and authorizing later hardware stages of DO-103.
-5. **Boundary intact:** `docs/ANALYZER_BOUNDARY_SPEC.md` / tap_tone measurement boundary still hold — Stage 3 does not move interpretation into Tap Tone Pi.
+5. **Boundary intact:** The measurement boundary defined in `docs/ANALYZER_BOUNDARY_SPEC.md` still holds — Stage 3 does not move interpretation into Tap Tone Pi.
 
 ---
 
@@ -118,11 +119,12 @@ Building that registry *before* provenance semantics are frozen would force a se
 
 ## 6. Cross-repo touchpoints (luthiers-toolbox)
 
-Stage 3 implementation ownership is **tap_tone_pi**. In this repo, Stage 3 authorizes only:
+Stage 3 implementation ownership is **tap_tone_pi**. In this repo, this authorization
+establishes only:
 
 - This active-order record and queue discipline  
 - Consumer expectation: ToolBox must treat HARDWARE as provenance-derived when material-evidence integration begins  
-- No premature Mesh Pipeline / orthotropic validation work under the guise of Stage 3
+- A prohibition on premature Mesh Pipeline / orthotropic validation work under the guise of Stage 3
 
 Contract reminder (existing law):
 
@@ -142,4 +144,5 @@ Contract reminder (existing law):
 
 ---
 
-*Authorization recorded 2026-08-19. Implementation of Stage 3 code belongs in tap_tone_pi under this scope — do not absorb DO-101B or Mesh Pipeline work into Stage 3.*
+*Authorization recorded 2026-08-19. Stage 3 implementation belongs in `tap_tone_pi` and must
+remain within this scope. Do not absorb DO-101B or Mesh Pipeline work into Stage 3.*
