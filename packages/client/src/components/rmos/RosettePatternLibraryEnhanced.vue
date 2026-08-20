@@ -24,7 +24,7 @@
     <Teleport to="body">
       <div
         v-if="showPresets"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
         @click.self="showPresets = false"
       >
         <div class="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden mx-4">

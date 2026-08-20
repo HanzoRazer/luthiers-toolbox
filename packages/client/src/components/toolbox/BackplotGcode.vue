@@ -267,6 +267,10 @@ function formatTime(seconds: number): string {
 </script>
 
 <style scoped>
+/* Tailwind v4: each style block is compiled in isolation, so @apply
+   needs an explicit reference to the theme. */
+@reference "tailwindcss";
+
 .backplot-gcode {
   @apply p-4;
 }

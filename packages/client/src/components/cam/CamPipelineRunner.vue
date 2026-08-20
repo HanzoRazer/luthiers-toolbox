@@ -443,6 +443,10 @@ watch([machineId, postId], () => {
 </script>
 
 <style scoped>
+/* Tailwind v4: each style block is compiled in isolation, so @apply
+   needs an explicit reference to the theme. */
+@reference "tailwindcss";
+
 .btn {
   @apply bg-gray-900 text-white rounded-lg px-3 py-2 text-xs disabled:opacity-50;
 }
