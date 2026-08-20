@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -925,6 +925,9 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-009 | Client ESLint regression ratchet (companion to the type-check ratchet) | CI / client gates | QUEUED | 2026-08-18 |
 | MAINT-DEFER-010 | Orphaned `packages/client/src/views/cam/headstock/` — 42% of client type errors | Cleanup / client | DEFERRED | 2026-08-18 |
 | MAINT-DEFER-011 | `.gitignore` `/ci/` swallows newly added CI data files | Process / repo hygiene | QUEUED | 2026-08-18 |
+| MAINT-DEFER-012 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
+| MAINT-DEFER-013 | `mesh-pipeline-ci` demo steps call `app.retopo` (deleted in `ee36ddf1`); now stubbed, so the gate is green but exercises nothing | CI / mesh pipeline | QUEUED | 2026-08-19 |
+| MAINT-DEFER-014 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1331,6 +1334,67 @@ should be applied once, deliberately, not mid-way through an unrelated PR.
 `docs/` states that `scripts/ci/` is the home for new CI data and `ci/` is legacy-only.
 
 **Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+### MAINT-DEFER-012 — Client container smoke has no readiness wait
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/CLIENT_CONTAINER_SMOKE_READINESS_2026-08-19.md`
+
+**Why deferred:** `.github/workflows/containers.yml` polls the **API** container for up to 60s (`:56-58`, 30 x 2s against `${SERVER_PORT}/health`) and then curls the **client** container single-shot at `:100-106` — no wait, no `--retry`, no `--retry-connrefused`. `${CLIENT_PORT}` appears nowhere in the readiness loop. Client readiness is never asserted — whether the smoke step succeeds depends on the API poll happening to outlast client startup. No measurement of how often that holds was taken.
+
+**Symptom when the assumption fails:** `curl: (56) Recv failure: Connection reset by peer` on the first client request. That is *consistent with* a socket accepting connections before nginx is serving, which is the readiness race this record is about; it is not uniquely diagnostic of it, and no packet-level confirmation was taken. Observed on PR #297 (run `32183393779`, job `95861446559`). Established as a flake before re-run: the PR changed only `SPRINTS.md` + a CBSP21 manifest and cannot affect a container image; the workflow was green on main's preceding six commits and on all four runs of a sibling branch; and it passed on re-run with no code change.
+
+**Why it matters more than one re-run:** this is CI-RED-020's defect shape on the client side. That sprint replaced a blind reachable-check with a real readiness gate and produced `scripts/ci/wait_for_api_ready.py`, now used by `api_health_check.yml`, `api_tests.yml`, and `api_health_and_smoke.yml`. `containers.yml` never adopted it and still hand-rolls the older pattern — for the API only. The cost is an ambiguous red that takes a re-run to classify, which trains readers to dismiss reds in this job as flaky; that habit is indistinguishable from how a genuine client-container regression would first present.
+
+**Restore trigger:** client readiness asserted before the first client curl — either extend the existing loop to poll `${CLIENT_PORT}` alongside the API health check, or give the client curls a bounded `--retry`/`--retry-connrefused`. Preferred: reuse `wait_for_api_ready.py` so both containers gate through one witness rather than two divergent patterns. Done-condition: a deliberate cold-start run where the client is slower than the API still passes the smoke step.
+
+**Not established:** failure rate. One occurrence is recorded; no history sweep was run, so this says nothing about how often the race is lost.
+
+**Path:** HYG — CI signal quality; not on the CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-013 — `mesh-pipeline-ci` demo steps call a deleted module; the failure is now stubbed over
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-013
+
+**Why deferred:** `ee36ddf1` (2026-02-10, "refactor(api): remove orphaned feature modules (Phase 4)") deleted `services/api/app/retopo/` — 612 lines, five files, including the `run.py` that defined `run_pipeline` — describing them as "unused retopology tools". **That description was accurate for application code and still left live callers behind.** At `ee36ddf1^` the only importers of `app.retopo` were the package's own `run.py` and `examples/retopo/run.sh`; no module under `services/api/app/` imported it. The orphan sweep evidently scoped "used" to Python imports from application code, so it did not see a shell script — or the workflow that runs it. `.github/workflows/mesh-pipeline-ci.yml` invokes `examples/retopo/run.sh` twice (`qrm`, `miq`) and then validates its outputs. **The transferable lesson is the detection criterion, not the deletion:** an orphan check that only reads Python imports will keep deleting things that shell, CI, and docs still call.
+
+**Current state — the red is gone, the condition is not.** `services/api/app/retopo` is still absent on `main`. What changed is that `examples/retopo/run.sh` gained an `except ImportError` branch (merged with #305 as `93b3e581`) which writes `qa_core.json` and `cam_policy.json` itself when the import fails, and the next workflow step then validates those. `mesh-pipeline-ci` consequently recorded its **first success on `main` on 2026-08-19** (`93b3e581`) — 6 failures and 1 success across the 7 runs GitHub still retains, the failures dated 2026-01-21 through 2026-03-08.
+
+**Correction to this record's first draft:** it claimed the workflow was "failure on every run on `main`" and that the demo steps were "structurally unfixable". Neither is true as written — one run succeeded, and the steps were made to pass without restoring anything. Recorded here rather than silently edited, because the original claim was cited in PR #309.
+
+**Why it still belongs in the queue:** the stub is labelled honestly (`overall_status: review_required`, plus a note naming the absent module), so nothing is disguised at the artifact level. But the two demo steps now exercise the fallback's own JSON literals rather than a pipeline, so a green `mesh-pipeline-ci` no longer carries the meaning a reader will take from it. The debt moved from visible to invisible, which is the harder state to notice later.
+
+**Restore trigger — a disposition, and the stub makes it a three-way choice.** (a) Restore `services/api/app/retopo/` from `ee36ddf1^` if the retopology lane is wanted; (b) retire the scaffold — delete `examples/retopo/` and drop the three demo steps; or (c) keep the stub deliberately, and then make the workflow say so — the demo steps should not be named as if they exercise a pipeline. Done-condition: whichever is chosen, `mesh-pipeline-ci`'s green means something a reader can rely on without opening `run.sh`.
+
+**Path:** HYG — CI signal quality; not on the CAM MVP cut path.
+
+---
+
+### MAINT-DEFER-014 — `solve_rayleigh_ritz` eigensolver and its mislabelled fallback
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-19  
+**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-014
+
+**Why deferred:** `services/api/app/calculators/plate_design/rayleigh_ritz.py:650-657` carries three distinct defects, all **predating** PR #305 (which touched only `gauss_legendre` in this file):
+
+1. **Explicit inverse.** `np.linalg.eig(np.linalg.inv(M) @ K)` forms `inv(M)` and multiplies, which is less accurate and less stable than solving directly. Symmetry was measured, not assumed: for a 4x4 basis under both SIMPLY_SUPPORTED and CLAMPED, `K` and `M` are **exactly** symmetric (relative asymmetry `0.00e+00`) and `M` is positive definite (min eigenvalue `3.15e-02`). A symmetric-definite generalized solver is therefore applicable on the problem's own terms, not merely as a stylistic preference. `inv(M) @ K` is not symmetric, which is why the general `eig` is needed at all.
+2. **The fallback comment is false.** It says "Fallback to scipy if available"; scipy is never imported or called. What runs is `np.diag(K) / np.diag(M)` — every off-diagonal coupling discarded — with `np.eye(...)` for mode shapes, i.e. every mode shape replaced by a unit vector. That is not equivalent to the stated generalized solve; it is a diagonal approximation returning similarly shaped outputs.
+3. **The degradation is silent.** Nothing in the result records that the fallback ran, so a caller cannot tell a real solve from diagonal ratios with identity mode shapes. `:660-661` then takes `np.real(eigenvalues)`, discarding any imaginary part non-symmetric `eig` can produce, without flagging it.
+
+**Why now:** recorded because PR #305 put the file under review, and because MESH-MAT-001's predictor is a new consumer — the first whose outputs are published as governed sidecars.
+
+**Restore trigger:** solve the generalized problem directly (`scipy.linalg.eigh(K, M)` if scipy is acceptable here, else symmetric handling via `np.linalg.solve`), and make any fallback **observable in the result** rather than silent — raise, or return a flag the caller must read. Correct the comment to describe what the fallback actually does. Done-condition: a test against closed-form simply-supported isotropic modal frequencies to a stated tolerance, plus a test proving the fallback is externally detectable.
+
+**Explicitly NOT to be batched into a feature branch:** changing an eigensolver could move existing plate-prediction outputs, and how far is not established here — no before/after comparison was run. It needs its own PR, its own witnesses, and a ruling on whether scipy may be added as a dependency.
+
+**Path:** HYG — numerics quality; feeds MESH-MAT-001 prediction confidence.
+
+---
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 
