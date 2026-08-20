@@ -1,0 +1,99 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "REMOVE_ORPHANED_HEADSTOCK_VIEWS",
+  "title": "chore(client): remove the orphaned cam/headstock views; type-check ceiling 150 -> 87",
+  "intent": "packages/client/src/views/cam/headstock/ is unreachable dead code: four .vue files (~1828 lines) with zero inbound references anywhere in the package, absent from the router, superseded by a live routed replacement at /art-studio/headstock, and importing 11 modules of which 5 no longer exist in any form. vite build never saw them (not in the module graph) but vue-tsc type-checked them because tsconfig include covers all of src with no exclude, so they contributed 63 of the 150 type errors - 42%, the single largest cluster and pure noise. Closes MAINT-DEFER-010.",
+  "change_type": "chore",
+  "behavior_change": "None. The removed files were not in the module graph and no route, import, or test referenced them; the built bundle is byte-identical in module count.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "packages/client/src/views/cam/headstock/",
+      "scripts/ci/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "packages/client/src/views/cam/headstock/ConfiguratorView.vue",
+      "packages/client/src/views/cam/headstock/ImportView.vue",
+      "packages/client/src/views/cam/headstock/ParametricView.vue",
+      "packages/client/src/views/cam/headstock/WorkspaceView.vue",
+      "scripts/ci/client_type_check_baseline.json",
+      "scripts/ci/client_lint_baseline.json",
+      ".cbsp21/patches/remove-orphaned-headstock-views.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Deletes the four orphaned views. Regenerates both ratchet baselines against the resulting tree: the type-check ceiling falls 150 -> 87 (exactly the 63 predicted), and the lint ceiling falls 7683 -> 6980 warnings over 1477 -> 1473 files, with errors unchanged at 34 (the removed files carried warnings but no lint errors). The type-check baseline's _known_hotspot note, which described this directory and predicted the ~87 outcome, is replaced by a _witness recording the full ceiling history.",
+    "why_not_redundant": "Not covered by any other cleanup: the directory is invisible to vite build (never in the graph) and to the test suite, so nothing except vue-tsc had any reason to surface it. Removing it is also not equivalent to excluding it in tsconfig - an exclude would hide the errors while leaving 1828 lines of unreconstructible code in the tree."
+  },
+  "verification": {
+    "commands_run": [
+      "DEAD-CODE EVIDENCE, five independent lines. (1) Zero inbound references: swept all of packages/ for the four view names and the directory path across .ts/.vue/.js/.json/.html - the only hit is ConfiguratorView.vue referencing itself. Corroborated by two different tools (ripgrep and a shell grep sweep) with no contradiction. (2) No dynamic escape hatch: zero import.meta.glob, zero require.context, and every dynamic import() uses a string literal, so the module graph is statically knowable - control-tested, 'import.meta' appears 65 times across 49 files, so the empty glob result is a real absence and not a broken pattern. (3) Live twin: /art-studio/headstock routes to HeadstockDesignerView.vue, backed by src/views/art/art_studio_headstock/ and 4 composables - these views are superseded, not parked work-in-progress, which was MAINT-DEFER-010's stated restore trigger. (4) Dependencies partly destroyed: of 11 imported modules, 3 moved (useCamSpec, drawCamOverlay -> design-utilities/lutherie/neck/; CamSpecPanel -> components/cam/neck/) and 5 no longer exist in any form (useHeadstock, useParametric, headstockData, VariantLibraryPanel, WoodGrainPanel) - the files cannot be revived by fixing import paths. (5) Absent from build output and from every spec.",
+      "PREDICTIONS STATED BEFORE RUNNING, all three hit exactly: vue-tsc -> 87 errors (150 - 63); npm run build -> exit 0 with 1656 modules transformed, UNCHANGED from before the deletion; npm test -> 765 passed, unchanged. The unchanged module count is the decisive proof the files were never in the graph - deleting 1828 lines moved the bundle by zero modules.",
+      "npm run build -> exit 0, 1656 modules, built in 1m3s",
+      "npm test -> exit 0, 42 files passed / 1 skipped, 765 tests passed, 0 failed",
+      "Both ratchets re-run against their regenerated baselines -> PASS",
+      "Last substantive commits to these files: 2026-03-18 (three files) and 2026-04-01 (one), five months stale, and the touching commits were sweeping renames rather than feature work"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/src/views/cam/headstock/ConfiguratorView.vue",
+      "intent": "Remove orphaned view (676 lines, 12 type errors).",
+      "scan_targets": ["packages/client/src/views/cam/headstock/ConfiguratorView.vue"],
+      "risk": "low",
+      "behavior_change": "None - unreachable, not in the module graph."
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/ImportView.vue",
+      "intent": "Remove orphaned view (578 lines, 3 type errors).",
+      "scan_targets": ["packages/client/src/views/cam/headstock/ImportView.vue"],
+      "risk": "low",
+      "behavior_change": "None - unreachable, not in the module graph."
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/ParametricView.vue",
+      "intent": "Remove orphaned view (242 lines, 27 type errors - the largest single cluster).",
+      "scan_targets": ["packages/client/src/views/cam/headstock/ParametricView.vue"],
+      "risk": "low",
+      "behavior_change": "None - unreachable, not in the module graph."
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/WorkspaceView.vue",
+      "intent": "Remove orphaned view (332 lines, 21 type errors).",
+      "scan_targets": ["packages/client/src/views/cam/headstock/WorkspaceView.vue"],
+      "risk": "low",
+      "behavior_change": "None - unreachable, not in the module graph."
+    },
+    {
+      "path": "scripts/ci/client_type_check_baseline.json",
+      "intent": "Lower the type-check ceiling 150 -> 87 and record the full ceiling history.",
+      "scan_targets": ["scripts/ci/client_type_check_baseline.json"],
+      "risk": "low",
+      "behavior_change": "Tightens the gate. Any PR that reintroduces those 63 errors now fails."
+    },
+    {
+      "path": "scripts/ci/client_lint_baseline.json",
+      "intent": "Lower the lint warning ceiling 7683 -> 6980 (703 warnings lived in the dead code); errors unchanged at 34.",
+      "scan_targets": ["scripts/ci/client_lint_baseline.json"],
+      "risk": "low",
+      "behavior_change": "Tightens the gate. Regenerated deliberately - leaving it at 7683 would have left a ceiling 703 too high, which is exactly the drift the ratchet exists to prevent."
+    },
+    {
+      "path": ".cbsp21/patches/remove-orphaned-headstock-views.json",
+      "intent": "Per-PR CBSP21 patch manifest for this change set.",
+      "scan_targets": [".cbsp21/patches/remove-orphaned-headstock-views.json"],
+      "risk": "low",
+      "behavior_change": "none - manifest only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-19-HEADSTOCK",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 7 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Source deletion of 1828 lines, authorized by the owner after the evidence was verified. The dead-code case rests on the strong tier of the repo's own discipline - unreachable by construction, a routed live twin, and destroyed dependencies - not on grep-absence alone. Both ratchet ceilings are tightened in the same change so the reclaimed ground cannot be silently lost. Stacked on ci/client-type-check-ratchet (PR #306), which introduces the ratchets these baselines belong to; if #306 lands first this rebases trivially, and if this lands first the 150/7683 ceilings in #306 would simply be re-tightened here."
+  }
+}
