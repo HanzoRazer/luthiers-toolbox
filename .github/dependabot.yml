@@ -39,6 +39,14 @@ updates:
       # typescript@6 path open — ignore only >=7, not all majors. See #280.
       - dependency-name: typescript
         versions: [">=7.0.0"]
+      # Tailwind v4 is an architectural rewrite, not a version bump: the PostCSS
+      # plugin moved to @tailwindcss/postcss, @tailwind directives became
+      # @import, tailwind.config.js is ignored, @apply needs @reference inside
+      # every SFC style block, and *-opacity-* utilities were removed. #310 was
+      # a lockfile-only bump and failed 12 gates. Majors land as a deliberate
+      # migration PR, not Dependabot fan-out.
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
       # Lint majors must move with a coordinated TS/eslint migration
       # (Copilot #280 companions; same class as closed #255/#258). See #282/#283.
       - dependency-name: eslint

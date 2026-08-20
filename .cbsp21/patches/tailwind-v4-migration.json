@@ -11,7 +11,8 @@
   "scope": {
     "paths_in_scope": [
       "packages/client/",
-      ".cbsp21/patches/"
+      ".cbsp21/patches/",
+      ".github/"
     ],
     "files_expected_to_change": [
       "packages/client/package.json",
@@ -24,7 +25,11 @@
       "packages/client/src/components/art/rosette/RosetteParametersPanel.vue",
       "packages/client/src/components/cam/CamPipelineRunner.vue",
       "packages/client/src/components/toolbox/BackplotGcode.vue",
-      ".cbsp21/patches/tailwind-v4-migration.json"
+      ".cbsp21/patches/tailwind-v4-migration.json",
+      "packages/client/src/components/rmos/RosettePatternLibraryEnhanced.vue",
+      "packages/client/src/views/saw_lab_dashboard/RiskActionsModal.vue",
+      "packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue",
+      ".github/dependabot.yml"
     ]
   },
   "diff_articulation": {
@@ -41,91 +46,156 @@
       "@apply EXPANSION CHECK: emitted CSS contains input[type=range][data-v-b27b8c48]{height:calc(var(--spacing,.25rem) * 2);cursor:pointer;appearance:none;border-radius:...} under a /*! tailwindcss v4.3.3 */ banner, confirming v4 expanded the directives with Vue scoping intact. Zero raw @apply leaked into the bundle",
       "npm test -> 42 files passed / 1 skipped, 765 tests passed, 0 test failures. Identical to the pristine-main baseline, so this migration introduces no test regressions",
       "PRE-EXISTING FAILURE, NOT CAUSED HERE: src/testing/__tests__/nodeEngineFloor.spec.ts fails locally with SyntaxError. Proven unrelated by control - with ALL changes stashed on a pristine tree it fails identically. It is green in CI because CI is Linux; it does not run on Windows. The file is correct LF per .gitattributes with no BOM but carries 18 non-ASCII bytes, and the reported position (line 4 byte 31) is ordinary ASCII, so the location is misattributed. Landed via #307; flagged, not touched",
-      "ROOT-CAUSE COVERAGE: the 12 failing gates on #310 are 7 distinct gates duplicated across push/pull_request runs, every one downstream of the single client-build failure - lint-build (vite build), Containers/build-and-test/proxy-parity/proxy-adaptive (docker/client/Dockerfile npm ci + npm run build), Railway client (packages/client/Dockerfile), and Core CI Summary (aggregator). No API or Python gate fails, and SG_SPEC_TOKEN is present in the container jobs, confirming the old Dependabot-secret pattern is resolved and this is a clean single-cause failure"
+      "ROOT-CAUSE COVERAGE: the 12 failing gates on #310 are 7 distinct gates duplicated across push/pull_request runs, every one downstream of the single client-build failure - lint-build (vite build), Containers/build-and-test/proxy-parity/proxy-adaptive (docker/client/Dockerfile npm ci + npm run build), Railway client (packages/client/Dockerfile), and Core CI Summary (aggregator). No API or Python gate fails, and SG_SPEC_TOKEN is present in the container jobs, confirming the old Dependabot-secret pattern is resolved and this is a clean single-cause failure",
+      "CSS SELECTOR-SET DIFF v3 vs v4 - the check that caught the only real regression. Built the tree twice (tailwindcss 3.4.19 then 4.3.3) and extracted every class selector from all 85 emitted CSS bundles: v3 = 4620 selectors / 767,612 bytes; v4 = 4751 / 787,117. Exactly ONE selector existed in v3 and not v4: .bg-opacity-50, which Tailwind v4 REMOVED in favour of slash syntax. It was live in 3 modal backdrops (RosettePatternLibraryEnhanced.vue:27, RiskActionsModal.vue:5, RunDetailModal.vue:5, all `bg-black bg-opacity-50`), so under v4 those overlays would have rendered FULLY OPAQUE BLACK. That regression passes the build, all 765 tests, and spot-checks for individual utilities - only a full selector diff surfaces it. Replaced with bg-black/50 and confirmed `.bg-black\\/50` is emitted in index-BozNL13s.css. Swept for the other removed *-opacity-* variants: none remain. CAVEAT on method: the extraction regex collapses escaped-slash selectors (.bg-black\\/50 -> bg-black), so it under-counts slash-opacity utilities identically on both sides and is blind to that class; the /50 rule was therefore confirmed by direct grep, not by the set comparison. A fully symmetric diff would require rebuilding v3 against the fixed source, which was not done - the single discrepancy is explained and independently verified instead",
+      "npm test after the opacity fix -> 42 files passed / 1 skipped, 765 passed, 0 test failures; unchanged from the pristine-main baseline"
     ]
   },
   "files": [
     {
       "path": "packages/client/package.json",
       "intent": "Add @tailwindcss/postcss@4.3.3; tailwindcss at ^4.3.3.",
-      "scan_targets": ["packages/client/package.json"],
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
       "risk": "low",
       "behavior_change": "Dev dependency only."
     },
     {
       "path": "packages/client/package-lock.json",
       "intent": "Lock the v4 dependency tree.",
-      "scan_targets": ["packages/client/package-lock.json"],
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
       "risk": "low",
       "behavior_change": "None directly; npm ci verified to succeed, which the container gates depend on."
     },
     {
       "path": "packages/client/postcss.config.js",
       "intent": "Point PostCSS at @tailwindcss/postcss instead of the main package.",
-      "scan_targets": ["packages/client/postcss.config.js"],
+      "scan_targets": [
+        "packages/client/postcss.config.js"
+      ],
       "risk": "medium",
       "behavior_change": "This is the crash site. autoprefixer retained for the project's own CSS."
     },
     {
       "path": "packages/client/src/styles/main.css",
       "intent": "Replace the three @tailwind directives with the v4 @import entrypoint.",
-      "scan_targets": ["packages/client/src/styles/main.css"],
+      "scan_targets": [
+        "packages/client/src/styles/main.css"
+      ],
       "risk": "medium",
       "behavior_change": "Same generated utility surface; verified by grepping the emitted bundles."
     },
     {
       "path": "packages/client/tailwind.config.js",
       "intent": "Delete. v4 ignores it, nothing imports it, and its theme has 0 usages.",
-      "scan_targets": ["packages/client/tailwind.config.js"],
+      "scan_targets": [
+        "packages/client/tailwind.config.js"
+      ],
       "risk": "low",
       "behavior_change": "None - measured 0 usages of every token it defined."
     },
     {
       "path": "packages/client/src/components/art/art_studio_inlay/ArtStudioInlay.vue",
       "intent": "Add @reference so @apply resolves under v4.",
-      "scan_targets": ["packages/client/src/components/art/art_studio_inlay/ArtStudioInlay.vue"],
+      "scan_targets": [
+        "packages/client/src/components/art/art_studio_inlay/ArtStudioInlay.vue"
+      ],
       "risk": "low",
       "behavior_change": "None - style block only; expansion verified in the emitted CSS."
     },
     {
       "path": "packages/client/src/components/art/bracing/BraceSinglePanel.vue",
       "intent": "Add @reference so @apply resolves under v4.",
-      "scan_targets": ["packages/client/src/components/art/bracing/BraceSinglePanel.vue"],
+      "scan_targets": [
+        "packages/client/src/components/art/bracing/BraceSinglePanel.vue"
+      ],
       "risk": "low",
       "behavior_change": "None - style block only; expansion verified in the emitted CSS."
     },
     {
       "path": "packages/client/src/components/art/rosette/RosetteParametersPanel.vue",
       "intent": "Add @reference so @apply resolves under v4.",
-      "scan_targets": ["packages/client/src/components/art/rosette/RosetteParametersPanel.vue"],
+      "scan_targets": [
+        "packages/client/src/components/art/rosette/RosetteParametersPanel.vue"
+      ],
       "risk": "low",
       "behavior_change": "None - style block only."
     },
     {
       "path": "packages/client/src/components/cam/CamPipelineRunner.vue",
       "intent": "Add @reference so @apply resolves under v4.",
-      "scan_targets": ["packages/client/src/components/cam/CamPipelineRunner.vue"],
+      "scan_targets": [
+        "packages/client/src/components/cam/CamPipelineRunner.vue"
+      ],
       "risk": "low",
       "behavior_change": "None - style block only."
     },
     {
       "path": "packages/client/src/components/toolbox/BackplotGcode.vue",
       "intent": "Add @reference so @apply resolves under v4.",
-      "scan_targets": ["packages/client/src/components/toolbox/BackplotGcode.vue"],
+      "scan_targets": [
+        "packages/client/src/components/toolbox/BackplotGcode.vue"
+      ],
       "risk": "low",
       "behavior_change": "None - style block only."
     },
     {
       "path": ".cbsp21/patches/tailwind-v4-migration.json",
       "intent": "Per-PR CBSP21 patch manifest for this change set.",
-      "scan_targets": [".cbsp21/patches/tailwind-v4-migration.json"],
+      "scan_targets": [
+        ".cbsp21/patches/tailwind-v4-migration.json"
+      ],
       "risk": "low",
       "behavior_change": "none - manifest only."
+    },
+    {
+      "path": "packages/client/src/components/rmos/RosettePatternLibraryEnhanced.vue",
+      "intent": "Modal backdrop: bg-opacity-50 -> bg-black/50 (v4 removed *-opacity-* utilities).",
+      "scan_targets": [
+        "packages/client/src/components/rmos/RosettePatternLibraryEnhanced.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "Restores the intended 50% modal backdrop under v4; bg-black/50 is valid in Tailwind 3.0+ AND 4.x, so this is not a v4-only construct."
+    },
+    {
+      "path": "packages/client/src/views/saw_lab_dashboard/RiskActionsModal.vue",
+      "intent": "Modal backdrop: bg-opacity-50 -> bg-black/50.",
+      "scan_targets": [
+        "packages/client/src/views/saw_lab_dashboard/RiskActionsModal.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "Restores the intended 50% modal backdrop under v4; bg-black/50 is valid in Tailwind 3.0+ AND 4.x, so this is not a v4-only construct."
+    },
+    {
+      "path": "packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue",
+      "intent": "Modal backdrop: bg-opacity-50 -> bg-black/50.",
+      "scan_targets": [
+        "packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "Restores the intended 50% modal backdrop under v4; bg-black/50 is valid in Tailwind 3.0+ AND 4.x, so this is not a v4-only construct."
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Gate tailwindcss semver-majors as Tranche C, alongside the other client toolchain majors.",
+      "scan_targets": [
+        ".github/dependabot.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "Stops Dependabot regenerating tailwindcss major bumps; no runtime effect."
     }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-08-20-TAILWIND-V4",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 3, "low": 8 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 3,
+      "low": 12
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Build-pipeline migration touching CSS generation for the whole client, hence medium risk on the three pipeline files. Mitigated by checking output content rather than exit codes: the emitted bundles were verified to contain the utilities in use and the expanded @apply rules, because the dangerous failure mode here is a silent no-op that passes every gate and ships an unstyled app. GOVERNANCE, unresolved and deliberately not decided here: tailwindcss is absent from .github/dependabot.yml's ignore list while vite, vitest, @vitejs/plugin-vue, vue-router, pinia, typescript>=7, eslint and @typescript-eslint/* are all gated there as Tranche C majors. That omission is why #310 was generated. The established precedent for this class (#280, #282, #283, #288) is to CLOSE the Dependabot PR and add the ignore, landing the migration as a deliberate human PR. This branch is that deliberate migration; whether it lands, and whether tailwindcss joins the ignore list either way, is an owner decision."
