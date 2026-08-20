@@ -302,6 +302,10 @@ const purflingMaterials = PURFLING_MATERIALS
 </template>
 
 <style scoped>
+/* Tailwind v4: each style block is compiled in isolation, so @apply
+   needs an explicit reference to the theme. */
+@reference "tailwindcss";
+
 input[type="range"] {
   @apply h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
 }
