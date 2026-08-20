@@ -39,6 +39,7 @@ References:
 from __future__ import annotations
 
 import math
+from functools import lru_cache
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, List, Tuple
@@ -294,6 +295,47 @@ def get_basis_function(
 # =============================================================================
 
 
+@lru_cache(maxsize=8)
+def gauss_legendre(n_quad: int):
+    """
+    Gauss-Legendre nodes and weights for ``n_quad`` points, memoized.
+
+    They are constants for a given ``n_quad`` but were recomputed four times per
+    solve (twice each while assembling the stiffness and mass matrices).
+
+    Built by Golub-Welsch (eigendecomposition of the Legendre Jacobi matrix), NOT
+    ``np.polynomial.legendre.leggauss``. leggauss runs a reduction defaulted to the
+    module sentinel ``np._NoValue``; after numpy is re-imported mid-session that is
+    no longer the object the C ufunc recognises and it raises ``TypeError: float()
+    argument ... not '_NoValueType'``. Warming the cache from conftest did not fix
+    that — the warm-up itself raised at conftest-import time under Core CI.
+    Golub-Welsch touches only ``np.diag`` / ``np.linalg.eigh``, so it is correct
+    regardless of numpy import history. Rationale and exactness proof:
+    ``tests/mesh/materials/test_gauss_legendre_exactness.py``.
+
+    The returned arrays are shared and marked read-only; callers must not mutate
+    them in place.
+    """
+    if not isinstance(n_quad, int) or isinstance(n_quad, bool) or n_quad < 1:
+        # Without this, n_quad <= 0 silently returned a degenerate 1-point rule
+        # (np.arange(1, 0) is empty -> a 0x0 Jacobi matrix), so the solver would
+        # integrate with one node and report plausible-looking garbage.
+        raise ValueError(f"n_quad must be a positive int, got {n_quad!r}")
+    # Jacobi matrix off-diagonal for Legendre: b_k = k / sqrt(4k^2 - 1).
+    k = np.arange(1, n_quad, dtype=np.float64)
+    beta = k / np.sqrt(4.0 * k * k - 1.0)
+    jacobi = np.diag(beta, -1) + np.diag(beta, 1)
+    xi, eigenvectors = np.linalg.eigh(jacobi)
+    # Weight = 2 * (first component of the normalized eigenvector)^2; 2 is the
+    # integral of the Legendre weight function w(x)=1 over [-1, 1].
+    w = 2.0 * (eigenvectors[0, :] ** 2)
+    xi = np.ascontiguousarray(xi)
+    w = np.ascontiguousarray(w)
+    xi.flags.writeable = False
+    w.flags.writeable = False
+    return xi, w
+
+
 def compute_stiffness_matrix(
     plate: OrthotropicPlate,
     n_modes_x: int,
@@ -323,8 +365,8 @@ def compute_stiffness_matrix(
     n_total = n_modes_x * n_modes_y
 
     # Quadrature points and weights (Gauss-Legendre)
-    xi_x, w_x = np.polynomial.legendre.leggauss(n_quad)
-    xi_y, w_y = np.polynomial.legendre.leggauss(n_quad)
+    xi_x, w_x = gauss_legendre(n_quad)
+    xi_y, w_y = gauss_legendre(n_quad)
 
     # Map to physical coordinates [0, a] and [0, b]
     x = 0.5 * plate.a * (xi_x + 1)
@@ -438,8 +480,8 @@ def compute_mass_matrix(
     n_total = n_modes_x * n_modes_y
 
     # Quadrature points
-    xi_x, w_x = np.polynomial.legendre.leggauss(n_quad)
-    xi_y, w_y = np.polynomial.legendre.leggauss(n_quad)
+    xi_x, w_x = gauss_legendre(n_quad)
+    xi_y, w_y = gauss_legendre(n_quad)
 
     x = 0.5 * plate.a * (xi_x + 1)
     y = 0.5 * plate.b * (xi_y + 1)

@@ -36,8 +36,52 @@ jobs:
           file: docker/client/Dockerfile
           load: true
           tags: ${{ env.CLIENT_IMAGE }}
+          # Must satisfy "engines.node" in packages/client/package.json;
+          # docker/client/Dockerfile asserts it from that manifest before
+          # `npm ci`, and the nodeEngineFloor spec keeps this value in sync.
           build-args: |
-            NODE_VERSION=20
+            NODE_VERSION=22
+
+      # packages/client/Dockerfile is what Railway actually builds for the
+      # @luthiers-toolbox/client service (see packages/client/railway.json), with
+      # packages/client as the build CONTEXT rather than the repo root. Until now
+      # nothing in CI built it, so a change that broke only that entry point --
+      # a COPY whose path is valid from the repo root but not from the package
+      # directory, say -- surfaced as a red Railway deploy and nowhere else.
+      # Build it here so that failure mode is reproducible.
+      - name: Build Client image (Railway entry point)
+        uses: docker/build-push-action@v6
+        with:
+          context: packages/client
+          file: packages/client/Dockerfile
+          load: false
+          tags: toolbox/client-railway:ci
+          build-args: |
+            NODE_VERSION=22
+
+      # The remaining two client Dockerfiles. Nothing built these either, so a
+      # change valid for the other two could still break a deploy that uses one
+      # of them -- which is the shape of the failure this PR is chasing. Both
+      # take the repo root as context.
+      - name: Build Client image (railway variant)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile.railway
+          load: false
+          tags: toolbox/client-railwayvariant:ci
+          build-args: |
+            NODE_VERSION=22
+
+      - name: Build Client image (production variant)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/client/Dockerfile.production
+          load: false
+          tags: toolbox/client-production:ci
+          build-args: |
+            NODE_VERSION=22
 
       - name: Launch stack
         run: |

@@ -133,7 +133,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { DiffSkeletonLoader, LayersPanel } from './dual-svg'
 function isValidMoves(moves: any) {
   if (!Array.isArray(moves)) return false;

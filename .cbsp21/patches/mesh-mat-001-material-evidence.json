@@ -1,0 +1,346 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH",
+  "title": "feat(mesh): MESH-MAT-001 fixture-only material evidence + orthotropic research sidecars",
+  "intent": "Implement the amended MESH-MAT-001 rulings against current main: ToolBox-local MaterialEvidenceBundle under app.mesh.materials, ADR-0012 epistemic vocabulary, explicit OrthotropicPlate construction (no from_wood default, no inverse_solver), and research-only prediction/residual sidecars. Do not restore deleted fields/retopo scaffold; do not mutate qa_core or cam_policy; do not accept caller HARDWARE=true.",
+  "change_type": "feat",
+  "behavior_change": "Adds a new research-only material evidence → orthotropic state → Rayleigh–Ritz prediction → residual comparison surface under services/api/app/mesh/materials/. New JSON contracts material_evidence, material_prediction, and prediction_residual are registered. No manufacturing-policy or qa_core behavior changes. Missing E_C fails closed. Assumptions (G_LC, Poisson) serialize as ModelAssumption metadata, not as EpistemicStatus.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "contracts/material_evidence.schema.json",
+      "contracts/material_evidence.schema.sha256",
+      "contracts/material_prediction.schema.json",
+      "contracts/material_prediction.schema.sha256",
+      "contracts/prediction_residual.schema.json",
+      "contracts/prediction_residual.schema.sha256",
+      "contracts/schema_registry.json",
+      "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "services/api/app/mesh/__init__.py",
+      "services/api/app/mesh/materials/",
+      "services/api/tests/fixtures/materials/",
+      "services/api/tests/mesh/materials/",
+      "contracts/",
+      "services/api/app/calculators/plate_design/",
+      "services/api/tests/",
+      "ci/file_size_baseline.json",
+      ".github/workflows/mesh-pipeline-ci.yml",
+      ".github/workflows/smart_guitar_export_gate.yml",
+      "examples/retopo/run.sh"
+    ],
+    "files_expected_to_change": [
+      "contracts/material_evidence.schema.json",
+      "contracts/material_evidence.schema.sha256",
+      "contracts/material_prediction.schema.json",
+      "contracts/material_prediction.schema.sha256",
+      "contracts/prediction_residual.schema.json",
+      "contracts/prediction_residual.schema.sha256",
+      "contracts/schema_registry.json",
+      "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "services/api/app/mesh/__init__.py",
+      "services/api/app/mesh/materials/__init__.py",
+      "services/api/app/mesh/materials/evidence.py",
+      "services/api/app/mesh/materials/orthotropic.py",
+      "services/api/app/mesh/materials/predictor.py",
+      "services/api/app/mesh/materials/residuals.py",
+      "services/api/tests/fixtures/materials/complete_spruce_evidence.json",
+      "services/api/tests/fixtures/materials/incomplete_missing_ec.json",
+      "services/api/tests/fixtures/materials/plate_geometry.json",
+      "services/api/tests/mesh/materials/__init__.py",
+      "services/api/tests/mesh/materials/_helpers.py",
+      "services/api/tests/mesh/materials/test_evidence.py",
+      "services/api/tests/mesh/materials/test_orthotropic.py",
+      "services/api/tests/mesh/materials/test_predictor.py",
+      "services/api/tests/mesh/materials/test_residuals.py",
+      "services/api/tests/mesh/materials/test_schemas_and_boundaries.py",
+      ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "contracts/CHANGELOG.md",
+      "services/api/app/calculators/plate_design/rayleigh_ritz.py",
+      "services/api/tests/conftest.py",
+      "examples/retopo/run.sh"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) New app.mesh.materials package: evidence importer with ADR-0012 EpistemicStatus, HARDWARE=true rejection, SI canonicalization; OrthotropicMaterialState.from_evidence with ModelAssumption serialization and fail-closed missing E_C; predict_plate_modes wrapping solve_rayleigh_ritz with epistemic_status=predicted and research_only=true; compare_modal_prediction residual sidecar. (2) Contracts + schema_registry entries for material_evidence, material_prediction, prediction_residual. (3) Fixture-only spruce evidence + incomplete E_C fixture. (4) 19 unit tests covering import rules, orthotropic assumptions, prediction, residuals, schema validation, and package boundaries (no from_wood, no inverse_solver import, not under app.materials, no qa_core/cam_policy touch). (5) Handoff documenting amended Q1–Q7 rulings. REVIEW HARDENING: (a) evidence.py rejects research_only=false (was silently accepted on a surface defined as research-only) and rejects duplicate properties, including the canonicalization collision where E_L and E_L_Pa both normalize onto E_L_Pa and MaterialEvidenceBundle.get() would silently keep the first; values must be a JSON array, not any Sequence (str qualified). (b) orthotropic.py makes nu_cl Optional and omits it from to_dict() when E_C is absent, instead of publishing a placeholder 0.0 that reads as a known measurement of zero; caller-supplied g_lc_pa/nu_lc/nu_cl overrides are now recorded as ModelAssumption instead of silently bypassing evidence. (c) predictor.py validates positive integer mode counts and documents that boundary_condition applies to both axes. (d) residuals.py matches mode_indices in a first pass across ALL predictions before any frequency fallback (previously an earlier prediction's nearest-frequency guess could consume a measurement that a later prediction named explicitly, making pairing depend on prediction order), emits match_basis so a consumer can tell a labelled pairing from a proximity guess, rejects negative tolerance_hz, validates measured frequencies and mode_indices shape, and the docstring now describes the algorithm actually implemented. (e) material_evidence.schema.json encodes the observed/derived provenance requirement as an if/then so schema-valid payloads cannot fail at import, and pins research_only to const true; prediction/residual schemas are additionalProperties:false at the top level and declare match_basis. All three hashes regenerated. (f) import_material_evidence and compare_modal_prediction were decomposed to clear the complexity ratchet, which this PR was failing at 16 and 21 against a threshold of 15.",
+    "why_not_redundant": "app.materials is the curated tonewood registry; this is specimen-specific research evidence. Mesh Pipeline v0.1.0 fields/retopo were deliberately removed and are not restored. DO-103 Stage 3 HARDWARE provenance is deferred behind an adapter seam."
+  },
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=services/api /usr/bin/python3 -m pytest services/api/tests/mesh/materials/ -q --noconftest -o addopts= -> 19 passed",
+      "Static AST guards: no OrthotropicPlate.from_wood calls; no inverse_solver imports in app.mesh.materials",
+      "jsonschema validation of fixtures + prediction/residual sidecars against new contracts",
+      "pytest tests/mesh/materials/ -q --no-cov -> 48 passed (was 19)",
+      "pytest tests/ -k 'plate or rayleigh or ritz' -q --no-cov -> 43 passed (rayleigh_ritz memoization is numerically identical)",
+      "radon cc -n C app/mesh/materials/ -> max block C(11); import_material_evidence 16->under, compare_modal_prediction 21->8, from_evidence 15->11 (gate threshold >15)",
+      "python scripts/ci/check_contracts_governance.py --base-ref origin/main -> PASS (was CHANGELOG_REQUIRED)",
+      "sha256 of each schema re-derived and asserted by test_contract_hashes_match_schema_bytes",
+      "Hardening pass: `py -3.11 -m pytest tests/mesh/materials/ --no-cov -q` -> 84 passed (was 48). Seven previously-accepted invalid inputs now rejected, verified by direct probe before and after: mode_indices='12' coerced to (1,2); frequency_hz NaN and inf; EvidenceValue inf; density -500; E_L -1e9; q_factor NaN.",
+      "Adjacent-suite regression sweep: `pytest tests/ -k 'calculator or plate or rayleigh or mesh or contract or schema'` -> 398 passed, 1 failed. The failure is tests/test_openapi.py::test_openapi_schema_builds, a known LOCAL env trap (local fastapi 0.121.0 vs the repo's pinned 0.137+ crashes app.openapi()); unrelated to this patch and green on CI. Three further collection errors are a missing local 'defusedxml' dep, also environmental.",
+      "Core CI run 32278117183 disproved the conftest warm-up premise: with the broad `except Exception: pass` narrowed, the warm-up surfaced RuntimeWarning \"gauss_legendre(32) warm-up failed during conftest import: TypeError(... '_NoValueType')\". The warm-up was ALREADY failing silently, and three plate tests were failing because of it. gauss_legendre now uses Golub-Welsch (np.diag + np.linalg.eigh, no reduction sentinel); the obsolete warm-up block is removed from conftest.",
+      "Golub-Welsch validated against np.polynomial.legendre.leggauss for n in {4,8,16,32,64}: max node delta 5.6e-16, max weight delta 2.2e-15, sum(w)=2 to 1e-15. Exactness pinned independently by test for degrees <= 2n-1. `pytest tests/mesh/materials/` -> 99 passed; `pytest -k 'rayleigh or plate_design or plate'` -> 43 passed, 2 skipped.",
+      "CRLF trap corrected: prediction_residual.schema.sha256 was first computed from a Windows CRLF working copy and did not match the LF blob git stores, failing test_contract_hashes_match_schema_bytes on CI. The schema file is normalized to LF (.gitattributes declares `* text=auto`) and the hash recomputed -> 84011a40..., matching the value CI derives.",
+      "Second hardening pass (external file-by-file review): 12 further invalid inputs were accepted and are now rejected, each probed before/after — residuals dict frequency_hz NaN/inf/0/negative and q_factor NaN; _indices_key(bytearray(b'12')) which returned the BYTE VALUES (49, 50) rather than failing; PlateGeometry NaN/inf dimensions (min(...) <= 0 has the NaN blind spot); caller overrides g_lc_pa NaN/inf/non-positive and Poisson nu_LC/nu_CL NaN/inf/out-of-bounds; gauss_legendre(n_quad <= 0) which returned a degenerate 1-point rule. pytest tests/mesh/materials/ -> 149 passed (was 99).",
+      "Three-gate triage. (1) CBSP21 Patch Manifest Gate coverage 93.3% -> MINE: ci/file_size_baseline.json and .github/workflows/mesh-pipeline-ci.yml were undeclared; both now in files[], gate PASSES locally. (2) demo-and-validate -> PRE-EXISTING and NOT fixable here: examples/retopo/run.sh:16 does `from app.retopo.run import run_pipeline` and services/api/app/retopo does not exist anywhere in the repo (only synthetic references in tests/governance/test_namespace_authority_drift.py). The PYTHONPATH fix in 184670a7 cleared the earlier collection error and surfaced this deeper one. (3) Smart Guitar Export Boundary Gate -> PRE-EXISTING (red on main since 2026-06-11, run on 69e9ec59); root cause is that workflow installing no numpy while conftest.py:32 imports it. Fixed in the workflow."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/mesh/materials/evidence.py",
+      "intent": "ToolBox-local MaterialEvidenceBundle importer; ADR-0012 statuses; reject HARDWARE=true",
+      "risk": "low",
+      "behavior_change": "New research ingestion surface only"
+    },
+    {
+      "path": "services/api/app/mesh/materials/orthotropic.py",
+      "intent": "Explicit OrthotropicPlate inputs + ModelAssumption serialization; fail closed without E_C",
+      "risk": "low",
+      "behavior_change": "New research state builder; does not use from_wood()"
+    },
+    {
+      "path": "services/api/app/mesh/materials/predictor.py",
+      "intent": "Rayleigh–Ritz plate prediction wrapper; research_only + predicted epistemic status",
+      "risk": "low",
+      "behavior_change": "New research sidecar producer"
+    },
+    {
+      "path": "services/api/app/mesh/materials/residuals.py",
+      "intent": "Measured-vs-predicted residual report",
+      "risk": "low",
+      "behavior_change": "New research sidecar producer"
+    },
+    {
+      "path": "services/api/app/mesh/materials/__init__.py",
+      "intent": "Public exports for mesh materials research package",
+      "risk": "low",
+      "behavior_change": "Package surface"
+    },
+    {
+      "path": "services/api/app/mesh/__init__.py",
+      "intent": "Document separation from tonewood registry",
+      "risk": "low",
+      "behavior_change": "Docstring only"
+    },
+    {
+      "path": "contracts/material_evidence.schema.json",
+      "intent": "JSON Schema for MaterialEvidenceBundle",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/material_evidence.schema.sha256",
+      "intent": "Integrity hash for material_evidence schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/material_prediction.schema.json",
+      "intent": "JSON Schema for research plate prediction sidecar",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/material_prediction.schema.sha256",
+      "intent": "Integrity hash for material_prediction schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/prediction_residual.schema.json",
+      "intent": "JSON Schema for residual report sidecar",
+      "risk": "low",
+      "behavior_change": "New contract"
+    },
+    {
+      "path": "contracts/prediction_residual.schema.sha256",
+      "intent": "Integrity hash for prediction_residual schema",
+      "risk": "low",
+      "behavior_change": "New hash"
+    },
+    {
+      "path": "contracts/schema_registry.json",
+      "intent": "Register MESH-MAT-001 research schemas",
+      "risk": "low",
+      "behavior_change": "Registry entries added; qa_core/cam_policy untouched"
+    },
+    {
+      "path": "docs/handoffs/MESH_MAT_001_MATERIAL_EVIDENCE_RESEARCH_2026-08-19.md",
+      "intent": "Record amended Q1–Q7 rulings and pipeline",
+      "risk": "low",
+      "behavior_change": "Documentation"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/complete_spruce_evidence.json",
+      "intent": "Complete fixture with E_L/E_C/density + modal peaks",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/incomplete_missing_ec.json",
+      "intent": "Fail-closed fixture missing E_C",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/fixtures/materials/plate_geometry.json",
+      "intent": "Bounded plate geometry for prediction tests",
+      "risk": "low",
+      "behavior_change": "Test fixture"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/__init__.py",
+      "intent": "Test package marker",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/_helpers.py",
+      "intent": "Fixture/schema load helpers",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_evidence.py",
+      "intent": "Evidence import + HARDWARE/epistemic rejection tests",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_orthotropic.py",
+      "intent": "Assumption serialization + missing E_C + from_wood guard",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_predictor.py",
+      "intent": "Prediction sidecar + inverse_solver/thickness guards",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_residuals.py",
+      "intent": "Residual report research_only contract",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_schemas_and_boundaries.py",
+      "intent": "Schema validation + namespace/package boundary guards",
+      "risk": "low",
+      "behavior_change": "Tests"
+    },
+    {
+      "path": ".cbsp21/patches/mesh-mat-001-material-evidence.json",
+      "intent": "CBSP21 covering patch for MESH-MAT-001",
+      "risk": "low",
+      "behavior_change": "Coverage manifest"
+    },
+    {
+      "path": "contracts/CHANGELOG.md",
+      "intent": "Create the contracts changelog and record the three new MESH-MAT-001 contracts.",
+      "scan_targets": [
+        "contracts/CHANGELOG.md"
+      ],
+      "risk": "low",
+      "behavior_change": "Documentation. Required by scripts/ci/check_contracts_governance.py (CHANGELOG_REQUIRED / CHANGELOG_MISSING_MENTIONS), which was failing on this PR because the file did not exist."
+    },
+    {
+      "path": "services/api/app/calculators/plate_design/rayleigh_ritz.py",
+      "intent": "Memoize Gauss-Legendre quadrature nodes behind gauss_legendre().",
+      "scan_targets": [
+        "services/api/app/calculators/plate_design/rayleigh_ritz.py"
+      ],
+      "risk": "low",
+      "behavior_change": "leggauss(n_quad) was called four times per solve with identical arguments (twice each in stiffness and mass assembly); it is now computed once per n_quad and cached. Numerically identical - 43 plate/rayleigh tests unchanged. The cache also pins the computation to the first call in a process, which is what makes the conftest warm-up able to avoid the api-verify _NoValueType failure."
+    },
+    {
+      "path": "services/api/tests/conftest.py",
+      "intent": "Warm the quadrature cache while numpy is still pristine, alongside the existing numpy/ezdxf import-order guard.",
+      "scan_targets": [
+        "services/api/tests/conftest.py"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds a guarded gauss_legendre(32) call at conftest import. Wrapped in try/except so it can never block collection. Extends the guard that already exists in this file for the same class of numpy re-import hazard."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_evidence_domain_validation.py",
+      "intent": "Domain-validation regressions: every case in this file was ACCEPTED by the importer before the hardening commit (NaN/inf values, non-positive density and moduli, NaN q_factor, string-like mode_indices).",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_evidence_domain_validation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_gauss_legendre_exactness.py",
+      "intent": "Pin the quadrature rule by its DEFINING property (an n-point Gauss-Legendre rule integrates polynomials of degree <= 2n-1 exactly) rather than by agreement with numpy's leggauss, so the pin stays meaningful when that reference is itself broken by the numpy sentinel issue.",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_gauss_legendre_exactness.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Ratchet bump for rayleigh_ritz.py (692 -> 734). Single-key edit, NOT `file_size_gate.py --update`: that rewrites every entry and would silently lock in an unrelated improvement (app/services/body_geometry_repair.py 723 < baseline 725) that belongs to nobody in this PR.",
+      "scan_targets": [
+        "ci/file_size_baseline.json"
+      ],
+      "risk": "low",
+      "behavior_change": "None - CI baseline data."
+    },
+    {
+      "path": ".github/workflows/mesh-pipeline-ci.yml",
+      "intent": "Adds PYTHONPATH=. so tests/test_o3d_heal_topology.py can import `services.api.app.mesh.o3d_heal`. Authored by a parallel push (184670a7), declared here so manifest coverage matches the real diff.",
+      "scan_targets": [
+        ".github/workflows/mesh-pipeline-ci.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: changes how pytest resolves imports in that workflow. No application code."
+    },
+    {
+      "path": "services/api/tests/mesh/materials/test_boundary_domain_validation.py",
+      "intent": "Regressions for the three routes that BYPASS the evidence importer (residuals dict path, orthotropic caller overrides, PlateGeometry) plus bytearray mode_indices and non-positive n_quad. Every case was accepted before this commit.",
+      "scan_targets": [
+        "services/api/tests/mesh/materials/test_boundary_domain_validation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "None - test-only."
+    },
+    {
+      "path": ".github/workflows/smart_guitar_export_gate.yml",
+      "intent": "Add numpy to the install list. services/api/tests/conftest.py imports numpy unconditionally at module scope as the numpy/ezdxf import-order guard, so every pytest run under services/api needs it; this workflow installed only pydantic/pytest/fastapi/httpx/pytest-cov. Fixing the environment rather than guarding the import, which would defeat the guard's purpose.",
+      "scan_targets": [
+        ".github/workflows/smart_guitar_export_gate.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: installs one additional package in that workflow. No application code."
+    },
+    {
+      "path": "examples/retopo/run.sh",
+      "intent": "Emit schema-valid scaffold artifacts when app.retopo is absent, so the demo steps and their downstream schema validation can run. Authored by a parallel push (3e0cbc46/b8c1f88a/c944b809); declared here so manifest coverage matches the real diff.",
+      "scan_targets": [
+        "examples/retopo/run.sh"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only demo script. When app.retopo is importable the original path is unchanged; when it is not, the script now writes labelled placeholder artifacts instead of failing."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-19-MESH-MAT-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "Importing OrthotropicPlate still loads app.calculators.plate_design package __init__, which transitively imports inverse_solver. MESH-MAT code does not call inverse_solver; AST guard pins that. A future cleanup could slim plate_design/__init__ lazy exports.",
+      "DO-103 Stage 3 HARDWARE provenance adapter is intentionally deferred; fixture-only path is the authorized parallel track."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Amended rulings Q1–Q7 followed. Mesh Pipeline v0.1.0 is design ancestry only; fields/retopo not restored. Research sidecars only."
+  }
+}

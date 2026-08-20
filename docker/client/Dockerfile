@@ -6,13 +6,22 @@
 # ============================================
 # Stage 1: Build
 # ============================================
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine AS builder
 
 WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY packages/client/package*.json ./
+COPY packages/client/scripts/check-node-engine.mjs ./scripts/
+# --- Node engine floor (do not remove) ---------------------------------------
+# The floor lives in ONE place: "engines.node" in packages/client/package.json.
+# check-node-engine.mjs reads it rather than restating it, so this Dockerfile
+# cannot drift from the manifest or from its three siblings. Runs before
+# `npm ci` so a wrong base image fails HERE with a clear message instead of as
+# an opaque Vite/ESM error minutes later.
+RUN node scripts/check-node-engine.mjs
+
 RUN npm ci --production=false
 
 # Copy source and build

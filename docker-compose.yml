@@ -103,7 +103,7 @@ services:
   # - Geometry Overlay - Design verification
   #
   # Build Args:
-  #   NODE_VERSION: Node.js runtime version (default: 20)
+  #   NODE_VERSION: Node.js runtime version (default: 22)
   #
   # Ports:
   #   ${CLIENT_PORT}:8080 - Web UI endpoint (default: 8080:8080)
@@ -125,8 +125,10 @@ services:
       context: .
       dockerfile: docker/client/Dockerfile
       args:
-        # Node.js version for build (20+ required for Vite 5)
-        NODE_VERSION: ${NODE_VERSION:-20}
+        # Node.js major for the client build. Must satisfy "engines.node" in
+        # packages/client/package.json, which the Dockerfile asserts from that
+        # manifest before `npm ci`.
+        NODE_VERSION: ${NODE_VERSION:-22}
     image: ${CLIENT_IMAGE:-toolbox/client:local}
     container_name: ${COMPOSE_PROJECT_NAME:-toolbox}_client
     depends_on:
