@@ -3,7 +3,17 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
-    "watchPatterns": ["src/**", "*.ts", "*.vue", "*.json", "Dockerfile"]
+    "watchPatterns": [
+      "src/**",
+      "*.ts",
+      "*.vue",
+      "*.json",
+      "Dockerfile",
+      "scripts/**",
+      "package-lock.json",
+      "start.sh",
+      ".nvmrc"
+    ]
   },
   "deploy": {
     "numReplicas": 1,

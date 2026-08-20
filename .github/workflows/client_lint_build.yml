@@ -29,9 +29,17 @@ jobs:
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
         with:
+          # Must satisfy "engines.node" in packages/client/package.json. This
+          # job runs npm outside Docker, so nothing asserts the floor for it at
+          # runtime — the nodeEngineFloor spec below is what keeps it honest.
           node-version: 22
           cache: npm
           cache-dependency-path: packages/client/package-lock.json
+
+      - name: Assert Node engine floor
+        # Non-container path: Dockerfiles assert via check-node-engine.mjs;
+        # this job must assert the same floor before npm ci / vite build.
+        run: npm run check:node
 
       - name: Install dependencies
         run: |

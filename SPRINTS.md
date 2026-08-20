@@ -921,6 +921,10 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-005 | Dependabot intake has no `groups:` — runtime/types pairs arrive as separate PRs | Process / deps | QUEUED | 2026-08-18 |
 | MAINT-DEFER-006 | Client 3D components (`three` consumers) have zero automated coverage | Client / test coverage | QUEUED | 2026-08-18 |
 | MAINT-DEFER-007 | No client bundle-size budget — growth accrues unobserved | Client / build hygiene | QUEUED | 2026-08-18 |
+| MAINT-DEFER-008 | GitHub Actions runtime deprecation (Node 20 actions force-run on Node 24) | Process / CI infra | DEFERRED | 2026-08-17 |
+| MAINT-DEFER-009 | Client ESLint regression ratchet (companion to the type-check ratchet) | CI / client gates | QUEUED | 2026-08-18 |
+| MAINT-DEFER-010 | Orphaned `packages/client/src/views/cam/headstock/` — 42% of client type errors | Cleanup / client | DEFERRED | 2026-08-18 |
+| MAINT-DEFER-011 | `.gitignore` `/ci/` swallows newly added CI data files | Process / repo hygiene | QUEUED | 2026-08-18 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1028,6 +1032,95 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 
 **Alert witness (2026-08-11):** open alerts **65 → 32**; `axios` + `postcss` → **0**. Tier-1 witnessed effective. Remaining: 9 archive (owner dismissal) · 4 Tranche C · 1 out-of-scope Python · 18 Tranche B, only `ws` runtime-scope. Detail: residual matrix §8.
 
+**R-11 scope extension — container lane (witnessed 2026-08-17, PR #279) — ⚠️ SUPERSEDED 2026-08-18, see the RESOLUTION note that follows; retained as the historical state:** R-11 records the
+constraint as scoped to `api-verify`. It is broader. The same withheld `SG_SPEC_TOKEN` fails
+`docker/api/Dockerfile` at its sg-spec install step, and that image is built **first** in
+`containers.yml`, `core_ci.yml`, `proxy_parity.yml` and `proxy_adaptive.yml` — so the client
+image step never executes. **Consequence not previously recorded: a Dependabot PR touching
+only `packages/client` has zero container-path coverage.** `lint-build` (which needs no
+secret) is the only client witness that runs. Witness: PR #279 run `32015893727` job
+`95345157189` — `ERROR: SG_SPEC_TOKEN required to install declared dependency sg-spec` at
+step 8/13 of the API image, `Containers (Build + Smoke)` red, client image never reached;
+`lint-build` green in 3m19s; both Railway previews green. Corollary for triage: on any
+Dependabot PR, `mergeStateStatus: UNSTABLE` and the red container checks are **structural
+and carry no information about the bump** — do not read them as a verdict on its content.
+
+**✅ RESOLUTION — R-11 remedied by the Dependabot secret store (witnessed 2026-08-18):**
+The blockage was **not** terminal, and both the addendum above and R-11 itself overstated it.
+GitHub withholds *repository Actions* secrets from Dependabot-authored PRs — that premise was
+correct — but it exposes a **separate Dependabot secret store**, which R-11 never named.
+`SG_SPEC_TOKEN` was added there on **2026-08-18T04:22:13Z** (`gh api repos/.../dependabot/secrets`
+→ `total_count: 1`). Re-running every failed run on PR #279 under the new condition:
+**all 25 runs on the branch green, PR `mergeStateStatus` UNSTABLE → CLEAN, 35 pass / 1 skip /
+0 fail.** The decisive witness is `Containers (Build + Smoke)` run `32015898628`, where the
+previously unreachable steps now pass in order — step 4 `Build API image` ✅, step 5
+**`Build Client image` ✅**, step 10 **`Smoke - Client container` ✅**. A Dependabot PR touching
+`packages/client` therefore now has **full container-path coverage**, and the "structural,
+carries no information" corollary above **no longer holds** — red checks on a Dependabot PR
+are once again a real signal to read.
+
+**Consequences left OPEN for the owner (deliberately not actioned here):** R-11's disposition
+in `docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md` §10 is still recorded as
+**ACCEPTED CONSTRAINT** with the claim *"merging any Dependabot PR directly can never be
+CI-verified"* — that claim is now **falsified**, but flipping an accepted constraint to
+RESOLVED is a DEP-SEC-001 program decision. Downstream, Tranche B's *"one consolidated PR is
+**required**, not preferred"* was derived **solely** from R-11, so that derivation collapses;
+whether the requirement should actually relax is a separate judgement (there may be
+independent reasons to batch dependency work) and is **not** settled by this witness.
+
+**Intake posture now unthrottled — 5 open Dependabot PRs (2026-08-18):** #279 (`plugin-vue`
+5→6), #280 (`typescript` 5.9.3→7.0.2), #281 (`@types/node` 25→26), #282
+(`@typescript-eslint/eslint-plugin` 6→8), #283 (`eslint` 8.57.1→10.8.1). All are now
+CI-verifiable, i.e. they will start *looking* mergeable. Note the gap this exposes:
+`client_lint_build.yml` runs `type-check` with `continue-on-error: true` against ~400 known
+pre-existing type errors, so a `typescript` 5→7 major would **not** be caught by the lane
+that should catch it. Decide intake posture before green checks are mistaken for authorization.
+
+**#279 classification (2026-08-17, updated 2026-08-18):** `@vitejs/plugin-vue` 5.2.4 → 6.0.8
+is a **client major toolchain bump**, the same family as R-04 (`vite` 5→6) and R-05 (`vitest`
+2→3). Per the matrix it is **Tranche C**, trigger *BR-021 resolved or explicit manual
+build-witness authorization*. **This classification is UNCHANGED by the 2026-08-18
+resolution** — Tranche C rests on major-toolchain-migration risk (BR-021), not on CI
+verifiability; the two are independent axes. What the secret-store fix removed is the
+*verification* obstacle, not the *authorization* one. Neither compatibility nor CI coverage is
+now an open question (35/35 green, container + smoke included); the open question is solely
+**tranche authorization**. Whether a green container+smoke witness satisfies the trigger's
+"explicit manual build-witness authorization" is an owner reading, not an agent inference. Toolchain-floor
+prerequisite shipped separately: `chore/node-engine-floor-20.19` (`cbe39b4a`) declares
+`engines.node = ^20.19.0 || >=22.12.0` and asserts it on all five client build paths.
+
+**#290 `typescript` 5.9.3 → 6.0.3 — EVIDENCE ONLY, not a disposition (2026-08-18):** the
+per-PR disposition docs that landed on `main` this cycle
+(`docs/ci/DEP_SEC_PR280_TYPESCRIPT7_DISPOSITION_2026-08-18.md` and siblings) **blocked TS7 and
+deliberately kept the `typescript@6` lane open** — `.github/dependabot.yml` ignores
+`typescript` only at `>=7.0.0`, and PR #284 dropped `baseUrl` specifically to clear the TS6
+config blocker. Landing criterion 4 is *"prefer `typescript@6.0.x` first"*. #290 is therefore
+the sanctioned next step, **not** the same hard-blocked class as #280. No disposition doc
+exists for #290 yet.
+
+*Correction to the earlier note in this record:* #290 was previously characterised here as
+plain Tranche C with "green CI is not authorization". The authorization point stands — landing
+still needs an explicit Dev Order — but lumping it with the blocked majors was wrong; the TS6
+path is prepared and intended.
+
+**Measured evidence toward landing criteria 1–3** (clean worktree at `main a48e9002`, against
+the *production* toolchain versions the #280 doc names — `vue-tsc@2.2.12` →
+`@volar/typescript@2.4.15`, `@typescript-eslint/*@6.21.0`, `eslint@8.57.x`):
+
+| Criterion | Result under `typescript@6.0.3` |
+|-----------|--------------------------------|
+| 1. `vue-tsc` / `@volar/typescript` support the TS major's `exports` | **PASS** — ran clean, **no** `ERR_PACKAGE_PATH_NOT_EXPORTED`. `vue-tsc --noEmit` emitted **150 errors on TS 5.9.3 and 150 on TS 6.0.3, a byte-identical set** (0 new, 0 fixed) |
+| 2. `@typescript-eslint` + `eslint` compatible | **PASS** — 34 errors / 7683 warnings, identical to baseline; no plugin-load failure, no `Intrinsic`/`ts-api-utils` crash. Note this config is **not type-aware** (`.eslintrc.cjs` sets no `parserOptions.project`), so the TS version structurally cannot reach lint |
+| 3. green **without** relying on "soft-fail means pass" | **PARTIAL** — the type-check half is addressed by the ratchet on branch `ci/client-type-check-ratchet`; the lint half is **MAINT-DEFER-009**, still `continue-on-error` |
+
+The #280 doc's caution that *"peer range is insufficient evidence of compatibility"* is
+respected here: this is runtime execution against the real toolchain, not a peer-range read.
+Criterion 3 is the only one still open, and MAINT-DEFER-009 closes it.
+
+**Owner action:** decide #290 on this evidence. Drafting
+`docs/ci/DEP_SEC_PR290_TYPESCRIPT6_DISPOSITION_2026-08-18.md` is a disposition and therefore
+an owner act — deliberately not authored here.
+
 **Future implementation (≤2 tranches — no recursive PR creation during adjudication):**
 - **Tranche B** — residual security remediation + authorized version hygiene from #254–#258 when explicitly ordered. **Must ship as one consolidated PR** — Dependabot-authored PRs cannot pass `api-verify` (no `SG_SPEC_TOKEN`), so they cannot be CI-verified before merge. See matrix R-11.
 - **Tranche C** — major toolchain: `vitest` 2→3 → witness → `vite` 5→6. **Restore trigger:** BR-021 resolution **or** explicit manual build-witness authorization. Do not silently bypass BR-021.
@@ -1087,6 +1180,157 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 **Path:** HYG — build hygiene; not on the CAM MVP cut path.
 
 ---
+
+### MAINT-DEFER-008 — GitHub Actions runtime deprecation (Node 20 → Node 24)
+
+**Status:** DEFERRED  
+**last_verified:** 2026-08-17  
+**Category:** Process / CI infra  
+**Priority:** LOW now, becomes BLOCKING when GitHub removes the compatibility shim  
+
+**Why deferred:** Nothing is broken today. GitHub is **force-running** Node-20-runtime actions
+on Node 24 and emitting a warning; the shim keeps every workflow green. The work is a
+mechanical version bump with no product value until the shim is withdrawn, and bumping 174
+pins across 54 workflow files is a large blast radius to absorb while CI-RED-016 and
+CI-RED-021 are open.
+
+**Witness (2026-08-17, PR #279 run `32015893727` job `95345157189`):**
+
+```
+Node.js 20 is deprecated. The following actions target Node.js 20 but are being
+forced to run on Node.js 24: actions/checkout@v4, docker/build-push-action@v6.
+```
+
+Reference: <https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/>
+
+**Scope (measured, not estimated — `.github/workflows/`, 54 files, 174 `uses:` pins):**
+
+| Pin | Occurrences | Node-20 runtime? |
+|-----|-------------|------------------|
+| `actions/checkout@v4` | 63 | **witnessed yes** (named in the warning) |
+| `actions/setup-python@v5` | 50 | not witnessed — confirm before bumping |
+| `actions/upload-artifact@v4` | 23 | not witnessed — confirm |
+| `docker/build-push-action@v6` | 12 | **witnessed yes** (named in the warning) |
+| all 14 other distinct pins (`docker/setup-buildx@v3`, `docker/login@v3`, `docker/metadata@v5`, `github-script@v7`, `cache@v4`, `download-artifact@v4`, `setup-node@v4`, the three pages actions, `attest-build-provenance@v1`, 3 third-party) | 26 | not witnessed — confirm |
+
+**53 of 54 workflow files** carry at least one of the two witnessed pins. Only the two named
+in the warning are confirmed Node-20; the rest are **candidates to verify**, not established
+findings — do not bump them on the assumption that a `@v4` implies a Node 20 runtime.
+
+**Restore trigger (any one):**
+- GitHub announces a removal date for the Node 24 force-run shim, **or**
+- a workflow actually fails with a runtime error attributable to the action runtime, **or**
+- an unrelated sprint is already editing a given workflow — bump that file's pins opportunistically.
+
+**Done-condition:** every `uses:` pin in `.github/workflows/` resolves to an action release
+whose `runs.using` is `node24` or a container/composite action, and a full CI cycle on `main`
+emits no Node-runtime deprecation warning.
+
+**Sequencing note:** do **not** open this as one 53-file PR while CI-RED-021 is OPEN — with a
+single collaborator and `Fence Checks (Blocking)` as the only required check, a sweep that
+touches every workflow has no meaningful review gate. Prefer per-lane batches, or hold until
+CI-RED-021's second-owner prerequisite lands.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+### MAINT-DEFER-009 — Client ESLint regression ratchet
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-18  
+**Category:** CI / client gates  
+**Companion to:** the type-check ratchet on branch `ci/client-type-check-ratchet`
+(`scripts/ci/check_client_type_check_ratchet.py` + `scripts/ci/client_type_check_baseline.json`)
+
+**Why this exists:** `client_lint_build.yml` runs **both** `type-check` and `lint` with
+`continue-on-error: true`. The type-check half now has a real regression gate. The lint half
+does not, so ESLint findings still ride green indefinitely.
+
+**Measured on main `a48e9002` (not estimated):** `npx eslint . --ext .ts,.vue
+--max-warnings=1200` → **34 errors / 7683 warnings**. Note the threshold is already
+meaningless: 7683 warnings against a 1200 ceiling means the step fails on warning count
+alone every run, which is precisely why it was made non-gating.
+
+**Why deferred rather than shipped alongside:** the type-check ratchet was validated
+end-to-end (pass / regression / missing-log / empty-log / garbage-log / clean-run, plus the
+exact workflow command block). A second gate shipped without that validation would weaken
+confidence in the first. The work is small — the same script pattern applies.
+
+**Restore trigger:** any of — the type-check ratchet merges and holds for a cycle; or a lint
+regression lands unnoticed; or the coordinated TS/ESLint migration (MAINT-DEFER-004 landing
+criterion 3) needs lint to be a real witness.
+
+**Done-condition:** an errors-only ESLint ceiling is committed and enforced by a non
+`continue-on-error` step; the warning ceiling is either re-based to reality or explicitly
+declared advisory. **Ratchet errors and warnings separately** — folding 7683 warnings into
+one number hides error regressions behind warning noise.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+### MAINT-DEFER-010 — Orphaned `packages/client/src/views/cam/headstock/`
+
+**Status:** DEFERRED — owner decision required  
+**last_verified:** 2026-08-18  
+**Category:** Cleanup / client
+
+**Finding:** the directory is **unreachable dead code**. Four `.vue` files
+(`ConfiguratorView`, `ImportView`, `ParametricView`, `WorkspaceView`) with **zero inbound
+imports** from anywhere outside the directory, absent from the router (`router/index.ts`'s
+`WorkspaceView` reference resolves to `CamWorkspaceView.vue`, a different file), and
+importing **11 modules that do not exist on disk** (`@/stores/headstock`, `@/types/headstock`,
+`@/composables/useCamSpec`, `@/composables/drawCamOverlay`, `@/components/CamSpecPanel.vue`,
+and 6 more). They could never have executed.
+
+**Why `vite build` passes anyway:** the files are not in the module graph, so Vite never
+resolves them. `vue-tsc` checks them regardless, because `tsconfig.json` `include` covers all
+of `src/**` with **no `exclude`**. That split is the whole reason build is green while
+type-check is not.
+
+**Cost:** **63 of the 150** client type errors (**42%**) originate here — the single largest
+cluster, and pure noise.
+
+**Why deferred:** source deletion, not a config change. `FEATURE_PARITY_MIGRATION_POLICY`
+treats "archive without audit" as an anti-pattern, and the evidence tier here is
+*unreachable* (strong) rather than grep-absence (weak) — but the call is the owner's.
+
+**Restore trigger:** owner confirms the directory is not a parked
+work-in-progress being kept for reference.
+
+**Done-condition:** directory removed (or excluded with a recorded reason), then
+`scripts/ci/check_client_type_check_ratchet.py --write-baseline` re-run — the ceiling should
+fall from 150 to roughly **87**. The baseline file records this expectation inline, so the
+follow-up is mechanical.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
+
+### MAINT-DEFER-011 — `.gitignore` `/ci/` swallows newly added CI data files
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-18  
+**Category:** Process / repo hygiene  
+**Priority:** LOW severity, HIGH surprise — it fails silently
+
+**Finding:** `.gitignore` line 237 is `/ci/`, with negations only for `ci/rmos/` and
+`ci/rmos/**`. Everything else under `ci/` — `file_size_baseline.json`,
+`router_count_baseline.json`, `file_size_gate.py`, `ci/ai_sandbox/**` — is tracked **only
+because git ignore rules do not apply to already-tracked files**. They predate the rule.
+
+**Consequence:** any **new** file added under `ci/` is silently untracked. `git add` refuses
+it with a hint that is easy to `-f` past; a regenerated baseline written to a new filename
+would simply never reach CI, and the gate consuming it would look fine locally while being
+absent on the runner. Hit during the type-check ratchet work — the new baseline was
+relocated to `scripts/ci/` rather than force-added.
+
+**Why deferred:** the fix is a one-line `.gitignore` change, but choosing *which* fix is a
+judgement: negate the data files (`!ci/*.json`), negate the whole tree and rely on explicit
+ignores, or leave it and standardise new CI data under `scripts/ci/`. Whichever is chosen
+should be applied once, deliberately, not mid-way through an unrelated PR.
+
+**Restore trigger:** next time anything needs to add a file under `ci/`.
+
+**Done-condition:** either `ci/` no longer swallows new tracked files, or a short note in
+`docs/` states that `scripts/ci/` is the home for new CI data and `ci/` is legacy-only.
+
+**Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
 
 ### CI-RED-001 — sg-spec clone auth (api-verify dead)
 

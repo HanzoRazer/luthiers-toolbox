@@ -1,0 +1,278 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "NODE_ENGINE_FLOOR_CLIENT",
+  "title": "chore(client): declare and assert the Node engine floor across every client build path; register the two review findings in SPRINTS.md",
+  "intent": "PR #279 raises @vitejs/plugin-vue to 6.0.8, whose declared engine is ^20.19.0 || >=22.12.0 (up from ^18.0.0 || >=20.0.0). The repo had no machine-readable Node floor anywhere: packages/client/package.json had no engines field, and there is no .nvmrc, .node-version, or .npmrc. Every client build path resolved Node from a bare major (setup-node 20, ARG NODE_VERSION=20), which satisfies the new floor today only because floating tags resolve upward. This patch declares the floor once and asserts it at every build entry point, so a downward change or a stale cached base image fails with a named error instead of an opaque Vite/ESM failure. It does not change the resolved Node version on any current build path.",
+  "change_type": "chore",
+  "behavior_change": "build-time-guard",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "packages/client/",
+      "docker/client/",
+      ".github/workflows/",
+      ".cbsp21/patches/",
+      "SPRINTS.md",
+      "packages/client/scripts/",
+      "packages/client/src/testing/",
+      ".github/",
+      "packages/client/railway.toml",
+      "packages/client/README.md",
+      "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "railway.toml"
+    ],
+    "files_expected_to_change": [
+      "packages/client/package.json",
+      "packages/client/.nvmrc",
+      "packages/client/Dockerfile",
+      "docker/client/Dockerfile",
+      "docker/client/Dockerfile.production",
+      "docker/client/Dockerfile.railway",
+      ".github/workflows/client_lint_build.yml",
+      ".github/workflows/containers.yml",
+      "docker-compose.yml",
+      "docker-compose.production.yml",
+      ".env.example",
+      ".cbsp21/patches/node-engine-floor-client.json",
+      "SPRINTS.md",
+      "packages/client/scripts/check-node-engine.mjs",
+      "packages/client/src/testing/__tests__/nodeEngineFloor.spec.ts",
+      ".github/dependabot.yml",
+      "packages/client/railway.json",
+      "packages/client/railway.toml",
+      "packages/client/README.md",
+      "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "railway.toml"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json gains engines.node = '^20.19.0 || >=22.12.0', the single declared source of truth, mirroring @vitejs/plugin-vue 6.x. packages/client/.nvmrc (new) pins 20.19.0 for local shells. The four client Dockerfiles (docker/client/Dockerfile, .production, .railway, and packages/client/Dockerfile - the last of which is live via packages/client/railway.json dockerfilePath) each gain one RUN node -e assertion immediately after the builder FROM, exiting 1 with a named message when the base image is below the floor. client_lint_build.yml changes node-version from the bare major 20 to the range '^20.19.0' - still resolving the newest 20.x so security patches land, but now failing at setup-node rather than mid-build if the floor is ever unmet. containers.yml, docker-compose.yml, docker-compose.production.yml and .env.example keep NODE_VERSION=20 (which floats above the floor) and gain comments naming the floor and its source; docker-compose.yml's stale '20+ required for Vite 5' comment is corrected. SPRINTS.md: MAINT-DEFER-004 gains two dated addenda - an R-11 scope extension recording that the withheld SG_SPEC_TOKEN also kills the container lane (API image builds first in containers/core_ci/proxy_parity/proxy_adaptive, so the client image is never reached and a client-only Dependabot PR has zero container coverage), and a classification of #279 itself as a Tranche C client major toolchain bump requiring consolidated-PR handling. New MAINT-DEFER-005 registers the GitHub Actions Node-20 runtime deprecation with a measured pin inventory (174 pins / 54 workflow files), restore trigger, done-condition, and a sequencing note against a 53-file sweep while CI-RED-021 is OPEN. Header Last updated 2026-08-10 -> 2026-08-17. REVIEW HARDENING: (a) the four inline `node -e` guards are replaced by one scripts/check-node-engine.mjs that READS engines.node instead of restating it, so the Dockerfiles cannot drift from the manifest or from each other; each now COPYs the script next to package.json and runs it before `npm ci`, preserving the fail-fast property. (b) The declared floor was wrong for the tree it describes: @supabase/supabase-js@2.112.3 and its five sibling packages are non-optional PRODUCTION dependencies declaring engines.node >=22.0.0, so the previous floor's ^20.19.0 lane admitted a runtime those dependencies reject - and containers.yml, both compose files, .env.example and all four Dockerfile ARG defaults sat on exactly that lane. The floor is now >=22.12.0 and every NODE_VERSION default moves 20 -> 22. (c) The rationale repeated in all those comments, 'required by @vitejs/plugin-vue 6.x', was false: the installed plugin-vue is 5.2.4 with engines ^18.0.0 || >=20.0.0. Comments now point at the manifest rather than restating a range or a reason. (d) A new spec asserts the floor against the lockfile and against every Node pin that no runtime guard covers. FOLLOW-UP REVIEW: (a) satisfiesClause implemented real caret semantics - ^0.2.3 is >=0.2.3 <0.3.0, not 'any 0.x'. Unreachable for a Node engine range, but the helper is exported and unit-tested, so it implements the rule rather than the convenient approximation. (b) The drift spec stripped YAML comments before scanning, so a commented-out `# node-version: 18` is dead text rather than something the gate reads. (c) The dependency scan previously skipped any engines.node range that was not a tidy single-lane '>=x' - 210 checked, 11 skipped - which quietly narrowed 'every dependency' into 'every dependency with convenient syntax'. It now derives the lowest version any lane could accept and skips only genuinely unconstrained ranges; the test name says what it does. (d) containers.yml now builds packages/client/Dockerfile with packages/client as the context, which is the entry point Railway actually uses and which no CI job covered. (e) railway.json watchPatterns gained scripts/** and package-lock.json. (f) The stale yourorg/ OCI source label in Dockerfile.production corrected. (g) The script header now records why npm engine-strict is not enabled.",
+    "why_not_redundant": "No existing mechanism encodes a Node floor for this workspace - no engines field, no .nvmrc, no .npmrc, no CI assertion - so nothing today would catch a regression to Node 18 or 20.9 except an opaque downstream build failure. The Dockerfile assertion is not redundant with the workflow change: four of the five client-image call sites (core_ci.yml:181, proxy_parity.yml:44, proxy_adaptive.yml:43, publish-images.yml:159) pass no NODE_VERSION build-arg at all and silently inherit the Dockerfile ARG default, so a workflow-only fix would leave them uncovered. The ledger additions are not redundant with R-11: R-11 scopes the constraint to api-verify only and does not record the container-lane consequence, and no repo document tracked the Actions runtime deprecation at all (grep over SPRINTS.md and docs/ci/ returned nothing)."
+  },
+  "verification": {
+    "commands_run": [
+      "node -e <guard expression> over 18.20.8 / 20.9.0 / 20.18.3 / 20.19.0 / 20.20.1 / 21.7.3 / 22.11.0 / 22.12.0 / 24.11.0 -> FAIL,FAIL,FAIL,PASS,PASS,FAIL,FAIL,PASS,PASS - exactly matches ^20.19.0 || >=22.12.0",
+      "sh -c with the RUN payload extracted verbatim from docker/client/Dockerfile -> exit 0 on Node 24.11.0; confirms the quoting survives Dockerfile RUN shell form",
+      "npm ci --dry-run --no-audit --no-fund in packages/client -> added 459 packages, exit 0, no EBADENGINE",
+      "json.load(packages/client/package.json) -> OK, engines == {'node': '^20.19.0 || >=22.12.0'}",
+      "yaml.safe_load over client_lint_build.yml, containers.yml, docker-compose.yml, docker-compose.production.yml -> all OK",
+      "assertion that no build-args block-scalar line starts with '#' or lacks '=' -> PASS (an earlier draft leaked a comment into containers.yml build-args; corrected before commit)",
+      "python scripts/check_protected_paths.py -> exit 0",
+      "docker build NOT run - the local Docker daemon is not running; the Dockerfile assertion is verified by executing its exact payload through sh -c, not by an image build",
+      "SPRINTS.md ledger grounding: read MAINT-DEFER-004 and docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md R-11/R-04/R-05 before writing, to avoid minting a duplicate id; max CI-RED id repo-wide = 024 (checked, not assumed); action pin inventory counted from .github/workflows/ (63 checkout@v4, 50 setup-python@v5, 23 upload-artifact@v4, 12 build-push-action@v6, 26 other = 174 across 54 files; 53 files carry a witnessed pin)",
+      "npx vitest run src/testing/__tests__/nodeEngineFloor.spec.ts -> 6 passed",
+      "mutation: restored the previous floor '^20.19.0 || >=22.12.0' -> the dependency assertion FAILS naming all six @supabase packages ('needs node >=22.0.0, but the declared floor admits 20.19.0')",
+      "npx vitest run (full client suite) -> 43 files passed / 1 skipped, 765 passed",
+      "npx vue-tsc --noEmit -> 156 diagnostics, identical to the branch baseline measured with these changes stashed (zero new)",
+      "npx eslint on both new files -> clean",
+      "node scripts/check-node-engine.mjs -> passes; negative controls: floor >=99.0.0 exits 1, manifest without engines.node exits 1, unsupported clause '~22' throws rather than passing",
+      "parser matrix: >=22.12.0 accepts 22.12.0/24.0.0 and rejects 22.11.9/20.19.9; ^20.19.0 accepts 20.19.0 and rejects 21.0.0",
+      "caret matrix: ^1.2.3 accepts 1.2.3/1.9.9 rejects 2.0.0/1.2.2; ^0.2.3 accepts 0.2.3/0.2.9 rejects 0.3.0; ^0.0.3 accepts 0.0.3 rejects 0.0.4",
+      "mutation: inserted '# node-version: 18' above a live pin -> spec still 6 passed (comment is ignored, not read)",
+      "mutation: restored the previous floor -> the broadened dependency scan still fails on the @supabase family",
+      "measured skip rate of the OLD dependency scan: 210 checked / 11 skipped (6x '*', 5x '>=16 || 14 >=14.17')",
+      "npx vitest run (full client suite) -> 771 passed",
+      "npx vue-tsc --noEmit -> 156, unchanged from the branch baseline",
+      "npm run check:node -> Node 22.14.0 satisfies >=22.12.0",
+      "vitest nodeEngineFloor.spec.ts -> 6 passed",
+      "Local npm run build -> success (rules out app module graph as Railway cause)",
+      "Railway bisect: NODE_VERSION=22 alpine/bookworm-slim FAIL; NODE_VERSION=20 SUCCESS",
+      "Railway bot @luthiers-toolbox/client Success on 87dd6cc7",
+      "vitest nodeEngineFloor.spec.ts -> 6 passed after dual-lane floor + Railway exception",
+      "npm run check:node in client_lint_build.yml added"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declare the Node engine floor as the single machine-readable source of truth.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds an engines field. With npm's default engine-strict=false this warns (EBADENGINE) rather than failing; hard enforcement comes from the Dockerfile assertion and the setup-node range."
+    },
+    {
+      "path": "packages/client/.nvmrc",
+      "intent": "Give contributors and nvm a local signal for the floor.",
+      "scan_targets": [
+        "packages/client/.nvmrc"
+      ],
+      "risk": "low",
+      "behavior_change": "New file; not read by CI or any Docker build."
+    },
+    {
+      "path": "docker/client/Dockerfile",
+      "intent": "Assert the floor at the CI and docker-compose client image entry point.",
+      "scan_targets": [
+        "docker/client/Dockerfile"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor. No effect on current builds - node:20-alpine resolves above the floor."
+    },
+    {
+      "path": "docker/client/Dockerfile.production",
+      "intent": "Assert the floor on the published-image path (publish-images.yml, docker-compose.production.yml).",
+      "scan_targets": [
+        "docker/client/Dockerfile.production"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": "docker/client/Dockerfile.railway",
+      "intent": "Assert the floor on the Railway client path.",
+      "scan_targets": [
+        "docker/client/Dockerfile.railway"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": "packages/client/Dockerfile",
+      "intent": "Assert the floor on the live Railway client service build (referenced by packages/client/railway.json dockerfilePath).",
+      "scan_targets": [
+        "packages/client/Dockerfile"
+      ],
+      "risk": "low",
+      "behavior_change": "Adds one RUN layer that exits 1 below the floor."
+    },
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Resolve Node from an explicit floor range instead of a bare major.",
+      "scan_targets": [
+        ".github/workflows/client_lint_build.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "node-version 20 -> '^20.19.0'. Resolves the same newest-20.x release today; fails at setup-node instead of mid-build if the floor is ever unmet."
+    },
+    {
+      "path": ".github/workflows/containers.yml",
+      "intent": "Document why the NODE_VERSION build-arg satisfies the floor.",
+      "scan_targets": [
+        ".github/workflows/containers.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none - YAML comments only; the build-args block scalar is byte-identical."
+    },
+    {
+      "path": "docker-compose.yml",
+      "intent": "Correct the stale '20+ required for Vite 5' comment to name the real floor.",
+      "scan_targets": [
+        "docker-compose.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none - comments only."
+    },
+    {
+      "path": "docker-compose.production.yml",
+      "intent": "Name the floor beside the NODE_VERSION build arg.",
+      "scan_targets": [
+        "docker-compose.production.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none - comments only."
+    },
+    {
+      "path": ".env.example",
+      "intent": "Name the floor beside the NODE_VERSION build arg for local operators.",
+      "scan_targets": [
+        ".env.example"
+      ],
+      "risk": "low",
+      "behavior_change": "none - comments only; NODE_VERSION=20 is unchanged."
+    },
+    {
+      "path": ".cbsp21/patches/node-engine-floor-client.json",
+      "intent": "Per-PR CBSP21 patch manifest for this change set.",
+      "scan_targets": [
+        ".cbsp21/patches/node-engine-floor-client.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - manifest only."
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register the two PR #279 review findings in the parking lot: extend MAINT-DEFER-004 / R-11 with the container-lane scope and the #279 Tranche-C classification, and open MAINT-DEFER-005 for GitHub Actions runtime deprecation.",
+      "scan_targets": [
+        "SPRINTS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - ledger only. No CI-RED id is minted: the SG_SPEC_TOKEN finding is an extension of the existing ACCEPTED CONSTRAINT R-11, not a new defect, so it is recorded under MAINT-DEFER-004 rather than duplicated as a new entry."
+    },
+    {
+      "path": "packages/client/scripts/check-node-engine.mjs",
+      "intent": "Single derived engine-floor guard, replacing four hand-written inline copies.",
+      "scan_targets": [
+        "packages/client/scripts/check-node-engine.mjs"
+      ],
+      "risk": "low",
+      "behavior_change": "Reads engines.node from packages/client/package.json and validates process.versions.node against it. Fails closed on an unreadable manifest, an absent engines.node, or a semver clause form it does not implement - it throws rather than guessing, because a silently mis-parsed range is worse than no check. Also exposed as `npm run check:node`."
+    },
+    {
+      "path": "packages/client/src/testing/__tests__/nodeEngineFloor.spec.ts",
+      "intent": "Keep every unguarded Node pin, and the declared floor itself, consistent with the dependency tree.",
+      "scan_targets": [
+        "packages/client/src/testing/__tests__/nodeEngineFloor.spec.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "Six assertions: the floor is declared; no non-optional dependency requires more Node than the floor admits; .nvmrc, every NODE_VERSION default and every workflow node-version can satisfy it; and no Dockerfile restates the range by hand. The dependency assertion reproduces the defect this change fixes - against the previous floor it fails with the six @supabase packages."
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "intent": "Drop a now-stale restatement of the old floor from a comment.",
+      "scan_targets": [
+        ".github/dependabot.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "Comment only; no rule change."
+    },
+    {
+      "path": "packages/client/railway.json",
+      "intent": "Let a change to the guard script or the lockfile trigger a client rebuild.",
+      "scan_targets": [
+        "packages/client/railway.json"
+      ],
+      "risk": "low",
+      "behavior_change": "watchPatterns gains scripts/** and package-lock.json. Both are now part of the client build (the engine guard lives in scripts/, and npm ci reads the lockfile), so a change to either had to be able to trigger a redeploy."
+    },
+    {
+      "path": "packages/client/railway.toml",
+      "intent": "Pin DOCKERFILE builder as config-as-code for Railway client service",
+      "risk": "low",
+      "behavior_change": "Forces Dockerfile builder for packages/client Railway deploys"
+    },
+    {
+      "path": "packages/client/README.md",
+      "intent": "Document engines.node as SSoT and check:node",
+      "risk": "low",
+      "behavior_change": "Docs only"
+    },
+    {
+      "path": "docs/ci/PR307_RAILWAY_CLIENT_FAILURE_DISPOSITION_2026-08-19.md",
+      "intent": "Disposition for Railway client red on #307",
+      "risk": "low",
+      "behavior_change": "Docs only"
+    },
+    {
+      "path": "railway.toml",
+      "intent": "Correct stale Node 20 comment to Node 22",
+      "risk": "low",
+      "behavior_change": "Comment only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-17-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 13
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Build-time guard only; no application code, no runtime behavior, and no resolved-version change on any current build path. The single non-comment functional edit outside the guards is client_lint_build.yml node-version 20 -> ^20.19.0, which resolves to the same Node release today. Deliberately NOT done: hard-pinning NODE_VERSION to the literal floor 20.19.0, which would have moved every image from the newest 20.x down to an older patch level and dropped security fixes for no safety gain. Ledger additions are documentation only and mint no new CI-RED id."
+  }
+}

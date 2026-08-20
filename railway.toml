@@ -4,7 +4,7 @@
 #
 # Services:
 #   - api: FastAPI backend (Python 3.11)
-#   - client: Vue 3 + Vite frontend (Node 20)
+#   - client: Vue 3 + Vite frontend (Node 22; see packages/client engines.node)
 #
 # Setup:
 #   1. Create a new project on Railway
