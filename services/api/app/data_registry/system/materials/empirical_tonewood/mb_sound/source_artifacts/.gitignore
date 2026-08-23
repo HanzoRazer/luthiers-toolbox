@@ -1,0 +1,14 @@
+frames/
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.webp
+!artifact_manifest.json
+# Laboratory workbooks are intake source-of-truth (override repo-wide *.xlsx ignore)
+!workbooks/
+!workbooks/*.xlsx

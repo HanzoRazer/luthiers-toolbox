@@ -1,0 +1,104 @@
+{
+  "cohort_id": "mb_sound_alpine_spruce",
+  "species_id": "spruce_european",
+  "species_label": "Alpine spruce (plain)",
+  "treatment": "plain",
+  "treatments_seen": [
+    "plain"
+  ],
+  "target_batch_size_stated": 22,
+  "specimen_ids": [
+    "mb-as-000001",
+    "mb-as-000002",
+    "mb-as-000003",
+    "mb-as-000004",
+    "mb-as-000005",
+    "mb-as-000006",
+    "mb-as-000007",
+    "mb-as-000008",
+    "mb-as-000009",
+    "mb-as-000010",
+    "mb-as-000011",
+    "mb-as-000012",
+    "mb-as-000013",
+    "mb-as-000014",
+    "mb-as-000015",
+    "mb-as-000016",
+    "mb-as-000017",
+    "mb-as-000018",
+    "mb-as-000019",
+    "mb-as-000020",
+    "mb-as-000021",
+    "mb-as-000022"
+  ],
+  "catalog_gaps": [],
+  "status": "intake_batch_complete",
+  "specimen_id_prefix": "mb-as-",
+  "record_schema": "mb_sound_lab_procedure_v1",
+  "laboratory_workbook": "source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+  "primary_numerical_source": "detailed_analyzer",
+  "capture_audit": [
+    {
+      "issue_id": "AS-001",
+      "severity": "Low",
+      "affected": "000021",
+      "finding": "Summary and detailed resonance values may differ by approximately 0.1 Hz depending on the displayed run/rounding.",
+      "disposition": "Both values are retained when visible; detailed analyzer remains primary."
+    },
+    {
+      "issue_id": "AS-002",
+      "severity": "Medium",
+      "affected": "All samples",
+      "finding": "Graphs are available only as rendered screenshots, not numeric signal arrays.",
+      "disposition": "Embedded image archive preserves visual evidence; no digitized values are presented as raw data."
+    },
+    {
+      "issue_id": "AS-003",
+      "severity": "Low",
+      "affected": "All samples",
+      "finding": "Environmental conditions, calibration traceability, microphone placement, and support tolerances are not visible.",
+      "disposition": "Recorded as unavailable rather than inferred."
+    }
+  ],
+  "readme_notes": [
+    "Primary numerical source: detailed analyzer screen (Tonewood parameters characterization \u2013 Rev 1.5 \u2013 Giuliano Nicoletti).",
+    "Summary-card values retained separately for audit comparison.",
+    "Spectral plots present as rendered screenshots only; raw waveform/FFT/IR arrays not available.",
+    "22/22 specimens recovered (000001\u2013000022).",
+    "Source video URL not confirmed in workbook \u2014 left unresolved."
+  ],
+  "distinct_from": [
+    "mb_sound_european_spruce"
+  ],
+  "notes": "Rebuilt from Alpine_Spruce_Complete_Laboratory_Record.xlsx (22/22). Full laboratory analysis: 352/352 primary measurements (100%). Detailed analyzer primary. Dual-ID: 000001\u2013000010 \u2194 ABA-C-##; 000011\u2013000022 \u2194 ABA-W-01\u202612. species_id spruce_european; cohort alpine_spruce distinct from european_spruce stub. Source video URL pending.",
+  "dataset_statistics": {
+    "specimen_count": 22,
+    "catalog_range": "000001-000022",
+    "primary_measurement_fields_per_specimen": 16,
+    "max_possible_primary_measurements": 352,
+    "populated_primary_measurements": 352,
+    "blank_primary_measurements": 0,
+    "primary_data_completeness_pct": 100.0,
+    "populated_record_cells_incl_ids_material": 418,
+    "primary_fields": [
+      "Sample Length (mm)",
+      "Sample Width (mm)",
+      "Sample Thickness (mm)",
+      "Sample Mass (g)",
+      "Sample Density (kg/m\u00b3)",
+      "Sample Nodal Lines (mm)",
+      "Resonance Frequency (Hz)",
+      "Time Constant (ms)",
+      "Log Decrement",
+      "Q Factor / Sustain",
+      "Fitting (%)",
+      "Young's Modulus / Stiffness (GPa)",
+      "Radiation Coefficient",
+      "Total Recording Length (s)",
+      "Visualized Length (s)",
+      "Peak Amplitude (dBFS)"
+    ],
+    "description": "22 specimens containing 352 directly transcribed laboratory measurements."
+  },
+  "laboratory_analysis_complete": true
+}

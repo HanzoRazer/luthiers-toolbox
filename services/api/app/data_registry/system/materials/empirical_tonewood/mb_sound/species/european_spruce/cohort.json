@@ -1,0 +1,14 @@
+{
+  "cohort_id": "mb_sound_european_spruce",
+  "species_id": "spruce_european",
+  "species_label": "European spruce",
+  "treatments_seen": [],
+  "target_batch_size_stated": null,
+  "specimen_ids": [],
+  "status": "intake_empty",
+  "source_availability": "currently_unavailable",
+  "notes": "Listed in public MB Sound materials; no specimens ingested yet. Distinct from Alpine Spruce suite (same botanical species_id possible; separate MB Sound cohort). Source frames currently unavailable (operator 2026-08-02) — leave stub empty.",
+  "distinct_from": [
+    "mb_sound_alpine_spruce"
+  ]
+}
