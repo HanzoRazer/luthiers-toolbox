@@ -391,7 +391,7 @@ or re-pointing the orphaned suite is a test-tree change left out of this PR.
 
 ---
 
-## Blast radius — requires an owner decision before merge
+## Blast radius — RULED: blocked by design (see "Owner ruling" below)
 
 Four production CAM lanes change from authorized to blocked, because no evaluator exists for them
 and D3 forbids translating that into GREEN:
@@ -442,3 +442,175 @@ needs an unevaluated lane to run can already say so explicitly with the pre-exis
 | TC-25 | existing CAM tests | see PR body |
 | TC-26 | governance / boundary checks | see PR body |
 | TC-27 | CBSP21 | see PR body |
+
+---
+
+# Owner ruling — 2026-08-23
+
+The stop condition raised above was put to the owner and ruled on. Recorded here verbatim in
+substance, because it changes the disposition of four production lanes.
+
+> Keep pushing through the bottleneck rather than retreat to the old GREEN-default behavior.
+> The four lanes that now return `409 SAFETY_BLOCKED` should remain blocked until they have a
+> substantive evaluator. A manufacturing lane with no valid feasibility authority is not
+> production-ready merely because it previously returned GREEN. Do not use
+> `RMOS_TREAT_UNKNOWN_AS_RED=false` as the normal operational workaround; that would reintroduce
+> the authority problem this tranche exists to remove.
+>
+> Availability may not outrank manufacturing authority.
+
+## Ruled disposition
+
+```text
+RMOS-CONVERGE-001A
+
+F1 client-authored safety       CLOSED
+F2 GREEN-default CAM stub       CLOSED
+F3 evaluator-error fail-open    CLOSED
+F8 saw/rosette broken adapter   CLOSED
+
+roughing / vcarve / helical lanes
+→ BLOCKED BY DESIGN until evaluator authority exists
+
+F9 override attachment write path
+→ CONFIRMED DEFECT / DEFER TO 001C
+
+F10 adaptive run-id propagation
+→ CONFIRMED DEFECT / DEFER TO 001D
+```
+
+The **Blast radius** section above therefore stands as a statement of intended behaviour, not as
+an open question. `RMOS_TREAT_UNKNOWN_AS_RED=false` is explicitly **not** the sanctioned way to
+reopen these lanes; the sanctioned way is to give a lane a real evaluator and register it in
+`_PRODUCTION_FEASIBILITY_ENGINES`. That ruling is also recorded in the router's module docstring
+so it is not lost to whoever next meets a 409 there.
+
+The saw/rosette repair (F8) is ruled in-scope for 001A rather than deferrable: without it the
+claim that the feasibility authority boundary works could not be made, because the two lanes said
+to have real engines were in fact throwing inside the adapter and presenting the swallowed failure
+as a plausible YELLOW.
+
+---
+
+# Definition of Done — what is and is not satisfied
+
+**This increment does not claim the RMOS production workflow is complete.** It establishes
+trustworthy feasibility authority. The following DoD items are satisfied in full:
+
+| # | Item | Status |
+| --- | --- | --- |
+| 1 | Production clients cannot inject authoritative GREEN state | met |
+| 2 | One explicit server-authority boundary at `compute_feasibility_internal` | met |
+| 3 | No production CAM mode gets GREEN because its evaluator is unimplemented | met |
+| 4 | Evaluator failure does not silently preserve authorization | met |
+| 5 | `SafetyPolicy` continues to fail closed | met |
+| 6 | Supported operation-specific engines continue to work | met — and saw/rosette now actually run (F8) |
+| 7 | `RunArtifact` records the server-derived decision | met (TC-14) |
+| 8 | RED cannot export without the explicit audited override | met (TC-15) |
+| 12 | Stub/dispatcher source test proves no GREEN-default fallback | met (TC-23) |
+| 13 | Targeted RMOS + CAM regression tests pass | RMOS met; CAM see PR |
+| 15 | CBSP21 | met — 100% patch coverage |
+| 16 | No unrelated RMOS namespace migration included | met |
+
+**Two are satisfied only in part. They are recorded as truthful limitations, not waived:**
+
+- **DoD 9 / TC-17 — "override does not rewrite original RED history."** The *policy* half and the
+  *immutability* half are witnessed: the flag and acknowledgement gates refuse correctly, the
+  override record carries `original_risk_level="RED"`, the stored run is untouched, and
+  `apply_override`'s update set structurally never contains `decision`. **The complete override
+  round trip is not witnessed**, because F9 makes `apply_override` raise before it writes the
+  attachment. This is not evidence that the round trip works; it is evidence that it cannot
+  currently be exercised. It becomes evidence for 001C.
+
+- **DoD 10 / TC-20 — "supported operation-specific feasibility engines continue to work."** TC-20
+  proves the repaired saw and rosette lanes execute, reach their calculators, and differentiate
+  outcomes between lanes. It does **not** prove that the requested cutting parameters influence the
+  verdict — they do not, because `app/calculators/service.py` uses hard-coded rpm/feed and
+  `api_contracts.RmosContext` silently drops the `rpm`, `feed_rate_mm_min`, `spindle_power_watts`
+  and `tool_diameter_mm` the router passes. A repaired engine that ignores its inputs is a smaller
+  claim than a working one. It becomes evidence for a later tranche.
+
+**DoD 11** ("characterization test born from F1 fails before the fix and passes after it") is met
+in substance rather than in form: the F1 pre-fix behaviour was reproduced at runtime against the
+`origin/main` router and is recorded verbatim above, rather than committed as a test that fails on
+the pre-fix tree. The post-fix witnesses are committed (TC-03/04/05).
+
+**DoD 14** (governance/boundary gates) — see the timeout evidence below.
+
+---
+
+# Why each blocked lane is blocked
+
+The merge gate asks for confirmation that the four lanes are blocked because **no evaluator
+exists**, not because the new dispatcher fails to reach one that does. Both halves are evidenced:
+
+*The dispatcher does reach evaluators that exist.* TC-07 asserts
+`resolve_feasibility_engine("adaptive"/"saw"/"rosette")` returns the three real engine functions,
+and TC-01/TC-02/TC-20 show all three producing real verdicts through
+`compute_feasibility_internal`. The dispatcher is not the failure.
+
+*No evaluator's input contract matches the blocked lanes.* Per lane, the nearest candidate and the
+specific field it requires that the request model cannot supply:
+
+| blocked lane | tool_id → mode | request model | what the rule engine needs and cannot get |
+| --- | --- | --- | --- |
+| `roughing/gcode` | `roughing:default` → roughing | `RoughReq` — has `stepdown`, `stepover`, `safe_z`, `feed` | no **tool diameter** (`tool_d`, rule F001) and no `z_rough` (F004) |
+| `vcarve/gcode` | `vcarve:default` → vcarve | `VCarveGCodeRequest` — has `depth_mm`, `safe_z_mm`, `feed_rate_mm_min`, `plunge_rate_mm_min`, `bit_angle_deg` | no `tool_d`, `stepover`, `stepdown`, `strategy` — and a V-bit has an *angle*, not a straight diameter, so the engine's `tool_d`-based rules (F001, F025, chatter/deflection) do not model this cutter at all |
+| `vcarve/intent-gcode` | `vcarve:intent` → vcarve | normalized intent — `target_depth_mm`, `bit_angle_deg`, `feed_rate_mm_min` | as above |
+| `helical/gcode` | `helical:gcode` → helical | `HelicalReq` — has `tool_diameter_mm`, `z_target_mm`, `feed_xy_mm_min`, `pitch_mm_per_rev` | no `stepover`, `stepdown`, `strategy`, `climb`, `smoothing`, `margin`; a helical ramp is a pitch-per-revolution entry, which the engine's pass-schedule rules do not describe |
+| *(already blocked on main)* `biarc_gcode` | → unknown | `BiarcReq` — `path`, `z`, `feed`, `safe_z` | no `tool_d`, `stepover`, `stepdown` |
+| *(already blocked on main)* `relief_dxf` | → unknown | `ReliefDXFExportRequest` — an SVG plus export options | carries no CAM parameters at all |
+| *(already blocked on main)* `drill_pattern_gcode` | → unknown | `DrillParams` — `z`, `feed`, `peck_q`, `safe_z`, `rpm` | `app/cam/drilling/feasibility.py` requires `hole_diameter_mm`, which the pattern request never carries |
+
+`app/cam/pocketing/feasibility.py` and `app/cam/profiling/feasibility.py` were also considered and
+rejected for all seven: both require `plunge_rate_mm_min`, `retract_z_mm` and explicit contour/
+boundary geometry that none of these requests carry. Note that the drilling, pocketing and
+profiling **intent** lanes already call those evaluators directly and never route through this
+dispatcher — they are unaffected, and TC-21 witnesses that.
+
+Supplying any of the missing fields would mean inventing an input in order to make a lane green,
+which is what D4 forbids and what the ruling above declines.
+
+This table is the scope statement for the follow-on feasibility-engine recovery program, and it
+splits the work into two visibly different sizes:
+
+- **`roughing` is close to plumbing.** The request already carries `stepdown`, `stepover`, `safe_z`
+  and `feed`; it needs a tool diameter and a signed cutting depth, and the existing rule engine
+  then applies as-is.
+- **`vcarve`, `helical`, `biarc`, `relief` and `drill_pattern` need real evaluators.** The rule
+  engine models a flat-end-mill pass schedule. A V-bit, a helical ramp, a bi-arc contour follow and
+  a hole pattern are different operations, and adding fields to their requests would not make the
+  existing rules mean anything about them. Writing those evaluators is the substance of the
+  recovery program.
+
+In both cases the last step is the same: register the mode in `_PRODUCTION_FEASIBILITY_ENGINES`.
+That registration is a claim that a real engine evaluates the mode, and the module comment says so.
+
+---
+
+# Governance check evidence (DoD 14)
+
+`python scripts/governance/check_all.py --tier ci` on this branch reported **2 blocking failures**.
+Both are runner timeouts, not semantic failures — note the durations, which sit within a
+millisecond of the runner's 120 000 ms limit:
+
+```text
+[FAIL] DXF compatibility enforcement                        (120165ms) [blocking]
+[FAIL] Semantic sandbox import gate (Tier A cognition/grid)  (120197ms) [blocking]
+```
+
+Run standalone on the same tree, both pass:
+
+```text
+py -3.11 scripts/check_dxf_compat.py                              -> exit 0
+py -3.11 scripts/governance/check_semantic_sandbox_imports.py     -> exit 0
+   check_semantic_sandbox_imports: PASS (no forbidden imports under services/)
+```
+
+Neither check has any relationship to the files this branch touches — no DXF generator and nothing
+under the Tier A semantic sandbox is modified. **No code was changed to appease these**; per the
+ruling they are to be confirmed in CI, where the runner is not competing with a local test run.
+
+Of the five warnings, the RMOS-adjacent one is also environmental:
+`scripts/governance/validate_run_artifact_contract.py` requires a live API server and fails with
+`URLError: [WinError 10061]`. It names none of this branch's files.

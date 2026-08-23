@@ -23,9 +23,16 @@ There is exactly one authority boundary, at ``compute_feasibility_internal``:
   not a manufacturing-preserving YELLOW.
 
 ``UNKNOWN`` and ``ERROR`` are blocking under ``SafetyPolicy``'s default
-posture. Operators who need an unevaluated lane to run must say so
-explicitly via the pre-existing ``RMOS_TREAT_UNKNOWN_AS_RED`` flag; the code
-does not decide that for them.
+posture.
+
+**A lane with no substantive evaluator is blocked by design.** Owner ruling,
+2026-08-23 (RMOS-CONVERGE-001A): a manufacturing lane is not production-ready
+merely because it previously returned GREEN, and availability does not
+outrank manufacturing authority. ``RMOS_TREAT_UNKNOWN_AS_RED=false`` is
+**not** the sanctioned operational workaround for these lanes - using it that
+way reintroduces exactly the authority defect this boundary exists to remove.
+The way to reopen a blocked lane is to give it a real evaluator and register
+it in ``_PRODUCTION_FEASIBILITY_ENGINES``.
 """
 
 from __future__ import annotations
