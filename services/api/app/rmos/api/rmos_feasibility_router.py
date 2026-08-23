@@ -6,6 +6,26 @@ Implements the SERVER_SIDE_FEASIBILITY_ENFORCEMENT_CONTRACT_v1.md governance con
 This is the SINGLE SOURCE OF TRUTH for feasibility computation.
 Both /api/rmos/feasibility (public API) and /api/rmos/toolpaths (internal)
 MUST use this same engine.
+
+RMOS-CONVERGE-001A - canonical feasibility authority cutover
+------------------------------------------------------------
+There is exactly one authority boundary, at ``compute_feasibility_internal``:
+
+* every request is passed through ``sanitize_feasibility_input`` before an
+  engine sees it, so a client cannot assert ``feasibility`` / ``safety`` /
+  ``decision`` / ``risk_level`` / ``export_allowed`` (D1);
+* no engine echoes a caller-supplied safety block - every result is
+  constructed by the server (D2);
+* engines are resolved from an explicit table with **no default**. A mode
+  with no substantive evaluator returns ``FEASIBILITY_ENGINE_UNAVAILABLE`` /
+  ``UNKNOWN``, never GREEN (D3/D4);
+* an evaluator that raises returns ``FEASIBILITY_ENGINE_ERROR`` / ``ERROR``,
+  not a manufacturing-preserving YELLOW.
+
+``UNKNOWN`` and ``ERROR`` are blocking under ``SafetyPolicy``'s default
+posture. Operators who need an unevaluated lane to run must say so
+explicitly via the pre-existing ``RMOS_TREAT_UNKNOWN_AS_RED`` flag; the code
+does not decide that for them.
 """
 
 from __future__ import annotations
@@ -13,13 +33,33 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, HTTPException
-from typing import Any, Dict, Optional
+from pydantic import BaseModel
+from typing import Any, Callable, Dict, Optional
 
 from app.safety import safety_critical
+
+from ..feasibility_authority import (
+    error_feasibility,
+    sanitize_feasibility_input,
+    unavailable_feasibility,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Exceptions an adapter/engine may raise that mean "could not evaluate".
+# They are reported as ERROR (blocking), never downgraded to keep
+# manufacturing running.
+_ENGINE_FAILURES = (
+    ImportError,
+    ValueError,
+    TypeError,
+    AttributeError,
+    KeyError,
+    ZeroDivisionError,
+    OSError,
+)
 
 
 @router.post("/feasibility")
@@ -30,7 +70,7 @@ def rmos_feasibility(req: Dict[str, Any]) -> Dict[str, Any]:
     Canonical feasibility endpoint. Computes manufacturability assessment
     for the given tool/material/machine context.
 
-    Returns safety decision with risk_level (GREEN/YELLOW/RED/UNKNOWN).
+    Returns safety decision with risk_level (GREEN/YELLOW/RED/UNKNOWN/ERROR).
     """
     tool_id = str(req.get("tool_id") or "")
     if not tool_id:
@@ -47,43 +87,32 @@ def compute_feasibility_internal(
     context: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Canonical feasibility entrypoint.
+    Canonical feasibility entrypoint - the single server-authority boundary.
 
     - Used by /api/rmos/feasibility (API)
-    - Used internally by /api/rmos/toolpaths (server-side recompute)
+    - Used internally by the canonical CAM/toolpath routers (server-side recompute)
 
-    GOVERNANCE INVARIANT: This function NEVER trusts client-provided feasibility.
-    It computes feasibility from req + authoritative registry/presets.
+    GOVERNANCE INVARIANT: this function never trusts client-provided
+    feasibility. Authority-shaped client keys are stripped here, and the
+    result is always constructed server-side from an authoritative engine.
     """
     mode = resolve_mode(tool_id)
 
-    # NEVER trust any nested feasibility from client
-    clean_req = dict(req)
-    clean_req.pop("feasibility", None)
+    clean_req, rejected = sanitize_feasibility_input(req)
+    if rejected:
+        logger.warning(
+            "Rejected client-supplied authority keys %s on feasibility request "
+            "(tool_id=%s mode=%s context=%s)",
+            rejected, tool_id, mode, context,
+        )
 
-    if mode == "saw":
-        return compute_saw_feasibility(req=clean_req, context=context)
+    engine = resolve_feasibility_engine(mode)
+    if engine is None:
+        # No substantive evaluator. Inability to evaluate is not permission
+        # to manufacture - fail closed with a machine-readable reason.
+        return unavailable_feasibility(mode=mode, tool_id=tool_id, context=context)
 
-    if mode == "rosette":
-        return compute_rosette_feasibility(req=clean_req, context=context)
-
-    # CAM tool modes with stub feasibility (Phase 2 infrastructure)
-    # These return GREEN by default, allowing pass-through with audit trail
-    # Future: Wire to real feasibility engines as they're developed
-    if mode in ("vcarve", "roughing", "drilling", "drill_pattern", "biarc", "relief", "adaptive", "helical"):
-        return compute_cam_stub_feasibility(mode=mode, tool_id=tool_id, req=clean_req, context=context)
-
-    # Unknown tool mode
-    return {
-        "mode": mode,
-        "tool_id": tool_id,
-        "safety": {
-            "risk_level": "UNKNOWN",
-            "block_reason": f"Unsupported mode for feasibility: {mode}",
-            "warnings": [f"No feasibility engine registered for mode: {mode}"],
-            "details": {"context": context},
-        },
-    }
+    return engine(mode=mode, tool_id=tool_id, req=clean_req, context=context)
 
 
 # -----------------------------
@@ -115,11 +144,118 @@ def resolve_mode(tool_id: str) -> str:
     return "unknown"
 
 
+def resolve_feasibility_engine(mode: str) -> Optional[Callable[..., Dict[str, Any]]]:
+    """
+    Resolve the substantive feasibility engine for a mode, or ``None``.
+
+    Engine absence is explicit and is the caller's problem to handle. There
+    is deliberately no default engine: a ``dict.get(mode, some_stub)`` here
+    is what allowed unevaluated CAM modes to be authorized GREEN.
+    """
+    return _PRODUCTION_FEASIBILITY_ENGINES.get(mode)
+
+
+# -----------------------------
+# Design spec consumed by feasibility_scorer
+# -----------------------------
+
+class ScorerDesignSpec(BaseModel):
+    """
+    The design contract ``feasibility_scorer.score_design_feasibility``
+    actually consumes.
+
+    This is not a new design schema: it names the attributes the scorer and
+    its calculators read - ``outer_diameter_mm``, ``inner_diameter_mm``,
+    ``ring_count``, ``pattern_type``, and the ``hasattr``-guarded
+    ``depth_mm``.
+
+    ``art_studio.schemas.RosetteParamSpec`` is a different, ``extra="forbid"``
+    contract built around ``ring_params``; it rejects these fields and
+    carries no ``ring_count``, so binding the scorer to it made every
+    saw/rosette evaluation raise and fail open to YELLOW.
+    """
+
+    outer_diameter_mm: float = 100.0
+    inner_diameter_mm: float = 20.0
+    ring_count: int = 3
+    pattern_type: str = "radial"
+    depth_mm: Optional[float] = None
+    stock_thickness_mm: Optional[float] = None
+    petal_count: Optional[int] = None
+
+
+def _score_via_scorer(
+    *,
+    mode: str,
+    tool_id: str,
+    context: Optional[str],
+    design: ScorerDesignSpec,
+    req: Dict[str, Any],
+    default_material: str,
+) -> Dict[str, Any]:
+    """
+    Shared adapter onto ``feasibility_scorer.score_design_feasibility``.
+
+    Raises on evaluation failure; the caller converts that into an explicit
+    blocking ERROR result.
+    """
+    from ..feasibility_scorer import score_design_feasibility
+    from ..api_contracts import RmosContext
+
+    rmos_ctx = RmosContext(
+        tool_id=tool_id,
+        material_id=req.get("material_id", default_material),
+        machine_id=req.get("machine_id"),
+        rpm=req.get("rpm"),
+        feed_rate_mm_min=req.get("feed_rate_mm_min"),
+        spindle_power_watts=req.get("spindle_power_watts"),
+        tool_diameter_mm=req.get("tool_diameter_mm"),
+    )
+
+    result = score_design_feasibility(design, rmos_ctx)
+
+    risk_level = (
+        result.risk_bucket.value
+        if hasattr(result.risk_bucket, "value")
+        else str(result.risk_bucket)
+    )
+
+    block_reason = None
+    if risk_level == "RED":
+        block_reason = "Safety risk too high for automatic execution"
+    elif risk_level in ("UNKNOWN", "ERROR"):
+        block_reason = "Could not determine safety level"
+
+    return {
+        "mode": mode,
+        "tool_id": tool_id,
+        "safety": {
+            "risk_level": risk_level,
+            "score": result.score,
+            "block_reason": block_reason,
+            "warnings": result.warnings,
+            "details": {
+                "context": context,
+                "engine": "feasibility_scorer",
+                "efficiency": result.efficiency,
+                "estimated_cut_time_seconds": result.estimated_cut_time_seconds,
+                "calculator_results": result.calculator_results,
+            },
+        },
+    }
+
+
 # -----------------------------
 # Saw feasibility
 # -----------------------------
 
-def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> Dict[str, Any]:
+def compute_saw_feasibility(
+    *,
+    mode: str = "saw",
+    tool_id: Optional[str] = None,
+    req: Dict[str, Any],
+    context: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Saw feasibility engine using CNC Saw Labs calculators via SawEngine.
 
@@ -127,47 +263,17 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
       {
         "mode": "saw",
         "tool_id": "...",
-        "safety": { "risk_level": "...", "score": ..., "block_reason": ..., "warnings": [...], "details": {...} },
-        "checks": {...},            # optional
-        "recommendations": {...},   # optional
+        "safety": { "risk_level": ..., "score": ..., "block_reason": ..., "warnings": [...], "details": {...} },
       }
+
+    An evaluation failure is reported as blocking ERROR. It is not
+    downgraded to YELLOW: an engine that could not run has not established
+    that the cut is survivable.
     """
-    tool_id = str(req.get("tool_id") or "saw:unknown")
+    tool_id = str(tool_id or req.get("tool_id") or "saw:unknown")
 
-    # Test hook: allow caller to provide pre-computed safety for testing
-    safety = req.get("safety")
-    if isinstance(safety, dict):
-        return {
-            "mode": "saw",
-            "tool_id": tool_id,
-            "safety": safety,
-            "meta": {"context": context, "note": "echoed safety from request (test hook)"},
-        }
-
-    # Wire to real SawEngine via feasibility_scorer
     try:
-        from ..feasibility_scorer import score_design_feasibility
-        from ..api_contracts import RmosContext, RiskBucket
-        
-        # Import design spec - try art_studio first, fallback to api_contracts
-        try:
-            from ...art_studio.schemas import RosetteParamSpec
-        except ImportError:
-            from ..api_contracts import RosetteParamSpec
-        
-        # Build RmosContext from request
-        rmos_ctx = RmosContext(
-            tool_id=tool_id,
-            material_id=req.get("material_id", "hardwood"),
-            machine_id=req.get("machine_id"),
-            rpm=req.get("rpm"),
-            feed_rate_mm_min=req.get("feed_rate_mm_min"),
-            spindle_power_watts=req.get("spindle_power_watts"),
-            tool_diameter_mm=req.get("tool_diameter_mm"),
-        )
-        
-        # Build design spec from request
-        design = RosetteParamSpec(
+        design = ScorerDesignSpec(
             outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
             inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
             ring_count=req.get("ring_count", 1),
@@ -175,103 +281,40 @@ def compute_saw_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> D
             depth_mm=req.get("depth_mm"),
             stock_thickness_mm=req.get("stock_thickness_mm", 25.0),
         )
-        
-        # Call real feasibility scorer
-        result = score_design_feasibility(design, rmos_ctx)
-        
-        # Convert RiskBucket enum to string risk_level
-        risk_level = result.risk_bucket.value if hasattr(result.risk_bucket, 'value') else str(result.risk_bucket)
-        
-        # Determine block_reason based on risk
-        block_reason = None
-        if risk_level == "RED":
-            block_reason = "Safety risk too high for automatic execution"
-        elif risk_level == "UNKNOWN":
-            block_reason = "Could not determine safety level"
-        
-        return {
-            "mode": "saw",
-            "tool_id": tool_id,
-            "safety": {
-                "risk_level": risk_level,
-                "score": result.score,
-                "block_reason": block_reason,
-                "warnings": result.warnings,
-                "details": {
-                    "context": context,
-                    "efficiency": result.efficiency,
-                    "estimated_cut_time_seconds": result.estimated_cut_time_seconds,
-                    "calculator_results": result.calculator_results,
-                },
-            },
-        }
-    except (ImportError, ValueError, TypeError, AttributeError, KeyError, ZeroDivisionError, OSError) as e:  # WP-3: narrowed — fail-open to YELLOW for manufacturing continuity
+        return _score_via_scorer(
+            mode=mode,
+            tool_id=tool_id,
+            context=context,
+            design=design,
+            req=req,
+            default_material="hardwood",
+        )
+    except _ENGINE_FAILURES as e:
         logger.error("Saw feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
-        # Governance: fail-open to YELLOW so manufacturing is not blocked
-        return {
-            "mode": "saw",
-            "tool_id": tool_id,
-            "safety": {
-                "risk_level": "YELLOW",
-                "score": 50.0,
-                "block_reason": None,
-                "warnings": [f"Feasibility engine error: {str(e)}"],
-                "details": {"context": context, "error": str(e)},
-            },
-        }
+        return error_feasibility(mode=mode, tool_id=tool_id, context=context, error=e)
 
 
 # -----------------------------
 # Rosette feasibility
 # -----------------------------
 
-def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) -> Dict[str, Any]:
+def compute_rosette_feasibility(
+    *,
+    mode: str = "rosette",
+    tool_id: Optional[str] = None,
+    req: Dict[str, Any],
+    context: Optional[str] = None,
+) -> Dict[str, Any]:
     """
-    Rosette feasibility engine using RMOS manufacturability scorer.
+    Rosette feasibility engine using the RMOS manufacturability scorer.
 
-    Output shape:
-      {
-        "mode": "rosette",
-        "tool_id": "...",
-        "safety": { "risk_level": "...", "score": ..., "block_reason": ..., "warnings": [...], "details": {...} },
-      }
+    An evaluation failure is reported as blocking ERROR (see
+    ``compute_saw_feasibility``).
     """
-    tool_id = str(req.get("tool_id") or "rosette:unknown")
+    tool_id = str(tool_id or req.get("tool_id") or "rosette:unknown")
 
-    # Test hook
-    safety = req.get("safety")
-    if isinstance(safety, dict):
-        return {
-            "mode": "rosette",
-            "tool_id": tool_id,
-            "safety": safety,
-            "meta": {"context": context, "note": "echoed safety from request (test hook)"},
-        }
-
-    # Wire to real feasibility scorer
     try:
-        from ..feasibility_scorer import score_design_feasibility
-        from ..api_contracts import RmosContext, RiskBucket
-        
-        # Import design spec - try art_studio first, fallback to api_contracts
-        try:
-            from ...art_studio.schemas import RosetteParamSpec
-        except ImportError:
-            from ..api_contracts import RosetteParamSpec
-        
-        # Build RmosContext from request
-        rmos_ctx = RmosContext(
-            tool_id=tool_id,
-            material_id=req.get("material_id", "spruce"),
-            machine_id=req.get("machine_id"),
-            rpm=req.get("rpm"),
-            feed_rate_mm_min=req.get("feed_rate_mm_min"),
-            spindle_power_watts=req.get("spindle_power_watts"),
-            tool_diameter_mm=req.get("tool_diameter_mm"),
-        )
-        
-        # Build design spec from request
-        design = RosetteParamSpec(
+        design = ScorerDesignSpec(
             outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
             inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
             ring_count=req.get("ring_count", 3),
@@ -279,104 +322,147 @@ def compute_rosette_feasibility(*, req: Dict[str, Any], context: Optional[str]) 
             depth_mm=req.get("depth_mm"),
             petal_count=req.get("petal_count"),
         )
-        
-        # Call real feasibility scorer (uses router mode for rosette)
-        result = score_design_feasibility(design, rmos_ctx)
-        
-        # Convert RiskBucket enum to string risk_level
-        risk_level = result.risk_bucket.value if hasattr(result.risk_bucket, 'value') else str(result.risk_bucket)
-        
-        # Determine block_reason based on risk
-        block_reason = None
-        if risk_level == "RED":
-            block_reason = "Safety risk too high for automatic execution"
-        elif risk_level == "UNKNOWN":
-            block_reason = "Could not determine safety level"
-        
-        return {
-            "mode": "rosette",
-            "tool_id": tool_id,
-            "safety": {
-                "risk_level": risk_level,
-                "score": result.score,
-                "block_reason": block_reason,
-                "warnings": result.warnings,
-                "details": {
-                    "context": context,
-                    "efficiency": result.efficiency,
-                    "estimated_cut_time_seconds": result.estimated_cut_time_seconds,
-                    "calculator_results": result.calculator_results,
-                },
-            },
-        }
-    except (ImportError, ValueError, TypeError, AttributeError, KeyError, ZeroDivisionError, OSError) as e:  # WP-3: narrowed — fail-open to YELLOW for manufacturing continuity
+        return _score_via_scorer(
+            mode=mode,
+            tool_id=tool_id,
+            context=context,
+            design=design,
+            req=req,
+            default_material="spruce",
+        )
+    except _ENGINE_FAILURES as e:
         logger.error("Rosette feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
-        # Governance: fail-open to YELLOW so manufacturing is not blocked
-        return {
-            "mode": "rosette",
-            "tool_id": tool_id,
-            "safety": {
-                "risk_level": "YELLOW",
-                "score": 50.0,
-                "block_reason": None,
-                "warnings": [f"Feasibility engine error: {str(e)}"],
-                "details": {"context": context, "error": str(e)},
-            },
-        }
+        return error_feasibility(mode=mode, tool_id=tool_id, context=context, error=e)
 
 
 # -----------------------------
-# CAM Stub feasibility (Phase 2)
+# Adaptive pocketing feasibility
 # -----------------------------
 
-def compute_cam_stub_feasibility(
+# Every field the rule engine needs that the adaptive plan request carries
+# directly. If any is absent the input contract does not match and we say so
+# rather than substituting a value.
+_ADAPTIVE_REQUIRED_KEYS = (
+    "tool_d",
+    "stepover",
+    "stepdown",
+    "z_rough",
+    "feed_xy",
+    "safe_z",
+    "strategy",
+    "climb",
+    "smoothing",
+    "margin",
+)
+
+
+def compute_adaptive_feasibility(
     *,
-    mode: str,
-    tool_id: str,
+    mode: str = "adaptive",
+    tool_id: Optional[str] = None,
     req: Dict[str, Any],
-    context: Optional[str]
+    context: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Stub feasibility engine for CAM tools without dedicated engines.
+    Adaptive pocketing feasibility via the RMOS rule engine
+    (``app.rmos.feasibility.engine.compute_feasibility``).
 
-    Phase 2 infrastructure: Returns GREEN by default to allow operations
-    to proceed with audit trail. As real feasibility engines are developed
-    for each tool type, they will replace this stub.
+    The adaptive plan request (``PlanIn``) carries the rule engine's CAM
+    parameters field-for-field, so this is a dispatch to an existing
+    evaluator, not a new one. Two ``FeasibilityInput`` fields have no source
+    in the plan request and are recorded as derived in the result details:
 
-    Supports test hook: pass {"safety": {...}} in request to override.
-
-    Future enhancement paths:
-    - vcarve: Check depth vs bit angle, material hardness
-    - roughing: Check stepdown vs tool diameter, chipload
-    - drilling: Check drill depth vs diameter ratio, peck cycle
-    - biarc: Check radius vs tool diameter, contour accuracy
-    - relief: Check 3D heightfield complexity, tool accessibility
-    - adaptive: Check chipload, tool engagement angle
-    - helical: Check helix angle vs tool diameter, entry clearance
+    * ``layer_name`` - descriptive only; no rule reads it.
+    * ``feed_z`` - the plan request carries no plunge feed, so rule F011
+      (feed_z > feed_xy) has no data and is inert. It is set equal to
+      ``feed_xy`` so the rule neither fires on nor is suppressed by an
+      invented value.
     """
-    # Test hook: allow caller to provide pre-computed safety for testing
-    safety = req.get("safety")
-    if isinstance(safety, dict):
+    tool_id = str(tool_id or req.get("tool_id") or "adaptive:unknown")
+
+    missing = [k for k in _ADAPTIVE_REQUIRED_KEYS if req.get(k) is None]
+    if missing:
+        return unavailable_feasibility(
+            mode=mode,
+            tool_id=tool_id,
+            context=context,
+            detail=f"adaptive plan parameters absent: {', '.join(missing)}",
+        )
+
+    try:
+        from ..feasibility.engine import compute_feasibility
+        from ..feasibility.schemas import FeasibilityInput
+
+        loops = req.get("loops") or []
+        feed_xy = float(req["feed_xy"])
+
+        fi = FeasibilityInput(
+            pipeline_id="adaptive_pocket_v1",
+            post_id="GRBL",
+            units=str(req.get("units") or "mm"),
+            tool_d=float(req["tool_d"]),
+            stepover=float(req["stepover"]),
+            stepdown=float(req["stepdown"]),
+            z_rough=float(req["z_rough"]),
+            feed_xy=feed_xy,
+            feed_z=feed_xy,
+            rapid=float(req.get("machine_rapid") or 0.0),
+            safe_z=float(req["safe_z"]),
+            strategy=str(req["strategy"]),
+            layer_name="adaptive_pocket",
+            climb=bool(req["climb"]),
+            smoothing=float(req["smoothing"]),
+            margin=float(req["margin"]),
+            # Genuine derivations: the plan request's loops are closed
+            # polygons by contract, so their count is the loop hint.
+            has_closed_paths=bool(loops),
+            loop_count_hint=len(loops),
+        )
+
+        result = compute_feasibility(fi)
+        risk_level = result.risk_level.value
+
+        block_reason = None
+        if result.blocking:
+            block_reason = "; ".join(result.blocking_reasons) or "Blocked by feasibility rules"
+
         return {
             "mode": mode,
             "tool_id": tool_id,
-            "safety": safety,
-            "meta": {"context": context, "note": "echoed safety from request (test hook)"},
-        }
-
-    # Default: GREEN with advisory warning about stub engine
-    return {
-        "mode": mode,
-        "tool_id": tool_id,
-        "safety": {
-            "risk_level": "GREEN",
-            "score": 75.0,
-            "block_reason": None,
-            "warnings": [f"Using stub feasibility for {mode} - real engine not yet implemented"],
-            "details": {
-                "context": context,
-                "engine": "cam_stub_v1",
-                "note": "Phase 2 pass-through with audit trail",
+            "safety": {
+                "risk_level": risk_level,
+                "score": None,
+                "block_reason": block_reason,
+                "warnings": list(result.warnings),
+                "details": {
+                    "context": context,
+                    "engine": result.engine_version,
+                    "rules_triggered": list(result.rules_triggered),
+                    "constraints": list(result.constraints),
+                    "blocking_reasons": list(result.blocking_reasons),
+                    "derived_inputs": {
+                        "layer_name": "descriptive only; no rule reads it",
+                        "feed_z": "absent from plan request; set to feed_xy so rule F011 is inert",
+                        "loop_count_hint": "len(loops) from the plan request",
+                    },
+                },
             },
-        },
-    }
+        }
+    except _ENGINE_FAILURES as e:
+        logger.error("Adaptive feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
+        return error_feasibility(mode=mode, tool_id=tool_id, context=context, error=e)
+
+
+# -----------------------------
+# Production engine table
+# -----------------------------
+#
+# Explicit and total: a mode absent from this table has no substantive
+# evaluator and is failed closed by compute_feasibility_internal. Adding a
+# mode here is a claim that a real engine evaluates it - do not add a mode to
+# make a test or a lane green.
+_PRODUCTION_FEASIBILITY_ENGINES: Dict[str, Callable[..., Dict[str, Any]]] = {
+    "saw": compute_saw_feasibility,
+    "rosette": compute_rosette_feasibility,
+    "adaptive": compute_adaptive_feasibility,
+}
