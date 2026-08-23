@@ -439,7 +439,7 @@ needs an unevaluated lane to run can already say so explicitly with the pre-exis
 | TC-22 | source scan: no request-driven `safety` echo / test hook | pass |
 | TC-23 | source scan: no production `mode → GREEN-default stub` | pass |
 | TC-24 | targeted RMOS suite | 278 passed, 1 skipped |
-| TC-25 | existing CAM tests | see PR body |
+| TC-25 | existing CAM tests | 2538 passed, 3 skipped; 4 pre-existing failures reproduce on `origin/main`, 9 were the ruled blocking — see the TC-25 triage section |
 | TC-26 | governance / boundary checks | see PR body |
 | TC-27 | CBSP21 | see PR body |
 
@@ -614,3 +614,81 @@ ruling they are to be confirmed in CI, where the runner is not competing with a 
 Of the five warnings, the RMOS-adjacent one is also environmental:
 `scripts/governance/validate_run_artifact_contract.py` requires a live API server and fails with
 `URLError: [WinError 10061]`. It names none of this branch's files.
+
+---
+
+# TC-25 — CAM regression triage
+
+First run of the CAM regression set (`tests/cam` plus the toolpath/adaptive/rosette/drilling files):
+
+```text
+13 failed, 2538 passed, 3 skipped in 4145.55s
+```
+
+Every failure was triaged against the merge gate's question — *does this contradict the cutover?*
+None does. They fall into two groups.
+
+## Group 1 — pre-existing, unrelated (4)
+
+| test | failure |
+| --- | --- |
+| `test_relief_vcarve_endpoint_smoke.py::test_relief_preview_endpoint_exists` | `404 - router not wired` |
+| `test_relief_vcarve_endpoint_smoke.py::test_vcarve_preview_endpoint_exists` | `404 - router not wired` |
+| `cam/test_translator_execution_quarantine.py::test_get_latest_quarantine` | `'quarantine-7a4ea40daedf' == 'quarantine-bc60128bda9b'` |
+| `cam/test_translator_governance_review_ledger.py::test_get_latest_for_translator` | `'ledger-94f9ed824c19' == 'ledger-1c3eb7fcb28f'` |
+
+Verified pre-existing by restoring the `origin/main` router into this tree and re-running the four
+in isolation — all four fail identically, with the same messages:
+
+```text
+git checkout origin/main -- services/api/app/rmos/api/rmos_feasibility_router.py
+py -3.11 -m pytest <the four> -q  ->  4 failed
+    Relief preview endpoint returned 404 - router not wired. Got: 404
+    VCarve preview endpoint returned 404 - router not wired. Got: 404
+    assert 'quarantine-e9e8eae97935' == 'quarantine-b6e72900233d'
+    assert 'ledger-c6294d9ebfd0'     == 'ledger-f2cb2ea6001b'
+```
+
+The two 404s are unmounted preview routers — this branch mounts and unmounts nothing. The two id
+mismatches are `get_latest` returning a different record than the test expects, and the ids differ
+on every run, so they are order/isolation-dependent. Neither touches feasibility. **Not fixed
+here** — outside this tranche, and fixing them would mean editing files the manifest does not
+declare.
+
+## Group 2 — the ruled blocking, reconciled (9)
+
+All nine assert that the roughing or vcarve **intent** lanes produce G-code. They now receive
+`409`, which is the ruled behaviour, not a defect. The intent routers normalize first and delegate
+second, so the strict-mode contract is untouched — `test_strict_on_rejects_with_issues`,
+`test_strict_query_param_variations` and `test_strict_reject_increments_counter` still pass at 422,
+never reaching feasibility. What broke is precisely the half that says *the request survives and
+manufactures*.
+
+Reconciled without weakening anything:
+
+- **Eight are `xfail(strict=True)`**, with the reason and the restore condition in the marker.
+  Their assertions are preserved **verbatim** as the contract to restore. Rewriting them to expect
+  `409` was rejected: such a test keeps passing after the lane reopens and would then assert the
+  wrong thing, whereas a strict xfail fails loudly at exactly the moment a roughing or vcarve
+  evaluator lands. The marker is the tripwire for the recovery program.
+- **One** (`test_roughing_intent_increments_metrics`) has its incidental status assertion widened
+  to `(200, 409, 422)`. Its subject is the intent counter, which increments before delegation and
+  is unaffected; the counter equality assertion is unchanged.
+- **Two new classes positively witness the ruled behaviour** rather than leaving only an absence:
+  `TestRoughingIntentBlockedLane` and `TestVCarveIntentBlockedLane` assert the `409` carries
+  `SAFETY_BLOCKED` and `FEASIBILITY_ENGINE_UNAVAILABLE`, that normalization/strict rejection still
+  precedes the safety gate, and — for vcarve — that a `BLOCKED` run artifact is still persisted, so
+  the blocking is **governed rather than silent**.
+
+```text
+tests/test_cam_roughing_intent_strict.py + test_roughing_gcode_intent_metrics.py
+    ->  7 passed, 4 xfailed
+tests/cam/test_vcarve_intent_migration.py
+    -> 18 passed, 4 xfailed
+```
+
+## TC-25 verdict
+
+No failure contradicts the cutover. Four are pre-existing and reproduce on `origin/main`; nine were
+the intended blocking and are now either witnessed positively or held as strict-xfail contracts
+awaiting an evaluator.

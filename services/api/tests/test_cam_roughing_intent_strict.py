@@ -89,6 +89,18 @@ ISSUE_INTENT_BODY = {
 class TestRoughingIntentStrictMode:
     """H7.2.3: Strict mode behavior tests."""
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the roughing lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. The assertions below are the contract to restore when a "
+            "roughing evaluator lands and the mode is registered in "
+            "_PRODUCTION_FEASIBILITY_ENGINES. strict=True so this fails loudly the "
+            "moment the lane reopens, instead of silently rotting. Current behaviour "
+            "is witnessed by TestRoughingIntentBlockedLane below."
+        ),
+    )
     def test_strict_off_allows_issues(self, client: TestClient):
         """Non-strict mode returns 200 even when issues exist."""
         r = client.post("/api/cam/roughing/gcode_intent", json=ISSUE_INTENT_BODY)
@@ -117,6 +129,18 @@ class TestRoughingIntentStrictMode:
         assert isinstance(data["detail"]["issues"], list)
         assert len(data["detail"]["issues"]) > 0
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the roughing lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. The assertions below are the contract to restore when a "
+            "roughing evaluator lands and the mode is registered in "
+            "_PRODUCTION_FEASIBILITY_ENGINES. strict=True so this fails loudly the "
+            "moment the lane reopens, instead of silently rotting. Current behaviour "
+            "is witnessed by TestRoughingIntentBlockedLane below."
+        ),
+    )
     def test_strict_on_allows_clean_request(self, client: TestClient):
         """Strict mode returns 200 when no normalization issues."""
         r = client.post(
@@ -166,6 +190,18 @@ class TestRoughingIntentStrictMode:
         )
         assert after >= before + 1.0
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the roughing lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. The assertions below are the contract to restore when a "
+            "roughing evaluator lands and the mode is registered in "
+            "_PRODUCTION_FEASIBILITY_ENGINES. strict=True so this fails loudly the "
+            "moment the lane reopens, instead of silently rotting. Current behaviour "
+            "is witnessed by TestRoughingIntentBlockedLane below."
+        ),
+    )
     def test_non_strict_does_not_increment_strict_counter(self, client: TestClient):
         """Non-strict path does not increment strict_rejects counter."""
         before = _metric_value(
@@ -188,6 +224,18 @@ class TestRoughingIntentStrictMode:
 class TestRoughingIntentNonStrictIssuesHeader:
     """Verify non-strict mode still reports issues in response body."""
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the roughing lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. The assertions below are the contract to restore when a "
+            "roughing evaluator lands and the mode is registered in "
+            "_PRODUCTION_FEASIBILITY_ENGINES. strict=True so this fails loudly the "
+            "moment the lane reopens, instead of silently rotting. Current behaviour "
+            "is witnessed by TestRoughingIntentBlockedLane below."
+        ),
+    )
     def test_issues_in_response_body(self, client: TestClient):
         """Non-strict mode includes issues in JSON response."""
         r = client.post("/api/cam/roughing/gcode_intent", json=ISSUE_INTENT_BODY)
@@ -198,3 +246,39 @@ class TestRoughingIntentNonStrictIssuesHeader:
         assert len(data["issues"]) > 0
         # Normalizer reports missing_field for missing geometry
         assert data["issues"][0]["code"] == "missing_field"
+
+
+class TestRoughingIntentBlockedLane:
+    """
+    RMOS-CONVERGE-001A: positive witness for the ruled behaviour.
+
+    Roughing has no substantive feasibility evaluator. Under the owner ruling
+    of 2026-08-23 the lane stays blocked rather than being authorized by a
+    GREEN-default stub, so the endpoint refuses after normalization. This is
+    asserted positively so CI witnesses the blocked posture, rather than only
+    recording the absence of the old success path.
+    """
+
+    def test_normalization_still_runs_then_the_lane_refuses(self, client: TestClient):
+        r = client.post("/api/cam/roughing/gcode_intent", json=VALID_INTENT_BODY)
+        assert r.status_code == 409
+
+        detail = r.json()["detail"]
+        assert detail["error"] == "SAFETY_BLOCKED"
+        assert detail["decision"]["risk_level"] == "UNKNOWN"
+
+        safety = detail["authoritative_feasibility"]["safety"]
+        assert safety["details"]["code"] == "FEASIBILITY_ENGINE_UNAVAILABLE"
+        assert safety["risk_level"] != "GREEN"
+
+    def test_strict_rejection_still_precedes_the_safety_gate(self, client: TestClient):
+        """
+        The strict-mode contract is unaffected: normalization issues are still
+        rejected at 422 before the request ever reaches feasibility.
+        """
+        r = client.post(
+            "/api/cam/roughing/gcode_intent?strict=true",
+            json=ISSUE_INTENT_BODY,
+        )
+        assert r.status_code == 422
+        assert r.json()["detail"]["error"] == "CAM_INTENT_NORMALIZATION_ISSUES"
