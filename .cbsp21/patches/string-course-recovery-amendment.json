@@ -1,0 +1,62 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "STRING_COURSE_REC_001_AUTHORITY_AMENDMENT",
+  "title": "STRING-COURSE-REC-001: record and queue the string-course geometry authority gap",
+  "intent": "Governance / recovery-record amendment only. Records a newly confirmed string-course geometry authority gap in the frozen consolidation evidence system and places it in the recovery queue, without implementing a fix, selecting it as the next development item, or coupling it to the active RMOS-CONVERGE-001A work. Two commits by design: commit 1 establishes the pre-amendment frozen baseline of both artifacts in version control (they declared themselves FROZEN 2026-08-22 but had never been committed and were absent from origin/main - a freeze living only in one working tree is a durability problem, and it left the post-freeze amendment rule with no baseline to amend against); commit 2 contains only the dated amendment. The finding: ordered string-course lateral geometry has no declared canonical owner. A shared spacing abstraction exists (instrument_geometry/spacing.py) but is not canonical across consumers, does not implement equal-edge-gap spacing, and coexists with a second live nut-CAM implementation using a different coordinate convention. Implementation authority is NOT granted by this change.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation/governance artifacts only. No production code, schema, router, API, or test is touched. The diff is confined to docs/audit/ plus this manifest. Specifically NOT changed: nut_slot_calc.py, nut_slot_cam.py, nut_slot_export.py, nut_slot_router.py, nut_fret_router.py, instrument_geometry/spacing.py, bridge_calc.py, acoustic_bridge_calc.py, nut_compensation_physics.py, and every RMOS module. No gauge-table refactor, no new spacing algorithm, no Dev Order.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/string-course-recovery-amendment.json",
+      "docs/audit/formula_authority_census.md",
+      "docs/audit/formula_recovery_queue.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/formula_authority_census.md",
+      "docs/audit/formula_recovery_queue.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Commit 1 (baseline): adds docs/audit/formula_authority_census.md and docs/audit/formula_recovery_queue.md byte-for-byte as they existed pre-discovery, so the amendment lands as a legible diff against a real frozen state rather than appearing to have always been there. Commit 2 (amendment), census: (a) Status line marked 'FROZEN (2026-08-22) - amended 2026-08-23 (post-freeze; bounded reconciliation passed)'; (b) a dated CORRECTION block inserted after the Section 3 table, superseding the string-spacing row's 'single canonical (no duplicates found)' verdict with the two live implementations and their divergent origin conventions, explicitly retaining the original row text as historical state; (c) new summary row 44; (d) row 44 added to the LIVE AUTHORITY FRAGMENTATION family in the disposition matrix; (e) new Section 11, the full finding - eight traced surfaces, three independent divergences (two live lateral-spacing implementations neither of which is canonical; contradictory handedness for 'offsets from centerline' between acoustic_bridge_calc (treble-negative) and bridge_calc/spacing.py (bass-negative); contradictory string ordering between the two gauge registries, nut_slot_calc treble-first vs nut_compensation_physics bass-first), the classification block, the split edge-clearance datum verdict, the two preserved spacing models, the manual-override escape hatch, the prohibited remediation, the bounded P0 partial trace, and the no-double-counting reconciliation against four existing findings. Queue: (a) Status line amended; (b) the P0 row annotated with 'P0 PARTIAL TRACE - string-course representation only', explicitly NOT discharging, ranking, or reclassifying P0; (c) new item 17 STRING-COURSE-AUTH-001 at P3, rubric-scored CC=M LR=H CS=L AA=H EQ=H RD=M; (d) three dependency edges recorded, including item 17 <= item 15 alongside item 1 <= item 15 with an explicit statement that a shared harvest input does not make two findings the same authority defect; (e) a bounded post-freeze reconciliation section stating its own scope boundary, running the same five checks over the affected neighbourhood only, plus an explicit recency-bias check.",
+    "why_not_redundant": "Not a restatement of an existing finding. The census previously classified string spacing as 'single canonical (no duplicates found)' - that verdict is falsified by evidence gathered this pass, and the post-freeze amendment rule exists precisely for this case. The finding is deliberately recorded as an authority/datum issue rather than as 'proportional nut spacing missing', because the narrow feature framing would invite the one remediation that must not happen: plumbing the private gauge table from the nut-slot depth calculator into nut-slot CAM. That shortcut is prohibited in the census with its concrete failure mode - the two gauge registries order strings oppositely, so plumbing gauges across that boundary would silently mirror the gauge-to-string assignment and give the thickest string the treble slot. Reconciliation is bounded and says so, so it cannot be mistaken for a full re-audit of the frozen queue."
+  },
+  "verification": {
+    "commands_run": [
+      "TC-01 gauge authority search: rg over app/ -> two registries found (nut_slot_calc.STANDARD_STRING_SETS live treble-first; nut_compensation_physics.STRING_SETS dead bass-first, with wound flag + pitch). Both listed in the amendment; neither declared canonical.",
+      "TC-02 nut spacing trace: generate_string_positions -> uniform center-to-center confirmed (available_width / (num_strings - 1)); sole non-test consumer is generate_nut_slot_preview in the same module.",
+      "TC-03 gauge-aware spacing absence: rg for proportional/equal-edge/gauge-compensated spacing -> absent. Census CORRECTED rather than merely confirmed: instrument_geometry/spacing.py exists and is live, but compute_edge_margin_spacing_mm is edge-MARGIN (edge -> outer string), not equal-edge-GAP, so the absence finding survives in a more precise form.",
+      "TC-04 edge datum trace: edge_offset_treble/bass -> split verdict recorded. As implemented, edge -> string CENTRE (generate_slot_toolpath cuts at a single x_position_mm centreline; slot_width_mm never offsets X; test_single_string_position asserts positions[0] == 3.5). As intended, INSUFFICIENT_EVIDENCE - no doc, schema, or test distinguishes centre from outer-edge, and the two are indistinguishable while gauge is absent from the lateral model. Not guessed.",
+      "TC-05 bridge spacing trace: bounded to string-spread representation only, labelled P0 PARTIAL TRACE. Distinct stages documented (acoustic spread/taper vs preset spans + pin layout); no false authority conflict manufactured on the spacing quantity; the handedness contradiction recorded as a DATUM_CONFLICT candidate for the full P0 trace.",
+      "TC-06 manual override: string_positions_x_mm confirmed as an explicit bypass validated for count/order/bounds; recorded as an escape hatch, not canonical geometry authority.",
+      "TC-07 census reconciliation: no double-count against nut-slot depth (height vs lateral axis), row 9 / item 13 (tests lens vs owner lens, row-25 aspect-split precedent), intonation compensation (longitudinal vs lateral), or the corrected Section 3 row (correction, not a second finding).",
+      "TC-08 queue rubric completeness: all six criteria scored with rationale (CC=M LR=H CS=L AA=H EQ=H RD=M -> P3).",
+      "TC-09 no recency bias: explicit check recorded - the newest finding in either artifact lands at P3, below eight older items, because CS=L; not promoted for being recent.",
+      "TC-10 no RMOS contamination: git diff --name-only origin/main -> two docs/audit paths only; zero RMOS files. app/rmos/context.py is cited as liveness EVIDENCE for spacing.py and is not modified.",
+      "TC-11 artifact-only diff: git diff --name-only origin/main | grep -v '^docs/audit/' -> empty (plus this manifest).",
+      "TC-12 reconciliation: the one new census finding has exactly one queue disposition (item 17); the Section 3 correction carries no independent queue entry and points at item 17."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/formula_authority_census.md",
+      "intent": "Commit 1 adds the frozen pre-amendment baseline. Commit 2 applies the dated post-freeze amendment: status line, a dated CORRECTION superseding the Section 3 string-spacing verdict while retaining its original text, summary row 44, disposition-matrix membership under LIVE AUTHORITY FRAGMENTATION, and new Section 11 carrying the full string-course authority finding with its surfaces, divergences, classification, split datum verdict, prohibited remediation, bounded P0 note, and no-double-counting reconciliation.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/formula_recovery_queue.md",
+      "intent": "Commit 1 adds the frozen pre-amendment baseline. Commit 2 inserts queue item 17 (STRING-COURSE-AUTH-001) at P3 with all six rubric criteria scored, annotates the P0 row with the explicitly non-discharging string-course partial trace, records the item 17 <= item 15 dependency edge alongside item 1 <= item 15 without merging the findings, and appends a bounded post-freeze reconciliation that states its own scope boundary and includes an explicit recency-bias check.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/string-course-recovery-amendment.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
