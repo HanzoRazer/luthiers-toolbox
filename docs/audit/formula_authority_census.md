@@ -1,6 +1,7 @@
 # Formula / Calculator Authority Census
 
-**Status:** FROZEN (2026-08-22) — reconciliation passed. Read-only evidence artifact.
+**Status:** FROZEN (2026-08-22) — **amended 2026-08-23** (post-freeze; bounded reconciliation passed). Read-only evidence artifact.
+The 2026-08-23 amendment adds **§11** (string-course lateral geometry) and one dated correction to the §3 string-spacing row. No prior finding text was rewritten.
 **Not a schedule.** This file inventories formula/calculator authority and divergence across
 10 sections / 43 findings and closes with a **repository-level disposition matrix** (9 families);
 it does not assign priority or create work items. It may later feed a maintenance/scheduling
@@ -258,6 +259,26 @@ where a quantity has one.
 | String spacing (centered / edge-margin) | `spacing.py:47 compute_centered_spacing_mm`, `:88 compute_edge_margin_spacing_mm` | `STANDARD_ENGINEERING_RELATION` (even spacing / margins) | single canonical (no duplicates found) | LIVE (imported; no direct router) | HIGH, no tests | explicit origin conventions (centerline / bass-edge) — **clean, documented** |
 | Intonation compensation (saddle/bridge estimate) | `bridge/geometry.py:166 compute_compensation_estimate` (`gauge×30.0` magic) **vs** `saddle_compensation.py:193 estimate_string_compensation_mm` (semi-empirical) | bridge = `CUSTOM_HEURISTIC`; saddle = `EMPIRICAL_MODEL` | **`DUPLICATE_DIVERGENT` / fragmented** — two live estimators, different models (+ nut-comp at the other end, + `alternative_temperaments`) | both LIVE | uncited/heuristic (saddle has tests) | nut origin + saddle offset |
 | Cents→mm / straight-saddle fit | `saddle_compensation.py estimate_string_compensation_mm / fit_straight_saddle` | `CALIBRATED_MODEL` (semi-empirical coeffs) | single canonical (saddle) | LIVE (saddle_compensation_router) | calibrated coeffs, has tests | nut origin |
+
+> **CORRECTION — 2026-08-23 (post-freeze amendment).**
+>
+> The string-spacing row above classifies `instrument_geometry/spacing.py` as
+> **"single canonical (no duplicates found)"**. That classification is **superseded by new
+> evidence**:
+>
+> - `app/instrument_geometry/spacing.py` (`compute_centered_spacing_mm`, `compute_edge_margin_spacing_mm`)
+> - `app/cam/nut_slot_cam.py::generate_string_positions`
+>
+> Both are **live** lateral-spacing implementations and they use **different coordinate/origin
+> conventions** — `spacing.py` centred spacing declares *negative = bass*, while the nut-CAM
+> implementation places *String 1 = high E at low X* (treble at the 0 end) measured from the left
+> face of the nut. `spacing.py` has exactly one importer (`app/rmos/context.py`); the nut CAM path
+> does **not** consume it and derives positions inline.
+>
+> The row's other judgements stand: the math is standard, the origin conventions inside
+> `spacing.py` itself are explicit and documented, and there are no dedicated tests.
+>
+> **Original text retained above as historical state.** See **§11** and queue item **17 (`STRING-COURSE-AUTH-001`)**.
 
 **Section 3 finding:** the emphasis shift paid off. Most of the remaining geometry is
 **standard math with explicit origins** → `VALID_REUSE` / single-canonical / (several)
@@ -737,6 +758,7 @@ matrix below.
 | 41 | Treble-bleed / pickup-load component values | `CALIBRATED_MODEL` | `VALID_REUSE` — **named published designs** (Kinman/Duncan) + documented hardware defaults (cable 500pF, tone cap 22nF); manufacturer/literature basis, not `UNKNOWN_ORIGIN` | model (constant) | LIVE |
 | 42 | `scala_loader` parser | `STANDARD` | `VALID_REUSE` — **fail-loud** (raises on malformed input); no silent data loss | software | LIVE |
 | 43 | Simulation move-preview decimation | `STANDARD` | `VALID_REUSE` — **flagged** decimation (`moves_decimated`/`preview_stride`); stats over full path; not silent loss | software | LIVE |
+| 44 | **String-course lateral geometry** *(2026-08-23 post-freeze amendment, §11)* | `LUTHIERY_DOMAIN_MODEL` | **`LIVE_AUTHORITY_FRAGMENTATION` / `INCOMPLETE_AUTHORITY`** — shared `spacing.py` abstraction exists but is not canonical (1 importer, bypassed by nut CAM); no equal-edge-gap model; divergent handedness across 5 surfaces | model + software + datum | LIVE |
 
 **Headline for review:**
 1. **Axis B (scale origin) is clean** across the whole chain — nut origin everywhere; the only shifts are explicit and zero-fret-aware.
@@ -817,7 +839,7 @@ secondary noted in the disposition column. Row numbers refer to the summary tabl
 | Disposition family | Members (row/§ refs) | Disposition note |
 |--------------------|----------------------|------------------|
 | **VALID / LEAVE ALONE** | Standard/`VALID_REUSE` rows 13, 14, 22b, 24, 27, 28, 33, 39, 40, 41, 42, 43; the `—` alternate-model rows (top-deflection, side-bending, lignin Tg, saddle force, section props, two-cavity resonator, log-spiral, plate modal, port length, string tension); electronics (§10b) | The large majority. Fundamental physics, standard engineering/musical relations, legitimate alternate models, and good-hygiene exemplars. **No action is the correct disposition.** |
-| **LIVE AUTHORITY FRAGMENTATION** | 11 (compound radius), 15 (Sitka `E_L` 11.0 vs 9.5), 17 (soundhole stack calc‖physics), 25 (MOE ≥4 authorities), 29 (two fret-position surfaces), 34 (soundhole classifier rule ×3 loci); nut-slot-depth (§2), chipload & tool-deflection (§1/§4) | Multiple **live** implementations of one quantity/decision. Genuine competition confirmed by consumer/liveness traces. The candidate set for any future "single-authority" decision. |
+| **LIVE AUTHORITY FRAGMENTATION** | 11 (compound radius), 15 (Sitka `E_L` 11.0 vs 9.5), 17 (soundhole stack calc‖physics), 25 (MOE ≥4 authorities), 29 (two fret-position surfaces), 34 (soundhole classifier rule ×3 loci); nut-slot-depth (§2), chipload & tool-deflection (§1/§4); **44 (string-course lateral geometry, §11 — 2026-08-23 amendment)** | Multiple **live** implementations of one quantity/decision. Genuine competition confirmed by consumer/liveness traces. The candidate set for any future "single-authority" decision. |
 | **LIVE DEFECT** | 19 (rayleigh_ritz unbacked fallback, MAINT-DEFER-010), 20 (`L_eff` units, MAINT-DEFER-004), 30 (`api_v1/fret_math` `nut_width` units, latent), §1 rim-speed units, §2/§17 nut-slot `+crown/2` (GREEN band unreachable) | Concrete implementation defect on a live path (units/datum/fallback). Bounded and specific. Several already have MAINT-DEFER IDs. |
 | **UNVALIDATED AUTHORITY** | 18 (acoustic consts; `0.798` unknown), 21 (body scorers, uncited weights), 22 (export gate, 0.60/0.30 uncited), 35 (blueprint classifier confidences), 36 (coin scale weights), §2 row 10 (saddle-comp/PMF/γ calibration undocumented) | Heuristic/threshold/weight with **consequential consumer authority** (gates export, sets scale, drives classification) but **inadequate `ValidationBasis` (`UNKNOWN_ORIGIN`)**. The "produces product decisions without a basis" family. |
 | **DEAD-BUT-RELEVANT** | 32 (`nut_compensation_physics` — the "sounder" nut-slot model; `saddle_compensation_calc` predictive physics) | Orphaned (0 importers) but containing potentially **superior/useful** work. Preserve; do not delete blind. |
@@ -847,3 +869,160 @@ out of scope here.
 **43-row finding inventory + 9-family disposition matrix** above, which is the intended
 deliverable. Any later domain not yet named here would slot into the same frozen taxonomy and
 disposition families without re-opening them.
+
+---
+
+## Section 11 — POST-FREEZE AMENDMENT (2026-08-23): string-course lateral geometry
+
+> **This section was added after the 2026-08-22 freeze**, under the post-freeze amendment rule
+> (dated correction note grounded in new evidence + fresh census↔queue reconciliation). It adds
+> **one** finding and **one** dated correction (to the §3 string-spacing row). No prior finding
+> text was rewritten. Discovery trigger: a nut-slot spacing review on 2026-08-23.
+>
+> **Not authorized:** any implementation. This section records and classifies; the reading order
+> lives in the queue as item 17 (`STRING-COURSE-AUTH-001`).
+
+### Finding — STRING-COURSE GEOMETRY AUTHORITY — fragmented / missing gauge-aware spacing contract
+
+**This is an authority finding, not a missing feature.** The narrow observation ("gauge-aware
+equal-edge spacing is absent from the nut-slot CAM path") is true but is the *symptom*. The finding
+is that **ordered string-course lateral geometry has no declared canonical owner**: gauge data,
+nut lateral positions, nut E-to-E spread, saddle spread, taper, and CAM slot positions are each
+derived independently, by modules that do not agree on string order or on which side of the
+centerline is bass.
+
+**Precise statement of the gap** (this supersedes the looser "no shared string-course contract"
+framing — a shared abstraction *does* exist):
+
+> A shared spacing abstraction exists (`instrument_geometry/spacing.py`), but it is **not canonical
+> across consumers**, **does not implement equal-edge-gap spacing**, and **coexists with a second
+> live nut-CAM implementation using a different coordinate convention**.
+
+#### Surfaces traced
+
+| Surface | Role | Emits | Origin / handedness |
+|---------|------|-------|---------------------|
+| `calculators/nut_slot_calc.py` `STRING_DIAMETERS_MM`, `STANDARD_STRING_SETS` | gauge data + slot **depth** | gauges (in), depth (out) | string order **treble-first** (`e,B,G,D,A,E`) |
+| `calculators/nut_compensation_physics.py` `STRING_SETS` (`StringSpec`) | gauge data + compensation physics | gauges incl. **wound flag + pitch** | string order **bass-first** (`Low E … High e`) |
+| `instrument_geometry/spacing.py` `compute_centered_spacing_mm` | lateral positions | positions | centerline; **negative = bass** (docstring) |
+| `instrument_geometry/spacing.py` `compute_edge_margin_spacing_mm` | lateral positions | positions | **0.0 = bass edge** |
+| `cam/nut_slot_cam.py` `generate_string_positions` | lateral positions (**nut CAM**) | positions | 0.0 = left face; **String 1 = high E at low X** (treble at the 0 end) |
+| `calculators/acoustic_bridge_calc.py` `compute_string_spacing` | nut + saddle spread, taper | offsets | centerline; **treble side negative** (String 1 = high E at `−e2e/2`) |
+| `calculators/bridge_calc.py` `compute_pin_positions`, `string_spacing_mm` presets | saddle/pin positions + preset spans | positions | centerline; **bass at `−half_span`** (Position[0] = low E) |
+| `cam/nut_slot_export.py`, `routers/cam/nut_slot_router.py`, `routers/instrument_geometry/nut_fret_router.py` | consumers (DXF / G-code / API) | — | inherit the nut-CAM convention |
+
+#### Evidence — three independent divergences
+
+**(1) Two live lateral-spacing implementations, neither canonical.** `spacing.py` is LIVE but its
+only importer is `app/rmos/context.py`. `nut_slot_cam.py` does **not** import it; it computes
+`available_width / (num_strings − 1)` inline. Two live owners of one quantity.
+
+**(2) Contradictory handedness for the same representation.** For "offsets from centerline",
+`acoustic_bridge_calc` declares **treble negative** while `bridge_calc` and `spacing.py` declare
+**bass negative**. These are mutually exclusive readings of an identical output shape.
+
+**(3) Contradictory string ordering in the two gauge registries.** `nut_slot_calc` orders
+treble-first; `nut_compensation_physics` orders bass-first. Combined with (2), **an implementer who
+plumbs gauges from one module into positions from another silently mirrors the gauge-to-string
+assignment** — the thickest string gets the treble slot. This is the concrete failure mode that
+makes the prohibition below non-arbitrary, not a stylistic preference.
+
+#### Classification
+
+```text
+Quantity:              string-course lateral geometry (ordered string positions at nut and saddle)
+Provenance:            LUTHIERY_DOMAIN_MODEL
+Lifecycle:             live
+Bucket:                LIVE_AUTHORITY_FRAGMENTATION / INCOMPLETE_AUTHORITY
+                       (+ DATUM_CONFLICT candidate on handedness — see the bounded P0 note)
+Datum:                 edge-clearance semantics UNRESOLVED (see below);
+                       handedness/origin divergent across five surfaces
+ValidationBasis:       the existing uniform centre-to-centre implementation is FUNCTIONAL and
+                       correct for its declared mode; the equal-edge-gap model is ABSENT
+Consumer authority:    CAM (nut slot G-code/DXF) + geometry (preview/layout) + export
+Software authority:    NONE DECLARED — `spacing.py` looks canonical by name and placement but is
+                       consumed by exactly one caller and bypassed by the nut CAM path
+```
+
+#### Datum — edge clearance (D4): split verdict, no guessing
+
+`edge_offset_treble_mm` / `edge_offset_bass_mm` are documented only as *"Offset from bass/treble
+edge to first/last string."*
+
+- **As implemented: nut edge → string CENTRE.** `generate_slot_toolpath` cuts each slot at a single
+  `x_position_mm` centreline; `slot_width_mm` is a separate scalar and never offsets X.
+  `test_single_string_position` asserts `positions[0] == 3.5` for `edge_offset_treble_mm=3.5`.
+- **As intended: `INSUFFICIENT_EVIDENCE`.** No docstring, schema, or test states whether the
+  offset was meant as edge→centre or edge→**outside edge of the outer string**. Because gauge never
+  enters the lateral model, the two semantics are indistinguishable in current output — they would
+  differ by `gauge/2` per outer string only once gauge is introduced.
+
+Recording both halves is deliberate: the implemented datum is a fact, the intended datum is a
+**decision the owner must make before any implementation**, and it cannot be inferred from code
+that does not model the distinction.
+
+#### Two spacing models must both be preserved (D3)
+
+```text
+UNIFORM_CENTER    equal centre-to-centre  — currently implemented; a VALID explicit mode
+EQUAL_EDGE_GAP    equal gap between adjacent string EDGES (gauge-aware) — ABSENT
+```
+
+Uniform centre-to-centre is **not** classified as wrong. It is an unlabelled default; the defect is
+that the mode is implicit and the alternative is unavailable.
+
+Note also that `compute_edge_margin_spacing_mm` is **edge-margin** (nut edge → outer string), *not*
+equal-edge-**gap** (gauge-compensated inter-string gaps). The names are close enough to invite
+mistaken reconciliation; they are different quantities, and the presence of the former is not
+evidence of the latter.
+
+#### Manual override (`string_positions_x_mm`)
+
+`NutSlotPreviewRequest.string_positions_x_mm` accepts explicit positions that bypass derivation
+entirely (validated for count, ordering, and bounds). Recorded as an **escape hatch**, not as
+geometry authority: it is a caller-supplied array with no derivation, provenance, or datum
+declaration, and its existence is evidence that the derived path was known to be insufficient.
+
+#### Non-finding / prohibited remediation (D2)
+
+> **The gauge table in `nut_slot_calc.py` is evidence that gauge data exists. It does not establish
+> that `nut_slot_calc.py` is the canonical string-specification authority.**
+>
+> **This finding does not authorize copying gauge data from the live nut-slot depth calculator into
+> CAM.** Plumbing `STRING_DIAMETERS_MM` / `STANDARD_STRING_SETS` from `nut_slot_calc.py` into
+> `nut_slot_cam.py` would deepen authority coupling rather than resolve it — it would make a *depth*
+> calculator the de facto owner of *lateral* geometry, and (per evidence (3)) it would do so across
+> a string-ordering boundary that no module currently reconciles. Any implementation must first
+> identify or create a proper shared authority.
+
+#### Bounded P0 partial trace — string-course representation only
+
+```text
+P0 PARTIAL TRACE — string-course representation only
+```
+
+The queue's `P0 — investigate before ranking` row (`bridge_calc.py` / `acoustic_bridge_calc.py`,
+the census's one `INSUFFICIENT_EVIDENCE` classification) is **NOT discharged, NOT ranked, and NOT
+reclassified** by this amendment. Only the *string-spread representation* needed for this finding
+was traced:
+
+- `acoustic_bridge_calc.compute_string_spacing` owns **nut + saddle E-to-E spread and the taper
+  between them**, emitting uniform centre-to-centre offsets, treble-negative.
+- `bridge_calc` owns **per-instrument preset spans** (`string_spacing_mm`, E-to-e at saddle) and
+  `compute_pin_positions`, emitting positions bass-negative.
+
+These are **different stages** (acoustic spread/taper analysis vs. bridge pin layout preset), so no
+false authority conflict is manufactured between them on the *spacing* quantity. The **handedness
+contradiction** between them is recorded here as a `DATUM_CONFLICT` **candidate** and is deliberately
+left for the full P0 trace to adjudicate. `bridge_calc` / `acoustic_bridge_calc` remain
+`INSUFFICIENT_EVIDENCE` and P0.
+
+#### Relationship to existing findings (no double-counting)
+
+| Existing finding | Relationship |
+|------------------|--------------|
+| §2 Node 3 / rows 2, 3 — **nut slot DEPTH** authority + datum (queue item 1, P1) | **Distinct quantity.** Item 1 is the *height* axis (slot depth, zero-fret datum inheritance). This finding is the *lateral* axis. They share a nut, a consumer, and one harvest input — not a defect. |
+| Row 32 — `nut_compensation_physics` **dead-but-relevant** (queue item 15, P4) | **Shared harvest input.** Its `STRING_SETS` (with wound flag + pitch) is the richer gauge model and is a candidate input for a future string-course authority — the same module already sequenced as item 1's fix source. Recorded as a dependency edge, **not** a merge. |
+| §3 string-spacing row — *"single canonical (no duplicates found)"* | **Superseded.** See the dated correction in §3. |
+| Row 9 — neck/taper/bridge-height/**string-spacing** `UNTESTED_HIGH_RISK` (queue item 13, P3) | **Different lens.** Row 9's aspect is *absence of tests* on live implementations; this finding's aspect is *absence of a declared owner*. One surface, two lenses — the row-25 aspect-split precedent applies. Not a double-count. |
+| Row 31 / §3 — intonation compensation fragmentation | **Adjacent, not overlapping.** Compensation is longitudinal (along the string); this finding is lateral (across the nut/saddle). No shared quantity. |

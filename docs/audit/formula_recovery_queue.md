@@ -1,6 +1,6 @@
 # Formula / Calculator Recovery Queue
 
-**Status:** FROZEN (2026-08-22) — derived from the frozen census; reconciliation passed. Advisory
+**Status:** FROZEN (2026-08-22) — **amended 2026-08-23** (post-freeze; item 17 inserted, bounded reconciliation passed). Derived from the frozen census. Advisory
 prioritization. **Not authorized work; not a schedule; not a set of Dev Orders.** This document ranks
 the findings from the [Formula / Calculator Authority Census](./formula_authority_census.md) into
 **one comparable queue** so that consequence-and-evidence, not recency-of-discovery, decides order.
@@ -47,6 +47,8 @@ must be traced before it can be ranked at all.
 |------|-----------|----|----|----|----|----|----|-----------|
 | Bridge acoustic calcs — deep trace | `bridge_calc.py` / `acoustic_bridge_calc.py` (INSUFFICIENT_EVIDENCE) | ? | ? | ? | ? | **L** | — | Census cannot responsibly adjudicate. A scoped consumer/liveness trace is the **precursor**; only then does it enter P1-P4. Cheap; unblocks a blind spot. |
 
+> **P0 PARTIAL TRACE — string-course representation only (2026-08-23).** The 2026-08-23 amendment traced *only* how these two modules represent string spread, because item 17 needed that evidence. **P0 is NOT discharged, NOT ranked, and NOT reclassified.** Findings of the partial trace: `acoustic_bridge_calc.compute_string_spacing` owns nut+saddle E-to-E spread and the taper between them (offsets **treble-negative**); `bridge_calc` owns per-instrument preset spans plus `compute_pin_positions` (positions **bass-negative**). These are **different stages**, so no false authority conflict is manufactured on the spacing quantity — but the **handedness contradiction between them is recorded as a `DATUM_CONFLICT` candidate for the full P0 trace to adjudicate**. Both modules remain `INSUFFICIENT_EVIDENCE`. See census §11.
+
 ### P1 — high consequence, live, wrong now, actionable
 | # | Item | Census ref | CC | LR | CS | AA | EQ | RD | Rationale |
 |---|------|-----------|----|----|----|----|----|----|-----------|
@@ -71,6 +73,7 @@ must be traced before it can be ranked at all.
 | 11 | **Wood dataset provenance** | row 25 (*attribution aspect*: ~450 unsourced), row 26 (severed generator) | M | H | L | M | M | L | Data-integrity: values live, generator deleted, ~450 unattributed. Large effort, low correctness-risk. **Owner weighting could raise this** if provenance is valued over playability. |
 | 12 | **Acoustic calibration constants uncited** | rows 18 (`0.798` unknown), §2 row 10 (saddle-comp coeffs) | M | H | L | M | M | L | Uncited calibration on live acoustic/intonation constants; `ValidationBasis` gap, not a demonstrated error. |
 | 13 | **Untested high-risk live impls** | rows 9 (neck/taper/bridge-height/string-spacing), 13-partial (Bézier ≥8 etc.), `validate_scale_before_export` | M | H | L | L | M | M | Consequential + live but no dedicated verification. Remedy = **add tests** (not code correction — these are `VALID_REUSE`/legitimate gates); urgency rises only if the code is touched. |
+| 17 | **`STRING-COURSE-AUTH-001` — Canonical string-course geometry authority** *(2026-08-23 post-freeze amendment)* | §11, row 44 (+ dated correction to the §3 string-spacing row) | M | H | **L** | **H** | H | M | Five live surfaces derive ordered string-course geometry independently with **three different origin conventions** and **two contradictory handedness declarations**; the shared `spacing.py` abstraction has one importer and is bypassed by the nut CAM path. No output is demonstrated wrong today (CS=L) — every implementation is internally consistent — so this is **ambiguity, not defect**, which is what keeps it out of P1/P2 despite AA=H. Evidence is strong and traced (EQ=H). RD=M: it does not block others, but it shares item 15's harvest input and would consolidate five consumers onto one contract. |
 
 ### P4 — cleanup / lifecycle decisions / low urgency
 | # | Item | Census ref | CC | LR | CS | AA | EQ | RD | Rationale |
@@ -91,6 +94,22 @@ must be traced before it can be ranked at all.
 - **Item 4 pairs with retiring the stale `L_eff` second impl** (same row 20).
 - **Row 25 is split by aspect, not double-counted:** item 10 = authority *dispersion* (MOE), item 11 =
   *attribution* (~450 unsourced) — one census finding, two distinct remediation tracks.
+- **Item 17 ⇐ Item 15** (*and* **Item 1 ⇐ Item 15**). Both consume the same stranded module,
+  `nut_compensation_physics` — item 1 harvests its slot-depth physics, item 17 its `STRING_SETS`
+  (the richer gauge model: wound flag + pitch, absent from the live `nut_slot_calc` table).
+  **Shared harvest input does not make the findings the same authority defect.** Item 1 is the
+  *height* axis (slot depth / zero-fret datum); item 17 is the *lateral* axis (ordered string
+  positions). Recording them as one item would start collapsing unrelated consumers merely because
+  they happen to reuse one stranded module. Item 15 stays P4 on its own merits and is **not**
+  promoted by acquiring a second dependent.
+- **Item 17 is aspect-split from item 13**, not a double-count — the row-25 precedent. Row 9's
+  string-spacing entry is an *absence-of-tests* lens (item 13); item 17 is an *absence-of-declared-owner*
+  lens on overlapping surfaces. Two remediation tracks, one surface set.
+- **Item 17 is gated on two decisions, not on other queue items.** (a) The **edge-clearance datum**
+  — whether `edge_offset_*` means nut edge → string *centre* or → outer string *edge*; the code
+  implements centre, the intent is `INSUFFICIENT_EVIDENCE` and cannot be inferred from a model that
+  does not carry gauge. (b) **Which module owns gauge/string-set data**, given the two live/dead
+  registries disagree on string order. Neither is a code question.
 - **P0 gates nothing else** but should run early — it is the only unresolved classification.
 
 ## How to read this queue
@@ -133,3 +152,49 @@ census as the stable evidence base, this queue as the stable ordering mechanism.
 inserted into the queue by the same rubric **without** rewriting census history or auto-interrupting
 authorized work. The next checkpoint (choosing the first authorized recovery increment) remains
 owner-gated and is **out of scope here**.
+
+---
+
+## Bounded post-freeze reconciliation (2026-08-23) — STRING-COURSE-AUTH-001
+
+```text
+BOUNDED POST-FREEZE RECONCILIATION
+
+Scope limited to findings and queue entries affected by
+STRING-COURSE-AUTH-001.
+
+This is not a full re-audit of all frozen findings.
+```
+
+**In scope:** census §2 Node 3 (nut-slot depth) · census §3 string-spacing row (corrected) · census
+§11 (new finding) · summary row 9 · summary row 44 (new) · disposition matrix
+`LIVE AUTHORITY FRAGMENTATION` · queue items 1, 13, 15, 17 (new) · queue P0 row.
+
+**Out of scope and untouched:** every other census finding and queue item (2-12, 14, 16). Their
+2026-08-22 reconciliation stands unchanged and was not re-verified here.
+
+| Check (same five as 2026-08-22, applied to the affected neighbourhood) | Result |
+|---|---|
+| The new census finding appears exactly once in the queue, or has an explicit cross-ref disposition | **PASS.** §11 / row 44 → queue item 17, one disposition. The dated §3 correction is a *correction to an existing row*, not a new finding, and correctly carries **no** independent queue entry — it points at item 17. |
+| No `VALID_REUSE` / `VALID_ALTERNATE_MODEL` finding became remediation | **PASS.** The §3 row's *math* remains standard and is **not** queued. Item 17 queues the **authority/datum** aspect only. `UNIFORM_CENTER` is explicitly preserved as a valid mode (D3), so no working implementation is recast as debt. |
+| No double-counting against existing findings | **PASS**, three separations recorded in §11: (a) **item 1** is the *height* axis, item 17 the *lateral* axis — same nut, different quantity; (b) **item 13 / row 9** is the *absence-of-tests* lens, item 17 the *absence-of-owner* lens on overlapping surfaces — an aspect split on the row-25 precedent, not a duplicate; (c) **intonation compensation** is longitudinal, item 17 lateral — no shared quantity. |
+| Scores follow the six stated criteria | **PASS.** `CC=M` (consumers cut material but no output is shown wrong), `LR=H` (nut CAM → DXF/G-code export, live routers), `CS=L` (**no demonstrated wrong output** — each implementation is internally consistent; the risk is divergence on integration), `AA=H` (five surfaces, three origin conventions, two contradictory handedness declarations, no declared owner), `EQ=H` (traced this pass), `RD=M` (shares item 15's harvest; consolidates five consumers). `CS=L` + `AA=H` → **P3**, matching items 9-12, which are also ambiguity-not-defect. |
+| Dependencies haven't distorted priority | **PASS.** Item 15 gains a second dependent (item 17 ⇐ 15, alongside item 1 ⇐ 15) and **stays P4** — acquiring dependents does not promote a harvest input. Item 17 is **not** promoted by its association with P1 item 1. |
+
+**Recency-bias check (explicit).** Item 17 was discovered on 2026-08-23, the most recent finding in
+either artifact. It lands at **P3**, *below* eight older items, because the rubric puts it there:
+`CS=L` — nothing is demonstrated wrong today. It is **not** promoted for being recent, and it is
+**not** demoted for being a governance finding rather than a defect. Had it been scored on
+discovery-salience it would have read as P1; that is precisely the failure mode the rubric exists
+to prevent.
+
+**Freeze state after amendment.**
+
+```text
+FROZEN — amended 2026-08-23
+reconciliation passed (bounded)
+```
+
+**Implementation authority: NOT GRANTED.** Item 17 is queued, not scheduled. The future remediation
+shape sketched in census §11 (`StringCourseSpec` → `StringCourseGeometry` → consumers) is a
+**direction, not an authorization**, and would be a separate owner-gated program.
