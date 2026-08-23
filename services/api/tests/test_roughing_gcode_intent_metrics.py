@@ -50,7 +50,12 @@ def test_roughing_intent_increments_metrics(client: TestClient) -> None:
         json=payload,
         headers={"x-request-id": "req_test_1"},
     )
-    assert r.status_code in (200, 422)
+    # The subject of this test is the counter, not the outcome. The intent
+    # router increments before it delegates, so the count holds whichever way
+    # the lane resolves. 409 is the current outcome: RMOS-CONVERGE-001A leaves
+    # roughing blocked by design until it has a substantive feasibility
+    # evaluator (see tests/test_cam_roughing_intent_strict.py).
+    assert r.status_code in (200, 409, 422)
 
     after = _metric_sum(client.get(METRICS_URL).text, "cam_roughing_gcode_intent_total")
     assert after == before + 1.0

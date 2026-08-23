@@ -1,0 +1,124 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_CONVERGE_001A_FEASIBILITY_AUTHORITY",
+  "title": "RMOS-CONVERGE-001A: canonical feasibility authority cutover",
+  "intent": "Establish one trustworthy server-authority boundary for the canonical production CAM feasibility path, closing the two authority defects RMOS-PROD-AUDIT-001 Pass 1 identified at the convergence bottleneck. F1: compute_feasibility_internal stripped only the 'feasibility' key while each per-engine function carried an unguarded 'test hook' that echoed a caller-supplied 'safety' block, which SafetyPolicy.extract_safety_decision then read as the authoritative decision - so a request body carrying {\"safety\":{\"risk_level\":\"GREEN\"}} authorized manufacturing. F2: seven CAM modes resolved to compute_cam_stub_feasibility, which returned GREEN by default without evaluating anything. F3 (adjacent): engine exceptions were downgraded to YELLOW with block_reason=None so manufacturing would not be blocked. All three are closed. Engines now resolve from an explicit table with no default; a mode with no substantive evaluator returns UNKNOWN/FEASIBILITY_ENGINE_UNAVAILABLE and an evaluator that raises returns ERROR/FEASIBILITY_ENGINE_ERROR - both blocking under SafetyPolicy's existing fail-closed posture. Scope is deliberately the authority boundary only: no endpoint consolidation, no RunStoreV2 or RunArtifact change, no run-writer cleanup, no new feasibility physics. Downstream RMOS persistence/override/export architecture is preserved and re-witnessed, not rewritten.",
+  "change_type": "fix",
+  "behavior_change": "INTENTIONAL AND SIGNIFICANT - safety posture change. (1) Client-supplied feasibility/safety/decision/risk_level/export_allowed no longer influence any decision; they are stripped at one boundary and preserved as non-authoritative diagnostics. (2) Four production CAM lanes change from authorized to blocked because no evaluator exists for them: POST roughing/gcode, vcarve/gcode, vcarve/intent-gcode, helical/gcode now return 409 SAFETY_BLOCKED instead of proceeding on a GREEN stub. (biarc, relief and drill_pattern already returned 409 on origin/main - their tool_id values do not match resolve_mode's prefixes, so they already resolved to 'unknown' and already failed closed.) (3) adaptive:plan is promoted from the GREEN stub to the existing app/rmos/feasibility rule engine, whose FeasibilityInput contract PlanIn satisfies field-for-field; sane plans stay GREEN, unsafe ones now correctly block. (4) saw and rosette begin actually evaluating: on origin/main their scorer call raised on every request (see F8 below) and the failure was swallowed into a constant YELLOW/score=50.0. (5) Engine exceptions now block instead of passing as YELLOW. The blast radius in (2) was put to the owner and RULED on 2026-08-23: those lanes stay BLOCKED BY DESIGN until they have a substantive evaluator, because availability may not outrank manufacturing authority. RMOS_TREAT_UNKNOWN_AS_RED=false is explicitly NOT the sanctioned operational workaround - using it that way reintroduces the authority defect this tranche removes. A lane is reopened only by giving it a real evaluator and registering the mode in _PRODUCTION_FEASIBILITY_ENGINES. The ruling is recorded in the router's module docstring as well as the audit addendum.",
+  "risk_level": "high",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001a-feasibility-authority.json",
+      "docs/RMOS_CONCEPTS_GUIDE.md",
+      "docs/audit/rmos_prod_audit_001.md",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/feasibility_authority.py",
+      "services/api/tests/cam/test_vcarve_intent_migration.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_rmos_safety_policy.py",
+      "services/api/tests/test_cam_roughing_intent_strict.py",
+      "services/api/tests/test_roughing_gcode_intent_metrics.py"
+    ],
+    "files_expected_to_change": [
+      "docs/RMOS_CONCEPTS_GUIDE.md",
+      "docs/audit/rmos_prod_audit_001.md",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/feasibility_authority.py",
+      "services/api/tests/cam/test_vcarve_intent_migration.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_rmos_safety_policy.py",
+      "services/api/tests/test_cam_roughing_intent_strict.py",
+      "services/api/tests/test_roughing_gcode_intent_metrics.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/rmos/feasibility_authority.py (new): the authority boundary. sanitize_feasibility_input(payload) -> (sanitized, rejected_keys) removes AUTHORITY_KEYS = (feasibility, safety, decision, risk_level, export_allowed) - exactly the set of locations SafetyPolicy.extract_safety_decision can read a risk level from, plus export_allowed - without mutating the caller's object, and preserves what it removed under 'client_declared_non_authoritative' so a diagnostic trail survives without conferring authority. unavailable_feasibility() and error_feasibility() build server-owned non-authorizing results carrying FEASIBILITY_ENGINE_UNAVAILABLE/UNKNOWN and FEASIBILITY_ENGINE_ERROR/ERROR. (2) services/api/app/rmos/api/rmos_feasibility_router.py: compute_feasibility_internal now sanitizes every request, logs rejected authority keys, and dispatches through resolve_feasibility_engine(mode), which is a bare _PRODUCTION_FEASIBILITY_ENGINES.get(mode) with no default - engine absence is explicit and is failed closed by the caller. compute_cam_stub_feasibility is deleted along with the three per-engine 'test hook' echo blocks. compute_adaptive_feasibility is added, adapting the adaptive plan request onto app/rmos/feasibility/engine.compute_feasibility (an existing evaluator, not a new one) and declaring in details.derived_inputs the two FeasibilityInput fields the plan request has no source for (layer_name, which no rule reads, and feed_z, which leaves rule F011 inert). compute_saw_feasibility and compute_rosette_feasibility keep their engine but return error_feasibility() instead of a fail-open YELLOW, and now build their design spec from a new local ScorerDesignSpec that names the contract feasibility_scorer actually consumes (outer_diameter_mm, inner_diameter_mm, ring_count, pattern_type, depth_mm) - see F8. (3) Three test files under services/api/tests/rmos/ carry acceptance witnesses TC-01..TC-23 plus a source scan proving no echo hook and no GREEN-default fallback remain. (4) docs/audit/rmos_prod_audit_001.md: the Pass-1 audit is added to the repository (it existed only as an untracked working-tree file) and an implementation addendum is APPENDED - Pass-1 findings are not edited. The addendum records the F1 pre-fix and post-fix runtime witnesses verbatim, the per-mode F2 disposition table, and three new runtime findings: F8 (the saw/rosette scorer call raised on every request because the router bound it to art_studio's extra='forbid' RosetteParamSpec, which rejects those kwargs and has no ring_count - closed here), F9 (override_service.apply_override calls put_json_attachment with a signature it does not have, so every override application raises before writing - deferred to 001C), and F10 (adaptive PlanOut strips the _run_id the router sets, so the client cannot see its own governed run - deferred to 001D). (5) docs/RMOS_CONCEPTS_GUIDE.md: the 'RED operations cannot be overridden' line is corrected to the behaviour override_service implements - RED is blocked by default and proceeds only through the explicitly enabled, acknowledged, audited administrative override, and the original RED decision is never rewritten. (6) TC-25 reconciliation: nine existing tests asserted that the roughing and vcarve intent lanes produce G-code, which the ruling makes impossible. Eight are marked xfail(strict=True) with the reason and the restore condition, preserving their assertions verbatim as the contract to restore rather than rewriting them to expect 409 - a rewritten assertion would keep passing once the lane reopens and would then be asserting the wrong thing, while strict xfail fails loudly at exactly that moment. The ninth (the intent metrics counter) has its incidental status assertion widened to accept 409; its counter equality check is unchanged. Two new test classes, TestRoughingIntentBlockedLane and TestVCarveIntentBlockedLane, positively witness the ruled behaviour: the endpoints refuse with SAFETY_BLOCKED / FEASIBILITY_ENGINE_UNAVAILABLE, a BLOCKED run artifact is still persisted for audit so the blocking is governed rather than silent, and normalization/strict rejection still precedes the safety gate.",
+    "why_not_redundant": "Not cosmetic and not a refactor: this removes a live authority bypass on a @safety_critical function. On origin/main a client could set its own manufacturing risk level, and seven CAM modes were authorized without evaluation. Both were reproduced at runtime before the change and proved impossible after it. The SafetyPolicy gate, RunStoreV2, RunArtifact immutability, the RED override invariant and the export gate are deliberately untouched - the audit found them sound, and this increment repairs only the authority handed to them. No feasibility physics is invented: adaptive dispatches to an existing rule engine whose input contract its request already satisfies, and the six modes with no matching evaluator fail closed with a machine-readable reason rather than getting a speculative formula. The TC-25 reconciliation does not weaken any gate: no assertion is relaxed to accommodate the change, the blocked lanes gain positive witnesses, and the tests that encoded the old permissive contract are preserved intact behind a strict xfail that trips the moment the contract becomes satisfiable again."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 <probe> with the origin/main router restored -> PRE-FIX: client safety GREEN echoed as authoritative on saw/rosette/roughing/vcarve/adaptive (meta.note='echoed safety from request (test hook)'); CAM modes GREEN from the stub",
+      "py -3.11 <probe> with the cutover applied -> POST-FIX: all five authority key shapes ignored, request stays RED/blocked; roughing/vcarve/helical/unknown -> UNKNOWN + FEASIBILITY_ENGINE_UNAVAILABLE + blocked; adaptive -> GREEN when sane, RED (F002) when not",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_feasibility_authority.py -q --no-cov -> 29 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_safety_policy.py -q --no-cov -> 15 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_governed_cam_path.py -q --no-cov -> 10 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos tests/test_rmos_*.py tests/test_feasibility_*.py -q --no-cov -> 278 passed, 1 skipped (TC-24)",
+      "PYTHONPATH=. py -3.11 -m pytest <CAM regression set> tests/cam -q --no-cov -> (recorded at commit, TC-25)",
+      "py -3.11 scripts/governance/check_all.py --tier ci -> (recorded at commit, TC-26)",
+      "PYTHONPATH=. py -3.11 -m pytest <CAM regression set> tests/cam -q --no-cov -> 13 failed, 2538 passed, 3 skipped (TC-25 first run): 9 were the ruled blocking of roughing/vcarve intent lanes, 4 were pre-existing and reproduce identically with the origin/main router restored (2x relief/vcarve preview 404 'router not wired', 2x translator quarantine/ledger get_latest id mismatch)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_cam_roughing_intent_strict.py tests/test_roughing_gcode_intent_metrics.py -q --no-cov -> 7 passed, 4 xfailed; tests/cam/test_vcarve_intent_migration.py -> 18 passed, 4 xfailed"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/rmos/feasibility_authority.py",
+      "intent": "New authority boundary module: sanitize_feasibility_input strips the five client keys that can assert manufacturing authority (without mutating the caller and preserving them as explicitly non-authoritative diagnostics); unavailable_feasibility and error_feasibility build server-owned non-authorizing results with machine-readable reason codes.",
+      "risk": "medium",
+      "behavior_change": "new module; no behavior of its own until wired by the router"
+    },
+    {
+      "path": "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "intent": "Single server-authority boundary at compute_feasibility_internal: sanitize every request, dispatch through an explicit engine table with no default, delete compute_cam_stub_feasibility and the three per-engine safety echo hooks, promote adaptive to the existing rule engine, fail closed on evaluator error, and repair the saw/rosette scorer adapter that had been raising on every call (F8).",
+      "risk": "high",
+      "behavior_change": "yes - client safety assertions lose all effect; four CAM lanes move from GREEN-by-stub to 409 SAFETY_BLOCKED; adaptive and saw/rosette begin evaluating for real; evaluator errors block instead of passing as YELLOW"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "intent": "Acceptance witnesses TC-01..TC-09, TC-22, TC-23: real GREEN and RED verdicts, all five client authority key shapes refused on a RED request, explicit engine resolution, unavailable and error modes never GREEN, and source scans proving no request-driven safety echo and no GREEN-default dispatcher fallback remain.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_safety_policy.py",
+      "intent": "Acceptance witnesses TC-10..TC-13 plus regression guards that the two new non-authorizing results (UNKNOWN from an unavailable engine, ERROR from a failing one) are blocking at the gate, and that ERROR is never interchangeable with YELLOW. Placed under tests/ because the existing app/tests/rmos/test_safety_policy.py suite is never collected (pytest.ini testpaths = tests).",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "intent": "Acceptance witnesses TC-14..TC-21: the persisted run records the server decision (and a client GREEN never reaches it), export from a RED unoverridden run is denied, RED override is refused without both the flag and the acknowledgement, the original RED determination is never rewritten, run/feasibility/toolpath hashes stay linked and retrievable, and the saw/rosette and drilling/profiling evaluators still evaluate.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/audit/rmos_prod_audit_001.md",
+      "intent": "Add the RMOS-PROD-AUDIT-001 Pass-1 audit to the repository (previously untracked) and APPEND a dated implementation addendum: F1 pre-fix and post-fix runtime witnesses verbatim, the per-mode F2 disposition table with the reason each mode was or was not promoted, the F3 and F4 dispositions, three new runtime findings (F8 closed here, F9 and F10 deferred), two supplementary observations, and the merge-gating blast radius. Pass-1 findings are not edited.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/RMOS_CONCEPTS_GUIDE.md",
+      "intent": "Reconcile the F4 documentation drift: replace 'RED operations cannot be overridden' with the behaviour override_service implements - RED is blocked by default and may proceed only through the explicitly enabled (RMOS_ALLOW_RED_OVERRIDE=1), acknowledged, audited administrative override, and the original RED decision remains unchanged.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001a-feasibility-authority.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_cam_roughing_intent_strict.py",
+      "intent": "TC-25 reconciliation. Four tests assert the roughing lane produces G-code, which the ruling makes impossible: marked xfail(strict=True) with the reason and the restore condition, so they fail loudly the moment a roughing evaluator lands rather than silently rotting. Assertions are preserved verbatim as the contract to restore - not rewritten to expect 409, which would keep passing after the lane reopens and would then assert the wrong thing. Adds TestRoughingIntentBlockedLane as a positive witness that the lane refuses with SAFETY_BLOCKED / FEASIBILITY_ENGINE_UNAVAILABLE and that strict-mode rejection still precedes the safety gate.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/cam/test_vcarve_intent_migration.py",
+      "intent": "TC-25 reconciliation, same treatment for the vcarve lane. Adds TestVCarveIntentBlockedLane witnessing the 409, that a BLOCKED run artifact is still persisted for audit (blocking is governed, not silent), and that wrong-mode rejection still precedes feasibility.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_roughing_gcode_intent_metrics.py",
+      "intent": "TC-25 reconciliation. The subject is the intent counter, which increments before delegation and is unaffected; the incidental status assertion is widened to accept the lane's new 409 alongside 200/422, with a comment naming the cause. No assertion weakened - the counter equality check is unchanged.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    }
+  ]
+}

@@ -213,6 +213,19 @@ class TestVCarveIntentRouterIntegration:
             "options": {},
         }
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the vcarve lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. A V-bit has an angle rather than a straight diameter, so "
+            "the existing rule engine does not model this cutter at all - reopening "
+            "the lane needs a real vcarve evaluator, not extra request fields. The "
+            "assertions below are the contract to restore; strict=True so this fails "
+            "loudly the moment the lane reopens. Current behaviour is witnessed by "
+            "TestVCarveIntentBlockedLane below."
+        ),
+    )
     def test_intent_endpoint_accepts_valid_request(self, client):
         """Valid CamIntentV1 request returns 200."""
         response = client.post(
@@ -236,6 +249,19 @@ class TestVCarveIntentRouterIntegration:
         )
         assert response.status_code == 422
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the vcarve lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. A V-bit has an angle rather than a straight diameter, so "
+            "the existing rule engine does not model this cutter at all - reopening "
+            "the lane needs a real vcarve evaluator, not extra request fields. The "
+            "assertions below are the contract to restore; strict=True so this fails "
+            "loudly the moment the lane reopens. Current behaviour is witnessed by "
+            "TestVCarveIntentBlockedLane below."
+        ),
+    )
     def test_intent_endpoint_returns_normalization_issues(self, client):
         """Normalization issues are returned in response."""
         request = self._make_valid_request()
@@ -251,6 +277,19 @@ class TestVCarveIntentRouterIntegration:
         # Issues list should exist (may be empty if normalization is clean)
         assert isinstance(data["issues"], list)
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the vcarve lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. A V-bit has an angle rather than a straight diameter, so "
+            "the existing rule engine does not model this cutter at all - reopening "
+            "the lane needs a real vcarve evaluator, not extra request fields. The "
+            "assertions below are the contract to restore; strict=True so this fails "
+            "loudly the moment the lane reopens. Current behaviour is witnessed by "
+            "TestVCarveIntentBlockedLane below."
+        ),
+    )
     def test_intent_endpoint_persists_run_artifact(self, client):
         """Successful call persists RMOS run artifact."""
         response = client.post(
@@ -262,6 +301,19 @@ class TestVCarveIntentRouterIntegration:
         assert "run_id" in data
         assert data["run_id"] is not None
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "RMOS-CONVERGE-001A: the vcarve lane has no substantive feasibility "
+            "evaluator, so it is blocked by design (409 SAFETY_BLOCKED) and cannot "
+            "reach G-code. A V-bit has an angle rather than a straight diameter, so "
+            "the existing rule engine does not model this cutter at all - reopening "
+            "the lane needs a real vcarve evaluator, not extra request fields. The "
+            "assertions below are the contract to restore; strict=True so this fails "
+            "loudly the moment the lane reopens. Current behaviour is witnessed by "
+            "TestVCarveIntentBlockedLane below."
+        ),
+    )
     def test_intent_endpoint_returns_hashes(self, client):
         """Response includes provenance hashes."""
         response = client.post(
@@ -293,4 +345,77 @@ class TestVCarveIntentRouterIntegration:
             "/api/cam/vcarve/intent-gcode",
             json=request,
         )
+        assert response.status_code == 422
+
+
+class TestVCarveIntentBlockedLane:
+    """
+    RMOS-CONVERGE-001A: positive witness for the ruled behaviour.
+
+    V-carve has no substantive feasibility evaluator. Under the owner ruling
+    of 2026-08-23 the lane stays blocked rather than being authorized by a
+    GREEN-default stub, so the endpoint refuses after normalization. Asserted
+    positively so CI witnesses the blocked posture, not merely the absence of
+    the old success path.
+    """
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def _valid_request(self) -> dict:
+        return {
+            "mode": "router_3axis",
+            "units": "mm",
+            "design": {
+                "paths": [
+                    {
+                        "points": [{"x": 0, "y": 0}, {"x": 10, "y": 0}, {"x": 10, "y": 10}],
+                        "is_closed": False,
+                    }
+                ],
+                "bit_angle_deg": 60.0,
+                "target_line_width_mm": 2.0,
+            },
+            "context": {"spindle_rpm": 18000, "material": "hardwood"},
+            "options": {},
+        }
+
+    def test_valid_request_is_refused_by_the_safety_gate(self, client):
+        response = client.post(
+            "/api/cam/vcarve/intent-gcode",
+            json=self._valid_request(),
+        )
+        assert response.status_code == 409
+
+        detail = response.json()["detail"]
+        assert detail["error"] == "SAFETY_BLOCKED"
+        assert detail["decision"]["risk_level"] == "UNKNOWN"
+
+        safety = detail["authoritative_feasibility"]["safety"]
+        assert safety["details"]["code"] == "FEASIBILITY_ENGINE_UNAVAILABLE"
+        assert safety["risk_level"] != "GREEN"
+
+    def test_blocked_run_is_still_persisted_for_audit(self, client):
+        """Blocking is governed, not silent: a BLOCKED run artifact is written."""
+        from app.rmos.runs_v2.store_api import get_run
+
+        response = client.post(
+            "/api/cam/vcarve/intent-gcode",
+            json=self._valid_request(),
+        )
+        assert response.status_code == 409
+
+        run = get_run(response.json()["detail"]["run_id"])
+        assert run is not None
+        assert run.status == "BLOCKED"
+        assert run.decision.risk_level == "UNKNOWN"
+
+    def test_wrong_mode_still_rejected_before_the_safety_gate(self, client):
+        """Normalization rejection still precedes feasibility."""
+        request = self._valid_request()
+        request["mode"] = "saw"
+
+        response = client.post("/api/cam/vcarve/intent-gcode", json=request)
         assert response.status_code == 422
