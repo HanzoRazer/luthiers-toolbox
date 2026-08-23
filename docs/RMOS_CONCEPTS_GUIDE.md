@@ -62,7 +62,19 @@ When YELLOW warnings are present, an operator must acknowledge them before proce
 - When it was approved
 - Why it was approved (required text)
 
-**Important:** Overrides are logged but do not bypass safety checks. RED operations cannot be overridden.
+**Important:** Overrides are logged but do not bypass safety checks.
+
+**RED is blocked by default.** A RED operation may only proceed through the explicitly enabled,
+audited administrative override mechanism — it requires both the `RMOS_ALLOW_RED_OVERRIDE=1`
+server flag and an explicit `acknowledge_risk` from the operator, and it is recorded as a
+content-addressed audit attachment. It is not available from the operator seat alone.
+
+**The original RED decision is never rewritten.** An override changes the run's status and adds
+an override record; `decision.risk_level` remains RED as historical truth.
+
+*(Corrected 2026-08-23 under RMOS-CONVERGE-001A. The previous wording — "RED operations cannot
+be overridden" — did not match `runs_v2/override_service.py`, which has implemented the gated,
+acknowledged, audited RED override path described above.)*
 
 ### Audit Trail
 
