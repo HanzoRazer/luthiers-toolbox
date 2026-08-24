@@ -10,10 +10,15 @@
   "risk_level": "high",
   "scope": {
     "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001b-compat-contract.json",
       ".cbsp21/patches/rmos-converge-001b-output-governance.json",
       ".github/workflows/governance_baseline_diff_report.yml",
       "docs/api/endpoints.md",
       "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
       "services/api/app/ci/fence_baseline.json",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/runs_v2/store_completeness.py",
@@ -26,6 +31,10 @@
       ".github/workflows/governance_baseline_diff_report.yml",
       "docs/api/endpoints.md",
       "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
       "services/api/app/ci/fence_baseline.json",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/runs_v2/store_completeness.py",
@@ -36,7 +45,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) retract_gcode_router.py restructured so authority precedes generation structurally rather than by statement order: _authorize_retract() calls the 001A canonical boundary, derives the decision via SafetyPolicy, persists a BLOCKED RunArtifact carrying the feasibility hash but no gcode_sha256 and no attachment, and raises 409; G-code construction moved into pure builders (_build_simple_retract_gcode, _build_download_retract_gcode) that contain no authority code and are reachable only after authorization returns; _persist_authorized_run binds an authorized artifact to the run that authorized it. The two _governed routes are retained as thin delegations to their plain counterparts, so the suffix no longer denotes a different lane. (2) rmos_feasibility_router.resolve_mode gains a retract: prefix - an identity/wiring fix permitted by the 001B handoff, not an evaluator-table expansion. (3) New census artifact records the base SHA, entry-gate verification, inclusion rule, full candidate triage with per-exclusion evidence, the Phase 1 deep matrix, retract pre/post witnesses, and the eleven ungoverned capabilities awaiting a ruling. (4) New test module with 19 witnesses covering B01, B07, B09, B13, B14 and B19, plus a structural guard that the builders contain no authority code and that no route constructs a literal GREEN RunDecision - checked on the AST rather than source text, so the module may still describe the retired anti-pattern in prose. (5) Follow-up on the Fence Checks / api-verify failure: the retract router no longer imports or constructs RunArtifact, RunDecision or Hashes at all - both persistence paths now go through validate_and_persist(), the alternative FENCE_REGISTRY.json itself prescribes. _authorize_retract additionally returns the risk_level it derived, so _persist_authorized_run records the decision that granted authority instead of re-deriving it, and the retract mode label is an explicit constant rather than a string assembled from a suffix. _build_simple_retract_gcode now raises on an unrecognised strategy instead of emitting a header-only program under a retract_<strategy>.nc filename. (6) Census amended: the '5 self-minting GREEN' figure is restated as a LOWER BOUND, because store_api.persist_run_artifact() hardcodes risk_level=GREEN for all five of its callers inside the fence-authorized module, where a route-source detector cannot see it - a separate search dimension, queued not chased. New section 8 records the five findings this tranche surfaced but deliberately did not fix (persistence self-GREEN, FENCE_REGISTRY vs store_completeness.py authorization, FENCE_REGISTRY vs boundary_imports allowlist drift, five CAM composables that save a governed 409 as .nc, and the retract two-vocabulary split), plus the cutover invariant those findings imply: a server route is not ready for authority cutover merely because its backend gate is correct - its production consumer must also fail closed on the governed rejection. (7) Review follow-up: the public contract change is now documented on the endpoint-facing surface (docs/api/endpoints.md) rather than only in code docstrings and the audit census, and 409 SAFETY_BLOCKED is added to the common error-code table. A new guard module pins the alias-delegation contract, the unsupported-strategy raise, and the two-vocabulary split. The vocabulary is pinned, NOT normalised - reconciliation remains a queued ruling that must precede evaluator work. (8) baseline-diff turned red on this PR the moment the governance label was applied: its comment step is gated on that label, so it had never executed on any prior PR and broke on first use. Root cause is the repository default default_workflow_permissions=read against a workflow that declares no permissions block. Fixed at the cause with a minimal scope grant rather than by suppressing the step, because the report itself was correct - symbols 101 -> 98, net -3, the two 'added' entries being the store_completeness.py re-keys - and only the POST failed. This is the same class of work as the fence resolution in b9503f81: making this PR pass its own governance controls, not absorbing unrelated debt.",
+    "what_changed": "(1) retract_gcode_router.py restructured so authority precedes generation structurally rather than by statement order: _authorize_retract() calls the 001A canonical boundary, derives the decision via SafetyPolicy, persists a BLOCKED RunArtifact carrying the feasibility hash but no gcode_sha256 and no attachment, and raises 409; G-code construction moved into pure builders (_build_simple_retract_gcode, _build_download_retract_gcode) that contain no authority code and are reachable only after authorization returns; _persist_authorized_run binds an authorized artifact to the run that authorized it. The two _governed routes are retained as thin delegations to their plain counterparts, so the suffix no longer denotes a different lane. (2) rmos_feasibility_router.resolve_mode gains a retract: prefix - an identity/wiring fix permitted by the 001B handoff, not an evaluator-table expansion. (3) New census artifact records the base SHA, entry-gate verification, inclusion rule, full candidate triage with per-exclusion evidence, the Phase 1 deep matrix, retract pre/post witnesses, and the eleven ungoverned capabilities awaiting a ruling. (4) New test module with 19 witnesses covering B01, B07, B09, B13, B14 and B19, plus a structural guard that the builders contain no authority code and that no route constructs a literal GREEN RunDecision - checked on the AST rather than source text, so the module may still describe the retired anti-pattern in prose. (5) Follow-up on the Fence Checks / api-verify failure: the retract router no longer imports or constructs RunArtifact, RunDecision or Hashes at all - both persistence paths now go through validate_and_persist(), the alternative FENCE_REGISTRY.json itself prescribes. _authorize_retract additionally returns the risk_level it derived, so _persist_authorized_run records the decision that granted authority instead of re-deriving it, and the retract mode label is an explicit constant rather than a string assembled from a suffix. _build_simple_retract_gcode now raises on an unrecognised strategy instead of emitting a header-only program under a retract_<strategy>.nc filename. (6) Census amended: the '5 self-minting GREEN' figure is restated as a LOWER BOUND, because store_api.persist_run_artifact() hardcodes risk_level=GREEN for all five of its callers inside the fence-authorized module, where a route-source detector cannot see it - a separate search dimension, queued not chased. New section 8 records the five findings this tranche surfaced but deliberately did not fix (persistence self-GREEN, FENCE_REGISTRY vs store_completeness.py authorization, FENCE_REGISTRY vs boundary_imports allowlist drift, five CAM composables that save a governed 409 as .nc, and the retract two-vocabulary split), plus the cutover invariant those findings imply: a server route is not ready for authority cutover merely because its backend gate is correct - its production consumer must also fail closed on the governed rejection. (7) Review follow-up: the public contract change is now documented on the endpoint-facing surface (docs/api/endpoints.md) rather than only in code docstrings and the audit census, and 409 SAFETY_BLOCKED is added to the common error-code table. A new guard module pins the alias-delegation contract, the unsupported-strategy raise, and the two-vocabulary split. The vocabulary is pinned, NOT normalised - reconciliation remains a queued ruling that must precede evaluator work. (8) baseline-diff turned red on this PR the moment the governance label was applied: its comment step is gated on that label, so it had never executed on any prior PR and broke on first use. Root cause is the repository default default_workflow_permissions=read against a workflow that declares no permissions block. Fixed at the cause with a minimal scope grant rather than by suppressing the step, because the report itself was correct - symbols 101 -> 98, net -3, the two 'added' entries being the store_completeness.py re-keys - and only the POST failed. This is the same class of work as the fence resolution in b9503f81: making this PR pass its own governance controls, not absorbing unrelated debt. (9) PR #320 merged into this branch, bringing #315's commits (its head was an ancestor of #320's) plus Vue specs proving the retract query-parameter binding and the 409 handling. Two CBSP21 manifests now exist in one PR and they were exactly symmetric against the combined 16-file diff - each declaring 11 and covering 11 - which the gate correctly refuses as an ambiguous tie rather than picking by filename. Resolved by declaring the whole landed diff here, so this manifest wins on coverage; the compat manifest is retained as the record of that patch. Note for future stacked PRs: manifest SELECTION uses the union of files[] and scope.*, but coverage VALIDATION reads files[] only, so widening scope alone wins selection and then fails at partial coverage.",
     "why_not_redundant": "Closes a live authority bypass on machine-consumable output. Before this change a caller blocked anywhere in RMOS could obtain retract G-code, as a .nc download, from a route that never consulted feasibility - and two sibling routes wrapped that same unassessed output in a governed-looking run with a self-minted GREEN decision. The census is not decoration: it establishes that retract is one instance of a pattern (five routes self-mint GREEN; only two of twenty-nine in-scope routes were governed before this tranche) and provides the blast-radius map the owner requires before authorizing the next cutover group."
   },
   "verification": {
@@ -53,7 +62,8 @@
       "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_retract_contract_guards.py -q --no-cov -> 15 passed",
       "mutation check on the alias guards -> alias default drift caught by the signature guard; an alias that grows its own header caught by the structural guard (the behavioural parity check cannot see it while blocking short-circuits both paths, which is why both guards exist)",
       "CI witness: the first push of the alias-parity guard FAILED api-verify/API Tests on x-request-id, a per-call correlation header the local run did not surface. Fixed by supplying the same client-side X-Request-ID on both calls (the middleware echoes it), which keeps the header inside the comparison rather than excluding it.",
-      "gh api repos/HanzoRazer/luthiers-toolbox/actions/permissions/workflow -> default_workflow_permissions=read (root cause); workflow YAML re-parsed after the edit -> permissions {'contents': 'read', 'pull-requests': 'write'}, jobs ['baseline-diff']"
+      "gh api repos/HanzoRazer/luthiers-toolbox/actions/permissions/workflow -> default_workflow_permissions=read (root cause); workflow YAML re-parsed after the edit -> permissions {'contents': 'read', 'pull-requests': 'write'}, jobs ['baseline-diff']",
+      "post-merge simulation before committing -> both manifests covered 11 of 16 (tie, gate FAILED); widening scope.* alone -> selection won but coverage 71.4% FAILED; widening scope.* AND files[] -> 16 declared / 16 changed / 100.0% PASSED"
     ]
   },
   "files": [
@@ -122,6 +132,36 @@
       "intent": "Declare the GITHUB_TOKEN scopes the workflow needs. The repository default is default_workflow_permissions=read and the file declared no permissions block, so the final step could not post its report and 403'd with 'Resource not accessible by integration'. Scoped to contents:read + pull-requests:write - the one write the comment needs, nothing else. The report content was always computed correctly; only the post failed.",
       "risk": "low",
       "behavior_change": "yes - the baseline diff report is now actually posted to labelled PRs instead of 403'ing. No change to what the report contains, and no other workflow is affected."
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
+      "intent": "Do not download 409 JSON as G-code; send query params the endpoint actually reads.",
+      "risk": "medium",
+      "behavior_change": "yes - blocked export surfaces an error instead of saving a .nc of JSON; UI params now reach the API as query string"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "intent": "Add readGcodeOrThrow so a non-OK body (409 SAFETY_BLOCKED) cannot be saved as .nc. handleExportError gains an opt-in showDetail flag; its default alert is unchanged for the five CAM operations that already used it.",
+      "risk": "low",
+      "behavior_change": "none by default - showDetail is opt-in and only retract passes it"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001b-compat-contract.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "intent": "Cover readGcodeOrThrow: 200 text, 409 SAFETY_BLOCKED JSON, non-JSON error body.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "intent": "Cover exportGcode: retract params go on the query string, no JSON body, downloadFile is not called on 409.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
     }
   ]
 }
