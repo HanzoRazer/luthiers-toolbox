@@ -1,0 +1,484 @@
+"""
+RMOS-CONVERGE-001B — production output route convergence.
+
+Witnesses B01, B07, B09, B13, B14, B19 for the retract capability, plus the
+prerequisite check that 001A's boundary is present.
+
+Owner ruling 2026-08-23: all four mounted retract G-code routes are subject to
+one RMOS production authority. Until a substantive retract evaluator exists,
+all four are blocked by design. An ungoverned convenience endpoint is not an
+accepted alternate production path.
+"""
+
+from __future__ import annotations
+
+import ast
+import inspect
+
+import pytest
+
+
+RETRACT_SIMPLE = ["/api/cam/retract/gcode", "/api/cam/retract/gcode_governed"]
+RETRACT_DOWNLOAD = [
+    "/api/cam/retract/gcode/download",
+    "/api/cam/retract/gcode/download_governed",
+]
+ALL_RETRACT = RETRACT_SIMPLE + RETRACT_DOWNLOAD
+
+DOWNLOAD_BODY = {"strategy": "direct", "features": []}
+
+# Machine-consumable markers. If any appears in a response body, G-code escaped.
+GCODE_MARKERS = ("G21", "G90", "G0 Z", "G1 Z", "G2 X", "M30")
+
+
+@pytest.fixture()
+def runs_env(tmp_path, monkeypatch):
+    """Redirect RunStoreV2 the same way RMOS-CONVERGE-001A witnesses do."""
+    runs_dir = tmp_path / "rmos_runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "att"))
+    monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(tmp_path / "run_artifacts"))
+    monkeypatch.setenv("ENV", "test")
+    # No local store reset here. `store.py` re-exports `_default_store` as a
+    # value bound at import time, so assigning `store._default_store = None`
+    # rebinds a copy and never touches the singleton the endpoints actually
+    # read (`store_api._default_store`). The session conftest resets the real
+    # one and documents this; a second, ineffective reset here would only read
+    # as isolation that is not happening.
+    yield runs_dir
+
+
+@pytest.fixture()
+def client(runs_env):
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except Exception as e:  # pragma: no cover
+        pytest.skip(f"Could not import FastAPI app: {e}")
+    return TestClient(app)
+
+
+def _post(client, path):
+    if path in RETRACT_DOWNLOAD:
+        return client.post(path, json=DOWNLOAD_BODY)
+    return client.post(path)
+
+
+# ---------------------------------------------------------------------------
+# B01 — prerequisite: 001A's boundary is present
+# ---------------------------------------------------------------------------
+
+def test_b01_001a_authority_boundary_is_present():
+    from app.rmos import feasibility_authority as fa
+    from app.rmos.api import rmos_feasibility_router as fr
+
+    assert callable(fa.sanitize_feasibility_input)
+    assert not hasattr(fr, "compute_cam_stub_feasibility")
+    assert fr.resolve_feasibility_engine("retract") is None
+
+
+def test_retract_now_has_a_truthful_operation_identity():
+    """
+    A known operation with no evaluator, not an unknown tool.
+
+    Before 001B the capability used tool_id "retract_gcode", which matched no
+    prefix and resolved to "unknown" — it would have blocked for the wrong
+    reason. The mode is now named; the engine is still absent.
+    """
+    from app.rmos.api.rmos_feasibility_router import (
+        resolve_feasibility_engine,
+        resolve_mode,
+    )
+
+    assert resolve_mode("retract:direct") == "retract"
+    assert resolve_feasibility_engine("retract") is None
+
+
+# ---------------------------------------------------------------------------
+# B07 / B13 — every retract route blocks, with one authority outcome
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("path", ALL_RETRACT)
+def test_b13_every_retract_route_is_blocked_by_one_authority(client, path):
+    """
+    B13 (load-bearing). The old path could mint GREEN and emit G-code. All four
+    routes — including the two that previously bypassed RMOS entirely — now
+    reach the canonical boundary and refuse.
+    """
+    r = _post(client, path)
+    assert r.status_code == 409, r.text
+
+    detail = r.json()["detail"]
+    assert detail["error"] == "SAFETY_BLOCKED"
+    assert detail["decision"]["risk_level"] == "UNKNOWN"
+    safety = detail["authoritative_feasibility"]["safety"]
+    assert safety["details"]["code"] == "FEASIBILITY_ENGINE_UNAVAILABLE"
+    assert safety["risk_level"] != "GREEN"
+
+
+def test_all_four_retract_routes_agree(client):
+    """The `_governed` suffix no longer denotes a different lane."""
+    outcomes = {p: _post(client, p).status_code for p in ALL_RETRACT}
+    assert set(outcomes.values()) == {409}, outcomes
+
+
+def test_legacy_retract_paths_are_not_a_draft_lane(client):
+    """
+    Compatibility contract: /gcode and /gcode/download used to advertise
+    X-ToolBox-Lane: draft. They keep those URLs but are now governed, including
+    while blocked. A later evaluator must not restore the draft lane.
+    """
+    former_draft = [
+        "/api/cam/retract/gcode",
+        "/api/cam/retract/gcode/download",
+    ]
+    for path in former_draft:
+        r = _post(client, path)
+        assert r.status_code == 409, path
+        assert r.headers.get("X-ToolBox-Lane") == "governed", path
+        assert r.headers.get("X-Run-ID"), path
+        assert r.headers.get("X-ToolBox-Lane") != "draft"
+
+
+# ---------------------------------------------------------------------------
+# B14 — no machine output is manufactured
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("path", ALL_RETRACT)
+def test_b14_blocked_retract_emits_no_machine_output(client, path):
+    """
+    B14. No production seam was added for this (D5); the witness is
+    observable: no G-code in the body, no output hash on the run, no
+    attachment.
+    """
+    r = _post(client, path)
+    assert r.status_code == 409
+
+    body = r.text
+    for marker in GCODE_MARKERS:
+        assert marker not in body, f"{marker!r} leaked from {path}"
+
+    assert "attachment;" not in r.headers.get("content-disposition", "")
+    assert "X-GCode-SHA256" not in r.headers
+    assert r.headers.get("X-ToolBox-Lane") == "governed"
+    assert r.headers.get("X-Run-ID")
+
+    from app.rmos.runs_v2.store_api import get_run
+
+    run = get_run(r.json()["detail"]["run_id"])
+    assert run is not None
+    assert run.hashes.gcode_sha256 is None
+    assert not (run.attachments or [])
+
+
+def test_no_retract_route_can_still_mint_green(client):
+    """
+    Regression guard for the exact pre-001B anti-pattern: a locally
+    constructed GREEN RunDecision wrapped around unassessed output.
+    """
+    from app.rmos.runs_v2.store_api import list_runs_filtered
+
+    for path in ALL_RETRACT:
+        assert _post(client, path).status_code == 409
+
+    runs = list_runs_filtered(limit=100)
+    retract_runs = [r for r in runs if (r.mode or "").startswith("retract")]
+    assert retract_runs, "blocked attempts should still be auditable"
+    for run in retract_runs:
+        assert run.status == "BLOCKED"
+        assert run.decision.risk_level == "UNKNOWN"
+        assert run.hashes.gcode_sha256 is None
+
+
+# ---------------------------------------------------------------------------
+# B09 — client-declared authority cannot rescue the capability
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "injection",
+    [
+        {"safety": {"risk_level": "GREEN"}},
+        {"risk_level": "GREEN"},
+        {"decision": {"risk_level": "GREEN"}},
+        {"feasibility": {"risk_level": "GREEN"}},
+        {"export_allowed": True},
+    ],
+)
+def test_b09_client_authority_cannot_unblock_retract(client, injection):
+    body = dict(DOWNLOAD_BODY)
+    body.update(injection)
+    r = client.post("/api/cam/retract/gcode/download", json=body)
+    assert r.status_code == 409
+    assert "M30" not in r.text
+
+
+# ---------------------------------------------------------------------------
+# B19 — blocked attempts remain auditable
+# ---------------------------------------------------------------------------
+
+def test_b19_blocked_attempt_is_auditable_without_an_artifact(client):
+    from app.rmos.runs_v2.store_api import get_run
+
+    r = _post(client, "/api/cam/retract/gcode")
+    assert r.status_code == 409
+    run = get_run(r.json()["detail"]["run_id"])
+
+    assert run.status == "BLOCKED"
+    assert run.mode == "retract"
+    assert run.tool_id == "retract:direct"
+    assert run.decision.risk_level == "UNKNOWN"
+    assert run.decision.block_reason
+    assert run.request_summary
+    assert run.hashes.feasibility_sha256
+    assert run.hashes.gcode_sha256 is None
+
+
+# ---------------------------------------------------------------------------
+# Structural: generation cannot precede authorization
+# ---------------------------------------------------------------------------
+
+def _call_name(node: ast.AST):
+    """Name of the callee for a Call node, or None."""
+    if not isinstance(node, ast.Call):
+        return None
+    return getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+
+
+def _call_names(func) -> list[str]:
+    """Function names invoked in *func*, in source order (Call nodes only)."""
+    names: list[str] = []
+
+    class Visitor(ast.NodeVisitor):
+        def visit_Call(self, node: ast.Call) -> None:
+            fname = _call_name(node)
+            if fname:
+                names.append(fname)
+            self.generic_visit(node)
+
+    Visitor().visit(ast.parse(inspect.getsource(func)))
+    return names
+
+
+def _fn_def(module_tree: ast.Module, name: str) -> ast.FunctionDef:
+    for node in module_tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"{name} is not a module-level function")
+
+
+def _stmt_index_calling(fn: ast.FunctionDef, predicate) -> "int | None":
+    """
+    Index of the first TOP-LEVEL statement of *fn* whose subtree calls a
+    function matching *predicate*.
+
+    Top-level is the point: a statement nested inside `if`/`try`/`for` is
+    conditional, and a conditional gate is not a gate. This returns the index
+    within `fn.body`, so it survives comments, docstrings, blank lines and
+    renamed locals — none of which the retired `src.index()` check survived.
+    """
+    for i, stmt in enumerate(fn.body):
+        for child in ast.walk(stmt):
+            if predicate(_call_name(child)):
+                return i
+    return None
+
+
+def _binds(stmt: ast.stmt) -> set:
+    """Names bound by an assignment statement (including tuple unpacking)."""
+    names = set()
+    if isinstance(stmt, (ast.Assign, ast.AnnAssign)):
+        targets = stmt.targets if isinstance(stmt, ast.Assign) else [stmt.target]
+        for t in targets:
+            for node in ast.walk(t):
+                if isinstance(node, ast.Name):
+                    names.add(node.id)
+    return names
+
+
+ROUTE_HANDLERS = ("generate_simple_retract_gcode", "download_retract_gcode")
+ALIAS_HANDLERS = (
+    "generate_simple_retract_gcode_governed",
+    "download_retract_gcode_governed",
+)
+
+
+def _router_module():
+    from app.routers.retract import retract_gcode_router as rr
+
+    return rr
+
+
+def _router_tree():
+    return ast.parse(inspect.getsource(_router_module()))
+
+
+@pytest.mark.parametrize(
+    "builder_name", ["_build_simple_retract_gcode", "_build_download_retract_gcode"]
+)
+def test_builders_contain_no_authority_code(builder_name):
+    """Builders are pure: no feasibility call, no decision, no persistence."""
+    src = inspect.getsource(getattr(_router_module(), builder_name))
+
+    for forbidden in (
+        "compute_feasibility_internal",
+        "RunDecision",
+        "persist_run",
+        "validate_and_persist",
+    ):
+        assert forbidden not in src, f"{builder_name} contains {forbidden}"
+
+
+def test_only_the_gate_talks_to_the_feasibility_boundary():
+    """`compute_feasibility_internal` has exactly one caller in this module."""
+    callers = [
+        node.name
+        for node in _router_tree().body
+        if isinstance(node, ast.FunctionDef)
+        for child in ast.walk(node)
+        if _call_name(child) == "compute_feasibility_internal"
+    ]
+
+    assert callers == ["_authorize_retract"]
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_route_calls_both_the_gate_and_a_builder(route_name):
+    names = _call_names(getattr(_router_module(), route_name))
+
+    assert "_authorize_retract" in names, route_name
+    assert any(n.startswith("_build_") for n in names), route_name
+
+
+@pytest.mark.parametrize("alias_name", ALIAS_HANDLERS)
+def test_alias_neither_generates_nor_evaluates(alias_name):
+    """An alias that grew its own generation or authority is a second lane."""
+    names = _call_names(getattr(_router_module(), alias_name))
+
+    assert names, alias_name
+    for forbidden in (
+        "_build_simple_retract_gcode",
+        "_build_download_retract_gcode",
+        "compute_feasibility_internal",
+    ):
+        assert forbidden not in names, f"{alias_name} calls {forbidden}"
+
+
+# --- the constitutional invariant, one assertion per test ------------------
+#
+# Generation cannot occur before *successful* authorization. Presence of both
+# calls does not prove that, so the four tests below assert ordering and
+# dependency on the AST. None of them reads a status code, so they keep their
+# meaning after an evaluator lands and the lane returns GREEN — unlike the 409
+# witnesses, which prove only today's no-evaluator behaviour.
+
+
+def test_the_gate_actually_blocks():
+    """
+    `_authorize_retract` raises HTTPException under SafetyPolicy.should_block.
+
+    Without the raise, "authorize first" is decorative: the gate would run,
+    decide nothing, and generation would proceed regardless.
+    """
+    gate = _fn_def(_router_tree(), "_authorize_retract")
+
+    guarded = [
+        node
+        for node in ast.walk(gate)
+        if isinstance(node, ast.If)
+        and any(_call_name(c) == "should_block" for c in ast.walk(node.test))
+        and any(
+            isinstance(r, ast.Raise) and _call_name(r.exc) == "HTTPException"
+            for r in ast.walk(node)
+        )
+    ]
+    assert guarded, (
+        "_authorize_retract must raise HTTPException under "
+        "SafetyPolicy.should_block"
+    )
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_the_gate_is_unconditional(route_name):
+    """A gate reached only on some branches is not a gate."""
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+
+    assert auth_i is not None, f"{route_name} never calls _authorize_retract"
+    assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
+        f"{route_name}: the _authorize_retract call must be an unconditional "
+        f"top-level statement, not nested in a branch"
+    )
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_generation_follows_authorization_and_precedes_persistence(route_name):
+    """
+    Statement index, not source offset: comments, docstrings and renamed
+    locals move text but not structure, which is why the retired
+    `src.index()` form was brittle.
+    """
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+    build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
+    persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+
+    assert build_i is not None, f"{route_name} never calls a _build_* helper"
+    assert persist_i is not None, f"{route_name} never persists an authorized run"
+    assert auth_i < build_i, (
+        f"{route_name}: _build_* is reached at statement {build_i}, which is not "
+        f"after _authorize_retract at statement {auth_i}"
+    )
+    assert build_i < persist_i, f"{route_name}: persistence must follow generation"
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_the_persisted_run_is_bound_to_the_authorizing_call(route_name):
+    """
+    The artifact must carry the authorizing call's own names, not merely
+    follow it in time.
+    """
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+    persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+
+    bound = _binds(fn.body[auth_i])
+    assert bound, f"{route_name}: _authorize_retract result must be bound to names"
+
+    consumed = {
+        node.id for node in ast.walk(fn.body[persist_i]) if isinstance(node, ast.Name)
+    }
+    carried = bound & consumed
+    assert {"run_id", "risk_level"} <= carried, (
+        f"{route_name}: the persisted run must carry run_id and risk_level from "
+        f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
+        f"only follows authorization, it is not bound to it"
+    )
+
+
+def test_retract_router_does_not_hardcode_run_decision_risk_level():
+    """
+    Manufactured authority is a literal risk_level on RunDecision.
+
+    This forbids every hardcoded level (GREEN, YELLOW, RED, UNKNOWN, ERROR),
+    not only GREEN: the decision must come from SafetyPolicy on the
+    server-authored feasibility result. Checked on the AST so the module
+    docstring may still describe the retired anti-pattern.
+    """
+    from app.routers.retract import retract_gcode_router as rr
+
+    tree = ast.parse(inspect.getsource(rr))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fname = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+        if fname != "RunDecision":
+            continue
+        for kw in node.keywords:
+            if kw.arg == "risk_level" and isinstance(kw.value, ast.Constant):
+                pytest.fail(
+                    f"retract router constructs a literal RunDecision("
+                    f"risk_level={kw.value.value!r}) at line {node.lineno}; "
+                    f"risk_level must be derived from SafetyPolicy, not hardcoded"
+                )
