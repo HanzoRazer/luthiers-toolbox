@@ -198,6 +198,37 @@ can be re-emitted as G-code through an unevaluated route.
 
 ---
 
+### Artifact-authority fence
+
+The first push of this tranche turned `Fence Checks (Blocking)` and both `api-verify` runs red on a
+single root cause: `artifact_authority` violations in `retract_gcode_router.py`. The scan reported
+three NEW and three RESOLVED — the same three violations, at new line numbers. The baseline key is
+`fence|file|line|symbol|reason`, so refactoring inside an already-baselined file reads as newly
+introduced debt.
+
+Resolved rather than re-baselined. The router now persists through `validate_and_persist()`, which
+`FENCE_REGISTRY.json` names as the sanctioned alternative to direct `RunArtifact()` construction,
+and imports no `RunArtifact` / `RunDecision` / `Hashes` at all. Three baseline entries deleted.
+
+`validate_and_persist()` had no `event_type` passthrough, which is *why* callers reached around the
+fence: the sanctioned helper could not carry the audit label. Added as an optional kwarg; every
+existing call site is unchanged.
+
+Two follow-ups are out of scope here and are recorded, not fixed:
+
+1. **The baseline key embeds the line number.** Threading the new kwarg through
+   `store_completeness.py` shifted two of its own baselined lines and produced two more phantom NEW
+   violations — the identical failure mode, in a second file, within one change. The entries were
+   re-keyed (98 in / 98 out). A file+symbol+count key would end this class.
+2. **The fence contradicts itself.** `FENCE_REGISTRY.json` prescribes `validate_and_persist()` but
+   authorizes only `store.py` and `schemas.py` — not `store_completeness.py`, the module that
+   implements it. That module was extracted *out of* `store.py` by WP-3 and baselined as a violation
+   instead of inheriting its authorization. Separately, `app/ci/boundary_imports/config.py`
+   allowlists two CAM routers that `FENCE_REGISTRY.json` does not list: the executable allowlist and
+   the declared one have drifted.
+
+---
+
 ## 7. Deferrals preserved
 
 | Item | Status |

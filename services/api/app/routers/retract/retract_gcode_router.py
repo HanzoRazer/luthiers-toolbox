@@ -35,8 +35,13 @@ the lane green.
 The generation helpers below are pure builders: they are only reached after
 ``_authorize_retract`` returns, so blocking is structural rather than a matter
 of statement order.
+
+Both persistence paths go through ``validate_and_persist`` — the alternative
+``FENCE_REGISTRY.json`` (profile ``artifact_authority``) prescribes — so this
+router constructs no run-authority objects of its own at all. That is the same
+principle as the rest of 001B applied one level down: the module that grants
+authority is the module that shapes the record of it.
 """
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple
 
 from fastapi import APIRouter, HTTPException
@@ -47,17 +52,19 @@ from app.safety import safety_critical
 from ...rmos.api.rmos_feasibility_router import compute_feasibility_internal
 from ...rmos.policies import SafetyPolicy
 from ...rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
     create_run_id,
     sha256_of_obj,
     sha256_of_text,
+    validate_and_persist,
 )
 from .retract_apply_router import RetractStrategyIn, apply_retract_strategy
 
 router = APIRouter(tags=["Retract", "G-code"])
+
+# RMOS run `mode` values for this capability. Spelled out rather than assembled
+# from a suffix so the audit label is greppable.
+_MODE_SIMPLE = "retract"
+_MODE_DOWNLOAD = "retract_download"
 
 
 # ---------------------------------------------------------------------------
@@ -68,21 +75,23 @@ def _authorize_retract(
     *,
     tool_id: str,
     event_type: str,
-    mode_suffix: str,
+    mode: str,
     request_summary: Dict[str, Any],
-) -> Tuple[str, Dict[str, Any], str]:
+) -> Tuple[str, Dict[str, Any], str, str]:
     """
     Obtain the server-authoritative decision for a retract request.
 
-    Returns ``(run_id, feasibility, feasibility_sha256)`` when the operation is
-    authorized. Raises HTTP 409 — after persisting a BLOCKED run for audit —
-    when it is not.
+    Returns ``(run_id, feasibility, feasibility_sha256, risk_level)`` when the
+    operation is authorized. Raises HTTP 409 — after persisting a BLOCKED run
+    for audit — when it is not.
+
+    ``risk_level`` is returned rather than re-derived downstream so exactly one
+    call site interprets the feasibility result: the authorized artifact records
+    the same decision that authorized it, by construction.
 
     This runs **before** any G-code is built. The caller cannot emit an
     artifact without first passing through here.
     """
-    now = datetime.now(timezone.utc).isoformat()
-
     feasibility = compute_feasibility_internal(
         tool_id=tool_id,
         req={"tool_id": tool_id, **request_summary},
@@ -96,24 +105,18 @@ def _authorize_retract(
     if SafetyPolicy.should_block(decision.risk_level):
         # Blocked attempts stay auditable, but carry no executable artifact:
         # no gcode_sha256, no output, no attachment.
-        persist_run(
-            RunArtifact(
-                run_id=run_id,
-                created_at_utc=now,
-                tool_id=tool_id,
-                mode=f"retract{mode_suffix}",
-                event_type=f"{event_type}_blocked",
-                status="BLOCKED",
-                request_summary=request_summary,
-                feasibility=feasibility,
-                decision=RunDecision(
-                    risk_level=risk_level,
-                    block_reason=f"Blocked by safety policy: {risk_level}",
-                    warnings=list(decision.warnings),
-                ),
-                hashes=Hashes(feasibility_sha256=feas_hash),
-                notes=f"Blocked by safety policy: {risk_level}",
-            )
+        validate_and_persist(
+            run_id=run_id,
+            mode=mode,
+            tool_id=tool_id,
+            event_type=f"{event_type}_blocked",
+            status="BLOCKED",
+            request_summary=request_summary,
+            feasibility=feasibility,
+            feasibility_sha256=feas_hash,
+            risk_level=risk_level,
+            block_reason=f"Blocked by safety policy: {risk_level}",
+            decision_warnings=list(decision.warnings),
         )
         raise HTTPException(
             status_code=409,
@@ -126,37 +129,39 @@ def _authorize_retract(
             },
         )
 
-    return run_id, feasibility, feas_hash
+    return run_id, feasibility, feas_hash, risk_level
 
 
 def _persist_authorized_run(
     *,
     run_id: str,
     tool_id: str,
-    mode_suffix: str,
+    mode: str,
     event_type: str,
     request_summary: Dict[str, Any],
     feasibility: Dict[str, Any],
     feas_hash: str,
+    risk_level: str,
     gcode_text: str,
 ) -> str:
-    """Bind an authorized artifact to the run that authorized it. Returns the G-code hash."""
+    """Bind an authorized artifact to the run that authorized it. Returns the G-code hash.
+
+    ``risk_level`` is the decision produced by ``_authorize_retract``; it is not
+    re-derived here, so the recorded decision cannot drift from the one that
+    actually granted authority.
+    """
     gcode_hash = sha256_of_text(gcode_text)
-    persist_run(
-        RunArtifact(
-            run_id=run_id,
-            created_at_utc=datetime.now(timezone.utc).isoformat(),
-            tool_id=tool_id,
-            mode=f"retract{mode_suffix}",
-            event_type=f"{event_type}_execution",
-            status="OK",
-            request_summary=request_summary,
-            feasibility=feasibility,
-            decision=RunDecision(
-                risk_level=SafetyPolicy.extract_safety_decision(feasibility).risk_level_str(),
-            ),
-            hashes=Hashes(feasibility_sha256=feas_hash, gcode_sha256=gcode_hash),
-        )
+    validate_and_persist(
+        run_id=run_id,
+        mode=mode,
+        tool_id=tool_id,
+        event_type=f"{event_type}_execution",
+        status="OK",
+        request_summary=request_summary,
+        feasibility=feasibility,
+        feasibility_sha256=feas_hash,
+        risk_level=risk_level,
+        gcode_sha256=gcode_hash,
     )
     return gcode_hash
 
@@ -203,6 +208,15 @@ def _build_simple_retract_gcode(
             if z_step >= safe_z:
                 break
         gcode_lines.append("(Helical retract - safest for finished surfaces)")
+
+    else:
+        # No motion block matched. Emitting the header-only program would put a
+        # file named retract_<strategy>.nc in front of an operator that retracts
+        # nothing. Fail instead.
+        raise ValueError(
+            f"unsupported retract strategy {strategy!r}; "
+            f"expected one of: direct, ramped, helical"
+        )
 
     gcode_lines.append("")
     gcode_lines.append("M30")
@@ -261,10 +275,10 @@ def generate_simple_retract_gcode(
     summary = _simple_request_summary(
         strategy, current_z, safe_z, ramp_feed, helix_radius, helix_pitch
     )
-    run_id, feasibility, feas_hash = _authorize_retract(
+    run_id, feasibility, feas_hash, risk_level = _authorize_retract(
         tool_id=f"retract:{strategy}",
         event_type="retract_gcode",
-        mode_suffix="",
+        mode=_MODE_SIMPLE,
         request_summary=summary,
     )
 
@@ -272,9 +286,10 @@ def generate_simple_retract_gcode(
         strategy, current_z, safe_z, ramp_feed, helix_radius, helix_pitch
     )
     gcode_hash = _persist_authorized_run(
-        run_id=run_id, tool_id=f"retract:{strategy}", mode_suffix="",
+        run_id=run_id, tool_id=f"retract:{strategy}", mode=_MODE_SIMPLE,
         event_type="retract_gcode", request_summary=summary,
-        feasibility=feasibility, feas_hash=feas_hash, gcode_text=gcode_text,
+        feasibility=feasibility, feas_hash=feas_hash, risk_level=risk_level,
+        gcode_text=gcode_text,
     )
 
     resp = Response(
@@ -297,18 +312,19 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
     Returns .nc file ready for CNC controller.
     """
     summary = body.model_dump(mode="json")
-    run_id, feasibility, feas_hash = _authorize_retract(
+    run_id, feasibility, feas_hash, risk_level = _authorize_retract(
         tool_id=f"retract:{body.strategy}",
         event_type="retract_download_gcode",
-        mode_suffix="_download",
+        mode=_MODE_DOWNLOAD,
         request_summary=summary,
     )
 
     gcode_text = _build_download_retract_gcode(body)
     gcode_hash = _persist_authorized_run(
-        run_id=run_id, tool_id=f"retract:{body.strategy}", mode_suffix="_download",
+        run_id=run_id, tool_id=f"retract:{body.strategy}", mode=_MODE_DOWNLOAD,
         event_type="retract_download_gcode", request_summary=summary,
-        feasibility=feasibility, feas_hash=feas_hash, gcode_text=gcode_text,
+        feasibility=feasibility, feas_hash=feas_hash, risk_level=risk_level,
+        gcode_text=gcode_text,
     )
 
     resp = Response(
