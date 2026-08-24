@@ -1683,6 +1683,9 @@ exclude = ["data", "data.*", "metrics", "metrics.*", "test_support", "test_suppo
 **last_verified:** 2026-08-24
 **Priority:** MEDIUM
 **Source:** surfaced while reconciling `CHANGELOG.md` against the release tags (PR #317)
+**Recorded at:** `CHANGELOG.md` -> *Versioning*, which links back here rather than naming a
+winner; the reconstruction method behind that reconciliation is in the same file under
+*How this file was reconstructed*.
 
 Five surfaces report the version of this repository. No two of them agree, and
 nothing reconciles them:

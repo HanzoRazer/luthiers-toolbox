@@ -23,18 +23,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 >   that could not be attributed are grouped under *Unattributed* rather than guessed at.
 > - The roadmap has been separated from the changelog; a changelog records what
 >   shipped, not what is planned.
+>
+> Every claim above is reproducible. [How this file was reconstructed](#how-this-file-was-reconstructed)
+> gives the exact commands and the decision rules — attribution by ancestry, marking
+> reconstructions as reconstructions, refusing to date unprovable work into a release —
+> so the next refresh extends this work instead of re-deriving it.
 
 ---
 
 ## [Unreleased]
 
-Covers `toolbox-v0.39.1` (2026-02-28) → `main` (2026-08-24): **1,716+ commits across
-277+ merged pull requests**, with no release cut in that window.
+Covers `toolbox-v0.39.1` (2026-02-28) → `main` at **`7d134c36`** (2026-08-24):
+**1,734 commits across 281 merged pull requests**, with no release cut in that window.
+
+Both numbers are pinned to that commit and were re-derived there — not carried over from
+an earlier measurement. They move whenever `main` does; re-derive rather than trust them
+(see [How this file was reconstructed](#how-this-file-was-reconstructed)).
 
 Because that is far too much to enumerate faithfully, the summary below is grouped by
 area and derived from commit scopes and merged PR titles. It is **representative, not
 exhaustive** — the tag range is the authoritative record. Item counts are commit counts
-for that scope, not feature counts.
+for that scope, not feature counts. The one exception is the breaking change immediately
+below: capability removals are always listed individually, never summarised.
 
 ### Removed — BREAKING
 
@@ -778,6 +788,143 @@ Complete visual QA pipeline connecting golden baseline validation with automatic
 
 ---
 
+## How this file was reconstructed
+
+Added 2026-08-24. This file is authoritative again, so the claims in it must be
+auditable and the next refresh must not have to re-litigate them from scratch. Every
+rule below is executable; run it and you should reproduce what is written above.
+
+### Which releases exist
+
+```bash
+gh release list --limit 50 --json tagName --jq '.[].tagName'   # published Releases
+git tag --list 'toolbox-v*'                                    # tags, superset
+```
+
+**A tag is not a release.** `toolbox-v0.32.0` has a tag but no GitHub Release object, so
+it never appears in `gh release list`. The "eleven releases were missing" claim means
+precisely: every entry in `gh release list` had no matching `## [<tag>]` section here.
+Check with:
+
+```bash
+for t in $(gh release list --limit 50 --json tagName --jq '.[].tagName'); do
+  grep -q "^## \[$t\]" CHANGELOG.md || echo "MISSING: $t"
+done
+```
+
+### Which entries are reconstructed, and why they say so
+
+Five releases — `v0.35.0`, `v0.36.0`, `v0.36.1`, `v0.37.0`, `v0.38.0`, `v0.39.1` —
+published Docker deploy boilerplate as their entire release notes and said nothing about
+what changed. Their entries were rebuilt from the commit range between tags:
+
+```bash
+gh release view <tag> --json body --jq .body        # is there real content?
+git log --no-merges --format='%s' <prev>..<tag>     # what actually landed
+git rev-list --count <prev>..<tag>
+```
+
+**Rule:** an entry not derived from its own release notes must say so in its own body
+text. Do not silently present a reconstruction as a source. Every such entry here carries
+a line naming the exact commit range it came from.
+
+### How work is attributed to a release
+
+**Rule: ancestry, never date proximity.** A block is filed under a release only if a
+commit that introduces it is provably contained in that tag:
+
+```bash
+git merge-base --is-ancestor <commit> <tag>          # is it in?
+git cat-file -e <earlier-tag>:<path-it-adds>         # and not in the one before?
+```
+
+Worked examples, both re-runnable:
+
+```bash
+git merge-base --is-ancestor 57d4ff73 toolbox-v0.35.0     # WP-2 -> v0.35.0
+git cat-file -e toolbox-v0.34.1:services/api/ROUTE_AUDIT_PHASE2_RESULTS.md  # absent
+git merge-base --is-ancestor c35a6936 toolbox-v0.32.0     # Saw Lab -> v0.32.0
+```
+
+**Rule: what cannot be proved goes under `Unattributed`.** It is not dated into a
+plausible release. B22.16 is the worked example — see that section.
+
+**Rule: still-unreleased work is proved too, not assumed.** An entry stays in
+`[Unreleased]` only if the files it describes postdate the newest tag:
+
+```bash
+git log --diff-filter=A --format=%ad --date=short -1 -- <path>
+git log -1 --format=%ad --date=short toolbox-v0.39.1
+```
+
+### How superseded entries are handled
+
+**Rule: annotate, never delete.** An entry describing work that has since been removed
+keeps its text and gains a dated superseded note naming the removing commit. Find one:
+
+```bash
+git log --all --oneline --diff-filter=A -- <path-the-entry-names>
+git log --all --oneline --grep='<subject>' -i
+```
+
+### The `[Unreleased]` counts
+
+```bash
+git rev-list --count toolbox-v0.39.1..origin/main
+gh pr list --state merged --limit 500 --json mergedAt \
+  --jq '[.[] | select(.mergedAt > "2026-02-28")] | length'
+```
+
+**Rule: pin counts to a stated commit.** They change whenever `main` does. Re-derive at
+the new SHA and restate both the number and the SHA; never carry a number forward.
+
+**Rule: a summary says it is a summary.** Grouping ~1,700 commits by area is the only
+honest option at that volume, and the text must say it is representative rather than
+exhaustive. **Capability removals are the exception** — they are listed individually, no
+matter how large the window, because a summary is unreadable to someone asking "what
+will break me".
+
+### Links
+
+```bash
+python - <<'PY'
+import re, os
+s = open('CHANGELOG.md', encoding='utf-8').read()
+for m in re.finditer(r'\]\(\./([^)#]+)\)', s):
+    print(('OK   ' if os.path.exists(m.group(1)) else 'BROKEN'), m.group(1))
+PY
+```
+
+This file is **not** in the MkDocs nav, so broken links here do not fail the docs build.
+They have to be checked deliberately — three were dead before this refresh.
+
+### Why release entries are not uniformly formatted
+
+Deliberate, not accidental. An entry's shape reflects the evidence behind it: entries
+sourced from substantial release notes keep that structure (`Focus`/`Type`, feature
+sections); entries rebuilt from commits are terser and carry their range statement;
+documentation-only releases have a `Docs` section and nothing else. Flattening them into
+one template would make a reconstruction look exactly like a sourced entry, which is the
+distinction this file exists to preserve.
+
+### Structural invariants
+
+One `[Unreleased]`, at the top. Releases in reverse-chronological order below it.
+Component tags (`toolbox-<component>-vX.Y.Z`) sit in date order alongside the main line
+and say which component they belong to. Roadmap material does not live in this file —
+a changelog records what shipped.
+
+```bash
+python - <<'PY'
+s = open('CHANGELOG.md', encoding='utf-8').read()
+h2 = [l for l in s.split('\n') if l.startswith('## ')]
+print('H2:', len(h2), '| duplicates:', len(h2) - len(set(h2)),
+      '| [Unreleased]:', s.count('\n## [Unreleased]'))
+PY
+```
+
+---
+
 ## Versioning
 
 Releases are cut as **Git tags**, and the tag series is the record of what shipped:
@@ -795,6 +942,11 @@ Releases are cut as **Git tags**, and the tag series is the record of what shipp
 > `packages/client/package.json` says `1.0.0`; and the example response in
 > `docs/api/endpoints.md` shows `0.33.0`. Nothing reconciles them. Treat the tag series
 > as authoritative for *releases* until a single source of truth is chosen.
+>
+> Tracked as **`VERSION-AUTHORITY-001`** in the `SPRINTS.md` `QUEUED` section, which
+> carries the four owner decisions a resolution needs and the order they have to be
+> taken in. Any release-automation work should start there rather than aligning a
+> surface unilaterally — correcting one surface alone just moves the inconsistency.
 
 ---
 
