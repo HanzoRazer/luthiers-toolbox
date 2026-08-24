@@ -10,13 +10,23 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  // Pre-bundle heavy deps that are only reached through lazy route chunks
-  // (e.g. chart.js via the Calculators hub). Without this, the dev server
-  // discovers them mid-session, re-runs optimizeDeps, and serves a transient
-  // 504 "Outdated Optimize Dep" that breaks the first navigation to those
-  // routes. Listing them here bundles them at startup instead.
+  // Pre-bundle deps that are only reached through lazy route chunks. Vite's
+  // optimizer discovers an import when the module graph first reaches it, so
+  // chart.js is found mid-session, optimizeDeps re-runs, and the dev server
+  // serves a transient 504 "Outdated Optimize Dep" that blanks the first
+  // navigation to a chart-bearing route (reported on /calculators). Listing it
+  // here bundles it at startup instead.
+  //
+  // chart.js is reached from three places, not just the calculators hub:
+  // src/tools/audio_analyzer/renderers/**, src/views/calculators/acoustics/
+  // SoundholeCalculator.vue, and src/views/multi_run_comparison/**. Keep this
+  // entry as long as any of them import it lazily.
+  //
+  // Only the bare specifier is listed: every chart.js import in src/ resolves
+  // 'chart.js'. Nothing imports the 'chart.js/auto' subpath, so including it
+  // would pre-bundle a module the app never loads.
   optimizeDeps: {
-    include: ['chart.js', 'chart.js/auto'],
+    include: ['chart.js'],
   },
   server: {
     port: 5173,
