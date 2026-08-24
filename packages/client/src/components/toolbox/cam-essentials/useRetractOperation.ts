@@ -4,7 +4,7 @@
  */
 import { ref, type Ref } from 'vue'
 import { api } from '@/services/apiBase'
-import { downloadFile, handleExportError } from './useGcodeExport'
+import { downloadFile, handleExportError, readGcodeOrThrow } from './useGcodeExport'
 
 // ============================================================================
 // Types
@@ -48,22 +48,22 @@ export function useRetractOperation(): RetractState {
 
   async function exportGcode(): Promise<void> {
     try {
-      const body = {
+      // /gcode takes query params, not a JSON body. Sending JSON was ignored
+      // by FastAPI and silently used defaults.
+      const query = new URLSearchParams({
         strategy: params.value.strategy,
-        current_z: params.value.current_z,
-        safe_z: params.value.safe_z,
-        ramp_feed: params.value.ramp_feed,
-        helix_radius: params.value.helix_radius,
-        helix_pitch: params.value.helix_pitch
-      }
-
-      const response = await api('/api/cam/retract/gcode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        current_z: String(params.value.current_z),
+        safe_z: String(params.value.safe_z),
+        ramp_feed: String(params.value.ramp_feed),
+        helix_radius: String(params.value.helix_radius),
+        helix_pitch: String(params.value.helix_pitch)
       })
 
-      const gcode = await response.text()
+      const response = await api(`/api/cam/retract/gcode?${query.toString()}`, {
+        method: 'POST'
+      })
+
+      const gcode = await readGcodeOrThrow(response, 'Retract')
       downloadFile(gcode, `retract_${params.value.strategy}.nc`)
     } catch (err) {
       handleExportError('Retract', err)

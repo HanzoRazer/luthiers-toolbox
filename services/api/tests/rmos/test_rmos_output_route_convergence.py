@@ -12,6 +12,9 @@ accepted alternate production path.
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 
@@ -29,12 +32,14 @@ GCODE_MARKERS = ("G21", "G90", "G0 Z", "G1 Z", "G2 X", "M30")
 
 
 @pytest.fixture()
-def client(tmp_path, monkeypatch):
+def runs_env(tmp_path, monkeypatch):
+    """Redirect RunStoreV2 the same way RMOS-CONVERGE-001A witnesses do."""
     runs_dir = tmp_path / "rmos_runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
     (runs_dir / "_index.json").write_text("{}", encoding="utf-8")
     monkeypatch.setenv("RMOS_RUNS_DIR", str(runs_dir))
     monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "att"))
+    monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(tmp_path / "run_artifacts"))
     monkeypatch.setenv("ENV", "test")
     try:
         from app.rmos.runs_v2 import store as runs_v2_store
@@ -42,18 +47,23 @@ def client(tmp_path, monkeypatch):
         runs_v2_store._default_store = None
     except ImportError:
         pass
-    try:
-        from fastapi.testclient import TestClient
-        from app.main import app
-    except Exception as e:  # pragma: no cover
-        pytest.skip(f"Could not import FastAPI app: {e}")
-    yield TestClient(app)
+    yield runs_dir
     try:
         from app.rmos.runs_v2 import store as runs_v2_store
 
         runs_v2_store._default_store = None
     except ImportError:
         pass
+
+
+@pytest.fixture()
+def client(runs_env):
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except Exception as e:  # pragma: no cover
+        pytest.skip(f"Could not import FastAPI app: {e}")
+    return TestClient(app)
 
 
 def _post(client, path):
@@ -120,6 +130,24 @@ def test_all_four_retract_routes_agree(client):
     assert set(outcomes.values()) == {409}, outcomes
 
 
+def test_legacy_retract_paths_are_not_a_draft_lane(client):
+    """
+    Compatibility contract: /gcode and /gcode/download used to advertise
+    X-ToolBox-Lane: draft. They keep those URLs but are now governed, including
+    while blocked. A later evaluator must not restore the draft lane.
+    """
+    former_draft = [
+        "/api/cam/retract/gcode",
+        "/api/cam/retract/gcode/download",
+    ]
+    for path in former_draft:
+        r = _post(client, path)
+        assert r.status_code == 409, path
+        assert r.headers.get("X-ToolBox-Lane") == "governed", path
+        assert r.headers.get("X-Run-ID"), path
+        assert r.headers.get("X-ToolBox-Lane") != "draft"
+
+
 # ---------------------------------------------------------------------------
 # B14 — no machine output is manufactured
 # ---------------------------------------------------------------------------
@@ -140,6 +168,8 @@ def test_b14_blocked_retract_emits_no_machine_output(client, path):
 
     assert "attachment;" not in r.headers.get("content-disposition", "")
     assert "X-GCode-SHA256" not in r.headers
+    assert r.headers.get("X-ToolBox-Lane") == "governed"
+    assert r.headers.get("X-Run-ID")
 
     from app.rmos.runs_v2.store_api import get_run
 
@@ -215,30 +245,76 @@ def test_b19_blocked_attempt_is_auditable_without_an_artifact(client):
 # Structural: generation cannot precede authorization
 # ---------------------------------------------------------------------------
 
+def _call_names(func) -> list[str]:
+    """Function names invoked in *func*, in source order (Call nodes only)."""
+    names: list[str] = []
+
+    class Visitor(ast.NodeVisitor):
+        def visit_Call(self, node: ast.Call) -> None:
+            fname = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+            if fname:
+                names.append(fname)
+            self.generic_visit(node)
+
+    Visitor().visit(ast.parse(inspect.getsource(func)))
+    return names
+
+
 def test_generation_is_unreachable_before_authorization():
     """
-    The builders are pure and are called only after `_authorize_retract`
-    returns, so blocking is structural rather than a matter of statement order.
-    Before 001B every route built its G-code first and (in two cases) minted a
-    run around it afterwards.
+    Builders are pure; only `_authorize_retract` talks to the feasibility
+    boundary; route handlers invoke that gate. Order is not asserted by
+    substring search — that was brittle to comments and helper extraction.
+    Behavioural 409 witnesses prove G-code is not emitted while blocked.
     """
-    import inspect
-
     from app.routers.retract import retract_gcode_router as rr
 
     for builder in (rr._build_simple_retract_gcode, rr._build_download_retract_gcode):
         src = inspect.getsource(builder)
         assert "compute_feasibility_internal" not in src
         assert "RunDecision" not in src
+        assert "persist_run" not in src
+        assert "validate_and_persist" not in src
+
+    feas_callers = []
+    module_tree = ast.parse(inspect.getsource(rr))
+    for node in module_tree.body:
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call):
+                continue
+            fname = getattr(child.func, "id", None) or getattr(child.func, "attr", None)
+            if fname == "compute_feasibility_internal":
+                feas_callers.append(node.name)
+    assert feas_callers == ["_authorize_retract"]
 
     for route_fn in (rr.generate_simple_retract_gcode, rr.download_retract_gcode):
-        src = inspect.getsource(route_fn)
-        assert src.index("_authorize_retract") < src.index("_build_")
+        names = _call_names(route_fn)
+        assert "_authorize_retract" in names, route_fn.__name__
+        assert any(n.startswith("_build_") for n in names), route_fn.__name__
 
-    # No route may construct its own GREEN decision. Checked on the AST rather
-    # than the source text, so the module may still *describe* the retired
-    # anti-pattern in its docstring without tripping the guard.
-    import ast
+    for alias_fn in (
+        rr.generate_simple_retract_gcode_governed,
+        rr.download_retract_gcode_governed,
+    ):
+        names = _call_names(alias_fn)
+        assert names, alias_fn.__name__
+        assert "_build_simple_retract_gcode" not in names
+        assert "_build_download_retract_gcode" not in names
+        assert "compute_feasibility_internal" not in names
+
+
+def test_retract_router_does_not_hardcode_run_decision_risk_level():
+    """
+    Manufactured authority is a literal risk_level on RunDecision.
+
+    This forbids every hardcoded level (GREEN, YELLOW, RED, UNKNOWN, ERROR),
+    not only GREEN: the decision must come from SafetyPolicy on the
+    server-authored feasibility result. Checked on the AST so the module
+    docstring may still describe the retired anti-pattern.
+    """
+    from app.routers.retract import retract_gcode_router as rr
 
     tree = ast.parse(inspect.getsource(rr))
     for node in ast.walk(tree):
@@ -251,5 +327,6 @@ def test_generation_is_unreachable_before_authorization():
             if kw.arg == "risk_level" and isinstance(kw.value, ast.Constant):
                 pytest.fail(
                     f"retract router constructs a literal RunDecision("
-                    f"risk_level={kw.value.value!r}) at line {node.lineno}"
+                    f"risk_level={kw.value.value!r}) at line {node.lineno}; "
+                    f"risk_level must be derived from SafetyPolicy, not hardcoded"
                 )
