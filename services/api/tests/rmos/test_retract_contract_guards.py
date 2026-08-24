@@ -2,7 +2,7 @@
 
 Separate from ``test_rmos_output_route_convergence.py`` on purpose. That module
 witnesses the *convergence*: one authority, four routes, no machine output while
-blocked. This module pins three narrower contracts that the convergence made
+blocked. This module pins four narrower contracts that the convergence made
 load-bearing but does not itself assert:
 
 1. the ``_governed`` aliases are pure delegations and cannot drift from their
@@ -10,7 +10,10 @@ load-bearing but does not itself assert:
 2. an unrecognised retract strategy fails loudly instead of yielding a
    motionless program under a ``.nc`` filename;
 3. the two disjoint retract strategy vocabularies are recorded as they stand —
-   pinned, **not** endorsed.
+   pinned, **not** endorsed;
+4. ``POST /gcode`` binds query-string scalars (a JSON body is ignored);
+   ``POST /gcode/download`` binds a JSON body. The Vue exporter talks to
+   ``/gcode``, so this is the frontend/API compatibility point.
 
 Only the pair-parity check looks at a status code, and it compares the two
 routes rather than asserting a particular value, so these guards keep their
@@ -228,6 +231,24 @@ def test_supported_strategies_still_emit_motion(strategy):
     assert gcode.strip().endswith("(End of retract sequence)")
 
 
+def test_simple_builder_embeds_query_equivalent_scalars():
+    """
+    The Vue exporter's query params only matter if they reach the builder.
+    This is the generation half of the query-binding contract; the HTTP half
+    is ``test_simple_gcode_binds_query_params_not_json_body``.
+    """
+    from app.routers.retract.retract_gcode_router import _build_simple_retract_gcode
+
+    ramped = _build_simple_retract_gcode("ramped", -20.0, 12.5, 777.0, 5.0, 1.0)
+    assert "(Retract Strategy: ramped)" in ramped
+    assert "(Current Z: -20.0mm -> Safe Z: 12.5mm)" in ramped
+    assert "G1 Z12.5000 F777" in ramped
+
+    helical = _build_simple_retract_gcode("helical", -10.0, 5.0, 600.0, 7.5, 2.0)
+    assert "I7.5000" in helical
+    assert "Z" in helical
+
+
 # ---------------------------------------------------------------------------
 # 3. The strategy vocabularies are pinned, not endorsed
 # ---------------------------------------------------------------------------
@@ -280,3 +301,97 @@ def test_retract_strategy_vocabularies_are_split_and_unreconciled():
     # identity problem rather than a routing one.
     for strategy in simple_vocab | download_vocab:
         assert resolve_mode(f"retract:{strategy}") == "retract"
+
+
+# ---------------------------------------------------------------------------
+# 4. /gcode binds query params; /gcode/download binds a JSON body
+# ---------------------------------------------------------------------------
+
+_SIMPLE_QUERY_NAMES = {
+    "strategy",
+    "current_z",
+    "safe_z",
+    "ramp_feed",
+    "helix_radius",
+    "helix_pitch",
+}
+
+
+def test_simple_gcode_openapi_declares_query_params_not_a_body(client):
+    """
+    OpenAPI is the public contract. If someone wraps these scalars in a
+    Pydantic body model, the Vue query-string POST would silently revert to
+    defaults — the exact bug the #315 frontend change closed.
+    """
+    from app.main import app
+
+    app.openapi_schema = None
+    schema = app.openapi()
+
+    simple = schema["paths"]["/api/cam/retract/gcode"]["post"]
+    alias = schema["paths"]["/api/cam/retract/gcode_governed"]["post"]
+    download = schema["paths"]["/api/cam/retract/gcode/download"]["post"]
+
+    for spec in (simple, alias):
+        query_names = {
+            p["name"] for p in spec.get("parameters", []) if p.get("in") == "query"
+        }
+        assert _SIMPLE_QUERY_NAMES <= query_names, query_names
+        assert "requestBody" not in spec
+
+    assert "requestBody" in download
+    download_query = {
+        p["name"] for p in download.get("parameters", []) if p.get("in") == "query"
+    }
+    assert not (_SIMPLE_QUERY_NAMES & download_query)
+
+
+def test_simple_gcode_binds_query_params_not_json_body(client):
+    """
+    Live FastAPI binding, not just OpenAPI.
+
+    Query params must reach authorization (and therefore the builder, once the
+    lane reopens) even while the capability is 409 SAFETY_BLOCKED. A JSON body
+    with different values is ignored — that was the pre-#315 Vue client, and
+    changing the frontend to query params is a bug fix, not a silent behaviour
+    change for body-sending callers.
+
+    Asserts against the persisted run rather than a status code, so it keeps
+    meaning after a retract evaluator lands.
+    """
+    from app.rmos.runs_v2.store_api import get_run
+
+    query = (
+        "strategy=helical&current_z=-20&safe_z=12"
+        "&ramp_feed=800&helix_radius=7.5&helix_pitch=1.5"
+    )
+    conflicting_body = {
+        "strategy": "direct",
+        "current_z": 0,
+        "safe_z": 0,
+        "ramp_feed": 1,
+        "helix_radius": 1,
+        "helix_pitch": 1,
+    }
+
+    r = client.post(f"/api/cam/retract/gcode?{query}", json=conflicting_body)
+    assert r.headers.get("X-Run-ID"), r.headers
+    run = get_run(r.headers["X-Run-ID"])
+    assert run.tool_id == "retract:helical"
+    assert run.request_summary["strategy"] == "helical"
+    assert run.request_summary["current_z"] == -20.0
+    assert run.request_summary["safe_z"] == 12.0
+    assert run.request_summary["ramp_feed"] == 800.0
+    assert run.request_summary["helix_radius"] == 7.5
+    assert run.request_summary["helix_pitch"] == 1.5
+
+    # JSON body alone must not override the documented defaults.
+    r_body = client.post(
+        "/api/cam/retract/gcode",
+        json={"strategy": "helical", "current_z": -99.0, "safe_z": 99.0},
+    )
+    run_body = get_run(r_body.headers["X-Run-ID"])
+    assert run_body.tool_id == "retract:direct"
+    assert run_body.request_summary["strategy"] == "direct"
+    assert run_body.request_summary["current_z"] == -10.0
+    assert run_body.request_summary["safe_z"] == 5.0

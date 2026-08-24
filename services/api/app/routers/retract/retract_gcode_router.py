@@ -1,10 +1,10 @@
 """Retract G-code Router - G-code generation (all lanes governed).
 
 Provides:
-- POST /gcode - Simple retract G-code
-- POST /gcode_governed - Simple retract G-code (retained path; same authority)
-- POST /gcode/download - Download optimized G-code
-- POST /gcode/download_governed - Download optimized G-code (retained path; same authority)
+- POST /gcode - Simple retract G-code (governed; formerly draft)
+- POST /gcode_governed - Alias of /gcode; same authority and headers
+- POST /gcode/download - Download optimized G-code (governed; formerly draft)
+- POST /gcode/download_governed - Alias of /gcode/download; same authority and headers
 
 Total: 4 routes for G-code generation.
 
@@ -24,13 +24,27 @@ Before this change the capability carried two different defects:
   governed-looking run around output that no evaluator had ever assessed;
 * the plain pair **bypassed RMOS entirely** — it emitted the same
   machine-consumable G-code (including a ``.nc`` download) with no run, no
-  decision and no hash.
+  decision and no hash, and advertised ``X-ToolBox-Lane: draft``.
 
 Both are now routed through the single 001A authority boundary *before* any
 G-code exists. There is no substantive retract feasibility evaluator, so the
 capability currently resolves ``UNKNOWN`` and is **blocked by design** — see
 ``_PRODUCTION_FEASIBILITY_ENGINES``. No retract evaluator was invented to keep
 the lane green.
+
+**Contract change (explicit, not implicit):**
+``POST /api/cam/retract/gcode`` and ``POST /api/cam/retract/gcode/download``
+are no longer draft-lane endpoints. They keep the old paths for compatibility
+but inherit governed semantics and governed headers:
+
+* current behaviour: ``409 SAFETY_BLOCKED`` (no G-code body, no ``.nc``
+  attachment, no ``X-GCode-SHA256``)
+* headers on every response, including 409: ``X-ToolBox-Lane: governed``,
+  ``X-Run-ID``
+* when a retract evaluator is later registered, these paths stay governed;
+  they will **not** revert to ``X-ToolBox-Lane: draft``
+
+The ``_governed`` suffix is a retained alias, not a second lane.
 
 The generation helpers below are pure builders: they are only reached after
 ``_authorize_retract`` returns, so blocking is structural rather than a matter
@@ -42,9 +56,9 @@ router constructs no run-authority objects of its own at all. That is the same
 principle as the rest of 001B applied one level down: the module that grants
 authority is the module that shapes the record of it.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 
 from app.safety import safety_critical
@@ -65,6 +79,41 @@ router = APIRouter(tags=["Retract", "G-code"])
 # from a suffix so the audit label is greppable.
 _MODE_SIMPLE = "retract"
 _MODE_DOWNLOAD = "retract_download"
+
+# All four retract G-code paths, including the former draft URLs, advertise
+# the governed lane. This is a contract change: consumers that branched on
+# X-ToolBox-Lane: draft must treat these paths as governed.
+_GOVERNED_LANE = "governed"
+
+# Shared Query() objects for /gcode and /gcode_governed.
+#
+# FastAPI already binds unannotated scalars as query params (a JSON body is
+# ignored). Query() makes that contract visible in OpenAPI so callers do not
+# confuse these routes with /gcode/download, which takes RetractStrategyIn as
+# a JSON body. The objects are shared so the alias cannot drift from the
+# plain route's defaults.
+_Q_STRATEGY = Query(
+    "direct",
+    description=(
+        "Retract strategy: direct, ramped, or helical. "
+        "Bound from the query string; a JSON body is ignored."
+    ),
+)
+_Q_CURRENT_Z = Query(-10.0, description="Current tool Z in mm")
+_Q_SAFE_Z = Query(5.0, description="Safe retract Z in mm")
+_Q_RAMP_FEED = Query(600.0, description="Feed for ramped/helical retract, mm/min")
+_Q_HELIX_RADIUS = Query(5.0, description="Helical retract radius in mm")
+_Q_HELIX_PITCH = Query(1.0, description="Helical retract pitch, mm/rev")
+
+
+def _governed_headers(run_id: str, *, gcode_sha256: Optional[str] = None) -> Dict[str, str]:
+    headers = {
+        "X-Run-ID": run_id,
+        "X-ToolBox-Lane": _GOVERNED_LANE,
+    }
+    if gcode_sha256 is not None:
+        headers["X-GCode-SHA256"] = gcode_sha256
+    return headers
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +176,7 @@ def _authorize_retract(
                 "decision": decision.to_dict(),
                 "authoritative_feasibility": feasibility,
             },
+            headers=_governed_headers(run_id),
         )
 
     return run_id, feasibility, feas_hash, risk_level
@@ -264,14 +314,25 @@ def _simple_request_summary(
 @router.post("/gcode", response_class=Response)
 @safety_critical
 def generate_simple_retract_gcode(
-    strategy: str = "direct",
-    current_z: float = -10.0,
-    safe_z: float = 5.0,
-    ramp_feed: float = 600.0,
-    helix_radius: float = 5.0,
-    helix_pitch: float = 1.0
+    strategy: str = _Q_STRATEGY,
+    current_z: float = _Q_CURRENT_Z,
+    safe_z: float = _Q_SAFE_Z,
+    ramp_feed: float = _Q_RAMP_FEED,
+    helix_radius: float = _Q_HELIX_RADIUS,
+    helix_pitch: float = _Q_HELIX_PITCH,
 ) -> Response:
-    """Generate simple retract G-code (governed)."""
+    """Generate simple retract G-code.
+
+    **Not a draft lane.** This path previously returned ``200`` with
+    ``X-ToolBox-Lane: draft`` and no RMOS involvement. It now shares governed
+    authority and governed headers with ``/gcode_governed``. Currently
+    ``409 SAFETY_BLOCKED`` until a retract evaluator exists; if one is later
+    registered this path remains governed and will not revert to draft.
+
+    Parameters are **query-string bound**, not a JSON body. A JSON body is
+    ignored (the pre-#315 Vue client POSTed JSON and silently received
+    defaults). ``POST /gcode/download`` is the body-model route.
+    """
     summary = _simple_request_summary(
         strategy, current_z, safe_z, ramp_feed, helix_radius, helix_pitch
     )
@@ -297,9 +358,7 @@ def generate_simple_retract_gcode(
         media_type="text/plain",
         headers={"Content-Type": "text/plain"},
     )
-    resp.headers["X-Run-ID"] = run_id
-    resp.headers["X-GCode-SHA256"] = gcode_hash
-    resp.headers["X-ToolBox-Lane"] = "governed"
+    resp.headers.update(_governed_headers(run_id, gcode_sha256=gcode_hash))
     return resp
 
 
@@ -307,9 +366,13 @@ def generate_simple_retract_gcode(
 @safety_critical
 def download_retract_gcode(body: RetractStrategyIn) -> Response:
     """
-    Generate and download G-code with retract optimization (governed).
+    Generate and download G-code with retract optimization.
 
-    Returns .nc file ready for CNC controller.
+    **Not a draft lane.** This path previously returned a ``.nc`` attachment
+    with ``X-ToolBox-Lane: draft`` and no RMOS involvement. It now shares
+    governed authority and governed headers with ``/gcode/download_governed``.
+    Currently ``409 SAFETY_BLOCKED`` until a retract evaluator exists; if one
+    is later registered this path remains governed and will not revert to draft.
     """
     summary = body.model_dump(mode="json")
     run_id, feasibility, feas_hash, risk_level = _authorize_retract(
@@ -334,27 +397,26 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
             "Content-Disposition": f"attachment; filename=retract_{body.strategy}.nc"
         },
     )
-    resp.headers["X-Run-ID"] = run_id
-    resp.headers["X-GCode-SHA256"] = gcode_hash
-    resp.headers["X-ToolBox-Lane"] = "governed"
+    resp.headers.update(_governed_headers(run_id, gcode_sha256=gcode_hash))
     return resp
 
 
 @router.post("/gcode_governed", response_class=Response)
 @safety_critical
 def generate_simple_retract_gcode_governed(
-    strategy: str = "direct",
-    current_z: float = -10.0,
-    safe_z: float = 5.0,
-    ramp_feed: float = 600.0,
-    helix_radius: float = 5.0,
-    helix_pitch: float = 1.0
+    strategy: str = _Q_STRATEGY,
+    current_z: float = _Q_CURRENT_Z,
+    safe_z: float = _Q_SAFE_Z,
+    ramp_feed: float = _Q_RAMP_FEED,
+    helix_radius: float = _Q_HELIX_RADIUS,
+    helix_pitch: float = _Q_HELIX_PITCH,
 ) -> Response:
     """
     Generate simple retract G-code.
 
-    Retained for compatibility. Carries the same authority as ``/gcode``; the
-    ``_governed`` suffix no longer denotes a different lane.
+    Retained alias of ``/gcode``. Same authority, same governed headers; the
+    ``_governed`` suffix no longer denotes a different lane. Query-string
+    bound, same as ``/gcode`` — a JSON body is ignored.
     """
     return generate_simple_retract_gcode(
         strategy=strategy,
@@ -372,8 +434,8 @@ def download_retract_gcode_governed(body: RetractStrategyIn) -> Response:
     """
     Generate and download G-code with retract optimization.
 
-    Retained for compatibility. Carries the same authority as
-    ``/gcode/download``; the ``_governed`` suffix no longer denotes a different lane.
+    Retained alias of ``/gcode/download``. Same authority, same governed
+    headers; the ``_governed`` suffix no longer denotes a different lane.
     """
     return download_retract_gcode(body)
 

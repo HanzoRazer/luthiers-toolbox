@@ -149,8 +149,23 @@ all four routes -> 409 SAFETY_BLOCKED
                    no G21/G90/G0/G1/G2/M30 in any response body
                    no Content-Disposition attachment
                    no X-GCode-SHA256 header
+                   X-ToolBox-Lane: governed   (including the former draft URLs)
+                   X-Run-ID: <blocked run>
                    BLOCKED RunArtifact persisted, gcode_sha256 = None, attachments = []
 ```
+
+### Contract change — former draft paths are now governed
+
+This is an explicit compatibility break, not an implementation detail.
+
+| Path | Before 001B | After 001B (now) | After a retract evaluator lands |
+|---|---|---|---|
+| `POST /api/cam/retract/gcode` | `200` text/plain G-code, `X-ToolBox-Lane: draft`, no run/hash | `409 SAFETY_BLOCKED`, `X-ToolBox-Lane: governed`, `X-Run-ID`, no G-code | still **governed** (will not revert to `draft`) |
+| `POST /api/cam/retract/gcode/download` | `200` `.nc` attachment, `X-ToolBox-Lane: draft`, no run/hash | same 409 + governed headers as above | still **governed** |
+| `POST /api/cam/retract/gcode_governed` | `200` G-code + self-minted GREEN run | same 409 + governed headers | governed, evaluator-backed |
+| `POST /api/cam/retract/gcode/download_governed` | `200` `.nc` + self-minted GREEN run | same 409 + governed headers | governed, evaluator-backed |
+
+The `_governed` suffix is a retained alias of the plain path. Consumers that branched on `X-ToolBox-Lane: draft`, treated `200` as “G-code bytes”, or downloaded the body as `.nc` without checking status must update. In-tree consumer: `packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts`.
 
 ### Truthful operation identity
 
@@ -166,7 +181,16 @@ Generation was extracted into pure builders (`_build_simple_retract_gcode`,
 `_authorize_retract` returns. Per D5, **no production seam was added for testing**; the
 non-generation witness is observable (no G-code in body, no hash, no attachment).
 
-19 witnesses pass: `services/api/tests/rmos/test_rmos_output_route_convergence.py`.
+22 witnesses pass: `services/api/tests/rmos/test_rmos_output_route_convergence.py`.
+
+One of them, `test_authorization_structurally_precedes_generation`, is the only witness that
+survives the lane reopening. The 409 witnesses prove today's no-evaluator behaviour and stop
+proving anything the moment an evaluator returns GREEN; that test asserts the structure that must
+hold in *that* state — the gate is unconditional, `_build_*` is at a strictly later top-level
+statement, the persisted artifact carries `run_id` and `risk_level` from the authorizing call, and
+`_authorize_retract` raises under `SafetyPolicy.should_block`. Verified by mutation: moving
+generation ahead of the gate, removing the raise, and hardcoding the persisted `risk_level` each
+fail it.
 
 ---
 
