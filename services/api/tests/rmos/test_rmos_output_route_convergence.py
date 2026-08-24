@@ -297,76 +297,93 @@ def _binds(stmt: ast.stmt) -> set:
     return names
 
 
-def test_generation_is_unreachable_before_authorization():
-    """
-    Builders are pure; only `_authorize_retract` talks to the feasibility
-    boundary; route handlers invoke that gate. Order is not asserted by
-    substring search — that was brittle to comments and helper extraction.
-    Behavioural 409 witnesses prove G-code is not emitted while blocked.
-    """
+ROUTE_HANDLERS = ("generate_simple_retract_gcode", "download_retract_gcode")
+ALIAS_HANDLERS = (
+    "generate_simple_retract_gcode_governed",
+    "download_retract_gcode_governed",
+)
+
+
+def _router_module():
     from app.routers.retract import retract_gcode_router as rr
 
-    for builder in (rr._build_simple_retract_gcode, rr._build_download_retract_gcode):
-        src = inspect.getsource(builder)
-        assert "compute_feasibility_internal" not in src
-        assert "RunDecision" not in src
-        assert "persist_run" not in src
-        assert "validate_and_persist" not in src
-
-    feas_callers = []
-    module_tree = ast.parse(inspect.getsource(rr))
-    for node in module_tree.body:
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        for child in ast.walk(node):
-            if not isinstance(child, ast.Call):
-                continue
-            fname = getattr(child.func, "id", None) or getattr(child.func, "attr", None)
-            if fname == "compute_feasibility_internal":
-                feas_callers.append(node.name)
-    assert feas_callers == ["_authorize_retract"]
-
-    for route_fn in (rr.generate_simple_retract_gcode, rr.download_retract_gcode):
-        names = _call_names(route_fn)
-        assert "_authorize_retract" in names, route_fn.__name__
-        assert any(n.startswith("_build_") for n in names), route_fn.__name__
+    return rr
 
 
-def test_authorization_structurally_precedes_generation():
+def _router_tree():
+    return ast.parse(inspect.getsource(_router_module()))
+
+
+@pytest.mark.parametrize(
+    "builder_name", ["_build_simple_retract_gcode", "_build_download_retract_gcode"]
+)
+def test_builders_contain_no_authority_code(builder_name):
+    """Builders are pure: no feasibility call, no decision, no persistence."""
+    src = inspect.getsource(getattr(_router_module(), builder_name))
+
+    for forbidden in (
+        "compute_feasibility_internal",
+        "RunDecision",
+        "persist_run",
+        "validate_and_persist",
+    ):
+        assert forbidden not in src, f"{builder_name} contains {forbidden}"
+
+
+def test_only_the_gate_talks_to_the_feasibility_boundary():
+    """`compute_feasibility_internal` has exactly one caller in this module."""
+    callers = [
+        node.name
+        for node in _router_tree().body
+        if isinstance(node, ast.FunctionDef)
+        for child in ast.walk(node)
+        if _call_name(child) == "compute_feasibility_internal"
+    ]
+
+    assert callers == ["_authorize_retract"]
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_route_calls_both_the_gate_and_a_builder(route_name):
+    names = _call_names(getattr(_router_module(), route_name))
+
+    assert "_authorize_retract" in names, route_name
+    assert any(n.startswith("_build_") for n in names), route_name
+
+
+@pytest.mark.parametrize("alias_name", ALIAS_HANDLERS)
+def test_alias_neither_generates_nor_evaluates(alias_name):
+    """An alias that grew its own generation or authority is a second lane."""
+    names = _call_names(getattr(_router_module(), alias_name))
+
+    assert names, alias_name
+    for forbidden in (
+        "_build_simple_retract_gcode",
+        "_build_download_retract_gcode",
+        "compute_feasibility_internal",
+    ):
+        assert forbidden not in names, f"{alias_name} calls {forbidden}"
+
+
+# --- the constitutional invariant, one assertion per test ------------------
+#
+# Generation cannot occur before *successful* authorization. Presence of both
+# calls does not prove that, so the four tests below assert ordering and
+# dependency on the AST. None of them reads a status code, so they keep their
+# meaning after an evaluator lands and the lane returns GREEN — unlike the 409
+# witnesses, which prove only today's no-evaluator behaviour.
+
+
+def test_the_gate_actually_blocks():
     """
-    The constitutional invariant of 001B: generation cannot occur before
-    *successful* authorization.
+    `_authorize_retract` raises HTTPException under SafetyPolicy.should_block.
 
-    Presence of both calls does not prove that. This asserts the ordering and
-    the dependency, on the AST:
-
-    1. `_authorize_retract` is called from an **unconditional top-level**
-       statement of each route handler — a gate reached only on some branches
-       is not a gate.
-    2. The first `_build_*` call appears at a **strictly later** top-level
-       statement index. Statement index, not source offset: comments,
-       docstrings and renamed locals move text but not structure, which is why
-       the retired `src.index()` form was brittle.
-    3. The names bound by the authorization statement are **consumed** by the
-       persistence call, so the emitted artifact is tied to the run that
-       authorized it rather than merely following it.
-    4. `_authorize_retract` raises `HTTPException` under
-       `SafetyPolicy.should_block`, which is what makes "before" mean "gates"
-       rather than "happens to precede".
-
-    Why this outlives the current blocked state: the behavioural 409 witnesses
-    prove today's no-evaluator behaviour and stop proving anything the moment a
-    retract evaluator lands and the lane returns GREEN. This test asserts the
-    structure that must hold in *that* state — order and dependency — and is
-    unaffected by which risk level the evaluator returns.
+    Without the raise, "authorize first" is decorative: the gate would run,
+    decide nothing, and generation would proceed regardless.
     """
-    from app.routers.retract import retract_gcode_router as rr
+    gate = _fn_def(_router_tree(), "_authorize_retract")
 
-    tree = ast.parse(inspect.getsource(rr))
-
-    # (4) The gate actually blocks: a raise guarded by the policy check.
-    gate = _fn_def(tree, "_authorize_retract")
-    guarded_raises = [
+    guarded = [
         node
         for node in ast.walk(gate)
         if isinstance(node, ast.If)
@@ -376,58 +393,68 @@ def test_authorization_structurally_precedes_generation():
             for r in ast.walk(node)
         )
     ]
-    assert guarded_raises, (
-        "_authorize_retract must raise HTTPException under SafetyPolicy.should_block; "
-        "without the raise, 'authorize first' is decorative"
+    assert guarded, (
+        "_authorize_retract must raise HTTPException under "
+        "SafetyPolicy.should_block"
     )
 
-    for route_name in ("generate_simple_retract_gcode", "download_retract_gcode"):
-        fn = _fn_def(tree, route_name)
 
-        auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
-        build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
-        persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_the_gate_is_unconditional(route_name):
+    """A gate reached only on some branches is not a gate."""
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
 
-        # (1) unconditional gate
-        assert auth_i is not None, f"{route_name} never calls _authorize_retract"
-        assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
-            f"{route_name}: the _authorize_retract call must be an unconditional "
-            f"top-level statement, not nested in a branch"
-        )
+    assert auth_i is not None, f"{route_name} never calls _authorize_retract"
+    assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
+        f"{route_name}: the _authorize_retract call must be an unconditional "
+        f"top-level statement, not nested in a branch"
+    )
 
-        # (2) strict ordering
-        assert build_i is not None, f"{route_name} never calls a _build_* helper"
-        assert auth_i < build_i, (
-            f"{route_name}: _build_* is reached at statement {build_i}, which is not "
-            f"after _authorize_retract at statement {auth_i}"
-        )
 
-        # (3) data dependency: the artifact is bound to the authorizing run
-        assert persist_i is not None, f"{route_name} never persists an authorized run"
-        assert build_i < persist_i, f"{route_name}: persistence must follow generation"
-        bound = _binds(fn.body[auth_i])
-        assert bound, f"{route_name}: _authorize_retract result must be bound to names"
-        consumed = {
-            node.id
-            for node in ast.walk(fn.body[persist_i])
-            if isinstance(node, ast.Name)
-        }
-        carried = bound & consumed
-        assert {"run_id", "risk_level"} <= carried, (
-            f"{route_name}: the persisted run must carry run_id and risk_level from "
-            f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
-            f"only follows authorization, it is not bound to it"
-        )
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_generation_follows_authorization_and_precedes_persistence(route_name):
+    """
+    Statement index, not source offset: comments, docstrings and renamed
+    locals move text but not structure, which is why the retired
+    `src.index()` form was brittle.
+    """
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+    build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
+    persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
 
-    for alias_fn in (
-        rr.generate_simple_retract_gcode_governed,
-        rr.download_retract_gcode_governed,
-    ):
-        names = _call_names(alias_fn)
-        assert names, alias_fn.__name__
-        assert "_build_simple_retract_gcode" not in names
-        assert "_build_download_retract_gcode" not in names
-        assert "compute_feasibility_internal" not in names
+    assert build_i is not None, f"{route_name} never calls a _build_* helper"
+    assert persist_i is not None, f"{route_name} never persists an authorized run"
+    assert auth_i < build_i, (
+        f"{route_name}: _build_* is reached at statement {build_i}, which is not "
+        f"after _authorize_retract at statement {auth_i}"
+    )
+    assert build_i < persist_i, f"{route_name}: persistence must follow generation"
+
+
+@pytest.mark.parametrize("route_name", ROUTE_HANDLERS)
+def test_the_persisted_run_is_bound_to_the_authorizing_call(route_name):
+    """
+    The artifact must carry the authorizing call's own names, not merely
+    follow it in time.
+    """
+    fn = _fn_def(_router_tree(), route_name)
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+    persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+
+    bound = _binds(fn.body[auth_i])
+    assert bound, f"{route_name}: _authorize_retract result must be bound to names"
+
+    consumed = {
+        node.id for node in ast.walk(fn.body[persist_i]) if isinstance(node, ast.Name)
+    }
+    carried = bound & consumed
+    assert {"run_id", "risk_level"} <= carried, (
+        f"{route_name}: the persisted run must carry run_id and risk_level from "
+        f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
+        f"only follows authorization, it is not bound to it"
+    )
 
 
 def test_retract_router_does_not_hardcode_run_decision_risk_level():
