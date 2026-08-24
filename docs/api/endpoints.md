@@ -305,6 +305,73 @@ Download G-code.
 
 ---
 
+### POST /api/cam/retract/gcode
+
+### POST /api/cam/retract/gcode/download
+
+### POST /api/cam/retract/gcode_governed
+
+### POST /api/cam/retract/gcode/download_governed
+
+Retract G-code generation.
+
+> **BREAKING CHANGE — all four routes now fail closed.**
+>
+> These routes previously emitted G-code. They no longer do. Every one of them
+> returns **`409 SAFETY_BLOCKED`** and emits no machine output, and will keep
+> doing so until a substantive retract feasibility evaluator exists.
+>
+> This is a deliberate change of the *public* contract on unchanged URLs, made
+> under the owner ruling of 2026-08-23 (RMOS-CONVERGE-001B): the governing unit
+> is the production capability, not the URL suffix, and an ungoverned
+> convenience endpoint is not an accepted alternate production path.
+
+**What changed for callers:**
+
+| | Before | Now |
+|---|---|---|
+| `POST /gcode` | `200` `text/plain` G-code, `X-ToolBox-Lane: draft`, no run or hash | `409 SAFETY_BLOCKED`, no G-code |
+| `POST /gcode/download` | `200` `.nc` attachment, `X-ToolBox-Lane: draft`, no run or hash | `409 SAFETY_BLOCKED`, no attachment |
+| `POST /gcode_governed` | `200` G-code wrapped in a run carrying a self-minted `GREEN` decision | `409 SAFETY_BLOCKED`, no G-code |
+| `POST /gcode/download_governed` | `200` `.nc` wrapped in the same self-minted run | `409 SAFETY_BLOCKED`, no attachment |
+
+The `_governed` suffix no longer denotes a second lane. Each suffixed route is a
+retained alias of its plain counterpart and returns an identical response.
+
+**If you consume these routes, you must:**
+
+- check the status before treating a response body as G-code. A `409` body is
+  JSON; saving it as a `.nc` file writes an error message to a machine program;
+- stop branching on `X-ToolBox-Lane: draft` for the plain routes. The old draft
+  lane is gone and is not coming back when an evaluator lands;
+- expect no `X-GCode-SHA256` and no `Content-Disposition` on a blocked response.
+
+**Blocked response:**
+
+```json
+{
+  "detail": {
+    "error": "SAFETY_BLOCKED",
+    "message": "Retract G-code generation blocked by server-side safety policy.",
+    "run_id": "run_2f1c…",
+    "decision": { "risk_level": "UNKNOWN", "...": "..." },
+    "authoritative_feasibility": { "...": "..." }
+  }
+}
+```
+
+Blocked attempts remain auditable: a `BLOCKED` run artifact is persisted with the
+feasibility hash, and with no `gcode_sha256` and no attachments. Look it up with
+`GET /api/rmos/runs_v2/runs/{run_id}` using the `run_id` from the response.
+
+**Note on retract strategies.** The two route families accept different strategy
+vocabularies — `/gcode` takes `direct | ramped | helical`, `/gcode/download`
+takes `minimal | safe | incremental` (default `safe`). Reconciling them is a
+pending ruling; until then, do not assume a value valid on one is valid on the
+other.
+
+---
+
 ## RMOS (Safety)
 
 ### GET /api/rmos/runs_v2/runs
@@ -521,6 +588,7 @@ All errors follow this format:
 |------|---------|
 | 400 | Bad request (invalid parameters) |
 | 404 | Resource not found |
+| 409 | Blocked by server-side safety policy (`SAFETY_BLOCKED`) — the operation was refused before any machine output was generated. The body carries the authoritative decision and a `run_id`; it is **not** machine output. |
 | 422 | Validation error |
 | 500 | Internal server error |
 

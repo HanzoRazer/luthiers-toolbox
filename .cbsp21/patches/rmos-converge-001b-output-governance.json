@@ -11,26 +11,30 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/rmos-converge-001b-output-governance.json",
+      "docs/api/endpoints.md",
       "docs/audit/rmos_prod_output_census_001b.md",
       "services/api/app/ci/fence_baseline.json",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/runs_v2/store_completeness.py",
       "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_retract_contract_guards.py",
       "services/api/tests/rmos/test_rmos_output_route_convergence.py",
       "services/api/tests/test_retract_endpoint_smoke.py"
     ],
     "files_expected_to_change": [
+      "docs/api/endpoints.md",
       "docs/audit/rmos_prod_output_census_001b.md",
       "services/api/app/ci/fence_baseline.json",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/runs_v2/store_completeness.py",
       "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_retract_contract_guards.py",
       "services/api/tests/rmos/test_rmos_output_route_convergence.py",
       "services/api/tests/test_retract_endpoint_smoke.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) retract_gcode_router.py restructured so authority precedes generation structurally rather than by statement order: _authorize_retract() calls the 001A canonical boundary, derives the decision via SafetyPolicy, persists a BLOCKED RunArtifact carrying the feasibility hash but no gcode_sha256 and no attachment, and raises 409; G-code construction moved into pure builders (_build_simple_retract_gcode, _build_download_retract_gcode) that contain no authority code and are reachable only after authorization returns; _persist_authorized_run binds an authorized artifact to the run that authorized it. The two _governed routes are retained as thin delegations to their plain counterparts, so the suffix no longer denotes a different lane. (2) rmos_feasibility_router.resolve_mode gains a retract: prefix - an identity/wiring fix permitted by the 001B handoff, not an evaluator-table expansion. (3) New census artifact records the base SHA, entry-gate verification, inclusion rule, full candidate triage with per-exclusion evidence, the Phase 1 deep matrix, retract pre/post witnesses, and the eleven ungoverned capabilities awaiting a ruling. (4) New test module with 19 witnesses covering B01, B07, B09, B13, B14 and B19, plus a structural guard that the builders contain no authority code and that no route constructs a literal GREEN RunDecision - checked on the AST rather than source text, so the module may still describe the retired anti-pattern in prose. (5) Follow-up on the Fence Checks / api-verify failure: the retract router no longer imports or constructs RunArtifact, RunDecision or Hashes at all - both persistence paths now go through validate_and_persist(), the alternative FENCE_REGISTRY.json itself prescribes. _authorize_retract additionally returns the risk_level it derived, so _persist_authorized_run records the decision that granted authority instead of re-deriving it, and the retract mode label is an explicit constant rather than a string assembled from a suffix. _build_simple_retract_gcode now raises on an unrecognised strategy instead of emitting a header-only program under a retract_<strategy>.nc filename. (6) Census amended: the '5 self-minting GREEN' figure is restated as a LOWER BOUND, because store_api.persist_run_artifact() hardcodes risk_level=GREEN for all five of its callers inside the fence-authorized module, where a route-source detector cannot see it - a separate search dimension, queued not chased. New section 8 records the five findings this tranche surfaced but deliberately did not fix (persistence self-GREEN, FENCE_REGISTRY vs store_completeness.py authorization, FENCE_REGISTRY vs boundary_imports allowlist drift, five CAM composables that save a governed 409 as .nc, and the retract two-vocabulary split), plus the cutover invariant those findings imply: a server route is not ready for authority cutover merely because its backend gate is correct - its production consumer must also fail closed on the governed rejection.",
+    "what_changed": "(1) retract_gcode_router.py restructured so authority precedes generation structurally rather than by statement order: _authorize_retract() calls the 001A canonical boundary, derives the decision via SafetyPolicy, persists a BLOCKED RunArtifact carrying the feasibility hash but no gcode_sha256 and no attachment, and raises 409; G-code construction moved into pure builders (_build_simple_retract_gcode, _build_download_retract_gcode) that contain no authority code and are reachable only after authorization returns; _persist_authorized_run binds an authorized artifact to the run that authorized it. The two _governed routes are retained as thin delegations to their plain counterparts, so the suffix no longer denotes a different lane. (2) rmos_feasibility_router.resolve_mode gains a retract: prefix - an identity/wiring fix permitted by the 001B handoff, not an evaluator-table expansion. (3) New census artifact records the base SHA, entry-gate verification, inclusion rule, full candidate triage with per-exclusion evidence, the Phase 1 deep matrix, retract pre/post witnesses, and the eleven ungoverned capabilities awaiting a ruling. (4) New test module with 19 witnesses covering B01, B07, B09, B13, B14 and B19, plus a structural guard that the builders contain no authority code and that no route constructs a literal GREEN RunDecision - checked on the AST rather than source text, so the module may still describe the retired anti-pattern in prose. (5) Follow-up on the Fence Checks / api-verify failure: the retract router no longer imports or constructs RunArtifact, RunDecision or Hashes at all - both persistence paths now go through validate_and_persist(), the alternative FENCE_REGISTRY.json itself prescribes. _authorize_retract additionally returns the risk_level it derived, so _persist_authorized_run records the decision that granted authority instead of re-deriving it, and the retract mode label is an explicit constant rather than a string assembled from a suffix. _build_simple_retract_gcode now raises on an unrecognised strategy instead of emitting a header-only program under a retract_<strategy>.nc filename. (6) Census amended: the '5 self-minting GREEN' figure is restated as a LOWER BOUND, because store_api.persist_run_artifact() hardcodes risk_level=GREEN for all five of its callers inside the fence-authorized module, where a route-source detector cannot see it - a separate search dimension, queued not chased. New section 8 records the five findings this tranche surfaced but deliberately did not fix (persistence self-GREEN, FENCE_REGISTRY vs store_completeness.py authorization, FENCE_REGISTRY vs boundary_imports allowlist drift, five CAM composables that save a governed 409 as .nc, and the retract two-vocabulary split), plus the cutover invariant those findings imply: a server route is not ready for authority cutover merely because its backend gate is correct - its production consumer must also fail closed on the governed rejection. (7) Review follow-up: the public contract change is now documented on the endpoint-facing surface (docs/api/endpoints.md) rather than only in code docstrings and the audit census, and 409 SAFETY_BLOCKED is added to the common error-code table. A new guard module pins the alias-delegation contract, the unsupported-strategy raise, and the two-vocabulary split. The vocabulary is pinned, NOT normalised - reconciliation remains a queued ruling that must precede evaluator work.",
     "why_not_redundant": "Closes a live authority bypass on machine-consumable output. Before this change a caller blocked anywhere in RMOS could obtain retract G-code, as a .nc download, from a route that never consulted feasibility - and two sibling routes wrapped that same unassessed output in a governed-looking run with a self-minted GREEN decision. The census is not decoration: it establishes that retract is one instance of a pattern (five routes self-mint GREEN; only two of twenty-nine in-scope routes were governed before this tranche) and provides the blast-radius map the owner requires before authorizing the next cutover group."
   },
   "verification": {
@@ -43,7 +47,9 @@
       "py -3.11 scripts/governance/check_all.py --tier ci -> (recorded at commit)",
       "PYTHONPATH=. py -3.11 -m pytest tests/test_retract_endpoint_smoke.py tests/test_retract_shim_retirement_invariant.py -q --no-cov -> 54 passed, 28 xfailed",
       "py -3.11 ci/rmos/check_no_direct_runartifact.py -> PASS: No new RunArtifact authority violations (98 current, 98 baselined)",
-      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py tests/test_rmos_store_completeness.py -q -> 95 passed, 28 xfailed"
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py tests/test_rmos_store_completeness.py -q -> 95 passed, 28 xfailed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_retract_contract_guards.py -q --no-cov -> 15 passed",
+      "mutation check on the alias guards -> alias default drift caught by the signature guard; an alias that grows its own header caught by the structural guard (the behavioural parity check cannot see it while blocking short-circuits both paths, which is why both guards exist)"
     ]
   },
   "files": [
@@ -94,6 +100,18 @@
       "intent": "Drop the three now-resolved artifact_authority entries for retract_gcode_router.py (the router no longer imports or constructs RunArtifact) and re-key the two store_completeness.py entries whose line numbers shifted. The baseline key embeds the line number, so a pure line shift inside an already-baselined file reads as a NEW violation; the violation set is unchanged at 98 in / 98 out for store_completeness and 3 fewer overall.",
       "risk": "low",
       "behavior_change": "none (CI baseline)"
+    },
+    {
+      "path": "docs/api/endpoints.md",
+      "intent": "Endpoint-facing documentation of the contract change. The published API reference now carries a BREAKING CHANGE block for all four retract G-code routes: before/after table per route, what a consumer must do (check status before treating a body as G-code, stop branching on X-ToolBox-Lane: draft, expect no X-GCode-SHA256 or Content-Disposition), the blocked response shape, how to look the blocked run up, and a note that the two route families take different strategy vocabularies. 409 SAFETY_BLOCKED added to the common error-code table, where it was absent.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_retract_contract_guards.py",
+      "intent": "Three contract guards the convergence made load-bearing but did not itself assert: (a) the _governed aliases are pure delegations - identical signatures, a body that is a single delegating return forwarding every declared parameter, and an indistinguishable response on identical input; (b) an unrecognised strategy raises instead of emitting a motionless program under a retract_<strategy>.nc filename, with the download vocabulary values included because they are the ones most likely to arrive by mistake, plus a companion proving the three supported strategies still emit motion; (c) a characterisation guard pinning the two disjoint strategy vocabularies. Separate module from the convergence witnesses on purpose. Only the pair-parity check reads a status code, and it compares the two routes rather than asserting a value, so all three survive the lane reopening.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
     }
   ]
 }
