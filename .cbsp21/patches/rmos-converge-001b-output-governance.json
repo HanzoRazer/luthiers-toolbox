@@ -1,0 +1,81 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_CONVERGE_001B_OUTPUT_GOVERNANCE",
+  "title": "RMOS-CONVERGE-001B: production output census + retract capability convergence",
+  "intent": "Phase 0/1 census of the live manufacturing-output surface taken from the mounted FastAPI route table (1062 routes, 62 machine-artifact emitters, 60 with no feasibility call, 5 self-minting a literal GREEN RunDecision), plus remediation of the one capability covered by an explicit owner ruling: retract. Every other discovered bypass is classified and reported at the checkpoint, not patched, per the owner ruling that the census may classify additional bypasses but may not take a newly discovered capability offline without explicit acceptance of that availability change.",
+  "change_type": "fix",
+  "behavior_change": "INTENTIONAL - newly blocked production routes. All four mounted retract G-code routes (POST /api/cam/retract/gcode, /gcode_governed, /gcode/download, /gcode/download_governed) now return 409 SAFETY_BLOCKED instead of emitting G-code. Two of them previously built G-code and then minted a literal GREEN RunDecision around it; the other two bypassed RMOS entirely and served a .nc download with no run, decision or hash. There is no substantive retract feasibility evaluator, so the capability is blocked by design under the owner ruling of 2026-08-23. This is a fail-closed conversion of a live production capability, not an internal refactor. Also: tool_id moves from retract_gcode to retract:<strategy> and resolve_mode gains a retract: prefix so the capability blocks as a known operation rather than an unknown tool - this grants no evaluator (resolve_feasibility_engine for retract returns None) and changes no other route's behavior. No other capability was patched.",
+  "risk_level": "high",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001b-output-governance.json",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "services/api/tests/test_retract_endpoint_smoke.py"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "services/api/tests/test_retract_endpoint_smoke.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) retract_gcode_router.py restructured so authority precedes generation structurally rather than by statement order: _authorize_retract() calls the 001A canonical boundary, derives the decision via SafetyPolicy, persists a BLOCKED RunArtifact carrying the feasibility hash but no gcode_sha256 and no attachment, and raises 409; G-code construction moved into pure builders (_build_simple_retract_gcode, _build_download_retract_gcode) that contain no authority code and are reachable only after authorization returns; _persist_authorized_run binds an authorized artifact to the run that authorized it. The two _governed routes are retained as thin delegations to their plain counterparts, so the suffix no longer denotes a different lane. (2) rmos_feasibility_router.resolve_mode gains a retract: prefix - an identity/wiring fix permitted by the 001B handoff, not an evaluator-table expansion. (3) New census artifact records the base SHA, entry-gate verification, inclusion rule, full candidate triage with per-exclusion evidence, the Phase 1 deep matrix, retract pre/post witnesses, and the eleven ungoverned capabilities awaiting a ruling. (4) New test module with 19 witnesses covering B01, B07, B09, B13, B14 and B19, plus a structural guard that the builders contain no authority code and that no route constructs a literal GREEN RunDecision - checked on the AST rather than source text, so the module may still describe the retired anti-pattern in prose.",
+    "why_not_redundant": "Closes a live authority bypass on machine-consumable output. Before this change a caller blocked anywhere in RMOS could obtain retract G-code, as a .nc download, from a route that never consulted feasibility - and two sibling routes wrapped that same unassessed output in a governed-looking run with a self-minted GREEN decision. The census is not decoration: it establishes that retract is one instance of a pattern (five routes self-mint GREEN; only two of twenty-nine in-scope routes were governed before this tranche) and provides the blast-radius map the owner requires before authorizing the next cutover group."
+  },
+  "verification": {
+    "commands_run": [
+      "entry gate on origin/main -> PR #312 MERGED, feasibility_authority.py PRESENT, compute_cam_stub_feasibility ABSENT, 001A owner ruling PRESENT",
+      "Phase 0 census from live app.routes -> 1062 mounted, 293 keyword candidates, 62 machine-artifact emitters, 60 without feasibility, 5 self-minted GREEN",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py -q --no-cov -> 19 passed",
+      "retract identity probe -> retract:direct, retract:ramped, retract:helical all resolve mode=retract, engine=None, UNKNOWN, blocked, FEASIBILITY_ENGINE_UNAVAILABLE",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos -q --no-cov -> (recorded at commit)",
+      "py -3.11 scripts/governance/check_all.py --tier ci -> (recorded at commit)",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_retract_endpoint_smoke.py tests/test_retract_shim_retirement_invariant.py -q --no-cov -> 54 passed, 28 xfailed"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/retract/retract_gcode_router.py",
+      "intent": "Converge all four retract G-code routes onto the 001A authority boundary; extract generation into pure builders reached only after authorization; persist BLOCKED attempts for audit without an executable artifact; retain the _governed paths as delegations carrying identical authority.",
+      "risk": "high",
+      "behavior_change": "yes - all four routes now return 409 SAFETY_BLOCKED and emit no G-code"
+    },
+    {
+      "path": "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "intent": "Add a retract: prefix to resolve_mode so the capability blocks as a known operation with no authorized evaluator rather than as an unknown tool. Identity/wiring only; no engine registered.",
+      "risk": "low",
+      "behavior_change": "none for any existing route - retract previously resolved to unknown and blocked; it now resolves to retract and blocks"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "intent": "19 witnesses: 001A boundary present, truthful retract identity, all four routes blocked by one authority, no machine output emitted (observable, no production seam added), client-declared authority cannot unblock, blocked attempts auditable, and a structural AST guard that generation cannot precede authorization and no route mints a literal GREEN decision.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/audit/rmos_prod_output_census_001b.md",
+      "intent": "The census artifact: base SHA and entry-gate provenance, inclusion rule, full candidate triage with per-exclusion evidence, Phase 1 deep matrix, retract pre/post witnesses, the eleven ungoverned capabilities awaiting a capability-level ruling, and preserved F7/F9/F10 deferrals.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001b-output-governance.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_retract_endpoint_smoke.py",
+      "intent": "Reconciliation: 28 tests assert that retract manufactures output (200, G-code body, .nc attachment, X-Run-ID, X-ToolBox-Lane), which the owner ruling makes impossible. Marked xfail(strict=True) with the reason and restore condition, assertions preserved verbatim as the contract to restore rather than rewritten to expect 409 - a rewritten assertion would keep passing once a retract evaluator lands and would then assert the wrong thing. 54 tests in the file are unaffected and still pass.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    }
+  ]
+}
