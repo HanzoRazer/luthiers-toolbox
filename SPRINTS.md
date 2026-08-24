@@ -1678,6 +1678,49 @@ exclude = ["data", "data.*", "metrics", "metrics.*", "test_support", "test_suppo
 
 ## QUEUED
 
+### VERSION-AUTHORITY-001 — five version surfaces disagree
+**Status:** QUEUED
+**last_verified:** 2026-08-24
+**Priority:** MEDIUM
+**Source:** surfaced while reconciling `CHANGELOG.md` against the release tags (PR #317)
+
+Five surfaces report the version of this repository. No two of them agree, and
+nothing reconciles them:
+
+| Surface | Reports |
+|---|---|
+| Release tags (`gh release list`) | `toolbox-v0.39.1` |
+| API runtime — `services/api/app/main.py`, `GET /health` | `2.0.0-clean` |
+| API package — `services/api/pyproject.toml` | `2.0.0` |
+| Client package — `packages/client/package.json` | `1.0.0` |
+| API documentation example — `docs/api/endpoints.md` | `0.33.0` |
+
+**Why this is an authority finding, not a tidy-up.** There is no declared source of
+truth, so every consumer picks one and they are picking differently: a released
+artifact identifies itself as `2.0.0-clean` while the tag that produced it says
+`toolbox-v0.39.1`, and the published API reference shows a third value again. A
+support question of the form "what version are you running?" currently has no
+answerable form.
+
+**Deliberately not fixed in PR #317.** That PR records the disagreement under
+*Versioning* in `CHANGELOG.md` and names the tag series authoritative **for releases
+only** — the narrowest true statement available. Changing any package or runtime
+version inside a changelog reconciliation would have been an authority decision taken
+opportunistically, which is the failure mode the reconciliation exists to correct.
+
+**What a resolution requires (owner decision, not a patch):**
+1. Declare which surface is the source of truth.
+2. Decide whether the API and client version independently or move together.
+3. Decide whether `toolbox-vX.Y.Z` continues, or whether tags follow the package version.
+4. Only then align the remaining surfaces — and add a gate, or they drift again.
+
+**Related:** `docs/api/endpoints.md` also carries the stale `0.33.0` example; it is the
+cheapest surface to correct once (1) is decided, but correcting it alone would just
+move the inconsistency.
+
+---
+
+
 ### ART-STUDIO-DEFER-001
 
 Tracked under [DEFERRED MAINTENANCE](#art-studio-defer-001--design-first-workflow--promotion-intent-export) and [GOV-CONVERGE-004](#gov-converge-004--art-studio-design-first-workflow-restore). Schedule when Art Studio promotion path is in scope — not blocking MVP cut.
