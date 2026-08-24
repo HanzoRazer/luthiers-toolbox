@@ -49,7 +49,8 @@
       "py -3.11 ci/rmos/check_no_direct_runartifact.py -> PASS: No new RunArtifact authority violations (98 current, 98 baselined)",
       "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py tests/test_rmos_store_completeness.py -q -> 95 passed, 28 xfailed",
       "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_retract_contract_guards.py -q --no-cov -> 15 passed",
-      "mutation check on the alias guards -> alias default drift caught by the signature guard; an alias that grows its own header caught by the structural guard (the behavioural parity check cannot see it while blocking short-circuits both paths, which is why both guards exist)"
+      "mutation check on the alias guards -> alias default drift caught by the signature guard; an alias that grows its own header caught by the structural guard (the behavioural parity check cannot see it while blocking short-circuits both paths, which is why both guards exist)",
+      "CI witness: the first push of the alias-parity guard FAILED api-verify/API Tests on x-request-id, a per-call correlation header the local run did not surface. Fixed by supplying the same client-side X-Request-ID on both calls (the middleware echoes it), which keeps the header inside the comparison rather than excluding it."
     ]
   },
   "files": [
@@ -109,7 +110,7 @@
     },
     {
       "path": "services/api/tests/rmos/test_retract_contract_guards.py",
-      "intent": "Three contract guards the convergence made load-bearing but did not itself assert: (a) the _governed aliases are pure delegations - identical signatures, a body that is a single delegating return forwarding every declared parameter, and an indistinguishable response on identical input; (b) an unrecognised strategy raises instead of emitting a motionless program under a retract_<strategy>.nc filename, with the download vocabulary values included because they are the ones most likely to arrive by mistake, plus a companion proving the three supported strategies still emit motion; (c) a characterisation guard pinning the two disjoint strategy vocabularies. Separate module from the convergence witnesses on purpose. Only the pair-parity check reads a status code, and it compares the two routes rather than asserting a value, so all three survive the lane reopening.",
+      "intent": "Three contract guards the convergence made load-bearing but did not itself assert: (a) the _governed aliases are pure delegations - identical signatures, a body that is a single delegating return forwarding every declared parameter, and an indistinguishable response on identical input; (b) an unrecognised strategy raises instead of emitting a motionless program under a retract_<strategy>.nc filename, with the download vocabulary values included because they are the ones most likely to arrive by mistake, plus a companion proving the three supported strategies still emit motion; (c) a characterisation guard pinning the two disjoint strategy vocabularies. Separate module from the convergence witnesses on purpose. Only the pair-parity check reads a status code, and it compares the two routes rather than asserting a value, so all three survive the lane reopening. The parity check pins X-Request-ID from the client so the correlation middleware echoes one value across both calls; excluding the header instead would have blinded the comparison to a route that started rewriting it.",
       "risk": "low",
       "behavior_change": "none (tests)"
     }

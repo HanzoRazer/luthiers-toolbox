@@ -35,8 +35,15 @@ DOWNLOAD_BODY = {
     "strategy": "safe",
 }
 
-# Headers that differ between two identical calls by construction.
+# Headers that differ between two identical calls by construction and cannot be
+# pinned from the client side.
 VOLATILE_HEADERS = {"date", "x-run-id", "server"}
+
+# `RequestIdMiddleware` (app/main.py) echoes a caller-supplied x-request-id and
+# only generates one when absent. Supplying the same value on both calls keeps
+# that header INSIDE the comparison instead of blinding the test to it — a route
+# that started rewriting it would still be caught.
+PARITY_REQUEST_ID = "req_alias_parity_probe"
 
 ALIAS_PAIRS = [
     ("generate_simple_retract_gcode", "generate_simple_retract_gcode_governed"),
@@ -61,9 +68,10 @@ def client(tmp_path, monkeypatch):
 
 
 def _post(client, path):
+    headers = {"X-Request-ID": PARITY_REQUEST_ID}
     if path in DOWNLOAD_PAIR:
-        return client.post(path, json=DOWNLOAD_BODY)
-    return client.post(path)
+        return client.post(path, json=DOWNLOAD_BODY, headers=headers)
+    return client.post(path, headers=headers)
 
 
 def _comparable(response):
@@ -165,6 +173,10 @@ def test_alias_response_is_indistinguishable_from_the_plain_route(client, plain,
     Deliberately asserts equality between the pair rather than a specific
     status, so it keeps testing the delegation contract after an evaluator lands
     and both routes start returning 200 with G-code.
+
+    Both calls carry the same client-supplied ``X-Request-ID``. Without that the
+    correlation middleware mints a fresh id per call and the comparison fails on
+    a header that has nothing to do with the delegation contract.
     """
     assert _comparable(_post(client, plain)) == _comparable(_post(client, alias))
 
