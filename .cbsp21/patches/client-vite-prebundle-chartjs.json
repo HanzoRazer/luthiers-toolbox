@@ -1,0 +1,46 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_VITE_PREBUNDLE_CHARTJS",
+  "title": "client: pre-bundle chart.js in Vite dev so lazy chart routes render reliably",
+  "intent": "Vite's dependency optimizer only discovers an import when the module graph reaches it. chart.js is reached exclusively through lazy route chunks, so the dev server discovers it mid-session, re-runs optimizeDeps, and serves a transient 504 'Outdated Optimize Dep' that blanks the first navigation to a chart-bearing route (reported on /calculators). Declaring it in optimizeDeps.include pre-bundles it at dev-server startup instead, which is the conventional Vite remedy for this symptom. Dev-server configuration only.",
+  "change_type": "fix",
+  "behavior_change": "none in production. vite.config.ts optimizeDeps affects the Vite dev server's dependency pre-bundling only; it does not alter the production rollup build, application logic, routing, or any API contract. Tests are unaffected because packages/client/vitest.config.ts is a standalone vitest/config defineConfig with its own plugins and resolve block - it does not import or extend vite.config.ts, so no optimizeDeps setting reaches the test runner. Observable dev-server effect: a marginally longer cold start in exchange for removing the mid-session re-optimize.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-vite-prebundle-chartjs.json",
+      "packages/client/vite.config.ts"
+    ],
+    "files_expected_to_change": [
+      "packages/client/vite.config.ts"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/vite.config.ts gains an optimizeDeps.include entry for 'chart.js', with a comment recording why the entry exists so it does not later read as arbitrary. The include list is exactly the specifier the codebase imports: all seven chart.js imports in packages/client/src resolve 'chart.js', and no file imports the 'chart.js/auto' subpath, so listing it would pre-bundle a module the app never loads and would assert an import path the codebase does not use. The comment names the three feature areas that actually reach the dependency - the audio analyzer renderers, the acoustics calculator, and multi-run comparison - rather than attributing it to /calculators alone, because /calculators is where the symptom was reported, not the extent of the dependency.",
+    "why_not_redundant": "There is no existing optimizeDeps block in this config; the file previously declared only plugins, resolve.alias and server. This is the first dependency-optimizer directive in the client build, and it addresses a reproducible dev-server failure rather than a style preference."
+  },
+  "verification": {
+    "commands_run": [
+      "grep -rn \"from ['\\\"]chart\\.js\" packages/client/src -> 7 hits, all specifier 'chart.js'; zero hits for 'chart.js/auto'",
+      "chart.js consumers: src/tools/audio_analyzer/renderers/** (4 files), src/views/calculators/acoustics/SoundholeCalculator.vue, src/views/multi_run_comparison/composables/useMultiRunComparisonChart.ts",
+      "packages/client/vitest.config.ts inspected -> standalone defineConfig from vitest/config; does not import vite.config.ts, so tests are unaffected",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files packages/client/vite.config.ts -> reproduced the PR failure (Coverage 0.0% < 95%, best-covering manifest audit-n1-refuted.json declared 1 unrelated file)"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/vite.config.ts",
+      "intent": "Add optimizeDeps.include for the chart.js specifier the codebase actually imports, so the Vite dev server pre-bundles it at startup instead of discovering it mid-session through a lazy route chunk and serving a transient 504 'Outdated Optimize Dep'.",
+      "risk": "low",
+      "behavior_change": "dev-server pre-bundling only; no production build, application logic, or test behavior change"
+    },
+    {
+      "path": ".cbsp21/patches/client-vite-prebundle-chartjs.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file. Its absence is the sole failing gate on this PR: the gate auto-discovers manifests, selected an unrelated best-covering manifest, and failed at Coverage 0.0% < 95%.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
