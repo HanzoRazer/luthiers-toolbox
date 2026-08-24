@@ -1,51 +1,84 @@
 # Changelog
 
-All notable changes to Production Shop (formerly The Production Shop) will be documented in this file.
+All notable changes to **The Production Shop** (this repository, `luthiers-toolbox`) are
+documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
-
-## [toolbox-v0.32.0] - 2026-01-20
-
-### Art Studio Promotion Contracts & CAM Bridge
-
-**Focus:** Art Studio (Design-First Workflow)  
-**Type:** Contract + Orchestration release (non-execution)
-
-#### Added
-- Canonical approval-gated PromotionIntentV1 export:
-  - `GET /api/art/design-first-workflow/sessions/{session_id}/promotion_intent.json`
-- UI-friendly PromotionIntentV1 wrapper:
-  - `POST /api/art/design-first-workflow/sessions/{session_id}/promotion_intent_v1`
-- CAM orchestration bridge:
-  - `POST /api/art/design-first-workflow/sessions/{session_id}/promote_to_cam`
-- New orchestration artifact:
-  - `CamPromotionRequestV1` (idempotent, file-backed persistence)
-
-#### Changed
-- Frontend export URL preview updated to canonical design-first workflow route
-- Added UI button to copy a full GitHub Actions workflow for export + strict validation
-- Added UI button to promote approved intent to a queued CAM request
-
-#### Tests
-- Added pytest contract tests enforcing:
-  - Approval gating (403 for canonical export when not approved)
-  - Strict PromotionIntentV1 shape when approved
-  - Wrapper ok/blocked semantics
-  - Promotion idempotency (stable request ID)
-
-#### CI / Tooling
-- `make api-verify` runs scope checks, boundary checks, and API contract tests
-- CI runs `make api-verify` on push/PR
-
-#### Docs
-- Updated workflow integration docs with new section describing PromotionIntentV1 → CamPromotionRequestV1 bridge
+> **Refreshed 2026-08-24.** The file had drifted badly and was rebuilt against the
+> repository's own history. What changed, and why you can trust the result:
+>
+> - **Eleven shipped releases were missing.** `toolbox-v0.33.0-wave22.1` through
+>   `toolbox-v0.39.1` are all tagged and published on GitHub, but the newest entry
+>   here was `toolbox-v0.32.0`. They are now filed, sourced from their release notes
+>   where those carry content and from the commit range between tags where they do
+>   not (v0.35.0–v0.38.0 and v0.39.1 shipped with deploy-boilerplate release notes
+>   only, so their entries are reconstructed from commits and say so).
+> - **Three `[Unreleased]` sections existed**, one of them below a released version
+>   and one of them a roadmap. There is now exactly one, at the top, where the format
+>   requires it.
+> - **Work filed as "unreleased" had shipped months earlier.** Entries were dated and
+>   attributed by proving ancestry against the tags — see the note on each. Entries
+>   that could not be attributed are grouped under *Unattributed* rather than guessed at.
+> - The roadmap has been separated from the changelog; a changelog records what
+>   shipped, not what is planned.
 
 ---
 
 ## [Unreleased]
+
+Covers `toolbox-v0.39.1` (2026-02-28) → `main` (2026-08-23): **1,716 commits across
+277 merged pull requests**, with no release cut in that window.
+
+Because that is far too much to enumerate faithfully, the summary below is grouped by
+area and derived from commit scopes and merged PR titles. It is **representative, not
+exhaustive** — the tag range is the authoritative record. Item counts are commit counts
+for that scope, not feature counts.
+
+### Added
+
+- **CAM** (82 commits) — canonical process authorization anchor; process-exclusive
+  canonical geometry authority (C2, ratified 2026-07-04); review-queue architecture
+  readiness check; production views wired to real intent–G-code endpoints
+  (contour/profiling, drilling) in place of stubs.
+- **Calculators** (35) — Soundhole Calculator (Helmholtz + P:A), Scala `.scl` file
+  parser, cantilever armrest, inverse brace sizing from a deflection target, and the
+  acoustic chain wired into the build sequence.
+- **Vectorizer / blueprint intake** (32 + 23 + 22) — V2_RAW and PHOTO_V2 recovery modes
+  exposed on the API; text-masking preprocessing for blueprint extraction; grid
+  reclassification; async job pipeline for production deployment; soundhole-based
+  calibration for DXF scaling; multi-view blueprint segmentation; flag-gated geometry
+  deduplication (default OFF).
+- **IBG** (19) — canonical repository proposal pipeline, worktree isolation layer,
+  descriptive execution planning, observational proposal evaluation, provenance bridge.
+- **Acoustics** (15) — ingest audit log and UI panel, experimental drift timeline
+  workspace and session synthesis, measurement-lab session panel.
+- **Governance / RMOS** (13 + others) — namespace authority drift detector,
+  `ConfidenceEnvelopeV1` cross-repo interoperability layer, DXF lifecycle guards across
+  neck and remaining routers, cross-repo governance normalization contracts.
+- **Smart Guitar** (14) — traced body outline, control-cavity spec with CNC operations,
+  neck length fields, `GET /api/instruments/smart-guitar/dxf`.
+
+### Changed
+
+- **RMOS stub retirement** — safety evaluate/mode, rosette segment-ring, slice
+  generation and preview, live-monitor drilldown, and the DXF→GRBL wrap were all moved
+  off placeholder implementations onto real engines and the `runs_v2` store.
+- **Materials data** (54 docs commits) — substantial wood-species and tonewood
+  reference work.
+- **Documentation** (230 docs commits, incl. 56 sprint and 18 audit) — the single
+  largest category in the window.
+
+### Fixed
+
+- CI (43), tests (28), Docker (17), CAM (16), vectorizer (13).
+
+### Instrument geometry, neck, headstock and photo-vectorizer work (March 2026)
+
+The entries below were previously filed under a mid-file `[Unreleased]` heading. They
+are genuinely unreleased — the files they describe were added on 2026-03-18/19,
+after the `toolbox-v0.39.1` tag (2026-02-28) — so they belong here, verbatim.
 
 ### Refactor
 
@@ -137,7 +170,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `docs/BACKLOG.md` — implementation backlog with scoped tasks from code analysis
 
-### 🔧 Changed
+---
+
+## [toolbox-v0.39.1] - 2026-02-28
+
+**Documentation fixes.** Reconstructed from the three commits in
+`toolbox-v0.39.0..toolbox-v0.39.1`; the published release notes contain only Docker
+deploy boilerplate.
+
+#### Fixed
+- Renamed `README.md` to `DEVELOPMENT.md` to resolve an MkDocs file conflict
+- Removed broken links that were failing MkDocs strict mode
+
+#### Docs
+- Added CBSP21 protocol documentation
+
+---
+
+## [toolbox-v0.39.0] - 2026-02-28
+
+### Wave 27.1 Dead Code Recovery + Design Review
+
+**Focus:** Recovery and UI decomposition
+**Type:** Restoration + refactor release (475 commits since v0.38.0)
+
+#### Fixed
+Nine functional modules deleted in error during an aggressive dead-code cleanup were
+restored — **1,407 lines across 9 files**:
+
+| Priority | File | Lines |
+|----------|------|-------|
+| P0-CRITICAL | `app/post_injection_helpers.py` | 488 (import chain repaired) |
+| P1-HIGH | `cam_dxf_adaptive_router.py` | 147 (DXF → Adaptive workflow) |
+| P1-HIGH | `cam_relief_router.py` | 160 (CAM relief operations) |
+| P1-HIGH | `cam_core/saw_lab/queue.py` | 265 |
+| P2-MEDIUM | `cnc_production/presets_router.py` | 77 |
+| P2-MEDIUM | `websocket/monitor.py` | 131 |
+| P2-MEDIUM | `schemas/job_log.py` | 81 |
+| P2-MEDIUM | `services/rmos_stores.py` | 130 |
+| P3-LOW | `ai/prompts/templates.py` | 235 |
+| P3-LOW | `workflow_schemas.py` | 181 |
+
+#### Changed
+- Largest UI refactor in the project's history: **127 `refactor(ui)` commits**, including
+  god-object decomposition of `CompareLabView` and `AdaptivePocketLab`
+- Client Phase 1 code quality: `useAsyncAction` composable (5 stores refactored), named
+  timing and dimension constants replacing magic numbers across 13 files
+
+#### Added
+- **Security:** `eval()` removed from `ScientificCalculator.vue`, replaced with a safe
+  `parseFraction()` — eliminated an XSS vector
+- **Safety:** mandatory simulation gate for G-code exports
+- Business Startup Suite and Engineering Cost Estimator modules (+ Vue wrapper)
+- Analyzer interpretation layer for `tap_tone_pi` integration
+- `/api/_meta/routing-truth` endpoint backing a CI gate
+- CI tooling: Vue decomposition analyzer (LOC enforcement), API wiring verification,
+  stub-endpoint scanner
+- Wood species database expanded to 472 species (v4.0.0)
+- Bézier body outline generator for acoustic guitars
+- DXF preflight validator composables; `useSavedViews` with versioning and statistics
+- Rosette Photo Batch Processor wired up (Wave 27)
+
+#### Docs
+- Critical systems design review (2026-02-28) with scorecard
+
+---
+
+## [toolbox-v0.38.0] - 2026-02-09
+
+### Phase 9 God-Object Decomposition Complete
+
+Reconstructed from the three commits in `toolbox-v0.37.0..toolbox-v0.38.0`; the
+published release notes contain only Docker deploy boilerplate.
+
+#### Changed
+- `main.py` simplified using `router_registry`: **915 → 207 lines**
+- Phase 9 schema extraction for `geometry` and `blueprint_cam_bridge`
+
+---
+
+## [toolbox-v0.37.0] - 2026-02-09
+
+Reconstructed from the seven commits in `toolbox-v0.36.1..toolbox-v0.37.0`; the
+published release notes contain only Docker deploy boilerplate.
+
+#### Added
+- Phase 10 startup validation for safety-critical modules (`feat(health)`)
+
+#### Changed
+- Phase 9 god-object decomposition — schemas and router registry extracted
+- Phase 8 exception hardening — broad catches documented, types added
+- Phase 7 root directory cleanup
+- Removed an accidental `tap_tone_pi` copy (−2 MB, 282 files)
+
+#### Docs
+- Phase 11 API surface documentation; review remediation plan (Phases 7–11)
+
+---
+
+## [toolbox-v0.36.1] - 2026-02-09
+
+Documentation only — two bookmark updates recording the v0.36.0 tag/release and a
+cross-repo cleanup summary. No code change in `toolbox-v0.36.0..toolbox-v0.36.1`.
+
+---
+
+## [toolbox-v0.36.0] - 2026-02-09
+
+### Remediation Complete + WP-3 Decomposition
+
+Reconstructed from the 48 commits in `toolbox-v0.35.0..toolbox-v0.36.0`; the published
+release notes contain only Docker deploy boilerplate.
+
+#### Added
+- Safety and health features; UI and API additions
+
+#### Changed
+- WP-3 decomposition (this is the work that split `store_completeness.py` out of
+  `store.py` in `rmos/runs_v2`)
+
+#### Fixed
+- Test stability (3), agentic policy (2), RMOS (1)
+
+#### Docs
+- 15 documentation commits — the bulk of the release
+
+---
+
+## [toolbox-v0.35.0] - 2026-02-07
+
+**131 commits since v0.34.1.** The published release notes contain only Docker deploy
+boilerplate; the content below is reconstructed from commits, plus the WP-2 entry that
+had been mis-filed as unreleased.
+
+#### Added
+- **Agentic spine** (10 commits) — cross-repo contracts for agent orchestration, spine
+  reference implementation (moments + policy), UWSM update engine and shadow replay
+  harness, replay-determinism test suite, session-level directive gating with
+  `FIRST_SIGNAL` grace selector and cooldown, `make verify-policy`
+- **Rosette** (6) — real tile segmentation geometry, formula-accurate pattern renderer,
+  traditional builder interface, beginner-friendly presets, corrected AI image prompts
+- **Smart Guitar** (4) and **demo surfaces** (4) — Blueprint Reader with DXF
+  import/export and GPT-4o Vision analysis, CNC Studio, Fret Calculator tab
+- Saw Lab and job-log placeholders wired to the real SQLite `cnc_production` stores
+- Real feeds & speeds implementation wired into CAM
+- Headstock inlay art prompt module; `dragon_dreadnought` template
+- M1 Advisory Mode — CoachBubble + directive store
+
+#### Changed
+
+##### WP-2: API Surface Reduction (2026-02-06)
+
+> **Attribution note.** This block was filed under `[Unreleased]` until 2026-08-24. It
+> is in this release: `57d4ff73` is an ancestor of `toolbox-v0.35.0`, and
+> `services/api/ROUTE_AUDIT_PHASE2_RESULTS.md` is absent at `toolbox-v0.34.1`.
 
 #### **WP-2: API Surface Reduction** - 2026-02-06
 Major API cleanup reducing route count by 51% to improve maintainability and startup performance.
@@ -168,7 +354,157 @@ Major API cleanup reducing route count by 51% to improve maintainability and sta
 
 ---
 
-### 🆕 Added
+## [toolbox-v0.34.1] - 2026-01-27
+
+### Physics Audit Documentation
+
+#### Docs
+- **`docs/PHYSICS_AUDIT_v0.34.md`** — formal audit of all 15 manufacturing physics
+  modules
+
+**CAM pipeline (8 modules)** — `energy_model` (SCE × MRR, heat partition),
+`feedtime_l3` (jerk-limited S-curve), `adaptive_spiralizer_utils` (Menger curvature),
+`trochoid_l3` (G2/G3 arc pair insertion), `whatif_opt` (chipload grid search),
+`helical_core` (parametric helix), `cnc_kerf_physics` (small-angle kerf drift),
+`time_estimator_v2` (multi-pass cycle time) — all ✓ Correct.
+
+**Saw Lab calculators (7 modules)** — `saw_heat` (1D transient conduction,
+Carslaw–Jaeger), `saw_deflection` (Euler–Bernoulli cantilever), `saw_rimspeed`,
+`saw_bite_load`, `saw_kickback`, `saw_cutting_force`, `saw_blade_dynamics` (annular
+plate vibration modes) — all ✓ Correct.
+
+**Result:** 0 critical errors, 0 blocking issues, 7 conservative approximations (all
+safe-side). References: Altintas *Manufacturing Automation*; Tlusty *Manufacturing
+Processes*; Sandvik Coromant *Technical Guide*; Carslaw & Jaeger *Conduction of Heat in
+Solids*.
+
+---
+
+## [toolbox-v0.34.0] - 2026-01-27
+
+### Physics, Feasibility, Legacy Cleanup, Test Stability
+
+#### Added
+- **Saw Lab physics layer** — 7 feasibility calculators (heat, deflection, rim speed,
+  bite load, kickback, cutting force, blade dynamics); beam theory for blade deflection;
+  thermodynamic heat-buildup model; weighted aggregation via
+  `FeasibilityCalculatorBundle`
+- **RMOS feasibility rules — 30/30 validation PASSED**
+  - Adversarial blocking (F020–F029): excessive DOC in hardwood, tool breakage risk,
+    depth exceeds material, zero/negative geometry, missing material, tool larger than
+    pocket, chatter/deflection, thermal risk, structural wall failure, combined
+    adversarial
+  - Edge pressure (F030–F037): near-limit warnings for boundary-pushing scenarios
+  - **Zero RED leaks across all 30 validation scenarios**
+- **AI advisory integration** — `AiExplainSelectionButton`, `AiAdvisoryPanel`,
+  `AiAdvisoryRenderer`; advisory store, context builder, evidence extractors; mock RMOS
+  dev server for frontend work
+- **Run log audit surface (Wave 22.2)** — flattened append-only audit log for
+  manufacturing runs; JSONL (authoritative) + CSV (convenience) export; endpoints for
+  latest, `export.csv`, `export.json`, summary, overrides
+
+#### Changed
+- **Fret math (PATCH-001)** — explicit 12-TET default plus opt-in `custom_ratios`
+  intonation model; named ratio sets (`JUST_MAJOR`, `PYTHAGOREAN`, `MEANTONE`); CAM
+  export rejects `ratio_set_id` without explicit per-fret ratios; manufacturability
+  validation for all intonation models
+- **Vision stack unification** — canonical `app.vision` prompt engine and vocabulary
+  endpoints, with backward-compatible re-exports from deprecated paths
+
+#### Removed
+- `_experimental/ai_graphics/` deleted — all Layer 1 legacy debt resolved
+- Layers 2+3 resolved — compat mounts and redirect routers deleted
+- Vision debt lock CI guard added to prevent new legacy imports
+
+#### Tests
+- All 8 skipped tests resolved with real implementations
+- 2 flaky tests stabilized (subprocess timeout, non-deterministic ordering)
+- **Final: 1201 passed, 0 failed, 0 skipped**
+
+---
+
+## [toolbox-mesh-pipeline-v0.1.0] - 2026-01-21
+
+### Mesh Pipeline (Preview)
+
+> Component release on its own tag series, not part of the `toolbox-vX.Y.Z` line.
+
+#### Added
+- `services/api/app/mesh/` — mesh healing and topology helpers
+- `services/api/app/retopo/` — retopology runner with QRM/MIQ presets
+- `services/api/app/fields/` — field analysis utilities
+- `presets/retopo/`, `examples/retopo/` — preset configurations and worked examples
+
+#### Contracts
+- `qa_core.schema.json` v1.0 — quality assessment coupling mesh healing, thickness,
+  grain and brace graph
+- `cam_policy.schema.json` v1.0 — per-region manufacturing constraints
+
+Usage: `cd examples/retopo && python -m app.retopo.run --preset qrm intake.obj`
+
+---
+
+## [toolbox-v0.33.0-wave22.1] - 2026-01-21
+
+### Wave 22.1 — Acoustics Ingest Audit
+
+#### Added
+- Append-only ingest audit log (accepted / rejected)
+- `GET /api/rmos/acoustics/ingest/events`
+- `GET /api/rmos/acoustics/ingest/events/{event_id}`
+- UI viewer for ingest history
+
+#### Changed
+- Import pipeline instrumented to emit audit records
+
+#### Tests
+- Acceptance tests added and passing
+
+Finalizes ingest traceability and closes the acoustics validation loop.
+
+---
+
+## [toolbox-v0.32.0] - 2026-01-20
+
+### Art Studio Promotion Contracts & CAM Bridge
+
+**Focus:** Art Studio (Design-First Workflow)  
+**Type:** Contract + Orchestration release (non-execution)
+
+#### Added
+- Canonical approval-gated PromotionIntentV1 export:
+  - `GET /api/art/design-first-workflow/sessions/{session_id}/promotion_intent.json`
+- UI-friendly PromotionIntentV1 wrapper:
+  - `POST /api/art/design-first-workflow/sessions/{session_id}/promotion_intent_v1`
+- CAM orchestration bridge:
+  - `POST /api/art/design-first-workflow/sessions/{session_id}/promote_to_cam`
+- New orchestration artifact:
+  - `CamPromotionRequestV1` (idempotent, file-backed persistence)
+
+#### Changed
+- Frontend export URL preview updated to canonical design-first workflow route
+- Added UI button to copy a full GitHub Actions workflow for export + strict validation
+- Added UI button to promote approved intent to a queued CAM request
+
+#### Tests
+- Added pytest contract tests enforcing:
+  - Approval gating (403 for canonical export when not approved)
+  - Strict PromotionIntentV1 shape when approved
+  - Wrapper ok/blocked semantics
+  - Promotion idempotency (stable request ID)
+
+#### CI / Tooling
+- `make api-verify` runs scope checks, boundary checks, and API contract tests
+- CI runs `make api-verify` on push/PR
+
+#### Docs
+- Updated workflow integration docs with new section describing PromotionIntentV1 → CamPromotionRequestV1 bridge
+
+---
+
+> **Attribution note.** The Saw Lab block below was filed under `[Unreleased]` until
+> 2026-08-24. It is in this release: `c35a6936` ("Ship Execution Complete", 2026-01-20)
+> is an ancestor of `toolbox-v0.32.0`.
 
 #### **CNC Saw Lab Execution Completion** - 2026-01-19
 Completes the CNC Saw Lab execution lifecycle with explicit, auditable terminal states.
@@ -198,35 +534,6 @@ Completes the CNC Saw Lab execution lifecycle with explicit, auditable terminal 
 - Timelines, dashboards, and audit ZIPs include explicit closure context
 
 **Compatibility:** No schema migrations, no breaking changes, fully backward compatible.
-
----
-
-#### **B22.16: Golden + Report Fusion** - 2025-12-03
-Complete visual QA pipeline connecting golden baseline validation with automatic HTML report generation.
-
-**Features:**
-- Automatic HTML report generation for every golden check (pass or drift)
-- Reports include PNG preview, bounding boxes, layer table, full JSON payload
-- CI artifact upload for all reports (30-day retention)
-- Visual drift diagnosis without local reproduction
-- Clear filename pattern: `<left>__vs__<right>__PASS/DRIFT.html`
-
-**Enhanced Components:**
-- `tools/compare_golden_cli.py` - Report generation in `check` and `check-all` commands
-- `.github/workflows/comparelab-golden.yml` - Artifact upload step
-- `docs/COMPARELAB_REPORTS.md` - Golden integration documentation section
-
-**Benefits:**
-- ✅ Golden check fails → Operator gets HTML report automatically
-- ✅ Visual diff shows exact geometry changes
-- ✅ Fast diagnosis from CI artifacts (no local setup needed)
-- ✅ Self-contained reports with embedded PNG previews
-
-**Docs:**
-- Complete spec: `docs/B22_16_GOLDEN_REPORT_FUSION.md`
-- Quick reference: `docs/B22_16_GOLDEN_REPORT_FUSION_QUICKREF.md`
-
-**Status:** ✅ B22.8 → B22.16 Complete - Full CompareLab QA Pipeline Operational
 
 ---
 
@@ -384,7 +691,55 @@ First alpha release candidate with complete foundational CAM capabilities.
 
 ---
 
-## [Unreleased]
+## Unattributed
+
+Entries that shipped but whose release could not be established from the repository's
+own history. Recorded here rather than guessed into a version.
+
+> **Superseded 2026-08-24.** Every artifact this entry names is absent from the current
+> tree — `docs/B22_16_GOLDEN_REPORT_FUSION.md`, `docs/COMPARELAB_REPORTS.md`,
+> `tools/compare_golden_cli.py`, `.github/workflows/comparelab-golden.yml`. The
+> workflows were deleted by `f74d4487 chore(ci): remove broken CompareLab workflows`,
+> and `CompareLabView.vue` was later decomposed and partly removed. The **Status:
+> ✅ … Operational** line below was true when written and is not true now. The entry is
+> kept as a historical record; a changelog is not rewritten when the code moves on.
+
+#### **B22.16: Golden + Report Fusion** - 2025-12-03
+Complete visual QA pipeline connecting golden baseline validation with automatic HTML report generation.
+
+**Features:**
+- Automatic HTML report generation for every golden check (pass or drift)
+- Reports include PNG preview, bounding boxes, layer table, full JSON payload
+- CI artifact upload for all reports (30-day retention)
+- Visual drift diagnosis without local reproduction
+- Clear filename pattern: `<left>__vs__<right>__PASS/DRIFT.html`
+
+**Enhanced Components:**
+- `tools/compare_golden_cli.py` - Report generation in `check` and `check-all` commands
+- `.github/workflows/comparelab-golden.yml` - Artifact upload step
+- `docs/COMPARELAB_REPORTS.md` - Golden integration documentation section
+
+**Benefits:**
+- ✅ Golden check fails → Operator gets HTML report automatically
+- ✅ Visual diff shows exact geometry changes
+- ✅ Fast diagnosis from CI artifacts (no local setup needed)
+- ✅ Self-contained reports with embedded PNG previews
+
+**Docs:**
+- Complete spec: `docs/B22_16_GOLDEN_REPORT_FUSION.md`
+- Quick reference: `docs/B22_16_GOLDEN_REPORT_FUSION_QUICKREF.md`
+
+**Status:** ✅ B22.8 → B22.16 Complete - Full CompareLab QA Pipeline Operational
+
+---
+
+## Roadmap — planned, not shipped
+
+> Retained here rather than deleted, but flagged: **a changelog records what shipped, a
+> roadmap records what is planned**, and mixing them is what produced the three
+> `[Unreleased]` sections this refresh removed. This belongs in a roadmap document;
+> the one the Links section used to point at (`A_N_BUILD_ROADMAP.md`) does not exist.
+> Nothing below has shipped.
 
 ### 🔜 Priority 2 (Design Tools Enhancement)
 - **P2.1**: Neck Calculator production-ready (geometry, CNC paths, templates)
@@ -402,24 +757,45 @@ First alpha release candidate with complete foundational CAM capabilities.
 
 ---
 
-## Version History Legend
+## Versioning
 
-- **A_N.x**: Alpha releases (A_N.1, A_N.2, ...)
-- **B_x**: Beta releases (B_1, B_2, ...)
-- **1.x**: Stable releases (1.0, 1.1, ...)
+Releases are cut as **Git tags**, and the tag series is the record of what shipped:
+
+- **`toolbox-vX.Y.Z`** — the main application line. Current: `toolbox-v0.39.1`
+  (2026-02-28).
+- **`toolbox-<component>-vX.Y.Z`** — independently versioned components, e.g.
+  `toolbox-mesh-pipeline-v0.1.0`.
+- **`A_N.x`** — historical alpha series, superseded by the `toolbox-v` line. Retained
+  for the `A_N.1` entry below; not used for new releases.
+
+> **Known inconsistency (2026-08-24).** Five surfaces report five different versions:
+> the newest release tag is `toolbox-v0.39.1`; `services/api/app/main.py` and `/health`
+> report `2.0.0-clean`; `services/api/pyproject.toml` says `2.0.0`;
+> `packages/client/package.json` says `1.0.0`; and the example response in
+> `docs/api/endpoints.md` shows `0.33.0`. Nothing reconciles them. Treat the tag series
+> as authoritative for *releases* until a single source of truth is chosen.
 
 ---
 
 ## Links
 
-- **Roadmap**: [A_N_BUILD_ROADMAP.md](./A_N_BUILD_ROADMAP.md)
-- **Architecture**: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **Contributing**: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- **Quick Start**: [README.md](./README.md#-quick-start)
+- **README**: [README.md](./README.md)
+- **Development guide**: [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- **API reference**: [docs/api/endpoints.md](./docs/api/endpoints.md) ·
+  [overview](./docs/api/overview.md)
+- **Project instructions**: [CLAUDE.md](./CLAUDE.md)
+- **Governance authority hierarchy**:
+  [docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md](./docs/governance/GOVERNANCE_AUTHORITY_HIERARCHY.md)
+- **Migration policy**:
+  [FEATURE_PARITY_MIGRATION_POLICY.md](./FEATURE_PARITY_MIGRATION_POLICY.md)
+
+> The previous Links section pointed at `A_N_BUILD_ROADMAP.md`, `ARCHITECTURE.md` and
+> `CONTRIBUTING.md`. **None of the three exists**; all were dead links. They are
+> replaced above with targets verified present on `main`.
 
 ---
 
-**A_N.1 Release Date**: November 20, 2025  
-**Priority 1 Status**: ✅ 100% Complete (P1.1-P1.4)  
-**Test Coverage**: 12/12 CAM Essentials tests passing  
+**A_N.1 Release Date**: November 20, 2025
+**Priority 1 Status**: ✅ 100% Complete (P1.1–P1.4)
+**Test Coverage**: 12/12 CAM Essentials tests passing
 **Production Ready**: CAM Core, Multi-Post Export, Adaptive Pocketing
