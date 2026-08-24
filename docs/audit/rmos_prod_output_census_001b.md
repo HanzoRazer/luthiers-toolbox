@@ -34,8 +34,16 @@ TOTAL MOUNTED ROUTES                                    1062
 keyword candidates                                       293
 routes whose source shows machine-artifact emission       62
   ├─ of those, making NO feasibility/policy call          60
-  └─ of those, self-minting a literal GREEN RunDecision     5
+  └─ of those, self-minting a literal GREEN RunDecision     5   (LOWER BOUND)
 ```
+
+**The GREEN figure is a lower bound, not a repository total.** The detector reads each route's own
+source for a literal `RunDecision(risk_level="GREEN")`. It cannot see authority minted one level
+down: `store_api.persist_run_artifact()` hardcodes `risk_level="GREEN"` for every caller, inside the
+fence-*authorized* module, so a route that reaches it self-authorizes without ever naming
+`RunDecision`. Five call sites exist today. That is a **different search dimension** — helper-level
+rather than route-level — and it is queued (§8), not folded into this census. What the mounted-route
+census measured, it measured correctly; it simply did not measure this.
 
 ## 2. Inclusion rule
 
@@ -239,7 +247,34 @@ Two follow-ups are out of scope here and are recorded, not fixed:
 | adaptive `feed_z = feed_xy` derived input | follow-up authority item, untouched |
 | String-course / formula recovery (#313) | untouched; zero files in this diff |
 
-## 8. Definition-of-done status
+## 8. Queued findings — discovered here, deliberately not fixed here
+
+Convergence work surfaces adjacent debt. Recording it is in scope; chasing it is not. None of the
+below is a defect in the retract cutover, and none is a reason to widen this tranche.
+
+| Finding | Disposition |
+|---|---|
+| `store_api.persist_run_artifact()` hardcodes `risk_level="GREEN"` for all callers (`decision_intelligence_service` ×2, `decision_intel_apply_service`, `translator_governance_review_ledger`, `translator_governance_review_matrix`) | **Queue HIGH** — authority defect; needs its own caller trace, not a repo-wide GREEN re-sweep |
+| `FENCE_REGISTRY.json` prescribes `validate_and_persist()` but authorizes only `store.py` / `schemas.py`, not `store_completeness.py` — the module that implements it, extracted out of `store.py` by WP-3 and baselined as a violation instead of inheriting authorization | **Queue — governance reconciliation** |
+| `app/ci/boundary_imports/config.py` allowlists two CAM routers that `FENCE_REGISTRY.json` does not list; enforced and declared allowlists have drifted | **Queue — same governance reconciliation** |
+| Five CAM composables (`useContourOperation`, `useDrillingOperation`, `usePatternOperation`, `useRoughingOperation`, `useProbeOperation` SVG path) do `await response.text()` → `downloadFile(...)` with no status check, so a governed 409 is saved as a `.nc` file | **Queue as a convergence dependency** for those capabilities — see the cutover invariant below |
+| Retract carries two disjoint strategy vocabularies: `/gcode` takes `direct\|ramped\|helical`, `/gcode/download` takes `RetractStrategyIn.strategy` (`minimal\|safe\|incremental`, default `safe`). Both feed `tool_id=f"retract:{strategy}"`, so one capability emits six peer identities, none validated | **Queue before retract evaluator work** — needs a ruling on one canonical vocabulary or an explicit translation. An evaluator must not be built against six ambiguous peer identities. |
+
+### Cutover invariant added by these findings
+
+The client discovery changes the readiness test for the remaining capabilities:
+
+> **A server route is not ready for authority cutover merely because its backend gate is correct.
+> Its production consumer must also fail closed on the governed rejection.**
+
+Closing `adaptive/gcode`, the drilling sibling, profiling and V-carve is therefore gated on each
+one's client either already rejecting non-2xx machine artifacts or receiving the same narrow
+compatibility treatment retract gets. This is not a retreat from convergence — it is what stops
+convergence from producing `.nc` files that contain JSON error messages.
+
+---
+
+## 9. Definition-of-done status
 
 Met: complete mounted-route census · every live output route classified · retract blocked before
 generation · retract emits no machine output · client authority cannot rescue it · missing evaluator
