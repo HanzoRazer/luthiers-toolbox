@@ -58,7 +58,7 @@ authority is the module that shapes the record of it.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 
 from app.safety import safety_critical
@@ -84,6 +84,26 @@ _MODE_DOWNLOAD = "retract_download"
 # the governed lane. This is a contract change: consumers that branched on
 # X-ToolBox-Lane: draft must treat these paths as governed.
 _GOVERNED_LANE = "governed"
+
+# Shared Query() objects for /gcode and /gcode_governed.
+#
+# FastAPI already binds unannotated scalars as query params (a JSON body is
+# ignored). Query() makes that contract visible in OpenAPI so callers do not
+# confuse these routes with /gcode/download, which takes RetractStrategyIn as
+# a JSON body. The objects are shared so the alias cannot drift from the
+# plain route's defaults.
+_Q_STRATEGY = Query(
+    "direct",
+    description=(
+        "Retract strategy: direct, ramped, or helical. "
+        "Bound from the query string; a JSON body is ignored."
+    ),
+)
+_Q_CURRENT_Z = Query(-10.0, description="Current tool Z in mm")
+_Q_SAFE_Z = Query(5.0, description="Safe retract Z in mm")
+_Q_RAMP_FEED = Query(600.0, description="Feed for ramped/helical retract, mm/min")
+_Q_HELIX_RADIUS = Query(5.0, description="Helical retract radius in mm")
+_Q_HELIX_PITCH = Query(1.0, description="Helical retract pitch, mm/rev")
 
 
 def _governed_headers(run_id: str, *, gcode_sha256: Optional[str] = None) -> Dict[str, str]:
@@ -294,12 +314,12 @@ def _simple_request_summary(
 @router.post("/gcode", response_class=Response)
 @safety_critical
 def generate_simple_retract_gcode(
-    strategy: str = "direct",
-    current_z: float = -10.0,
-    safe_z: float = 5.0,
-    ramp_feed: float = 600.0,
-    helix_radius: float = 5.0,
-    helix_pitch: float = 1.0
+    strategy: str = _Q_STRATEGY,
+    current_z: float = _Q_CURRENT_Z,
+    safe_z: float = _Q_SAFE_Z,
+    ramp_feed: float = _Q_RAMP_FEED,
+    helix_radius: float = _Q_HELIX_RADIUS,
+    helix_pitch: float = _Q_HELIX_PITCH,
 ) -> Response:
     """Generate simple retract G-code.
 
@@ -308,6 +328,10 @@ def generate_simple_retract_gcode(
     authority and governed headers with ``/gcode_governed``. Currently
     ``409 SAFETY_BLOCKED`` until a retract evaluator exists; if one is later
     registered this path remains governed and will not revert to draft.
+
+    Parameters are **query-string bound**, not a JSON body. A JSON body is
+    ignored (the pre-#315 Vue client POSTed JSON and silently received
+    defaults). ``POST /gcode/download`` is the body-model route.
     """
     summary = _simple_request_summary(
         strategy, current_z, safe_z, ramp_feed, helix_radius, helix_pitch
@@ -380,18 +404,19 @@ def download_retract_gcode(body: RetractStrategyIn) -> Response:
 @router.post("/gcode_governed", response_class=Response)
 @safety_critical
 def generate_simple_retract_gcode_governed(
-    strategy: str = "direct",
-    current_z: float = -10.0,
-    safe_z: float = 5.0,
-    ramp_feed: float = 600.0,
-    helix_radius: float = 5.0,
-    helix_pitch: float = 1.0
+    strategy: str = _Q_STRATEGY,
+    current_z: float = _Q_CURRENT_Z,
+    safe_z: float = _Q_SAFE_Z,
+    ramp_feed: float = _Q_RAMP_FEED,
+    helix_radius: float = _Q_HELIX_RADIUS,
+    helix_pitch: float = _Q_HELIX_PITCH,
 ) -> Response:
     """
     Generate simple retract G-code.
 
     Retained alias of ``/gcode``. Same authority, same governed headers; the
-    ``_governed`` suffix no longer denotes a different lane.
+    ``_governed`` suffix no longer denotes a different lane. Query-string
+    bound, same as ``/gcode`` — a JSON body is ignored.
     """
     return generate_simple_retract_gcode(
         strategy=strategy,

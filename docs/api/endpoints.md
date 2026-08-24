@@ -346,6 +346,21 @@ retained alias of its plain counterpart and returns an identical response.
   lane is gone and is not coming back when an evaluator lands;
 - expect no `X-GCode-SHA256` and no `Content-Disposition` on a blocked response.
 
+**Consumer impact, plainly:** clients that keyed on `draft` or assumed all
+`200` / POST export bodies were G-code must change. The in-tree Vue retract
+card now surfaces the safety block instead of saving the 409 JSON as `.nc`.
+
+**Parameter binding (do not confuse the two families):**
+
+| Route | How parameters bind |
+|---|---|
+| `POST /gcode`, `POST /gcode_governed` | Query string: `strategy`, `current_z`, `safe_z`, `ramp_feed`, `helix_radius`, `helix_pitch`. A JSON body is **ignored**. |
+| `POST /gcode/download`, `POST /gcode/download_governed` | JSON body (`RetractStrategyIn`). |
+
+The in-tree Vue exporter talks to `POST /gcode`. It previously POSTed a JSON
+body and silently received defaults; it now sends the same fields as query
+params. That is a bug fix, not a change in what FastAPI accepts.
+
 **Blocked response:**
 
 ```json
