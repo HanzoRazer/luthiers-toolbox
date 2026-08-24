@@ -181,7 +181,16 @@ Generation was extracted into pure builders (`_build_simple_retract_gcode`,
 `_authorize_retract` returns. Per D5, **no production seam was added for testing**; the
 non-generation witness is observable (no G-code in body, no hash, no attachment).
 
-21 witnesses pass: `services/api/tests/rmos/test_rmos_output_route_convergence.py`.
+22 witnesses pass: `services/api/tests/rmos/test_rmos_output_route_convergence.py`.
+
+One of them, `test_authorization_structurally_precedes_generation`, is the only witness that
+survives the lane reopening. The 409 witnesses prove today's no-evaluator behaviour and stop
+proving anything the moment an evaluator returns GREEN; that test asserts the structure that must
+hold in *that* state — the gate is unconditional, `_build_*` is at a strictly later top-level
+statement, the persisted artifact carries `run_id` and `risk_level` from the authorizing call, and
+`_authorize_retract` raises under `SafetyPolicy.should_block`. Verified by mutation: moving
+generation ahead of the gate, removing the raise, and hardcoding the persisted `risk_level` each
+fail it.
 
 ---
 

@@ -4,6 +4,36 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+# ---------------------------------------------------------------------------
+# RMOS-CONVERGE-001B reconciliation marker
+# ---------------------------------------------------------------------------
+
+blocked_by_design = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
+        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
+        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
+        "accepted alternate production path. The assertions below are the contract to restore "
+        "when a retract evaluator lands and the mode is registered in "
+        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
+        "reopens. Current behaviour is witnessed by "
+        "tests/rmos/test_rmos_output_route_convergence.py."
+    ),
+)
+"""Applied to tests that assert retract manufactures output.
+
+Their assertions are preserved verbatim as the contract to RESTORE, not
+rewritten to expect 409 - a rewritten assertion would keep passing once an
+evaluator lands and would then assert the wrong thing. strict=True makes every
+one of them fail loudly the moment the lane reopens.
+
+The exception is the lane-header group: `draft` is not coming back (see the
+compatibility contract in retract_gcode_router), so those were rewritten to the
+governed contract rather than marked for restoration.
+"""
+
+
 @pytest.fixture
 def client():
     """Create test client."""
@@ -541,38 +571,14 @@ def test_estimate_requires_features_count(client):
 # G-code Generation Endpoints
 # =============================================================================
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_returns_200(client):
     """POST /api/cam/retract/gcode returns 200."""
     response = client.post("/api/cam/retract/gcode")
     assert response.status_code == 200
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_returns_text_content_type(client):
     """G-code endpoint returns text content type."""
     response = client.post("/api/cam/retract/gcode")
@@ -593,19 +599,7 @@ def test_gcode_contains_g_commands(client):
         assert marker not in response.text
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_contains_m30(client):
     """G-code ends with M30."""
     response = client.post("/api/cam/retract/gcode")
@@ -613,19 +607,7 @@ def test_gcode_contains_m30(client):
     assert "M30" in content
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_direct_strategy(client):
     """G-code with direct strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=direct")
@@ -633,19 +615,7 @@ def test_gcode_direct_strategy(client):
     assert "direct" in response.text.lower() or "Direct" in response.text
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_ramped_strategy(client):
     """G-code with ramped strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=ramped")
@@ -653,19 +623,7 @@ def test_gcode_ramped_strategy(client):
     assert "ramped" in response.text.lower() or "Ramped" in response.text
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_helical_strategy(client):
     """G-code with helical strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=helical")
@@ -673,19 +631,7 @@ def test_gcode_helical_strategy(client):
     assert "G2" in response.text  # Arc command for helix
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_custom_safe_z(client):
     """G-code with custom safe_z."""
     response = client.post("/api/cam/retract/gcode?safe_z=20.0")
@@ -693,19 +639,7 @@ def test_gcode_custom_safe_z(client):
     assert "20" in response.text
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_custom_current_z(client):
     """G-code with custom current_z."""
     response = client.post("/api/cam/retract/gcode?current_z=-20.0")
@@ -731,19 +665,7 @@ def test_gcode_lane_is_governed(client):
 # G-code Governed Endpoint
 # =============================================================================
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_governed_returns_200(client):
     """POST /api/cam/retract/gcode_governed returns 200."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -757,19 +679,7 @@ def test_gcode_governed_has_run_id_header(client):
     assert "X-Run-ID" in response.headers
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_governed_has_gcode_hash_header(client):
     """Governed endpoint returns X-GCode-SHA256 header."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -783,19 +693,7 @@ def test_gcode_governed_lane_is_governed(client):
     assert response.headers.get("X-ToolBox-Lane") == "governed"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_governed_contains_gcode(client):
     """Governed endpoint returns valid G-code."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -808,19 +706,7 @@ def test_gcode_governed_contains_gcode(client):
 # G-code Download Endpoint
 # =============================================================================
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_returns_200(client):
     """POST /api/cam/retract/gcode/download returns 200."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -830,19 +716,7 @@ def test_gcode_download_returns_200(client):
     assert response.status_code == 200
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_has_disposition_header(client):
     """Download has Content-Disposition header."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -852,19 +726,7 @@ def test_gcode_download_has_disposition_header(client):
     assert "Content-Disposition" in response.headers
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_filename_contains_strategy(client):
     """Download filename contains strategy name."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -875,19 +737,7 @@ def test_gcode_download_filename_contains_strategy(client):
     assert "minimal" in disposition
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_is_nc_file(client):
     """Download is .nc file."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -913,19 +763,7 @@ def test_gcode_download_lane_is_governed(client):
 # G-code Download Governed Endpoint
 # =============================================================================
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_governed_returns_200(client):
     """POST /api/cam/retract/gcode/download_governed returns 200."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -945,19 +783,7 @@ def test_gcode_download_governed_has_run_id(client):
     assert "X-Run-ID" in response.headers
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_governed_has_gcode_hash(client):
     """Download governed has X-GCode-SHA256 header."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -977,19 +803,7 @@ def test_gcode_download_governed_lane_is_governed(client):
     assert response.headers.get("X-ToolBox-Lane") == "governed"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_gcode_download_governed_is_nc_file(client):
     """Download governed is .nc file."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -1004,19 +818,7 @@ def test_gcode_download_governed_is_nc_file(client):
 # Integration Tests
 # =============================================================================
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_apply_and_download_same_features(client):
     """Apply and download work with same features."""
     features = SIMPLE_FEATURES
@@ -1044,19 +846,7 @@ def test_all_strategies_work_with_apply(client):
         assert response.status_code == 200, f"Strategy '{strategy}' failed"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
-        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
-        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
-        "accepted alternate production path. The assertions below are the contract to restore "
-        "when a retract evaluator lands and the mode is registered in "
-        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
-        "reopens. Current behaviour is witnessed by "
-        "tests/rmos/test_rmos_output_route_convergence.py."
-    ),
-)
+@blocked_by_design
 def test_all_gcode_strategies_work(client):
     """All G-code strategies work."""
     for strategy in ["direct", "ramped", "helical"]:

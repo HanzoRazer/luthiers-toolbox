@@ -51,9 +51,23 @@ export async function readGcodeOrThrow(
 
 /**
  * Handle export errors consistently.
+ *
+ * The generic alert is deliberately unchanged for the five CAM operations that
+ * have always used it. Pass `showDetail` only where the server message is
+ * actionable to the operator — a governed SAFETY_BLOCKED rejection says *why*
+ * the lane is closed, and "check the console" wastes that. Widening the detail
+ * text to every operation is a UX change unrelated to retract convergence.
  */
-export function handleExportError(operation: string, err: unknown): void {
-  const detail = err instanceof Error ? err.message : String(err)
+export function handleExportError(
+  operation: string,
+  err: unknown,
+  opts: { showDetail?: boolean } = {}
+): void {
   console.error(`${operation} export failed:`, err)
+  if (!opts.showDetail) {
+    alert('Export failed. Check console for details.')
+    return
+  }
+  const detail = err instanceof Error ? err.message : String(err)
   alert(`${operation} export failed: ${detail}`)
 }

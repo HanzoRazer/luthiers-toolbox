@@ -66,7 +66,7 @@ export function useRetractOperation(): RetractState {
       const gcode = await readGcodeOrThrow(response, 'Retract')
       downloadFile(gcode, `retract_${params.value.strategy}.nc`)
     } catch (err) {
-      handleExportError('Retract', err)
+      handleExportError('Retract', err, { showDetail: true })
     }
   }
 

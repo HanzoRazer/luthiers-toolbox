@@ -6,7 +6,7 @@
   "title": "RMOS-CONVERGE-001B: make former draft retract paths an explicit governed contract",
   "intent": "Follow-up to RMOS-CONVERGE-001B (#314). The checkpoint PR converged all four retract G-code routes onto one authority boundary but left the draft-to-governed header/path contract implicit, which would silently break consumers that still treated /gcode and /gcode/download as draft-lane 200 G-code. This patch documents that contract, advertises X-ToolBox-Lane: governed and X-Run-ID on 409, locks it with witnesses, retires the smoke-test restore-to-draft assertions, and stops the in-tree Vue exporter from downloading 409 JSON as a .nc file.",
   "change_type": "fix",
-  "behavior_change": "INTENTIONAL compatibility contract. Former draft retract URLs already returned 409 SAFETY_BLOCKED under #314; they now also send X-ToolBox-Lane: governed and X-Run-ID on that 409 (and still will after an evaluator lands — they will not revert to draft). The Vue retract exporter no longer treats a non-OK body as G-code; it surfaces SAFETY_BLOCKED instead of saving JSON as .nc. Query params are now sent (the previous JSON body was ignored by FastAPI).",
+  "behavior_change": "INTENTIONAL compatibility contract. Former draft retract URLs already returned 409 SAFETY_BLOCKED under #314; they now also send X-ToolBox-Lane: governed and X-Run-ID on that 409 (and still will after an evaluator lands \u2014 they will not revert to draft). The Vue retract exporter no longer treats a non-OK body as G-code; it surfaces SAFETY_BLOCKED instead of saving JSON as .nc. Query params are now sent (the previous JSON body was ignored by FastAPI).",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
@@ -28,12 +28,13 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) retract_gcode_router.py: 409 SAFETY_BLOCKED now carries X-ToolBox-Lane: governed and X-Run-ID via a shared header helper; module and endpoint docs state that /gcode and /gcode/download are not draft lanes and will not revert to draft when an evaluator lands. (2) Census adds an explicit before/after/after-evaluator contract table and names the Vue consumer. (3) Convergence tests assert governed headers on 409, drop the brittle source-index order check for AST/call-graph invariants, and split the literal-RunDecision guard so it is named as forbidding any hardcoded risk_level. (4) Smoke tests that encoded restore-to-draft are rewritten to the governed contract; the letter-G false positive is replaced with machine-marker checks. (5) useRetractOperation sends query params and refuses to download non-OK bodies; useGcodeExport adds readGcodeOrThrow.",
+    "what_changed": "(1) retract_gcode_router.py: 409 SAFETY_BLOCKED now carries X-ToolBox-Lane: governed and X-Run-ID via a shared header helper; module and endpoint docs state that /gcode and /gcode/download are not draft lanes and will not revert to draft when an evaluator lands. (2) Census adds an explicit before/after/after-evaluator contract table and names the Vue consumer. (3) Convergence tests assert governed headers on 409, drop the brittle source-index order check for AST/call-graph invariants, and split the literal-RunDecision guard so it is named as forbidding any hardcoded risk_level. (4) Smoke tests that encoded restore-to-draft are rewritten to the governed contract; the letter-G false positive is replaced with machine-marker checks. (5) useRetractOperation sends query params and refuses to download non-OK bodies; useGcodeExport adds readGcodeOrThrow. (6) Rebased onto #314's fence resolution (validate_and_persist persistence, risk_level carried forward from the authorization, explicit retract mode constants) and, on owner direction, restored a STRUCTURAL authorization-before-generation invariant: test_authorization_structurally_precedes_generation asserts order and dependency on the AST - unconditional top-level gate, _build_* at a strictly later statement index, persisted artifact carrying run_id and risk_level from the authorizing call, and an HTTPException raise guarded by SafetyPolicy.should_block. Statement index, not source offset, so comments and renamed locals cannot break it; verified by three mutations. This is the only witness that survives the lane reopening - the 409 witnesses prove today's no-evaluator state only. (7) The generalized alert-detail change to handleExportError is withdrawn: it altered behaviour for five unrelated CAM operations. Detail is now opt-in via a showDetail flag that only the retract caller passes. (8) The 20 verbatim xfail reason blocks are hoisted to one module-level `blocked_by_design` marker. (9) The convergence fixture's local `store._default_store = None` is removed - store.py re-exports that name as an import-time value binding, so the assignment never touched the singleton the endpoints read, and the session conftest already resets the real one.",
     "why_not_redundant": "The #314 checkpoint changed live production endpoints from draft 200 G-code to governed 409 without making the header/path contract observable or updating the in-tree consumer. That is the blocking review concern: old paths plus new behaviour silently breaks callers. This patch is that contract, not a second census or a new evaluator."
   },
   "verification": {
     "commands_run": [
-      "PYTHONPATH=. python -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py -q --no-cov"
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py -q --no-cov -> 81 passed, 20 xfailed",
+      "mutation check on test_authorization_structurally_precedes_generation -> fails on (a) generation moved before the gate, (b) HTTPException raise removed, (c) persisted risk_level hardcoded"
     ]
   },
   "files": [
@@ -69,9 +70,9 @@
     },
     {
       "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
-      "intent": "Shared helper that refuses to treat a non-OK export response as G-code bytes.",
+      "intent": "Add readGcodeOrThrow so a non-OK body (409 SAFETY_BLOCKED) cannot be saved as .nc. handleExportError gains an opt-in showDetail flag; its default alert is unchanged for the five CAM operations that already used it.",
       "risk": "low",
-      "behavior_change": "none for other callers until they opt in; alert text now includes Error.message"
+      "behavior_change": "none by default - showDetail is opt-in and only retract passes it"
     },
     {
       "path": ".cbsp21/patches/rmos-converge-001b-compat-contract.json",

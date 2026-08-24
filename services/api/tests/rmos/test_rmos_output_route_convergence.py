@@ -41,19 +41,13 @@ def runs_env(tmp_path, monkeypatch):
     monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "att"))
     monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(tmp_path / "run_artifacts"))
     monkeypatch.setenv("ENV", "test")
-    try:
-        from app.rmos.runs_v2 import store as runs_v2_store
-
-        runs_v2_store._default_store = None
-    except ImportError:
-        pass
+    # No local store reset here. `store.py` re-exports `_default_store` as a
+    # value bound at import time, so assigning `store._default_store = None`
+    # rebinds a copy and never touches the singleton the endpoints actually
+    # read (`store_api._default_store`). The session conftest resets the real
+    # one and documents this; a second, ineffective reset here would only read
+    # as isolation that is not happening.
     yield runs_dir
-    try:
-        from app.rmos.runs_v2 import store as runs_v2_store
-
-        runs_v2_store._default_store = None
-    except ImportError:
-        pass
 
 
 @pytest.fixture()
@@ -245,18 +239,61 @@ def test_b19_blocked_attempt_is_auditable_without_an_artifact(client):
 # Structural: generation cannot precede authorization
 # ---------------------------------------------------------------------------
 
+def _call_name(node: ast.AST):
+    """Name of the callee for a Call node, or None."""
+    if not isinstance(node, ast.Call):
+        return None
+    return getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+
+
 def _call_names(func) -> list[str]:
     """Function names invoked in *func*, in source order (Call nodes only)."""
     names: list[str] = []
 
     class Visitor(ast.NodeVisitor):
         def visit_Call(self, node: ast.Call) -> None:
-            fname = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+            fname = _call_name(node)
             if fname:
                 names.append(fname)
             self.generic_visit(node)
 
     Visitor().visit(ast.parse(inspect.getsource(func)))
+    return names
+
+
+def _fn_def(module_tree: ast.Module, name: str) -> ast.FunctionDef:
+    for node in module_tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"{name} is not a module-level function")
+
+
+def _stmt_index_calling(fn: ast.FunctionDef, predicate) -> "int | None":
+    """
+    Index of the first TOP-LEVEL statement of *fn* whose subtree calls a
+    function matching *predicate*.
+
+    Top-level is the point: a statement nested inside `if`/`try`/`for` is
+    conditional, and a conditional gate is not a gate. This returns the index
+    within `fn.body`, so it survives comments, docstrings, blank lines and
+    renamed locals — none of which the retired `src.index()` check survived.
+    """
+    for i, stmt in enumerate(fn.body):
+        for child in ast.walk(stmt):
+            if predicate(_call_name(child)):
+                return i
+    return None
+
+
+def _binds(stmt: ast.stmt) -> set:
+    """Names bound by an assignment statement (including tuple unpacking)."""
+    names = set()
+    if isinstance(stmt, (ast.Assign, ast.AnnAssign)):
+        targets = stmt.targets if isinstance(stmt, ast.Assign) else [stmt.target]
+        for t in targets:
+            for node in ast.walk(t):
+                if isinstance(node, ast.Name):
+                    names.add(node.id)
     return names
 
 
@@ -293,6 +330,94 @@ def test_generation_is_unreachable_before_authorization():
         names = _call_names(route_fn)
         assert "_authorize_retract" in names, route_fn.__name__
         assert any(n.startswith("_build_") for n in names), route_fn.__name__
+
+
+def test_authorization_structurally_precedes_generation():
+    """
+    The constitutional invariant of 001B: generation cannot occur before
+    *successful* authorization.
+
+    Presence of both calls does not prove that. This asserts the ordering and
+    the dependency, on the AST:
+
+    1. `_authorize_retract` is called from an **unconditional top-level**
+       statement of each route handler — a gate reached only on some branches
+       is not a gate.
+    2. The first `_build_*` call appears at a **strictly later** top-level
+       statement index. Statement index, not source offset: comments,
+       docstrings and renamed locals move text but not structure, which is why
+       the retired `src.index()` form was brittle.
+    3. The names bound by the authorization statement are **consumed** by the
+       persistence call, so the emitted artifact is tied to the run that
+       authorized it rather than merely following it.
+    4. `_authorize_retract` raises `HTTPException` under
+       `SafetyPolicy.should_block`, which is what makes "before" mean "gates"
+       rather than "happens to precede".
+
+    Why this outlives the current blocked state: the behavioural 409 witnesses
+    prove today's no-evaluator behaviour and stop proving anything the moment a
+    retract evaluator lands and the lane returns GREEN. This test asserts the
+    structure that must hold in *that* state — order and dependency — and is
+    unaffected by which risk level the evaluator returns.
+    """
+    from app.routers.retract import retract_gcode_router as rr
+
+    tree = ast.parse(inspect.getsource(rr))
+
+    # (4) The gate actually blocks: a raise guarded by the policy check.
+    gate = _fn_def(tree, "_authorize_retract")
+    guarded_raises = [
+        node
+        for node in ast.walk(gate)
+        if isinstance(node, ast.If)
+        and any(_call_name(c) == "should_block" for c in ast.walk(node.test))
+        and any(
+            isinstance(r, ast.Raise) and _call_name(r.exc) == "HTTPException"
+            for r in ast.walk(node)
+        )
+    ]
+    assert guarded_raises, (
+        "_authorize_retract must raise HTTPException under SafetyPolicy.should_block; "
+        "without the raise, 'authorize first' is decorative"
+    )
+
+    for route_name in ("generate_simple_retract_gcode", "download_retract_gcode"):
+        fn = _fn_def(tree, route_name)
+
+        auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+        build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
+        persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+
+        # (1) unconditional gate
+        assert auth_i is not None, f"{route_name} never calls _authorize_retract"
+        assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
+            f"{route_name}: the _authorize_retract call must be an unconditional "
+            f"top-level statement, not nested in a branch"
+        )
+
+        # (2) strict ordering
+        assert build_i is not None, f"{route_name} never calls a _build_* helper"
+        assert auth_i < build_i, (
+            f"{route_name}: _build_* is reached at statement {build_i}, which is not "
+            f"after _authorize_retract at statement {auth_i}"
+        )
+
+        # (3) data dependency: the artifact is bound to the authorizing run
+        assert persist_i is not None, f"{route_name} never persists an authorized run"
+        assert build_i < persist_i, f"{route_name}: persistence must follow generation"
+        bound = _binds(fn.body[auth_i])
+        assert bound, f"{route_name}: _authorize_retract result must be bound to names"
+        consumed = {
+            node.id
+            for node in ast.walk(fn.body[persist_i])
+            if isinstance(node, ast.Name)
+        }
+        carried = bound & consumed
+        assert {"run_id", "risk_level"} <= carried, (
+            f"{route_name}: the persisted run must carry run_id and risk_level from "
+            f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
+            f"only follows authorization, it is not bound to it"
+        )
 
     for alias_fn in (
         rr.generate_simple_retract_gcode_governed,
