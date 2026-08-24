@@ -1,0 +1,46 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_CONVERGE_001B_MERGE_GATES",
+  "title": "RMOS-CONVERGE-001B: split AST witnesses under the complexity ratchet",
+  "intent": "Follow-up on #314 after #320 merged the stacked retract-contract work and #314 declared the combined diff on the output-governance manifest (398e0254). debt-gates still fails: test_authorization_structurally_precedes_generation (26) and test_generation_is_unreachable_before_authorization (16) exceed complexity 15. Split them into helpers so the ratchet passes; assertions and mutation meaning are unchanged.",
+  "change_type": "fix",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001b-merge-gates.json",
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Extract helpers from test_generation_is_unreachable_before_authorization and test_authorization_structurally_precedes_generation so cyclomatic complexity stays at or below 15. CBSP21 selection was already resolved on #314 by 398e0254 (output-governance declares the whole landed diff; compat-contract retained as the record of that patch).",
+    "why_not_redundant": "Not a second census or a new retract evaluator. 398e0254 cleared the CBSP21 tie; this patch is the remaining red gate on #314 — the complexity ratchet on the two AST witnesses written as single functions. Assertions and meaning are unchanged."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/fix/rmos-converge-001b-output-governance --head HEAD",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "cd services/api && PYTHONPATH=. python3 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json",
+      "cd services/api && PYTHONPATH=. python3 -m pytest tests/rmos/test_rmos_output_route_convergence.py -q --cov-fail-under=0"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "intent": "Split the two AST structural witnesses into helpers so each function stays under complexity 15. Behaviour of the witnesses is unchanged.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001b-merge-gates.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating this follow-up's changed files.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}

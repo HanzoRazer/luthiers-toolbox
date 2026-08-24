@@ -297,6 +297,92 @@ def _binds(stmt: ast.stmt) -> set:
     return names
 
 
+def _assert_builders_contain_no_authority(rr) -> None:
+    forbidden = (
+        "compute_feasibility_internal",
+        "RunDecision",
+        "persist_run",
+        "validate_and_persist",
+    )
+    for builder in (rr._build_simple_retract_gcode, rr._build_download_retract_gcode):
+        src = inspect.getsource(builder)
+        for token in forbidden:
+            assert token not in src, f"{builder.__name__} contains {token}"
+
+
+def _module_functions_calling(module_tree: ast.Module, name: str) -> list[str]:
+    callers: list[str] = []
+    for node in module_tree.body:
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        if any(_call_name(child) == name for child in ast.walk(node)):
+            callers.append(node.name)
+    return callers
+
+
+def _if_raises_http_under_should_block(node: ast.AST) -> bool:
+    if not isinstance(node, ast.If):
+        return False
+    policy_guarded = any(_call_name(c) == "should_block" for c in ast.walk(node.test))
+    raises_http = any(
+        isinstance(r, ast.Raise) and _call_name(r.exc) == "HTTPException"
+        for r in ast.walk(node)
+    )
+    return policy_guarded and raises_http
+
+
+def _assert_gate_raises_under_policy(tree: ast.Module) -> None:
+    gate = _fn_def(tree, "_authorize_retract")
+    assert any(_if_raises_http_under_should_block(n) for n in ast.walk(gate)), (
+        "_authorize_retract must raise HTTPException under SafetyPolicy.should_block; "
+        "without the raise, 'authorize first' is decorative"
+    )
+
+
+def _assert_route_authorizes_before_generation(fn: ast.FunctionDef, route_name: str) -> None:
+    auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
+    build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
+    persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
+
+    assert auth_i is not None, f"{route_name} never calls _authorize_retract"
+    assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
+        f"{route_name}: the _authorize_retract call must be an unconditional "
+        f"top-level statement, not nested in a branch"
+    )
+    assert build_i is not None, f"{route_name} never calls a _build_* helper"
+    assert auth_i < build_i, (
+        f"{route_name}: _build_* is reached at statement {build_i}, which is not "
+        f"after _authorize_retract at statement {auth_i}"
+    )
+    assert persist_i is not None, f"{route_name} never persists an authorized run"
+    assert build_i < persist_i, f"{route_name}: persistence must follow generation"
+    bound = _binds(fn.body[auth_i])
+    assert bound, f"{route_name}: _authorize_retract result must be bound to names"
+    consumed = {
+        node.id
+        for node in ast.walk(fn.body[persist_i])
+        if isinstance(node, ast.Name)
+    }
+    carried = bound & consumed
+    assert {"run_id", "risk_level"} <= carried, (
+        f"{route_name}: the persisted run must carry run_id and risk_level from "
+        f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
+        f"only follows authorization, it is not bound to it"
+    )
+
+
+def _assert_aliases_do_not_generate(rr) -> None:
+    for alias_fn in (
+        rr.generate_simple_retract_gcode_governed,
+        rr.download_retract_gcode_governed,
+    ):
+        names = _call_names(alias_fn)
+        assert names, alias_fn.__name__
+        assert "_build_simple_retract_gcode" not in names
+        assert "_build_download_retract_gcode" not in names
+        assert "compute_feasibility_internal" not in names
+
+
 def test_generation_is_unreachable_before_authorization():
     """
     Builders are pure; only `_authorize_retract` talks to the feasibility
@@ -306,26 +392,11 @@ def test_generation_is_unreachable_before_authorization():
     """
     from app.routers.retract import retract_gcode_router as rr
 
-    for builder in (rr._build_simple_retract_gcode, rr._build_download_retract_gcode):
-        src = inspect.getsource(builder)
-        assert "compute_feasibility_internal" not in src
-        assert "RunDecision" not in src
-        assert "persist_run" not in src
-        assert "validate_and_persist" not in src
-
-    feas_callers = []
+    _assert_builders_contain_no_authority(rr)
     module_tree = ast.parse(inspect.getsource(rr))
-    for node in module_tree.body:
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        for child in ast.walk(node):
-            if not isinstance(child, ast.Call):
-                continue
-            fname = getattr(child.func, "id", None) or getattr(child.func, "attr", None)
-            if fname == "compute_feasibility_internal":
-                feas_callers.append(node.name)
-    assert feas_callers == ["_authorize_retract"]
-
+    assert _module_functions_calling(module_tree, "compute_feasibility_internal") == [
+        "_authorize_retract"
+    ]
     for route_fn in (rr.generate_simple_retract_gcode, rr.download_retract_gcode):
         names = _call_names(route_fn)
         assert "_authorize_retract" in names, route_fn.__name__
@@ -363,71 +434,10 @@ def test_authorization_structurally_precedes_generation():
     from app.routers.retract import retract_gcode_router as rr
 
     tree = ast.parse(inspect.getsource(rr))
-
-    # (4) The gate actually blocks: a raise guarded by the policy check.
-    gate = _fn_def(tree, "_authorize_retract")
-    guarded_raises = [
-        node
-        for node in ast.walk(gate)
-        if isinstance(node, ast.If)
-        and any(_call_name(c) == "should_block" for c in ast.walk(node.test))
-        and any(
-            isinstance(r, ast.Raise) and _call_name(r.exc) == "HTTPException"
-            for r in ast.walk(node)
-        )
-    ]
-    assert guarded_raises, (
-        "_authorize_retract must raise HTTPException under SafetyPolicy.should_block; "
-        "without the raise, 'authorize first' is decorative"
-    )
-
+    _assert_gate_raises_under_policy(tree)
     for route_name in ("generate_simple_retract_gcode", "download_retract_gcode"):
-        fn = _fn_def(tree, route_name)
-
-        auth_i = _stmt_index_calling(fn, lambda n: n == "_authorize_retract")
-        build_i = _stmt_index_calling(fn, lambda n: bool(n) and n.startswith("_build_"))
-        persist_i = _stmt_index_calling(fn, lambda n: n == "_persist_authorized_run")
-
-        # (1) unconditional gate
-        assert auth_i is not None, f"{route_name} never calls _authorize_retract"
-        assert isinstance(fn.body[auth_i], (ast.Assign, ast.AnnAssign, ast.Expr)), (
-            f"{route_name}: the _authorize_retract call must be an unconditional "
-            f"top-level statement, not nested in a branch"
-        )
-
-        # (2) strict ordering
-        assert build_i is not None, f"{route_name} never calls a _build_* helper"
-        assert auth_i < build_i, (
-            f"{route_name}: _build_* is reached at statement {build_i}, which is not "
-            f"after _authorize_retract at statement {auth_i}"
-        )
-
-        # (3) data dependency: the artifact is bound to the authorizing run
-        assert persist_i is not None, f"{route_name} never persists an authorized run"
-        assert build_i < persist_i, f"{route_name}: persistence must follow generation"
-        bound = _binds(fn.body[auth_i])
-        assert bound, f"{route_name}: _authorize_retract result must be bound to names"
-        consumed = {
-            node.id
-            for node in ast.walk(fn.body[persist_i])
-            if isinstance(node, ast.Name)
-        }
-        carried = bound & consumed
-        assert {"run_id", "risk_level"} <= carried, (
-            f"{route_name}: the persisted run must carry run_id and risk_level from "
-            f"_authorize_retract (carried: {sorted(carried)}); otherwise the artifact "
-            f"only follows authorization, it is not bound to it"
-        )
-
-    for alias_fn in (
-        rr.generate_simple_retract_gcode_governed,
-        rr.download_retract_gcode_governed,
-    ):
-        names = _call_names(alias_fn)
-        assert names, alias_fn.__name__
-        assert "_build_simple_retract_gcode" not in names
-        assert "_build_download_retract_gcode" not in names
-        assert "compute_feasibility_internal" not in names
+        _assert_route_authorizes_before_generation(_fn_def(tree, route_name), route_name)
+    _assert_aliases_do_not_generate(rr)
 
 
 def test_retract_router_does_not_hardcode_run_decision_risk_level():
