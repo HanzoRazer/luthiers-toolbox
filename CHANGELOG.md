@@ -28,13 +28,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Covers `toolbox-v0.39.1` (2026-02-28) → `main` (2026-08-23): **1,716 commits across
-277 merged pull requests**, with no release cut in that window.
+Covers `toolbox-v0.39.1` (2026-02-28) → `main` (2026-08-24): **1,716+ commits across
+277+ merged pull requests**, with no release cut in that window.
 
 Because that is far too much to enumerate faithfully, the summary below is grouped by
 area and derived from commit scopes and merged PR titles. It is **representative, not
 exhaustive** — the tag range is the authoritative record. Item counts are commit counts
 for that scope, not feature counts.
+
+### Removed — BREAKING
+
+- **All four retract G-code routes now fail closed** (RMOS-CONVERGE-001B, #314,
+  merged 2026-08-24 as `e1365198`). `POST /api/cam/retract/gcode`,
+  `/gcode/download`, `/gcode_governed` and `/gcode/download_governed` no longer
+  emit G-code; every one returns **`409 SAFETY_BLOCKED`** and will until a
+  substantive retract feasibility evaluator exists.
+
+  Listed explicitly rather than folded into the summary below, because it is the
+  one change in this window that removes a capability callers were using. Two of
+  those routes previously built G-code and then minted their own
+  `RunDecision(risk_level="GREEN")` around output no evaluator had assessed; the
+  other two bypassed RMOS entirely and served a `.nc` download with no run,
+  decision or hash. The `_governed` suffix is now a retained alias, not a second
+  lane.
+
+  Consumer-facing detail, including the before/after table per route and what a
+  caller must change: [`docs/api/endpoints.md`](./docs/api/endpoints.md).
+  Full census and the findings it surfaced but did not fix:
+  `docs/audit/rmos_prod_output_census_001b.md`.
 
 ### Added
 
