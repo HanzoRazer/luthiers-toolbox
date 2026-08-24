@@ -6,6 +6,16 @@ on:
       - "services/api/app/ci/fence_baseline.json"
       - "services/api/app/ci/fence_patterns_baseline.json"
 
+# The repository default is `default_workflow_permissions: read`, so without this
+# block GITHUB_TOKEN cannot post the report and the final step 403s with
+# "Resource not accessible by integration" — which is exactly what happened the
+# first time this workflow's comment step ever executed. That step is gated on the
+# `governance` label, so it lay dormant until PR #314 became the first labelled PR
+# to touch a baseline. Read everywhere except the one scope the comment needs.
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   baseline-diff:
     runs-on: ubuntu-latest
