@@ -77,6 +77,7 @@ def create_blocked_artifact_for_violations(
     violations: List[CompletenessViolation],
     request_summary: Optional[Dict[str, Any]] = None,
     feasibility: Optional[Dict[str, Any]] = None,
+    event_type: Optional[str] = None,
 ) -> RunArtifact:
     """Create a BLOCKED artifact when required invariants are missing."""
     violation_details = "; ".join(str(v) for v in violations)
@@ -85,12 +86,17 @@ def create_blocked_artifact_for_violations(
     # Use placeholder hash if not provided (indicates incomplete data)
     placeholder_hash = "0" * 64
 
+    extra: Dict[str, Any] = {}
+    if event_type is not None:
+        extra["event_type"] = event_type
+
     return RunArtifact(
         run_id=run_id,
         mode=mode,
         tool_id=tool_id,
         status="BLOCKED",
         request_summary=request_summary or {},
+        **extra,
         feasibility=feasibility or {},
         decision=RunDecision(
             risk_level="ERROR",
@@ -124,8 +130,16 @@ def validate_and_persist(
     toolpaths_sha256: Optional[str] = None,
     gcode_sha256: Optional[str] = None,
     meta: Optional[Dict[str, Any]] = None,
+    event_type: Optional[str] = None,
 ) -> RunArtifact:
-    """Validate completeness and persist artifact."""
+    """Validate completeness and persist artifact.
+
+    ``event_type`` is optional so callers that need the audit label do not have
+    to construct ``RunArtifact`` themselves — direct construction outside this
+    module is fenced (``FENCE_REGISTRY.json`` -> ``artifact_authority``), and
+    the absence of this passthrough was the reason routers reached around the
+    fence.
+    """
     # Check completeness
     violations = check_completeness(
         feasibility_sha256=feasibility_sha256,
@@ -142,15 +156,21 @@ def validate_and_persist(
             violations=violations,
             request_summary=request_summary,
             feasibility=feasibility,
+            event_type=event_type,
         )
     else:
         # All required fields present - create normal artifact
+        extra: Dict[str, Any] = {}
+        if event_type is not None:
+            extra["event_type"] = event_type
+
         artifact = RunArtifact(
             run_id=run_id,
             mode=mode,
             tool_id=tool_id,
             status=status,
             request_summary=request_summary,
+            **extra,
             feasibility=feasibility,
             decision=RunDecision(
                 risk_level=risk_level,

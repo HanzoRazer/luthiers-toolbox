@@ -4,6 +4,36 @@ import pytest
 from fastapi.testclient import TestClient
 
 
+# ---------------------------------------------------------------------------
+# RMOS-CONVERGE-001B reconciliation marker
+# ---------------------------------------------------------------------------
+
+blocked_by_design = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "RMOS-CONVERGE-001B: the retract capability has no substantive feasibility "
+        "evaluator, so all four G-code routes are blocked by design (409 SAFETY_BLOCKED) "
+        "per the owner ruling of 2026-08-23 - an ungoverned convenience endpoint is not an "
+        "accepted alternate production path. The assertions below are the contract to restore "
+        "when a retract evaluator lands and the mode is registered in "
+        "_PRODUCTION_FEASIBILITY_ENGINES; strict=True so they fail loudly the moment the lane "
+        "reopens. Current behaviour is witnessed by "
+        "tests/rmos/test_rmos_output_route_convergence.py."
+    ),
+)
+"""Applied to tests that assert retract manufactures output.
+
+Their assertions are preserved verbatim as the contract to RESTORE, not
+rewritten to expect 409 - a rewritten assertion would keep passing once an
+evaluator lands and would then assert the wrong thing. strict=True makes every
+one of them fail loudly the moment the lane reopens.
+
+The exception is the lane-header group: `draft` is not coming back (see the
+compatibility contract in retract_gcode_router), so those were rewritten to the
+governed contract rather than marked for restoration.
+"""
+
+
 @pytest.fixture
 def client():
     """Create test client."""
@@ -541,12 +571,14 @@ def test_estimate_requires_features_count(client):
 # G-code Generation Endpoints
 # =============================================================================
 
+@blocked_by_design
 def test_gcode_returns_200(client):
     """POST /api/cam/retract/gcode returns 200."""
     response = client.post("/api/cam/retract/gcode")
     assert response.status_code == 200
 
 
+@blocked_by_design
 def test_gcode_returns_text_content_type(client):
     """G-code endpoint returns text content type."""
     response = client.post("/api/cam/retract/gcode")
@@ -555,12 +587,19 @@ def test_gcode_returns_text_content_type(client):
 
 
 def test_gcode_contains_g_commands(client):
-    """G-code contains G commands."""
+    """Blocked retract JSON is not G-code.
+
+    The pre-001B assertion ``"G" in content`` is not a G-code witness:
+    ``FEASIBILITY_ENGINE_UNAVAILABLE`` contains the letter G, so it would
+    pass on the 409 body. Assert machine markers instead.
+    """
     response = client.post("/api/cam/retract/gcode")
-    content = response.text
-    assert "G" in content
+    assert response.status_code == 409
+    for marker in ("G21", "G90", "G0 Z", "G1 Z", "G2 X", "M30"):
+        assert marker not in response.text
 
 
+@blocked_by_design
 def test_gcode_contains_m30(client):
     """G-code ends with M30."""
     response = client.post("/api/cam/retract/gcode")
@@ -568,6 +607,7 @@ def test_gcode_contains_m30(client):
     assert "M30" in content
 
 
+@blocked_by_design
 def test_gcode_direct_strategy(client):
     """G-code with direct strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=direct")
@@ -575,6 +615,7 @@ def test_gcode_direct_strategy(client):
     assert "direct" in response.text.lower() or "Direct" in response.text
 
 
+@blocked_by_design
 def test_gcode_ramped_strategy(client):
     """G-code with ramped strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=ramped")
@@ -582,6 +623,7 @@ def test_gcode_ramped_strategy(client):
     assert "ramped" in response.text.lower() or "Ramped" in response.text
 
 
+@blocked_by_design
 def test_gcode_helical_strategy(client):
     """G-code with helical strategy."""
     response = client.post("/api/cam/retract/gcode?strategy=helical")
@@ -589,6 +631,7 @@ def test_gcode_helical_strategy(client):
     assert "G2" in response.text  # Arc command for helix
 
 
+@blocked_by_design
 def test_gcode_custom_safe_z(client):
     """G-code with custom safe_z."""
     response = client.post("/api/cam/retract/gcode?safe_z=20.0")
@@ -596,6 +639,7 @@ def test_gcode_custom_safe_z(client):
     assert "20" in response.text
 
 
+@blocked_by_design
 def test_gcode_custom_current_z(client):
     """G-code with custom current_z."""
     response = client.post("/api/cam/retract/gcode?current_z=-20.0")
@@ -603,21 +647,25 @@ def test_gcode_custom_current_z(client):
 
 
 def test_gcode_has_toolbox_lane_header(client):
-    """G-code response has X-ToolBox-Lane header."""
+    """Former draft path still advertises a lane header — now governed."""
     response = client.post("/api/cam/retract/gcode")
+    assert response.status_code == 409
     assert "X-ToolBox-Lane" in response.headers
 
 
-def test_gcode_lane_is_draft(client):
-    """G-code draft endpoint has draft lane."""
+def test_gcode_lane_is_governed(client):
+    """Former draft /gcode path inherits governed lane semantics."""
     response = client.post("/api/cam/retract/gcode")
-    assert response.headers.get("X-ToolBox-Lane") == "draft"
+    assert response.status_code == 409
+    assert response.headers.get("X-ToolBox-Lane") == "governed"
+    assert response.headers.get("X-Run-ID")
 
 
 # =============================================================================
 # G-code Governed Endpoint
 # =============================================================================
 
+@blocked_by_design
 def test_gcode_governed_returns_200(client):
     """POST /api/cam/retract/gcode_governed returns 200."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -625,11 +673,13 @@ def test_gcode_governed_returns_200(client):
 
 
 def test_gcode_governed_has_run_id_header(client):
-    """Governed endpoint returns X-Run-ID header."""
+    """Governed endpoint returns X-Run-ID header (including while blocked)."""
     response = client.post("/api/cam/retract/gcode_governed")
+    assert response.status_code == 409
     assert "X-Run-ID" in response.headers
 
 
+@blocked_by_design
 def test_gcode_governed_has_gcode_hash_header(client):
     """Governed endpoint returns X-GCode-SHA256 header."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -637,11 +687,13 @@ def test_gcode_governed_has_gcode_hash_header(client):
 
 
 def test_gcode_governed_lane_is_governed(client):
-    """Governed endpoint has governed lane."""
+    """Governed endpoint has governed lane (including while blocked)."""
     response = client.post("/api/cam/retract/gcode_governed")
+    assert response.status_code == 409
     assert response.headers.get("X-ToolBox-Lane") == "governed"
 
 
+@blocked_by_design
 def test_gcode_governed_contains_gcode(client):
     """Governed endpoint returns valid G-code."""
     response = client.post("/api/cam/retract/gcode_governed")
@@ -654,6 +706,7 @@ def test_gcode_governed_contains_gcode(client):
 # G-code Download Endpoint
 # =============================================================================
 
+@blocked_by_design
 def test_gcode_download_returns_200(client):
     """POST /api/cam/retract/gcode/download returns 200."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -663,6 +716,7 @@ def test_gcode_download_returns_200(client):
     assert response.status_code == 200
 
 
+@blocked_by_design
 def test_gcode_download_has_disposition_header(client):
     """Download has Content-Disposition header."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -672,6 +726,7 @@ def test_gcode_download_has_disposition_header(client):
     assert "Content-Disposition" in response.headers
 
 
+@blocked_by_design
 def test_gcode_download_filename_contains_strategy(client):
     """Download filename contains strategy name."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -682,6 +737,7 @@ def test_gcode_download_filename_contains_strategy(client):
     assert "minimal" in disposition
 
 
+@blocked_by_design
 def test_gcode_download_is_nc_file(client):
     """Download is .nc file."""
     response = client.post("/api/cam/retract/gcode/download", json={
@@ -692,19 +748,22 @@ def test_gcode_download_is_nc_file(client):
     assert ".nc" in disposition
 
 
-def test_gcode_download_lane_is_draft(client):
-    """Download draft endpoint has draft lane."""
+def test_gcode_download_lane_is_governed(client):
+    """Former draft download path inherits governed lane semantics."""
     response = client.post("/api/cam/retract/gcode/download", json={
         "features": SIMPLE_FEATURES,
         "strategy": "safe"
     })
-    assert response.headers.get("X-ToolBox-Lane") == "draft"
+    assert response.status_code == 409
+    assert response.headers.get("X-ToolBox-Lane") == "governed"
+    assert response.headers.get("X-Run-ID")
 
 
 # =============================================================================
 # G-code Download Governed Endpoint
 # =============================================================================
 
+@blocked_by_design
 def test_gcode_download_governed_returns_200(client):
     """POST /api/cam/retract/gcode/download_governed returns 200."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -715,14 +774,16 @@ def test_gcode_download_governed_returns_200(client):
 
 
 def test_gcode_download_governed_has_run_id(client):
-    """Download governed has X-Run-ID header."""
+    """Download governed has X-Run-ID header (including while blocked)."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
         "features": SIMPLE_FEATURES,
         "strategy": "safe"
     })
+    assert response.status_code == 409
     assert "X-Run-ID" in response.headers
 
 
+@blocked_by_design
 def test_gcode_download_governed_has_gcode_hash(client):
     """Download governed has X-GCode-SHA256 header."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -733,14 +794,16 @@ def test_gcode_download_governed_has_gcode_hash(client):
 
 
 def test_gcode_download_governed_lane_is_governed(client):
-    """Download governed has governed lane."""
+    """Download governed has governed lane (including while blocked)."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
         "features": SIMPLE_FEATURES,
         "strategy": "safe"
     })
+    assert response.status_code == 409
     assert response.headers.get("X-ToolBox-Lane") == "governed"
 
 
+@blocked_by_design
 def test_gcode_download_governed_is_nc_file(client):
     """Download governed is .nc file."""
     response = client.post("/api/cam/retract/gcode/download_governed", json={
@@ -755,6 +818,7 @@ def test_gcode_download_governed_is_nc_file(client):
 # Integration Tests
 # =============================================================================
 
+@blocked_by_design
 def test_apply_and_download_same_features(client):
     """Apply and download work with same features."""
     features = SIMPLE_FEATURES
@@ -782,6 +846,7 @@ def test_all_strategies_work_with_apply(client):
         assert response.status_code == 200, f"Strategy '{strategy}' failed"
 
 
+@blocked_by_design
 def test_all_gcode_strategies_work(client):
     """All G-code strategies work."""
     for strategy in ["direct", "ramped", "helical"]:
@@ -789,11 +854,14 @@ def test_all_gcode_strategies_work(client):
         assert response.status_code == 200, f"Strategy '{strategy}' failed"
 
 
-def test_draft_and_governed_produce_same_content(client):
-    """Draft and governed endpoints produce equivalent content."""
-    draft = client.post("/api/cam/retract/gcode?strategy=direct")
-    governed = client.post("/api/cam/retract/gcode_governed?strategy=direct")
+def test_legacy_and_alias_paths_share_one_authority_outcome(client):
+    """Former draft URL and _governed alias return the same blocked outcome."""
+    legacy = client.post("/api/cam/retract/gcode?strategy=direct")
+    alias = client.post("/api/cam/retract/gcode_governed?strategy=direct")
 
-    # Both should return valid G-code
-    assert "G0" in draft.text or "G1" in draft.text
-    assert "G0" in governed.text or "G1" in governed.text
+    assert legacy.status_code == 409
+    assert alias.status_code == 409
+    assert legacy.headers.get("X-ToolBox-Lane") == "governed"
+    assert alias.headers.get("X-ToolBox-Lane") == "governed"
+    assert legacy.json()["detail"]["error"] == "SAFETY_BLOCKED"
+    assert alias.json()["detail"]["error"] == "SAFETY_BLOCKED"

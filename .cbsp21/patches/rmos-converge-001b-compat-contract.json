@@ -1,0 +1,119 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_CONVERGE_001B_COMPAT_CONTRACT",
+  "title": "RMOS-CONVERGE-001B: make former draft retract paths an explicit governed contract",
+  "intent": "Stacked follow-up to RMOS-CONVERGE-001B (#314), superseding the #315 draft as the thing to merge into #314. The checkpoint PR converged all four retract G-code routes onto one authority boundary but left the draft-to-governed header/path contract implicit, which would silently break consumers that still treated /gcode and /gcode/download as draft-lane 200 G-code. This patch documents that contract, advertises X-ToolBox-Lane: governed and X-Run-ID on 409, locks it with witnesses, retires the smoke-test restore-to-draft assertions, stops the in-tree Vue exporter from downloading 409 JSON as a .nc file, and proves POST /gcode binds query params (a JSON body is ignored) with OpenAPI/HTTP/builder guards plus Vue tests for readGcodeOrThrow and exportGcode.",
+  "change_type": "fix",
+  "behavior_change": "INTENTIONAL compatibility contract. Former draft retract URLs already returned 409 SAFETY_BLOCKED under #314; they now also send X-ToolBox-Lane: governed and X-Run-ID on that 409 (and still will after an evaluator lands \u2014 they will not revert to draft). The Vue retract exporter no longer treats a non-OK body as G-code; it surfaces SAFETY_BLOCKED instead of saving JSON as .nc. Query params are now sent (the previous JSON body was ignored by FastAPI).",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001b-compat-contract.json",
+      "docs/api/endpoints.md",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
+      "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_retract_contract_guards.py",
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "services/api/tests/test_retract_endpoint_smoke.py"
+    ],
+    "files_expected_to_change": [
+      "docs/api/endpoints.md",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
+      "services/api/app/routers/retract/retract_gcode_router.py",
+      "services/api/tests/rmos/test_retract_contract_guards.py",
+      "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "services/api/tests/test_retract_endpoint_smoke.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) retract_gcode_router.py: 409 SAFETY_BLOCKED now carries X-ToolBox-Lane: governed and X-Run-ID via a shared header helper; module and endpoint docs state that /gcode and /gcode/download are not draft lanes and will not revert to draft when an evaluator lands. Shared Query() objects make /gcode and /gcode_governed query-string bound in OpenAPI so they cannot be confused with /gcode/download (JSON body). (2) Census adds an explicit before/after/after-evaluator contract table and names the Vue consumer. (3) Convergence tests assert governed headers on 409, drop the brittle source-index order check for AST/call-graph invariants, and split the literal-RunDecision guard so it is named as forbidding any hardcoded risk_level. (4) Smoke tests that encoded restore-to-draft are rewritten to the governed contract; the letter-G false positive is replaced with machine-marker checks. (5) useRetractOperation sends query params and refuses to download non-OK bodies; useGcodeExport adds readGcodeOrThrow. (6) Rebased onto #314's fence resolution (validate_and_persist persistence, risk_level carried forward from the authorization, explicit retract mode constants) and, on owner direction, restored a STRUCTURAL authorization-before-generation invariant: test_authorization_structurally_precedes_generation asserts order and dependency on the AST - unconditional top-level gate, _build_* at a strictly later statement index, persisted artifact carrying run_id and risk_level from the authorizing call, and an HTTPException raise guarded by SafetyPolicy.should_block. Statement index, not source offset, so comments and renamed locals cannot break it; verified by three mutations. This is the only witness that survives the lane reopening - the 409 witnesses prove today's no-evaluator state only. (7) The generalized alert-detail change to handleExportError is withdrawn: it altered behaviour for five unrelated CAM operations. Detail is now opt-in via a showDetail flag that only the retract caller passes. (8) The 20 verbatim xfail reason blocks are hoisted to one module-level `blocked_by_design` marker. (9) The convergence fixture's local `store._default_store = None` is removed - store.py re-exports that name as an import-time value binding, so the assignment never touched the singleton the endpoints read, and the session conftest already resets the real one. (10) Query-binding proof: OpenAPI declares /gcode scalars as query not body; an HTTP test shows query values reach request_summary/tool_id and a JSON body is ignored; the builder embeds those scalars. Vue tests cover readGcodeOrThrow (200 text, 409 SAFETY_BLOCKED, non-JSON error) and exportGcode query-string POST without downloadFile on 409. (11) docs/api/endpoints.md states consumer impact plainly: clients that keyed on draft or assumed all 200/POST export bodies were G-code must change.",
+    "why_not_redundant": "The #314 checkpoint changed live production endpoints from draft 200 G-code to governed 409 without making the header/path contract observable or updating the in-tree consumer. That is the blocking review concern: old paths plus new behaviour silently breaks callers. This patch is that contract, not a second census or a new evaluator. The query-binding tests close the remaining #315 merge-readiness gap: proving the Vue query-string POST matches FastAPI, rather than silently changing a JSON-body contract that never existed."
+  },
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py tests/test_retract_endpoint_smoke.py -q --no-cov -> 81 passed, 20 xfailed",
+      "mutation check on test_authorization_structurally_precedes_generation -> fails on (a) generation moved before the gate, (b) HTTPException raise removed, (c) persisted risk_level hardcoded",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_retract_contract_guards.py tests/rmos/test_rmos_output_route_convergence.py -q --cov-fail-under=0 -> 40 passed",
+      "npx vitest run src/components/toolbox/cam-essentials/useGcodeExport.spec.ts src/components/toolbox/cam-essentials/useRetractOperation.spec.ts -> 5 passed",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/fix/rmos-converge-001b-output-governance --head HEAD -> PASS (compat-contract selected; 10 declared files)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/retract/retract_gcode_router.py",
+      "intent": "Advertise governed lane headers on 409 and document that former draft URLs stay governed even after an evaluator lands.",
+      "risk": "medium",
+      "behavior_change": "yes - 409 responses now include X-ToolBox-Lane: governed and X-Run-ID"
+    },
+    {
+      "path": "docs/audit/rmos_prod_output_census_001b.md",
+      "intent": "Record the draft-to-governed path/header contract as an explicit compatibility break.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_output_route_convergence.py",
+      "intent": "Lock governed headers on blocked former-draft paths; replace brittle source-order assertion; name the literal-risk_level rule.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_retract_endpoint_smoke.py",
+      "intent": "Stop treating draft-lane 200 as the restore contract; fix the letter-G false positive.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
+      "intent": "Do not download 409 JSON as G-code; send query params the endpoint actually reads.",
+      "risk": "medium",
+      "behavior_change": "yes - blocked export surfaces an error instead of saving a .nc of JSON; UI params now reach the API as query string"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "intent": "Add readGcodeOrThrow so a non-OK body (409 SAFETY_BLOCKED) cannot be saved as .nc. handleExportError gains an opt-in showDetail flag; its default alert is unchanged for the five CAM operations that already used it.",
+      "risk": "low",
+      "behavior_change": "none by default - showDetail is opt-in and only retract passes it"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001b-compat-contract.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/api/endpoints.md",
+      "intent": "Call out consumer impact plainly and document query-string vs JSON-body binding so /gcode is not confused with /gcode/download.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_retract_contract_guards.py",
+      "intent": "Add the fourth contract: /gcode binds query params (OpenAPI + live HTTP, JSON body ignored) and the builder embeds those scalars. Survives lane reopening because it asserts request_summary, not a 200 G-code body.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "intent": "Cover readGcodeOrThrow: 200 text, 409 SAFETY_BLOCKED JSON, non-JSON error body.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.spec.ts",
+      "intent": "Cover exportGcode: retract params go on the query string, no JSON body, downloadFile is not called on 409.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    }
+  ]
+}

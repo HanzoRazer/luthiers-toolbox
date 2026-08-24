@@ -148,6 +148,8 @@ def resolve_mode(tool_id: str) -> str:
         return "adaptive"
     if tool_id.startswith("helical:"):
         return "helical"
+    if tool_id.startswith("retract:"):
+        return "retract"
     return "unknown"
 
 
