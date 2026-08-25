@@ -4,6 +4,7 @@
  */
 import { ref, watch, type Ref } from 'vue'
 import { api } from '@/services/apiBase'
+import { ensureArtifactResponseOk } from '@/components/toolbox/cam-essentials/useGcodeExport'
 
 export interface ExportModes {
   comment: boolean
@@ -66,6 +67,7 @@ export function useToolpathExport(): ExportState {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      await ensureArtifactResponseOk(r, 'Adaptive NC')
       ncText.value = await r.text()
       ncOpen.value = true
     } catch (err) {
@@ -81,6 +83,7 @@ export function useToolpathExport(): ExportState {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      await ensureArtifactResponseOk(r, 'Adaptive')
       const blob = await r.blob()
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)

@@ -27,7 +27,7 @@ from .helpers import (
     _merge_adaptive_override,
     _apply_adaptive_feed,
 )
-from .plan_router import plan
+from .plan_router import _enforce_safety_policy, plan
 
 # Import run artifact persistence (OPERATION lane requirement)
 from ...rmos.runs_v2 import (
@@ -36,7 +36,6 @@ from ...rmos.runs_v2 import (
     Hashes,
     persist_run,
     create_run_id,
-    sha256_of_obj,
     sha256_of_text,
 )
 
@@ -73,6 +72,22 @@ def gcode(request: Request, body: GcodeIn) -> StreamingResponse:
         if body.post_id not in valid_post_ids:
             raise HTTPException(400, f"Invalid post_id '{body.post_id}'. Available: {', '.join(valid_post_ids)}")
 
+    # --- Server-side feasibility enforcement (RMOS-CONVERGE-001B-B2) ---
+    #
+    # This route used to inherit authority implicitly: it called plan(), which
+    # gates internally, and then recorded RunDecision(risk_level="GREEN") with
+    # feasibility_sha256 set to a hash of the *request*. Authority was really
+    # being consumed, but the artifact did not say what the evaluator said — a
+    # YELLOW plan was persisted as GREEN, against a hash that was not a
+    # feasibility hash. The decision is now obtained explicitly, from the same
+    # helper plan() uses, so the recorded decision is the one that authorised
+    # the operation.
+    #
+    # This gate runs before any G-code exists. plan() re-evaluates internally;
+    # compute_feasibility_internal is deterministic, so both agree.
+    plan_request_dict = body.model_dump(mode="json")
+    feasibility, risk_level, feas_hash = _enforce_safety_policy(plan_request_dict)
+
     # Generate toolpath using /plan logic
     plan_out = plan(body)
 
@@ -107,22 +122,25 @@ def gcode(request: Request, body: GcodeIn) -> StreamingResponse:
     # Assemble full program
     program = "\n".join(hdr + [meta] + body_lines + ftr) + "\n"
 
-    # Create artifact for OPERATION lane compliance
+    # Create artifact for OPERATION lane compliance.
+    #
+    # The decision and the feasibility hash both come from the gate above, so
+    # the record cannot drift from the authority that granted it.
     now = datetime.now(timezone.utc).isoformat()
-    request_hash = sha256_of_obj(body.model_dump(mode="json"))
     gcode_hash = sha256_of_text(program)
 
     run_id = create_run_id()
     artifact = RunArtifact(
         run_id=run_id,
         created_at_utc=now,
-        tool_id="adaptive_gcode",
+        tool_id="adaptive:gcode",
         mode="adaptive",
         event_type="adaptive_gcode_execution",
         status="OK",
-        decision=RunDecision(risk_level="GREEN"),  # plan() already validated feasibility
+        feasibility=feasibility,
+        decision=RunDecision(risk_level=risk_level),
         hashes=Hashes(
-            feasibility_sha256=request_hash,  # Use request hash as proxy (plan validated)
+            feasibility_sha256=feas_hash,
             gcode_sha256=gcode_hash,
         ),
     )
