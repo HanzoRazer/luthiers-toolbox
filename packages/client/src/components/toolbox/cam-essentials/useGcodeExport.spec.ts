@@ -5,7 +5,7 @@
  * from being saved as a .nc file.
  */
 import { describe, expect, it } from 'vitest'
-import { readGcodeOrThrow } from './useGcodeExport'
+import { ensureArtifactResponseOk, readGcodeOrThrow } from './useGcodeExport'
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -47,6 +47,37 @@ describe('readGcodeOrThrow', () => {
 
     await expect(readGcodeOrThrow(response, 'Retract')).rejects.toThrow(
       'Retract export failed (502)'
+    )
+  })
+})
+
+describe('ensureArtifactResponseOk', () => {
+  it('does not consume a successful body, so the caller can still read it', async () => {
+    // B2-05. The adaptive export path reads .blob() after the guard; if the
+    // guard consumed the body the download would silently be empty.
+    const res = textResponse(200, ['G21 G90', 'M30', ''].join('\n'))
+    await ensureArtifactResponseOk(res, 'Adaptive')
+    expect(res.bodyUsed).toBe(false)
+    await expect(res.text()).resolves.toContain('M30')
+  })
+
+  it('throws the governed reason for 409 SAFETY_BLOCKED', async () => {
+    const res = jsonResponse(409, {
+      detail: {
+        error: 'SAFETY_BLOCKED',
+        message: 'Adaptive G-code generation blocked by server-side safety policy.'
+      }
+    })
+    await expect(ensureArtifactResponseOk(res, 'Adaptive')).rejects.toThrow(
+      /blocked by server-side safety policy/i
+    )
+  })
+
+  it('still throws when the error body is not JSON', async () => {
+    // Fail-closed must not depend on parsing succeeding.
+    const res = textResponse(500, '<html>gateway blew up</html>')
+    await expect(ensureArtifactResponseOk(res, 'Adaptive')).rejects.toThrow(
+      /Adaptive export failed \(500\)/
     )
   })
 })

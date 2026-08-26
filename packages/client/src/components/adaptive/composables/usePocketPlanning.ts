@@ -6,6 +6,7 @@
  */
 import { ref, type Ref, type ComputedRef } from 'vue'
 import { api } from '@/services/apiBase'
+import { ensureArtifactResponseOk } from '@/components/toolbox/cam-essentials/useGcodeExport'
 // Re-use types from other composables to avoid duplicate exports
 import type { Move, Overlay } from './useToolpathRenderer'
 
@@ -245,6 +246,7 @@ export function usePocketPlanning(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      await ensureArtifactResponseOk(r, 'Adaptive NC')
       deps.ncText.value = await r.text()
       deps.ncOpen.value = true
     } catch (err) {
@@ -298,6 +300,7 @@ export function usePocketPlanning(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      await ensureArtifactResponseOk(r, 'Adaptive')
       const blob = await r.blob()
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
