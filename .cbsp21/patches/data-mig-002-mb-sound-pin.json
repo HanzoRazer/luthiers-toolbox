@@ -1,0 +1,336 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "data-mig-002-mb-sound-pin",
+  "title": "DATA-MIG-002: delete the duplicated MB Sound corpus and pin mb-sound/v1.0.0",
+  "intent": "Toolbox stops being a second authority for MB Sound observational data. The 132-file cohort and 12 process documents are deleted after byte parity with the canonical immutable release is proven, and replaced by a dependency pin plus a fail-closed verifier.",
+  "change_type": "data_custody",
+  "behavior_change": "none - the corpus had no application consumer in this repository (no adapter, API route, view or test read it). No runtime, request or build path resolves the canonical corpus; verification is a manual/CI-offline step.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/data_registry/system/materials/empirical_tonewood/",
+      "services/api/app/data_registry/system/materials/panel_acoustic/",
+      "services/api/app/data_registry/system/materials/SOURCES.md",
+      "docs/reference/mb-sound/",
+      "scripts/verify_reference_corpus_pin.py",
+      "tests/test_mb_sound_corpus_dependency.py",
+      ".cbsp21/patches/data-mig-002-mb-sound-pin.json",
+      ".gitignore",
+      "SPRINTS.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/data-mig-002-mb-sound-pin.json",
+      ".gitignore",
+      "docs/reference/mb-sound/CORPUS_DEPENDENCY.json",
+      "docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md",
+      "docs/reference/mb-sound/README.md",
+      "scripts/verify_reference_corpus_pin.py",
+      "tests/test_mb_sound_corpus_dependency.py",
+      "services/api/app/data_registry/system/materials/SOURCES.md",
+      "services/api/app/data_registry/system/materials/panel_acoustic/README.md",
+      "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+      "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
+      "SPRINTS.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Removed 144 files: 132 under materials/empirical_tonewood/mb_sound/ (114 specimen payloads, 6 species cohorts, 3 validation reports, cohort manifest, 2 readmes, 4 .xlsx laboratory workbooks and their artifact manifest) and 12 process documents under docs/reference/mb-sound/. Added a dependency pin, a consumer README, a custody-transfer record carrying the full 145-file hash table, a ported fail-closed verifier, and 29 contract and anti-regression tests. Repointed the panel_acoustic tombstones and materials/SOURCES.md from the deleted local path to the canonical release, and dropped the .gitignore exception that un-ignored the workbooks.",
+    "why": "MB Sound observational data became canonical in HanzoRazer/luthier-acoustics-data at the immutable release mb-sound/v1.0.0. Holding a second normalized copy here made Toolbox a competing authority for evidence it does not measure and cannot correct.",
+    "what_did_not_change": "No specimen identifier, schema, vocabulary, unit or measured value was altered. No canonical data repository, Laboratory or Tap Tone Pi change. No adapter, TonewoodEntry, wood_species.json, generator or solver change. No public API or UI surface touched.",
+    "why_not_redundant": "This is not a re-run of the DO-SIP-013 intake (patch mb-sound-panel-corpus-scaffold) and not a repeat of the Laboratory pin (DATA-REL-001). Those established the corpus and proved external consumption works from one consumer. This increment does the thing neither did: it removes the duplicate from the repository that originally preserved it, so exactly one authority for MB Sound observations remains. Nothing else in the tree deletes this data or pins this release from Toolbox; without it, Toolbox stays a second, independently mutable copy of vendor measurements with no reconciliation path."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/verify_reference_corpus_pin.py",
+      "python -m pytest tests/test_mb_sound_corpus_dependency.py -q"
+    ],
+    "results": "Live pin resolution against the private canonical release: VERIFIED, 13/13 checks. Contract and anti-regression suite: 29 passed. Pre-deletion parity: 145/145 files byte-identical; the 114 local specimen blobs independently reproduced the canonical dataset digest ea77ca63...",
+    "known_residual": "The four scripts/mb_sound_*.py extraction tools are duplicated canonically under tools/mb_sound/ in the data repository. They are retained here as non-authoritative process tooling pending a later audit; they are not evidence and no longer have a local corpus to operate on."
+  },
+  "files": [
+    {
+      "path": "services/api/app/data_registry/system/materials/empirical_tonewood/",
+      "intent": "Delete the duplicated canonical MB Sound cohort (132 files) after byte parity with mb-sound/v1.0.0 was proven and recorded.",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/SOURCES.md",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/MB_SOUND_SOURCES.md",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/README.md",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/manifest.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/.gitignore",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/artifact_manifest.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Alpine_Spruce_Complete_Laboratory_Record.xlsx",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_30_Year_Drying_Complete_Laboratory_Record.xlsx",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Red_Cedar_Complete_Laboratory_Record.xlsx",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/Torrefied_Adirondack_Complete_Laboratory_Record.xlsx",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/adirondack_torrefied/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/alpine_spruce/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/european_spruce/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/species/red_cedar_30yr_naturally_dried/cohort.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000001.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000003.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000004.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000005.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000006.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000007.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000008.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000009.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000010.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000011.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000012.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000013.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000014.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000015.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000016.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000017.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000018.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000019.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000020.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000021.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-adt-000022.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000001.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000002.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000003.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000004.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000005.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000006.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000007.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000008.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000009.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000010.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000011.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000012.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000013.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000014.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000015.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000016.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000017.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000018.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000019.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000020.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000021.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-as-000022.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000001.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000002.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000003.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000004.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000005.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000006.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000007.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000008.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000009.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000010.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000011.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000012.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000013.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000014.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000015.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000016.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000017.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000018.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000019.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000020.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000021.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc-000022.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000024.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000025.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000026.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000027.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000028.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000029.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000030.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000031.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000032.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000033.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000034.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000035.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000036.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000037.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000038.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000039.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000040.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000041.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000042.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000043.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000044.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000045.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000046.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000047.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000048.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000049.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000050.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000051.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000052.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000053.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000054.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000055.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000056.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000057.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000058.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000059.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000060.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000061.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000062.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000063.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000064.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000065.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000066.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000067.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000068.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000069.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000070.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000071.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/specimens/mb-rc30-000072.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/consistency_results.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/corpus_laboratory_statistics.json",
+        "services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/validation/unresolved_fields.json",
+        "services/api/app/data_registry/system/materials/panel_acoustic/"
+      ],
+      "risk": "medium",
+      "behavior_change": "none - no code path read this data; verified by repository-wide search for empirical_tonewood and mb_sound across py/ts/vue/js outside scripts/.",
+      "verification": [
+        "python -m pytest tests/test_mb_sound_corpus_dependency.py -q",
+        "Parity table in docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md, Appendix A"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/CORPUS_DEPENDENCY.json",
+      "intent": "Declare the immutable consumer pin to luthier-acoustics-data @ mb-sound/v1.0.0, mirroring the proven Laboratory pin contract.",
+      "scan_targets": [
+        "docs/reference/mb-sound/"
+      ],
+      "risk": "low",
+      "behavior_change": "none - additive metadata; no runtime consumer.",
+      "verification": [
+        "python scripts/verify_reference_corpus_pin.py"
+      ]
+    },
+    {
+      "path": "docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md",
+      "intent": "Preserve the parity proof, the consumer census and the disposition of every MB Sound file so the deletion stays auditable after the files are gone.",
+      "scan_targets": [
+        "docs/reference/mb-sound/",
+        "docs/reference/mb-sound/CORPUS_DEPENDENCY.json",
+        "docs/reference/mb-sound/DO_SIP_PROGRAM.md",
+        "docs/reference/mb-sound/EXTRACTION_PLAYBOOK.md",
+        "docs/reference/mb-sound/FIELD_GLOSSARY_ES_EN.md",
+        "docs/reference/mb-sound/LABORATORY_RECORD.md",
+        "docs/reference/mb-sound/LINKAGE.md",
+        "docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md",
+        "docs/reference/mb-sound/NAMESPACE.md",
+        "docs/reference/mb-sound/README.md",
+        "docs/reference/mb-sound/TREATMENT_COHORTS.md",
+        "docs/reference/mb-sound/schema/lab_procedure.example.json",
+        "docs/reference/mb-sound/schema/panel.example.json",
+        "docs/reference/mb-sound/staging/.gitignore",
+        "docs/reference/mb-sound/staging/ocr/.gitkeep",
+        "docs/reference/mb-sound/staging/rows.jsonl"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation.",
+      "verification": [
+        "python -m pytest tests/test_mb_sound_corpus_dependency.py -q -k migration_record"
+      ]
+    },
+    {
+      "path": "scripts/verify_reference_corpus_pin.py",
+      "intent": "Fail-closed resolver ported from luthier-acoustics-lab: resolves a local clone then the GitHub API, verifies release identity, manifest digest, corpus digest, counts and schema, and reports UNRESOLVED rather than passing when the release is unreachable.",
+      "scan_targets": [
+        "scripts/verify_reference_corpus_pin.py",
+        "docs/reference/mb-sound/"
+      ],
+      "risk": "low",
+      "behavior_change": "none - a standalone verification utility; nothing imports it at runtime.",
+      "verification": [
+        "python scripts/verify_reference_corpus_pin.py"
+      ]
+    },
+    {
+      "path": "tests/test_mb_sound_corpus_dependency.py",
+      "intent": "Pin-contract, fail-closed and anti-regression tests. Rejects reintroduction of a cohort-sized mb-* payload set, canonical envelopes, laboratory workbooks, the retired directory, or any hidden local fallback.",
+      "scan_targets": [
+        "tests/test_mb_sound_corpus_dependency.py",
+        "scripts/verify_reference_corpus_pin.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test-only; runs fully offline against synthetic manifests, so CI needs no network or credentials for the private canonical repository.",
+      "verification": [
+        "python -m pytest tests/test_mb_sound_corpus_dependency.py -q"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/panel_acoustic/",
+      "intent": "Repoint the empty relocation tombstones from the deleted local directory to the canonical release and the Toolbox pin, so older references resolve instead of dangling.",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/panel_acoustic/",
+        "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
+        "services/api/app/data_registry/system/materials/panel_acoustic/README.md",
+        "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - the panels array was and remains empty.",
+      "verification": [
+        "Manual link check against docs/reference/mb-sound/"
+      ]
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/SOURCES.md",
+      "intent": "Change authority language from Toolbox-owned draft intake to pinned external corpus, and record that a local copy must not be re-added.",
+      "scan_targets": [
+        "services/api/app/data_registry/system/materials/SOURCES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation.",
+      "verification": [
+        "Manual read"
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "intent": "Remove the *.xlsx negation that un-ignored the MB Sound laboratory workbooks; its target no longer exists.",
+      "scan_targets": [
+        ".gitignore"
+      ],
+      "risk": "low",
+      "behavior_change": "none - the excepted path was deleted in this same increment.",
+      "verification": [
+        "git status --porcelain"
+      ]
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Ledger entry recording the custody transfer and the resulting consumer states.",
+      "scan_targets": [
+        "SPRINTS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation.",
+      "verification": [
+        "Manual read"
+      ]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-25-data-mig-002-mb-sound-pin",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 0
+    },
+    "findings": [
+      {
+        "id": "DATA-MIG-002-F1",
+        "severity": "medium",
+        "finding": "Toolbox now depends on an external private repository for evidence it previously held locally.",
+        "mitigation": "The dependency is an immutable annotated tag plus commit SHA, manifest digest, corpus digest, record count and schema version, all verified by a fail-closed resolver. No runtime or build path resolves it, so unavailability cannot degrade the running application; it can only fail an explicit verification run."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Accepted. Split data authority was the larger risk: two independently mutable copies of vendor observations with no reconciliation mechanism. Availability risk is bounded because consumption is verification-time only."
+  }
+}
