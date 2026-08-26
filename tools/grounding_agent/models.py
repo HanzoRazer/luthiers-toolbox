@@ -86,10 +86,14 @@ class ClaimType(str, Enum):
 
 
 class CrossRepoPolicy(str, Enum):
-    """Cross-repository policy carried on the active lane (D4/D5)."""
+    """Cross-repository policy carried on the active lane (D4/D5).
+
+    v0.1 defines exactly one policy value. Any other value is rejected as a
+    malformed request (fail-closed) rather than silently accepted; a broader
+    policy space is a later concern, not v0.1 surface.
+    """
 
     EVIDENCE_ONLY = "EVIDENCE_ONLY"
-    ALLOW_MUTATION = "ALLOW_MUTATION"
 
 
 # ---------------------------------------------------------------------------

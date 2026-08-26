@@ -457,7 +457,8 @@ def _check_active_lane(claim, *, request, git, github, fs) -> ClaimResult:
             ),
         )
 
-    # Cross-repo evidence reference (or mutation explicitly allowed): permitted.
+    # Cross-repo evidence reference: permitted (only evidence reaches here, since
+    # v0.1 defines a single policy, EVIDENCE_ONLY, which blocks cross-repo mutation).
     observed["classification"] = "CROSS_REPO_EVIDENCE"
     return _result(
         claim, ClaimVerdict.MATCH, EvidenceClass.INPUT_CONTRACT, Confidence.HIGH,
