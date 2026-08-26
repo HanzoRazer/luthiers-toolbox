@@ -18,7 +18,8 @@
       "tests/test_mb_sound_corpus_dependency.py",
       ".cbsp21/patches/data-mig-002-mb-sound-pin.json",
       ".gitignore",
-      "SPRINTS.md"
+      "SPRINTS.md",
+      "scripts/mb_sound_*.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/data-mig-002-mb-sound-pin.json",
@@ -32,11 +33,13 @@
       "services/api/app/data_registry/system/materials/panel_acoustic/README.md",
       "services/api/app/data_registry/system/materials/panel_acoustic/MB_SOUND_SOURCES.md",
       "services/api/app/data_registry/system/materials/panel_acoustic/mb_sound_panels.json",
-      "SPRINTS.md"
+      "SPRINTS.md",
+      "scripts/mb_sound_validate_corpus.py",
+      "scripts/mb_sound_merge_rows.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Removed 144 files: 132 under materials/empirical_tonewood/mb_sound/ (114 specimen payloads, 6 species cohorts, 3 validation reports, cohort manifest, 2 readmes, 4 .xlsx laboratory workbooks and their artifact manifest) and 12 process documents under docs/reference/mb-sound/. Added a dependency pin, a consumer README, a custody-transfer record carrying the full 145-file hash table, a ported fail-closed verifier, and 29 contract and anti-regression tests. Repointed the panel_acoustic tombstones and materials/SOURCES.md from the deleted local path to the canonical release, and dropped the .gitignore exception that un-ignored the workbooks.",
+    "what_changed": "Removed 144 files: 132 under materials/empirical_tonewood/mb_sound/ (114 specimen payloads, 6 species cohorts, 3 validation reports, cohort manifest, 2 readmes, 4 .xlsx laboratory workbooks and their artifact manifest) and 12 process documents under docs/reference/mb-sound/. Added a dependency pin, a consumer README, a custody-transfer record carrying the full 145-file hash table, a ported fail-closed verifier, and 29 contract and anti-regression tests. Repointed the panel_acoustic tombstones and materials/SOURCES.md from the deleted local path to the canonical release, and dropped the .gitignore exception that un-ignored the workbooks. Also repaired the two retained extraction scripts that still referenced the deleted local corpus path, so no retained tooling instructs a maintainer against a path this increment removed.",
     "why": "MB Sound observational data became canonical in HanzoRazer/luthier-acoustics-data at the immutable release mb-sound/v1.0.0. Holding a second normalized copy here made Toolbox a competing authority for evidence it does not measure and cannot correct.",
     "what_did_not_change": "No specimen identifier, schema, vocabulary, unit or measured value was altered. No canonical data repository, Laboratory or Tap Tone Pi change. No adapter, TonewoodEntry, wood_species.json, generator or solver change. No public API or UI surface touched.",
     "why_not_redundant": "This is not a re-run of the DO-SIP-013 intake (patch mb-sound-panel-corpus-scaffold) and not a repeat of the Laboratory pin (DATA-REL-001). Those established the corpus and proved external consumption works from one consumer. This increment does the thing neither did: it removes the duplicate from the repository that originally preserved it, so exactly one authority for MB Sound observations remains. Nothing else in the tree deletes this data or pins this release from Toolbox; without it, Toolbox stays a second, independently mutable copy of vendor measurements with no reconciliation path."
@@ -311,6 +314,20 @@
       "behavior_change": "none - documentation.",
       "verification": [
         "Manual read"
+      ]
+    },
+    {
+      "path": "scripts/mb_sound_validate_corpus.py",
+      "intent": "Retained extraction tooling must not point at the corpus this increment deleted. Marks both scripts historical/non-authoritative, removes the hard-coded local corpus path in favour of a required --corpus-path, and rewrites the retired merge entrypoint's guidance so it no longer instructs against a path that no longer exists.",
+      "scan_targets": [
+        "scripts/mb_sound_validate_corpus.py",
+        "scripts/mb_sound_merge_rows.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none in the application - neither script is imported or invoked by any code path. The validator's CLI is now stricter: --corpus-path is required where a local default previously existed, because that default no longer resolves.",
+      "verification": [
+        "python scripts/mb_sound_validate_corpus.py  (must error: --corpus-path required)",
+        "python scripts/mb_sound_validate_corpus.py --corpus-path <clone>/cohorts/external/mb_sound  (114 specimens, digest ea77ca63...)"
       ]
     }
   ],
