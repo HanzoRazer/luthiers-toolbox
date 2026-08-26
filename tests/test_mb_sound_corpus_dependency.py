@@ -26,6 +26,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -216,3 +217,80 @@ def test_tc016_unresolvable_pin_reports_unresolved_not_verified(tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()
     assert V.verify(_write_pin(tmp_path, pin), empty) == 2
+
+
+# --------------------------------------------------------------------------
+# TC-020 … TC-023 — no second authority may reappear in this repository
+# --------------------------------------------------------------------------
+
+SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__", ".pytest_cache",
+             "dist", "build", ".mypy_cache", ".ruff_cache"}
+
+
+def _walk_repo(pattern: str):
+    """Repo files matching `pattern`, ignoring vendored and generated trees."""
+    for path in ROOT.rglob(pattern):
+        if SKIP_DIRS.isdisjoint(path.parts):
+            yield path
+
+
+# A canonical specimen payload is named for its identifier: mb-adt-000001.json,
+# mb-rc30-000024.json. Deliberately narrower than "mb-*.json" so that governance
+# records and documentation keep their natural names (e.g. the DO-SIP-013 patch
+# .cbsp21/patches/mb-sound-panel-corpus-scaffold.json) without tripping the guard.
+SPECIMEN_PAYLOAD = re.compile(r"^mb-[a-z0-9]+-\d{6}\.json$")
+
+
+def test_tc020_no_canonical_specimen_payloads_are_duplicated_here():
+    """The decisive test: Toolbox references the corpus, it does not hold it.
+
+    Guards against a future developer re-adding the cohort under any path. A
+    handful of synthetic fixtures would be acceptable; a cohort-sized set of
+    `mb-*` payloads is a second data authority by definition.
+    """
+    strays = sorted(str(p.relative_to(ROOT)) for p in _walk_repo("mb-*.json")
+                    if SPECIMEN_PAYLOAD.match(p.name))
+    assert strays == [], (
+        f"{len(strays)} MB Sound payload(s) found in Toolbox. The corpus is canonical "
+        f"in luthier-acoustics-data @ mb-sound/v1.0.0 and must be consumed by pin: {strays[:5]}"
+    )
+
+
+def test_tc021_no_canonical_envelope_set_is_duplicated_here():
+    """Envelopes are the data repository's custody wrapper. Toolbox holds none."""
+    envelopes = sorted(str(p.relative_to(ROOT)) for p in _walk_repo("*.json")
+                       if "mb_sound" in str(p).lower() and "envelope" in str(p).lower())
+    assert envelopes == [], f"canonical envelopes must not be copied here: {envelopes[:5]}"
+
+
+def test_tc020_the_retired_corpus_directory_is_gone():
+    retired = ROOT / "services" / "api" / "app" / "data_registry" / "system" / "materials" / "empirical_tonewood"
+    assert not retired.exists(), (
+        "empirical_tonewood/ was removed in DATA-MIG-002; re-creating it restores the "
+        "split authority the migration eliminated"
+    )
+
+
+def test_tc021_no_laboratory_workbooks_are_duplicated_here():
+    """The four .xlsx source workbooks are canonical; none is held locally."""
+    books = sorted(str(p.relative_to(ROOT)) for p in _walk_repo("*Laboratory_Record.xlsx"))
+    assert books == [], f"MB Sound workbooks are canonical, not local: {books}"
+
+
+def test_tc023_no_hidden_local_fallback_exists():
+    """D5 — a missing canonical corpus must fail clearly, never degrade silently."""
+    verifier = (ROOT / "scripts" / "verify_reference_corpus_pin.py").read_text(encoding="utf-8")
+    assert "empirical_tonewood" not in verifier, "the resolver must not know a local corpus path"
+    assert "UNRESOLVED" in verifier, "an unreachable release must be named, not swallowed"
+    assert PIN["consumption"]["fail_closed"], "the pin must declare fail-closed consumption"
+
+
+def test_toolbox_specific_provenance_is_retained():
+    """TC-022 — removing evidence ownership must not erase Toolbox interpretation."""
+    keep = [
+        ROOT / "docs" / "calculators" / "acoustics" / "mb_sound_panel_laboratory_records" / "CROSSWALK_TOOLBOX.md",
+        ROOT / "docs" / "calculators" / "acoustics" / "nicoletti_mb_sound_acoustic_study_set" / "README.md",
+        ROOT / "scripts" / "mb_sound_validate_corpus.py",
+    ]
+    missing = [str(p.relative_to(ROOT)) for p in keep if not p.exists()]
+    assert missing == [], f"Toolbox-specific provenance must survive the migration: {missing}"

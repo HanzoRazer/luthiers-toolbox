@@ -1,8 +1,11 @@
 {
   "_meta": {
     "status": "relocated",
-    "canonical_corpus": "../empirical_tonewood/mb_sound/",
-    "note": "Do not add panels here. Use empirical_tonewood/mb_sound/specimens/ + manifest.json (DO-SIP-013 intake)."
+    "canonical_repository": "HanzoRazer/luthier-acoustics-data",
+    "canonical_release": "mb-sound/v1.0.0",
+    "canonical_path": "cohorts/external/mb_sound/",
+    "toolbox_pin": "docs/reference/mb-sound/CORPUS_DEPENDENCY.json",
+    "note": "Do not add panels here. MB Sound is an external pinned corpus; Toolbox is not its authority. This file is an empty tombstone retained only so older references resolve."
   },
   "panels": []
 }

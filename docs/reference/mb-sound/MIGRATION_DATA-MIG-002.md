@@ -136,7 +136,8 @@ the application coupling this increment does not authorise.
 | Classification | Paths | Action |
 |---|---|---|
 | `CANONICAL_DATA_DUPLICATE` | `services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/` (132 files) | **REMOVED** |
-| `CANONICAL_DATA_DUPLICATE` | `docs/reference/mb-sound/` process docs (13 files) | **REMOVED** |
+| `CANONICAL_DATA_DUPLICATE` | `docs/reference/mb-sound/` process docs (12 files) | **REMOVED** |
+| `CANONICAL_DATA_DUPLICATE` | `docs/reference/mb-sound/README.md` | **REPLACED** by the consumer README |
 | Pin | `docs/reference/mb-sound/CORPUS_DEPENDENCY.json`, `README.md` | **ADDED** |
 | `TOOLBOX_TOOLING` | `scripts/mb_sound_{extract_frames,ocr_frames,merge_rows,validate_corpus}.py` | **RETAINED**, non-authoritative |
 | `TOOLBOX_PROVENANCE` | `docs/calculators/acoustics/mb_sound_panel_laboratory_records/`, `.../nicoletti_mb_sound_acoustic_study_set/` | **RETAINED** |
