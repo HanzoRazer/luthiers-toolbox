@@ -11,7 +11,7 @@ Endpoints:
 - POST /gcode: Export G-code with post-processor headers/footers
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -29,14 +29,18 @@ from .helpers import (
 )
 from .plan_router import _enforce_safety_policy, plan
 
-# Import run artifact persistence (OPERATION lane requirement)
+# Import run artifact persistence (OPERATION lane requirement).
+#
+# Persistence goes through `validate_and_persist`, the passthrough
+# `FENCE_REGISTRY.json` (profile `artifact_authority`) prescribes: direct
+# `RunArtifact()` construction outside `runs_v2` is fenced, and this route
+# used to reach around that fence. Same principle the retract capability
+# adopted in 001B — the module that grants authority is the module that
+# shapes the record of it.
 from ...rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
     create_run_id,
     sha256_of_text,
+    validate_and_persist,
 )
 
 router = APIRouter(tags=["cam-adaptive"])
@@ -126,25 +130,21 @@ def gcode(request: Request, body: GcodeIn) -> StreamingResponse:
     #
     # The decision and the feasibility hash both come from the gate above, so
     # the record cannot drift from the authority that granted it.
-    now = datetime.now(timezone.utc).isoformat()
     gcode_hash = sha256_of_text(program)
 
     run_id = create_run_id()
-    artifact = RunArtifact(
+    validate_and_persist(
         run_id=run_id,
-        created_at_utc=now,
-        tool_id="adaptive:gcode",
         mode="adaptive",
+        tool_id="adaptive:gcode",
         event_type="adaptive_gcode_execution",
         status="OK",
+        request_summary=plan_request_dict,
         feasibility=feasibility,
-        decision=RunDecision(risk_level=risk_level),
-        hashes=Hashes(
-            feasibility_sha256=feas_hash,
-            gcode_sha256=gcode_hash,
-        ),
+        feasibility_sha256=feas_hash,
+        risk_level=risk_level,
+        gcode_sha256=gcode_hash,
     )
-    persist_run(artifact)
 
     response = export_gcode(GcodeExportIn(gcode=program, units=body.units, post_id=body.post_id))
     response.headers["X-Run-ID"] = run_id
