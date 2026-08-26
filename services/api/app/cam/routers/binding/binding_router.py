@@ -145,33 +145,25 @@ def generate_binding_channel_gcode(req: BindingChannelRequest) -> Response:
         (pt.x, pt.y) for pt in req.body_outline
     ]
 
-    # Build configuration
+    # Map HTTP field names onto BindingConfig (stepdown_mm, feed_rate_xy, …).
     config = BindingConfig(
         channel_width_mm=req.channel_width_mm,
         channel_depth_mm=req.channel_depth_mm,
         tool_diameter_mm=req.tool_diameter_mm,
-        max_stepdown_mm=req.max_stepdown_mm,
-        max_stepover_mm=req.max_stepover_mm,
+        stepdown_mm=req.max_stepdown_mm,
         safe_z_mm=req.safe_z_mm,
-        feed_rate_mm_min=req.feed_rate_mm_min,
-        plunge_rate_mm_min=req.plunge_rate_mm_min,
+        feed_rate_xy=req.feed_rate_mm_min,
+        plunge_rate=req.plunge_rate_mm_min,
     )
 
-    # Generate toolpath
-    channel = BindingChannel(
-        body_outline=points,
-        is_closed=req.is_closed,
-        config=config,
-    )
-
+    channel = BindingChannel(outline=points, config=config)
     result = channel.generate()
 
     return Response(
         content=result.gcode,
         media_type="text/plain; charset=utf-8",
         headers={
-            "X-Depth-Passes": str(result.depth_passes),
-            "X-Width-Passes": str(result.width_passes),
+            "X-Pass-Count": str(result.pass_count),
             "X-Total-Length-MM": f"{result.total_length_mm:.2f}",
             "X-Estimated-Time-S": f"{result.estimated_time_seconds:.1f}",
         }
@@ -205,17 +197,11 @@ def generate_purfling_ledge_gcode(req: PurflingLedgeRequest) -> Response:
         offset_from_edge_mm=req.offset_from_edge_mm,
         tool_diameter_mm=req.tool_diameter_mm,
         safe_z_mm=req.safe_z_mm,
-        feed_rate_mm_min=req.feed_rate_mm_min,
-        plunge_rate_mm_min=req.plunge_rate_mm_min,
+        feed_rate_xy=req.feed_rate_mm_min,
+        plunge_rate=req.plunge_rate_mm_min,
     )
 
-    # Generate toolpath
-    ledge = PurflingLedge(
-        body_outline=points,
-        is_closed=req.is_closed,
-        config=config,
-    )
-
+    ledge = PurflingLedge(outline=points, config=config)
     result = ledge.generate()
 
     return Response(

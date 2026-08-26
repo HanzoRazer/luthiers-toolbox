@@ -1,0 +1,83 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PROFILING_ROUTE_ANNOTATION_001",
+  "title": "PROFILING-ROUTE-ANNOTATION-001: resolve postponed annotations in @safety_critical",
+  "intent": "Fix the decorator-annotation binding defect identified as PROFILING-ROUTE-ANNOTATION-001 during RMOS-CONVERGE-001B-B2 (PR #322). @safety_critical claimed to preserve the function signature for FastAPI but copied PEP 563 string annotations onto a wrapper defined in app/core/safety.py. FastAPI then resolved those strings against the wrapper's globals, failed, and treated Pydantic body models as required query parameters (422 loc=['query','req']). The handler never ran. The decorator now evaluates annotations against the wrapped function's module (inspect.signature(eval_str=True) + get_type_hints) so FastAPI sees real classes. This is the decorator contract made true under postponed annotations, not an RMOS evaluator and not a Body() sweep of individual routers.",
+  "change_type": "fix",
+  "behavior_change": "FastAPI parameter binding is restored for @safety_critical routes that combine from __future__ import annotations with a bare Pydantic body parameter. Those routes no longer 422 on a missing query field named after the parameter. JSON bodies bind as declared. Builtin-scalar routes (retract /gcode) are unchanged. Fail-closed exception re-raise is unchanged. No RMOS feasibility gate is added; sibling G-code emitters that were accidentally unreachable become reachable as they were written. 001B-B2's HOLD on converging profiling, drilling, and V-carve is unchanged.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/profiling-route-annotation-001.json",
+      "docs/audit/PROFILING-ROUTE-ANNOTATION-001.md",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "services/api/app/core/safety.py",
+      "services/api/app/cam/routers/profiling/profile_router.py",
+      "services/api/app/cam/routers/binding/binding_router.py",
+      "services/api/tests/test_safety_critical_annotation_binding.py"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/PROFILING-ROUTE-ANNOTATION-001.md",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "services/api/app/core/safety.py",
+      "services/api/app/cam/routers/profiling/profile_router.py",
+      "services/api/app/cam/routers/binding/binding_router.py",
+      "services/api/tests/test_safety_critical_annotation_binding.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/core/safety.py: safety_critical now attaches inspect.signature(func, eval_str=True) and get_type_hints(func, include_extras=True) to the wrapper instead of the unevaluated PEP 563 signature. FastAPI therefore sees Pydantic classes, not strings resolved against app.core.safety globals. (2) profile_router.py and binding_router.py: map HTTP field names onto the generator dataclasses (stepdown_mm, feed_rate_xy, outline=) so restoring binding does not 500 on TypeError. (3) tests/test_safety_critical_annotation_binding.py: isolated FastAPI mini-app reproduces the 422 loc=['query','req'] pattern and proves JSON body binding; production endpoints keep evaluated model types; profiling and binding /gcode accept a JSON body and emit G-code. (4) docs/audit/PROFILING-ROUTE-ANNOTATION-001.md records the mechanism, bounded census, adapter follow-through, and non-goals. (5) Census §8 gains a pointer.",
+    "why_not_redundant": "The decorator already documented 'preserve function signature for FastAPI' and already set wrapper.__signature__, which is why the 422 looked like a profiling bug. Copying the signature without evaluating postponed annotations is exactly the defect. Adding Body() to profile_router.py would have unblocked one route and left binding, V-carve production, inlay, radius dish, and feeds-speeds broken. Fixing the decorator closes the class. PR #322 correctly HOLDed RMOS gating of these siblings; this change does not gate them."
+  },
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=. python3 -m pytest tests/test_safety_critical_annotation_binding.py -q -> 14 passed"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/core/safety.py",
+      "intent": "Evaluate postponed annotations against the wrapped function's globals before FastAPI inspects the @safety_critical wrapper, so Pydantic body models bind as bodies rather than query parameters.",
+      "risk": "medium",
+      "behavior_change": "affected @safety_critical FastAPI routes accept JSON bodies as declared instead of 422 missing query param"
+    },
+    {
+      "path": "services/api/app/cam/routers/profiling/profile_router.py",
+      "intent": "Map ProfileRequest onto ProfileConfig/ProfileToolpath real fields so a bound JSON body does not TypeError.",
+      "risk": "medium",
+      "behavior_change": "POST /api/cam/profiling/gcode with a valid JSON body returns G-code instead of 422 or 500"
+    },
+    {
+      "path": "services/api/app/cam/routers/binding/binding_router.py",
+      "intent": "Same HTTP-to-dataclass mapping for binding channel and purfling ledge.",
+      "risk": "medium",
+      "behavior_change": "POST /api/cam/binding/channel|purfling/gcode with a valid JSON body returns G-code instead of 422 or 500"
+    },
+    {
+      "path": "services/api/tests/test_safety_critical_annotation_binding.py",
+      "intent": "Reproduce the postponed-annotation + decorator + Pydantic body pattern in a mini FastAPI app and pin evaluated signatures on the production endpoints that share it.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/audit/PROFILING-ROUTE-ANNOTATION-001.md",
+      "intent": "Record the mechanism, bounded census, fix, and non-goals so the 001B-B2 HOLD on RMOS gating is not misread as a hold on the decorator contract.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/rmos_prod_output_census_001b.md",
+      "intent": "Point the 001B queued-findings table at the decorator fix without expanding 001B-B2 scope.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/profiling-route-annotation-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}

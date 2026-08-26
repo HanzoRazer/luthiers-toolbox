@@ -27,6 +27,7 @@ from app.cam.profiling import (
     ProfileToolpath,
     ProfileConfig,
     TabGenerator,
+    MillingDirection,
 )
 
 router = APIRouter()
@@ -113,31 +114,32 @@ def generate_profile_gcode(req: ProfileRequest) -> Response:
         (pt.x, pt.y) for pt in req.contour
     ]
 
-    # Build configuration
+    # Map the HTTP model onto ProfileConfig's real field names. The request
+    # uses CAM-intent vocabulary (max_stepdown_mm, feed_rate_mm_min); the
+    # generator dataclass does not. Passing request names through caused
+    # TypeError once FastAPI binding was restored (PROFILING-ROUTE-ANNOTATION-001).
     config = ProfileConfig(
         tool_diameter_mm=req.tool_diameter_mm,
         cut_depth_mm=req.cut_depth_mm,
-        max_stepdown_mm=req.max_stepdown_mm,
-        use_tabs=req.use_tabs,
-        tab_count=req.tab_count,
-        tab_width_mm=req.tab_width_mm,
-        tab_height_mm=req.tab_height_mm,
+        stepdown_mm=req.max_stepdown_mm,
+        feed_rate_xy=req.feed_rate_mm_min,
+        plunge_rate=req.plunge_rate_mm_min,
         safe_z_mm=req.safe_z_mm,
         retract_z_mm=req.retract_z_mm,
-        feed_rate_mm_min=req.feed_rate_mm_min,
-        plunge_rate_mm_min=req.plunge_rate_mm_min,
-        climb_milling=req.climb_milling,
-        lead_in_radius_mm=req.lead_in_radius_mm,
-        is_outside_cut=req.is_outside,
+        tab_count=req.tab_count if req.use_tabs else 0,
+        tab_width_mm=req.tab_width_mm,
+        tab_height_mm=req.tab_height_mm,
+        lead_in_radius_mm=(
+            req.lead_in_radius_mm if req.lead_in_radius_mm is not None else 5.0
+        ),
+        direction=(
+            MillingDirection.CLIMB if req.climb_milling
+            else MillingDirection.CONVENTIONAL
+        ),
+        compensation_side="outside" if req.is_outside else "inside",
     )
 
-    # Generate toolpath
-    profiler = ProfileToolpath(
-        contour=points,
-        is_closed=req.is_closed,
-        config=config,
-    )
-
+    profiler = ProfileToolpath(outline=points, config=config)
     result = profiler.generate()
 
     return Response(
@@ -145,7 +147,7 @@ def generate_profile_gcode(req: ProfileRequest) -> Response:
         media_type="text/plain; charset=utf-8",
         headers={
             "X-Pass-Count": str(result.pass_count),
-            "X-Tab-Count": str(result.tab_count),
+            "X-Tab-Count": str(config.tab_count),
             "X-Total-Length-MM": f"{result.total_length_mm:.2f}",
             "X-Estimated-Time-S": f"{result.estimated_time_seconds:.1f}",
         }
