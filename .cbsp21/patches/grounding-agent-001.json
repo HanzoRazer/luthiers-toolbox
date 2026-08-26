@@ -1,0 +1,96 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "files": [
+    {
+      "path": "tools/grounding_agent/__init__.py",
+      "intent": "GROUNDING-AGENT-001: read-only handoff truth-check package marker (version only).",
+      "scan_targets": [
+        "tools/grounding_agent/__init__.py",
+        "tools/grounding_agent/models.py",
+        "tools/grounding_agent/evidence.py",
+        "tools/grounding_agent/engine.py",
+        "tools/grounding_agent/cli.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none — additive developer tool under tools/; no runtime/API or CI behavior change.",
+      "verification": [
+        "python -m pytest tests/grounding_agent/ -q",
+        "python -m tools.grounding_agent.cli --request docs/governance/agents/grounding_request.example.json --repo-root ."
+      ]
+    },
+    {
+      "path": "tools/grounding_agent/adapters/__init__.py",
+      "intent": "Read-only evidence adapters (git/GitHub GET/filesystem); no write adapter, no generic runner.",
+      "scan_targets": [
+        "tools/grounding_agent/adapters/__init__.py",
+        "tools/grounding_agent/adapters/git_repo.py",
+        "tools/grounding_agent/adapters/github_api.py",
+        "tools/grounding_agent/adapters/filesystem.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none — read-only adapters; anti-mutation tests enforce the read-only boundary.",
+      "verification": [
+        "python -m pytest tests/grounding_agent/test_anti_mutation.py -q"
+      ]
+    },
+    {
+      "path": "tests/grounding_agent/test_engine.py",
+      "intent": "GA-001..GA-020 core behavior, adapter unit tests, and anti-mutation guard.",
+      "scan_targets": [
+        "tests/grounding_agent/__init__.py",
+        "tests/grounding_agent/conftest.py",
+        "tests/grounding_agent/_fakes.py",
+        "tests/grounding_agent/test_models.py",
+        "tests/grounding_agent/test_engine.py",
+        "tests/grounding_agent/test_git_adapter.py",
+        "tests/grounding_agent/test_filesystem_adapter.py",
+        "tests/grounding_agent/test_github_adapter.py",
+        "tests/grounding_agent/test_cli.py",
+        "tests/grounding_agent/test_anti_mutation.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none — test-only additions.",
+      "verification": [
+        "python -m pytest tests/grounding_agent/ -q"
+      ]
+    },
+    {
+      "path": "tests/grounding_agent/test_historical_fixtures.py",
+      "intent": "GA-HIST-01..05 recorded stale-handoff fixtures and their loader test.",
+      "scan_targets": [
+        "tests/grounding_agent/test_historical_fixtures.py",
+        "tests/grounding_agent/fixtures/pr_312_not_merged.json",
+        "tests/grounding_agent/fixtures/cursor_artifact_missing.json",
+        "tests/grounding_agent/fixtures/stale_base_sha.json",
+        "tests/grounding_agent/fixtures/pr_state_superseded.json",
+        "tests/grounding_agent/fixtures/cross_repo_lane_conflict.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none — recorded deterministic fixtures; no live network in tests.",
+      "verification": [
+        "python -m pytest tests/grounding_agent/test_historical_fixtures.py -q"
+      ]
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1.md",
+      "intent": "v0.1 authority, non-scope, claim types, evidence classes, status logic, exit codes, and example.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1.md",
+        "docs/governance/agents/grounding_request.example.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none — documentation and an example request under a protected docs path (GOVERNANCE_APPROVED_CHANGE).",
+      "verification": [
+        "python -m json.tool docs/governance/agents/grounding_request.example.json"
+      ]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-26-GROUNDING-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Read-only developer tool under tools/grounding_agent/. No runtime package, no _experimental/ paths touched, no mutation surface (enforced by tests/grounding_agent/test_anti_mutation.py)."
+  }
+}
