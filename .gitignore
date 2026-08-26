@@ -215,8 +215,8 @@ CAM_Roadmap_AlphaNightingale/
 # Large Data Files
 # ------------------------------------------
 *.xlsx
-# MB Sound laboratory procedural workbooks (intake source-of-truth)
-!services/api/app/data_registry/system/materials/empirical_tonewood/mb_sound/source_artifacts/workbooks/*.xlsx
+# (The MB Sound laboratory workbook exception was removed in DATA-MIG-002.
+#  Those workbooks are canonical in luthier-acoustics-data @ mb-sound/v1.0.0.)
 *.f3d
 ExportedParameters*.csv
 FenderNeckParameters.xlsx

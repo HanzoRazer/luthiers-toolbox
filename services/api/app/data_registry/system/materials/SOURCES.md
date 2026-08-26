@@ -146,17 +146,24 @@ Each species includes a `guitar_relevance` field indicating its classification:
 
 ## Empirical tonewood corpora (separate from species averages)
 
-> **Draft intake only (DO-SIP-013).** Not an Inv-026-A materials-vocabulary ruling.  
+> **External pinned corpus.** Not an Inv-026-A materials-vocabulary ruling.  
 > Does not change plate solvers, generator defaults, or `TonewoodEntry` authority.  
-> ~4 species / ~60 specimens target — versioned empirical dataset, not fixtures.
+> Toolbox is a consumer of this corpus, not its authority.
 
 Measured **individual specimens** (e.g. Maderas Barber **MB Sound**) must not be folded into `wood_species.json` as handbook species means.
 
-| Corpus | Path |
-|--------|------|
-| MB Sound empirical corpus | [`empirical_tonewood/mb_sound/`](./empirical_tonewood/mb_sound/) |
-| Program / process | [`docs/reference/mb-sound/DO_SIP_PROGRAM.md`](../../../../../../docs/reference/mb-sound/DO_SIP_PROGRAM.md) |
-| Draft PR | https://github.com/HanzoRazer/luthiers-toolbox/pull/244 |
+Originally taken in under DO-SIP-013 as a local draft dataset, the MB Sound cohort became
+canonical in `HanzoRazer/luthier-acoustics-data` at release `mb-sound/v1.0.0`
+(114 specimens). Toolbox deleted its duplicate in DATA-MIG-002 and now references the
+release by immutable pin. **Do not re-add a local copy** — a test rejects it.
+
+| Corpus | Location |
+|--------|----------|
+| MB Sound canonical corpus | `HanzoRazer/luthier-acoustics-data` @ `mb-sound/v1.0.0`, `cohorts/external/mb_sound/` |
+| Toolbox dependency pin | [`docs/reference/mb-sound/CORPUS_DEPENDENCY.json`](../../../../../../docs/reference/mb-sound/CORPUS_DEPENDENCY.json) |
+| Custody transfer record | [`docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md`](../../../../../../docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md) |
+| Program / process | canonical at `cohorts/external/mb_sound/process/DO_SIP_PROGRAM.md` |
+| Original draft PR | https://github.com/HanzoRazer/luthiers-toolbox/pull/244 |
 
 ---
 

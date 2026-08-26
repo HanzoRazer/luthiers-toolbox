@@ -1,8 +1,22 @@
 #!/usr/bin/env python3
 """Corpus-level validation for the MB Sound empirical tonewood dataset.
 
-  python3 scripts/mb_sound_validate_corpus.py
-  python3 scripts/mb_sound_validate_corpus.py --write-validation
+HISTORICAL / NON-AUTHORITATIVE extraction tooling. Toolbox no longer holds the
+MB Sound corpus: it is canonical in HanzoRazer/luthier-acoustics-data, release
+mb-sound/v1.0.0, and this repository consumes it by pin (see
+docs/reference/mb-sound/). The canonical repository carries its own copy of this
+script under tools/mb_sound/ and validates the cohort there.
+
+Retained here for provenance and for validating a corpus you point it at. It has
+no default corpus path -- the local one was removed in DATA-MIG-002 -- so the
+target must be given explicitly:
+
+  python3 scripts/mb_sound_validate_corpus.py --corpus-path <clone>/cohorts/external/mb_sound
+  python3 scripts/mb_sound_validate_corpus.py --corpus-path <path> --write-validation
+
+--write-validation writes into the directory you name. Do not point it at a
+checkout of the canonical release and write back: that repository owns its own
+validation outputs.
 """
 
 from __future__ import annotations
@@ -18,17 +32,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CORPUS = (
-    ROOT
-    / "services"
-    / "api"
-    / "app"
-    / "data_registry"
-    / "system"
-    / "materials"
-    / "empirical_tonewood"
-    / "mb_sound"
-)
+# No default corpus path. The local corpus was removed in DATA-MIG-002; a default
+# here would either point at nothing or silently re-create split authority.
 SPECIES_SOT = (
     ROOT
     / "services"
@@ -73,15 +78,15 @@ def _species_ids() -> set[str]:
     return ids
 
 
-def validate(write: bool) -> int:
+def validate(write: bool, corpus: Path) -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
-    if not CORPUS.is_dir():
-        print(f"FAIL: corpus missing at {CORPUS}", file=sys.stderr)
+    if not corpus.is_dir():
+        print(f"FAIL: corpus missing at {corpus}", file=sys.stderr)
         return 2
 
-    specimen_paths = sorted(CORPUS.joinpath("specimens").glob("mb-*.json"))
+    specimen_paths = sorted(corpus.joinpath("specimens").glob("mb-*.json"))
     specimens = [_load(p) for p in specimen_paths]
     sot = _species_ids()
 
@@ -234,10 +239,10 @@ def validate(write: bool) -> int:
     }
 
     if write:
-        (CORPUS / "validation" / "consistency_results.json").write_text(
+        (corpus / "validation" / "consistency_results.json").write_text(
             json.dumps(consistency, indent=2) + "\n", encoding="utf-8"
         )
-        (CORPUS / "validation" / "unresolved_fields.json").write_text(
+        (corpus / "validation" / "unresolved_fields.json").write_text(
             json.dumps(unresolved, indent=2) + "\n", encoding="utf-8"
         )
         schemas = Counter(s.get("record_schema") for s in specimens)
@@ -283,7 +288,7 @@ def validate(write: bool) -> int:
                 "gates.intake_complete_approx_60 true",
             ],
         }
-        (CORPUS / "manifest.json").write_text(
+        (corpus / "manifest.json").write_text(
             json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
         )
 
@@ -304,12 +309,19 @@ def validate(write: bool) -> int:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
+        "--corpus-path",
+        type=Path,
+        required=True,
+        help="Path to an mb_sound cohort directory (containing specimens/). "
+             "Required: this repository no longer holds a local corpus.",
+    )
+    p.add_argument(
         "--write-validation",
         action="store_true",
-        help="Write manifest.json + validation/*.json",
+        help="Write manifest.json + validation/*.json into --corpus-path",
     )
     args = p.parse_args(argv)
-    return validate(write=args.write_validation)
+    return validate(write=args.write_validation, corpus=args.corpus_path)
 
 
 if __name__ == "__main__":

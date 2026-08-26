@@ -262,6 +262,39 @@ Sprint 3B PR 2B execution resolves DXF output compliance; DXF readers are a sepa
 
 ## ACTIVE
 
+### DATA-MIG-002 — MB Sound corpus: Toolbox becomes a pinned consumer
+**Status:** COMPLETE (branch `agent/data-mig-002-mb-sound-pin`, not yet pushed)
+**last_verified:** 2026-08-25
+**Base:** `b5e08279` (origin/main)
+
+MB Sound observational data is canonical in `HanzoRazer/luthier-acoustics-data` at the
+immutable release `mb-sound/v1.0.0`. Toolbox held a full duplicate and was a second
+authority for evidence it does not measure. That duplicate is gone.
+
+| Item | State |
+|---|---|
+| MB Sound canonical authority | `luthier-acoustics-data` @ `mb-sound/v1.0.0` (114 specimens / 114 envelopes) |
+| Toolbox role | **pinned consumer** — [`docs/reference/mb-sound/CORPUS_DEPENDENCY.json`](docs/reference/mb-sound/CORPUS_DEPENDENCY.json) |
+| Local canonical payload copy | **removed** (132 files) |
+| Local canonical envelope copy | never existed in Toolbox |
+| Local process docs | **removed** (12 files); canonical at `cohorts/external/mb_sound/process/` |
+| Laboratory workbooks (4 × `.xlsx`) | **removed**; canonical in the release, hashes verified first |
+| Adapter layer | none existed — no consumer migration was required |
+| Provenance | retained: [`MIGRATION_DATA-MIG-002.md`](docs/reference/mb-sound/MIGRATION_DATA-MIG-002.md) carries the full 145-file hash table |
+| Toolbox-specific docs/tooling | retained (acoustics crosswalk, study set, 4 extraction scripts — non-authoritative) |
+| Lab | `VERIFIED PINNED CONSUMER` (DATA-REL-001, unchanged by this increment) |
+| Tap Tone Pi | **not yet a consumer** — deliberately out of scope |
+
+Parity before deletion: 145/145 files byte-identical; the 114 local specimen blobs
+independently reproduced the canonical dataset digest `ea77ca63…`. Live pin resolution
+`VERIFIED` 13/13; contract and anti-regression suite 29 passed.
+
+**Do not re-add a local MB Sound corpus** — `tests/test_mb_sound_corpus_dependency.py`
+rejects it. Next increment, separately authorized, decides whether and how Tap Tone Pi
+consumes the canonical corpus.
+
+---
+
 ### Sprint 1 — Vectorizer Reconciliation
 **Status:** COMPLETE — all phases done
 **last_verified:** 2026-04-23
