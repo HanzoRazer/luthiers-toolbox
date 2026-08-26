@@ -1,0 +1,61 @@
+{
+  "dependency_id": "toolbox-mb-sound",
+  "consumer_repository": "HanzoRazer/luthiers-toolbox",
+  "canonical_repository": "HanzoRazer/luthier-acoustics-data",
+
+  "corpus_id": "mb-sound",
+  "release_tag": "mb-sound/v1.0.0",
+  "release_version": "1.0.0",
+
+  "canonical_commit_sha": "081601ecf25703acfe8ba3b64d21fff0c07cfa2e",
+  "content_commit_sha": "21d36fb",
+
+  "record_count": 114,
+  "envelope_count": 114,
+  "corpus_digest_sha256": "ea77ca6397c2e4b34d92133a59a55f07ff14a8ec3bec7f33e0f59590df653717",
+  "manifest_digest_sha256": "03abe6509ae4e0ad530d85a9d6ff04d43418260380854c72b6b50dc5d2f86689",
+  "manifest_path": "manifests/mb-sound-v1.0.0.json",
+
+  "schema_version": "mb_sound_lab_procedure_v1",
+  "envelope_schema": "luthier-acoustics-data/specimen_envelope/v1",
+  "source_dataset_version": "0.5.0-draft",
+
+  "provenance_class": "EXTERNAL_REFERENCE",
+  "dependency_status": "PINNED",
+  "verified_at": "2026-08-25",
+
+  "_notes": {
+    "this_file": "Machine-facing dependency pin. Human-facing explanation lives in README.md; the custody transfer that produced it is recorded in MIGRATION_DATA-MIG-002.md.",
+    "no_local_copy": "Toolbox holds NO copy of the 114 specimen payloads, the 114 envelopes, or the laboratory workbooks. This pin is a reference, not a dataset. Before DATA-MIG-002 this repository held a full duplicate; it was deleted after 145/145 byte parity was proven.",
+    "prior_custody": "This repository was the preservation site the canonical release was packaged from. mb-sound/v1.0.0 records preserved_at_revision df3b3581 in this repository. That role is now historical.",
+    "canonical_vs_content_commit": "canonical_commit_sha is the commit the release tag resolves to and contains the release manifest. content_commit_sha is the commit that introduced the packaged cohort itself. A release manifest cannot contain its own commit SHA, so both are recorded here.",
+    "annotated_tag": "mb-sound/v1.0.0 is an annotated tag. Its tag object is ee824083c87f6e7e3b1db59c4a67dcff570c7a34, which dereferences to canonical_commit_sha. A reader comparing the tag object to the commit SHA is not looking at tag drift.",
+    "manifest_digest": "sha256 of the release manifest file as published, computed over raw bytes. Recomputed at verification time to make tampering with the release record detectable by the consumer. The manifest cannot carry this value itself.",
+    "digest_line_endings": "corpus_digest_sha256 is computed over raw specimen bytes and is line-ending sensitive. The canonical repository pins LF via .gitattributes; a CRLF checkout yields 0ee9adc2... and every pin citing the digest will appear violated.",
+    "version_semantics": "release_version 1.0.0 describes the canonical PACKAGED cohort (custody). source_dataset_version 0.5.0-draft is what the source calls its own data. Custody maturity does not restate source maturity."
+  },
+
+  "consumption": {
+    "mechanism": "Verification-time only. No Toolbox runtime path, request path, build step or test resolves this corpus over the network.",
+    "verifier": "scripts/verify_reference_corpus_pin.py",
+    "offline": "python scripts/verify_reference_corpus_pin.py --corpus-repo <clone of luthier-acoustics-data>",
+    "online": "python scripts/verify_reference_corpus_pin.py (requires gh, authenticated; the canonical repository is private)",
+    "fail_closed": "Any identity, digest, count or schema mismatch is an error. An unreachable canonical release is reported UNRESOLVED, never treated as verified. There is no bundled-copy fallback."
+  },
+
+  "evidence_character": {
+    "source": "Maderas Barber — MB Sound",
+    "measured_by": "vendor; methodology, environment and calculation inherited, not controlled by Toolbox",
+    "toolbox_measurements": 0,
+    "laboratory_measurements": 0,
+    "tap_tone_pi_measurements": 0
+  },
+
+  "non_claims": [
+    "Pinning establishes access and identity only.",
+    "Asserts nothing about MB methodology validity, Tap-Tone-Pi parity, calibration, or agreement.",
+    "Does not make the cohort a source of design defaults; it is not an FPL or CIRAD replacement and must not be folded into wood_species.json as handbook species means.",
+    "Validates no formula, implementation, generator, or model.",
+    "Does not rank any species, treatment, or specimen against another."
+  ]
+}
