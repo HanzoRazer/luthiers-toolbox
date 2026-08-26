@@ -1,0 +1,44 @@
+{
+  "name": "GA-HIST-04 — PR state superseded by later merge",
+  "description": "Handoff describes PR #324 as still draft/on hold (merged=false); recorded GitHub state shows it already merged. Proves stale state can be wrong in the opposite direction from GA-HIST-01.",
+  "request": {
+    "schema_version": "grounding_request_v0.1",
+    "active_lane": {
+      "project": "Luthiers-Toolbox-Consolidation-Lab",
+      "active_repository": "HanzoRazer/luthiers-toolbox",
+      "active_program": "RMOS-CONVERGE",
+      "active_order": "RMOS-CONVERGE-001B-B2",
+      "active_state": "IMPLEMENTATION",
+      "cross_repo_policy": "EVIDENCE_ONLY"
+    },
+    "claims": [
+      {
+        "claim_id": "C-001",
+        "type": "pr_state",
+        "repository": "HanzoRazer/luthiers-toolbox",
+        "pr_number": 324,
+        "expected": { "merged": false, "draft": true },
+        "material": true
+      }
+    ]
+  },
+  "recorded": {
+    "github_prs": {
+      "HanzoRazer/luthiers-toolbox#324": {
+        "number": 324,
+        "state": "closed",
+        "draft": false,
+        "merged": true,
+        "head": { "sha": "2222222222222222222222222222222222222222" },
+        "base": { "ref": "main" }
+      }
+    }
+  },
+  "expected": {
+    "status": "STALE",
+    "decision": "STOP",
+    "material_divergences": ["C-001"],
+    "claim_verdicts": { "C-001": "MISMATCH" },
+    "evidence_classes": { "C-001": "GITHUB_STATE" }
+  }
+}

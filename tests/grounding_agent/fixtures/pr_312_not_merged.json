@@ -1,0 +1,44 @@
+{
+  "name": "GA-HIST-01 — PR claimed merged when still draft",
+  "description": "Handoff asserts PR #312 is merged; recorded GitHub state shows it open and draft. Stale in the 'claimed done but isn't' direction.",
+  "request": {
+    "schema_version": "grounding_request_v0.1",
+    "active_lane": {
+      "project": "Luthiers-Toolbox-Consolidation-Lab",
+      "active_repository": "HanzoRazer/luthiers-toolbox",
+      "active_program": "RMOS-CONVERGE",
+      "active_order": "RMOS-CONVERGE-001B-B2",
+      "active_state": "IMPLEMENTATION",
+      "cross_repo_policy": "EVIDENCE_ONLY"
+    },
+    "claims": [
+      {
+        "claim_id": "C-001",
+        "type": "pr_state",
+        "repository": "HanzoRazer/luthiers-toolbox",
+        "pr_number": 312,
+        "expected": { "merged": true },
+        "material": true
+      }
+    ]
+  },
+  "recorded": {
+    "github_prs": {
+      "HanzoRazer/luthiers-toolbox#312": {
+        "number": 312,
+        "state": "open",
+        "draft": true,
+        "merged": false,
+        "head": { "sha": "1111111111111111111111111111111111111111" },
+        "base": { "ref": "main" }
+      }
+    }
+  },
+  "expected": {
+    "status": "STALE",
+    "decision": "STOP",
+    "material_divergences": ["C-001"],
+    "claim_verdicts": { "C-001": "MISMATCH" },
+    "evidence_classes": { "C-001": "GITHUB_STATE" }
+  }
+}
