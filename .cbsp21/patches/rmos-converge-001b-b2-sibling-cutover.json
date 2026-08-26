@@ -1,0 +1,98 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_CONVERGE_001B_B2_SIBLING_CUTOVER",
+  "title": "RMOS-CONVERGE-001B-B2: converge the adaptive sibling; hold drilling, profiling and V-carve with evidence",
+  "intent": "Second bounded step of sibling machine-output convergence, base main@b5e08279 after PR #314 merged. Four candidates were traced individually and resolve into four different defect classes, only one of which was a convergence target. Adaptive is converged. Drilling, profiling and V-carve are converted from vague 'sibling bypass' labels into evidence-backed HOLD states, each requiring a separate decision. The retract capability required no work: its client hardening and query-parameter binding already landed on main before this tranche, so it appears here only as regression control.",
+  "change_type": "fix",
+  "behavior_change": "No production route is taken offline by this change, and no route that previously succeeded now fails. Adaptive: POST /api/cam/pocket/adaptive/gcode already gated correctly (it calls plan(), which enforces safety policy), so valid requests still succeed and blocked requests still return 409. What changes is the persisted record - the run now carries the decision and feasibility hash produced by the gate instead of a hardcoded GREEN and a hash of the request. tool_id moves from 'adaptive_gcode' to 'adaptive:gcode' so the run carries the identity resolve_mode recognises. Client: two adaptive composables now check HTTP success before reading the response, so a governed 409 can no longer be written to disk as a .nc file or displayed as NC text; successful exports are unaffected. Drilling, profiling and V-carve server and client code are untouched.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-converge-001b-b2-sibling-cutover.json",
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/adaptive/composables/usePocketPlanning.ts",
+      "packages/client/src/components/adaptive/composables/useToolpathExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "services/api/app/routers/adaptive/gcode_router.py",
+      "services/api/tests/rmos/test_rmos_sibling_output_convergence.py"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/rmos_prod_output_census_001b.md",
+      "packages/client/src/components/adaptive/composables/usePocketPlanning.ts",
+      "packages/client/src/components/adaptive/composables/useToolpathExport.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "services/api/app/routers/adaptive/gcode_router.py",
+      "services/api/tests/rmos/test_rmos_sibling_output_convergence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) services/api/app/routers/adaptive/gcode_router.py: the route obtains its decision explicitly from plan_router._enforce_safety_policy - the same helper plan() uses - before generation, and persists that decision, that feasibility payload and that feasibility hash. It previously recorded RunDecision(risk_level='GREEN') unconditionally with feasibility_sha256 set to a hash of the request, described in-code as a proxy 'because plan validated'. A YELLOW plan was therefore filed as GREEN against a hash that was not a feasibility hash. tool_id corrected to 'adaptive:gcode'. (2) packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts: new ensureArtifactResponseOk(response, operation) throws on non-2xx after extracting the governed reason, still throws when the error body is not JSON, and does not consume a successful body; readGcodeOrThrow now delegates to it and is otherwise unchanged for its existing callers. This is deliberately not a media-neutral rewrite - adaptive's export path reads .blob(), which the text-returning readGcodeOrThrow cannot guard, so the capability being cut over got the guard it needed and nothing wider. (3) useToolpathExport.ts and usePocketPlanning.ts: both previously read the response with no status check, one into an NC preview pane via .text() and one straight into a .nc download via .blob(); both now guard first. (4) useGcodeExport.spec.ts: three new cases for the guard, including that a successful body is left unread. (5) New test module with 7 server witnesses including a source-position ordering assertion (gate < plan < assembly) and an AST guard against literal RunDecision(risk_level=...). (6) Census appended with the 001B-B2 section: the four-class refinement, the adaptive reclassification from BYPASS to authority/provenance mis-recording, drilling as a stage-contract mismatch, the new PROFILING-ROUTE-ANNOTATION-001 finding, V-carve unchanged, residuals, and a grounding-provenance note recording that earlier client conclusions came from a stale checkout and were discarded.",
+    "why_not_redundant": "The adaptive change closes a real audit-integrity defect: the run artifact asserted a safety decision the evaluator had not made, and cited a feasibility hash that hashed the request instead. The client changes close the corresponding consumer half - without them this tranche's own governed 409 would have been saved as a machine file, which is the defect 001B-A left live for retract and which main has since fixed there. The census work is not decoration: it replaces a coarse 'sibling bypass' count with four distinct, evidenced classes, which materially lowers the number of true output-authority bypasses the programme still believes it has."
+  },
+  "verification": {
+    "commands_run": [
+      "entry grounding: PR #314 MERGED 2026-08-24T18:27:51Z; worktree base b5e08279, 0 commits behind origin/main; retract convergence and census present on main",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_sibling_output_convergence.py -q --no-cov -> 7 passed",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos/test_rmos_output_route_convergence.py -q --no-cov -> 34 passed (B2-23 retract regression)",
+      "npx vitest run useGcodeExport.spec.ts useRetractOperation.spec.ts -> 8 passed",
+      "drilling contract comparison: compute_drilling_feasibility requires 9 keyword-only inputs; DrillReq supplies no hole_diameter_mm (tool is an int tool number), and rpm/r_clear/peck_q are Optional-None while hole depth and feed are per-hole -> STOP, no fabrication",
+      "profiling runtime probe on unmodified main: POST /api/cam/profiling/gcode -> 422 {'loc':['query','req']}; cause traced to postponed annotations + functools.wraps resolving 'ProfileRequest' against app/core/safety globals -> PROFILING-ROUTE-ANNOTATION-001, HOLD",
+      "PYTHONPATH=. py -3.11 -m pytest tests/rmos -q --no-cov -> (recorded at commit)",
+      "py -3.11 scripts/governance/check_all.py --tier ci -> (recorded at commit)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/adaptive/gcode_router.py",
+      "intent": "Bind the persisted decision and feasibility provenance to the actual gate result instead of a hardcoded GREEN and a request hash; obtain the decision from the same _enforce_safety_policy helper plan() uses, before generation; correct tool_id to the identity resolve_mode recognises.",
+      "risk": "medium",
+      "behavior_change": "no change to which requests succeed or fail; the persisted run now records the evaluator's decision and a real feasibility hash"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts",
+      "intent": "Add ensureArtifactResponseOk - a success gate that does not consume a successful body, needed because adaptive's export path reads .blob(); readGcodeOrThrow delegates to it and keeps its existing text contract.",
+      "risk": "low",
+      "behavior_change": "none for existing readGcodeOrThrow callers"
+    },
+    {
+      "path": "packages/client/src/components/adaptive/composables/useToolpathExport.ts",
+      "intent": "Check HTTP success before reading the NC preview text and before reading the export blob, so a governed 409 cannot become NC text or a .nc download.",
+      "risk": "low",
+      "behavior_change": "blocked responses now surface an error instead of producing a file"
+    },
+    {
+      "path": "packages/client/src/components/adaptive/composables/usePocketPlanning.ts",
+      "intent": "Same guard on the two adaptive G-code call sites in this composable.",
+      "risk": "low",
+      "behavior_change": "blocked responses now surface an error instead of producing a file"
+    },
+    {
+      "path": "packages/client/src/components/toolbox/cam-essentials/useGcodeExport.spec.ts",
+      "intent": "Three cases for the new guard: a successful body is left unread and still readable by the caller, a 409 SAFETY_BLOCKED surfaces the governed reason, and a non-JSON error body still throws so fail-closed does not depend on parsing succeeding.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_rmos_sibling_output_convergence.py",
+      "intent": "Seven adaptive witnesses: canonical/sibling parity on valid and blocked plans, no G-code or output hash leaked when blocked, client-declared GREEN cannot unblock, the persisted run's feasibility hash actually hashes the stored feasibility, an AST guard against literal RunDecision(risk_level=...), and a source-position ordering assertion that authorization precedes generation.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/audit/rmos_prod_output_census_001b.md",
+      "intent": "Append the 001B-B2 section: four-class refinement of the sibling-bypass label, adaptive reclassified from BYPASS to authority/provenance mis-recording, drilling recorded as a stage-contract mismatch, new PROFILING-ROUTE-ANNOTATION-001 finding, V-carve HOLD unchanged, residuals, deferrals, and a grounding-provenance note about the discarded stale-checkout conclusions.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-converge-001b-b2-sibling-cutover.json",
+      "intent": "Per-PR CBSP21 patch manifest enumerating every changed file in files[], not only in scope.*.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}

@@ -310,3 +310,199 @@ string-course untouched.
 capabilities remain ungoverned and are reported above rather than patched, because converging them
 takes availability offline and no owner ruling covers them. That is the checkpoint this tranche was
 built to reach.
+
+---
+
+# RMOS-CONVERGE-001B-B2 — Consumer-safe sibling output convergence (2026-08-25)
+
+**Base:** `main@b5e08279` (after PR #314 / 001B-A merged 2026-08-24T18:27:51Z)
+**Outcome:** one capability converged, three converted from vague labels into evidence-backed HOLD states.
+
+> **Grounding provenance.** Earlier client conclusions in this tranche were discarded because they came
+> from a stale `Downloads` checkout sitting on `smart-guitar-cavity-geometry-1`, not on `main`. A
+> `readGcodeOrThrow` search that *timed out* was also read as absence. All 001B-B2 client
+> classifications below were re-established against `main@b5e08279`. This note exists so the
+> stale-tree conclusion — "retract client is live-broken, `readGcodeOrThrow` does not exist" — does
+> not resurface later as a regression. It was never true of `main`.
+
+## 1. The "sibling bypass" label was too coarse
+
+001B classified these four capabilities together as sibling machine-output bypasses. Traced
+individually, they are **four different defect classes**, and only one was a convergence target:
+
+| Capability | Actual class | 001B-B2 disposition |
+|---|---|---|
+| **Adaptive** | authority *was* consumed; the persisted decision and feasibility provenance were false | **CONVERGED** |
+| **Drilling** | post-processor emission contract cannot truthfully satisfy a design-level evaluator | **HOLD** — stage mismatch |
+| **Profiling** | route is runtime-unreachable; RMOS authority is not yet the relevant question | **HOLD** — see `PROFILING-ROUTE-ANNOTATION-001` |
+| **V-carve** | live route, no authorized evaluator | **HOLD** — availability ruling required |
+
+This refinement matters for the residual count: the census would otherwise overstate the number of
+true output-authority bypasses. Retract remains the only *true* bypass found and closed so far.
+
+## 2. Adaptive — CORRECTED CLASSIFICATION and converged
+
+**Previous census entry:** `Adaptive G-code | none | self-minted GREEN | no | BYPASS — SELF-AUTHORIZING`
+
+**Corrected:** the sibling was **not** bypassing feasibility. `POST /api/cam/pocket/adaptive/gcode`
+calls `plan()`, and `plan()` gates internally via `_enforce_safety_policy`, so a blocked plan already
+returned 409 before any G-code existed. Authorization *did* precede generation.
+
+The defect was **audit/provenance integrity**, one layer later:
+
+```text
+real evaluated outcome
+        ↓
+plan() gates correctly
+        ↓
+RunArtifact records GREEN anyway          ← decision falsified after evaluation
+        ↓
+feasibility_sha256 = sha256(request)      ← provenance falsified: not a feasibility hash
+```
+
+```python
+# before
+decision=RunDecision(risk_level="GREEN"),   # plan() already validated feasibility
+feasibility_sha256=request_hash,            # Use request hash as proxy (plan validated)
+```
+
+A YELLOW plan was filed as GREEN, against a hash of the *request*. The audit chain asserted
+something no evaluator had said.
+
+**Fix.** `/gcode` now obtains the decision explicitly from `_enforce_safety_policy` — the same helper
+`plan()` uses — and records that decision, that feasibility, and that hash. The re-derivation is
+removed: persistence is bound to the actual gate result rather than to a constant.  `tool_id` moves
+from `adaptive_gcode` to `adaptive:gcode`, the identity `resolve_mode` recognises.
+
+`plan()` still gates internally. `compute_feasibility_internal` is deterministic, so the two agree by
+construction rather than by assumption.
+
+**Witnesses** (`services/api/tests/rmos/test_rmos_sibling_output_convergence.py`, 7 pass):
+canonical/sibling parity on a valid plan and on an F004-blocked plan · no G-code markers and no
+`X-GCode-SHA256` on the blocked sibling · client-declared GREEN cannot unblock it · the persisted run
+carries the evaluator's decision with `feasibility_sha256 == sha256_of_obj(run.feasibility)` · an AST
+guard rejects any literal `RunDecision(risk_level=...)` · **ordering** (`gate < plan < assembly`)
+asserted on source positions, not on mere presence of both calls.
+
+### Client hardening, scoped to the converged capability
+
+`useToolpathExport` and `usePocketPlanning` each read the response with **no status check** — one via
+`.text()` into an NC preview pane, one via `.blob()` straight into a `.nc` download. Either would have
+turned this cutover's own 409 into a machine file.
+
+This needed a guard `readGcodeOrThrow` could not provide: it returns *text*, and the export path reads
+`.blob()`. So `useGcodeExport.ts` gained:
+
+```text
+ensureArtifactResponseOk()      generic HTTP artifact gate — throws on non-2xx,
+                                still throws when the error body is not JSON,
+                                does not consume a successful body
+        ↓
+readGcodeOrThrow()              G-code-specific successful-body reader (unchanged for its callers)
+```
+
+This is **not** the media-neutral rewrite the handoff anticipated. Adaptive needed a blob-safe guard,
+so it got one and nothing wider. The neutral-shape question remains a deferred design decision for the
+first consumer that genuinely needs it. 8 client tests pass, including that the guard leaves a
+successful body unread — revised **B2-05**: *the successful body is consumed exactly once, and only
+after HTTP success has been established.*
+
+## 3. Drilling — HOLD: stage-contract mismatch
+
+`compute_drilling_feasibility` takes 9 required keyword-only inputs. `DrillReq` cannot supply them:
+
+| evaluator input | sibling source | verdict |
+|---|---|---|
+| `hole_diameter_mm` | **absent** | `tool: Optional[int]` is a tool *number* for the post-processor, not a diameter; no tool table is consulted |
+| `spindle_rpm` | `rpm: Optional[float] = None` | may be absent |
+| `retract_z_mm` | `r_clear: Optional[float] = None` | may be absent |
+| `peck_depth_mm` | `peck_q: Optional[float] = None` | may be absent |
+| `hole_depth_mm` | `Hole.z` | a coordinate, not a depth — the request carries no stock-top datum |
+| `feed_rate_mm_min` | `Hole.feed` | N per-hole values for one scalar input |
+| `peck_drilling` | `cycle == "G83"` | derivable |
+| `hole_count` | `len(holes)` | derivable |
+| `safe_z_mm` | `safe_z` | exact |
+
+**This is not a field-mapping gap.** The canonical lane feeds the evaluator from a drilling *design*
+(`design.hole_depth_mm`, `design.hole_diameter_mm`). `DrillReq` is a *post-processor emission* model:
+where to move and which canned cycle to emit. The two describe different stages. `hole_diameter_mm`
+is load-bearing for the evaluator's central rules — the depth:diameter deep-hole ratio and the
+mandatory peck rule — so substituting a value would not be adaptation but invention.
+
+Consistent with the 001B observation that post-processor families may not belong in the same bucket
+as cut-planning routes: authority for this lane plausibly belongs **upstream**, wherever the hole list
+is designed. That is a scoping decision, not a convergence one.
+
+Client note: `cam-essentials/useDrillingOperation` is unsafe on non-2xx, but the drilling server did
+not cut over, so per the capability-scoped rule it was **not** patched. Its exposure remains latent —
+`/api/cam/drilling/gcode` returns 200 today. `drilling_lab/useDrillingGcode` checks status and stands
+as the positive control.
+
+## 4. `PROFILING-ROUTE-ANNOTATION-001` — new finding
+
+```text
+PROFILING-ROUTE-ANNOTATION-001
+Classification: RUNTIME_UNREACHABLE / DECORATOR-ANNOTATION RESOLUTION
+Effect:         POST /api/cam/profiling/gcode always returns 422
+Scope:          separate remediation decision
+001B-B2:        HOLD / evidence only
+```
+
+Observed on unmodified `main`:
+
+```text
+POST /api/cam/profiling/gcode
+→ 422 {"detail":[{"type":"missing","loc":["query","req"],"msg":"Field required"}]}
+```
+
+**Mechanism.** `profile_router.py` uses `from __future__ import annotations`, so `req: ProfileRequest`
+is stored as the *string* `'ProfileRequest'`. `@safety_critical` wraps the endpoint with
+`functools.wraps`, so FastAPI resolves that string against the **wrapper's** module globals —
+`app/core/safety.py` — where `ProfileRequest` is not defined. Resolution fails and FastAPI falls back
+to treating `req` as a plain query parameter.
+
+**Why the sibling routes differ**, which is what makes this a pattern rather than a one-off:
+
+| route | why it survives |
+|---|---|
+| retract `/gcode` | parameters are builtin scalars (`str`, `float`) — resolvable in any module's globals |
+| drilling `/gcode` | `req: DrillReq = Body(...)` — the explicit `Body()` default forces body binding |
+| profiling `/gcode` | bare Pydantic annotation, postponed — **fails** |
+
+**Consequence for this tranche.** Profiling is not a live sibling bypass; it is unreachable. Governing
+it would govern something that cannot run, and *repairing* the 422 would newly expose a G-code emitter
+that has never been reachable — an availability decision, not a convergence one. Held, evidence only.
+
+**Wider pattern recorded, deliberately not swept.** Any `@safety_critical` route combining postponed
+annotations with a bare Pydantic body annotation is a candidate. A bounded decorator/annotation census
+can be authorized later; sweeping now would convert a concrete finding into another open-ended audit.
+
+## 5. V-carve — HOLD unchanged
+
+Canonical `vcarve/intent-gcode` is itself blocked by 001A (no substantive evaluator); the production
+sibling `cam/vcarve/production/gcode` remains live. Converging it would take a live production route
+offline with no owner ruling covering it. Read-only in this tranche; no server or client behaviour
+changed. The adaptive result turning out narrower than expected does not weaken this stop condition.
+
+## 6. Residuals after 001B-B2
+
+| Capability | State |
+|---|---|
+| Retract | converged (001B-A); client already safe on `main`; regression-only here |
+| Adaptive | **converged** — authority and provenance now agree |
+| Drilling | HOLD — stage mismatch; client exposure latent, unpatched by design |
+| Profiling | HOLD — `PROFILING-ROUTE-ANNOTATION-001` |
+| V-carve | HOLD — availability ruling required |
+| Remaining 001B capabilities (geometry export, polygon offset, binding, guitar body/neck, probe, post/wrap, vision) | unchanged; still awaiting the 001B capability-level ruling |
+
+Deferrals preserved: **F9** → 001C · **F10** → 001D (adaptive run-id still stripped by `PlanOut`;
+untouched) · `persist_run_artifact()` self-GREEN family → separate persistence trace · adaptive
+`feed_z = feed_xy` → follow-up authority item · biarc `useContourOperation` → out of scope · formula /
+string-course / versioning → separate queues.
+
+## 7. Closeout
+
+> Of the four sibling-output candidates, only adaptive was a valid convergence target. Drilling is a
+> stage-contract mismatch, profiling is runtime-unreachable, and V-carve lacks an authorized
+> evaluator. 001B-B2 corrected adaptive and converted the remaining candidates from vague "bypass"
+> labels into evidence-backed HOLD states.
