@@ -1,0 +1,33 @@
+name: Grounding Agent
+
+# Runs the Grounding Agent v0.1 read-only truth-check suite so its guardrails —
+# the anti-mutation authority boundary and the historical stale-handoff
+# fixtures — actually gate future changes. Scoped to the tool's own paths; it is
+# stdlib + pytest only (no app dependencies, no network, no app boot).
+
+on:
+  pull_request:
+    paths:
+      - "tools/grounding_agent/**"
+      - "tests/grounding_agent/**"
+      - ".github/workflows/grounding_agent.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/grounding_agent/**"
+      - "tests/grounding_agent/**"
+      - ".github/workflows/grounding_agent.yml"
+
+jobs:
+  grounding-agent-tests:
+    name: Grounding Agent tests (read-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Run grounding agent suite (engine, adapters, fixtures, anti-mutation)
+        run: python -m pytest tests/grounding_agent/ -q

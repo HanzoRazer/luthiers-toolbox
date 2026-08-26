@@ -1,6 +1,65 @@
 {
   "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
+  "patch_id": "GROUNDING_AGENT_001",
+  "title": "GROUNDING-AGENT-001: Grounding Agent v0.1 — read-only handoff truth check",
+  "intent": "Add one narrow, read-only agent under tools/grounding_agent/ that verifies whether a structured handoff still describes the live repository before an implementation agent acts. It checks seven typed claim types (repo_head, pr_state, file_exists, local_path_exists, commit_ancestor, worktree_clean, active_lane) against live Git/GitHub(GET)/filesystem evidence and returns claim-by-claim verdicts with evidence classes, confidence, material divergences, and a MATCH/STALE/BLOCKED/INSUFFICIENT_EVIDENCE status plus a PROCEED/STOP decision. It never mutates state and never emits a remediation. Adds the tool package, a test package with 77 tests including five recorded historical stale-handoff fixtures and an AST-scoped anti-mutation guard, a governance spec and example request under docs/governance/agents/, and a minimal scoped CI workflow so the guardrails actually run in CI.",
+  "change_type": "feature",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/grounding-agent-001.json",
+      "tools/grounding_agent/",
+      "tests/grounding_agent/",
+      "docs/governance/agents/",
+      ".github/workflows/grounding_agent.yml"
+    ],
+    "files_expected_to_change": [
+      "tools/grounding_agent/__init__.py",
+      "tools/grounding_agent/models.py",
+      "tools/grounding_agent/evidence.py",
+      "tools/grounding_agent/engine.py",
+      "tools/grounding_agent/cli.py",
+      "tools/grounding_agent/adapters/__init__.py",
+      "tools/grounding_agent/adapters/git_repo.py",
+      "tools/grounding_agent/adapters/github_api.py",
+      "tools/grounding_agent/adapters/filesystem.py",
+      "tests/grounding_agent/__init__.py",
+      "tests/grounding_agent/conftest.py",
+      "tests/grounding_agent/_fakes.py",
+      "tests/grounding_agent/test_models.py",
+      "tests/grounding_agent/test_engine.py",
+      "tests/grounding_agent/test_git_adapter.py",
+      "tests/grounding_agent/test_filesystem_adapter.py",
+      "tests/grounding_agent/test_github_adapter.py",
+      "tests/grounding_agent/test_historical_fixtures.py",
+      "tests/grounding_agent/test_anti_mutation.py",
+      "tests/grounding_agent/test_cli.py",
+      "tests/grounding_agent/fixtures/pr_312_not_merged.json",
+      "tests/grounding_agent/fixtures/cursor_artifact_missing.json",
+      "tests/grounding_agent/fixtures/stale_base_sha.json",
+      "tests/grounding_agent/fixtures/pr_state_superseded.json",
+      "tests/grounding_agent/fixtures/cross_repo_lane_conflict.json",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1.md",
+      "docs/governance/agents/grounding_request.example.json",
+      ".github/workflows/grounding_agent.yml"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New read-only developer tool tools/grounding_agent/ (models, evidence/aggregation, engine, CLI, and git/GitHub-GET/filesystem adapters), a tests/grounding_agent/ suite (contracts, adapters, GA-001..020 engine cases, five GA-HIST fixtures, CLI exit codes, anti-mutation guard), a docs/governance/agents/ spec + example request, a CBSP21 patch manifest, and a scoped .github/workflows/grounding_agent.yml that runs the suite. No FastAPI runtime, client, schema, route, or build file is touched.",
+    "why_not_redundant": "No prior grounding/handoff-verification utility exists in the repo (only prose mentions in handoffs). This adds new capability — deterministic, evidence-classed, read-only verification of handoff claims — that nothing else provides; it is additive and does not duplicate any existing tool or governance script."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/grounding_agent/ -q -> 77 passed",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff> -> PASSED (coverage 100%)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "python scripts/governance/check_all.py --tier ci -> all blocking checks pass",
+      "python -m tools.grounding_agent.cli --request docs/governance/agents/grounding_request.example.json --repo-root . -> MATCH/PROCEED (exit 0)"
+    ]
+  },
   "files": [
     {
       "path": "tools/grounding_agent/__init__.py",
@@ -13,11 +72,7 @@
         "tools/grounding_agent/cli.py"
       ],
       "risk": "low",
-      "behavior_change": "none — additive developer tool under tools/; no runtime/API or CI behavior change.",
-      "verification": [
-        "python -m pytest tests/grounding_agent/ -q",
-        "python -m tools.grounding_agent.cli --request docs/governance/agents/grounding_request.example.json --repo-root ."
-      ]
+      "behavior_change": "none — additive developer tool under tools/; no runtime/API or CI behavior change."
     },
     {
       "path": "tools/grounding_agent/adapters/__init__.py",
@@ -29,14 +84,11 @@
         "tools/grounding_agent/adapters/filesystem.py"
       ],
       "risk": "low",
-      "behavior_change": "none — read-only adapters; anti-mutation tests enforce the read-only boundary.",
-      "verification": [
-        "python -m pytest tests/grounding_agent/test_anti_mutation.py -q"
-      ]
+      "behavior_change": "none — read-only adapters; anti-mutation tests enforce the read-only boundary."
     },
     {
       "path": "tests/grounding_agent/test_engine.py",
-      "intent": "GA-001..GA-020 core behavior, adapter unit tests, and anti-mutation guard.",
+      "intent": "GA-001..GA-020 core behavior, adapter unit tests, CLI, and anti-mutation guard.",
       "scan_targets": [
         "tests/grounding_agent/__init__.py",
         "tests/grounding_agent/conftest.py",
@@ -50,10 +102,7 @@
         "tests/grounding_agent/test_anti_mutation.py"
       ],
       "risk": "low",
-      "behavior_change": "none — test-only additions.",
-      "verification": [
-        "python -m pytest tests/grounding_agent/ -q"
-      ]
+      "behavior_change": "none — test-only additions."
     },
     {
       "path": "tests/grounding_agent/test_historical_fixtures.py",
@@ -67,10 +116,7 @@
         "tests/grounding_agent/fixtures/cross_repo_lane_conflict.json"
       ],
       "risk": "low",
-      "behavior_change": "none — recorded deterministic fixtures; no live network in tests.",
-      "verification": [
-        "python -m pytest tests/grounding_agent/test_historical_fixtures.py -q"
-      ]
+      "behavior_change": "none — recorded deterministic fixtures; no live network in tests."
     },
     {
       "path": "docs/governance/agents/GROUNDING_AGENT_v0.1.md",
@@ -80,10 +126,16 @@
         "docs/governance/agents/grounding_request.example.json"
       ],
       "risk": "low",
-      "behavior_change": "none — documentation and an example request under a protected docs path (GOVERNANCE_APPROVED_CHANGE).",
-      "verification": [
-        "python -m json.tool docs/governance/agents/grounding_request.example.json"
-      ]
+      "behavior_change": "none — documentation and an example request under a protected docs path (GOVERNANCE_APPROVED_CHANGE)."
+    },
+    {
+      "path": ".github/workflows/grounding_agent.yml",
+      "intent": "Scoped CI workflow that runs the grounding-agent suite so the anti-mutation boundary and historical fixtures actually gate future changes.",
+      "scan_targets": [
+        ".github/workflows/grounding_agent.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none — adds a CI job scoped to tools/grounding_agent and tests/grounding_agent paths; does not alter existing workflows."
     }
   ],
   "architecture_scan": {
@@ -92,5 +144,11 @@
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Read-only developer tool under tools/grounding_agent/. No runtime package, no _experimental/ paths touched, no mutation surface (enforced by tests/grounding_agent/test_anti_mutation.py)."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. Additions are a read-only developer tool under tools/, its tests under tests/, documentation under docs/governance/agents/, a scoped CI workflow, and this CBSP21 manifest.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
   }
 }
