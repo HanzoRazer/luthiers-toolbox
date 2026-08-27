@@ -1,0 +1,94 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_VCARVE_CONVERGE_001",
+  "title": "RMOS-VCARVE-CONVERGE-001: HOLD — no authorized V-carve feasibility path",
+  "intent": "Prove the V-carve production G-code path cannot truthfully converge to GOVERNED in this order: no substantive V-carve evaluator exists whose input contract the production request can satisfy. Record HOLD evidence. Do not gate production, do not create an evaluator, do not invent physics, do not change Profiling.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-vcarve-converge-001.json",
+      ".github/workflows/rmos_ci.yml",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "scripts/audit/rmos_authority_stage2.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_vcarve_authority_convergence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/rmos-vcarve-converge-001.json",
+      ".github/workflows/rmos_ci.yml",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "scripts/audit/rmos_authority_stage2.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_vcarve_authority_convergence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) tests/rmos/test_vcarve_authority_convergence.py: VCARVE-001–024 HOLD witnesses — production still 200 ungated, no vcarve engine, mapping matrix empty / NOT SATISFIABLE, #324 422 preserved, no in-repo production consumer, frozen POST_MERGE_AUTHORITY_EXPOSURE kept, Profiling/retract/adaptive/drilling unchanged. (2) Registry + Stage-2 overlay: HOLD evidence appended; disposition/reachability/ungated exposure unchanged. (3) Audit §8 records the checkpoint and blast radius. (4) GA-TRIAL-0004 MATCH / PROCEED. (5) rmos_ci.yml collects the new file without an if-[ -f ] skip. Production router and engine table are not modified.",
+    "why_not_redundant": "PR #328 classified the post-#324 exposure; it did not decide whether a V-carve evaluator exists. This increment answers that question with evidence and stops at HOLD. Gating production to 409 UNKNOWN without an evaluator would be a silent availability drop (D3), not governance."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m tools.grounding_agent.cli --request /tmp/rmos_vcarve_converge_001_grounding.json → MATCH / PROCEED (GA-TRIAL-0004)",
+      "PYTHONPATH=services/api python3 -m pytest tests/rmos/test_vcarve_authority_convergence.py tests/rmos/test_manufacturing_authority_stage2.py tests/rmos/test_profiling_authority_convergence.py -q --no-cov",
+      "PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/tests/rmos/test_vcarve_authority_convergence.py",
+      "intent": "VCARVE-001–024 HOLD witnesses: no evaluator, production still reachable, frozen classification preserved, other capabilities untouched.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+      "intent": "Append HOLD evidence to V-carve only. Keep POST_MERGE_AUTHORITY_EXPOSURE / RUNTIME_REACHABLE / ungated YES. Do not mark GOVERNED.",
+      "risk": "low",
+      "behavior_change": "none (inert audit record)"
+    },
+    {
+      "path": "scripts/audit/rmos_authority_stage2.py",
+      "intent": "Keep the Stage-2 overlay in lockstep with the committed V-carve HOLD evidence. Other overlays unchanged.",
+      "risk": "low",
+      "behavior_change": "none (audit overlay)"
+    },
+    {
+      "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "intent": "Append dated V-carve HOLD after-state. Preserve the frozen POST_MERGE_AUTHORITY_EXPOSURE before-state from PR #328.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record GA-TRIAL-0004 MATCH / PROCEED for this Dev Order. No Grounding Agent code change.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".github/workflows/rmos_ci.yml",
+      "intent": "Collect test_vcarve_authority_convergence.py in the manufacturing-authority step. No if-[ -f ] skip.",
+      "risk": "low",
+      "behavior_change": "none (CI collection of new witnesses)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-27-RMOS-VCARVE-HOLD",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "HOLD evidence only. Production V-carve router, RMOS engine table, Profiling, and client are not modified."
+  },
+  "no_backend_no_schema": "No production API, route, schema, persistence, or engine-table change. Adds HOLD tests, audit, registry evidence, overlay lockstep, CI collection, and this CBSP21 manifest.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

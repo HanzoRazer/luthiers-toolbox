@@ -393,7 +393,7 @@
       "operation_family": "vcarve",
       "grouping_rule": "seeded_prefix:/api/cam/toolpath/vcarve",
       "surface_kind": "manufacturing_capability",
-      "intent_contract": "Production POST /api/cam/vcarve/production/gcode is @safety_critical with no RMOS call and emits G-code after #324 restored body binding. Toolpath /api/cam/toolpath/vcarve/gcode and intent /intent-gcode call compute_feasibility_internal; mode vcarve has no engine so they 409. The live production path is the post-merge exposure.",
+      "intent_contract": "Production POST /api/cam/vcarve/production/gcode is @safety_critical with no RMOS call and emits G-code after #324 restored body binding. Toolpath /api/cam/toolpath/vcarve/gcode and intent /intent-gcode call compute_feasibility_internal; mode vcarve has no engine so they 409. The live production path is the post-merge exposure. RMOS-VCARVE-CONVERGE-001 HOLD (2026-08-27): no substantive V-carve evaluator exists. AUTHORITY CONTRACT = NOT SATISFIABLE. Adjacent profiling/drilling/pocketing/FeasibilityInput(tool_d) evaluators are not V-carve-capable (D1). Production behavior unchanged; disposition remains POST_MERGE_AUTHORITY_EXPOSURE.",
       "authority": {
         "status": "NONE",
         "evaluator": null,
@@ -467,6 +467,11 @@
           "class": "RUNTIME_REQUEST_WITNESS",
           "ref": "POST /api/cam/vcarve/intent-gcode",
           "note": "409 SAFETY_BLOCKED \u2014 engine unavailable, fail-closed. Not the exposure path."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/rmos/api/rmos_feasibility_router.py:_PRODUCTION_FEASIBILITY_ENGINES",
+          "note": "RMOS-VCARVE-CONVERGE-001 HOLD: no vcarve engine. AUTHORITY CONTRACT = NOT SATISFIABLE. Do not gate production to 409 UNKNOWN without an owner availability ruling (D3)."
         }
       ],
       "evidence_class": "RUNTIME_REQUEST_WITNESS",

@@ -27,6 +27,7 @@ Spec: [`GROUNDING_AGENT_v0.1.md`](GROUNDING_AGENT_v0.1.md)
 | GA-TRIAL-0001 | 2026-08-27 | GROUNDING-AGENT-TRIAL-001 | STALE / STOP | yes | no | no | no | no | small positive (~a few min saved) | PR #326 had already created the ledger on `main`; Grounding caught the stale "create ledger" premise before mutation. |
 | GA-TRIAL-0002 | 2026-08-27 | RMOS-AUTHORITY-MAP-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified eight material prerequisites (v0.1 + ledger; #322 and #324 MERGED; rmos_prod_audit_001.md; core/safety.py; rmos/feasibility/engine.py) before the Stage-1 census began. Risk reduction, not a large time saving. |
 | GA-TRIAL-0003 | 2026-08-27 | RMOS-PROFILING-CONVERGE-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #328 MERGED, frozen registry, profiling LIVE_UNGOVERNED_OUTPUT / RUNTIME_REACHABLE, #324 binding, mounted /gcode, canonical compute_profile_feasibility, and the trial ledger before mutation. C-009 (wrong SHA, material:false) was INSUFFICIENT and did not stop. |
+| GA-TRIAL-0004 | 2026-08-27 | RMOS-VCARVE-CONVERGE-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #328 and #329 MERGED, origin/main `c987bfce`, frozen V-carve POST_MERGE_AUTHORITY_EXPOSURE files present, Profiling GOVERNED (independent JSON read), trial ledger present. Grounding v0.1 has no content-claim type for dispositions. No Grounding Agent code was changed. |
 
 ## Incident notes
 
@@ -35,6 +36,7 @@ Use only where a table row cannot adequately explain an important event.
 - **GA-TRIAL-0001** — First real operational use, not a synthetic fixture. GROUNDING-AGENT-TRIAL-001 instructed "create the trial ledger", but PR #326 had merged that ledger to `main` ~2 minutes earlier. Grounding checked the handoff's premises against `origin/main` (v0.1 files present → MATCH; ledger expected absent → observed present → MISMATCH) and returned `STALE / STOP`, preventing a redundant/blind ledger creation. The stale premise was corrected into this narrow ledger-contract-completion increment.
 - **GA-TRIAL-0002** — Second real operational use. RMOS-AUTHORITY-MAP-001 Stage 1 (a one-off census, not a new agent) required Grounding before mutation. All eight material claims MATCH, including live GitHub state that #322 and #324 are merged. Decision PROCEED. The Dev Order was then rewritten to forbid building a second agent; the census proceeded as ordinary script + inert registry + report.
 - **GA-TRIAL-0003** — Third real operational use. RMOS-PROFILING-CONVERGE-001 required Grounding before mutating the live Profiling G-code path. All material claims MATCH; decision PROCEED. Grounding v0.1 has no content-claim type, so the frozen Profiling classification (`LIVE_UNGOVERNED_OUTPUT` / `RUNTIME_REACHABLE`) was re-read from the committed registry independently. No Grounding Agent code was changed.
+- **GA-TRIAL-0004** — Fourth real operational use. RMOS-VCARVE-CONVERGE-001 required Grounding before acting on the live V-carve production G-code path. All 15 claims MATCH (including GitHub `pr_state` that #328 and #329 are merged); decision PROCEED. Frozen V-carve `POST_MERGE_AUTHORITY_EXPOSURE` and Profiling `GOVERNED` were re-read from the committed registry independently. Subsequent evaluator search found no substantive V-carve feasibility engine, so the order completed as HOLD rather than GOVERNED. No Grounding Agent code was changed.
 
 ## Summary
 
@@ -43,8 +45,8 @@ TRIAL PERIOD:
 START: 2026-08-26
 END:
 
-TOTAL HANDOFFS CHECKED: 3
-  MATCH / PROCEED:                2
+TOTAL HANDOFFS CHECKED: 4
+  MATCH / PROCEED:                3
   STALE / STOP:                   1
   BLOCKED / STOP:                 0
   INSUFFICIENT_EVIDENCE / STOP:   0
