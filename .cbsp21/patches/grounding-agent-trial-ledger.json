@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GROUNDING_AGENT_001_TRIAL_LEDGER",
+  "title": "GROUNDING-AGENT-001: add v0.1 trial ledger template",
+  "intent": "Add the lightweight operational trial ledger for Grounding Agent v0.1 — one table (one row per real use) plus a short summary/decision block — so the trial period can be measured (handoffs checked, stale caught, false positives/negatives, blocked runs, human overrides, time saved) before deciding KEEP/REVISE/RETIRE. This is the measurement instrument for the experiment, not additional agent architecture.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/grounding-agent-trial-ledger.json",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ],
+    "files_expected_to_change": [
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds a single documentation file, docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md, containing the trial ledger table and summary/decision block, plus this CBSP21 manifest. No code, schema, route, workflow, or build file is touched.",
+    "why_not_redundant": "No trial ledger exists for Grounding Agent v0.1; the merged spec references a trial period but provides no instrument to record it. This adds that instrument without duplicating the spec and without expanding the tool's scope."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main..HEAD -> docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md plus .cbsp21/patches/grounding-agent-trial-ledger.json (docs-only)",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff> -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Trial ledger template: per-use table + summary/decision block for the v0.1 trial period.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-27-GROUNDING-LEDGER",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only trial ledger under docs/governance/agents/. No code, workflow, or _experimental/ paths touched."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change. Adds one documentation file plus this CBSP21 manifest.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
