@@ -188,7 +188,7 @@ def test_profiling_gcode_accepts_json_body_and_emits_gcode(
     from app.cam.routers.profiling.profile_router import router
 
     runs = tmp_path / "rmos_runs"
-    runs.mkdir(parents=True)
+    runs.mkdir(parents=True, exist_ok=True)
     (runs / "_index.json").write_text("{}", encoding="utf-8")
     monkeypatch.setenv("RMOS_RUNS_DIR", str(runs))
     monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "att"))
