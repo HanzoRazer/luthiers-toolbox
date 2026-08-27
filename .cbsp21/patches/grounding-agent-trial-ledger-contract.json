@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GROUNDING_AGENT_TRIAL_001_LEDGER_CONTRACT",
+  "title": "GROUNDING-AGENT-TRIAL-001: complete the v0.1 trial ledger contract + record first real run",
+  "intent": "Enrich the existing Grounding Agent v0.1 trial ledger (created by PR #326, already on main) in place to complete its evidence-recording contract, and record the first genuine operational use. Adds only the missing evidence-integrity pieces: the D5 false-negative rule (requires independent evidence the claim was already wrong when Grounding ran; later drift alone does not count), the D6 human-override rule (preserve the original Grounding result, record the override separately), an Incident notes section, and the full aggregate breakdown (MATCH/PROCEED, STALE/STOP, BLOCKED/STOP, INSUFFICIENT_EVIDENCE/STOP). Records inaugural row GA-TRIAL-0001, a real STALE/STOP catch. Documentation only: no Grounding Agent code, tests, workflow, or new agent work.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ],
+    "files_expected_to_change": [
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Amends docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md in place: adds the D5 false-negative definition and D6 human-override semantics to the recording guidance, adds an Incident notes section, expands the aggregate summary with the per-decision breakdown, and records the first real run (GA-TRIAL-0001, STALE/STOP). Also adds an ID column and renames the time column to 'Estimated time effect' so a run identifier and non-beneficial time outcomes can be recorded. No code, schema, route, workflow, or build file is touched.",
+    "why_not_redundant": "The ledger existed but was missing the evidence-integrity rules the trial depends on (false-negative independence, override-preserves-original) and the aggregate breakdown; without them the trial could silently misclassify outcomes. This completes that contract and records genuine evidence rather than duplicating the existing artifact or altering agent behavior."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff --name-only origin/main..HEAD -> docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md plus .cbsp21/patches/grounding-agent-trial-ledger-contract.json (docs-only)",
+      "python -m tools.grounding_agent.cli --request /tmp/trial001_handoff.json --repo-root . -> STALE/STOP (exit 2): recorded as GA-TRIAL-0001",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff> -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Complete the trial ledger evidence-recording contract (D5/D6/incident notes/aggregate breakdown) and record inaugural real run GA-TRIAL-0001.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-27-GROUNDING-TRIAL-LEDGER",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only ledger enrichment under docs/governance/agents/. No tools/grounding_agent, tests/grounding_agent, workflow, or _experimental/ paths touched."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change. Amends one documentation file plus this CBSP21 manifest.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
