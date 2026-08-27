@@ -105,7 +105,7 @@ jobs:
         env:
           RMOS_RUNS_DIR: ${{ runner.temp }}/rmos_runs_authority
         run: |
-          python -m pytest             tests/rmos/test_manufacturing_authority_registry.py             tests/rmos/test_manufacturing_authority_discovery.py             tests/rmos/test_manufacturing_authority_stage2.py             -q --tb=short
+          python -m pytest             tests/rmos/test_manufacturing_authority_registry.py             tests/rmos/test_manufacturing_authority_discovery.py             tests/rmos/test_manufacturing_authority_stage2.py             tests/rmos/test_profiling_authority_convergence.py             -q --tb=short
 
       - name: Run RMOS CI smoke test
         working-directory: services/api

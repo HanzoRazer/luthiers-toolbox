@@ -134,7 +134,10 @@ def test_mar_012_validation_error_is_not_live_ungoverned(registry, client):
     missing = client.post("/api/cam/profiling/gcode")
     assert missing.status_code == 422
     cap = _by_id(registry)["profiling"]
-    assert cap["authority_disposition"] == "LIVE_UNGOVERNED_OUTPUT"
+    # 422 on an empty body is still not a reachability class. After
+    # RMOS-PROFILING-CONVERGE-001 the 200 path is GOVERNED; the 422
+    # binding behaviour from #324 is unchanged.
+    assert cap["authority_disposition"] == "GOVERNED"
     # Classification rests on the 200 emission path, not the 422.
     ok = client.post("/api/cam/profiling/gcode", json={"contour": RECT})
     assert ok.status_code == 200, ok.text
@@ -240,13 +243,16 @@ def test_mar_015_adaptive_authority_and_truthful_persistence(registry, client):
 
 
 def test_mar_017_profiling_post_324_emits_without_rmos(registry, client):
+    # RMOS-PROFILING-CONVERGE-001: sibling /gcode is now GOVERNED. Binding
+    # from #324 is preserved (200 + G-code); authority is no longer absent.
     cap = _by_id(registry)["profiling"]
-    assert cap["authority_disposition"] == "LIVE_UNGOVERNED_OUTPUT"
+    assert cap["authority_disposition"] == "GOVERNED"
+    assert cap["ungated_output_exposure"] == "NO"
     assert cap["authority_disposition"] != "POST_MERGE_AUTHORITY_EXPOSURE"
     r = client.post("/api/cam/profiling/gcode", json={"contour": RECT})
     assert r.status_code == 200, r.text
     assert _has_gcode(r.text)
-    assert r.headers.get("X-Run-ID") in (None, "")
+    assert r.headers.get("X-Run-ID")
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +321,7 @@ def test_mar_020_cam_stub_is_retired_for_named_modes():
     from app.rmos.api.rmos_feasibility_router import resolve_feasibility_engine
 
     assert resolve_feasibility_engine("rosette") is not None
+    assert resolve_feasibility_engine("profiling") is not None
     assert resolve_feasibility_engine("vcarve") is None
     assert resolve_feasibility_engine("roughing") is None
 

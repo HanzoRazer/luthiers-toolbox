@@ -50,6 +50,7 @@ from ..feasibility_authority import (
     sanitize_feasibility_input,
     unavailable_feasibility,
 )
+from .profiling_feasibility import compute_profiling_feasibility
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,8 @@ def resolve_mode(tool_id: str) -> str:
         return "helical"
     if tool_id.startswith("retract:"):
         return "retract"
+    if tool_id.startswith("profiling:") or tool_id.startswith("profile:"):
+        return "profiling"
     return "unknown"
 
 
@@ -474,4 +477,5 @@ _PRODUCTION_FEASIBILITY_ENGINES: Dict[str, Callable[..., Dict[str, Any]]] = {
     "saw": compute_saw_feasibility,
     "rosette": compute_rosette_feasibility,
     "adaptive": compute_adaptive_feasibility,
+    "profiling": compute_profiling_feasibility,
 }

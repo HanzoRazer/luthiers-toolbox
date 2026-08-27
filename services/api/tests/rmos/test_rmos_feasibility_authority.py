@@ -214,6 +214,7 @@ def test_tc07_supported_mode_uses_its_real_evaluator():
     assert resolve_feasibility_engine("adaptive") is fr.compute_adaptive_feasibility
     assert resolve_feasibility_engine("saw") is fr.compute_saw_feasibility
     assert resolve_feasibility_engine("rosette") is fr.compute_rosette_feasibility
+    assert resolve_feasibility_engine("profiling") is fr.compute_profiling_feasibility
 
     result = _compute("adaptive:plan", **SANE_ADAPTIVE)
     engine = result["safety"]["details"]["engine"]
@@ -347,7 +348,7 @@ def test_tc23_dispatcher_has_no_green_default_fallback():
     # or refuses to authorize.
     named_modes = {
         "saw", "rosette", "vcarve", "roughing", "drilling", "drill_pattern",
-        "biarc", "relief", "adaptive", "helical", "unknown",
+        "biarc", "relief", "adaptive", "helical", "profiling", "unknown",
     }
     for mode in named_modes:
         if resolve_feasibility_engine(mode) is None:

@@ -21,6 +21,14 @@ from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from app.core.safety import safety_critical
+from app.rmos.api.rmos_feasibility_router import compute_feasibility_internal
+from app.rmos.policies.safety_policy import SafetyPolicy
+from app.rmos.runs_v2 import (
+    create_run_id,
+    sha256_of_obj,
+    sha256_of_text,
+    validate_and_persist,
+)
 
 # Import production profiling module
 from app.cam.profiling import (
@@ -28,6 +36,28 @@ from app.cam.profiling import (
     ProfileConfig,
     TabGenerator,
     MillingDirection,
+)
+
+PROFILING_TOOL_ID = "profiling:gcode"
+PROFILING_MODE = "profiling"
+
+# ProfileRequest → ProfileConfig → compute_profile_feasibility.
+# Every evaluator input has a runtime source. Finishing fields are
+# ProfileConfig defaults that ProfileToolpath.generate() actually uses.
+PROFILE_FEASIBILITY_SOURCES = (
+    ("tool_diameter_mm", "ProfileConfig.tool_diameter_mm", "mm"),
+    ("cut_depth_mm", "ProfileConfig.cut_depth_mm", "mm"),
+    ("stepdown_mm", "ProfileConfig.stepdown_mm <- ProfileRequest.max_stepdown_mm", "mm"),
+    ("feed_rate_mm_min", "ProfileConfig.feed_rate_xy <- ProfileRequest.feed_rate_mm_min", "mm/min"),
+    ("plunge_rate_mm_min", "ProfileConfig.plunge_rate <- ProfileRequest.plunge_rate_mm_min", "mm/min"),
+    ("safe_z_mm", "ProfileConfig.safe_z_mm", "mm"),
+    ("retract_z_mm", "ProfileConfig.retract_z_mm", "mm"),
+    ("contour_point_count", "len(ProfileRequest.contour)", "count"),
+    ("tab_count", "ProfileConfig.tab_count", "count"),
+    ("tab_height_mm", "ProfileConfig.tab_height_mm", "mm"),
+    ("use_tabs", "ProfileRequest.use_tabs", "bool"),
+    ("finishing_pass", "ProfileConfig.finishing_pass (runtime default)", "bool"),
+    ("finishing_allowance_mm", "ProfileConfig.finishing_allowance_mm (runtime default)", "mm"),
 )
 
 router = APIRouter()
@@ -90,35 +120,9 @@ class TabInfo(BaseModel):
     width_mm: float
 
 
-@router.post("/gcode", response_class=Response)
-@safety_critical
-def generate_profile_gcode(req: ProfileRequest) -> Response:
-    """
-    Generate perimeter profiling G-code with holding tabs.
-
-    Uses production-quality ProfileToolpath with:
-    - Multi-pass stepdown for deep cuts
-    - Holding tabs to prevent part movement
-    - Lead-in/out arcs (optional)
-    - Climb/conventional milling selection
-    - Cutter compensation awareness
-    """
-    if len(req.contour) < 3:
-        raise HTTPException(
-            status_code=400,
-            detail="Contour must have at least 3 points"
-        )
-
-    # Convert to tuple format expected by module
-    points: List[Tuple[float, float]] = [
-        (pt.x, pt.y) for pt in req.contour
-    ]
-
-    # Map the HTTP model onto ProfileConfig's real field names. The request
-    # uses CAM-intent vocabulary (max_stepdown_mm, feed_rate_mm_min); the
-    # generator dataclass does not. Passing request names through caused
-    # TypeError once FastAPI binding was restored (PROFILING-ROUTE-ANNOTATION-001).
-    config = ProfileConfig(
+def profile_config_from_request(req: ProfileRequest) -> ProfileConfig:
+    """Map HTTP intent onto the generator dataclass the route actually runs."""
+    return ProfileConfig(
         tool_diameter_mm=req.tool_diameter_mm,
         cut_depth_mm=req.cut_depth_mm,
         stepdown_mm=req.max_stepdown_mm,
@@ -139,8 +143,125 @@ def generate_profile_gcode(req: ProfileRequest) -> Response:
         compensation_side="outside" if req.is_outside else "inside",
     )
 
+
+def feasibility_req_from_config(
+    config: ProfileConfig,
+    *,
+    contour_point_count: int,
+    use_tabs: bool,
+) -> Dict[str, Any]:
+    """Evaluator inputs from the same ProfileConfig the generator receives."""
+    return {
+        "tool_id": PROFILING_TOOL_ID,
+        "tool_diameter_mm": config.tool_diameter_mm,
+        "cut_depth_mm": config.cut_depth_mm,
+        "stepdown_mm": config.stepdown_mm,
+        "feed_rate_mm_min": config.feed_rate_xy,
+        "plunge_rate_mm_min": config.plunge_rate,
+        "safe_z_mm": config.safe_z_mm,
+        "retract_z_mm": config.retract_z_mm,
+        "contour_point_count": contour_point_count,
+        "tab_count": config.tab_count,
+        "tab_height_mm": config.tab_height_mm,
+        "use_tabs": use_tabs,
+        "finishing_pass": config.finishing_pass,
+        "finishing_allowance_mm": config.finishing_allowance_mm,
+    }
+
+
+def _authorize_profiling(
+    *,
+    config: ProfileConfig,
+    contour_point_count: int,
+    use_tabs: bool,
+):
+    """Evaluate then policy-gate. Returns only when generation is allowed.
+
+    Generation is not reachable from this function. Callers must not build
+    G-code before this returns.
+    """
+    feas_req = feasibility_req_from_config(
+        config,
+        contour_point_count=contour_point_count,
+        use_tabs=use_tabs,
+    )
+    feasibility = compute_feasibility_internal(
+        tool_id=PROFILING_TOOL_ID,
+        req=feas_req,
+        context="profiling_gcode",
+    )
+    decision = SafetyPolicy.extract_safety_decision(feasibility)
+    risk_level = decision.risk_level_str()
+    feas_hash = sha256_of_obj(feasibility)
+    run_id = create_run_id()
+    if SafetyPolicy.should_block(decision.risk_level):
+        validate_and_persist(
+            run_id=run_id,
+            mode=PROFILING_MODE,
+            tool_id=PROFILING_TOOL_ID,
+            event_type="profiling_gcode_blocked",
+            status="BLOCKED",
+            request_summary=feas_req,
+            feasibility=feasibility,
+            feasibility_sha256=feas_hash,
+            risk_level=risk_level,
+            block_reason=f"Blocked by safety policy: {risk_level}",
+            decision_warnings=list(decision.warnings),
+        )
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "SAFETY_BLOCKED",
+                "message": "Profiling G-code generation blocked by server-side safety policy.",
+                "run_id": run_id,
+                "decision": decision.to_dict(),
+                "authoritative_feasibility": feasibility,
+            },
+            headers={"X-Run-ID": run_id, "X-ToolBox-Lane": "governed"},
+        )
+    return run_id, feasibility, feas_hash, risk_level, feas_req
+
+
+@router.post("/gcode", response_class=Response)
+@safety_critical
+def generate_profile_gcode(req: ProfileRequest) -> Response:
+    """
+    Generate perimeter profiling G-code with holding tabs.
+
+    Authority (compute_profile_feasibility via compute_feasibility_internal
+    and SafetyPolicy) runs before ProfileToolpath.generate().
+    """
+    if len(req.contour) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail="Contour must have at least 3 points"
+        )
+
+    points: List[Tuple[float, float]] = [
+        (pt.x, pt.y) for pt in req.contour
+    ]
+    config = profile_config_from_request(req)
+    run_id, feasibility, feas_hash, risk_level, feas_req = _authorize_profiling(
+        config=config,
+        contour_point_count=len(points),
+        use_tabs=req.use_tabs,
+    )
+
     profiler = ProfileToolpath(outline=points, config=config)
     result = profiler.generate()
+    gcode_hash = sha256_of_text(result.gcode)
+    validate_and_persist(
+        run_id=run_id,
+        mode=PROFILING_MODE,
+        tool_id=PROFILING_TOOL_ID,
+        event_type="profiling_gcode_execution",
+        status="OK",
+        request_summary=feas_req,
+        feasibility=feasibility,
+        feasibility_sha256=feas_hash,
+        risk_level=risk_level,
+        gcode_sha256=gcode_hash,
+    )
 
     return Response(
         content=result.gcode,
@@ -150,6 +271,10 @@ def generate_profile_gcode(req: ProfileRequest) -> Response:
             "X-Tab-Count": str(config.tab_count),
             "X-Total-Length-MM": f"{result.total_length_mm:.2f}",
             "X-Estimated-Time-S": f"{result.estimated_time_seconds:.1f}",
+            "X-Run-ID": run_id,
+            "X-GCode-SHA256": gcode_hash,
+            "X-ToolBox-Lane": "governed",
+            "X-Risk-Level": risk_level,
         }
     )
 

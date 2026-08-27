@@ -5,6 +5,11 @@
 **Base:** `origin/main` at execution (`93df82f3`, after #327).  
 **PR:** continues draft #328 (same increment; not a second agent PR).
 
+**Later after-state (do not erase the frozen before-state):**  
+RMOS-PROFILING-CONVERGE-001 (2026-08-27) changed **Profiling only** from
+`LIVE_UNGOVERNED_OUTPUT` to `GOVERNED`. Historical Stage-2 classifications
+in this document remain the before-state. See §7.
+
 This is not an agent report. Grounding Agent v0.1 remains the only agent under
 trial (`GA-TRIAL-0002`, MATCH / PROCEED). One script, one inert registry, one
 report, one PR.
@@ -326,3 +331,84 @@ VERIFY AGAINST REGISTRY
         ↓
 UPDATE BEFORE → AFTER EVIDENCE
 ```
+
+---
+
+## 7. After-state — RMOS-PROFILING-CONVERGE-001 (2026-08-27)
+
+This section is an increment on the frozen Stage-2 map. It does **not**
+rewrite the historical classification. PR #328 remains the before-state.
+
+```text
+Capability: profiling
+
+BEFORE (PR #328 / merge 9d5d9001):
+  authority_disposition = LIVE_UNGOVERNED_OUTPUT
+  reachability          = RUNTIME_REACHABLE
+  POST /api/cam/profiling/gcode → 200 G-code
+  RMOS authority boundary absent from the sibling /gcode route
+
+AFTER (RMOS-PROFILING-CONVERGE-001):
+  authority_disposition = GOVERNED
+  reachability          = RUNTIME_REACHABLE
+  POST /api/cam/profiling/gcode → evaluate → SafetyPolicy → ALLOW? generate
+  GOVERNED ≠ FUNCTIONAL ≠ AVAILABLE
+```
+
+Grounding Agent v0.1: **GA-TRIAL-0003**, `MATCH / PROCEED`. No Grounding
+Agent code was changed.
+
+### What changed
+
+Production `POST /api/cam/profiling/gcode` now:
+
+1. maps `ProfileRequest` → the same `ProfileConfig` `ProfileToolpath` runs;
+2. builds evaluator inputs from that config (no fabricated defaults;
+   finishing fields are the `ProfileConfig` runtime values
+   `ProfileToolpath.generate()` actually uses);
+3. calls the **existing** `compute_profile_feasibility` through
+   `compute_feasibility_internal` / `compute_profiling_feasibility`
+   (adapter only — not a second evaluator);
+4. passes the result through `SafetyPolicy`;
+5. generates G-code only after allow;
+6. persists via `validate_and_persist` with the authority decision and
+   feasibility identity (not a request hash).
+
+Evaluator vocabulary mapping (not new physics):
+
+| `compute_profile_feasibility` | RMOS `SafetyPolicy` |
+| --- | --- |
+| not feasible / issues | RED (block) |
+| feasible + `low` | GREEN |
+| feasible + `medium` or `high` (warnings) | YELLOW (allowed; not rewritten GREEN) |
+| missing required inputs | UNKNOWN (block) |
+| engine exception | ERROR (block) |
+
+`SafetyPolicy` must not be handed the scorer's `low`/`medium` strings —
+those would become UNKNOWN and block valid jobs.
+
+### Witnesses
+
+| Input | After |
+| --- | --- |
+| Valid default contour | 200 G-code, `X-Risk-Level: GREEN`, `X-Run-ID` |
+| Tiny tool + aggressive feed (warnings) | 200 G-code, `X-Risk-Level: YELLOW` |
+| `tab_height_mm >= cut_depth_mm` | 409 `SAFETY_BLOCKED`, no G-code, no output hash |
+| Empty body | 422 (PR #324 binding preserved) |
+| Client-supplied `risk_level` / `decision` | ignored; RED fixture still 409 |
+| `POST /api/cam/profiling/preview` | unchanged |
+
+No in-repo production consumer of `/api/cam/profiling/gcode` was found
+(`packages/client` calls `/intent-gcode` only). Client code was not
+changed.
+
+### What did not change
+
+V-carve, drilling, retract, adaptive, polygon-offset, rmos-wrap, Rosette,
+profiling `/preview`, `TabGenerator(contour=...)`, profiling physics, and
+the Grounding Agent. Adaptive remains `GOVERNED`. Retract remains
+`BLOCKED_BY_DESIGN`. Rosette remains `GOVERNED` + `RUNTIME_BROKEN`.
+
+The `_PRODUCTION_FEASIBILITY_ENGINES` table now includes `profiling`. That
+is the sanctioned way to reopen a lane (existing evaluator, registered
+mode). It is not a new feasibility physics module.
