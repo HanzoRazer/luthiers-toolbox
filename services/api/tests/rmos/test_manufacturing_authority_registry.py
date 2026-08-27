@@ -237,3 +237,26 @@ def test_script_validate_registry_helper_agrees(registry, schema):
     mod = _load_script()
     errors = mod.validate_registry(registry, schema=schema)
     assert errors == []
+
+
+def test_registry_is_inert_no_production_module_reads_it():
+    """The registry describes authority; it must never be consulted for it.
+
+    Nothing under ``services/api/app/`` may import, open, or name the registry
+    file. The document's whole warranty is that it is a record, not a policy
+    source -- a single production read would make a frozen audit snapshot into
+    live configuration, and every disposition in it into a runtime decision.
+    """
+    app_root = REPO_ROOT / "services/api/app"
+    needles = (
+        "manufacturing_authority_registry",
+        "rmos_authority_map",
+        "rmos_authority_stage2",
+    )
+    offenders = []
+    for path in app_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for needle in needles:
+            if needle in text:
+                offenders.append(f"{path.relative_to(REPO_ROOT)} references {needle}")
+    assert offenders == [], offenders

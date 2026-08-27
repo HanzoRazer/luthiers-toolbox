@@ -271,3 +271,89 @@ def test_live_app_registry_reconciles(mod):
     assert errors == [], errors
     assert inventory["unique_mounted_paths"] > 100
     assert len(classified["candidates"]) >= 14
+
+
+def _app_without_retract() -> FastAPI:
+    """The mini app with the retract family absent, as a failed mount leaves it."""
+    app = FastAPI()
+
+    @app.post("/api/cam/profiling/gcode")
+    def profiling_gcode():
+        return "ok"
+
+    return app
+
+
+def test_mar_027_unmounted_family_reports_once_not_per_route(mod):
+    """A router family that did not mount is one cause, not N stale routes.
+
+    The CAM aggregator mounts each family behind ``try: import / except
+    ImportError: router = None``. A missing dependency therefore removes a whole
+    manufacturing family silently, and the routes resurface here looking like
+    unrelated stale registry entries. MAR-027 names the mechanism once.
+    """
+    full = _mini_app()
+    inventory = mod.collect_inventory(full)
+    classified = mod.classify_routes(inventory["routes"])
+    skeleton = mod.build_skeleton(inventory, classified)
+
+    reduced = mod.collect_inventory(_app_without_retract())
+    reduced_classified = mod.classify_routes(reduced["routes"])
+    errors = mod.validate_registry(
+        skeleton, inventory=reduced, classified=reduced_classified
+    )
+
+    family = [e for e in errors if e.startswith("MAR-027")]
+    assert len(family) == 1, errors
+    assert "/api/cam/retract" in family[0]
+    assert "import guard" in family[0]
+    # The four routes must not also be reported individually.
+    assert not [e for e in errors if e.startswith("MAR-004")], errors
+
+
+def test_mar_004_still_fires_for_a_single_stale_route(mod):
+    """One dead route inside a family that IS mounted stays a MAR-004."""
+    app = _mini_app()
+    inventory = mod.collect_inventory(app)
+    classified = mod.classify_routes(inventory["routes"])
+    skeleton = mod.build_skeleton(inventory, classified)
+    retract = next(
+        c for c in skeleton["capabilities"] if c["capability_id"] == "retract"
+    )
+    retract["routes"].append(
+        {
+            "path": "/api/cam/retract/gcode_ancient",
+            "methods": ["POST"],
+            "mount_state": "MOUNTED",
+            "route_role": "alias",
+            "historical_or_dead": False,
+        }
+    )
+    errors = mod.validate_registry(
+        skeleton, inventory=inventory, classified=classified
+    )
+    assert any("MAR-004" in e and "gcode_ancient" in e for e in errors), errors
+    assert not [e for e in errors if e.startswith("MAR-027")], errors
+
+
+def test_mar_026_blind_walk_cannot_report_agreement(mod):
+    """An OpenAPI cross-check that did not run must not read as 'no discrepancy'."""
+    app = _mini_app()
+    inventory = mod.collect_inventory(app)
+    classified = mod.classify_routes(inventory["routes"])
+    skeleton = mod.build_skeleton(inventory, classified)
+
+    assert inventory["openapi_available"] is True
+    assert inventory["in_openapi_not_walked"] == []
+
+    blinded = dict(inventory)
+    blinded["openapi_available"] = False
+    blinded["openapi_error"] = "TypeAdapter is not fully defined"
+    blinded["in_openapi_not_walked"] = None
+    blinded["in_walked_not_openapi"] = None
+
+    errors = mod.validate_registry(
+        skeleton, inventory=blinded, classified=classified
+    )
+    assert any(e.startswith("MAR-026") for e in errors), errors
+    assert any("not fully defined" in e for e in errors), errors

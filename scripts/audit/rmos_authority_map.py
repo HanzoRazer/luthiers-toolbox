@@ -320,6 +320,14 @@ def collect_inventory(app: Any) -> Dict[str, Any]:
     walked_paths = {r["path"] for r in unique}
     oa_set = set(openapi_paths)
 
+    # The OpenAPI comparison is the only thing that catches the mounted-route
+    # walk silently under-counting -- a renamed ``_IncludedRouter`` would make
+    # the walk fall through to the flat branch and lose whole subtrees without
+    # raising. When the comparison itself did not run, an empty difference means
+    # "no data", not "no discrepancy", so report unavailability instead of
+    # agreement. ``None`` is deliberate: it cannot be mistaken for a clean set.
+    openapi_available = openapi_error is None and bool(openapi_paths)
+
     return {
         "top_level_route_objects": len(app.routes),
         "walked_operations": len(mounted),
@@ -327,8 +335,9 @@ def collect_inventory(app: Any) -> Dict[str, Any]:
         "unique_mounted_paths": len(walked_paths),
         "openapi_paths": len(openapi_paths),
         "openapi_error": openapi_error,
-        "in_openapi_not_walked": sorted(oa_set - walked_paths),
-        "in_walked_not_openapi": sorted(walked_paths - oa_set),
+        "openapi_available": openapi_available,
+        "in_openapi_not_walked": sorted(oa_set - walked_paths) if openapi_available else None,
+        "in_walked_not_openapi": sorted(walked_paths - oa_set) if openapi_available else None,
         "duplicate_mounts": [
             {"path": d["path"], "methods": d["methods"]} for d in duplicate_mounts
         ],
@@ -583,6 +592,17 @@ def load_json(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def mount_family(path: str) -> str:
+    """Prefix a router family is mounted under, e.g. ``/api/cam/toolpath``.
+
+    Four segments is where the CAM aggregator's ``include_router(prefix=...)``
+    calls attach, so it is the granularity at which a family appears or vanishes
+    as a unit.
+    """
+    parts = [p for p in path.split("/") if p]
+    return "/" + "/".join(parts[:3]) if len(parts) >= 3 else path
+
+
 def registered_route_keys(registry: Dict[str, Any]) -> Dict[Tuple[str, Tuple[str, ...]], str]:
     out: Dict[Tuple[str, Tuple[str, ...]], str] = {}
     for cap in registry.get("capabilities", []):
@@ -598,6 +618,196 @@ def candidate_route_keys(classified: Dict[str, Any]) -> Dict[Tuple[str, Tuple[st
         key = (item["path"], tuple(item["methods"]))
         out[key] = item["capability_id"]
     return out
+
+
+def _validate_against_mounted_surface(
+    registry: Dict[str, Any],
+    caps: Sequence[Dict[str, Any]],
+    inventory: Dict[str, Any],
+    classified: Dict[str, Any],
+) -> List[str]:
+    """Reconcile the registry against the live mounted route table.
+
+    Split out of ``validate_registry`` so the two questions stay separable:
+    that function asks whether the document is internally coherent, this one
+    asks whether it still describes the running application. They fail for
+    unrelated reasons and one needs a live app while the other does not.
+    """
+    errors: List[str] = []
+    mounted_keys = {
+        (r["path"], tuple(r["methods"])) for r in inventory["routes"]
+    }
+    reg_keys = registered_route_keys(registry)
+    cand_keys = candidate_route_keys(classified)
+
+    # MAR-026: a walk that was never cross-checked cannot support MAR-004.
+    # Default True so synthetic inventories built by tests stay valid.
+    if not inventory.get("openapi_available", True):
+        errors.append(
+            "MAR-026 OpenAPI cross-check unavailable "
+            f"({inventory.get('openapi_error') or 'no paths returned'}); "
+            "the mounted-route walk is unverified, so route-resolution "
+            "findings below are not trustworthy"
+        )
+
+    unresolved: List[Tuple[str, str, str]] = []  # (mount_family, cap_id, "path [M]")
+    for key, cap_id in reg_keys.items():
+        path, methods = key
+        route_rec = None
+        for cap in caps:
+            if cap["capability_id"] != cap_id:
+                continue
+            for route in cap.get("routes") or []:
+                if route["path"] == path and tuple(route["methods"]) == methods:
+                    route_rec = route
+                    break
+        if route_rec and route_rec.get("historical_or_dead"):
+            continue
+        if key not in mounted_keys:
+            unresolved.append((mount_family(path), cap_id, f"{path} {list(methods)}"))
+
+    # A whole router family that failed to mount is one cause, not N registry
+    # errors. The CAM aggregator mounts each family behind
+    # ``try: import / except ImportError: router = None``, so a single missing
+    # dependency removes an entire manufacturing family with no error raised
+    # anywhere -- and the routes then surface here as unrelated-looking stale
+    # entries spread across several capabilities. Detect the family, say it
+    # once, and name the mechanism.
+    by_family: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
+    for family, cap_id, entry in unresolved:
+        by_family[family].append((cap_id, entry))
+
+    for family, items in sorted(by_family.items()):
+        family_has_mounted = any(
+            m_path == family or m_path.startswith(family + "/")
+            for m_path, _ in mounted_keys
+        )
+        if len(items) > 1 and not family_has_mounted:
+            cap_ids = sorted({c for c, _ in items})
+            errors.append(
+                f"MAR-027 {family}: {len(items)} registered routes across "
+                f"capabilities {cap_ids} are absent, and nothing at all is "
+                f"mounted under this prefix -- the router family did not mount, "
+                f"it is not individually stale. Check the conditional import "
+                f"guard for this prefix; a failed dependency import silently "
+                f"yields None and drops the whole family. "
+                f"Routes: {sorted(e for _, e in items)}"
+            )
+            continue
+        for cap_id, entry in sorted(items):
+            errors.append(
+                f"MAR-004 {cap_id} {entry}: registered mounted route does not resolve"
+            )
+
+    for key, cap_id in cand_keys.items():
+        if key not in reg_keys:
+            path, methods = key
+            errors.append(
+                f"MAR-006/MAR-021 unregistered machine-artifact route {path} {list(methods)} (discovered as {cap_id})"
+            )
+
+    # Alias grouping: retract-style suffixes must not mint extra capabilities.
+    by_family = defaultdict(set)
+    for cap in caps:
+        for route in cap.get("routes") or []:
+            fam, _ = assign_capability(route["path"])
+            by_family[fam].add(cap["capability_id"])
+    for fam, cap_ids in by_family.items():
+        if len(cap_ids) > 1:
+            errors.append(
+                f"MAR-008 family {fam} split across capabilities {sorted(cap_ids)}"
+            )
+    return errors
+
+
+def _validate_capability_semantics(
+    cap: Dict[str, Any],
+    vocab: set,
+    registry: Dict[str, Any],
+) -> List[str]:
+    """Rules that hold for one capability record on its own.
+
+    Split out of ``validate_registry``: these need no live app and no
+    inventory, only the record and the vocabulary it claims to use.
+    """
+    errors: List[str] = []
+    disp = cap.get("authority_disposition")
+    if disp not in vocab:
+        errors.append(
+            f"MAR-002 {cap.get('capability_id')}: disposition {disp!r} not in vocabulary"
+        )
+    if disp in AUTHORITATIVE_DISPOSITIONS:
+        evidence = cap.get("evidence") or []
+        if not evidence:
+            errors.append(
+                f"MAR-003 {cap.get('capability_id')}: authoritative disposition {disp} lacks evidence"
+            )
+        if disp == "LIVE_UNGOVERNED_OUTPUT" and cap.get("authority", {}).get("status") in (
+            "NAMED",
+        ):
+            # Silent governed marking of an ungoverned disposition.
+            errors.append(
+                f"MAR-003 {cap.get('capability_id')}: LIVE_UNGOVERNED_OUTPUT marked with named authority"
+            )
+
+    reach = cap.get("reachability")
+    runtime_ev = cap.get("runtime_evidence")
+    if reach == "RUNTIME_REACHABLE" and runtime_ev in (
+        "NOT_OBTAINED_STAGE_1",
+        "NOT_OBTAINED_SAFELY",
+        None,
+    ):
+        errors.append(
+            f"MAR-023 {cap.get('capability_id')}: SOURCE/MOUNT evidence cannot establish RUNTIME_REACHABLE"
+        )
+    if reach in {"RUNTIME_BROKEN", "RUNTIME_BLOCKED_BY_POLICY"} and not cap.get("client_consumers"):
+        # Empty consumers must not be the reason a route is called dead.
+        if runtime_ev in ("NOT_OBTAINED_STAGE_1", "NOT_OBTAINED_SAFELY") and reach != "MOUNTED":
+            errors.append(
+                f"MAR-022 {cap.get('capability_id')}: NO_IN_REPO_CONSUMER must not classify reachability as {reach}"
+            )
+
+    for route in cap.get("routes") or []:
+        if route.get("historical_or_dead") and route.get("mount_state") == "MOUNTED":
+            errors.append(
+                f"MAR-005 {cap.get('capability_id')} {route.get('path')}: historical/dead flag on a mounted route"
+            )
+        if route.get("mount_state") in {"HISTORICAL", "DEAD", "UNMOUNTED"} and not route.get(
+            "historical_or_dead"
+        ):
+            errors.append(
+                f"MAR-005 {cap.get('capability_id')} {route.get('path')}: stale route lacks historical_or_dead"
+            )
+
+    kind = cap.get("surface_kind")
+    if kind not in set(SURFACE_KIND_VOCABULARY):
+        errors.append(
+            f"MAR-025 {cap.get('capability_id')}: surface_kind {kind!r} not in vocabulary"
+        )
+    if kind == "advisory" and disp not in {
+        "ADVISORY_ONLY",
+        "UNKNOWN",
+        "INSUFFICIENT_EVIDENCE",
+    }:
+        errors.append(
+            f"MAR-025 {cap.get('capability_id')}: advisory surface cannot carry manufacturing disposition {disp}"
+        )
+    if kind == "artifact_retrieval" and disp == "GOVERNED":
+        errors.append(
+            f"MAR-009 {cap.get('capability_id')}: artifact retrieval cannot be manufacturing GOVERNED"
+        )
+    if cap.get("persistence", {}).get("status") == "FALSE_PROVENANCE" and disp == "GOVERNED":
+        errors.append(
+            f"MAR-009 {cap.get('capability_id')}: GREEN/false provenance is not GOVERNED"
+        )
+    if (
+        registry.get("stage") == "stage_2_authority"
+        and cap.get("runtime_evidence") == "NOT_OBTAINED_STAGE_1"
+    ):
+        errors.append(
+            f"MAR-023 {cap.get('capability_id')}: Stage 2 cannot retain NOT_OBTAINED_STAGE_1"
+        )
+    return errors
 
 
 def validate_registry(
@@ -629,129 +839,16 @@ def validate_registry(
 
     vocab = set(registry.get("disposition_vocabulary") or DISPOSITION_VOCABULARY)
     for cap in caps:
-        disp = cap.get("authority_disposition")
-        if disp not in vocab:
-            errors.append(
-                f"MAR-002 {cap.get('capability_id')}: disposition {disp!r} not in vocabulary"
-            )
-        if disp in AUTHORITATIVE_DISPOSITIONS:
-            evidence = cap.get("evidence") or []
-            if not evidence:
-                errors.append(
-                    f"MAR-003 {cap.get('capability_id')}: authoritative disposition {disp} lacks evidence"
-                )
-            if disp == "LIVE_UNGOVERNED_OUTPUT" and cap.get("authority", {}).get("status") in (
-                "NAMED",
-            ):
-                # Silent governed marking of an ungoverned disposition.
-                errors.append(
-                    f"MAR-003 {cap.get('capability_id')}: LIVE_UNGOVERNED_OUTPUT marked with named authority"
-                )
-
-        reach = cap.get("reachability")
-        runtime_ev = cap.get("runtime_evidence")
-        if reach == "RUNTIME_REACHABLE" and runtime_ev in (
-            "NOT_OBTAINED_STAGE_1",
-            "NOT_OBTAINED_SAFELY",
-            None,
-        ):
-            errors.append(
-                f"MAR-023 {cap.get('capability_id')}: SOURCE/MOUNT evidence cannot establish RUNTIME_REACHABLE"
-            )
-        if reach in {"RUNTIME_BROKEN", "RUNTIME_BLOCKED_BY_POLICY"} and not cap.get("client_consumers"):
-            # Empty consumers must not be the reason a route is called dead.
-            if runtime_ev in ("NOT_OBTAINED_STAGE_1", "NOT_OBTAINED_SAFELY") and reach != "MOUNTED":
-                errors.append(
-                    f"MAR-022 {cap.get('capability_id')}: NO_IN_REPO_CONSUMER must not classify reachability as {reach}"
-                )
-
-        for route in cap.get("routes") or []:
-            if route.get("historical_or_dead") and route.get("mount_state") == "MOUNTED":
-                errors.append(
-                    f"MAR-005 {cap.get('capability_id')} {route.get('path')}: historical/dead flag on a mounted route"
-                )
-            if route.get("mount_state") in {"HISTORICAL", "DEAD", "UNMOUNTED"} and not route.get(
-                "historical_or_dead"
-            ):
-                errors.append(
-                    f"MAR-005 {cap.get('capability_id')} {route.get('path')}: stale route lacks historical_or_dead"
-                )
-
-        kind = cap.get("surface_kind")
-        if kind not in set(SURFACE_KIND_VOCABULARY):
-            errors.append(
-                f"MAR-025 {cap.get('capability_id')}: surface_kind {kind!r} not in vocabulary"
-            )
-        if kind == "advisory" and disp not in {
-            "ADVISORY_ONLY",
-            "UNKNOWN",
-            "INSUFFICIENT_EVIDENCE",
-        }:
-            errors.append(
-                f"MAR-025 {cap.get('capability_id')}: advisory surface cannot carry manufacturing disposition {disp}"
-            )
-        if kind == "artifact_retrieval" and disp == "GOVERNED":
-            errors.append(
-                f"MAR-009 {cap.get('capability_id')}: artifact retrieval cannot be manufacturing GOVERNED"
-            )
-        if cap.get("persistence", {}).get("status") == "FALSE_PROVENANCE" and disp == "GOVERNED":
-            errors.append(
-                f"MAR-009 {cap.get('capability_id')}: GREEN/false provenance is not GOVERNED"
-            )
-        if (
-            registry.get("stage") == "stage_2_authority"
-            and cap.get("runtime_evidence") == "NOT_OBTAINED_STAGE_1"
-        ):
-            errors.append(
-                f"MAR-023 {cap.get('capability_id')}: Stage 2 cannot retain NOT_OBTAINED_STAGE_1"
-            )
+        errors.extend(_validate_capability_semantics(cap, vocab, registry))
 
     unclassified = registry.get("_stage2_unclassified_capabilities") or []
     if unclassified:
         errors.append(f"MAR-006 Stage 2 overlay missing capabilities: {unclassified}")
 
     if inventory is not None and classified is not None:
-        mounted_keys = {
-            (r["path"], tuple(r["methods"])) for r in inventory["routes"]
-        }
-        reg_keys = registered_route_keys(registry)
-        cand_keys = candidate_route_keys(classified)
-
-        for key, cap_id in reg_keys.items():
-            path, methods = key
-            route_rec = None
-            for cap in caps:
-                if cap["capability_id"] != cap_id:
-                    continue
-                for route in cap.get("routes") or []:
-                    if route["path"] == path and tuple(route["methods"]) == methods:
-                        route_rec = route
-                        break
-            if route_rec and route_rec.get("historical_or_dead"):
-                continue
-            if key not in mounted_keys:
-                errors.append(
-                    f"MAR-004 {cap_id} {path} {list(methods)}: registered mounted route does not resolve"
-                )
-
-        for key, cap_id in cand_keys.items():
-            if key not in reg_keys:
-                path, methods = key
-                errors.append(
-                    f"MAR-006/MAR-021 unregistered machine-artifact route {path} {list(methods)} (discovered as {cap_id})"
-                )
-
-        # Alias grouping: retract-style suffixes must not mint extra capabilities.
-        by_family = defaultdict(set)
-        for cap in caps:
-            for route in cap.get("routes") or []:
-                fam, _ = assign_capability(route["path"])
-                by_family[fam].add(cap["capability_id"])
-        for fam, cap_ids in by_family.items():
-            if len(cap_ids) > 1:
-                errors.append(
-                    f"MAR-008 family {fam} split across capabilities {sorted(cap_ids)}"
-                )
+        errors.extend(
+            _validate_against_mounted_surface(registry, caps, inventory, classified)
+        )
 
     return errors
 

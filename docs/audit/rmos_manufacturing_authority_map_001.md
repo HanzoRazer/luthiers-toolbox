@@ -45,6 +45,82 @@ hold. Naive `app.routes` under-counts; the walk recurses `_IncludedRouter`.
 
 Validation: `PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate` → OK.
 
+These counts are **environment-dependent and must be read with the stamp
+below.** `top_level_route_objects` in particular reflects how the installed
+FastAPI stores included routers: 0.137 wraps them as `_IncludedRouter` (155
+top-level objects), while an older FastAPI flattens them (~1147). A re-run on a
+machine that does not match `services/api/requirements.txt` will not reproduce
+this table and should not be treated as contradicting it.
+
+| Stamp | Value |
+| --- | --- |
+| FastAPI | `>=0.137.0,<0.138.0` (per `services/api/requirements.txt`) |
+| Re-run drift observed 2026-08-27 | OpenAPI paths 1077 → 1072, unique mounted paths 1081 → 1076 |
+
+The drift is `main` moving under a frozen snapshot, which is expected and does
+not invalidate the classifications: the reconciliation test pins only the 26
+registered capabilities' routes, not global counts.
+
+---
+
+## 0a. The mount itself is fail-open (finding added 2026-08-27)
+
+Stage 1 recorded `mount_state: MOUNTED` as a fact. It is not a fact; it is a
+**contingent outcome**. `app/cam/routers/aggregator.py` mounts every CAM family
+through the same guard:
+
+```python
+try:
+    from .toolpath import router as toolpath_router
+except ImportError:
+    toolpath_router = None
+...
+if toolpath_router:
+    cam_router.include_router(toolpath_router, prefix="/toolpath", ...)
+```
+
+There are **16 such guards**. A single failed transitive import silently removes
+an entire manufacturing-output family — no exception, no log, no gate. This was
+not theorised: on 2026-08-27 a missing `defusedxml` (a *declared* requirement,
+absent from one developer machine) removed `/api/cam/toolpath/*` in full, taking
+four registered routes with it.
+
+**Registry exposure: 9 of 26 capabilities, 16 routes.**
+
+| Capability | Disposition | Routes behind a fail-open guard |
+| --- | --- | ---: |
+| `pocketing` | GOVERNED | 1 |
+| `rosette` | GOVERNED | 2 |
+| `vcarve` | POST_MERGE_AUTHORITY_EXPOSURE | 3 |
+| `drilling` | AUTHORITY_CONTRACT_MISMATCH | 3 |
+| `binding` | LIVE_UNGOVERNED_OUTPUT | 2 |
+| `profiling` | LIVE_UNGOVERNED_OUTPUT | 2 |
+| `biarc-contour` | BLOCKED_BY_DESIGN | 1 |
+| `helical` | BLOCKED_BY_DESIGN | 1 |
+| `roughing` | BLOCKED_BY_DESIGN | 1 |
+
+Why it matters to *this* audit specifically, in both directions:
+
+- **Availability.** A capability classified `GOVERNED` can vanish without anyone
+  being told. Governance that disappears silently is not governance.
+- **Classification integrity.** Three capabilities are classified
+  `BLOCKED_BY_DESIGN`. Had that evidence been a 404, it would have been
+  indistinguishable from "the router never mounted" — an import failure recorded
+  as a design decision. It is not: §4's witnesses assert **409**, which only a
+  mounted, governed route can return. The methodology holds, and it holds
+  *because* it insisted on a governed status code rather than mere absence.
+
+This is recorded as a finding, not remediated. Removing the guards is an
+availability change requiring an owner ruling: today a broken optional
+dependency degrades the API, whereas failing closed would refuse to boot.
+
+**Diagnosability, fixed here.** The reconciliation previously reported an
+unmounted family as N unrelated `MAR-004 ... does not resolve` lines, which
+reads as registry rot rather than a missing router. `MAR-027` now detects that
+nothing at all is mounted under the shared prefix and says so once, naming the
+import guard as the mechanism.
+
+
 ---
 
 ## 1. Taxonomy amendment applied (`surface_kind`)
@@ -176,8 +252,37 @@ saw-batch artifact to download G-code.
 `services/api/tests/rmos/test_manufacturing_authority_discovery.py`  
 `services/api/tests/rmos/test_manufacturing_authority_stage2.py`
 
-47 passed: MAR-001–024 (Stage 1 integrity/discovery plus Stage 2 semantics).
+51 passed: MAR-001–027 (Stage 1 integrity/discovery plus Stage 2 semantics).
 `--no-cov` because `pytest.ini` has `--cov-fail-under=20` for unrelated modules.
+
+Added 2026-08-27: `MAR-026` (a blind OpenAPI cross-check must not read as
+agreement), `MAR-027` (an unmounted family is reported once, naming the import
+guard), a MAR-004 regression proving a single stale route is still reported
+individually, and an inertness witness asserting that **no** module under
+`services/api/app/` references the registry, the map script, or the Stage 2
+overlay. The registry's entire warranty is that it is a record and not a policy
+source; nothing previously enforced that.
+
+### These tests were not run by any gate
+
+`services/api/tests/` is **not collected by CI**. The "API Tests" workflow runs
+`cd services/api && python -m pytest -q app/tests/` — a different tree. The gap
+is repo-scale, not specific to this audit:
+
+| Tree | Test files | Collected by CI |
+| --- | ---: | --- |
+| `services/api/app/tests/` | 34 | yes |
+| `services/api/tests/` | 447 (~8,384 test functions) | **no** |
+
+So every witness in this PR was green locally and unenforced remotely, and
+`rmos-ci` passing said nothing about any of it. A **bounded** fix is applied
+here: `rmos_ci.yml` now runs these three files explicitly, and unlike the
+adjacent steps it is not wrapped in `if [ -f ... ]` — a missing witness fails
+the gate rather than skipping quietly.
+
+The wider gap is left open deliberately. Collecting 447 files at once is an
+unbounded availability change and belongs to its own order, not to a frozen
+audit snapshot.
 
 `--emit-skeleton` still prints Stage-1 UNKNOWN. `--emit-stage2` prints the
 overlay to stdout and does not write the registry.
