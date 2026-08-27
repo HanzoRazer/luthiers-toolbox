@@ -1,0 +1,38 @@
+{
+  "name": "GA-HIST-02 — Cursor cloud artifact referenced from wrong environment",
+  "description": "Handoff references a /opt/cursor/artifacts patch as present; the local environment has no such path. Reported as environment-scoped absence, not 'never existed'.",
+  "request": {
+    "schema_version": "grounding_request_v0.1",
+    "active_lane": {
+      "project": "Luthiers-Toolbox-Consolidation-Lab",
+      "active_repository": "HanzoRazer/luthiers-toolbox",
+      "active_program": "RMOS-CONVERGE",
+      "active_order": "RMOS-CONVERGE-001B-B2",
+      "active_state": "IMPLEMENTATION",
+      "cross_repo_policy": "EVIDENCE_ONLY"
+    },
+    "claims": [
+      {
+        "claim_id": "C-001",
+        "type": "local_path_exists",
+        "path": "/opt/cursor/artifacts/grounding_walkthrough.patch",
+        "expected": true,
+        "material": true
+      }
+    ]
+  },
+  "recorded": {
+    "local_paths": {
+      "/opt/cursor/artifacts/grounding_walkthrough.patch": false
+    }
+  },
+  "expected": {
+    "status": "STALE",
+    "decision": "STOP",
+    "material_divergences": ["C-001"],
+    "claim_verdicts": { "C-001": "MISMATCH" },
+    "evidence_classes": { "C-001": "FILE_PRESENCE" },
+    "scopes": { "C-001": "LOCAL_ENVIRONMENT" },
+    "message_contains": { "C-001": "not present in current environment" }
+  }
+}

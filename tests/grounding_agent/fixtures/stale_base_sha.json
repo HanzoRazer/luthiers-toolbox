@@ -1,0 +1,48 @@
+{
+  "name": "GA-HIST-03 — stale base SHA",
+  "description": "Handoff pins main at an expected SHA; the checkout resolves main to a different SHA. Also witnesses ancestry: the expected base is not an ancestor of the working branch.",
+  "request": {
+    "schema_version": "grounding_request_v0.1",
+    "active_lane": {
+      "project": "Luthiers-Toolbox-Consolidation-Lab",
+      "active_repository": "HanzoRazer/luthiers-toolbox",
+      "active_program": "RMOS-CONVERGE",
+      "active_order": "RMOS-CONVERGE-001B-B2",
+      "active_state": "IMPLEMENTATION",
+      "cross_repo_policy": "EVIDENCE_ONLY"
+    },
+    "claims": [
+      {
+        "claim_id": "C-001",
+        "type": "repo_head",
+        "repository": "HanzoRazer/luthiers-toolbox",
+        "ref": "main",
+        "expected_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "material": true
+      },
+      {
+        "claim_id": "C-002",
+        "type": "commit_ancestor",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "target_ref": "feature/work",
+        "expected": { "is_ancestor": true },
+        "material": true
+      }
+    ]
+  },
+  "recorded": {
+    "git_refs": {
+      "main": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "git_ancestry": {
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|feature/work": false
+    }
+  },
+  "expected": {
+    "status": "STALE",
+    "decision": "STOP",
+    "material_divergences": ["C-001", "C-002"],
+    "claim_verdicts": { "C-001": "MISMATCH", "C-002": "MISMATCH" },
+    "evidence_classes": { "C-001": "GIT_REF", "C-002": "GIT_ANCESTRY" }
+  }
+}

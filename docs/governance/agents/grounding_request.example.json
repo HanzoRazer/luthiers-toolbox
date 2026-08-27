@@ -1,0 +1,42 @@
+{
+  "schema_version": "grounding_request_v0.1",
+  "active_lane": {
+    "project": "Luthiers-Toolbox-Consolidation-Lab",
+    "active_repository": "HanzoRazer/luthiers-toolbox",
+    "active_program": "RMOS-CONVERGE",
+    "active_order": "RMOS-CONVERGE-001B-B2",
+    "active_state": "IMPLEMENTATION",
+    "cross_repo_policy": "EVIDENCE_ONLY"
+  },
+  "claims": [
+    {
+      "claim_id": "C-001",
+      "type": "file_exists",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "ref": "HEAD",
+      "path": "services/api/app/core/safety.py",
+      "expected": true,
+      "material": true
+    },
+    {
+      "claim_id": "C-002",
+      "type": "active_lane",
+      "target_repository": "HanzoRazer/luthiers-toolbox",
+      "action": "mutation",
+      "material": true
+    },
+    {
+      "claim_id": "C-003",
+      "type": "local_path_exists",
+      "path": "README.md",
+      "expected": true,
+      "material": false
+    },
+    {
+      "claim_id": "C-004",
+      "type": "worktree_clean",
+      "expected": { "tracked_clean": true, "untracked_clean": false },
+      "material": false
+    }
+  ]
+}

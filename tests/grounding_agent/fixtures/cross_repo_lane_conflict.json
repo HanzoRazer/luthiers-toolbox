@@ -1,0 +1,39 @@
+{
+  "name": "GA-HIST-05 — cross-repo active-lane conflict",
+  "description": "Active lane is luthiers-toolbox under EVIDENCE_ONLY, but a claim declares a mutation target in code-analysis-tool. Cross-repo evidence remains permitted; cross-repo mutation is a lane conflict.",
+  "request": {
+    "schema_version": "grounding_request_v0.1",
+    "active_lane": {
+      "project": "Luthiers-Toolbox-Consolidation-Lab",
+      "active_repository": "HanzoRazer/luthiers-toolbox",
+      "active_program": "RMOS-CONVERGE",
+      "active_order": "RMOS-CONVERGE-001B-B2",
+      "active_state": "IMPLEMENTATION",
+      "cross_repo_policy": "EVIDENCE_ONLY"
+    },
+    "claims": [
+      {
+        "claim_id": "C-001",
+        "type": "active_lane",
+        "target_repository": "HanzoRazer/code-analysis-tool",
+        "action": "evidence",
+        "material": true
+      },
+      {
+        "claim_id": "C-002",
+        "type": "active_lane",
+        "target_repository": "HanzoRazer/code-analysis-tool",
+        "action": "mutation",
+        "material": true
+      }
+    ]
+  },
+  "recorded": {},
+  "expected": {
+    "status": "STALE",
+    "decision": "STOP",
+    "material_divergences": ["C-002"],
+    "claim_verdicts": { "C-001": "MATCH", "C-002": "MISMATCH" },
+    "evidence_classes": { "C-001": "INPUT_CONTRACT", "C-002": "INPUT_CONTRACT" }
+  }
+}
