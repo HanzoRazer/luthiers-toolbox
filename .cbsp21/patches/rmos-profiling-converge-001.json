@@ -16,6 +16,7 @@
       "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
       "scripts/audit/rmos_authority_stage2.py",
       "services/api/app/cam/routers/profiling/profile_router.py",
+      "services/api/app/rmos/api/profiling_feasibility.py",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/manufacturing_authority_registry.json",
       "services/api/tests/rmos/test_manufacturing_authority_stage2.py",
@@ -30,6 +31,7 @@
       "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
       "scripts/audit/rmos_authority_stage2.py",
       "services/api/app/cam/routers/profiling/profile_router.py",
+      "services/api/app/rmos/api/profiling_feasibility.py",
       "services/api/app/rmos/api/rmos_feasibility_router.py",
       "services/api/app/rmos/manufacturing_authority_registry.json",
       "services/api/tests/rmos/test_manufacturing_authority_stage2.py",
@@ -57,6 +59,12 @@
       "intent": "Gate production /gcode: truthful ProfileRequest→ProfileConfig→feasibility mapping, canonical evaluator + SafetyPolicy before generation, sanctioned persist, no G-code on block. Preview unchanged.",
       "risk": "high",
       "behavior_change": "yes - blocked authority no longer emits G-code; allowed requests still 200"
+    },
+    {
+      "path": "services/api/app/rmos/api/profiling_feasibility.py",
+      "intent": "File-size split of the profiling engine adapter (dispatch to existing compute_profile_feasibility). Not a second evaluator and not new physics.",
+      "risk": "medium",
+      "behavior_change": "none vs inlining the same adapter in the router; required so rmos_feasibility_router stays under the 500-line gate"
     },
     {
       "path": "services/api/app/rmos/api/rmos_feasibility_router.py",
