@@ -249,39 +249,47 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
     "profiling": _overlay(
         surface_kind="manufacturing_capability",
         intent_contract=(
-            "Legacy POST /gcode is @safety_critical with no RMOS feasibility. "
-            "#324 restored JSON body binding; the route now emits G-code. "
-            "Intent /intent-gcode uses compute_profile_feasibility (intent-lane) "
-            "before ProfileToolpath.generate(). Capability disposition follows "
-            "the live ungated primary, not the intent lane. "
-            "POST_MERGE_AUTHORITY_EXPOSURE is reserved for V-carve (D9)."
+            "RMOS-PROFILING-CONVERGE-001. Production POST /gcode evaluates "
+            "compute_profile_feasibility (via compute_profiling_feasibility) "
+            "then SafetyPolicy before ProfileToolpath.generate(). Finishing "
+            "defaults are ProfileConfig runtime values the generator actually "
+            "uses. Intent /intent-gcode already used the same canonical scorer. "
+            "Preview /preview is unchanged and is not a machine-output path. "
+            "GOVERNED != FUNCTIONAL != AVAILABLE. Frozen before-state from "
+            "PR #328 was LIVE_UNGOVERNED_OUTPUT / RUNTIME_REACHABLE."
         ),
-        authority_status="NONE",
-        evaluator="app.cam.profiling.feasibility.compute_profile_feasibility (intent route only)",
-        policy_boundary="@safety_critical is fail-closed logging, not RMOS",
-        generation_ordering="MIXED",
-        input_contract_status="MIXED",
-        ungated_output_exposure="YES",
+        authority_status="NAMED",
+        evaluator=(
+            "app.cam.profiling.feasibility.compute_profile_feasibility "
+            "via app.rmos.api.rmos_feasibility_router.compute_profiling_feasibility"
+        ),
+        policy_boundary="SafetyPolicy.should_block via _authorize_profiling",
+        generation_ordering="AUTHORITY_BEFORE_GENERATION",
+        input_contract_status="TRUTHFUL",
+        ungated_output_exposure="NO",
         generators=[
             "app.cam.routers.profiling.profile_router.generate_profile_gcode",
             "app.cam.routers.profiling.intent_router.generate_profile_intent_gcode",
         ],
-        persistence_status="NONE",
-        persistence_mechanism="legacy /gcode: none; intent: validate_and_persist",
+        persistence_status="RUN_ARTIFACT",
+        persistence_mechanism="validate_and_persist with evaluator feasibility + gcode_sha256",
         client_consumers=[],
         reachability="RUNTIME_REACHABLE",
         runtime_evidence="POST_COMPUTE_WITNESS",
-        authority_disposition="LIVE_UNGOVERNED_OUTPUT",
+        authority_disposition="GOVERNED",
         evidence=[
             _ev(
                 "STATIC_CODE_TRACE",
                 "services/api/app/cam/routers/profiling/profile_router.py:generate_profile_gcode",
-                "No compute_feasibility_internal. ProfileToolpath.generate() then Response.",
+                "_authorize_profiling (compute_feasibility_internal + SafetyPolicy) "
+                "returns only when allowed; ProfileToolpath.generate() follows.",
             ),
             _ev(
                 "RUNTIME_REQUEST_WITNESS",
                 "POST /api/cam/profiling/gcode",
-                "Post-#324: 200 with G21 from JSON contour. Empty body is 422 (not classified as LIVE).",
+                "Valid contour → 200 G-code + X-Run-ID + X-Risk-Level GREEN. "
+                "tab_height_mm >= cut_depth_mm → 409 SAFETY_BLOCKED, no G-code. "
+                "Empty body remains 422 (PR #324 binding preserved).",
             ),
         ],
         evidence_class="RUNTIME_REQUEST_WITNESS",

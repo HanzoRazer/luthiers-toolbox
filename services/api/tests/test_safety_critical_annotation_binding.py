@@ -181,9 +181,24 @@ _RECT = [
 ]
 
 
-def test_profiling_gcode_accepts_json_body_and_emits_gcode() -> None:
+def test_profiling_gcode_accepts_json_body_and_emits_gcode(
+    tmp_path, monkeypatch,
+) -> None:
     """End-to-end: the production route is no longer 422 loc=['query','req']."""
     from app.cam.routers.profiling.profile_router import router
+
+    runs = tmp_path / "rmos_runs"
+    runs.mkdir(parents=True)
+    (runs / "_index.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("RMOS_RUNS_DIR", str(runs))
+    monkeypatch.setenv("RMOS_RUN_ATTACHMENTS_DIR", str(tmp_path / "att"))
+    monkeypatch.setenv("RMOS_ARTIFACT_ROOT", str(tmp_path / "run_artifacts"))
+    monkeypatch.setenv("ART_STUDIO_DB_PATH", str(tmp_path / "art.db"))
+    try:
+        from app.rmos.runs_v2 import store_api as runs_v2_store_api
+        runs_v2_store_api._default_store = None
+    except ImportError:
+        pass
 
     app = FastAPI()
     app.include_router(router)
