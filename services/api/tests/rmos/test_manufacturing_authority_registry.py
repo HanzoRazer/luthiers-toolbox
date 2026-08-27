@@ -134,25 +134,46 @@ def test_emit_skeleton_stays_unknown():
 
 def test_committed_registry_is_stage2(registry):
     assert registry["stage"] == "stage_2_authority"
+
+
+def test_surface_kinds_cover_the_owner_amendment(registry):
     kinds = {c["surface_kind"] for c in registry["capabilities"]}
     assert "manufacturing_capability" in kinds
     assert "advisory" in kinds
     assert "artifact_retrieval" in kinds
     assert "artifact_transformation" in kinds
-    feeds = next(c for c in registry["capabilities"] if c["capability_id"] == "feeds-speeds")
+
+
+def test_advisory_and_retrieval_are_not_manufacturing_governed(registry):
+    by_id = {c["capability_id"]: c for c in registry["capabilities"]}
+    feeds = by_id["feeds-speeds"]
+    op = by_id["operator-pack"]
+    geom = by_id["geometry"]
     assert feeds["surface_kind"] == "advisory"
     assert feeds["authority_disposition"] == "ADVISORY_ONLY"
-    op = next(c for c in registry["capabilities"] if c["capability_id"] == "operator-pack")
     assert op["surface_kind"] == "artifact_retrieval"
     assert op["authority_disposition"] != "GOVERNED"
-    geom = next(c for c in registry["capabilities"] if c["capability_id"] == "geometry")
     assert geom["surface_kind"] == "artifact_transformation"
-    for cap in registry["capabilities"]:
-        assert cap["runtime_evidence"] != "NOT_OBTAINED_STAGE_1"
-        assert cap["generation_ordering"] != "UNKNOWN" or cap["authority_disposition"] in {
-            "UNKNOWN",
-            "INSUFFICIENT_EVIDENCE",
-        }
+
+
+def test_stage2_left_no_stage1_runtime_placeholder(registry):
+    leftovers = [
+        c["capability_id"]
+        for c in registry["capabilities"]
+        if c["runtime_evidence"] == "NOT_OBTAINED_STAGE_1"
+    ]
+    assert leftovers == []
+
+
+def test_unknown_ordering_only_with_non_conclusions(registry):
+    non_conclusions = {"UNKNOWN", "INSUFFICIENT_EVIDENCE"}
+    bad = [
+        c["capability_id"]
+        for c in registry["capabilities"]
+        if c["generation_ordering"] == "UNKNOWN"
+        and c["authority_disposition"] not in non_conclusions
+    ]
+    assert bad == []
 
 
 def test_required_seed_capabilities_present(registry):
