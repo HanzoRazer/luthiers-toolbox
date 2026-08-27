@@ -1,0 +1,1595 @@
+{
+  "schema_version": "manufacturing_authority_registry_v0.1",
+  "audit_id": "RMOS-AUTHORITY-MAP-001",
+  "stage": "stage_1_checkpoint",
+  "warning": "PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This is an audit census of manufacturing-capability reachability. It does not replace CANONICAL_AUTHORITY_MAP.md, geometry_authority_registry.py, or ontology_authority_map.py. Nothing production-facing should import this file.",
+  "adjacent_authority_maps": [
+    {
+      "path": "docs/governance/CANONICAL_AUTHORITY_MAP.md",
+      "concern": "semantic ownership \u2014 not manufacturing reachability"
+    },
+    {
+      "path": "services/api/app/cam/geometry_authority_registry.py",
+      "concern": "7T geometry references; no execution/machine-output authority"
+    },
+    {
+      "path": "services/api/app/cam/ontology_authority_map.py",
+      "concern": "7M vocabulary; execution_authorized is always false"
+    }
+  ],
+  "reachability_vocabulary": [
+    "SOURCE_PRESENT",
+    "MOUNTED",
+    "RUNTIME_REACHABLE",
+    "RUNTIME_BLOCKED_BY_POLICY",
+    "RUNTIME_BROKEN",
+    "NO_IN_REPO_CONSUMER"
+  ],
+  "disposition_vocabulary": [
+    "GOVERNED",
+    "GOVERNED_PROVENANCE_DEFECT",
+    "LIVE_UNGOVERNED_OUTPUT",
+    "BLOCKED_BY_DESIGN",
+    "AUTHORITY_CONTRACT_MISMATCH",
+    "POST_MERGE_AUTHORITY_EXPOSURE",
+    "RUNTIME_BROKEN",
+    "EXPLICITLY_NON_PRODUCTION",
+    "ADVISORY_ONLY",
+    "UNKNOWN",
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "evidence_class_vocabulary": [
+    "MOUNTED_ROUTE_TABLE",
+    "OPENAPI_PATHS",
+    "RUNTIME_REQUEST_WITNESS",
+    "STATIC_CODE_TRACE",
+    "CLIENT_CALL_SITE",
+    "GREP_LEAD",
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "capabilities": [
+    {
+      "capability_id": "retract",
+      "operation_family": "retract",
+      "grouping_rule": "seeded_prefix:/api/cam/retract",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/retract/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/retract/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/retract/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/retract/gcode_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "alias",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "adaptive",
+      "operation_family": "adaptive",
+      "grouping_rule": "seeded_prefix:/api/cam/pocket/adaptive",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/pocket/adaptive/batch_export",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/pocket/adaptive/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode",
+        "unknown"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "drilling",
+      "operation_family": "drilling",
+      "grouping_rule": "seeded_prefix:/api/cam/drilling",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/drilling/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/drilling/intent-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "intent",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/drilling/pattern/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "profiling",
+      "operation_family": "profiling",
+      "grouping_rule": "seeded_prefix:/api/cam/profiling",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/profiling/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/profiling/intent-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "intent",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "vcarve",
+      "operation_family": "vcarve",
+      "grouping_rule": "seeded_prefix:/api/cam/toolpath/vcarve",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/vcarve/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/vcarve/intent-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "intent",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/vcarve/production/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "roughing",
+      "operation_family": "roughing",
+      "grouping_rule": "seeded_prefix:/api/cam/toolpath/roughing",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/roughing/gcode_intent",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "intent",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/toolpath/roughing/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "helical",
+      "operation_family": "helical",
+      "grouping_rule": "seeded_prefix:/api/cam/toolpath/helical_entry",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/helical_entry",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "rosette",
+      "operation_family": "rosette",
+      "grouping_rule": "seeded_prefix:/api/cam/rosette",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/rosette/plan-toolpath",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/rosette/post-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "unknown",
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "probing",
+      "operation_family": "probing",
+      "grouping_rule": "seeded_prefix:/api/probe",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/probe/boss/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/boss/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/boss/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/corner/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/corner/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/corner/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/pocket/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/pocket/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/pocket/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/surface_z/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/surface_z/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/surface_z/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/vise_square/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/vise_square/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/probe/vise_square/gcode/download_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/v1/machines/probe/corner",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/v1/machines/probe/surface",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode",
+        "unknown"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "binding",
+      "operation_family": "binding",
+      "grouping_rule": "seeded_prefix:/api/cam/binding",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/binding/channel/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/binding/purfling/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "inlay",
+      "operation_family": "inlay",
+      "grouping_rule": "seeded_prefix:/api/art-studio/inlay",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/art-studio/inlay/export-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "radius-dish",
+      "operation_family": "radius-dish",
+      "grouping_rule": "seeded_prefix:/api/acoustics/radius-dish",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/acoustics/radius-dish/generate-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "feeds-speeds",
+      "operation_family": "feeds-speeds",
+      "grouping_rule": "seeded_prefix:/api/cam/opt/feeds-speeds",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/opt/feeds-speeds",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "feeds_speeds_json"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "biarc-contour",
+      "operation_family": "biarc-contour",
+      "grouping_rule": "seeded_prefix:/api/cam/toolpath/biarc",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/biarc/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "cam-guitar",
+      "operation_family": "cam-guitar",
+      "grouping_rule": "derived_path_family:cam-guitar",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/binding/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/body/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/soundhole/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/flying_v/body/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/les_paul/body/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/stratocaster/body/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/{model_id}/neck/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "cam-post",
+      "operation_family": "cam-post",
+      "grouping_rule": "derived_path_family:cam-post",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/post/post_v155",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "geometry",
+      "operation_family": "geometry",
+      "grouping_rule": "derived_path_family:geometry",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/geometry/export_bundle",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/geometry/export_bundle_multi",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/geometry/export_gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/geometry/export_gcode_governed",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "alias",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode",
+        "zip_with_gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "headstock-transition",
+      "operation_family": "headstock-transition",
+      "grouping_rule": "derived_path_family:headstock-transition",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/headstock/transition/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "neck-gcode",
+      "operation_family": "neck-gcode",
+      "grouping_rule": "seeded_prefix:/api/neck/gcode",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/neck/gcode/download",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/neck/gcode/generate",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "operator-pack",
+      "operation_family": "operator-pack",
+      "grouping_rule": "seeded_prefix:/api/rmos/runs_v2",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/rmos/runs_v2/{run_id}/operator-pack",
+          "methods": [
+            "GET"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "operator_pack"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "pocketing",
+      "operation_family": "pocketing",
+      "grouping_rule": "seeded_prefix:/api/cam/pocketing",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/pocketing/intent-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "intent",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "polygon-offset",
+      "operation_family": "polygon-offset",
+      "grouping_rule": "seeded_prefix:/api/cam/polygon_offset",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/cam/polygon_offset.nc",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/polygon_offset_governed.nc",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "alias",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "nc"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "rmos-wrap",
+      "operation_family": "rmos-wrap",
+      "grouping_rule": "derived_path_family:rmos-wrap",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/rmos/wrap/mvp/dxf-to-grbl",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "saw-batch",
+      "operation_family": "saw-batch",
+      "grouping_rule": "derived_path_family:saw-batch",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/saw/batch/executions/{batch_execution_artifact_id}/gcode",
+          "methods": [
+            "GET"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/saw/batch/op-toolpaths/{op_toolpaths_artifact_id}/gcode",
+          "methods": [
+            "GET"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        },
+        {
+          "path": "/api/saw/batch/toolpaths/{toolpaths_artifact_id}/download/gcode",
+          "methods": [
+            "GET"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "download",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "v1-dxf",
+      "operation_family": "v1-dxf",
+      "grouping_rule": "derived_path_family:v1-dxf",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/v1/dxf/cam/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    },
+    {
+      "capability_id": "vision",
+      "operation_family": "vision",
+      "grouping_rule": "derived_path_family:vision",
+      "intent_contract": "UNKNOWN",
+      "authority": {
+        "status": "UNKNOWN",
+        "evaluator": null,
+        "policy_boundary": null
+      },
+      "routes": [
+        {
+          "path": "/api/vision/photo-to-gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
+        }
+      ],
+      "generators": [],
+      "persistence": {
+        "status": "UNKNOWN",
+        "mechanism": null
+      },
+      "artifact_types": [
+        "gcode"
+      ],
+      "client_consumers": [],
+      "reachability": "MOUNTED",
+      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
+      "authority_disposition": "UNKNOWN",
+      "evidence": [
+        {
+          "class": "MOUNTED_ROUTE_TABLE",
+          "ref": "app.main:app",
+          "note": "Stage 1 inventory only. No authority conclusion."
+        }
+      ],
+      "evidence_class": "INSUFFICIENT_EVIDENCE",
+      "confidence": "LOW"
+    }
+  ],
+  "exclusions": [
+    {
+      "path": "/api/cam/sim/gcode",
+      "methods": [
+        "POST"
+      ],
+      "reason": "consumes G-code or simulates; emits analysis, not a cut"
+    },
+    {
+      "path": "/api/cam/gcode/plot.svg",
+      "methods": [
+        "POST"
+      ],
+      "reason": "visualization SVG of existing G-code"
+    },
+    {
+      "path": "/api/cam/gcode/estimate",
+      "methods": [
+        "POST"
+      ],
+      "reason": "time/cost estimate; does not emit a machine artifact"
+    },
+    {
+      "path": "/api/cam/gcode/simulate",
+      "methods": [
+        "POST"
+      ],
+      "reason": "simulation of existing G-code"
+    },
+    {
+      "path": "/api/neck/gcode/styles",
+      "methods": [
+        "GET"
+      ],
+      "reason": "metadata catalog, not emission"
+    },
+    {
+      "path": "/api/neck/gcode/profiles",
+      "methods": [
+        "GET"
+      ],
+      "reason": "metadata catalog, not emission"
+    },
+    {
+      "path": "/api/neck/gcode/tools",
+      "methods": [
+        "GET"
+      ],
+      "reason": "metadata catalog, not emission"
+    }
+  ],
+  "unexplained_emitters": []
+}

@@ -25,12 +25,14 @@ Spec: [`GROUNDING_AGENT_v0.1.md`](GROUNDING_AGENT_v0.1.md)
 | ID | Date | Handoff / Order | Result | Stale caught? | False positive? | False negative? | Blocked evidence? | Human override? | Estimated time effect | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | GA-TRIAL-0001 | 2026-08-27 | GROUNDING-AGENT-TRIAL-001 | STALE / STOP | yes | no | no | no | no | small positive (~a few min saved) | PR #326 had already created the ledger on `main`; Grounding caught the stale "create ledger" premise before mutation. |
+| GA-TRIAL-0002 | 2026-08-27 | RMOS-AUTHORITY-MAP-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified eight material prerequisites (v0.1 + ledger; #322 and #324 MERGED; rmos_prod_audit_001.md; core/safety.py; rmos/feasibility/engine.py) before the Stage-1 census began. Risk reduction, not a large time saving. |
 
 ## Incident notes
 
 Use only where a table row cannot adequately explain an important event.
 
 - **GA-TRIAL-0001** — First real operational use, not a synthetic fixture. GROUNDING-AGENT-TRIAL-001 instructed "create the trial ledger", but PR #326 had merged that ledger to `main` ~2 minutes earlier. Grounding checked the handoff's premises against `origin/main` (v0.1 files present → MATCH; ledger expected absent → observed present → MISMATCH) and returned `STALE / STOP`, preventing a redundant/blind ledger creation. The stale premise was corrected into this narrow ledger-contract-completion increment.
+- **GA-TRIAL-0002** — Second real operational use. RMOS-AUTHORITY-MAP-001 Stage 1 (a one-off census, not a new agent) required Grounding before mutation. All eight material claims MATCH, including live GitHub state that #322 and #324 are merged. Decision PROCEED. The Dev Order was then rewritten to forbid building a second agent; the census proceeded as ordinary script + inert registry + report.
 
 ## Summary
 
@@ -39,8 +41,8 @@ TRIAL PERIOD:
 START: 2026-08-26
 END:
 
-TOTAL HANDOFFS CHECKED: 1
-  MATCH / PROCEED:                0
+TOTAL HANDOFFS CHECKED: 2
+  MATCH / PROCEED:                1
   STALE / STOP:                   1
   BLOCKED / STOP:                 0
   INSUFFICIENT_EVIDENCE / STOP:   0
@@ -50,7 +52,7 @@ FALSE POSITIVES:       0
 FALSE NEGATIVES:       0
 BLOCKED RUNS:          0
 HUMAN OVERRIDES:       0
-ESTIMATED NET TIME EFFECT: small positive (~a few min saved)
+ESTIMATED NET TIME EFFECT: small positive / neutral
 
 DECISION (current): INSUFFICIENT EVIDENCE
 Allowed terminal dispositions: KEEP | REVISE | RETIRE | INSUFFICIENT EVIDENCE

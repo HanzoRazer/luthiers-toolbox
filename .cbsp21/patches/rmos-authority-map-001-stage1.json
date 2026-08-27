@@ -1,0 +1,134 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_AUTHORITY_MAP_001_STAGE1",
+  "title": "RMOS-AUTHORITY-MAP-001 Stage 1: one-off manufacturing authority census (not an agent)",
+  "intent": "Rewrite RMOS-AUTHORITY-MAP-001 as a plain one-off RMOS audit/consolidation increment and deliver Stage 1 only: one census script, one inert capability registry, one JSON Schema, one checkpoint report, MAR-001–008 and MAR-021–024 tests, GA-TRIAL-0002 in the existing Grounding trial ledger, and a pointer on the historical RMOS audit. Grounding Agent v0.1 remains the only agent under trial. No new agent identity, workflow, orchestration, or standing mapper service. No production CAM/RMOS/feasibility/route/client/persistence/G-code behavior change. Stage 1 dispositions are UNKNOWN / INSUFFICIENT_EVIDENCE; stop at the Step-7 taxonomy checkpoint.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md",
+      "scripts/audit/rmos_authority_map.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/app/rmos/schemas/manufacturing_authority_registry.schema.json",
+      "services/api/tests/rmos/test_manufacturing_authority_registry.py",
+      "services/api/tests/rmos/test_manufacturing_authority_discovery.py",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/audit/rmos_prod_audit_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      ".cbsp21/patches/rmos-authority-map-001-stage1.json"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md",
+      "scripts/audit/rmos_authority_map.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/app/rmos/schemas/manufacturing_authority_registry.schema.json",
+      "services/api/tests/rmos/test_manufacturing_authority_registry.py",
+      "services/api/tests/rmos/test_manufacturing_authority_discovery.py",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/audit/rmos_prod_audit_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      ".cbsp21/patches/rmos-authority-map-001-stage1.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds a rewritten Dev Order that forbids a second agent, a read-only census script (scripts/audit/rmos_authority_map.py) that walks FastAPI _IncludedRouter mounts, an inert manufacturing_authority_registry.json seeded UNKNOWN, its JSON Schema, Stage-1 checkpoint audit, a dated pointer on rmos_prod_audit_001.md, GA-TRIAL-0002 on the existing Grounding ledger, and 22 pytest witnesses (MAR-001–008, MAR-021–024). Nothing production-facing imports the registry. No tools/ package, no new GitHub workflow, no Grounding Agent code change.",
+    "why_not_redundant": "Existing RMOS audits and live_routes.json are route censuses and historical leads. There is no capability-level manufacturing reachability registry, and adjacent maps (CANONICAL_AUTHORITY_MAP, geometry_authority_registry, ontology_authority_map) explicitly do not own machine-output authority. This increment is the evidence artifact a later cutover would consume; it introduces no runtime authority."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m tools.grounding_agent.cli --request /tmp/rmos_authority_map_001_grounding.json --repo-root . -> MATCH/PROCEED (exit 0); recorded as GA-TRIAL-0002",
+      "PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate -> OK",
+      "cd services/api && PYTHONPATH=. python3 -m pytest tests/rmos/test_manufacturing_authority_registry.py tests/rmos/test_manufacturing_authority_discovery.py -q --no-cov -> 22 passed",
+      "git diff --name-only origin/main..HEAD -> census/docs/tests/ledger/manifest only; no CAM/RMOS production modules"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md",
+      "intent": "Rewritten Dev Order: one-off RMOS audit, not an agent build.",
+      "scan_targets": ["docs/handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md"],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "scripts/audit/rmos_authority_map.py",
+      "intent": "Read-only census/validate script; default does not write the registry.",
+      "scan_targets": ["scripts/audit/rmos_authority_map.py"],
+      "risk": "low",
+      "behavior_change": "none — standalone audit script, not imported by production"
+    },
+    {
+      "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+      "intent": "Inert Stage-1 capability registry; UNKNOWN dispositions; grants no execution authority.",
+      "scan_targets": ["services/api/app/rmos/manufacturing_authority_registry.json"],
+      "risk": "low",
+      "behavior_change": "none — data artifact, no production importer"
+    },
+    {
+      "path": "services/api/app/rmos/schemas/manufacturing_authority_registry.schema.json",
+      "intent": "JSON Schema for the census registry, including the no-authority warning.",
+      "scan_targets": ["services/api/app/rmos/schemas/manufacturing_authority_registry.schema.json"],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_manufacturing_authority_registry.py",
+      "intent": "MAR-001–005 integrity tests against the committed registry.",
+      "scan_targets": ["services/api/tests/rmos/test_manufacturing_authority_registry.py"],
+      "risk": "low",
+      "behavior_change": "none — tests only"
+    },
+    {
+      "path": "services/api/tests/rmos/test_manufacturing_authority_discovery.py",
+      "intent": "MAR-006–008 and MAR-021–024 discovery/negative tests plus live reconcile.",
+      "scan_targets": ["services/api/tests/rmos/test_manufacturing_authority_discovery.py"],
+      "risk": "low",
+      "behavior_change": "none — tests only"
+    },
+    {
+      "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "intent": "Stage-1 checkpoint report. Authorizes no remediation.",
+      "scan_targets": ["docs/audit/rmos_manufacturing_authority_map_001.md"],
+      "risk": "low",
+      "behavior_change": "none — documentation"
+    },
+    {
+      "path": "docs/audit/rmos_prod_audit_001.md",
+      "intent": "Dated pointer that the newer capability census supersedes route-level identity where they conflict, after Stage 2. Does not rewrite historical findings.",
+      "scan_targets": ["docs/audit/rmos_prod_audit_001.md"],
+      "risk": "low",
+      "behavior_change": "none — documentation addendum only"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record GA-TRIAL-0002 MATCH/PROCEED as the second natural Grounding use.",
+      "scan_targets": ["docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"],
+      "risk": "low",
+      "behavior_change": "none — ledger only; no Grounding Agent code change"
+    },
+    {
+      "path": ".cbsp21/patches/rmos-authority-map-001-stage1.json",
+      "intent": "Per-PR CBSP21 manifest for this Stage-1 census.",
+      "scan_targets": [".cbsp21/patches/rmos-authority-map-001-stage1.json"],
+      "risk": "low",
+      "behavior_change": "none — CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-27-RMOS-AUTHORITY-MAP-001-STAGE1",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Audit-only census. No production importer. No new agent. Grounding v0.1 unchanged."
+  },
+  "no_backend_no_schema": "No backend API, route, persistence, workflow, or G-code change. Adds an inert JSON audit registry plus schema under app/rmos/ that nothing production-facing imports, plus a standalone scripts/audit census, tests, and docs.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

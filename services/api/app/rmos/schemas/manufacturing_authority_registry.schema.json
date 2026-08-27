@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luthierstoolbox.com/schemas/rmos/manufacturing_authority_registry.schema.json",
+  "title": "Manufacturing Authority & Reachability Registry",
+  "description": "Audit-only census of manufacturing capabilities, routes, and reachability. PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This registry does not replace CANONICAL_AUTHORITY_MAP.md (semantic ownership), geometry_authority_registry.py (7T geometry references), or ontology_authority_map.py (7M vocabulary).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "audit_id",
+    "stage",
+    "warning",
+    "adjacent_authority_maps",
+    "reachability_vocabulary",
+    "disposition_vocabulary",
+    "evidence_class_vocabulary",
+    "capabilities",
+    "exclusions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "manufacturing_authority_registry_v0.1"
+    },
+    "audit_id": {
+      "type": "string",
+      "const": "RMOS-AUTHORITY-MAP-001"
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["stage_1_checkpoint", "stage_2_authority"]
+    },
+    "warning": {
+      "type": "string",
+      "minLength": 40
+    },
+    "adjacent_authority_maps": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["path", "concern"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "concern": { "type": "string" }
+        }
+      }
+    },
+    "reachability_vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SOURCE_PRESENT",
+          "MOUNTED",
+          "RUNTIME_REACHABLE",
+          "RUNTIME_BLOCKED_BY_POLICY",
+          "RUNTIME_BROKEN",
+          "NO_IN_REPO_CONSUMER"
+        ]
+      }
+    },
+    "disposition_vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "GOVERNED",
+          "GOVERNED_PROVENANCE_DEFECT",
+          "LIVE_UNGOVERNED_OUTPUT",
+          "BLOCKED_BY_DESIGN",
+          "AUTHORITY_CONTRACT_MISMATCH",
+          "POST_MERGE_AUTHORITY_EXPOSURE",
+          "RUNTIME_BROKEN",
+          "EXPLICITLY_NON_PRODUCTION",
+          "ADVISORY_ONLY",
+          "UNKNOWN",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      }
+    },
+    "evidence_class_vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "MOUNTED_ROUTE_TABLE",
+          "OPENAPI_PATHS",
+          "RUNTIME_REQUEST_WITNESS",
+          "STATIC_CODE_TRACE",
+          "CLIENT_CALL_SITE",
+          "GREP_LEAD",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "exclusions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/exclusion" }
+    },
+    "unexplained_emitters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unexplained" }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "operation_family",
+        "grouping_rule",
+        "intent_contract",
+        "authority",
+        "routes",
+        "generators",
+        "persistence",
+        "artifact_types",
+        "client_consumers",
+        "reachability",
+        "runtime_evidence",
+        "authority_disposition",
+        "evidence",
+        "evidence_class",
+        "confidence"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "operation_family": { "type": "string", "minLength": 1 },
+        "grouping_rule": { "type": "string", "minLength": 1 },
+        "intent_contract": { "type": "string" },
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "evaluator", "policy_boundary"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["UNKNOWN", "NAMED", "NONE", "MISMATCH"]
+            },
+            "evaluator": { "type": ["string", "null"] },
+            "policy_boundary": { "type": ["string", "null"] }
+          }
+        },
+        "routes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/route" }
+        },
+        "generators": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "persistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "mechanism"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "NONE",
+                "RUN_ARTIFACT",
+                "FALSE_PROVENANCE",
+                "NOT_TRACED"
+              ]
+            },
+            "mechanism": { "type": ["string", "null"] }
+          }
+        },
+        "artifact_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "gcode",
+              "nc",
+              "zip_with_gcode",
+              "operator_pack",
+              "manufacturing_dxf",
+              "feeds_speeds_json",
+              "unknown"
+            ]
+          }
+        },
+        "client_consumers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reachability": {
+          "type": "string",
+          "enum": [
+            "SOURCE_PRESENT",
+            "MOUNTED",
+            "RUNTIME_REACHABLE",
+            "RUNTIME_BLOCKED_BY_POLICY",
+            "RUNTIME_BROKEN",
+            "NO_IN_REPO_CONSUMER"
+          ]
+        },
+        "runtime_evidence": {
+          "type": "string",
+          "enum": [
+            "NOT_OBTAINED_STAGE_1",
+            "NOT_OBTAINED_SAFELY",
+            "GET_WITNESS",
+            "POST_COMPUTE_WITNESS",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "authority_disposition": {
+          "type": "string",
+          "enum": [
+            "GOVERNED",
+            "GOVERNED_PROVENANCE_DEFECT",
+            "LIVE_UNGOVERNED_OUTPUT",
+            "BLOCKED_BY_DESIGN",
+            "AUTHORITY_CONTRACT_MISMATCH",
+            "POST_MERGE_AUTHORITY_EXPOSURE",
+            "RUNTIME_BROKEN",
+            "EXPLICITLY_NON_PRODUCTION",
+            "ADVISORY_ONLY",
+            "UNKNOWN",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_item" }
+        },
+        "evidence_class": {
+          "type": "string",
+          "enum": [
+            "MOUNTED_ROUTE_TABLE",
+            "OPENAPI_PATHS",
+            "RUNTIME_REQUEST_WITNESS",
+            "STATIC_CODE_TRACE",
+            "CLIENT_CALL_SITE",
+            "GREP_LEAD",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["HIGH", "MEDIUM", "LOW"]
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "methods",
+        "mount_state",
+        "route_role",
+        "historical_or_dead"
+      ],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "pattern": "^/" },
+        "methods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          }
+        },
+        "mount_state": {
+          "type": "string",
+          "enum": ["MOUNTED", "HISTORICAL", "DEAD", "UNMOUNTED"]
+        },
+        "route_role": {
+          "type": "string",
+          "enum": ["primary", "alias", "download", "intent", "other"]
+        },
+        "historical_or_dead": { "type": "boolean" }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "reason"],
+      "properties": {
+        "path": { "type": "string" },
+        "methods": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reason": { "type": "string", "minLength": 8 }
+      }
+    },
+    "unexplained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "methods", "note"],
+      "properties": {
+        "path": { "type": "string" },
+        "methods": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "evidence_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "ref"],
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": [
+            "MOUNTED_ROUTE_TABLE",
+            "OPENAPI_PATHS",
+            "RUNTIME_REQUEST_WITNESS",
+            "STATIC_CODE_TRACE",
+            "CLIENT_CALL_SITE",
+            "GREP_LEAD",
+            "INSUFFICIENT_EVIDENCE"
+          ]
+        },
+        "ref": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}
