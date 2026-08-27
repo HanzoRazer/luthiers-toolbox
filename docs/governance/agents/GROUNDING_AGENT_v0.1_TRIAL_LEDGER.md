@@ -8,41 +8,52 @@ never synthetic exercises.
 Spec: [`GROUNDING_AGENT_v0.1.md`](GROUNDING_AGENT_v0.1.md)
 
 ## How to record a row
+- **ID** — stable identifier for the run, e.g. `GA-TRIAL-0001`.
 - **Result** — the agent's top-level status/decision, e.g. `MATCH/PROCEED`, `STALE/STOP`, `BLOCKED/STOP`, `INSUFFICIENT_EVIDENCE/STOP`.
 - **Stale caught?** — did it catch stale state we would otherwise have acted on? (`yes`/`no`)
 - **False positive?** — did it STOP on something that was actually fine? (`yes`/`no`)
-- **False negative?** — did it PROCEED past stale state it should have caught? (`yes`/`no`)
+- **False negative?** — did it return `PROCEED`/`MATCH` when a material claim was **already** wrong or unsupported *at the time Grounding ran*? (`yes`/`no`)
+  - A false negative **requires independent evidence** that the claim was already false when Grounding ran. Later repository drift alone does **not** count — if the state only changed *after* the run, that is not a false negative.
 - **Blocked evidence?** — did a required evidence source fail (no token, GitHub down, etc.)? (`yes`/`no`)
-- **Human override?** — did a human override the STOP and proceed anyway? (`yes`/`no`)
-- **Time saved?** — rough estimate (e.g. `~15m`, `none`, `-` if unknown).
+- **Human override?** — did a human override Grounding's decision and act anyway? (`yes`/`no`)
+  - Record the override **separately** and **preserve the original Grounding result** — do not rewrite the recorded verdict after the fact. Capture, in Notes or an incident note: (1) Grounding's decision, (2) that a human overrode it, (3) why, and (4) whether later evidence showed the override or the Grounding decision to have been correct.
+- **Estimated time effect** — approximate, and may be positive, neutral, or negative: e.g. `+10 min saved`, `neutral`, `-5 min overhead`. Do not assume the agent was beneficial.
 - **Notes** — one line of context; link the handoff/PR if useful.
 
 ## Ledger
 
-| Date | Handoff / Order | Result | Stale caught? | False positive? | False negative? | Blocked evidence? | Human override? | Time saved? | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | |
+| ID | Date | Handoff / Order | Result | Stale caught? | False positive? | False negative? | Blocked evidence? | Human override? | Estimated time effect | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| GA-TRIAL-0001 | 2026-08-27 | GROUNDING-AGENT-TRIAL-001 | STALE / STOP | yes | no | no | no | no | small positive (~a few min saved) | PR #326 had already created the ledger on `main`; Grounding caught the stale "create ledger" premise before mutation. |
+
+## Incident notes
+
+Use only where a table row cannot adequately explain an important event.
+
+- **GA-TRIAL-0001** — First real operational use, not a synthetic fixture. GROUNDING-AGENT-TRIAL-001 instructed "create the trial ledger", but PR #326 had merged that ledger to `main` ~2 minutes earlier. Grounding checked the handoff's premises against `origin/main` (v0.1 files present → MATCH; ledger expected absent → observed present → MISMATCH) and returned `STALE / STOP`, preventing a redundant/blind ledger creation. The stale premise was corrected into this narrow ledger-contract-completion increment.
 
 ## Summary
 
 ```text
 TRIAL PERIOD:
-START:
+START: 2026-08-26
 END:
 
-TOTAL HANDOFFS CHECKED:
-STALE HANDOFFS CAUGHT:
-FALSE POSITIVES:
-FALSE NEGATIVES:
-BLOCKED RUNS:
-HUMAN OVERRIDES:
-ESTIMATED TIME SAVED:
+TOTAL HANDOFFS CHECKED: 1
+  MATCH / PROCEED:                0
+  STALE / STOP:                   1
+  BLOCKED / STOP:                 0
+  INSUFFICIENT_EVIDENCE / STOP:   0
 
-DECISION:
-KEEP
-REVISE
-RETIRE
-INSUFFICIENT EVIDENCE
+STALE HANDOFFS CAUGHT: 1
+FALSE POSITIVES:       0
+FALSE NEGATIVES:       0
+BLOCKED RUNS:          0
+HUMAN OVERRIDES:       0
+ESTIMATED NET TIME EFFECT: small positive (~a few min saved)
+
+DECISION (current): INSUFFICIENT EVIDENCE
+Allowed terminal dispositions: KEEP | REVISE | RETIRE | INSUFFICIENT EVIDENCE
 ```
 
 > The next agent (Reconciliation or otherwise) is not justified by architecture.
