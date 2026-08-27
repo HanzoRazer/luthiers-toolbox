@@ -156,6 +156,17 @@ def test_advisory_and_retrieval_are_not_manufacturing_governed(registry):
     assert geom["surface_kind"] == "artifact_transformation"
 
 
+def test_governed_is_not_functional_or_available(registry):
+    """Authority disposition does not imply a working production path."""
+    text = registry["warning"].upper()
+    assert "GOVERNED" in text
+    assert "FUNCTIONAL" in text
+    assert "AVAILABLE" in text
+    rosette = next(c for c in registry["capabilities"] if c["capability_id"] == "rosette")
+    assert rosette["authority_disposition"] == "GOVERNED"
+    assert rosette["reachability"] == "RUNTIME_BROKEN"
+
+
 def test_stage2_left_no_stage1_runtime_placeholder(registry):
     leftovers = [
         c["capability_id"]

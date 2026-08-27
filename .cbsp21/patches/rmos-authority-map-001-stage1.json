@@ -46,7 +46,7 @@
     "commands_run": [
       "python3 -m tools.grounding_agent.cli --request /tmp/rmos_authority_map_001_grounding.json --repo-root . -> MATCH/PROCEED (exit 0); recorded as GA-TRIAL-0002",
       "PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate -> OK",
-      "cd services/api && PYTHONPATH=. python3 -m pytest tests/rmos/test_manufacturing_authority_registry.py tests/rmos/test_manufacturing_authority_discovery.py tests/rmos/test_manufacturing_authority_stage2.py -q --no-cov -> 40 passed",
+      "cd services/api && PYTHONPATH=. python3 -m pytest tests/rmos/test_manufacturing_authority_registry.py tests/rmos/test_manufacturing_authority_discovery.py tests/rmos/test_manufacturing_authority_stage2.py -q --no-cov -> 47 passed",
       "git diff --name-only origin/main..HEAD -> census/docs/tests/ledger/manifest only; no CAM/RMOS production modules"
     ]
   },

@@ -420,7 +420,11 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
             "ScorerDesignSpec). Historical fail-open (wrong schema / CAM stub "
             "GREEN) is retired. post-gcode is serialization of the same family, "
             "not a second manufacturing authority. Router maps inner/outer "
-            "radius to scorer diameters; that mapping is in the handler, not invented here."
+            "radius to scorer diameters; that mapping is in the handler, not invented here. "
+            "GOVERNED here means the named evaluator is consulted before generation. "
+            "It does not mean generation is functional or the path is available. "
+            "Witnessed generation failure: 400 TOOLPATH_PLAN_ERROR "
+            "(RosetteGeometry.__init__ unexpected keyword center_x). Not remediated."
         ),
         authority_status="NAMED",
         evaluator="app.rmos.api.rmos_feasibility_router.compute_rosette_feasibility",
@@ -435,7 +439,7 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
         persistence_status="RUN_ARTIFACT",
         persistence_mechanism="persist_run OK or BLOCKED with evaluator feasibility",
         client_consumers=[],
-        reachability="MOUNTED",
+        reachability="RUNTIME_BROKEN",
         runtime_evidence="POST_COMPUTE_WITNESS",
         authority_disposition="GOVERNED",
         evidence=[
@@ -447,7 +451,7 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
             _ev(
                 "RUNTIME_REQUEST_WITNESS",
                 "POST /api/cam/rosette/plan-toolpath",
-                "Evaluator is consulted (not 409 UNKNOWN). After a non-blocking decision, generation currently returns 400 TOOLPATH_PLAN_ERROR (RosetteGeometry constructor kwargs). No G-code leaked. Not remediated here.",
+                "Evaluator is consulted (not 409 UNKNOWN). After a non-blocking decision, generation currently returns 400 TOOLPATH_PLAN_ERROR (RosetteGeometry constructor kwargs). No G-code leaked. Recorded as reachability RUNTIME_BROKEN so GOVERNED is not read as functional/available. Not remediated here.",
             ),
         ],
         evidence_class="RUNTIME_REQUEST_WITNESS",

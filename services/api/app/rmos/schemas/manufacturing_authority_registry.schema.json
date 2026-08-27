@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://luthierstoolbox.com/schemas/rmos/manufacturing_authority_registry.schema.json",
   "title": "Manufacturing Authority & Reachability Registry",
-  "description": "Audit-only census of manufacturing capabilities, routes, and reachability. PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This registry does not replace CANONICAL_AUTHORITY_MAP.md (semantic ownership), geometry_authority_registry.py (7T geometry references), or ontology_authority_map.py (7M vocabulary).",
+  "description": "Audit-only census of manufacturing capabilities, routes, and reachability. PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. GOVERNED is an authority conclusion, not a claim that generation is functional or the production path is available (GOVERNED != FUNCTIONAL != AVAILABLE). This registry does not replace CANONICAL_AUTHORITY_MAP.md (semantic ownership), geometry_authority_registry.py (7T geometry references), or ontology_authority_map.py (7M vocabulary).",
   "type": "object",
   "additionalProperties": false,
   "required": [

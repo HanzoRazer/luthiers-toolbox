@@ -2,7 +2,7 @@
   "schema_version": "manufacturing_authority_registry_v0.1",
   "audit_id": "RMOS-AUTHORITY-MAP-001",
   "stage": "stage_2_authority",
-  "warning": "PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This is an audit census of manufacturing-capability reachability. It does not replace CANONICAL_AUTHORITY_MAP.md, geometry_authority_registry.py, or ontology_authority_map.py. Nothing production-facing should import this file.",
+  "warning": "PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This is an audit census of manufacturing-capability reachability. GOVERNED is an authority conclusion, not a claim that generation is functional or the production path is available (GOVERNED != FUNCTIONAL != AVAILABLE). It does not replace CANONICAL_AUTHORITY_MAP.md, geometry_authority_registry.py, or ontology_authority_map.py. Nothing production-facing should import this file.",
   "adjacent_authority_maps": [
     {
       "path": "docs/governance/CANONICAL_AUTHORITY_MAP.md",
@@ -610,7 +610,7 @@
       "operation_family": "rosette",
       "grouping_rule": "seeded_prefix:/api/cam/rosette",
       "surface_kind": "manufacturing_capability",
-      "intent_contract": "plan-toolpath and post-gcode share one upstream authority: compute_feasibility_internal with tool_id rosette:* dispatches to compute_rosette_feasibility (manufacturability scorer via ScorerDesignSpec). Historical fail-open (wrong schema / CAM stub GREEN) is retired. post-gcode is serialization of the same family, not a second manufacturing authority. Router maps inner/outer radius to scorer diameters; that mapping is in the handler, not invented here.",
+      "intent_contract": "plan-toolpath and post-gcode share one upstream authority: compute_feasibility_internal with tool_id rosette:* dispatches to compute_rosette_feasibility (manufacturability scorer via ScorerDesignSpec). Historical fail-open (wrong schema / CAM stub GREEN) is retired. post-gcode is serialization of the same family, not a second manufacturing authority. Router maps inner/outer radius to scorer diameters; that mapping is in the handler, not invented here. GOVERNED here means the named evaluator is consulted before generation. It does not mean generation is functional or the path is available. Witnessed generation failure: 400 TOOLPATH_PLAN_ERROR (RosetteGeometry.__init__ unexpected keyword center_x). Not remediated.",
       "authority": {
         "status": "NAMED",
         "evaluator": "app.rmos.api.rmos_feasibility_router.compute_rosette_feasibility",
@@ -652,7 +652,7 @@
         "gcode"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
+      "reachability": "RUNTIME_BROKEN",
       "runtime_evidence": "POST_COMPUTE_WITNESS",
       "authority_disposition": "GOVERNED",
       "evidence": [
@@ -669,7 +669,7 @@
         {
           "class": "RUNTIME_REQUEST_WITNESS",
           "ref": "POST /api/cam/rosette/plan-toolpath",
-          "note": "Evaluator is consulted (not 409 UNKNOWN). After a non-blocking decision, generation currently returns 400 TOOLPATH_PLAN_ERROR (RosetteGeometry constructor kwargs). No G-code leaked. Not remediated here."
+          "note": "Evaluator is consulted (not 409 UNKNOWN). After a non-blocking decision, generation currently returns 400 TOOLPATH_PLAN_ERROR (RosetteGeometry constructor kwargs). No G-code leaked. Recorded as reachability RUNTIME_BROKEN so GOVERNED is not read as functional/available. Not remediated here."
         }
       ],
       "evidence_class": "RUNTIME_REQUEST_WITNESS",

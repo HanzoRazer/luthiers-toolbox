@@ -190,6 +190,9 @@ EVIDENCE_CLASS_VOCABULARY = [
 WARNING_TEXT = (
     "PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. "
     "This is an audit census of manufacturing-capability reachability. "
+    "GOVERNED is an authority conclusion, not a claim that generation is "
+    "functional or the production path is available "
+    "(GOVERNED != FUNCTIONAL != AVAILABLE). "
     "It does not replace CANONICAL_AUTHORITY_MAP.md, "
     "geometry_authority_registry.py, or ontology_authority_map.py. "
     "Nothing production-facing should import this file."

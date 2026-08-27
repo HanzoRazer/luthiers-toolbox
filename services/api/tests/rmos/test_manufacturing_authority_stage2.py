@@ -307,6 +307,8 @@ def test_mar_020_rosette_evaluator_is_named(registry):
     assert cap["authority"]["status"] == "NAMED"
     assert "compute_rosette_feasibility" in (cap["authority"]["evaluator"] or "")
     assert cap["authority_disposition"] == "GOVERNED"
+    # GOVERNED != FUNCTIONAL != AVAILABLE: generation is currently broken.
+    assert cap["reachability"] == "RUNTIME_BROKEN"
 
 
 def test_mar_020_cam_stub_is_retired_for_named_modes():
@@ -328,16 +330,11 @@ def test_mar_020_rosette_plan_does_not_fail_open(client):
             "feed_xy": 800.0,
         },
     )
-    # 200 = governed plan. 409 = evaluator blocked. 400 TOOLPATH_PLAN_ERROR =
-    # evaluator passed and generation then crashed — still not fail-open G-code.
-    assert r.status_code in {200, 400, 409}, r.text
-    leaked = _has_gcode(r.text) and r.status_code != 200
-    assert not leaked, r.text[:500]
-    if r.status_code == 200:
-        return
+    # Frozen before-state: evaluator ran; generation then 400. No G-code leaked.
+    assert r.status_code == 400, r.text
+    assert not _has_gcode(r.text)
     detail = r.json().get("detail") or {}
-    expected = {409: "SAFETY_BLOCKED", 400: "TOOLPATH_PLAN_ERROR"}
-    assert detail.get("error") == expected[r.status_code]
+    assert detail.get("error") == "TOOLPATH_PLAN_ERROR"
 
 
 # ---------------------------------------------------------------------------

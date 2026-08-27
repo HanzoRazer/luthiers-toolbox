@@ -1,6 +1,6 @@
 # RMOS-AUTHORITY-MAP-001 — Stage 2 Authority Classification
 
-**Status:** STAGE 2 COMPLETE — capability-level classification populated. **No remediation authorized.**  
+**Status:** STAGE 2 COMPLETE — frozen before-state. **No remediation authorized.**  
 **Date:** 2026-08-27  
 **Base:** `origin/main` at execution (`93df82f3`, after #327).  
 **PR:** continues draft #328 (same increment; not a second agent PR).
@@ -84,6 +84,20 @@ generation ordering, persistence truth, and client/retrieval path.
 `UNKNOWN` / `INSUFFICIENT_EVIDENCE` remain valid where a safe witness was
 withheld (Stop #5) or inputs would have to be fabricated (Stop #6).
 
+Reading rule (applies to every capability):
+
+```text
+GOVERNED
+≠
+FUNCTIONAL
+≠
+AVAILABLE
+```
+
+`authority_disposition` answers whether manufacturing authority is valid and
+consulted. `reachability` answers whether the production path currently emits.
+Rosette is the scrutinized case: **GOVERNED** and **RUNTIME_BROKEN**.
+
 ---
 
 ## 3. Capability classifications
@@ -104,7 +118,7 @@ only**. Missing engine → `unavailable_feasibility` UNKNOWN →
 | roughing | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | Mode `roughing` has no engine → 409. MAR-019. |
 | helical | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | `helical:gcode` → no engine → 409. MAR-019. |
 | biarc-contour | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | `tool_id='biarc_gcode'` → mode `unknown`. 409. |
-| rosette | **GOVERNED** | MOUNTED | `compute_rosette_feasibility` | authority before gen | NO | Real scorer (not fail-open). After a non-blocking decision, plan currently 400 `TOOLPATH_PLAN_ERROR` (`RosetteGeometry` kwargs). No G-code leaked. Not remediated. MAR-020. |
+| rosette | **GOVERNED** | RUNTIME_BROKEN | `compute_rosette_feasibility` | authority before gen | NO | Real scorer (not fail-open). After a non-blocking decision, plan currently 400 `TOOLPATH_PLAN_ERROR` (`RosetteGeometry` kwargs). No G-code leaked. GOVERNED ≠ functional/available. Not remediated. MAR-020. |
 | probing | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Draft ungated; governed downloads mint GREEN. Runtime POST withheld (setup probing). |
 | binding | **LIVE_UNGOVERNED_OUTPUT** | RUNTIME_REACHABLE | none | without authority | YES | Channel 200 G-code. Includes acoustic binding. |
 | inlay | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Static; runtime payload not fabricated. |
@@ -162,7 +176,7 @@ saw-batch artifact to download G-code.
 `services/api/tests/rmos/test_manufacturing_authority_discovery.py`  
 `services/api/tests/rmos/test_manufacturing_authority_stage2.py`
 
-40 passed: MAR-001–024 (Stage 1 integrity/discovery plus Stage 2 semantics).
+47 passed: MAR-001–024 (Stage 1 integrity/discovery plus Stage 2 semantics).
 `--no-cov` because `pytest.ini` has `--cov-fail-under=20` for unrelated modules.
 
 `--emit-skeleton` still prints Stage-1 UNKNOWN. `--emit-stage2` prints the
@@ -181,3 +195,29 @@ overlay to stdout and does not write the registry.
 
 The next manufacturing cutover, if any, should be authorized
 **capability-by-capability** against this registry’s *before* state.
+
+Do not launch a generic RMOS remediation tranche from this PR. After #328
+merges as the frozen before-state, the owner selects exactly one capability
+and writes one bounded Dev Order. Evidence ranking (not a work order):
+
+1. Profiling — reachable ungated G-code; strongest pure authority defect.
+2. V-carve production — equally serious exposure; post-#324 history; own ruling.
+3. Drilling — contract mismatch; architecture/design before gating.
+4. Polygon-offset / rmos-wrap — provenance repair, not immediate emission blocking.
+5. Rosette — downstream constructor defect, not authority remediation.
+
+```text
+RMOS-AUTHORITY-MAP-001
+        ↓
+FROZEN BEFORE-STATE
+        ↓
+OWNER SELECTS ONE CAPABILITY
+        ↓
+BOUNDED DEV ORDER
+        ↓
+IMPLEMENT
+        ↓
+VERIFY AGAINST REGISTRY
+        ↓
+UPDATE BEFORE → AFTER EVIDENCE
+```

@@ -1,6 +1,6 @@
 # RMOS-AUTHORITY-MAP-001 — Manufacturing Authority & Reachability Census
 
-**Status:** STAGE 2 COMPLETE (this PR) — classification populated; no remediation  
+**Status:** STAGE 2 COMPLETE — frozen before-state (this PR); no remediation  
 **Date:** 2026-08-27  
 **Repository:** HanzoRazer/luthiers-toolbox  
 **Base:** `origin/main` at execution time  
@@ -224,3 +224,34 @@ evaluator or none, truthful input contract or mismatch, generation before/after
 authority, persistence truth, and whether any client/retrieval path can expose
 ungated machine output — and when that answer is evidence-backed without a
 production behavior change or a remediation merge.
+
+Reading rule: **GOVERNED ≠ FUNCTIONAL ≠ AVAILABLE.** Rosette remains
+`GOVERNED` (named evaluator consulted before generation) with reachability
+`RUNTIME_BROKEN` (witnessed 400 `TOOLPATH_PLAN_ERROR`; no G-code leaked).
+
+---
+
+## Frozen before-state / next program
+
+This increment stops here. No further taxonomy additions unless CI or review
+finds an actual ambiguity. After #328 is green and reviewed, merge it as the
+frozen before-state audit. Do not combine the first remediation with this PR.
+
+The next Dev Order must consume this registry and authorize **exactly one**
+capability-level change. Do not launch a generic RMOS remediation tranche.
+
+```text
+RMOS-AUTHORITY-MAP-001
+        ↓
+FROZEN BEFORE-STATE
+        ↓
+OWNER SELECTS ONE CAPABILITY
+        ↓
+BOUNDED DEV ORDER
+        ↓
+IMPLEMENT
+        ↓
+VERIFY AGAINST REGISTRY
+        ↓
+UPDATE BEFORE → AFTER EVIDENCE
+```
