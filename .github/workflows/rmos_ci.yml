@@ -92,6 +92,21 @@ jobs:
             echo "Skipping test_endpoint_truth_gate.py - file not found"
           fi
 
+      # RMOS-AUTHORITY-MAP-001. These live in services/api/tests/, which the
+      # "API Tests" workflow does not collect -- it runs app/tests/ only. Without
+      # this step the registry's reconciliation against the live mounted route
+      # table is never enforced by any gate, and the audit artifact can drift
+      # from the application it describes with CI still green.
+      #
+      # Deliberately NOT guarded by `if [ -f ... ]` like the step above: a
+      # missing witness must fail the gate, not skip it quietly.
+      - name: Run manufacturing authority registry tests
+        working-directory: services/api
+        env:
+          RMOS_RUNS_DIR: ${{ runner.temp }}/rmos_runs_authority
+        run: |
+          python -m pytest             tests/rmos/test_manufacturing_authority_registry.py             tests/rmos/test_manufacturing_authority_discovery.py             tests/rmos/test_manufacturing_authority_stage2.py             -q --tb=short
+
       - name: Run RMOS CI smoke test
         working-directory: services/api
         run: |
