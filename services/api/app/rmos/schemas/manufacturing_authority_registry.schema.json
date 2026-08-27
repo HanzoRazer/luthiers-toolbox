@@ -11,6 +11,7 @@
     "stage",
     "warning",
     "adjacent_authority_maps",
+    "surface_kind_vocabulary",
     "reachability_vocabulary",
     "disposition_vocabulary",
     "evidence_class_vocabulary",
@@ -45,6 +46,18 @@
           "path": { "type": "string" },
           "concern": { "type": "string" }
         }
+      }
+    },
+    "surface_kind_vocabulary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "manufacturing_capability",
+          "artifact_transformation",
+          "artifact_retrieval",
+          "advisory"
+        ]
       }
     },
     "reachability_vocabulary": {
@@ -117,8 +130,12 @@
         "capability_id",
         "operation_family",
         "grouping_rule",
+        "surface_kind",
         "intent_contract",
         "authority",
+        "generation_ordering",
+        "input_contract_status",
+        "ungated_output_exposure",
         "routes",
         "generators",
         "persistence",
@@ -138,7 +155,41 @@
         },
         "operation_family": { "type": "string", "minLength": 1 },
         "grouping_rule": { "type": "string", "minLength": 1 },
+        "surface_kind": {
+          "type": "string",
+          "enum": [
+            "manufacturing_capability",
+            "artifact_transformation",
+            "artifact_retrieval",
+            "advisory"
+          ]
+        },
         "intent_contract": { "type": "string" },
+        "generation_ordering": {
+          "type": "string",
+          "enum": [
+            "AUTHORITY_BEFORE_GENERATION",
+            "GENERATION_WITHOUT_AUTHORITY",
+            "AUTHORITY_AFTER_GENERATION",
+            "MIXED",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "input_contract_status": {
+          "type": "string",
+          "enum": [
+            "TRUTHFUL",
+            "MISMATCH",
+            "MIXED",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "ungated_output_exposure": {
+          "type": "string",
+          "enum": ["YES", "NO", "RETRIEVAL_ONLY", "UNKNOWN"]
+        },
         "authority": {
           "type": "object",
           "additionalProperties": false,

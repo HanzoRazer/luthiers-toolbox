@@ -110,15 +110,49 @@ def test_mar_003_authoritative_conclusions_have_evidence(registry):
             assert cap.get("evidence"), f"{cap['capability_id']} {disp} lacks evidence"
 
 
-def test_stage1_dispositions_are_unknown(registry):
-    """Stage 1 must not sneak in authority conclusions."""
-    for cap in registry["capabilities"]:
+def test_emit_skeleton_stays_unknown():
+    """--emit-skeleton remains the UNKNOWN taxonomy checkpoint."""
+    mod = _load_script()
+    skeleton = mod.build_skeleton(
+        {
+            "routes": [],
+            "top_level_route_objects": 0,
+            "walked_operations": 0,
+            "unique_mounted_operations": 0,
+            "unique_mounted_paths": 0,
+            "openapi_paths": 0,
+            "duplicate_mounts": [],
+        },
+        {"candidates": [], "exclusions": []},
+    )
+    assert skeleton["stage"] == "stage_1_checkpoint"
+    for cap in skeleton["capabilities"]:
         assert cap["authority_disposition"] in {"UNKNOWN", "INSUFFICIENT_EVIDENCE"}
-        assert cap["authority"]["status"] == "UNKNOWN"
-        assert cap["persistence"]["status"] == "UNKNOWN"
         assert cap["runtime_evidence"] == "NOT_OBTAINED_STAGE_1"
-        assert cap["reachability"] in {"MOUNTED", "SOURCE_PRESENT"}
-        assert cap["reachability"] != "RUNTIME_REACHABLE"
+        assert cap["surface_kind"] in set(mod.SURFACE_KIND_VOCABULARY)
+
+
+def test_committed_registry_is_stage2(registry):
+    assert registry["stage"] == "stage_2_authority"
+    kinds = {c["surface_kind"] for c in registry["capabilities"]}
+    assert "manufacturing_capability" in kinds
+    assert "advisory" in kinds
+    assert "artifact_retrieval" in kinds
+    assert "artifact_transformation" in kinds
+    feeds = next(c for c in registry["capabilities"] if c["capability_id"] == "feeds-speeds")
+    assert feeds["surface_kind"] == "advisory"
+    assert feeds["authority_disposition"] == "ADVISORY_ONLY"
+    op = next(c for c in registry["capabilities"] if c["capability_id"] == "operator-pack")
+    assert op["surface_kind"] == "artifact_retrieval"
+    assert op["authority_disposition"] != "GOVERNED"
+    geom = next(c for c in registry["capabilities"] if c["capability_id"] == "geometry")
+    assert geom["surface_kind"] == "artifact_transformation"
+    for cap in registry["capabilities"]:
+        assert cap["runtime_evidence"] != "NOT_OBTAINED_STAGE_1"
+        assert cap["generation_ordering"] != "UNKNOWN" or cap["authority_disposition"] in {
+            "UNKNOWN",
+            "INSUFFICIENT_EVIDENCE",
+        }
 
 
 def test_required_seed_capabilities_present(registry):
@@ -150,6 +184,16 @@ def test_retract_aliases_are_one_capability(registry):
     ids = [c["capability_id"] for c in registry["capabilities"]]
     assert "retract-gcode" not in ids
     assert "gcode_governed" not in ids
+
+
+def test_acoustic_binding_is_not_guitar(registry):
+    binding = next(c for c in registry["capabilities"] if c["capability_id"] == "binding")
+    guitar = next(c for c in registry["capabilities"] if c["capability_id"] == "cam-guitar")
+    bind_paths = {r["path"] for r in binding["routes"]}
+    guitar_paths = {r["path"] for r in guitar["routes"]}
+    acoustic_binding = [p for p in bind_paths if "/acoustic/" in p and "/binding/" in p]
+    assert acoustic_binding, "owner ruling: acoustic binding belongs to binding"
+    assert not any("/binding/" in p for p in guitar_paths)
 
 
 def test_schema_validates_committed_registry(registry, schema):

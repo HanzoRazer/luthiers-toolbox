@@ -1,16 +1,16 @@
-# RMOS-AUTHORITY-MAP-001 — Stage 1 Checkpoint
+# RMOS-AUTHORITY-MAP-001 — Stage 2 Authority Classification
 
-**Status:** STAGE 1 COMPLETE — awaiting owner review of the capability model.  
+**Status:** STAGE 2 COMPLETE — capability-level classification populated. **No remediation authorized.**  
 **Date:** 2026-08-27  
 **Base:** `origin/main` at execution (`93df82f3`, after #327).  
-**Nature:** one-off read-only census. **This document authorizes no remediation.**
+**PR:** continues draft #328 (same increment; not a second agent PR).
 
 This is not an agent report. Grounding Agent v0.1 remains the only agent under
-trial (`GA-TRIAL-0002`, MATCH / PROCEED). The census is an ordinary script plus
-an inert JSON registry, the same shape as the GEN-5 instrument-library census.
+trial (`GA-TRIAL-0002`, MATCH / PROCEED). One script, one inert registry, one
+report, one PR.
 
-**Presence in the registry grants no execution authority.** The file is not a
-runtime consumer and must not be imported by production code.
+**Presence in the registry grants no execution authority.** Nothing
+production-facing imports this file.
 
 This registry does **not** replace:
 
@@ -20,49 +20,16 @@ This registry does **not** replace:
 | `services/api/app/cam/geometry_authority_registry.py` | 7T geometry references; no machine-output authority |
 | `services/api/app/cam/ontology_authority_map.py` | 7M vocabulary; `execution_authorized = false` |
 
-Cross-reference (do not rewrite): [`rmos_prod_audit_001.md`](rmos_prod_audit_001.md),
-[`rmos_prod_output_census_001b.md`](rmos_prod_output_census_001b.md),
-[`PROFILING-ROUTE-ANNOTATION-001.md`](PROFILING-ROUTE-ANNOTATION-001.md).
-
-Dev Order: [`docs/handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md`](../handoffs/RMOS_AUTHORITY_MAP_001_DEV_ORDER.md).
+Owner ruling (2026-08-27): *Stage 1 taxonomy accepted with the semantic
+boundary below. Proceed to Stage 2 deep classification, but do not merge
+remediation into the same tranche.*
 
 ---
 
-## 1. Scope (Stage 1)
+## 0. Stage 1 inventory (unchanged counts)
 
-Stage 1 answers: **is the capability model itself correct?**
-
-In scope: mounted-route inventory, machine-output candidate selection, deterministic
-capability grouping, seeded `UNKNOWN` / `INSUFFICIENT_EVIDENCE` registry, schema,
-MAR-001–008 and MAR-021–024, this checkpoint.
-
-Out of scope (Stage 2, only if authorized): deep authority/persistence
-classification (MAR-009–020), post-#324 V-carve exposure classification,
-runtime POST witnesses, any production change.
-
----
-
-## 2. Methodology
-
-Evidence order used in Stage 1:
-
-1. Mounted FastAPI route table from `app.main:app`, **recursing**
-   `_IncludedRouter` (naive `app.routes` is 155 objects / 6 `APIRoute`; walked
-   unique paths are 1081; OpenAPI has 1077 paths).
-2. OpenAPI path set as a completeness cross-check (format differences only;
-   `{file_path:path}` vs `{file_path}`).
-3. Path-pattern inclusion for machine-consumable output (G-code / `.nc` /
-   operator-pack / post / wrap / helical_entry / feeds-speeds / bundles).
-4. Explicit exclusion table (declared purpose: simulation, visualization,
-   metadata catalogs).
-5. Deterministic grouping: longest seeded path prefix, then derived path-family.
-
-Not used in Stage 1: POST request witnesses, handler AST, evaluator call graphs,
-client call sites as authority.
-
----
-
-## 3. Checkpoint numbers
+Stage 1 answered “is the capability model itself correct?” Those numbers still
+hold. Naive `app.routes` under-counts; the walk recurses `_IncludedRouter`.
 
 | Measure | Count |
 | --- | ---: |
@@ -73,150 +40,144 @@ client call sites as authority.
 | OpenAPI paths | 1077 |
 | Machine-output candidates | 67 |
 | Hint matches excluded by declared purpose | 7 |
-| Capabilities in the registry | 26 |
-| Required seeded capabilities (all have routes) | 14 |
-| Additional prefix-grouped capabilities | 4 |
-| Remainder derived from path family | 8 |
+| Capabilities | 26 |
 | Unexplained emitters | 0 |
-| Capabilities with more than one route (aliases) | 14 |
-| Duplicate mounts (same path+method, de-duplicated) | 15 |
 
-Validation: `PYTHONPATH=services/api python scripts/audit/rmos_authority_map.py --validate` → OK.
+Validation: `PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate` → OK.
 
 ---
 
-## 4. Capability grouping (the model under review)
+## 1. Taxonomy amendment applied (`surface_kind`)
 
-### 4.1 Required seed set (14) — all mounted
+The registry now distinguishes **manufacturing capability authority** from
+artifact layers so postprocessors, wrappers, and retrieval endpoints cannot
+inflate the manufacturing count.
 
-| capability_id | Routes | Grouping |
-| --- | ---: | --- |
-| retract | 4 | `/api/cam/retract` |
-| adaptive | 2 | `/api/cam/pocket/adaptive` |
-| drilling | 3 | `/api/cam/drilling` (modal + pattern + intent) |
-| profiling | 2 | `/api/cam/profiling` |
-| vcarve | 3 | production + toolpath + intent |
-| roughing | 2 | toolpath gcode + `gcode_intent` |
-| helical | 1 | `/api/cam/toolpath/helical_entry` |
-| rosette | 2 | `plan-toolpath` + `post-gcode` |
-| probing | 17 | `/api/probe/*` (5 families × aliases) + `/api/v1/machines/probe/{corner,surface}` |
-| binding | 2 | channel + purfling |
-| inlay | 1 | `/api/art-studio/inlay/export-gcode` |
-| radius-dish | 1 | `/api/acoustics/radius-dish/generate-gcode` |
-| feeds-speeds | 1 | `/api/cam/opt/feeds-speeds` (JSON, not G-code) |
-| biarc-contour | 1 | `/api/cam/toolpath/biarc/gcode` |
-
-### 4.2 Additional prefix-grouped (4)
-
-These are not in the original 14 but have an unambiguous path prefix, so they
-were not left as a coarse derived family:
-
-| capability_id | Routes | Why prefixed |
-| --- | ---: | --- |
-| pocketing | 1 | `/api/cam/pocketing/intent-gcode` |
-| polygon-offset | 2 | `.nc` + `_governed.nc` aliases |
-| neck-gcode | 2 | `/api/neck/gcode/{generate,download}` |
-| operator-pack | 1 | `GET /api/rmos/runs_v2/{run_id}/operator-pack` |
-
-### 4.3 Remainder derived from path family (8)
-
-| capability_id | Routes | Note |
-| --- | ---: | --- |
-| cam-guitar | 7 | electric body/neck + acoustic body/soundhole/binding |
-| geometry | 4 | `export_gcode` (+ governed) + bundles |
-| saw-batch | 3 | GET stored toolpath G-code |
-| cam-post | 1 | `/api/cam/post/post_v155` |
-| rmos-wrap | 1 | `/api/rmos/wrap/mvp/dxf-to-grbl` |
-| v1-dxf | 1 | `/api/v1/dxf/cam/gcode` |
-| vision | 1 | `/api/vision/photo-to-gcode` |
-| headstock-transition | 1 | `/api/headstock/transition/gcode` |
-
-Retract aliases are the canonical example of D2: four URLs, one capability.
-
----
-
-## 5. Excluded surfaces (hint matched, declared not machine output)
-
-| Path | Reason |
+| `surface_kind` | Meaning |
 | --- | --- |
-| `/api/cam/sim/gcode` | consumes / simulates G-code; analysis |
-| `/api/cam/gcode/plot.svg` | visualization |
-| `/api/cam/gcode/estimate` | estimate, not emission |
-| `/api/cam/gcode/simulate` | simulation |
-| `/api/neck/gcode/styles` | metadata catalog |
-| `/api/neck/gcode/profiles` | metadata catalog |
-| `/api/neck/gcode/tools` | metadata catalog |
+| `manufacturing_capability` | Generates a machine/operator-consumable artifact under some (or no) manufacturing authority |
+| `artifact_transformation` | Transforms an already-produced artifact (post-wrap of supplied G-code, bundles) |
+| `artifact_retrieval` | Returns or packages a stored artifact; not a manufacturing generator |
+| `advisory` | Parameters/advice that can influence execution without emitting a machine file |
 
-Drawing DXF, blueprint vectorization, and design exports were **not** pulled in
-by the path-pattern inclusion rule, so they never entered the candidate set.
+Owner rulings applied:
 
----
+| Question | Ruling | What we did |
+| --- | --- | --- |
+| Post vs wrap | Keep separate unless same upstream authority and serialization-only | `cam-post`, `rmos-wrap`, `v1-dxf` remain three capabilities. Rosette plan+post stay one family (shared evaluator). |
+| Guitar vs binding | Binding separate | Acoustic `{style}/binding/gcode` moved from `cam-guitar` into `binding` (3 routes). Guitar body/soundhole/electric remain `cam-guitar` (6). |
+| Neck surfaces | Split only for a distinct operation/authority contract | Kept `neck-gcode`, `cam-guitar` neck, and `headstock-transition` as three contracts (parametric OP10–40 vs project stub vs blend surfacing). |
+| Operator-pack vs retrieval | Retrieval is not manufacturing; pack is a capability only if it constructs a new bundle | `operator-pack` is `artifact_retrieval`. ZIP of existing attachments; not GOVERNED. |
+| Feeds-speeds | Keep; advisory unless proven machine-parameter authority | `advisory` / `ADVISORY_ONLY`. JSON 200, no G-code. |
+| Saw-batch GETs | Include iff machine-consumable artifacts, not status | Included as `artifact_retrieval`. Three GETs serialize stored moves to G-code. HTTP method ignored. |
 
-## 6. Taxonomy additions requested (do not guess)
-
-Stage 1 stopped rather than merge these. Owner ruling wanted before Stage 2:
-
-1. **Post / wrap.** Census 001B treated `cam/post/post_v155`,
-   `rmos/wrap/mvp/dxf-to-grbl`, and `v1/dxf/cam/gcode` as one family. Stage 1
-   kept three capabilities because the prefixes differ. Merging them is a
-   product decision, not a path fact.
-2. **Guitar body vs acoustic binding vs CAM binding.** Acoustic
-   `{style}/binding/gcode` is under `cam-guitar`, not `binding`.
-3. **Neck surfaces.** `neck-gcode`, `cam-guitar` `/{model_id}/neck/gcode`, and
-   `headstock-transition` are three capabilities. One “neck” family would be a
-   guess.
-4. **Operator pack.** Retrieval of an already-persisted governed bundle vs a
-   manufacturing capability of its own.
-5. **Saw-batch GET G-code.** Retrieval of stored toolpaths vs generation.
-6. **feeds-speeds.** Required seed, but the artifact is JSON, not G-code.
-   Confirm it belongs on the manufacturing-output surface.
-7. **Duplicate mounts.** 15 `(path, method)` pairs are mounted twice. Inventory
-   de-duplicates them; they are not 15 extra capabilities.
-8. **Adaptive plan** is not a machine-output candidate (no G-code path token).
-   The capability currently holds only `gcode` + `batch_export`. Confirm that
-   split is the intended model.
+Also recorded, not guessed: 15 duplicate mounts remain de-duplicated; adaptive `/plan` is still not a machine-output candidate.
 
 ---
 
-## 7. Reachability and evidence limitations
+## 2. Stage 2 rule
 
-Every registered in-scope route is `reachability = MOUNTED` with
-`runtime_evidence = NOT_OBTAINED_STAGE_1` and
-`authority_disposition = UNKNOWN`.
+Do not let the registry vocabulary outrun the evidence. A capability is
+promoted only after naming evaluator (or none), runtime reachability,
+generation ordering, persistence truth, and client/retrieval path.
 
-That is deliberate:
-
-- Source presence was **not** promoted to LIVE.
-- Empty `client_consumers` was **not** promoted to dead (MAR-022).
-- No POST was issued. Stage 1 does not deep-trace evaluators or persistence.
-
-| Runtime witnesses attempted | none |
-| Runtime witnesses withheld | all POST machine-artifact endpoints; any persist / file-export / machine-control / override path |
-
-V-carve production is **mounted** after #324. Whether it is
-`POST_MERGE_AUTHORITY_EXPOSURE` is a Stage 2 classification.
+`UNKNOWN` / `INSUFFICIENT_EVIDENCE` remain valid where a safe witness was
+withheld (Stop #5) or inputs would have to be fabricated (Stop #6).
 
 ---
 
-## 8. Tests
+## 3. Capability classifications
+
+Engine table (`_PRODUCTION_FEASIBILITY_ENGINES`): **saw, rosette, adaptive
+only**. Missing engine → `unavailable_feasibility` UNKNOWN →
+`SafetyPolicy.should_block`. The historical CAM stub GREEN path is retired.
+
+### Manufacturing capabilities
+
+| ID | Disposition | Reachability | Evaluator | Ordering | Ungated output | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| retract | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | All 4 routes 409; no G-code. MAR-014. |
+| adaptive | **GOVERNED** | RUNTIME_REACHABLE | `compute_adaptive_feasibility` | authority before gen | NO | 200 sane / 409 F004. Persistence matches evaluator. MAR-015. |
+| drilling | **AUTHORITY_CONTRACT_MISMATCH** | RUNTIME_REACHABLE | intent-lane only | MIXED | YES | Modal `DrillReq` cannot feed `compute_drilling_feasibility` (`hole_diameter_mm` absent). Modal 200 G81/G83. Do not invent a mapping. MAR-011/016. |
+| profiling | **LIVE_UNGOVERNED_OUTPUT** | RUNTIME_REACHABLE | intent-lane only | MIXED | YES | Post-#324 `/gcode` 200 G-code, no RMOS. 422 empty body is not the classifier (MAR-012). Not `POST_MERGE_*` (that name is D9/V-carve). MAR-017. |
+| vcarve | **POST_MERGE_AUTHORITY_EXPOSURE** | RUNTIME_REACHABLE | none on production | MIXED | YES | `/production/gcode` 200 without RMOS. Intent 409. MAR-018. |
+| roughing | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | Mode `roughing` has no engine → 409. MAR-019. |
+| helical | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | `helical:gcode` → no engine → 409. MAR-019. |
+| biarc-contour | **BLOCKED_BY_DESIGN** | RUNTIME_BLOCKED_BY_POLICY | none | authority before gen | NO | `tool_id='biarc_gcode'` → mode `unknown`. 409. |
+| rosette | **GOVERNED** | MOUNTED | `compute_rosette_feasibility` | authority before gen | NO | Real scorer (not fail-open). After a non-blocking decision, plan currently 400 `TOOLPATH_PLAN_ERROR` (`RosetteGeometry` kwargs). No G-code leaked. Not remediated. MAR-020. |
+| probing | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Draft ungated; governed downloads mint GREEN. Runtime POST withheld (setup probing). |
+| binding | **LIVE_UNGOVERNED_OUTPUT** | RUNTIME_REACHABLE | none | without authority | YES | Channel 200 G-code. Includes acoustic binding. |
+| inlay | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Static; runtime payload not fabricated. |
+| radius-dish | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Static; client uses public `.nc`, not this API. |
+| pocketing | **GOVERNED** | MOUNTED | intent-lane `compute_pocket_feasibility` | authority before gen | NO | Static only; runtime CamIntentV1 not reproduced. Confidence MEDIUM. |
+| polygon-offset | **GOVERNED_PROVENANCE_DEFECT** | RUNTIME_REACHABLE | none | without authority | YES | Governed lane 200 NC + `RunDecision(GREEN)` without evaluator. MAR-009. |
+| cam-guitar | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Auth/project; runtime withheld. Binding removed. |
+| cam-post | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Independent contour→G-code authority. Runtime payload withheld. |
+| rmos-wrap | **GOVERNED_PROVENANCE_DEFECT** | MOUNTED | none | without authority | YES | Hardcoded GREEN. File-upload POST withheld. MAR-009/010. |
+| v1-dxf | **EXPLICITLY_NON_PRODUCTION** | MOUNTED | none | without authority | NO | Placeholder `; TODO: Full toolpath…`. |
+| vision | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Photo pipeline withheld (external/AI). |
+| neck-gcode | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Distinct from guitar neck / headstock. |
+| headstock-transition | **LIVE_UNGOVERNED_OUTPUT** | MOUNTED | none | without authority | YES | Distinct blend-surface operation. |
+
+### Non-manufacturing surfaces
+
+| ID | `surface_kind` | Disposition | Notes |
+| --- | --- | --- | --- |
+| feeds-speeds | advisory | **ADVISORY_ONLY** | 200 JSON `feed_xy`/`rpm`; not G-code. |
+| geometry | artifact_transformation | **LIVE_UNGOVERNED_OUTPUT** | Wraps supplied G-code. Not a manufacturing generator. |
+| operator-pack | artifact_retrieval | **INSUFFICIENT_EVIDENCE** | Not GOVERNED. Retrieval of stored blobs; stored-risk gate. Missing run → 404. |
+| saw-batch | artifact_retrieval | **LIVE_UNGOVERNED_OUTPUT** | GET serializes stored moves to G-code. Quarantine. Missing id → 404. |
+
+---
+
+## 4. Runtime witnesses (Stage 2)
+
+Ephemeral `RMOS_RUNS_DIR` / `RMOS_ARTIFACT_ROOT` / `ART_STUDIO_DB_PATH`. No
+machine-control, no production DB, no operator-file export.
+
+| Attempted | Result |
+| --- | --- |
+| Retract POST `/gcode` and `/gcode/download` | 409, no G-code |
+| Adaptive `/gcode` sane / F004 | 200 + hashes / 409 |
+| Drill modal `/gcode` | 200 G81/G83 |
+| Profiling `/gcode` empty / contour | 422 / 200 G21 |
+| V-carve `/production/gcode` / intent | 200 / 409 |
+| Roughing, helical, biarc | 409, no G-code |
+| Rosette `plan-toolpath` | 400 TOOLPATH_PLAN_ERROR after evaluator; no G-code |
+| Binding channel | 200 G21 |
+| Feeds-speeds | 200 JSON |
+| Polygon-offset governed | 200 NC, `X-ToolBox-Lane: governed` |
+| Operator-pack / saw-batch GET missing id | 404 |
+
+**Withheld (NOT_OBTAINED_SAFELY):** guitar (auth/project), wrap DXF upload,
+vision photo/AI, probe G38 programs, inlay/radius-dish/neck/headstock/cam-post
+payloads that would require fabricated manufacturing inputs, planting a
+saw-batch artifact to download G-code.
+
+---
+
+## 5. Tests
 
 `services/api/tests/rmos/test_manufacturing_authority_registry.py`  
-`services/api/tests/rmos/test_manufacturing_authority_discovery.py`
+`services/api/tests/rmos/test_manufacturing_authority_discovery.py`  
+`services/api/tests/rmos/test_manufacturing_authority_stage2.py`
 
-22 passed: MAR-001–008, MAR-021–024, plus Stage-1 “no conclusions yet” guards
-and a live reconcile against `app.main:app`.
+40 passed: MAR-001–024 (Stage 1 integrity/discovery plus Stage 2 semantics).
+`--no-cov` because `pytest.ini` has `--cov-fail-under=20` for unrelated modules.
 
-MAR-009–020 are not implemented. They require authority conclusions.
+`--emit-skeleton` still prints Stage-1 UNKNOWN. `--emit-stage2` prints the
+overlay to stdout and does not write the registry.
 
 ---
 
-## 9. What this checkpoint does not authorize
+## 6. What this still does not authorize
 
 - No CAM, RMOS, feasibility, route, client, persistence, or G-code change.
 - No new agent, workflow, or standing mapper service.
-- No Stage 2 classification.
-- No remediation queue spawned from these findings.
+- **No cutover.** Discovery does not authorize remediation.
+- Rosette `RosetteGeometry` constructor mismatch is recorded, not patched.
+- V-carve production exposure is recorded, not gated.
+- Drill modal mismatch is preserved, not adapted.
 
-The next manufacturing cutover, if any, should be authorized capability-by-capability
-against this registry’s *before* state — after the owner accepts or amends the
-grouping above.
+The next manufacturing cutover, if any, should be authorized
+**capability-by-capability** against this registry’s *before* state.

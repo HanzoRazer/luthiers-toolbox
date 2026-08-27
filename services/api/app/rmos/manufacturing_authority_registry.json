@@ -1,7 +1,7 @@
 {
   "schema_version": "manufacturing_authority_registry_v0.1",
   "audit_id": "RMOS-AUTHORITY-MAP-001",
-  "stage": "stage_1_checkpoint",
+  "stage": "stage_2_authority",
   "warning": "PRESENCE IN THIS REGISTRY GRANTS NO EXECUTION AUTHORITY. This is an audit census of manufacturing-capability reachability. It does not replace CANONICAL_AUTHORITY_MAP.md, geometry_authority_registry.py, or ontology_authority_map.py. Nothing production-facing should import this file.",
   "adjacent_authority_maps": [
     {
@@ -16,6 +16,12 @@
       "path": "services/api/app/cam/ontology_authority_map.py",
       "concern": "7M vocabulary; execution_authorized is always false"
     }
+  ],
+  "surface_kind_vocabulary": [
+    "manufacturing_capability",
+    "artifact_transformation",
+    "artifact_retrieval",
+    "advisory"
   ],
   "reachability_vocabulary": [
     "SOURCE_PRESENT",
@@ -52,12 +58,16 @@
       "capability_id": "retract",
       "operation_family": "retract",
       "grouping_rule": "seeded_prefix:/api/cam/retract",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "All four mounted retract G-code routes share one authority path (_authorize_retract \u2192 compute_feasibility_internal \u2192 SafetyPolicy) before any builder. resolve_feasibility_engine('retract') is None, so the result is UNKNOWN and SafetyPolicy blocks. No G-code is emitted. Strategy vocabularies are split (query vs download body) but both feed tool_id='retract:{strategy}'.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "SafetyPolicy.should_block via _authorize_retract"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/retract/gcode",
@@ -96,38 +106,67 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.retract.retract_gcode_router.generate_simple_retract_gcode",
+        "app.routers.retract.retract_gcode_router.download_retract_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "validate_and_persist (BLOCKED; no gcode_sha256)"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts"
+      ],
+      "reachability": "RUNTIME_BLOCKED_BY_POLICY",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/retract/retract_gcode_router.py:_authorize_retract",
+          "note": "Authority precedes builders. Engine table has no retract evaluator."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/rmos/api/rmos_feasibility_router.py:_PRODUCTION_FEASIBILITY_ENGINES",
+          "note": "Registered engines are saw, rosette, adaptive only."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/retract/gcode and /gcode/download",
+          "note": "409 SAFETY_BLOCKED; body contains no G21/M30; no X-GCode-SHA256."
+        },
+        {
+          "class": "CLIENT_CALL_SITE",
+          "ref": "packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts",
+          "note": "In-repo consumer of /api/cam/retract/gcode. Reachability evidence, not authority."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "adaptive",
       "operation_family": "adaptive",
       "grouping_rule": "seeded_prefix:/api/cam/pocket/adaptive",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Machine-output routes are /gcode and /batch_export. /plan is not a machine-output candidate. gcode calls _enforce_safety_policy (compute_adaptive_feasibility + SafetyPolicy) before plan() and before post-processor assembly. Persistence records the evaluator decision (feasibility_sha256 of the result, not a request hash).",
       "authority": {
-        "status": "UNKNOWN",
-        "evaluator": null,
-        "policy_boundary": null
+        "status": "NAMED",
+        "evaluator": "app.rmos.api.rmos_feasibility_router.compute_adaptive_feasibility",
+        "policy_boundary": "SafetyPolicy.should_block via _enforce_safety_policy"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/pocket/adaptive/batch_export",
@@ -148,39 +187,63 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.adaptive.gcode_router.gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "validate_and_persist with evaluator feasibility + gcode_sha256"
       },
       "artifact_types": [
         "gcode",
         "unknown"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/api/adaptive.ts",
+        "packages/client/src/components/adaptive/composables/useToolpathExport.ts"
+      ],
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "GOVERNED",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/adaptive/gcode_router.py:gcode",
+          "note": "Gate then plan() then assembly then validate_and_persist."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/pocket/adaptive/gcode",
+          "note": "Sane plan \u2192 200 G-code + X-Run-ID. F004 z_rough=1.5 \u2192 409, no G-code."
+        },
+        {
+          "class": "CLIENT_CALL_SITE",
+          "ref": "packages/client/src/components/adaptive/composables/useToolpathExport.ts",
+          "note": "Client calls /gcode and /batch_export."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "drilling",
       "operation_family": "drilling",
       "grouping_rule": "seeded_prefix:/api/cam/drilling",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Three routes, three contracts, one path-prefix family. Modal POST /gcode (DrillReq) emits G81/G83 with no feasibility call; DrillReq cannot supply compute_drilling_feasibility kwargs (hole_diameter_mm absent; hole z is a coordinate, not depth). Do not invent a mapping. Pattern /pattern/gcode calls compute_feasibility_internal(tool_id='drill_pattern_gcode') which resolves to mode 'unknown' (prefix drill_pattern: required) and has no engine anyway. Intent /intent-gcode uses compute_drilling_feasibility (intent-lane, not the RMOS engine table) before PeckDrill.generate().",
       "authority": {
-        "status": "UNKNOWN",
-        "evaluator": null,
-        "policy_boundary": null
+        "status": "MISMATCH",
+        "evaluator": "app.cam.drilling.feasibility.compute_drilling_feasibility (intent route only; not in _PRODUCTION_FEASIBILITY_ENGINES)",
+        "policy_boundary": "none on modal; SafetyPolicy on pattern (always UNKNOWN); intent-local feasible flag"
       },
+      "generation_ordering": "MIXED",
+      "input_contract_status": "MISMATCH",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/drilling/gcode",
@@ -210,38 +273,66 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.drilling.drill_modal_router.drill_gcode",
+        "app.cam.routers.drilling.drill_pattern_router.drill_pattern_gcode",
+        "app.cam.routers.drilling.intent_router.generate_drilling_intent_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "NONE",
+        "mechanism": "modal: none; pattern: persist_run BLOCKED; intent: validate_and_persist"
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "AUTHORITY_CONTRACT_MISMATCH",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/drilling/drill_modal_router.py:drill_gcode",
+          "note": "No RMOS import. DrillReq vs compute_drilling_feasibility kwargs do not match."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/drilling/feasibility.py:compute_drilling_feasibility",
+          "note": "Named kwargs only. hole_diameter_mm required. No adapter from DrillReq exists."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/drilling/gcode",
+          "note": "200 text/plain G81/G83. Ungated machine output on the modal route."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/drilling/drill_pattern_router.py",
+          "note": "tool_id='drill_pattern_gcode' \u2192 resolve_mode 'unknown'; engine None."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "profiling",
       "operation_family": "profiling",
       "grouping_rule": "seeded_prefix:/api/cam/profiling",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Legacy POST /gcode is @safety_critical with no RMOS feasibility. #324 restored JSON body binding; the route now emits G-code. Intent /intent-gcode uses compute_profile_feasibility (intent-lane) before ProfileToolpath.generate(). Capability disposition follows the live ungated primary, not the intent lane. POST_MERGE_AUTHORITY_EXPOSURE is reserved for V-carve (D9).",
       "authority": {
-        "status": "UNKNOWN",
-        "evaluator": null,
-        "policy_boundary": null
+        "status": "NONE",
+        "evaluator": "app.cam.profiling.feasibility.compute_profile_feasibility (intent route only)",
+        "policy_boundary": "@safety_critical is fail-closed logging, not RMOS"
       },
+      "generation_ordering": "MIXED",
+      "input_contract_status": "MIXED",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/profiling/gcode",
@@ -262,38 +353,55 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.profiling.profile_router.generate_profile_gcode",
+        "app.cam.routers.profiling.intent_router.generate_profile_intent_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "NONE",
+        "mechanism": "legacy /gcode: none; intent: validate_and_persist"
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/profiling/profile_router.py:generate_profile_gcode",
+          "note": "No compute_feasibility_internal. ProfileToolpath.generate() then Response."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/profiling/gcode",
+          "note": "Post-#324: 200 with G21 from JSON contour. Empty body is 422 (not classified as LIVE)."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "vcarve",
       "operation_family": "vcarve",
       "grouping_rule": "seeded_prefix:/api/cam/toolpath/vcarve",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Production POST /api/cam/vcarve/production/gcode is @safety_critical with no RMOS call and emits G-code after #324 restored body binding. Toolpath /api/cam/toolpath/vcarve/gcode and intent /intent-gcode call compute_feasibility_internal; mode vcarve has no engine so they 409. The live production path is the post-merge exposure.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "none on production; SafetyPolicy on toolpath/intent (UNKNOWN \u2192 block)"
       },
+      "generation_ordering": "MIXED",
+      "input_contract_status": "MIXED",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/toolpath/vcarve/gcode",
@@ -323,38 +431,61 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.vcarve.production_router.generate_production_vcarve_gcode",
+        "app.cam.routers.toolpath.vcarve_router.generate_vcarve_gcode",
+        "app.cam.routers.vcarve.intent_router.generate_vcarve_intent_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "NONE",
+        "mechanism": "production: none; toolpath/intent: persist_run / validate_and_persist on BLOCKED"
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "POST_MERGE_AUTHORITY_EXPOSURE",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/vcarve/production_router.py:generate_production_vcarve_gcode",
+          "note": "VCarveToolpath.generate() with no RMOS gate."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/vcarve/production/gcode",
+          "note": "200 text/plain G-code after #324. No X-Run-ID required."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/vcarve/intent-gcode",
+          "note": "409 SAFETY_BLOCKED \u2014 engine unavailable, fail-closed. Not the exposure path."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "roughing",
       "operation_family": "roughing",
       "grouping_rule": "seeded_prefix:/api/cam/toolpath/roughing",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Both /toolpath/roughing/gcode and /roughing/gcode_intent call compute_feasibility_internal(tool_id='roughing:default' or body). Mode roughing has no engine \u2192 unavailable_feasibility UNKNOWN \u2192 SafetyPolicy 409 before G-code. Persistence of BLOCKED is not GREEN and is not GOVERNED manufacturing authority.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "SafetyPolicy.should_block (UNKNOWN from missing engine)"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/roughing/gcode_intent",
@@ -375,38 +506,58 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.toolpath.roughing_router.roughing_gcode",
+        "app.routers.cam_roughing_intent_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "persist_run BLOCKED (roughing_gcode_blocked)"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/components/toolbox/cam-essentials/useRoughingOperation.ts",
+        "packages/client/src/sdk/endpoints/cam/roughing.ts"
+      ],
+      "reachability": "RUNTIME_BLOCKED_BY_POLICY",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/toolpath/roughing_router.py:roughing_gcode",
+          "note": "compute_feasibility_internal then should_block then generate. Engine None for roughing."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/toolpath/roughing/gcode",
+          "note": "Valid RoughReq \u2192 409 SAFETY_BLOCKED; no G-code body."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "helical",
       "operation_family": "helical",
       "grouping_rule": "seeded_prefix:/api/cam/toolpath/helical_entry",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/cam/toolpath/helical_entry calls compute_feasibility_internal(tool_id='helical:gcode'). Mode helical has no engine \u2192 UNKNOWN \u2192 409 before helical_gcode().",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "SafetyPolicy.should_block (UNKNOWN from missing engine)"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/toolpath/helical_entry",
@@ -418,38 +569,56 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.toolpath.helical_router.helical_entry"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "persist_run BLOCKED (helical_gcode_blocked)"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/api/v161.ts"
+      ],
+      "reachability": "RUNTIME_BLOCKED_BY_POLICY",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/toolpath/helical_router.py:helical_entry",
+          "note": "tool_id helical:gcode; resolve_feasibility_engine('helical') is None."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/toolpath/helical_entry",
+          "note": "Valid HelicalReq \u2192 409 SAFETY_BLOCKED; no G-code."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "rosette",
       "operation_family": "rosette",
       "grouping_rule": "seeded_prefix:/api/cam/rosette",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "plan-toolpath and post-gcode share one upstream authority: compute_feasibility_internal with tool_id rosette:* dispatches to compute_rosette_feasibility (manufacturability scorer via ScorerDesignSpec). Historical fail-open (wrong schema / CAM stub GREEN) is retired. post-gcode is serialization of the same family, not a second manufacturing authority. Router maps inner/outer radius to scorer diameters; that mapping is in the handler, not invented here.",
       "authority": {
-        "status": "UNKNOWN",
-        "evaluator": null,
-        "policy_boundary": null
+        "status": "NAMED",
+        "evaluator": "app.rmos.api.rmos_feasibility_router.compute_rosette_feasibility",
+        "policy_boundary": "SafetyPolicy.should_block"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/rosette/plan-toolpath",
@@ -470,10 +639,13 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.rosette.rosette_toolpath_router.plan_rosette_cam_toolpath",
+        "app.cam.routers.rosette.rosette_toolpath_router.postprocess_toolpath_grbl"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "persist_run OK or BLOCKED with evaluator feasibility"
       },
       "artifact_types": [
         "unknown",
@@ -481,28 +653,42 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "GOVERNED",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/rmos/api/rmos_feasibility_router.py:compute_rosette_feasibility",
+          "note": "Real scorer. Evaluation failure \u2192 error_feasibility (blocking ERROR), not fail-open GREEN."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/rosette/plan-toolpath",
+          "note": "Evaluator is consulted (not 409 UNKNOWN). After a non-blocking decision, generation currently returns 400 TOOLPATH_PLAN_ERROR (RosetteGeometry constructor kwargs). No G-code leaked. Not remediated here."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "probing",
       "operation_family": "probing",
       "grouping_rule": "seeded_prefix:/api/probe",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Work-offset / setup G38 programs. Draft /api/probe/*/gcode has no RMOS evaluator. download_governed persists a hardcoded GREEN decision (create_governed_probe_response) without compute_feasibility_internal. /api/v1/machines/probe/{corner,surface} is a parallel ungated contract, not an alias. GREEN persistence on the governed lane is not GOVERNED manufacturing authority.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "none on draft/v1; hardcoded GREEN persist on governed downloads"
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "MIXED",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/probe/boss/gcode",
@@ -658,39 +844,63 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.probe",
+        "app.api_v1.machines"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "FALSE_PROVENANCE",
+        "mechanism": "draft: none; governed download: persist_run RunDecision(risk_level=GREEN) without evaluator"
       },
       "artifact_types": [
         "gcode",
         "unknown"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/components/toolbox/cam-essentials/useProbeOperation.ts"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/probe",
+          "note": "Draft JSON gcode has no feasibility call. Governed downloads mint GREEN."
+        },
+        {
+          "class": "CLIENT_CALL_SITE",
+          "ref": "packages/client/src/components/toolbox/cam-essentials/useProbeOperation.ts",
+          "note": "Client path /api/cam/probe/* does not match live /api/probe/*. Consumer evidence only."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST of probe G38 programs",
+          "note": "Withheld: machine-setup probing programs are not a side-effect-free compute POST for this audit."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "binding",
       "operation_family": "binding",
-      "grouping_rule": "seeded_prefix:/api/cam/binding",
-      "intent_contract": "UNKNOWN",
+      "grouping_rule": "owner_ruling:acoustic_binding_separate",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Owner ruling: binding stays separate from guitar body. Includes /api/cam/binding/{channel,purfling}/gcode (caller-supplied outline, BindingChannel/PurflingLedge) and acoustic /api/cam/guitar/acoustic/{style}/binding/gcode (style-parametric). Distinct geometry/tooling from body cuts. Neither route family calls RMOS. Input contracts differ; manufacturing intent is binding.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "@safety_critical logging only"
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "MIXED",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/binding/channel/gcode",
@@ -709,40 +919,66 @@
           "mount_state": "MOUNTED",
           "route_role": "primary",
           "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/binding/gcode",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "primary",
+          "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.binding.binding_router",
+        "app.routers.cam.guitar.acoustic_cam_router.generate_binding_channel_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/binding/binding_router.py",
+          "note": "No RMOS. Channel and purfling emit G-code from body_outline."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/binding/channel/gcode",
+          "note": "200 G21 from JSON body_outline rectangle."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "inlay",
       "operation_family": "inlay",
       "grouping_rule": "seeded_prefix:/api/art-studio/inlay",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/art-studio/inlay/export-gcode builds pocket G-code from inlay shapes. No RMOS evaluator. Client currently uses export-dxf, not this path.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/art-studio/inlay/export-gcode",
@@ -754,9 +990,11 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.art_studio.inlay_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
@@ -764,28 +1002,42 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/art_studio/inlay_router.py",
+          "note": "export-gcode has no compute_feasibility_internal."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST /api/art-studio/inlay/export-gcode",
+          "note": "Withheld: request contract needs inlay document state; do not fabricate inputs."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "radius-dish",
       "operation_family": "radius-dish",
       "grouping_rule": "seeded_prefix:/api/acoustics/radius-dish",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/acoustics/radius-dish/generate-gcode is a parametric spherical raster generator. No RMOS. Client downloads static public .nc files instead of this API.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/acoustics/radius-dish/generate-gcode",
@@ -797,9 +1049,11 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.radius_dish_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
@@ -807,28 +1061,42 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/radius_dish_router.py",
+          "note": "generate-gcode has no RMOS gate."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST generate-gcode",
+          "note": "Withheld rather than guess a full parametric payload."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "feeds-speeds",
       "operation_family": "feeds-speeds",
       "grouping_rule": "seeded_prefix:/api/cam/opt/feeds-speeds",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "advisory",
+      "intent_contract": "POST /api/cam/opt/feeds-speeds returns JSON machining parameters (feed_xy, rpm, stepdown, \u2026), not a machine file. Keep on the authority map because the numbers can influence execution. Not classified as machine-output authority unless a later stage shows the JSON is consumed as authoritative machine parameters.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "@safety_critical logging only"
       },
+      "generation_ordering": "NOT_APPLICABLE",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/opt/feeds-speeds",
@@ -840,38 +1108,54 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.utility.optimization_router.calculate_feeds_speeds"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
         "feeds_speeds_json"
       ],
       "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "ADVISORY_ONLY",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/utility/optimization_router.py:calculate_feeds_speeds",
+          "note": "calculate_feed_plan \u2192 FeedsSpeedsResponse. No G-code."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/opt/feeds-speeds",
+          "note": "200 JSON with feed_xy/rpm; body is not G-code."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "biarc-contour",
       "operation_family": "biarc-contour",
       "grouping_rule": "seeded_prefix:/api/cam/toolpath/biarc",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/cam/toolpath/biarc/gcode calls compute_feasibility_internal(tool_id='biarc_gcode'). That tool_id does not use the biarc: prefix, so resolve_mode returns 'unknown' and there is no engine either way. Result UNKNOWN \u2192 409 before linear G1 generation. Name is historical (no bi-arc fit).",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "MISMATCH",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "SafetyPolicy.should_block (UNKNOWN)"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "MISMATCH",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/toolpath/biarc/gcode",
@@ -883,48 +1167,57 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.toolpath.biarc_router.biarc_gcode"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "persist_run BLOCKED"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/components/toolbox/cam-essentials/useContourOperation.ts"
+      ],
+      "reachability": "RUNTIME_BLOCKED_BY_POLICY",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/toolpath/biarc_router.py:biarc_gcode",
+          "note": "tool_id='biarc_gcode' \u2192 mode unknown; engine None."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/toolpath/biarc/gcode",
+          "note": "Valid BiarcReq \u2192 409 SAFETY_BLOCKED; no G-code."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "cam-guitar",
       "operation_family": "cam-guitar",
       "grouping_rule": "derived_path_family:cam-guitar",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Electric project-driven body/neck G-code and acoustic body/soundhole G-code. Acoustic binding moved to capability binding per owner ruling. Auth/project gates may apply; no RMOS evaluator on the generators.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "@safety_critical logging; some routes require auth + manufacturing_state"
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "MIXED",
+      "ungated_output_exposure": "YES",
       "routes": [
-        {
-          "path": "/api/cam/guitar/acoustic/{style}/binding/gcode",
-          "methods": [
-            "POST"
-          ],
-          "mount_state": "MOUNTED",
-          "route_role": "primary",
-          "historical_or_dead": false
-        },
         {
           "path": "/api/cam/guitar/acoustic/{style}/body/gcode",
           "methods": [
@@ -980,9 +1273,12 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.cam.guitar.body_gcode_router",
+        "app.routers.cam.guitar.acoustic_cam_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
@@ -990,28 +1286,42 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/cam/guitar",
+          "note": "No compute_feasibility_internal on body/neck/soundhole G-code."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST guitar gcode",
+          "note": "Withheld: project auth and durable project state. Record MOUNTED, not RUNTIME_REACHABLE."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "cam-post",
       "operation_family": "cam-post",
       "grouping_rule": "derived_path_family:cam-post",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/cam/post/post_v155 is contour \u2192 v15.5 post G-code. Kept separate from wrap and v1-dxf: it does not share an upstream authorized artifact; the post is the manufacturing authority. Not a mere serializer of someone else's decision. No RMOS.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/post/post_v155",
@@ -1023,38 +1333,56 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.cam_post_v155_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/api/postv155.ts"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/cam_post_v155_router.py",
+          "note": "Independent contour-to-G-code authority. Client still names /api/cam_gcode/post_v155."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST post_v155",
+          "note": "Withheld: full contour/post payload not fabricated for this audit."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "geometry",
       "operation_family": "geometry",
       "grouping_rule": "derived_path_family:geometry",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "artifact_transformation",
+      "intent_contract": "export_gcode / export_gcode_governed wrap caller-supplied G-code with a post-processor. Bundles zip DXF/SVG/NC. Not a new manufacturing authority: transformation of an already-produced artifact. Draft lane has no evaluator. Governed lane persists; simulation gate is not a manufacturing evaluator.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "governed: _check_simulation_gate (not RMOS engine table)"
       },
+      "generation_ordering": "NOT_APPLICABLE",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/geometry/export_bundle",
@@ -1093,39 +1421,53 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.geometry.export_router",
+        "app.geometry.bundle_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "governed export_gcode: persist_run; draft: none"
       },
       "artifact_types": [
         "gcode",
         "zip_with_gcode"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/components/GeometryOverlay.vue"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/geometry/export_router.py",
+          "note": "Wraps supplied gcode. Draft ungated. Not a manufacturing capability."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "headstock-transition",
       "operation_family": "headstock-transition",
       "grouping_rule": "derived_path_family:headstock-transition",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/headstock/transition/gcode is ball-nose 3-axis finish of the headstock/neck blend. Distinct operation from full-neck OP10\u201340 and from guitar project neck stub. No RMOS.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/headstock/transition/gcode",
@@ -1137,9 +1479,11 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.neck.headstock_transition_export"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
@@ -1147,28 +1491,37 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/neck/headstock_transition_export.py",
+          "note": "No RMOS gate. Client can also build G-code locally."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "neck-gcode",
       "operation_family": "neck-gcode",
       "grouping_rule": "seeded_prefix:/api/neck/gcode",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Parametric NeckGCodeGenerator OP10\u201340 via /api/neck/gcode/generate and /download. Distinct from project-driven guitar neck stub and from headstock-transition surfacing (owner: split only for a distinct operation/authority contract). No RMOS.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/neck/gcode/download",
@@ -1189,9 +1542,11 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.neck.gcode_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
@@ -1199,28 +1554,42 @@
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/neck/gcode_router.py",
+          "note": "generate/download have no RMOS feasibility call."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST /api/neck/gcode/generate",
+          "note": "Withheld: full neck program payload not fabricated."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "operator-pack",
       "operation_family": "operator-pack",
       "grouping_rule": "seeded_prefix:/api/rmos/runs_v2",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "artifact_retrieval",
+      "intent_contract": "GET /api/rmos/runs_v2/{run_id}/operator-pack zips existing run attachments. It does not regenerate G-code. Not a manufacturing capability. Stored YELLOW/RED require override before export. Can re-export G-code persisted under a defective GREEN (wrap).",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "exports.py stored-risk gate (YELLOW/RED override)"
       },
+      "generation_ordering": "NOT_APPLICABLE",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "RETRIEVAL_ONLY",
       "routes": [
         {
           "path": "/api/rmos/runs_v2/{run_id}/operator-pack",
@@ -1234,36 +1603,53 @@
       ],
       "generators": [],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "reads RunStoreV2 attachments; does not create manufacturing identity"
       },
       "artifact_types": [
         "operator_pack"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/sdk/rmos/runs.ts",
+        "packages/client/src/composables/useDxfToGcode.ts"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "GET_WITNESS",
+      "authority_disposition": "INSUFFICIENT_EVIDENCE",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/rmos/runs_v2/exports.py",
+          "note": "ZIP of existing blobs. No manufacturing evaluator. Not GOVERNED."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "GET /api/rmos/runs_v2/missing/operator-pack",
+          "note": "Mounted retrieval: missing run_id is not 200 G-code. No run planted to export a pack."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "pocketing",
       "operation_family": "pocketing",
       "grouping_rule": "seeded_prefix:/api/cam/pocketing",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/cam/pocketing/intent-gcode uses compute_pocket_feasibility (intent-lane, shapely) before adaptive L1 G-code, then validate_and_persist. Not in _PRODUCTION_FEASIBILITY_ENGINES. Named local evaluator + gate-before-generate.",
       "authority": {
-        "status": "UNKNOWN",
-        "evaluator": null,
-        "policy_boundary": null
+        "status": "NAMED",
+        "evaluator": "compute_pocket_feasibility (intent-lane; not RMOS engine table)",
+        "policy_boundary": "block on not feasibility.feasible; validate_and_persist"
       },
+      "generation_ordering": "AUTHORITY_BEFORE_GENERATION",
+      "input_contract_status": "TRUTHFUL",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/cam/pocketing/intent-gcode",
@@ -1275,38 +1661,56 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.cam.routers.pocketing.intent_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "validate_and_persist"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/api/pocketing.ts"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "GOVERNED",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/cam/routers/pocketing/intent_router.py",
+          "note": "compute_pocket_feasibility before generate; persist records the decision."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime POST intent-gcode",
+          "note": "Withheld: CamIntentV1 payload not reproduced here; static trace names evaluator and ordering."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "polygon-offset",
       "operation_family": "polygon-offset",
       "grouping_rule": "seeded_prefix:/api/cam/polygon_offset",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "Draft /polygon_offset.nc emits NC with no RMOS. Governed /polygon_offset_governed.nc generates first, then persists RunDecision(risk_level='GREEN') hashing the request, not a feasibility result. GREEN persistence is not GOVERNED.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/cam/polygon_offset.nc",
@@ -1327,38 +1731,56 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.routers.polygon_offset_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "FALSE_PROVENANCE",
+        "mechanism": "governed lane: persist_run RunDecision(GREEN) + request_hash as feasibility_sha256"
       },
       "artifact_types": [
         "nc"
       ],
-      "client_consumers": [],
-      "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "client_consumers": [
+        "packages/client/src/views/PolygonOffsetLab.vue"
+      ],
+      "reachability": "RUNTIME_REACHABLE",
+      "runtime_evidence": "POST_COMPUTE_WITNESS",
+      "authority_disposition": "GOVERNED_PROVENANCE_DEFECT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/routers/polygon_offset_router.py:polygon_offset_nc_governed",
+          "note": "Generate program, then mint GREEN. No compute_feasibility_internal."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/cam/polygon_offset_governed.nc",
+          "note": "200 NC body; X-ToolBox-Lane governed does not imply an evaluator."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "RUNTIME_REQUEST_WITNESS",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "rmos-wrap",
       "operation_family": "rmos-wrap",
       "grouping_rule": "derived_path_family:rmos-wrap",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/rmos/wrap/mvp/dxf-to-grbl parses DXF, calls adaptive plan(), emits GRBL, persists attachments with a hardcoded risk_level GREEN. Independent of cam-post and v1-dxf. GREEN persistence is not GOVERNED (MAR-009).",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "hardcoded GREEN in mvp_router (not SafetyPolicy)"
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/rmos/wrap/mvp/dxf-to-grbl",
@@ -1370,38 +1792,57 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.rmos.mvp_router.dxf_to_grbl"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "FALSE_PROVENANCE",
+        "mechanism": "CAS attachments + risk_level GREEN literal"
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/composables/useDxfToGcode.ts",
+        "packages/client/src/views/QuickCutView.vue"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "GOVERNED_PROVENANCE_DEFECT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/rmos/mvp_router.py:dxf_to_grbl",
+          "note": "Literal risk_level GREEN. Calls plan() but records GREEN rather than the evaluator decision."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime multipart DXF POST",
+          "note": "Withheld: file-upload pipeline not exercised; static GREEN mint is sufficient for MAR-009/010."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "saw-batch",
       "operation_family": "saw-batch",
       "grouping_rule": "derived_path_family:saw-batch",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "artifact_retrieval",
+      "intent_contract": "Three GETs serialize stored saw-batch toolpath/execution moves to machine-consumable G-code (or redirect to an attachment). Included because the artifact is job instructions, not status metadata. HTTP GET is irrelevant. Export has no feasibility gate; module is marked QUARANTINE. Not a manufacturing generator.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "NOT_APPLICABLE",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "RETRIEVAL_ONLY",
       "routes": [
         {
           "path": "/api/saw/batch/executions/{batch_execution_artifact_id}/gcode",
@@ -1431,38 +1872,55 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.saw_lab.batch_gcode_router",
+        "app.saw_lab.toolpaths_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "reads stored saw_batch artifacts; no new manufacturing decision"
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "GET_WITNESS",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/saw_lab/batch_gcode_router.py",
+          "note": "export_op_toolpaths_gcode / export_execution_gcode: stored moves \u2192 G-code. QUARANTINE header."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "GET missing artifact gcode",
+          "note": "404 without a planted batch artifact. Emission not runtime-witnessed; static trace is the classifier."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     },
     {
       "capability_id": "v1-dxf",
       "operation_family": "v1-dxf",
       "grouping_rule": "derived_path_family:v1-dxf",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/v1/dxf/cam/gcode returns placeholder G-code ('; TODO: Full toolpath generation requires CAM engine'). Kept separate from wrap/post. Explicitly a non-production stub.",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "NOT_APPLICABLE",
+      "ungated_output_exposure": "NO",
       "routes": [
         {
           "path": "/api/v1/dxf/cam/gcode",
@@ -1474,38 +1932,51 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.api_v1.dxf_workflow"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "mechanism": null
       },
       "artifact_types": [
         "gcode"
       ],
-      "client_consumers": [],
+      "client_consumers": [
+        "packages/client/src/views/DxfToGcodeWizard.vue"
+      ],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "EXPLICITLY_NON_PRODUCTION",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/api_v1/dxf_workflow.py",
+          "note": "Placeholder toolpath comment in the G-code wrapper."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "HIGH"
     },
     {
       "capability_id": "vision",
       "operation_family": "vision",
       "grouping_rule": "derived_path_family:vision",
-      "intent_contract": "UNKNOWN",
+      "surface_kind": "manufacturing_capability",
+      "intent_contract": "POST /api/vision/photo-to-gcode segments a photo, plans via adaptive plan(), emits G-code. No RMOS feasibility gate on the vision entry. Independent of wrap even though both can call plan().",
       "authority": {
-        "status": "UNKNOWN",
+        "status": "NONE",
         "evaluator": null,
         "policy_boundary": null
       },
+      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "input_contract_status": "UNKNOWN",
+      "ungated_output_exposure": "YES",
       "routes": [
         {
           "path": "/api/vision/photo-to-gcode",
@@ -1517,27 +1988,39 @@
           "historical_or_dead": false
         }
       ],
-      "generators": [],
+      "generators": [
+        "app.vision.segmentation_router"
+      ],
       "persistence": {
-        "status": "UNKNOWN",
-        "mechanism": null
+        "status": "RUN_ARTIFACT",
+        "mechanism": "CAS attachments kind=advisory"
       },
       "artifact_types": [
         "gcode"
       ],
       "client_consumers": [],
       "reachability": "MOUNTED",
-      "runtime_evidence": "NOT_OBTAINED_STAGE_1",
-      "authority_disposition": "UNKNOWN",
+      "runtime_evidence": "NOT_OBTAINED_SAFELY",
+      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
           "ref": "app.main:app",
-          "note": "Stage 1 inventory only. No authority conclusion."
+          "note": "Stage 2: inventory routes unchanged; authority fields from static trace + safe witnesses."
+        },
+        {
+          "class": "STATIC_CODE_TRACE",
+          "ref": "services/api/app/vision/segmentation_router.py",
+          "note": "Photo pipeline emits G-code without compute_feasibility_internal."
+        },
+        {
+          "class": "INSUFFICIENT_EVIDENCE",
+          "ref": "runtime photo POST",
+          "note": "Withheld: may invoke external/AI services. NOT_OBTAINED_SAFELY."
         }
       ],
-      "evidence_class": "INSUFFICIENT_EVIDENCE",
-      "confidence": "LOW"
+      "evidence_class": "STATIC_CODE_TRACE",
+      "confidence": "MEDIUM"
     }
   ],
   "exclusions": [

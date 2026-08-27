@@ -1,6 +1,6 @@
 # RMOS-AUTHORITY-MAP-001 — Manufacturing Authority & Reachability Census
 
-**Status:** STAGE 1 IN PROGRESS (this PR) — stop at the Step-7 checkpoint  
+**Status:** STAGE 2 COMPLETE (this PR) — classification populated; no remediation  
 **Date:** 2026-08-27  
 **Repository:** HanzoRazer/luthiers-toolbox  
 **Base:** `origin/main` at execution time  
@@ -108,9 +108,15 @@ the taxonomy problem.
 review. Where runtime reachability cannot be established safely:
 `reachability = MOUNTED`, `runtime_evidence = NOT_OBTAINED_STAGE_1`.
 
-**D4–D6 — Authority, contract, persistence.** Named in the schema. **Not
-populated with conclusions in Stage 1.** All dispositions are `UNKNOWN` /
-`INSUFFICIENT_EVIDENCE` until Stage 2 is authorized.
+**D4–D6 — Authority, contract, persistence.** Named in the schema. Stage 1
+left them `UNKNOWN`. Stage 2 populates them only where evaluator, reachability,
+ordering, persistence, and client/retrieval path can be named. Vocabulary must
+not outrun evidence.
+
+**D11 — Surface kind (owner amendment, Stage 2).** The registry distinguishes
+`manufacturing_capability` from `artifact_transformation`, `artifact_retrieval`,
+and `advisory`. Postprocessors, wrappers, and retrieval endpoints must not
+inflate the manufacturing-capability count.
 
 **D7 — Client reachability is evidence, not authority.** Empty in-repo consumers
 do not classify a route dead.
@@ -121,8 +127,9 @@ modify CAM behavior, feasibility, RMOS decisions, route availability, clients,
 persistence, or G-code generation. Nothing production-facing imports the
 registry.
 
-**D9 — V-carve post-#324** is a Stage 2 classification. Stage 1 only records
-that the production route is mounted.
+**D9 — V-carve post-#324.** Stage 2 classified production
+`/api/cam/vcarve/production/gcode` as `POST_MERGE_AUTHORITY_EXPOSURE`
+(200 G-code, no RMOS). Intent/toolpath remain 409. Not remediated.
 
 **D10 — Existing audits are leads, not truth.** Reproduce against current main.
 
@@ -142,8 +149,23 @@ that the production route is mounted.
 8. CBSP21 per-PR manifest.
 9. Draft PR. Stop.
 
-MAR-009–020 (authority semantics and known-system witnesses) are **Stage 2**,
-after owner review of the taxonomy.
+MAR-009–020 (authority semantics and known-system witnesses) are **Stage 2**
+and are implemented in this same PR after the owner accepted the Stage-1
+taxonomy with the `surface_kind` amendment. Remediation is still forbidden.
+
+Owner rulings applied in Stage 2:
+
+- Post vs wrap: keep separate unless they share upstream authority and only
+  differ by serialization. A postprocessor is not its own manufacturing
+  authority if it merely transforms an already-authorized artifact.
+- Guitar vs binding: binding stays separate (acoustic binding grouped under
+  `binding`, not `cam-guitar`).
+- Neck surfaces: split only for a distinct operation/authority contract.
+- Operator-pack vs retrieval: retrieval is artifact access/lineage, not a
+  manufacturing capability.
+- Feeds-speeds: advisory / non-machine-output unless proven otherwise.
+- Saw-batch GETs: include when they return machine-consumable artifacts;
+  HTTP method is irrelevant.
 
 ---
 
@@ -196,3 +218,9 @@ Stage 1 is done when the capability model itself is reviewable: inventory,
 grouping, seeded UNKNOWN registry, completeness tests, checkpoint report,
 Grounding trial row, no production behavior changed, no new agent created,
 no remediation authorized.
+
+Stage 2 is done when each registered capability answers: reachable or not,
+evaluator or none, truthful input contract or mismatch, generation before/after
+authority, persistence truth, and whether any client/retrieval path can expose
+ungated machine output — and when that answer is evidence-backed without a
+production behavior change or a remediation merge.

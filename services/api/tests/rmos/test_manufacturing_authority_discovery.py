@@ -218,6 +218,34 @@ def test_health_is_not_a_machine_output_candidate(mod):
     assert "/health" not in paths
 
 
+def test_acoustic_binding_groups_under_binding(mod):
+    from fastapi import FastAPI
+
+    app = FastAPI()
+
+    @app.post("/api/cam/guitar/acoustic/{style}/binding/gcode")
+    def acoustic_binding():
+        return "ok"
+
+    @app.post("/api/cam/guitar/acoustic/{style}/body/gcode")
+    def acoustic_body():
+        return "ok"
+
+    @app.post("/api/cam/binding/channel/gcode")
+    def cam_binding():
+        return "ok"
+
+    inventory = mod.collect_inventory(app)
+    classified = mod.classify_routes(inventory["routes"])
+    grouped = mod.group_capabilities(classified["candidates"])
+    bind_paths = {i["path"] for i in grouped.get("binding", [])}
+    assert "/api/cam/binding/channel/gcode" in bind_paths
+    assert any("/binding/" in p and "/acoustic/" in p for p in bind_paths)
+    guitar_paths = {i["path"] for i in grouped.get("cam-guitar", [])}
+    assert not any("/binding/" in p for p in guitar_paths)
+    assert any("/body/" in p for p in guitar_paths)
+
+
 def test_naive_top_level_walk_undercounts_included_routers(mod):
     """Witness that Stage 1 must recurse ``_IncludedRouter``, not ``app.routes``."""
     app = _mini_app()

@@ -13,9 +13,11 @@ Usage (from repo root)::
     PYTHONPATH=services/api python scripts/audit/rmos_authority_map.py --validate
     PYTHONPATH=services/api python scripts/audit/rmos_authority_map.py --inventory
     PYTHONPATH=services/api python scripts/audit/rmos_authority_map.py --emit-skeleton
+    PYTHONPATH=services/api python scripts/audit/rmos_authority_map.py --emit-stage2
 
-``--emit-skeleton`` prints a Stage-1 UNKNOWN registry to stdout. It never
-writes a repository file.
+``--emit-skeleton`` prints a Stage-1 UNKNOWN registry to stdout.
+``--emit-stage2`` prints the Stage-2 overlay applied to that inventory.
+Neither flag writes a repository file.
 """
 from __future__ import annotations
 
@@ -25,6 +27,23 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+
+import importlib.util as _importlib_util
+
+
+def _load_stage2_module():
+    sibling = Path(__file__).resolve().parent / "rmos_authority_stage2.py"
+    spec = _importlib_util.spec_from_file_location("rmos_authority_stage2", sibling)
+    mod = _importlib_util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_STAGE2 = _load_stage2_module()
+apply_stage2 = _STAGE2.apply_stage2
+infer_surface_kind = _STAGE2.infer_surface_kind
+SURFACE_KIND_VOCABULARY = list(_STAGE2.SURFACE_KIND_VOCABULARY)
 
 REPO_MARKERS = (".git", "services/api/app/main.py")
 DEFAULT_REGISTRY = "services/api/app/rmos/manufacturing_authority_registry.json"
@@ -379,6 +398,11 @@ def _prefix_matches(path: str, pfx: str) -> bool:
 
 def assign_capability(path: str) -> Tuple[str, str]:
     """Return (capability_id, grouping_rule). Deterministic; no subjective merge."""
+    # Owner ruling 2026-08-27: acoustic binding is manufacturing-intent binding,
+    # not guitar-body. Path prefix /api/cam/guitar would otherwise swallow it.
+    lowered = path.lower()
+    if "/acoustic/" in lowered and "/binding/" in lowered:
+        return "binding", "owner_ruling:acoustic_binding_separate"
     matches = [(pfx, cid) for pfx, cid in SEEDED_PREFIXES if _prefix_matches(path, pfx)]
     if matches:
         pfx, cid = max(matches, key=lambda x: len(x[0]))
@@ -478,12 +502,16 @@ def stage1_capability_record(capability_id: str, routes: Sequence[Dict[str, Any]
         "capability_id": capability_id,
         "operation_family": family,
         "grouping_rule": grouping,
+        "surface_kind": infer_surface_kind(capability_id),
         "intent_contract": "UNKNOWN",
         "authority": {
             "status": "UNKNOWN",
             "evaluator": None,
             "policy_boundary": None,
         },
+        "generation_ordering": "UNKNOWN",
+        "input_contract_status": "UNKNOWN",
+        "ungated_output_exposure": "UNKNOWN",
         "routes": [
             {
                 "path": r["path"],
@@ -533,6 +561,7 @@ def build_skeleton(inventory: Dict[str, Any], classified: Dict[str, Any]) -> Dic
         "stage": "stage_1_checkpoint",
         "warning": WARNING_TEXT,
         "adjacent_authority_maps": ADJACENT_MAPS,
+        "surface_kind_vocabulary": SURFACE_KIND_VOCABULARY,
         "reachability_vocabulary": REACHABILITY_VOCABULARY,
         "disposition_vocabulary": DISPOSITION_VOCABULARY,
         "evidence_class_vocabulary": EVIDENCE_CLASS_VOCABULARY,
@@ -644,6 +673,39 @@ def validate_registry(
                 errors.append(
                     f"MAR-005 {cap.get('capability_id')} {route.get('path')}: stale route lacks historical_or_dead"
                 )
+
+        kind = cap.get("surface_kind")
+        if kind not in set(SURFACE_KIND_VOCABULARY):
+            errors.append(
+                f"MAR-025 {cap.get('capability_id')}: surface_kind {kind!r} not in vocabulary"
+            )
+        if kind == "advisory" and disp not in {
+            "ADVISORY_ONLY",
+            "UNKNOWN",
+            "INSUFFICIENT_EVIDENCE",
+        }:
+            errors.append(
+                f"MAR-025 {cap.get('capability_id')}: advisory surface cannot carry manufacturing disposition {disp}"
+            )
+        if kind == "artifact_retrieval" and disp == "GOVERNED":
+            errors.append(
+                f"MAR-009 {cap.get('capability_id')}: artifact retrieval cannot be manufacturing GOVERNED"
+            )
+        if cap.get("persistence", {}).get("status") == "FALSE_PROVENANCE" and disp == "GOVERNED":
+            errors.append(
+                f"MAR-009 {cap.get('capability_id')}: GREEN/false provenance is not GOVERNED"
+            )
+        if (
+            registry.get("stage") == "stage_2_authority"
+            and cap.get("runtime_evidence") == "NOT_OBTAINED_STAGE_1"
+        ):
+            errors.append(
+                f"MAR-023 {cap.get('capability_id')}: Stage 2 cannot retain NOT_OBTAINED_STAGE_1"
+            )
+
+    unclassified = registry.get("_stage2_unclassified_capabilities") or []
+    if unclassified:
+        errors.append(f"MAR-006 Stage 2 overlay missing capabilities: {unclassified}")
 
     if inventory is not None and classified is not None:
         mounted_keys = {
@@ -784,6 +846,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print a Stage-1 UNKNOWN skeleton to stdout. Does not write files.",
     )
     parser.add_argument(
+        "--emit-stage2",
+        action="store_true",
+        help="Print the Stage-2 overlay applied to the live inventory. Does not write files.",
+    )
+    parser.add_argument(
         "--app",
         default=None,
         help=argparse.SUPPRESS,  # tests inject a FastAPI app via load hook, not CLI
@@ -799,6 +866,7 @@ def _run(
     do_validate: bool,
     do_inventory: bool,
     emit_skeleton: bool,
+    emit_stage2: bool = False,
     app: Any = None,
 ) -> int:
     if app is None:
@@ -809,6 +877,14 @@ def _run(
     if emit_skeleton:
         skeleton = build_skeleton(inventory, classified)
         json.dump(skeleton, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if emit_stage2:
+        skeleton = build_skeleton(inventory, classified)
+        stage2 = apply_stage2(skeleton)
+        stage2.pop("_stage2_unclassified_capabilities", None)
+        json.dump(stage2, sys.stdout, indent=2)
         sys.stdout.write("\n")
         return 0
 
@@ -845,7 +921,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     repo_root = Path(args.repo_root).resolve() if args.repo_root else find_repo_root()
     do_validate = args.validate
     do_inventory = args.inventory
-    if not args.emit_skeleton and not do_validate and not do_inventory:
+    if not args.emit_skeleton and not args.emit_stage2 and not do_validate and not do_inventory:
         do_validate = True
         do_inventory = True
     return _run(
@@ -855,6 +931,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         do_validate=do_validate,
         do_inventory=do_inventory,
         emit_skeleton=args.emit_skeleton,
+        emit_stage2=args.emit_stage2,
         app=None,
     )
 

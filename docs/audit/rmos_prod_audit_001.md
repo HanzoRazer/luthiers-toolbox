@@ -8,8 +8,9 @@ historical evidence. Where they conflict with the capability-level census in
 [`rmos_manufacturing_authority_map_001.md`](rmos_manufacturing_authority_map_001.md)
 and `services/api/app/rmos/manufacturing_authority_registry.json`, the newer
 registry is the capability identity — **once Stage 2 dispositions are populated**.
-Stage 1 of that census is still `UNKNOWN` / `INSUFFICIENT_EVIDENCE` and
-authorizes no remediation. This addendum does not rewrite the findings below.
+Stage 2 of that census now populates capability dispositions. It still
+authorizes **no remediation**. Route-level rows below remain historical.
+This addendum does not rewrite the findings below.
 
 **Charter.** Prove whether the Resource Management Operating System still performs its intended
 role as the **bidirectional manufacturing spine** on current `main` — carry a manufacturing
