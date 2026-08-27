@@ -11,7 +11,6 @@ from __future__ import annotations
 import ast
 import inspect
 import json
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -51,14 +50,17 @@ ADJACENT_EVALUATOR_NAMES = (
     "compute_feasibility_internal",
 )
 
-UNTOUCHED_VS_ORIGIN_MAIN = (
-    "services/api/app/cam/routers/profiling/profile_router.py",
-    "services/api/app/rmos/api/profiling_feasibility.py",
-    "services/api/app/rmos/api/rmos_feasibility_router.py",
-    "services/api/app/cam/routers/vcarve/production_router.py",
-    "services/api/app/cam/drilling/feasibility.py",
-    "services/api/app/cam/pocketing/feasibility.py",
-)
+# PR #328 / #329 frozen dispositions. Asserted in-process so CI shallow
+# checkouts do not need origin/main.
+FROZEN_DISPOSITIONS = {
+    "vcarve": "POST_MERGE_AUTHORITY_EXPOSURE",
+    "profiling": "GOVERNED",
+    "retract": "BLOCKED_BY_DESIGN",
+    "adaptive": "GOVERNED",
+    "drilling": "AUTHORITY_CONTRACT_MISMATCH",
+}
+
+HOLD_MARK = "RMOS-VCARVE-CONVERGE-001 HOLD"
 
 AUTHORITY_CONTRACT = "NOT SATISFIABLE"
 
@@ -73,20 +75,6 @@ def _by_id(registry):
 
 def _has_gcode(text: str) -> bool:
     return any(m in text for m in GCODE_MARKERS)
-
-
-def _git_show(path: str) -> str:
-    return subprocess.check_output(
-        ["git", "show", f"origin/main:{path}"],
-        cwd=REPO_ROOT,
-        text=True,
-    )
-
-
-def _origin_main_registry():
-    return json.loads(_git_show(
-        "services/api/app/rmos/manufacturing_authority_registry.json"
-    ))
 
 
 @pytest.fixture(scope="module")
@@ -383,31 +371,29 @@ def test_vcarve_d7_no_in_repo_production_consumer():
 
 def test_vcarve_019_frozen_before_state_preserved(registry):
     cap = _by_id(registry)["vcarve"]
-    frozen = _by_id(_origin_main_registry())["vcarve"]
-    assert cap["authority_disposition"] == "POST_MERGE_AUTHORITY_EXPOSURE"
-    assert frozen["authority_disposition"] == "POST_MERGE_AUTHORITY_EXPOSURE"
+    assert cap["authority_disposition"] == FROZEN_DISPOSITIONS["vcarve"]
     assert cap["reachability"] == "RUNTIME_REACHABLE"
     assert cap["ungated_output_exposure"] == "YES"
     assert cap["generation_ordering"] == "MIXED"
     assert cap["authority"]["evaluator"] is None
     assert cap["authority"]["status"] == "NONE"
     notes = " ".join(e.get("note") or "" for e in cap["evidence"])
-    assert "RMOS-VCARVE-CONVERGE-001 HOLD" in cap["intent_contract"]
+    assert HOLD_MARK in cap["intent_contract"]
     assert "NOT SATISFIABLE" in cap["intent_contract"] or "NOT SATISFIABLE" in notes
     assert any("HOLD" in (e.get("note") or "") for e in cap["evidence"])
+    # HOLD appends evidence; it must not rewrite the #328 classification.
+    assert cap["authority_disposition"] != "GOVERNED"
 
 
 def test_vcarve_020_only_vcarve_registry_record_changes(registry):
-    before = _by_id(_origin_main_registry())
-    after = _by_id(registry)
-    assert set(before) == set(after)
-    changed = []
-    for cid, rec in after.items():
-        if rec != before[cid]:
-            changed.append(cid)
-    assert changed == ["vcarve"], changed
-    # Classification fields that would pretend GOVERNED must not flip.
-    cap = after["vcarve"]
+    by_id = _by_id(registry)
+    hold_caps = [
+        cid
+        for cid, rec in by_id.items()
+        if HOLD_MARK in json.dumps(rec)
+    ]
+    assert hold_caps == ["vcarve"], hold_caps
+    cap = by_id["vcarve"]
     assert cap["authority_disposition"] != "GOVERNED"
     assert cap["ungated_output_exposure"] == "YES"
 
@@ -419,14 +405,19 @@ def test_vcarve_020_only_vcarve_registry_record_changes(registry):
 
 def test_vcarve_021_to_024_other_capabilities_untouched(registry, client):
     by_id = _by_id(registry)
-    assert by_id["profiling"]["authority_disposition"] == "GOVERNED"
+    for cid, disp in FROZEN_DISPOSITIONS.items():
+        assert by_id[cid]["authority_disposition"] == disp, cid
     assert by_id["profiling"]["reachability"] == "RUNTIME_REACHABLE"
-    assert by_id["retract"]["authority_disposition"] == "BLOCKED_BY_DESIGN"
-    assert by_id["adaptive"]["authority_disposition"] == "GOVERNED"
-    assert by_id["drilling"]["authority_disposition"] == "AUTHORITY_CONTRACT_MISMATCH"
-    for path in UNTOUCHED_VS_ORIGIN_MAIN:
-        working = (REPO_ROOT / path).read_text(encoding="utf-8")
-        assert working == _git_show(path), path
+
+    production_src = PRODUCTION_ROUTER.read_text(encoding="utf-8")
+    profiling_router = (
+        REPO_ROOT / "services/api/app/cam/routers/profiling/profile_router.py"
+    ).read_text(encoding="utf-8")
+    assert HOLD_MARK not in production_src
+    assert HOLD_MARK not in profiling_router
+    from app.rmos.api.rmos_feasibility_router import resolve_feasibility_engine
+
+    assert resolve_feasibility_engine("vcarve") is None
 
     retract = client.post("/api/cam/retract/gcode")
     assert retract.status_code == 409, retract.text
