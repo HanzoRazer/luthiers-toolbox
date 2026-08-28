@@ -1,0 +1,134 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RMOS_DRILLING_CONTRACT_001",
+  "title": "RMOS-DRILLING-CONTRACT-001: truthful drilling authority contract, no gate",
+  "intent": "Introduce a canonical drilling manufacturing-intent contract (DrillingOperationSpec) so compute_drilling_feasibility can be fed without fabrication. Adapt the intent lane truthfully. Keep modal G81/G83 200. Do not mark Drilling GOVERNED. Do not introduce an RMOS production gate.",
+  "change_type": "feature",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/rmos-drilling-contract-001.json",
+      ".github/workflows/rmos_ci.yml",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "scripts/audit/rmos_authority_stage2.py",
+      "services/api/app/cam/drilling/feasibility.py",
+      "services/api/app/cam/drilling/operation_contract.py",
+      "services/api/app/cam/routers/drilling/drill_modal_router.py",
+      "services/api/app/cam/routers/drilling/drill_pattern_router.py",
+      "services/api/app/cam/routers/drilling/intent_router.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_drilling_authority_contract.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/rmos-drilling-contract-001.json",
+      ".github/workflows/rmos_ci.yml",
+      "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "scripts/audit/rmos_authority_stage2.py",
+      "services/api/app/cam/drilling/feasibility.py",
+      "services/api/app/cam/drilling/operation_contract.py",
+      "services/api/app/cam/routers/drilling/drill_modal_router.py",
+      "services/api/app/cam/routers/drilling/drill_pattern_router.py",
+      "services/api/app/cam/routers/drilling/intent_router.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_drilling_authority_contract.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) operation_contract.py: DrillingOperationSpec with explicit mm units, datum+target vs physical depth, first-class diameter, per-hole feeds, G81/G83 peck mapping, R-plane retract. (2) feasibility.py: thin from-spec adapter; scoring rules unchanged. (3) DrillReq/DrillParams: optional hole_diameter_mm and surface_z_mm; G-code generation unchanged. (4) intent_router uses the canonical adapter with the same kwargs. (5) Tests DRILL-CONTRACT-001–035. (6) Registry + overlay remain AUTHORITY_CONTRACT_MISMATCH / MISMATCH. (7) Audit §9 and GA-TRIAL-0005.",
+    "why_not_redundant": "The live modal request cannot presently satisfy compute_drilling_feasibility. This increment makes the manufacturing semantics say what they mean without gating production or fabricating evaluator inputs from Hole.z or tool."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 -m tools.grounding_agent.cli --request /tmp/rmos_drilling_contract_001_grounding.json → MATCH / PROCEED (GA-TRIAL-0005)",
+      "PYTHONPATH=services/api python3 -m pytest tests/rmos/test_drilling_authority_contract.py tests/rmos/test_manufacturing_authority_stage2.py tests/cam/test_drilling_intent_migration.py tests/test_cam_drilling_smoke.py -q --no-cov",
+      "PYTHONPATH=services/api python3 scripts/audit/rmos_authority_map.py --validate",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/drilling/operation_contract.py",
+      "intent": "Canonical drilling manufacturing-intent contract and truthful lane adapters. No RMOS import.",
+      "risk": "low",
+      "behavior_change": "none (new semantic types; not a production gate)"
+    },
+    {
+      "path": "services/api/app/cam/drilling/feasibility.py",
+      "intent": "Thin spec→kwargs adapter. Scoring rules frozen.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/cam/routers/drilling/drill_modal_router.py",
+      "intent": "Optional additive diameter/datum fields; contract snapshot; G81/G83 unchanged.",
+      "risk": "low",
+      "behavior_change": "none (additive optional fields ignored by generator)"
+    },
+    {
+      "path": "services/api/app/cam/routers/drilling/drill_pattern_router.py",
+      "intent": "Optional additive diameter/datum fields. Resolver defect unchanged.",
+      "risk": "low",
+      "behavior_change": "none (additive optional fields)"
+    },
+    {
+      "path": "services/api/app/cam/routers/drilling/intent_router.py",
+      "intent": "Evaluate feasibility through the canonical adapter with identical kwargs.",
+      "risk": "low",
+      "behavior_change": "none (same evaluator inputs)"
+    },
+    {
+      "path": "services/api/tests/rmos/test_drilling_authority_contract.py",
+      "intent": "DRILL-CONTRACT-001–035: semantics, adapter, production non-regression, lane isolation.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+      "intent": "Append contract-design evidence. Keep AUTHORITY_CONTRACT_MISMATCH / MISMATCH / ungated YES. Do not mark GOVERNED.",
+      "risk": "low",
+      "behavior_change": "none (inert audit record)"
+    },
+    {
+      "path": "scripts/audit/rmos_authority_stage2.py",
+      "intent": "Keep Stage-2 overlay in lockstep with the committed drilling contract evidence.",
+      "risk": "low",
+      "behavior_change": "none (audit overlay)"
+    },
+    {
+      "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "intent": "Append §9 contract-design after-state. Preserve #328 before-state and V-carve HOLD §8.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record GA-TRIAL-0005 MATCH / PROCEED. No Grounding Agent code change.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".github/workflows/rmos_ci.yml",
+      "intent": "Collect test_drilling_authority_contract.py. No if-[ -f ] skip.",
+      "risk": "low",
+      "behavior_change": "none (CI collection of new witnesses)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-28-RMOS-DRILLING-CONTRACT",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Contract design only. Modal G-code path remains ungated. Engine table, Scoring rules, Profiling, V-carve, and client are not gated or redesigned."
+  },
+  "no_backend_no_schema": "Additive optional DrillReq/DrillParams fields only; G-code generation and status codes unchanged. New domain module is not an RMOS policy source.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

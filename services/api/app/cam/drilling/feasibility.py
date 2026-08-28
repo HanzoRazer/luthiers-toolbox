@@ -153,6 +153,17 @@ def compute_drilling_feasibility(
     )
 
 
+def compute_drilling_feasibility_from_spec(spec: Any) -> DrillingFeasibilityResult:
+    """Adapter: complete DrillingOperationSpec → existing named kwargs.
+
+    Scoring rules are unchanged. Incomplete specs must raise in
+    ``feasibility_kwargs`` rather than invent diameter, depth, or RPM.
+    """
+    from .operation_contract import feasibility_kwargs
+
+    return compute_drilling_feasibility(**feasibility_kwargs(spec))
+
+
 def hash_feasibility_result(result: DrillingFeasibilityResult) -> str:
     """Generate SHA256 hash of feasibility result for provenance."""
     data = json.dumps(result.to_dict(), sort_keys=True)

@@ -88,7 +88,13 @@ class Pattern(BaseModel):
 
 
 class DrillParams(BaseModel):
-    """Drilling parameters for pattern operations."""
+    """Drilling parameters for pattern operations.
+
+    ``z`` is a G-code target Z, not hole depth. ``tool`` is a tool number.
+    Optional ``hole_diameter_mm`` / ``surface_z_mm`` complete the
+    manufacturing contract when supplied; G-code generation ignores them
+    (RMOS-DRILLING-CONTRACT-001). Pattern resolver defect is unchanged.
+    """
     z: float
     feed: float
     cycle: Literal["G81", "G83"] = "G81"
@@ -97,6 +103,8 @@ class DrillParams(BaseModel):
     dwell_p: Optional[float] = None
     safe_z: float = 5.0
     units: str = "mm"
+    hole_diameter_mm: Optional[float] = None
+    surface_z_mm: Optional[float] = None
     post: Optional[str] = None
     post_mode: Optional[str] = None
     machine_id: Optional[str] = None

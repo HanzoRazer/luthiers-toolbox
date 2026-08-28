@@ -193,16 +193,18 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
     "drilling": _overlay(
         surface_kind="manufacturing_capability",
         intent_contract=(
-            "Three routes, three contracts, one path-prefix family. "
-            "Modal POST /gcode (DrillReq) emits G81/G83 with no feasibility call; "
-            "DrillReq cannot supply compute_drilling_feasibility kwargs "
-            "(hole_diameter_mm absent; hole z is a coordinate, not depth). "
-            "Do not invent a mapping. Pattern /pattern/gcode calls "
-            "compute_feasibility_internal(tool_id='drill_pattern_gcode') which "
-            "resolves to mode 'unknown' (prefix drill_pattern: required) and "
-            "has no engine anyway. Intent /intent-gcode uses "
-            "compute_drilling_feasibility (intent-lane, not the RMOS engine table) "
-            "before PeckDrill.generate()."
+            "RMOS-DRILLING-CONTRACT-001: canonical DrillingOperationSpec exists; "
+            "intent maps completely; modal/pattern remain incomplete without "
+            "optional diameter+datum+RPM. Three routes, three HTTP contracts. "
+            "Modal POST /gcode (DrillReq) still emits G81/G83 with no feasibility "
+            "call and no RMOS gate. Hole.z is a coordinate, not depth; tool is "
+            "not diameter. Do not invent abs(z) or tool-as-diameter. Pattern "
+            "/pattern/gcode still calls compute_feasibility_internal("
+            "tool_id='drill_pattern_gcode') which resolves to mode 'unknown'. "
+            "Intent /intent-gcode uses compute_drilling_feasibility via the "
+            "canonical adapter (intent-lane, not the RMOS engine table). "
+            "input_contract_status remains MISMATCH until a separately "
+            "authorized converge order. Not GOVERNED."
         ),
         authority_status="MISMATCH",
         evaluator="app.cam.drilling.feasibility.compute_drilling_feasibility (intent route only; not in _PRODUCTION_FEASIBILITY_ENGINES)",
@@ -230,7 +232,10 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
             _ev(
                 "STATIC_CODE_TRACE",
                 "services/api/app/cam/drilling/feasibility.py:compute_drilling_feasibility",
-                "Named kwargs only. hole_diameter_mm required. No adapter from DrillReq exists.",
+                "Named kwargs only. hole_diameter_mm required. Canonical "
+                "adapter (operation_contract) exists; DrillReq still lacks "
+                "required diameter/datum/RPM unless optional fields are "
+                "supplied. No fabricated mapping from Hole.z or tool.",
             ),
             _ev(
                 "RUNTIME_REQUEST_WITNESS",
@@ -241,6 +246,13 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
                 "STATIC_CODE_TRACE",
                 "services/api/app/cam/routers/drilling/drill_pattern_router.py",
                 "tool_id='drill_pattern_gcode' → resolve_mode 'unknown'; engine None.",
+            ),
+            _ev(
+                "STATIC_CODE_TRACE",
+                "services/api/app/cam/drilling/operation_contract.py",
+                "RMOS-DRILLING-CONTRACT-001: manufacturing spec + evaluator "
+                "adapter. Modal remains ungated. Disposition still "
+                "AUTHORITY_CONTRACT_MISMATCH.",
             ),
         ],
         evidence_class="RUNTIME_REQUEST_WITNESS",
