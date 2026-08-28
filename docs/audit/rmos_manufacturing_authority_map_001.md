@@ -412,3 +412,95 @@ the Grounding Agent. Adaptive remains `GOVERNED`. Retract remains
 The `_PRODUCTION_FEASIBILITY_ENGINES` table now includes `profiling`. That
 is the sanctioned way to reopen a lane (existing evaluator, registered
 mode). It is not a new feasibility physics module.
+
+---
+
+## 8. HOLD — RMOS-VCARVE-CONVERGE-001 (2026-08-27)
+
+This section is an increment on the frozen Stage-2 map. It does **not**
+rewrite the historical classification. PR #328 remains the before-state.
+
+```text
+Capability: vcarve (production POST /api/cam/vcarve/production/gcode)
+
+BEFORE (PR #328 / merge 9d5d9001):
+  authority_disposition = POST_MERGE_AUTHORITY_EXPOSURE
+  reachability          = RUNTIME_REACHABLE
+  POST /api/cam/vcarve/production/gcode → 200 G-code
+  no RMOS authority on the production route
+  history: #322 looked live → #324 proved runtime-dead (annotation)
+           → #324 restored binding → #328 classified the exposure
+
+HOLD (RMOS-VCARVE-CONVERGE-001):
+  AUTHORITY CONTRACT = NOT SATISFIABLE
+  no substantive V-carve evaluator
+  production behavior unchanged (still 200 ungated G-code)
+  do not pretend GOVERNED
+```
+
+Grounding Agent v0.1: **GA-TRIAL-0004**, `MATCH / PROCEED`. No Grounding
+Agent code was changed.
+
+### Mandatory checkpoint
+
+| Evaluator input | Source | Unit | Semantically identical? |
+| --- | --- | --- | --- |
+| *(none — no V-carve evaluator exists)* | — | — | — |
+
+```text
+AUTHORITY CONTRACT = NOT SATISFIABLE
+```
+
+Finding class: **(3) no evaluator exists.** Not (1) a V-carve-capable
+scorer, and not (2) a merely adjacent scorer that this order could
+reuse. D1 forbids treating profiling, drilling, pocketing, adaptive, or
+`FeasibilityInput.tool_d` (flat end mill) as a V-carve authority.
+
+Evidence:
+
+- `_PRODUCTION_FEASIBILITY_ENGINES` = `{saw, rosette, adaptive, profiling}`.
+  `resolve_feasibility_engine("vcarve")` is `None`.
+- `services/api/app/cam/vcarve/` has toolpath/geometry/chipload/intent
+  adapters. There is no `feasibility.py` and no `compute_vcarve_*`.
+- CAM feasibility modules that do exist (`profiling`, `drilling`,
+  `pocketing`) and the RMOS rule engine (`FeasibilityInput.tool_d`,
+  F001/F025) model a straight-diameter cutter. A V-bit is an included
+  **angle**, not an endmill diameter (`docs/audit/rmos_prod_audit_001.md`
+  already recorded this for the intent lane).
+- This order does not create a new evaluator and does not invent physics.
+
+### Why not gate anyway
+
+D3: wiring `unavailable_feasibility` / SafetyPolicy onto production would
+turn today's valid 200 G-code into 409 UNKNOWN. That is an availability
+change, not an authority correction, and it needs an owner ruling.
+
+Blast radius if gated without an evaluator:
+
+- every syntactically valid `POST /api/cam/vcarve/production/gcode` that
+  currently returns 200 machine G-code would 409;
+- in-repo client consumers of that production path: **none**
+  (`NO_IN_REPO_CONSUMER`); `VCarveView` uses `/api/cam/toolpath/vcarve/gcode`,
+  which already 409s;
+- intent/toolpath V-carve routes are already fail-closed (not the
+  exposure, not changed here).
+
+### What changed in this increment
+
+Tests, audit, registry HOLD evidence, Stage-2 overlay lockstep, and the
+RMOS CI collection of the new witness file. The production router, engine
+table, Profiling, drilling, retract, adaptive, and client are untouched.
+
+Registry after-state (not a promotion):
+
+```text
+authority_disposition = POST_MERGE_AUTHORITY_EXPOSURE   # unchanged
+reachability          = RUNTIME_REACHABLE               # unchanged
+ungated_output_exposure = YES                           # unchanged
+evaluator             = none                            # unchanged
+HOLD evidence appended
+```
+
+Profiling remains `GOVERNED` / `RUNTIME_REACHABLE` (PR #329 / `c987bfce`).
+Retract remains `BLOCKED_BY_DESIGN`. Adaptive remains `GOVERNED`.
+Drilling remains `AUTHORITY_CONTRACT_MISMATCH`.

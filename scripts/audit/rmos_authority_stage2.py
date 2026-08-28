@@ -302,7 +302,12 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
             "with no RMOS call and emits G-code after #324 restored body binding. "
             "Toolpath /api/cam/toolpath/vcarve/gcode and intent /intent-gcode "
             "call compute_feasibility_internal; mode vcarve has no engine so "
-            "they 409. The live production path is the post-merge exposure."
+            "they 409. The live production path is the post-merge exposure. "
+            "RMOS-VCARVE-CONVERGE-001 HOLD (2026-08-27): no substantive V-carve "
+            "evaluator exists. AUTHORITY CONTRACT = NOT SATISFIABLE. Adjacent "
+            "profiling/drilling/pocketing/FeasibilityInput(tool_d) evaluators "
+            "are not V-carve-capable (D1). Production behavior unchanged; "
+            "disposition remains POST_MERGE_AUTHORITY_EXPOSURE."
         ),
         authority_status="NONE",
         evaluator=None,
@@ -336,6 +341,13 @@ STAGE2_BY_ID: Dict[str, Dict[str, Any]] = {
                 "RUNTIME_REQUEST_WITNESS",
                 "POST /api/cam/vcarve/intent-gcode",
                 "409 SAFETY_BLOCKED — engine unavailable, fail-closed. Not the exposure path.",
+            ),
+            _ev(
+                "STATIC_CODE_TRACE",
+                "services/api/app/rmos/api/rmos_feasibility_router.py:_PRODUCTION_FEASIBILITY_ENGINES",
+                "RMOS-VCARVE-CONVERGE-001 HOLD: no vcarve engine. "
+                "AUTHORITY CONTRACT = NOT SATISFIABLE. Do not gate production "
+                "to 409 UNKNOWN without an owner availability ruling (D3).",
             ),
         ],
         evidence_class="RUNTIME_REQUEST_WITNESS",
