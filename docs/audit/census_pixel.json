@@ -1,0 +1,1870 @@
+[
+ {
+  "path": "services/blueprint-import/.gitignore",
+  "first_date": "2026-03-05",
+  "first_commit": "fc88ca6c",
+  "first_subject": "chore(blueprint): ignore generated ML model files",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/BATCH_CLASSIFICATION_REPORT.md",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/CALIBRATION_REPORT.md",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/DIMENSIONS_REPORT.md",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/PHASE2_RELOCATION.md",
+  "first_date": "2026-05-20",
+  "first_commit": "4cbe56ed",
+  "first_subject": "chore(vectorizer): remove Tier A modules relocated to vectorizer-sandbox",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/__init__.py",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/analyzer.py",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\analyzer.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_patches\\analyzer.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/calibration/__init__.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/calibration/dimension_extractor.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\dimension_extractor.py"
+  ],
+  "relocated_to": [
+   "services\\blueprint-import\\dimension_extractor.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/calibration/pixel_calibrator.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/calibration/scale_detector.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/calibration_integration.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\calibration_integration.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/classifiers/__init__.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/grid_zone/__init__.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/grid_zone/classifier.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\classifiers\\latin_american\\classifier.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/grid_zone/zones.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\api\\app\\instrument_geometry\\body\\ibg\\body_grid\\zones.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/latin_american/__init__.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/latin_american/classifier.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\classifiers\\grid_zone\\classifier.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/classifiers/latin_american/instruments.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/config/__init__.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/config/processing_tiers.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/config/shop_config.yaml",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/debug_ocr.py",
+  "first_date": "2026-03-04",
+  "first_commit": "1ce27294",
+  "first_subject": "feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/dimension_extractor.py",
+  "first_date": "2026-03-04",
+  "first_commit": "65b3af05",
+  "first_subject": "Add blueprint dimension extraction with EasyOCR",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\dimension_extractor.py"
+  ],
+  "relocated_to": [
+   "services\\blueprint-import\\calibration\\dimension_extractor.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/docs/VECTORIZER_UPGRADE_PLAN.md",
+  "first_date": "2026-03-05",
+  "first_commit": "1dc68d8d",
+  "first_subject": "docs(blueprint): add Vectorizer Upgrade Plan with rating history",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/dxf_compat.py",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\dxf_compat.py"
+  ],
+  "relocated_to": [
+   "services\\api\\app\\util\\dxf_compat.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/dxf_parser.py",
+  "first_date": "2026-03-06",
+  "first_commit": "c5453e8a",
+  "first_subject": "feat: AI Images, Blueprint Lab, and DXF parser enhancements",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\dxf_parser.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/dxf_postprocessor.py",
+  "first_date": "2026-03-09",
+  "first_commit": "46af6ef5",
+  "first_subject": "Phase 3.7: Vectorizer enhancements, SVG export, CAM-ready DXF post-proce",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\dxf_postprocessor.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/export_svg.py",
+  "first_date": "2026-03-09",
+  "first_commit": "46af6ef5",
+  "first_subject": "Phase 3.7: Vectorizer enhancements, SVG export, CAM-ready DXF post-proce",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\export_svg.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/extract_dimensions.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/__init__.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/phase4/annotations/__init__.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/phase4/annotations/base.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\annotations\\base.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_patches\\base.py",
+   "services\\api\\app\\ai\\providers\\base.py",
+   "services\\api\\app\\cam\\translators\\base.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/phase4/annotations/dimensions.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\annotations\\dimensions.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/annotations/exporter.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\annotations\\exporter.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/annotations/json_exporter.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\annotations\\json_exporter.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/arrow_detector.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\arrow_detector.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/dimension_linker.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\dimension_linker.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/leader_associator.py",
+  "first_date": "2026-03-05",
+  "first_commit": "7445c30c",
+  "first_subject": "feat(blueprint): add Phase 4.0 scaffold for leader line association",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\leader_associator.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/phase4/pipeline.py",
+  "first_date": "2026-03-05",
+  "first_commit": "5a051855",
+  "first_subject": "feat(blueprint): complete Phase 4.0 dimension linking pipeline",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\phase4\\pipeline.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/requirements.txt",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "requirements.txt"
+  ],
+  "relocated_to": [
+   "production_shop_agent\\requirements.txt",
+   "services\\api\\requirements.txt"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/run_phase4.py",
+  "first_date": "2026-03-05",
+  "first_commit": "5a051855",
+  "first_subject": "feat(blueprint): complete Phase 4.0 dimension linking pipeline",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/test_batch_blueprints.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "RELOCATED",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\tests\\test_batch_blueprints.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/test_ocr_integration.py",
+  "first_date": "2026-03-04",
+  "first_commit": "1ce27294",
+  "first_subject": "feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer",
+  "state": "RELOCATED",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\tests\\test_ocr_integration.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/test_pixel_calibration.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "RELOCATED",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\tests\\test_pixel_calibration.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/test_strat_grid.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "RELOCATED",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\blueprint-import\\tests\\test_strat_grid.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/tests/__init__.py",
+  "first_date": "2026-03-15",
+  "first_commit": "d9cd4d7d",
+  "first_subject": "chore(blueprint-import): cleanup - remove dead code, organize tests",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/blueprint-import/tests/test_annotation_layer.py",
+  "first_date": "2026-03-05",
+  "first_commit": "fe917d37",
+  "first_subject": "feat(blueprint): add Phase 4.0 Annotation Layer Architecture",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_arrow_detector.py",
+  "first_date": "2026-03-05",
+  "first_commit": "5e3f2e4b",
+  "first_subject": "feat(blueprint): implement ArrowDetector with full detection logic",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_dimension_linker.py",
+  "first_date": "2026-03-05",
+  "first_commit": "5a051855",
+  "first_subject": "feat(blueprint): complete Phase 4.0 dimension linking pipeline",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_grid_zone_classifier.py",
+  "first_date": "2026-03-06",
+  "first_commit": "994c3453",
+  "first_subject": "feat(blueprint): add pixel calibration module + grid zone classifier",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_leader_associator.py",
+  "first_date": "2026-03-05",
+  "first_commit": "d052de8d",
+  "first_subject": "feat(blueprint): implement LeaderLineAssociator ranking algorithm",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_photo_pipeline_trial.py",
+  "first_date": "2026-03-09",
+  "first_commit": "79e8c289",
+  "first_subject": "Add dark background detection and auto-inversion for white-on-black blue",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_pipeline.py",
+  "first_date": "2026-03-05",
+  "first_commit": "5a051855",
+  "first_subject": "feat(blueprint): complete Phase 4.0 dimension linking pipeline",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/tests/test_sheet_type_detection.py",
+  "first_date": "2026-03-08",
+  "first_commit": "583a7034",
+  "first_subject": "feat(vectorizer): add sheet type detection + ukulele specs",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/train_classifier.py",
+  "first_date": "2026-03-04",
+  "first_commit": "370c04c5",
+  "first_subject": "feat(instruments): add Gibson Melody Maker and Cuatro to database",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/vectorizer.py",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "DELETED",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/vectorizer_enhancements.py",
+  "first_date": "2026-03-09",
+  "first_commit": "46af6ef5",
+  "first_subject": "Phase 3.7: Vectorizer enhancements, SVG export, CAM-ready DXF post-proce",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\vectorizer_enhancements.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/vectorizer_phase2.py",
+  "first_date": "2025-12-15",
+  "first_commit": "090cd808",
+  "first_subject": "fix: Wrap experimental routers in try/except for graceful fallback",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\incubation\\vectorizer_phase2.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/blueprint-import/vectorizer_phase3.py",
+  "first_date": "2026-03-04",
+  "first_commit": "1ce27294",
+  "first_subject": "feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\incubation\\vectorizer_phase3.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/ARCHAEOLOGY_RELOCATION.md",
+  "first_date": "2026-05-20",
+  "first_commit": "4cbe56ed",
+  "first_subject": "chore(vectorizer): remove Tier A modules relocated to vectorizer-sandbox",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/BLUEPRINT_CALIBRATION_METHODOLOGY.md",
+  "first_date": "2026-04-01",
+  "first_commit": "ced75eaa",
+  "first_subject": "docs(vectorizer): add Blueprint Calibration Methodology documentation",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/DEVELOPER_HANDOFF.md",
+  "first_date": "2026-03-09",
+  "first_commit": "4cd1b2bb",
+  "first_subject": "docs: add photo-vectorizer developer handoff",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "docs\\handoffs\\DEVELOPER_HANDOFF.md"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/PHOTO_INPUT_SPEC.md",
+  "first_date": "2026-04-06",
+  "first_commit": "7117e083",
+  "first_subject": "fix(vectorizer): add SVG inkscape namespace + guitar stand filter",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/__init__.py",
+  "first_date": "2026-03-09",
+  "first_commit": "ffecf39f",
+  "first_subject": "chore: rebrand from Luthier's ToolBox to The Production Shop",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "governance\\ibg_canonical_model\\__init__.py",
+   "governance\\ibg_evidence\\__init__.py",
+   "governance\\ibg_frame\\__init__.py",
+   "governance\\silhouette_isolation\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\__init__.py",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\harness\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\__init__.py",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\__init__.py",
+   "src\\archaeology\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\__init__.py",
+   "src\\archaeology\\arc_reconstructor\\Inst_body_generator\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\metrics\\__init__.py",
+   "src\\evaluation\\text_geometry_eval\\runners\\__init__.py",
+   "src\\ibg\\__init__.py",
+   "src\\ibg\\corpus\\__init__.py",
+   "src\\ibg\\corpus\\query\\__init__.py",
+   "src\\ibg\\corpus\\registry\\__init__.py",
+   "src\\incubation\\__init__.py",
+   "src\\incubation\\phase4\\__init__.py",
+   "src\\incubation\\phase4\\annotations\\__init__.py",
+   "src\\semantic\\__init__.py",
+   "tests\\corpus\\__init__.py",
+   "tests\\helpers\\__init__.py",
+   "tests\\research\\__init__.py"
+  ],
+  "relocated_to": [
+   "ci\\__init__.py",
+   "ci\\ai_sandbox\\__init__.py",
+   "docs\\archive\\photo_vectorizer_patches\\__init__.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/ai_render_extractor.py",
+  "first_date": "2026-03-24",
+  "first_commit": "8f504b56",
+  "first_subject": "feat(photo-vectorizer): add ai_render_extractor for AI-generated renders",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/blueprint_view_segmenter.py",
+  "first_date": "2026-04-01",
+  "first_commit": "9add8ce2",
+  "first_subject": "feat(photo-vectorizer): add blueprint view segmenter for multi-view blue",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/body_dimension_reference.json",
+  "first_date": "2026-03-21",
+  "first_commit": "0219871e",
+  "first_subject": "feat(photo-vectorizer): Diff 3 \u2014 spec-prior contour election",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\semantic\\body_dimension_reference.json"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\body_dimension_reference.json"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/body_isolation_result.py",
+  "first_date": "2026-03-15",
+  "first_commit": "50123379",
+  "first_subject": "feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry a",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\archaeology\\arc_reconstructor\\body_isolation_result.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/body_isolation_stage.py",
+  "first_date": "2026-03-15",
+  "first_commit": "50123379",
+  "first_subject": "feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry a",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/body_model.py",
+  "first_date": "2026-03-21",
+  "first_commit": "0219871e",
+  "first_subject": "feat(photo-vectorizer): Diff 3 \u2014 spec-prior contour election",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\archaeology\\arc_reconstructor\\body_model.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\body_model.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/calibrate_carlos_jumbo.py",
+  "first_date": "2026-04-01",
+  "first_commit": "ecc6f489",
+  "first_subject": "feat(photo-vectorizer): add soundhole-based calibration for accurate DXF",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/cognitive_extraction_engine.py",
+  "first_date": "2026-03-23",
+  "first_commit": "c3a8cecb",
+  "first_subject": "feat(photo-vectorizer): add cognitive extraction engine with document im",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\semantic\\cognitive_extraction_engine.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/cognitive_extractor.py",
+  "first_date": "2026-03-23",
+  "first_commit": "3e3337b6",
+  "first_subject": "feat(photo-vectorizer): cognitive extraction engine \u2014 fix O(n\u00b2) EdgeFlow",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\semantic\\cognitive_extractor.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/contour_debug_overlay.py",
+  "first_date": "2026-04-12",
+  "first_commit": "9cc92ba9",
+  "first_subject": "feat(vectorizer): hierarchy-based contour isolation + debug overlay",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/contour_election.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/contour_plausibility.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/contour_stage.py",
+  "first_date": "2026-03-15",
+  "first_commit": "c958ccfa",
+  "first_subject": "feat: extract Stage 8 into ContourStage + GeometryCoachV1",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\contour_stage.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/edge_to_dxf.py",
+  "first_date": "2026-04-01",
+  "first_commit": "55c30622",
+  "first_subject": "feat(photo-vectorizer): add edge_to_dxf high-fidelity exporter",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/extract_body_grid.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\archaeology\\extract_body_grid.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/extract_body_grid_v2.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\archaeology\\extract_body_grid_v2.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/extract_body_grid_v3.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\archaeology\\extract_body_grid_v3.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/extract_body_grid_v4.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\archaeology\\extract_body_grid_v4.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/extract_body_grid_v5.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "MIGRATED_TO_SANDBOX",
+  "sandbox_paths": [
+   "src\\archaeology\\extract_body_grid_v5.py"
+  ],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/fixtures/body_ownership_routing_cases.json",
+  "first_date": "2026-03-15",
+  "first_commit": "567862c9",
+  "first_subject": "feat(photo-vectorizer): coach toggle, routing fixtures, named retry prof",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/fixtures/regression_replay_archtop.json",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/fixtures/regression_replay_benedetto.json",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/fixtures/regression_replay_smart_guitar.json",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/fixtures/replay_retry_attempts_with_ownership.json",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/generate_carlos_jumbo_dxf.py",
+  "first_date": "2026-04-01",
+  "first_commit": "a7d267b0",
+  "first_subject": "feat(photo-vectorizer): add Carlos Jumbo DXF generator scripts",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/generate_carlos_jumbo_dxf_enhanced.py",
+  "first_date": "2026-04-01",
+  "first_commit": "a7d267b0",
+  "first_subject": "feat(photo-vectorizer): add Carlos Jumbo DXF generator scripts",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/geometry_authority.py",
+  "first_date": "2026-03-15",
+  "first_commit": "50123379",
+  "first_subject": "feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry a",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\archaeology\\arc_reconstructor\\geometry_authority.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\geometry_authority.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/geometry_coach.py",
+  "first_date": "2026-03-15",
+  "first_commit": "c958ccfa",
+  "first_subject": "feat: extract Stage 8 into ContourStage + GeometryCoachV1",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/geometry_coach_v2.py",
+  "first_date": "2026-03-15",
+  "first_commit": "50123379",
+  "first_subject": "feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry a",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/grid_classify.py",
+  "first_date": "2026-03-17",
+  "first_commit": "3357c793",
+  "first_subject": "chore: remove orphaned files from repo root",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/grouping_telemetry.py",
+  "first_date": "2026-05-20",
+  "first_commit": "9eba933a",
+  "first_subject": "feat(vectorizer): safe remediation PR-1/2/3 and local dev layout",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/landmark_extractor.py",
+  "first_date": "2026-03-21",
+  "first_commit": "0219871e",
+  "first_subject": "feat(photo-vectorizer): Diff 3 \u2014 spec-prior contour election",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "src\\archaeology\\arc_reconstructor\\landmark_extractor.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\landmark_extractor.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/light_line_body_extractor.py",
+  "first_date": "2026-04-01",
+  "first_commit": "b02091cd",
+  "first_subject": "feat(photo-vectorizer): add light line body extractor for blueprint PDFs",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Black and White Benedetto_00_original_photo_v2.dxf",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Black and White Benedetto_00_original_photo_v2.svg",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway_00_original_photo_v2.dxf",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway_00_original_photo_v2.svg",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Smart Guitar_1_00_original_photo_v2.dxf",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_output/Smart Guitar_1_00_original_photo_v2.svg",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_run.py",
+  "first_date": "2026-03-16",
+  "first_commit": "3a24683e",
+  "first_subject": "Import PostProcessor and related classes in surface_carving.py for enhan",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/live_test_summary.py",
+  "first_date": "2026-03-14",
+  "first_commit": "7d5d86c0",
+  "first_subject": "Patch 17: ContourMerger + X-extent guard + coin position filter\\n\\nThree",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/march_pipeline_restore.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/material_bom.py",
+  "first_date": "2026-03-14",
+  "first_commit": "39482abb",
+  "first_subject": "feat(photo-vectorizer): deploy patches 14+13+15 \u2014 gated closer, family c",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/multi_view_reconstructor.py",
+  "first_date": "2026-03-23",
+  "first_commit": "3d8cfa0d",
+  "first_subject": "feat(photo-vectorizer): multi-view shape reconstructor",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/mypy.ini",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/photo_silhouette_extractor.py",
+  "first_date": "2026-04-01",
+  "first_commit": "3676d75d",
+  "first_subject": "feat(photo-vectorizer): integrate blueprint + silhouette extractors into",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/photo_vectorizer_v2.py",
+  "first_date": "2026-03-09",
+  "first_commit": "0bb31bf8",
+  "first_subject": "feat: Photo Vectorizer V2 \u2014 standalone photo-to-SVG/DXF extractor",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\photo_vectorizer_v2.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/pyrightconfig.json",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/replay_execution.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/replay_fixture_loader.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/replay_objects.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/replay_summary.py",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\api\\app\\agentic\\replay_summary.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/test_ai_render_extractor.py",
+  "first_date": "2026-03-24",
+  "first_commit": "8f504b56",
+  "first_subject": "feat(photo-vectorizer): add ai_render_extractor for AI-generated renders",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_blueprint_view_segmenter.py",
+  "first_date": "2026-04-01",
+  "first_commit": "9add8ce2",
+  "first_subject": "feat(photo-vectorizer): add blueprint view segmenter for multi-view blue",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_body_isolation_retry_profiles.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_body_isolation_stage_expansion.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_body_ownership_score.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_body_region_protocol.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_carlos_jumbo_multiview.py",
+  "first_date": "2026-04-19",
+  "first_commit": "3e75a7cb",
+  "first_subject": "feat(api): add instrument geometry, curvature, and vectorizer modules",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_coaching_convergence.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_contour_election_ownership_gate.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_contour_plausibility_ownership.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_contour_stage.py",
+  "first_date": "2026-03-15",
+  "first_commit": "c958ccfa",
+  "first_subject": "feat: extract Stage 8 into ContourStage + GeometryCoachV1",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\test_contour_stage.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/test_contour_stage_merge_guard.py",
+  "first_date": "2026-03-15",
+  "first_commit": "3177a57f",
+  "first_subject": "test: add merge guard coverage for pre-vs-post contour election",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_extract_coach_integration.py",
+  "first_date": "2026-03-15",
+  "first_commit": "5cef203b",
+  "first_subject": "refactor(ui): extract more ToolpathPlayer panels (Phase 3)",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_fixture_e2e_ownership_regression.py",
+  "first_date": "2026-03-17",
+  "first_commit": "34e22a77",
+  "first_subject": "feat(cam): CAM Workspace wizard Phase 1",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_geometry_coach_v2.py",
+  "first_date": "2026-03-15",
+  "first_commit": "50123379",
+  "first_subject": "feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry a",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_geometry_coach_v2_multiview.py",
+  "first_date": "2026-04-01",
+  "first_commit": "33cbcc73",
+  "first_subject": "feat(photo-vectorizer): add multi-view blueprint support to geometry coa",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_geometry_coach_v2_ownership_retry.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_geometry_coach_v2_real_routing.py",
+  "first_date": "2026-03-15",
+  "first_commit": "567862c9",
+  "first_subject": "feat(photo-vectorizer): coach toggle, routing fixtures, named retry prof",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_geometry_coach_v2_retry_diagnostics.py",
+  "first_date": "2026-03-16",
+  "first_commit": "2232f159",
+  "first_subject": "feat(photo-vectorizer): add retry diagnostics to geometry coach",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_landmark_extractor.py",
+  "first_date": "2026-03-21",
+  "first_commit": "0219871e",
+  "first_subject": "feat(photo-vectorizer): Diff 3 \u2014 spec-prior contour election",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "tests\\test_landmark_extractor.py"
+  ],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\test_landmark_extractor.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/test_material_bom.py",
+  "first_date": "2026-03-14",
+  "first_commit": "39482abb",
+  "first_subject": "feat(photo-vectorizer): deploy patches 14+13+15 \u2014 gated closer, family c",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_multi_view_reconstructor.py",
+  "first_date": "2026-03-23",
+  "first_commit": "3d8cfa0d",
+  "first_subject": "feat(photo-vectorizer): multi-view shape reconstructor",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_patch_17.py",
+  "first_date": "2026-03-14",
+  "first_commit": "7d5d86c0",
+  "first_subject": "Patch 17: ContourMerger + X-extent guard + coin position filter\\n\\nThree",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_patches_14_13_15.py",
+  "first_date": "2026-03-14",
+  "first_commit": "39482abb",
+  "first_subject": "feat(photo-vectorizer): deploy patches 14+13+15 \u2014 gated closer, family c",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_photo_vectorizer_v2.py",
+  "first_date": "2026-03-14",
+  "first_commit": "39482abb",
+  "first_subject": "feat(photo-vectorizer): deploy patches 14+13+15 \u2014 gated closer, family c",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "docs\\archive\\photo_vectorizer_experiment_20260321\\test_photo_vectorizer_v2.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/test_plausibility_scorer.py",
+  "first_date": "2026-03-14",
+  "first_commit": "70a67a88",
+  "first_subject": "feat(photo-vectorizer): contour plausibility scorer + typed stage result",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_real_image_comparison.py",
+  "first_date": "2026-03-14",
+  "first_commit": "39482abb",
+  "first_subject": "feat(photo-vectorizer): deploy patches 14+13+15 \u2014 gated closer, family c",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_regression_replay_execution.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_regression_replay_ownership.py",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_replay_fixture_loader.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_replay_objects.py",
+  "first_date": "2026-03-19",
+  "first_commit": "bfffc7af",
+  "first_subject": "feat(vectorizer): add replay framework + type configs + smoke tests",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/test_replay_summary.py",
+  "first_date": "2026-03-18",
+  "first_commit": "8c553069",
+  "first_subject": "feat(materials): add E_C_gpa cross-grain modulus",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": [
+   "services\\api\\tests\\test_replay_summary.py"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/test_retry_diagnostics_serialization.py",
+  "first_date": "2026-03-17",
+  "first_commit": "ebfc8b8a",
+  "first_subject": "feat(cursor): Smart Guitar shell + nav modules + file decomposition + ga",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/README.md",
+  "first_date": "2026-04-06",
+  "first_commit": "d39d3ac9",
+  "first_subject": "docs(vectorizer): add file naming conventions + Sprint 4 validation arti",
+  "state": "BOTH",
+  "sandbox_paths": [
+   "README.md",
+   ".pytest_cache\\README.md",
+   "docs\\research\\README.md",
+   "experiments\\README.md",
+   "governance\\cam_ready_lock\\README.md",
+   "governance\\extraction_lock\\README.md",
+   "governance\\ibg_canonical_model\\README.md",
+   "governance\\ibg_frame\\README.md",
+   "governance\\negative_corpus\\README.md",
+   "governance\\positive_corpus\\README.md",
+   "governance\\silhouette_isolation\\boundary_fidelity\\investigations\\pos_007a\\README.md",
+   "governance\\silhouette_isolation\\investigations\\pos_008a\\README.md",
+   "reports\\research\\README.md",
+   "src\\archaeology\\README.md",
+   "src\\evaluation\\adaptive_reconstruction\\README.md",
+   "src\\evaluation\\adaptive_reconstruction\\fixtures\\README.md",
+   "src\\evaluation\\adaptive_reconstruction\\outputs\\README.md",
+   "src\\evaluation\\text_geometry_eval\\README.md",
+   "src\\ibg\\corpus\\query\\README.md",
+   "src\\ibg\\corpus\\registry\\README.md",
+   "src\\semantic\\README.md"
+  ],
+  "relocated_to": [
+   "README.md",
+   ".cbsp21\\patches\\README.md",
+   ".pytest_cache\\README.md"
+  ]
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/archtop_photo_v2.dxf",
+  "first_date": "2026-04-06",
+  "first_commit": "d39d3ac9",
+  "first_subject": "docs(vectorizer): add file naming conventions + Sprint 4 validation arti",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/archtop_photo_v2.svg",
+  "first_date": "2026-04-06",
+  "first_commit": "d39d3ac9",
+  "first_subject": "docs(vectorizer): add file naming conventions + Sprint 4 validation arti",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/archtop_photo_v3.dxf",
+  "first_date": "2026-04-06",
+  "first_commit": "17aaa6a3",
+  "first_subject": "fix(vectorizer): add body height cap to trim merged guitar stand (FIX 3)",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/archtop_photo_v3.svg",
+  "first_date": "2026-04-06",
+  "first_commit": "17aaa6a3",
+  "first_subject": "fix(vectorizer): add body height cap to trim merged guitar stand (FIX 3)",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/smart_guitar_ai_v3.dxf",
+  "first_date": "2026-04-06",
+  "first_commit": "d39d3ac9",
+  "first_subject": "docs(vectorizer): add file naming conventions + Sprint 4 validation arti",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ },
+ {
+  "path": "services/photo-vectorizer/validation/sprint4/smart_guitar_ai_v3.svg",
+  "first_date": "2026-04-06",
+  "first_commit": "d39d3ac9",
+  "first_subject": "docs(vectorizer): add file naming conventions + Sprint 4 validation arti",
+  "state": "LIVE",
+  "sandbox_paths": [],
+  "relocated_to": []
+ }
+]
