@@ -126,6 +126,46 @@ def invariant_feed_mm_min(feeds: Sequence[float]) -> float:
     return first
 
 
+_POSITIVE_FIELDS = (
+    ("hole_diameter_mm", "missing_hole_diameter_mm", "invalid_hole_diameter_mm"),
+    ("hole_depth_mm", "missing_hole_depth_mm", "invalid_hole_depth_mm"),
+)
+_PRESENT_FIELDS = (
+    ("surface_z_mm", "missing_surface_z_mm"),
+    ("spindle_rpm", "missing_spindle_rpm"),
+    ("safe_z_mm", "missing_safe_z_mm"),
+    ("retract_z_mm", "missing_retract_z_mm"),
+)
+
+
+def _positive_reasons(fields: dict) -> list[str]:
+    reasons: list[str] = []
+    for key, missing, invalid in _POSITIVE_FIELDS:
+        value = fields[key]
+        if value is None:
+            reasons.append(missing)
+        elif value <= 0:
+            reasons.append(invalid)
+    return reasons
+
+
+def _present_reasons(fields: dict) -> list[str]:
+    return [label for key, label in _PRESENT_FIELDS if fields[key] is None]
+
+
+def _feed_reasons(holes: Sequence[DrillingHoleSpec]) -> list[str]:
+    feeds = [h.feed_mm_min for h in holes]
+    if any(item is None for item in feeds):
+        return ["missing_feed"]
+    if len(feeds) <= 1:
+        return []
+    try:
+        invariant_feed_mm_min([float(item) for item in feeds])
+    except HeterogeneousFeedError:
+        return ["heterogeneous_feed"]
+    return []
+
+
 def _reason_list(spec_fields: dict) -> tuple[str, ...]:
     reasons: list[str] = []
     if spec_fields["units"] != "mm":
@@ -133,32 +173,11 @@ def _reason_list(spec_fields: dict) -> tuple[str, ...]:
     holes: tuple[DrillingHoleSpec, ...] = spec_fields["holes"]
     if not holes:
         reasons.append("missing_holes")
-    if spec_fields["hole_diameter_mm"] is None:
-        reasons.append("missing_hole_diameter_mm")
-    elif spec_fields["hole_diameter_mm"] <= 0:
-        reasons.append("invalid_hole_diameter_mm")
-    if spec_fields["hole_depth_mm"] is None:
-        reasons.append("missing_hole_depth_mm")
-    elif spec_fields["hole_depth_mm"] <= 0:
-        reasons.append("invalid_hole_depth_mm")
-    if spec_fields["surface_z_mm"] is None:
-        reasons.append("missing_surface_z_mm")
-    if spec_fields["spindle_rpm"] is None:
-        reasons.append("missing_spindle_rpm")
-    if spec_fields["safe_z_mm"] is None:
-        reasons.append("missing_safe_z_mm")
-    if spec_fields["retract_z_mm"] is None:
-        reasons.append("missing_retract_z_mm")
+    reasons.extend(_positive_reasons(spec_fields))
+    reasons.extend(_present_reasons(spec_fields))
     if spec_fields["peck_drilling"] and spec_fields["peck_depth_mm"] is None:
         reasons.append("missing_peck_depth_mm")
-    feeds = [h.feed_mm_min for h in holes]
-    if any(f is None for f in feeds):
-        reasons.append("missing_feed")
-    elif len(feeds) > 1:
-        try:
-            invariant_feed_mm_min([float(f) for f in feeds if f is not None])
-        except HeterogeneousFeedError:
-            reasons.append("heterogeneous_feed")
+    reasons.extend(_feed_reasons(holes))
     return tuple(reasons)
 
 
@@ -206,6 +225,63 @@ def feasibility_kwargs(spec: DrillingOperationSpec) -> dict:
     }
 
 
+def _or_raw(converted: Optional[float], raw: float) -> float:
+    if converted is None:
+        return float(raw)
+    return converted
+
+
+def _depth_from_datum(
+    target_z_mm: Optional[float],
+    surface_z: Optional[float],
+    units: str,
+) -> Optional[float]:
+    if surface_z is None or target_z_mm is None:
+        return None
+    surface_mm = length_to_mm(surface_z, units)
+    if surface_mm is None:
+        return None
+    candidate = physical_depth_mm(surface_z_mm=surface_mm, target_z_mm=target_z_mm)
+    if candidate <= 0:
+        return None
+    return candidate
+
+
+def _modal_hole(
+    x: float,
+    y: float,
+    z: float,
+    feed: float,
+    units: str,
+    surface_z: Optional[float],
+) -> DrillingHoleSpec:
+    z_mm = length_to_mm(z, units)
+    return DrillingHoleSpec(
+        x_mm=_or_raw(length_to_mm(x, units), x),
+        y_mm=_or_raw(length_to_mm(y, units), y),
+        target_z_mm=z_mm,
+        depth_mm=_depth_from_datum(z_mm, surface_z, units),
+        feed_mm_min=feed_to_mm_min(feed, units),
+    )
+
+
+def _uniform_depth(depths: Sequence[Optional[float]]) -> Optional[float]:
+    if not depths or any(item is None for item in depths):
+        return None
+    first = depths[0]
+    if any(item != first for item in depths[1:]):
+        return None
+    return first
+
+
+def _peck_fields(cycle: str, peck_q: Optional[float], units: str) -> tuple[bool, Optional[float]]:
+    peck = peck_drilling_from_cycle(cycle)
+    if not peck:
+        return False, 0.0
+    quantity = peck_q if peck_q is not None else MODAL_DEFAULT_PECK_Q
+    return True, length_to_mm(quantity, units)
+
+
 def spec_from_modal(
     *,
     holes: Sequence[tuple[float, float, float, float]],
@@ -227,52 +303,22 @@ def spec_from_modal(
     """
     kind = canonical_length_units(units)
     stored_units = "mm" if kind is not None else (units or "unknown")
-    hole_specs = []
-    depths: list[Optional[float]] = []
-    for x, y, z, feed in holes:
-        x_mm = length_to_mm(x, units)
-        y_mm = length_to_mm(y, units)
-        z_mm = length_to_mm(z, units)
-        feed_mm = feed_to_mm_min(feed, units)
-        depth = None
-        if surface_z is not None and z_mm is not None:
-            surface_mm = length_to_mm(surface_z, units)
-            if surface_mm is not None:
-                candidate = physical_depth_mm(surface_z_mm=surface_mm, target_z_mm=z_mm)
-                if candidate > 0:
-                    depth = candidate
-        depths.append(depth)
-        hole_specs.append(
-            DrillingHoleSpec(
-                x_mm=x_mm if x_mm is not None else float(x),
-                y_mm=y_mm if y_mm is not None else float(y),
-                target_z_mm=z_mm,
-                depth_mm=depth,
-                feed_mm_min=feed_mm,
-            )
-        )
-    diameter = length_to_mm(hole_diameter, units) if hole_diameter is not None else None
-    surface_mm = length_to_mm(surface_z, units) if surface_z is not None else None
-    r_value = r_clear if r_clear is not None else MODAL_DEFAULT_R_CLEAR
-    peck = peck_drilling_from_cycle(cycle)
-    peck_depth = None
-    if peck:
-        peck_depth = length_to_mm(
-            peck_q if peck_q is not None else MODAL_DEFAULT_PECK_Q, units
-        )
-    else:
-        peck_depth = 0.0
-    op_depth = depths[0] if depths and all(d == depths[0] for d in depths) else None
-    if depths and any(d is None for d in depths):
-        op_depth = None
+    hole_specs = tuple(
+        _modal_hole(x, y, z, feed, units, surface_z) for x, y, z, feed in holes
+    )
+    peck, peck_depth = _peck_fields(cycle, peck_q, units)
+    r_value = MODAL_DEFAULT_R_CLEAR if r_clear is None else r_clear
+    diameter = None if hole_diameter is None else length_to_mm(hole_diameter, units)
+    surface_mm = None if surface_z is None else length_to_mm(surface_z, units)
+    rpm_val = None if rpm is None else float(rpm)
     return _build_spec(
         units=stored_units,
-        holes=tuple(hole_specs),
-        hole_depth_mm=op_depth,
+        holes=hole_specs,
+        hole_depth_mm=_uniform_depth([h.depth_mm for h in hole_specs]),
         hole_diameter_mm=diameter,
         surface_z_mm=surface_mm,
         tool_number=tool,
-        spindle_rpm=float(rpm) if rpm is not None else None,
+        spindle_rpm=rpm_val,
         peck_drilling=peck,
         peck_depth_mm=peck_depth,
         safe_z_mm=length_to_mm(safe_z, units),
