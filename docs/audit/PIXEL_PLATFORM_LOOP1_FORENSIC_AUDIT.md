@@ -32,6 +32,12 @@
 5. **`agentic_supervisor.py` has never existed in this repository.** Its relationship to
    `GeometryCoachV2` is `RELATIONSHIP UNPROVEN` — they share no file, no commit, and no
    import in either direction.
+6. **Loop 1 is not a pixel mechanism.** The coach and its authority layer contain **zero**
+   `cv2` call sites. They decide on six dimensionless scores and on **millimetre-space
+   instrument-family priors**, and only *actuate* pixel stages. Loop 1 lives in the pixel
+   platform; it does not reason in it. The sandbox supervisor, by contrast, has **17** `cv2`
+   call sites and inspects masks directly — so the two systems diverge at the mechanism
+   level, not merely in maturity (§4.4, §5).
 
 ---
 
@@ -242,7 +248,72 @@ Two design properties worth recording because they are unusual and deliberate:
 
 Exhaustion terminates in `manual_review_required`, not in a silent best-effort export.
 
-### 4.4 Strategy selection exists here — and it is *not* Loop 2
+### 4.4 Loop 1 is **not** a pixel mechanism
+
+> **Amendment, 2026-08-28.** The first issue of this audit established *where* Loop 1 lives
+> and left its **operating domain** unstated. Location and mechanism are different claims,
+> and the answer is not the one the enclosing platform implies.
+
+`GeometryCoachV2` and `geometry_authority.py` perform **no image processing whatsoever**:
+
+| Evidence | `geometry_coach_v2.py` | `geometry_authority.py` |
+|---|---|---|
+| imports `cv2` | **no** | **no** |
+| `cv2.*` call sites | **0** | **0** |
+| imports `numpy` | yes — but only as a **type annotation** for pass-through params | **no** |
+| direct raster access | **one line**: `h, w = image.shape[:2]` (dimensions, not content) | none |
+
+Every apparent pixel-operation match in the coach (`threshold`) is the config field
+`ownership_retry_threshold`, not `cv2.threshold`. The images the coach receives are
+**opaque payloads** forwarded to the stage runners.
+
+**What it actually decides on** — `BodyIsolationResult.score_breakdown`, six dimensionless
+normalised scalars:
+
+```text
+hull_coverage           vertical_extent_ratio    width_stability
+border_contact_penalty  center_alignment         lower_bout_presence
+```
+
+and the rules read exactly these:
+
+```python
+ownership_score = self._ownership_score(contour_result)
+if ownership_score < self.config.ownership_retry_threshold: ...          # Rule 0
+if body_result.border_contact_likely and \
+   body_result.score_breakdown.border_contact_penalty >= \
+   self.config.severe_border_penalty_threshold: ...                      # Rule B
+ownership_delta = float(ownership_score_after) - float(ownership_score_before)  # monotonic gate
+```
+
+**And `geometry_authority` reasons in millimetres, against luthiery priors:**
+
+```python
+_FAMILY_BODY_PRIORS_MM   # (height_min_mm, height_max_mm, width_min_mm, width_max_mm)
+def score_dimension_fit(..., estimated_height_mm, estimated_width_mm)
+    -> {"height_fit": ..., "width_fit": ...}
+```
+
+Its entire import list is `json`, `os`, `dataclasses`, `typing`.
+
+**Therefore:**
+
+```text
+Loop 1 evidence domain    dimensionless scores + millimetre-space instrument-family priors
+Loop 1 actuator domain    pixel stages (body isolation, contour assembly)
+Loop 1 mechanism          NOT pixel-based
+```
+
+The coach is a **metrological / spec-domain supervisor whose workers happen to be pixel
+stages.** It never looks at an image; it looks at how well the extracted body scores as a
+*guitar body of its family*, in millimetres, and re-tasks the pixel stages when that score
+is poor. "Loop 1 belongs to the pixel platform" is true as a statement of **location** and
+false as a statement of **mechanism**.
+
+This is why the surviving implementation is domain-portable in a way the sandbox design is
+not — see §5.
+
+### 4.5 Strategy selection exists here — and it is *not* Loop 2
 
 `_choose_body_retry_profile(retry_count, ...)` selects the next `BodyIsolationParams` from
 `body_retry_profiles`, indexed by attempt. That **is** strategy selection, and it must be
@@ -262,11 +333,25 @@ learning.
 | Ever in the other repo? | never in VS | **never in LTB** (verified across all refs) |
 | Shape | 4 rules + ownership gate + budget | 7 agents each returning `AgentVerdict` |
 | Status | live, default-on | sandbox-only |
+| **imports `cv2`** | **no — 0 call sites** | **yes — 17 call sites** |
+| **Operating domain** | **scores + millimetres** | **raster / masks directly** |
 
 They resemble each other functionally. That is not evidence of derivation, and none was
-found: **no shared file, no shared commit, no import in either direction.** Per the locked
-instruction, resemblance is not treated as lineage. The correct statement is that two
-independent closed-loop designs exist, one in production and one in incubation.
+found: **no shared file, no shared commit, no import in either direction.**
+
+**And mechanically they are not the same kind of system.** This is stronger than
+"relationship unproven" — it is a positive divergence. The sandbox supervisor inspects
+pixels itself: `ContextAgent._detect_image_type(image: np.ndarray)`,
+`BackgroundAgent._detect_holes(mask)`, `_evaluate_edge_quality(mask)`. The production coach
+inspects **no pixels at all** (§4.4); it judges normalised scores against millimetre-space
+instrument priors and re-tasks pixel workers.
+
+So the honest statement is not "two implementations of the same idea, one live and one
+incubating." It is: **two closed-loop designs that share a control topology and disagree
+about what the controller is allowed to look at.** Any future attempt to "graduate" the
+sandbox supervisor into production, or to treat it as the mature form of the coach, would
+be swapping a spec-domain controller for a pixel-domain one — a change of kind, not a
+change of maturity.
 
 ---
 
