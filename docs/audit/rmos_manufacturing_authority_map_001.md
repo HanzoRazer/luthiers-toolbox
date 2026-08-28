@@ -611,9 +611,10 @@ resolver defect remains queued. Profiling remains GOVERNED. V-carve remains
 HOLD / `POST_MERGE_AUTHORITY_EXPOSURE`. Retract remains `BLOCKED_BY_DESIGN`.
 Adaptive remains GOVERNED. Client cleanup is out of scope.
 
-Optional additive `DrillReq` / `DrillParams` fields (`hole_diameter_mm`,
-`surface_z_mm`) are backward-compatible. They are ignored by G-code
-generation. Existing `useDrillingOperation.ts` callers keep working.
+Optional additive `DrillReq` fields (`hole_diameter_mm`, `surface_z_mm`)
+are backward-compatible. They are ignored by G-code generation. Existing
+`useDrillingOperation.ts` callers keep working. Pattern `DrillParams` is
+unchanged in this increment (pre-existing `RunArtifact()` fence sites).
 
 A later, separately authorized `RMOS-DRILLING-CONVERGE-001` may decide
 whether this truthful contract is ready to control machine-output authority.

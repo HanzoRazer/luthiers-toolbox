@@ -18,7 +18,6 @@
       "services/api/app/cam/drilling/feasibility.py",
       "services/api/app/cam/drilling/operation_contract.py",
       "services/api/app/cam/routers/drilling/drill_modal_router.py",
-      "services/api/app/cam/routers/drilling/drill_pattern_router.py",
       "services/api/app/cam/routers/drilling/intent_router.py",
       "services/api/app/rmos/manufacturing_authority_registry.json",
       "services/api/tests/rmos/test_drilling_authority_contract.py"
@@ -32,14 +31,13 @@
       "services/api/app/cam/drilling/feasibility.py",
       "services/api/app/cam/drilling/operation_contract.py",
       "services/api/app/cam/routers/drilling/drill_modal_router.py",
-      "services/api/app/cam/routers/drilling/drill_pattern_router.py",
       "services/api/app/cam/routers/drilling/intent_router.py",
       "services/api/app/rmos/manufacturing_authority_registry.json",
       "services/api/tests/rmos/test_drilling_authority_contract.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) operation_contract.py: DrillingOperationSpec with explicit mm units, datum+target vs physical depth, first-class diameter, per-hole feeds, G81/G83 peck mapping, R-plane retract. (2) feasibility.py: thin from-spec adapter; scoring rules unchanged. (3) DrillReq/DrillParams: optional hole_diameter_mm and surface_z_mm; G-code generation unchanged. (4) intent_router uses the canonical adapter with the same kwargs. (5) Tests DRILL-CONTRACT-001–035. (6) Registry + overlay remain AUTHORITY_CONTRACT_MISMATCH / MISMATCH. (7) Audit §9 and GA-TRIAL-0005.",
+    "what_changed": "(1) operation_contract.py: DrillingOperationSpec with explicit mm units, datum+target vs physical depth, first-class diameter, per-hole feeds, G81/G83 peck mapping, R-plane retract. (2) feasibility.py: thin from-spec adapter; scoring rules unchanged. (3) DrillReq: optional hole_diameter_mm and surface_z_mm; G-code generation unchanged. Pattern HTTP schema left untouched to avoid fence line-shift on pre-existing RunArtifact() sites. (4) intent_router uses the canonical adapter with the same kwargs. (5) Tests DRILL-CONTRACT-001–035. (6) Registry + overlay remain AUTHORITY_CONTRACT_MISMATCH / MISMATCH. (7) Audit §9 and GA-TRIAL-0005.",
     "why_not_redundant": "The live modal request cannot presently satisfy compute_drilling_feasibility. This increment makes the manufacturing semantics say what they mean without gating production or fabricating evaluator inputs from Hole.z or tool."
   },
   "verification": {
@@ -68,12 +66,6 @@
       "intent": "Optional additive diameter/datum fields; contract snapshot; G81/G83 unchanged.",
       "risk": "low",
       "behavior_change": "none (additive optional fields ignored by generator)"
-    },
-    {
-      "path": "services/api/app/cam/routers/drilling/drill_pattern_router.py",
-      "intent": "Optional additive diameter/datum fields. Resolver defect unchanged.",
-      "risk": "low",
-      "behavior_change": "none (additive optional fields)"
     },
     {
       "path": "services/api/app/cam/routers/drilling/intent_router.py",
@@ -125,7 +117,7 @@
     "acknowledged": true,
     "acknowledgement_notes": "Contract design only. Modal G-code path remains ungated. Engine table, Scoring rules, Profiling, V-carve, and client are not gated or redesigned."
   },
-  "no_backend_no_schema": "Additive optional DrillReq/DrillParams fields only; G-code generation and status codes unchanged. New domain module is not an RMOS policy source.",
+  "no_backend_no_schema": "Additive optional DrillReq fields only; G-code generation and status codes unchanged. Pattern HTTP schema untouched. New domain module is not an RMOS policy source.",
   "owner_approval": {
     "reviewed_by": "",
     "approved_by": "",
