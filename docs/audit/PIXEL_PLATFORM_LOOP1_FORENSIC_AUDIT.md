@@ -158,7 +158,55 @@ Loop 1 runs unless someone switches it off. This is the opposite posture from th
 machinery (`enable_feedback=False`), and the contrast is the most important structural
 fact about the surviving implementation.
 
-### 3.3 Full-pipeline execution — `PARTIAL`
+### 3.3a Full-pipeline execution — **`COMPLETED`** (amendment, 2026-08-28)
+
+The run recorded below as `WITNESS_INCOMPLETE_TIMEBOX` subsequently finished. Result, on
+`Guitar Plans/El Cuatro/El Cuatro 1.pdf`:
+
+```json
+{"ran": true, "result_type": "PhotoExtractionResult",
+ "coach_decision_type": "CoachDecisionV2",
+ "coach_action": "rerun_body_isolation",
+ "coach_reason": "Contour failed body ownership gate (0.501 < 0.600).",
+ "coach_retry_count": 1,
+ "warnings": ["Orientation corrected: landscape, 180.0 deg rotation applied",
+              "Input looks like a blueprint. Photo Vectorizer works best with photos.",
+              "Export blocked: No contour passed body ownership threshold 0.60",
+              "SVG/DXF/JSON export skipped due to low plausibility"]}
+```
+
+with this on stderr:
+
+```text
+elect_body_contour_v2: ownership gate rejected all plausible body contours   (x3)
+Export skipped: No contour passed body ownership threshold 0.60
+```
+
+**This upgrades §3.2 from reachability to execution.** Four things are now witnessed rather
+than inferred:
+
+1. **Rule 0 fired on real data.** `ownership_score = 0.501` against the `0.60` threshold, and
+   the coach returned `rerun_body_isolation` with `retry_count = 1`. The gate in §4.3 is not
+   merely present — it executed, on a measured score, and changed the pipeline's course.
+2. **The retry actually re-ran the stages.** `elect_body_contour_v2` logged three times, not
+   once. The closed loop in §4.2 closed.
+3. **The system failed closed.** Export was **blocked**: no SVG, no DXF, no JSON. Faced with
+   an input it could not resolve, the platform emitted **nothing** rather than a plausible-
+   looking artifact. For a fabrication-bound pipeline this is the correct behaviour and it is
+   the strongest single piece of evidence for the sufficiency verdict recorded in
+   `PIXEL_TECHNOLOGY_SUFFICIENCY_AUDIT.md`: the pixel layer could not do it, the
+   metrological supervisor caught that, and authority held.
+4. **Runtime confirmation of the checkpoint-2 arbitration finding.** The election that ran is
+   `elect_body_contour_v2` — the **inline** function in `photo_vectorizer_v2`. The named
+   module `contour_election.py` did not appear. Its `NO_PRODUCTION_CONSUMER` status is now
+   established by execution, not only by import graph and grep.
+
+One incidental result worth keeping: the pipeline correctly self-diagnosed a domain mismatch
+— *"Input looks like a blueprint. Photo Vectorizer works best with photos."* It knew the
+input was outside its competence, said so, and still refused to export. That is a fourth
+distinct guard, and it is not described anywhere in the loop vocabulary.
+
+### 3.3 Full-pipeline execution — superseded by §3.3a
 
 `PYMUPDF_AVAILABLE` was `False` locally; PyMuPDF **is** declared
 (`services/api/requirements.txt:34`), so this was a local environment gap, corrected by

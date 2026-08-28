@@ -228,8 +228,25 @@ Four are test results. Two are retirement records. One is the governing judgemen
   discrete commits. The series may predate these service paths.
 - Whether any G1–G10 criterion was later satisfied and the registry left un-updated.
 - The `el_cuatro_extraction_comparison` recommendation table was not read in full.
-- No runtime re-measurement was performed. Every figure here is quoted from the record as it
-  was written at the time, not reproduced.
+- No runtime re-measurement of the **2026 figures** was performed. Every figure in §3 is
+  quoted from the record as written at the time, not reproduced.
+
+**Amendment 2026-08-28 — one contemporary runtime confirmation now exists.** A live run of
+the photo pipeline on `El Cuatro 1.pdf` (recorded in
+`PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md` §3.3a) produced:
+
+```text
+ownership_score 0.501 < 0.600  -> coach action "rerun_body_isolation", retry_count 1
+elect_body_contour_v2: ownership gate rejected all plausible body contours   (x3)
+Export blocked: No contour passed body ownership threshold 0.60
+SVG/DXF/JSON export skipped due to low plausibility
+```
+
+This does not re-measure the 2026 accuracy figures, and does not attempt to. What it
+confirms is the §4 thesis, live and today: the pixel layer could not resolve a body, the
+metrological supervisor detected that from a scalar score, and **the platform exported
+nothing.** Sufficient as an extractor, not sufficient as an authority — and the authority
+boundary is observably load-bearing rather than aspirational.
 
 ---
 
