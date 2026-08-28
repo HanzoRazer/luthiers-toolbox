@@ -10,6 +10,13 @@ RMOS-PROFILING-CONVERGE-001 (2026-08-27) changed **Profiling only** from
 `LIVE_UNGOVERNED_OUTPUT` to `GOVERNED`. Historical Stage-2 classifications
 in this document remain the before-state. See §7.
 
+RMOS-VCARVE-CONVERGE-001 (2026-08-27) recorded **V-carve HOLD**
+(`POST_MERGE_AUTHORITY_EXPOSURE` unchanged). See §8.
+
+RMOS-DRILLING-CONTRACT-001 (2026-08-28) added a truthful drilling
+manufacturing contract. Drilling remains `AUTHORITY_CONTRACT_MISMATCH`.
+No production gate. See §9.
+
 This is not an agent report. Grounding Agent v0.1 remains the only agent under
 trial (`GA-TRIAL-0002`, MATCH / PROCEED). One script, one inert registry, one
 report, one PR.
@@ -504,3 +511,111 @@ HOLD evidence appended
 Profiling remains `GOVERNED` / `RUNTIME_REACHABLE` (PR #329 / `c987bfce`).
 Retract remains `BLOCKED_BY_DESIGN`. Adaptive remains `GOVERNED`.
 Drilling remains `AUTHORITY_CONTRACT_MISMATCH`.
+
+---
+
+## 9. Contract — RMOS-DRILLING-CONTRACT-001 (2026-08-28)
+
+This section is an increment on the frozen Stage-2 map. It does **not**
+rewrite the historical classification. PR #328 remains the before-state.
+V-carve HOLD in §8 is unchanged.
+
+```text
+Capability: drilling (modal POST /api/cam/drilling/gcode)
+
+BEFORE (PR #328):
+  authority_disposition = AUTHORITY_CONTRACT_MISMATCH
+  reachability          = RUNTIME_REACHABLE
+  ungated_output_exposure = YES
+  input_contract_status = MISMATCH
+  POST /api/cam/drilling/gcode → 200 G81/G83
+  no RMOS authority on the modal route
+  three HTTP contracts (modal / intent / pattern)
+
+AFTER (RMOS-DRILLING-CONTRACT-001):
+  authority_disposition = AUTHORITY_CONTRACT_MISMATCH   # unchanged
+  reachability          = RUNTIME_REACHABLE             # unchanged
+  ungated_output_exposure = YES                         # unchanged
+  input_contract_status = MISMATCH                      # unchanged
+  production G81/G83 still 200                          # no gate
+  canonical DrillingOperationSpec exists
+  canonical → evaluator = TRUTHFUL when spec is complete
+  intent → canonical = COMPLETE
+  modal → canonical = INCOMPLETE (optional diameter/datum/RPM)
+  pattern → canonical = INCOMPLETE (same Z/R gap; resolver queued)
+```
+
+Grounding Agent v0.1: **GA-TRIAL-0005**, `MATCH / PROCEED`. No Grounding
+Agent code was changed.
+
+### Mandatory checkpoint
+
+```text
+DRILLING CONTRACT CHECKPOINT
+
+canonical depth semantic: physical hole depth, mm, positive into material
+canonical datum:        work-surface Z in the same absolute frame as target Z;
+                        intent proves surface_z_mm = 0 (PeckDrill Z = -depth)
+canonical diameter source: first-class hole_diameter_mm (never tool number)
+tool identity semantic: Optional[int] tool number; distinct from diameter
+feed semantic:          sequence of per-hole feeds; evaluator adapter requires
+                        invariant feed (refuse heterogeneous collapse)
+RPM semantic:           required for evaluator mapping; not fabricated on modal
+peck semantic:          G81 → peck_drilling False; G83 → True; Q = peck_depth_mm
+safe-Z semantic:        G0 Z rapid clearance before cycle
+retract semantic:       canned-cycle R-plane (modal r_clear / intent retract_z_mm)
+units normalization:    canonical always mm; explicit inch→mm * 25.4
+
+modal → canonical:   INCOMPLETE
+intent → canonical:  COMPLETE
+pattern → canonical: INCOMPLETE
+canonical → evaluator: TRUTHFUL
+```
+
+### Three-lane matrix
+
+| Semantic | Modal | Intent | Pattern | Evaluator | Resolution |
+| --- | --- | --- | --- | --- | --- |
+| hole XY | `Hole.x`/`y` | `DrillPointV1.x`/`y` mm | generated from pattern | `hole_count` only | map XY; count=`len(holes)` |
+| target Z | `Hole.z` (G90 G-code Z) | derived `−depth` | `DrillParams.z` | not an input | keep as `target_z_mm`; not depth |
+| hole depth | missing | `hole_depth_mm` (design default) | missing | required | intent: design default; modal: only if `surface_z` + target Z |
+| datum | missing | implied surface Z=0 | missing | implicit | explicit `surface_z_mm`; intent=0 |
+| diameter | missing (optional additive) | `hole_diameter_mm` required | missing (optional additive) | required | first-class; never `tool` |
+| tool identity | `tool` Optional[int] | — | `tool` Optional[int] | none | keep distinct |
+| feed | per-hole `Hole.feed` | singular context (default 100) | singular `DrillParams.feed` | singular | list; adapter requires invariant |
+| RPM | optional, post-only | context (default 2000) | optional | required | intent: post-adapter value; modal: omit if missing |
+| cycle | G81/G83 | `peck_drilling` bool | G81/G83 | `peck_drilling` | G81=False, G83=True |
+| peck depth | `peck_q` (G83 default 1.0) | `peck_depth_mm` required | `peck_q` | required if peck | Q as generated |
+| safe Z | `safe_z` default 5 | context default 10 | `safe_z` default 5 | required | actual generator value |
+| retract / R | `r_clear` or 5.0 → R word | `retract_z_mm` → R word | `r_clear` or 5.0 | `retract_z_mm` | R-plane, not surface |
+| units | string default mm | CamIntentV1 mm | string default mm | mm | explicit normalize |
+
+`r_clear → retract_z_mm` is proven as the canned-cycle **R-plane**, not as
+stock-top. Depth is not `R − Z`.
+
+### What became representable
+
+- Physical depth distinct from target Z, with an explicit work-surface datum.
+- Diameter as a first-class millimetre field, never a tool number.
+- Per-hole feeds that cannot silently collapse to min/max/mean/first.
+- G81/G83 as non-peck / peck, with generator-true Q and R defaults.
+- Units as an explicit mm canonical with inch×25.4 normalization.
+- Intent lane already supplies every evaluator kwarg without fabrication.
+
+### What did not change
+
+No RMOS production gate. Modal `/gcode` still returns 200 G81/G83. No
+200→409. Scoring rules in `compute_drilling_feasibility()` are unchanged.
+Drilling is **not** GOVERNED. Pattern `tool_id='drill_pattern_gcode'`
+resolver defect remains queued. Profiling remains GOVERNED. V-carve remains
+HOLD / `POST_MERGE_AUTHORITY_EXPOSURE`. Retract remains `BLOCKED_BY_DESIGN`.
+Adaptive remains GOVERNED. Client cleanup is out of scope.
+
+Optional additive `DrillReq` fields (`hole_diameter_mm`, `surface_z_mm`)
+are backward-compatible. They are ignored by G-code generation. Existing
+`useDrillingOperation.ts` callers keep working. Pattern `DrillParams` is
+unchanged in this increment (pre-existing `RunArtifact()` fence sites).
+
+A later, separately authorized `RMOS-DRILLING-CONVERGE-001` may decide
+whether this truthful contract is ready to control machine-output authority.
+

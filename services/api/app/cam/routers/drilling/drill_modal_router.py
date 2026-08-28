@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Body, Response
 from pydantic import BaseModel
 
+from app.cam.drilling.operation_contract import spec_from_modal
 from app.safety import safety_critical
 
 try:
@@ -36,7 +37,11 @@ def _f(n: float) -> str:
 # ---------------------------------------------------------------------------
 
 class Hole(BaseModel):
-    """Single hole definition."""
+    """Single hole definition.
+
+    ``z`` is the canned-cycle target Z (G90), not physical hole depth.
+    ``feed`` is per-hole.
+    """
     x: float
     y: float
     z: float
@@ -44,7 +49,13 @@ class Hole(BaseModel):
 
 
 class DrillReq(BaseModel):
-    """Request model for drilling operation."""
+    """Request model for drilling operation.
+
+    ``Hole.z`` is a G-code target Z, not hole depth. ``tool`` is a tool
+    number, not diameter. Optional ``hole_diameter_mm`` / ``surface_z_mm``
+    complete the manufacturing contract when supplied; they are not used
+    by G-code generation (RMOS-DRILLING-CONTRACT-001).
+    """
     holes: List[Hole]
     r_clear: Optional[float] = None
     peck_q: Optional[float] = None
@@ -52,6 +63,8 @@ class DrillReq(BaseModel):
     cycle: str = "G81"
     safe_z: float = 5.0
     units: str = "mm"
+    hole_diameter_mm: Optional[float] = None
+    surface_z_mm: Optional[float] = None
 
     # Post-processor parameters
     post: Optional[str] = None
@@ -71,6 +84,18 @@ class DrillReq(BaseModel):
 @safety_critical
 def drill_gcode(req: DrillReq = Body(...)) -> Response:
     """Generate drilling G-code using modal cycles."""
+    spec_from_modal(
+        holes=[(h.x, h.y, h.z, h.feed) for h in req.holes],
+        r_clear=req.r_clear,
+        peck_q=req.peck_q,
+        cycle=req.cycle,
+        safe_z=req.safe_z,
+        units=req.units,
+        rpm=req.rpm,
+        tool=req.tool,
+        hole_diameter=req.hole_diameter_mm,
+        surface_z=req.surface_z_mm,
+    )
     cyc = req.cycle.upper().strip()
     if cyc not in ("G81", "G83"):
         cyc = "G81"

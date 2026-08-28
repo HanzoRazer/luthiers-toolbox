@@ -34,6 +34,7 @@ from app.cam.drilling.feasibility import (
     compute_drilling_feasibility,
     hash_feasibility_result,
 )
+from app.cam.drilling.operation_contract import feasibility_kwargs, spec_from_intent
 from app.rmos.runs_v2 import (
     validate_and_persist,
     create_run_id,
@@ -88,6 +89,23 @@ def _issues_to_response(issues: List[CamIntentIssue]) -> List[DrillingIntentIssu
         DrillingIntentIssue(code=i.code, message=i.message, path=i.path)
         for i in issues
     ]
+
+
+def _intent_feasibility(design, holes, config):
+    """Canonical contract → existing evaluator. Same kwargs as before."""
+    spec = spec_from_intent(
+        holes_xy=[(h.x, h.y) for h in holes],
+        per_hole_depth_mm=[h.depth_mm for h in holes],
+        hole_depth_mm=design.hole_depth_mm,
+        hole_diameter_mm=design.hole_diameter_mm,
+        peck_drilling=design.peck_drilling,
+        peck_depth_mm=design.peck_depth_mm,
+        feed_rate_mm_min=float(config.feed_rate),
+        spindle_rpm=float(config.spindle_rpm),
+        safe_z_mm=float(config.safe_z_mm),
+        retract_z_mm=float(config.retract_z_mm),
+    )
+    return compute_drilling_feasibility(**feasibility_kwargs(spec))
 
 
 @router.post("/intent-gcode", response_model=DrillingIntentResponse)
@@ -147,18 +165,8 @@ async def generate_drilling_intent_gcode(intent: CamIntentV1) -> DrillingIntentR
             detail={"error": "ADAPTER_ERROR", "message": str(e)},
         )
 
-    # Step 5: Feasibility check
-    feasibility = compute_drilling_feasibility(
-        hole_depth_mm=design.hole_depth_mm,
-        hole_diameter_mm=design.hole_diameter_mm,
-        peck_drilling=design.peck_drilling,
-        peck_depth_mm=design.peck_depth_mm,
-        hole_count=len(holes),
-        feed_rate_mm_min=config.feed_rate,
-        spindle_rpm=config.spindle_rpm,
-        safe_z_mm=config.safe_z_mm,
-        retract_z_mm=config.retract_z_mm,
-    )
+    # Step 5: Feasibility check (canonical contract → existing scorer)
+    feasibility = _intent_feasibility(design, holes, config)
     feas_hash = hash_feasibility_result(feasibility)
 
     # Step 6: Block if infeasible
