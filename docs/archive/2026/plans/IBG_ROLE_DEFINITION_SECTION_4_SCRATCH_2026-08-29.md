@@ -1,7 +1,9 @@
 # Scratch: IBG evaluator / selection scope (unmerged PR #336)
 
 **Status:** SCRATCH — not governance, not ratified, not owed  
-**Copied from:** unmerged PR #336 (`cursor/ibg-role-definition-amendment-5bd1`, commit `a6b5fea8`)  
+**Copied from:** unmerged [PR #336](https://github.com/HanzoRazer/luthiers-toolbox/pull/336)
+(`cursor/ibg-role-definition-amendment-5bd1`, commit
+[`a6b5fea8`](https://github.com/HanzoRazer/luthiers-toolbox/commit/a6b5fea8))  
 **Why this file exists:** PR #336 is being closed without merge. The §4 evaluator language
 existed only on that branch. This copy keeps it retrievable. It does not amend
 `IBG_ROLE_DEFINITION.md` and does not authorize a selector.

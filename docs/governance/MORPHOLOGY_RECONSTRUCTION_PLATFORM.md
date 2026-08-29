@@ -3,6 +3,16 @@
 **Status:** ACTIVE GOVERNANCE FRAMEWORK  
 **Effective:** 2026-05-11 — **amended 2026-08-29**
 
+> **Where the 2026-08-29 amendment lives.** This document was amended in **two** places, and
+> a reader arriving at either one alone will not see the other:
+>
+> - the **amendment preamble** immediately below (through the "authorizes nothing" note), and
+> - an inline qualification on the **BOE row** in
+>   [Canonical Layer Definitions](#canonical-layer-definitions).
+>
+> Search `amended 2026-08-29` to find every amended passage. The `Effective` line above is a
+> marker, not a table of contents — it says the document changed, not where.
+
 ---
 
 > ## AMENDMENT — 2026-08-29 (descriptive-capture correction)

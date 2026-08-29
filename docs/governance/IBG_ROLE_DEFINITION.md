@@ -3,6 +3,17 @@
 **Status:** ACTIVE GOVERNANCE  
 **Effective:** 2026-05-11 — **amended 2026-08-29**
 
+> **Where the 2026-08-29 amendment lives.** The amendment is the **preamble block below**,
+> which runs to the "authorizes nothing" note and includes a line-by-line table of what
+> changed. The body sections that follow are the amended text itself — they carry no
+> per-line markers, so a reader who jumps straight to
+> [Not Currently Implemented](#not-currently-implemented) or
+> [Math Authority](#math-authority) will read amended wording without seeing that it was
+> amended, or why.
+>
+> Search `amended 2026-08-29` to find every amended passage. The `Effective` line above says
+> the document changed; it does not say where.
+
 ---
 
 > ## AMENDMENT — 2026-08-29 (descriptive-capture correction)
@@ -153,6 +164,25 @@ Changes to IBG core math require:
 2. Verification against known instruments
 3. Regression test passage
 4. Explicit approval
+
+**Boundaries marked `LOCKED` follow their own change-control procedure and are not governed
+by the four steps above.** The four steps are the bar for changing *IBG core math*; a
+`LOCKED` boundary is a separate commitment that the thing does not change at all without its
+own procedure being satisfied first. The 2026-08-29 amendment explicitly left every one of
+them intact:
+
+| `LOCKED` boundary | Change-control authority |
+|---|---|
+| `BodyContourSolver` math | [Math Authority](#math-authority) — Sevy (*American Lutherie* #58), Mottola (#78) |
+| `SolvedBodyModel` schema | [Protected Interfaces](#protected-interfaces) |
+| API response contract | [Protected Interfaces](#protected-interfaces) |
+| DXF layer naming | [Protected Interfaces](#protected-interfaces) |
+
+The distinction matters because the two can be confused in the direction that does damage:
+satisfying steps 1–4 does **not** unlock a `LOCKED` boundary. Publishing a lutherie
+reference and passing regression is sufficient to change core math; it is **not** sufficient
+to change the Sevy/Mottola arc-parameter or side-contour derivations, whose authority is the
+published sources named in Math Authority.
 
 ---
 
