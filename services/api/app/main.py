@@ -221,6 +221,34 @@ def _startup_observability() -> None:
     register_loaded_feature("health")
 
 
+@app.on_event("startup")
+def _startup_ibg_session_store() -> None:
+    """Initialise IBG sessions at boot so redis misconfig fails closed."""
+    from .instrument_geometry.body.ibg.session_store import (
+        _fallback_allowed,
+        get_session_store,
+    )
+
+    # Announce a disarmed safety net at boot, not at failure.
+    #
+    # session_store already warns when it *uses* the fallback, but that only
+    # fires once Redis has actually failed. An operator running with Redis
+    # healthy and ALLOW_FALLBACK armed gets no signal at all -- and then the
+    # first Redis outage degrades to per-worker in-memory sessions silently,
+    # which is the intermittent-404 failure this change exists to remove.
+    # The dangerous window is the one where nothing is wrong yet.
+    if os.getenv("IBG_SESSION_STORE", "memory").strip().lower() == "redis" and _fallback_allowed():
+        logging.getLogger(__name__).warning(
+            "IBG_SESSION_STORE=redis with IBG_SESSION_STORE_ALLOW_FALLBACK set. "
+            "Fail-closed protection is DISABLED: if Redis becomes unreachable this "
+            "process will silently serve per-worker in-memory sessions, which "
+            "presents as intermittent 404s under multiple workers. This setting is "
+            "for local development only -- unset it in any deployed environment."
+        )
+
+    get_session_store()
+
+
 # =============================================================================
 # ROUTER REGISTRATION (via router_registry)
 # =============================================================================

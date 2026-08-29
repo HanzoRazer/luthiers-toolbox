@@ -1,0 +1,91 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_AGE_PRECURSOR_FORENSICS_DOCS",
+  "title": "docs(forensics): declare IBG/AGE precursor lineage documentation patch",
+  "intent": "Declare the docs-only forensics patch that adds six IBG/AGE precursor lineage investigation documents under docs/forensics and ensures CBSP21 manifest coverage for this PR.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/forensics/"
+    ],
+    "files_expected_to_change": [
+      "docs/forensics/IBG_AGE_PRECURSOR_CHRONOLOGY.md",
+      "docs/forensics/IBG_CODE_LINEAGE.md",
+      "docs/forensics/IBG_SEMANTIC_DRIFT_LEDGER.md",
+      "docs/forensics/IBG_SPRINT_1_2_RULING.md",
+      "docs/forensics/THREE_LOOP_ARCHITECTURE_FORENSIC_RECONSTRUCTION.md",
+      "docs/forensics/VECTORIZER_AGE_IBG_BOE_RELATIONSHIP_MATRIX.md",
+      ".cbsp21/patches/ibg-age-precursor-forensics-docs.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds six new docs/forensics markdown artifacts that reconstruct IBG/AGE precursor chronology, code lineage, semantic drift, sprint rulings, architecture reconstruction, and relationship mapping. Adds this per-PR CBSP21 manifest to declare and scope the docs-only change set.",
+    "why_not_redundant": "These forensics documents did not exist in the repository and establish a new auditable record for precursor lineage and terminology correction. The manifest addition is required so CBSP21 can map this PR's changed files to an applicable declared patch."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --changed-files docs/forensics/IBG_AGE_PRECURSOR_CHRONOLOGY.md docs/forensics/IBG_CODE_LINEAGE.md docs/forensics/IBG_SEMANTIC_DRIFT_LEDGER.md docs/forensics/IBG_SPRINT_1_2_RULING.md docs/forensics/THREE_LOOP_ARCHITECTURE_FORENSIC_RECONSTRUCTION.md docs/forensics/VECTORIZER_AGE_IBG_BOE_RELATIONSHIP_MATRIX.md .cbsp21/patches/ibg-age-precursor-forensics-docs.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base HEAD~1 --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/forensics/IBG_AGE_PRECURSOR_CHRONOLOGY.md",
+      "intent": "Document precursor chronology and provenance boundaries.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/forensics/IBG_CODE_LINEAGE.md",
+      "intent": "Map source-code lineage across precursor implementations.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/forensics/IBG_SEMANTIC_DRIFT_LEDGER.md",
+      "intent": "Track semantic drift and terminology corrections.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/forensics/IBG_SPRINT_1_2_RULING.md",
+      "intent": "Capture the sprint ruling and disposition context.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/forensics/THREE_LOOP_ARCHITECTURE_FORENSIC_RECONSTRUCTION.md",
+      "intent": "Record three-loop architecture reconstruction notes.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/forensics/VECTORIZER_AGE_IBG_BOE_RELATIONSHIP_MATRIX.md",
+      "intent": "Document relationship matrix for vectorizer, AGE, IBG, and BOE.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/ibg-age-precursor-forensics-docs.json",
+      "intent": "Per-PR CBSP21 manifest for this docs-only forensics patch.",
+      "risk": "low",
+      "behavior_change": "CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-29-IBG-AGE-PRECURSOR-FORENSICS-DOCS",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only change with no runtime code or workflow behavior modifications."
+  }
+}

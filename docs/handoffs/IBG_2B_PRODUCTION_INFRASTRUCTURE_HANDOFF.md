@@ -47,6 +47,7 @@ No IBG math, geometry behavior, or BOE editing behavior was changed.
 |----------|---------|-------------|
 | `IBG_SESSION_STORE` | `memory` | Session backend: `memory` or `redis` |
 | `REDIS_URL` | (none) | Redis connection URL (required if `redis`) |
+| `IBG_SESSION_STORE_ALLOW_FALLBACK` | (unset) | **Escape hatch.** Permits degrade-to-memory when `redis` was requested but is unreachable. Accepts `1`/`true`/`yes`/`on`. **Local development only** |
 | `IBG_SESSION_TTL_SECONDS` | `86400` | Session TTL (24 hours) |
 | `IBG_RATE_LIMIT_FREE` | `10/hour` | Rate limit for free tier |
 | `IBG_RATE_LIMIT_PAID` | `100/hour` | Rate limit for paid tier |
@@ -92,7 +93,46 @@ AUTH_MODE=supabase
 - Sessions stored in Redis with TTL
 - Survives restarts
 - Supports multi-worker deployment
-- Auto-fallback to memory if Redis unavailable
+- **Fails closed if Redis is unavailable** — see the behaviour change below
+
+### `IBG_SESSION_STORE_ALLOW_FALLBACK` — when to use it
+
+**Use it on a development machine that has no Redis**, when you have set
+`IBG_SESSION_STORE=redis` (for instance because you copied a production `.env`) and want the
+service to boot anyway.
+
+**Do not use it in production, or in any multi-worker deployment.** It restores the old
+degrade-to-memory behaviour, and in-memory sessions are **per worker**. Under more than one
+worker a session created on worker A is invisible to worker B, so the failure presents as
+*intermittent* 404s on a session that demonstrably exists — the hardest shape of bug to
+attribute, because retrying often "fixes" it.
+
+That is the whole reason this variable exists rather than the fallback being automatic: the
+old behaviour did not fail, it degraded, and the degradation was silent. The escape hatch
+makes the choice explicit and attributable to whoever set it.
+
+### Behaviour change — Redis-backed sessions now fail closed
+
+**Before:** `IBG_SESSION_STORE=redis` with an unreachable backend silently downgraded to
+in-memory sessions. The service booted, looked healthy, and produced intermittent 404s.
+
+**After:** the same configuration raises `IBGSessionStoreUnavailable` **at startup**, so the
+process refuses to boot rather than serving a broken session model.
+
+This is a deliberate breaking change for exactly one configuration: *Redis requested and not
+reachable.* Deployments with a working Redis are unaffected, and `memory` (the default) is
+unaffected.
+
+**Rollout checklist**
+
+1. Confirm `REDIS_URL` is set and reachable **from the deployment environment**, not just
+   from a developer machine.
+2. Deploy to one instance first. A misconfiguration now surfaces as a **boot failure**, which
+   is loud and immediate — expect the deploy to fail rather than to come up degraded.
+3. If the deploy fails on `IBGSessionStoreUnavailable`, the exception text names the reason.
+   Fix the backend. **Do not set `IBG_SESSION_STORE_ALLOW_FALLBACK` to get the deploy
+   through** — that reinstates the silent degradation this change exists to remove.
+4. Roll back by reverting the deployment, not by arming the escape hatch.
 
 ### Session Data Structure
 
