@@ -221,6 +221,14 @@ def _startup_observability() -> None:
     register_loaded_feature("health")
 
 
+@app.on_event("startup")
+def _startup_ibg_session_store() -> None:
+    """Initialise IBG sessions at boot so redis misconfig fails closed."""
+    from .instrument_geometry.body.ibg.session_store import get_session_store
+
+    get_session_store()
+
+
 # =============================================================================
 # ROUTER REGISTRATION (via router_registry)
 # =============================================================================

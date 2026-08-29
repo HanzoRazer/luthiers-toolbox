@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 
@@ -102,7 +102,7 @@ class TestInMemoryIBGSessionStore:
         session_id = store.create(data)
 
         # Manually backdate the timestamp to simulate expiration
-        store._timestamps[session_id] = datetime.utcnow() - timedelta(seconds=10)
+        store._timestamps[session_id] = datetime.now(timezone.utc) - timedelta(seconds=10)
 
         # Get should trigger cleanup
         assert store.get(session_id) is None
@@ -136,17 +136,27 @@ class TestRedisIBGSessionStore:
         assert result is None
 
     def test_update_refreshes_ttl(self):
-        """Redis store update refreshes TTL."""
+        """Redis store update uses SET XX so expired keys are not resurrected."""
         mock_client = MagicMock()
-        mock_client.exists.return_value = True
+        mock_client.set.return_value = True
 
         store = _session_store_mod.RedisIBGSessionStore(client=mock_client, ttl_seconds=3600)
         result = store.update("sess_test", {"data": "updated"})
 
         assert result is True
-        mock_client.setex.assert_called_once()
-        call_args = mock_client.setex.call_args
-        assert call_args[0][1] == 3600  # TTL preserved
+        mock_client.set.assert_called_once()
+        call_kwargs = mock_client.set.call_args.kwargs
+        assert call_kwargs["ex"] == 3600
+        assert call_kwargs["xx"] is True
+
+    def test_update_returns_false_when_set_xx_misses(self):
+        """Redis update reports miss when SET XX does not write."""
+        mock_client = MagicMock()
+        mock_client.set.return_value = None
+
+        store = _session_store_mod.RedisIBGSessionStore(client=mock_client)
+        result = store.update("sess_test", {"data": "updated"})
+        assert result is False
 
     def test_delete(self):
         """Redis store can delete sessions."""
@@ -170,15 +180,16 @@ class TestGetSessionStore:
         finally:
             _session_store_mod.reset_session_store()
 
-    def test_redis_fallback_without_url(self):
-        """get_session_store() falls back to memory if REDIS_URL not set."""
+    def test_redis_without_url_raises(self):
+        """Explicit redis backend does not silently degrade to memory."""
         _session_store_mod.reset_session_store()
         try:
             env = {"IBG_SESSION_STORE": "redis"}
             with patch.dict(os.environ, env, clear=False):
                 os.environ.pop("REDIS_URL", None)
-                store = _session_store_mod.get_session_store()
-                assert isinstance(store, _session_store_mod.InMemoryIBGSessionStore)
+                os.environ.pop("IBG_SESSION_STORE_ALLOW_FALLBACK", None)
+                with pytest.raises(_session_store_mod.IBGSessionStoreUnavailable):
+                    _session_store_mod.get_session_store()
         finally:
             _session_store_mod.reset_session_store()
 
