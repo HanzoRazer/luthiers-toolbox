@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VEC_CANONICAL_PIPELINE_FILES",
+  "title": "Expose the canonical vectorizer pipeline file list and a download bundle",
+  "intent": "Answer the recurring question 'which file is the vectorizer?' with evidence rather than a pointer. There is no single file: there are two production intakes, the blueprint path (default mode refined) and a separate photo endpoint. This publishes the verified file list, a plain-text path list, and a zip of those sources with repo paths preserved, so the pipeline can be read locally without copy-pasting dozens of files out of the GitHub UI.",
+  "change_type": "docs",
+  "behavior_change": "None. Four documentation artifacts plus one index under reports/vectorizer/. No production code, no configuration, no route, no schema. The zip contains copies of existing source files and is not imported, executed, or referenced by any runtime path.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vec-canonical-pipeline-files.json",
+      "reports/vectorizer/CANONICAL_PIPELINE.md",
+      "reports/vectorizer/HOW_TO_DOWNLOAD.md",
+      "reports/vectorizer/PATHS.txt",
+      "reports/vectorizer/README.md",
+      "reports/vectorizer/canonical_vectorizer_pipeline.zip"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vec-canonical-pipeline-files.json",
+      "reports/vectorizer/CANONICAL_PIPELINE.md",
+      "reports/vectorizer/HOW_TO_DOWNLOAD.md",
+      "reports/vectorizer/PATHS.txt",
+      "reports/vectorizer/README.md",
+      "reports/vectorizer/canonical_vectorizer_pipeline.zip"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Original commit added CANONICAL_PIPELINE.md (the file list, verified at 2646992f), PATHS.txt, HOW_TO_DOWNLOAD.md, and a 286 KB zip of 50 entries preserving repo paths. Review follow-up: (1) HOW_TO_DOWNLOAD.md now leads with a main-tracking download URL and demotes the feature-branch URL to a clearly-labelled pre-merge link, because the original pointed only at cursor/vec-canonical-pipeline-files-5bd1 and would have 404'd for every reader the moment that branch was deleted on merge. (2) A purpose statement now says plainly that the bundle is a point-in-time convenience snapshot for local work, not a release artifact, not a distribution channel and not a source of truth. (3) New README.md as the single top-level index, and a source-of-truth note added to CANONICAL_PIPELINE.md itself so the statement travels inside the zip as well as sitting in the repo folder.",
+    "why_not_redundant": "The link fix is the substantive one: a download link that points at the PR's own feature branch is guaranteed to break on merge, and it breaks silently -- readers get a 404 with no indication that a working link exists. The staleness statements matter for the same class of reason. A zip of source files carries no signal when it goes out of date; it keeps opening, keeps looking complete, and quietly describes a pipeline that has moved. Saying once, in both the repo folder and inside the zip, that the repository is authoritative is what stops this bundle being cited later as though it were."
+  },
+  "verification": {
+    "commands_run": [
+      "gate diagnosis: both CBSP21 Patch Manifest Gate and cbsp21-patch-input failed for one cause -- 'No manifest under .cbsp21/patches/ declares any changed file'. The PR had no per-PR manifest. This file is the fix.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <6 files> -> PASSED",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base <merge-base> --head HEAD -> PASS",
+      "zip integrity: zipfile.ZipFile lists 50 entries, top level PATHS.txt / HOW_TO_DOWNLOAD.md / CANONICAL_PIPELINE.md; binary not modified by this review pass",
+      "link audit: original doc contained two URLs, both on cursor/vec-canonical-pipeline-files-5bd1; both would 404 after branch deletion"
+    ]
+  },
+  "files": [
+    {
+      "path": "reports/vectorizer/CANONICAL_PIPELINE.md",
+      "intent": "The index: which files constitute the pipeline, split by intake, verified at a named commit. Review pass added a source-of-truth and staleness note so it travels inside the zip.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/vectorizer/HOW_TO_DOWNLOAD.md",
+      "intent": "Download instructions. Review pass replaced the branch-only link with a main-tracking durable link, kept the branch link explicitly scoped to pre-merge review, and added the purpose statement.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/vectorizer/README.md",
+      "intent": "Single top-level index for the folder, stating that the repository is the canonical source and this folder is derived.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/vectorizer/PATHS.txt",
+      "intent": "Plain-text file list for scripting.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/vectorizer/canonical_vectorizer_pipeline.zip",
+      "intent": "Snapshot of the listed source files with repo paths preserved, so a path in the index is also a path in the repository.",
+      "risk": "low",
+      "behavior_change": "none (inert artifact; not imported or executed)"
+    },
+    {
+      "path": ".cbsp21/patches/vec-canonical-pipeline-files.json",
+      "intent": "Per-PR CBSP21 patch manifest. Its absence is what failed both CBSP21 gates.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only; no architectural surface. The one low item is the committed binary: a 286 KB zip duplicating source files already in the repository, which will drift from those sources with no mechanism to detect it. Accepted deliberately and mitigated by stating in three places -- README, HOW_TO_DOWNLOAD and inside CANONICAL_PIPELINE.md which travels in the zip -- that the repository at the named commit is authoritative and the bundle is not."
+  }
+}

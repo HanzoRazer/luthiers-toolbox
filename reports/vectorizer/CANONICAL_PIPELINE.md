@@ -8,6 +8,15 @@ There is **not** one Python file. There are **two production intakes**. Default 
 
 Do not copy-paste these files. Use the zip (see `HOW_TO_DOWNLOAD.md`).
 
+> **Source of truth.** This document and the zip beside it are a **snapshot**, verified at
+> the commit named above. The canonical source is the repository at that commit — not this
+> file, and not the zip. Source files keep changing; when they do, this snapshot becomes
+> stale and nothing here will announce it. If a path below disagrees with the repository,
+> **the repository is right**.
+>
+> Every path listed here is a real repository path, so any entry can be checked directly
+> against `main`.
+
 ---
 
 ## Path A — Blueprint Reader default (`refined`)
