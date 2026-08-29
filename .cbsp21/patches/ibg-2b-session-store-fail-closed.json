@@ -1,0 +1,101 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_2B_SESSION_STORE_FAIL_CLOSED",
+  "title": "IBG-2B: fail closed when the Redis session store is requested but unreachable",
+  "intent": "A Redis-backed IBG session store that could not be reached used to downgrade silently to in-memory sessions. In-memory sessions are per-worker, so under more than one worker the service booted, reported healthy, and produced intermittent 404s on sessions that demonstrably existed. This makes the same configuration fail at startup instead, with an explicit escape hatch for developer machines that have no Redis.",
+  "change_type": "fix",
+  "behavior_change": "Breaking for exactly one configuration: IBG_SESSION_STORE=redis with an unreachable backend. That configuration previously booted degraded and now raises IBGSessionStoreUnavailable at startup, so the process refuses to come up. Deployments with a working Redis are unaffected. The default (memory) is unaffected. IBG_SESSION_STORE_ALLOW_FALLBACK=1 restores the previous degrade-to-memory behaviour and is documented as local-development only. Additive: a startup warning now fires when redis is requested AND the fallback is armed, whether or not Redis is currently healthy.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ibg-2b-session-store-fail-closed.json",
+      "docs/handoffs/IBG_2B_PRODUCTION_INFRASTRUCTURE_HANDOFF.md",
+      "services/api/app/instrument_geometry/body/ibg/__init__.py",
+      "services/api/app/instrument_geometry/body/ibg/session_store.py",
+      "services/api/app/main.py",
+      "services/api/tests/test_ibg_2b_infrastructure.py",
+      "services/api/tests/test_ibg_2b_session_store_fail_closed.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ibg-2b-session-store-fail-closed.json",
+      "docs/handoffs/IBG_2B_PRODUCTION_INFRASTRUCTURE_HANDOFF.md",
+      "services/api/app/instrument_geometry/body/ibg/__init__.py",
+      "services/api/app/instrument_geometry/body/ibg/session_store.py",
+      "services/api/app/main.py",
+      "services/api/tests/test_ibg_2b_infrastructure.py",
+      "services/api/tests/test_ibg_2b_session_store_fail_closed.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) session_store.py gains IBGSessionStoreUnavailable, _fallback_allowed() and _fail_or_fallback(): when IBG_SESSION_STORE=redis and the backend cannot be initialised, it raises unless IBG_SESSION_STORE_ALLOW_FALLBACK is set, in which case it warns loudly and returns an in-memory store. (2) main.py initialises the store in an on_event('startup') hook so a misconfiguration fails at boot rather than on the first request. (3) Review follow-up: main.py now also emits an operator-facing warning at startup when redis is requested AND the fallback is armed. The pre-existing warning in _fail_or_fallback only fires once Redis has actually failed, so an operator running with Redis healthy and the hatch armed previously got no signal at all -- and the first outage then degraded silently, which is the exact failure this change exists to remove. The dangerous window is the one where nothing is wrong yet. (4) The IBG-2B handoff documents the new variable in the environment table, adds a 'when to use it' section, and replaces the now-false line 'Auto-fallback to memory if Redis unavailable' with a behaviour-change section and a four-step rollout checklist whose third step is explicitly 'do not set ALLOW_FALLBACK to get the deploy through'.",
+    "why_not_redundant": "The gate this closes is not cosmetic. Silent degradation to per-worker sessions is a fail-open in the availability direction: it trades a loud boot failure for an intermittent, hard-to-attribute 404 that retrying often appears to fix. Documenting the escape hatch matters for the same reason -- an undocumented variable that reinstates the old behaviour would be discovered by whoever is trying to force a failing deploy through, which is precisely the wrong moment to find it."
+  },
+  "verification": {
+    "commands_run": [
+      "gate diagnosis: scripts/ci/check_cbsp21_gate.py --changed-files <5 files> -> FAILED, 'Coverage 0.0% < 95% minimum'. The PR had no per-PR manifest, so no manifest declared its files. This file is the fix.",
+      "runtime witness, fail-closed: IBG_SESSION_STORE=redis python -c 'from app.main import _startup_ibg_session_store; _startup_ibg_session_store()' -> RAISED IBGSessionStoreUnavailable",
+      "runtime witness, escape hatch: IBG_SESSION_STORE=redis IBG_SESSION_STORE_ALLOW_FALLBACK=1 -> both warnings emitted (new startup warning, then the existing _fail_or_fallback warning), startup completed",
+      "logger correctness: main.py defines _root_logger, not logger. The first draft of the startup warning called a bare logger.warning(), which py_compile accepts and which would have raised NameError at boot. Corrected to logging.getLogger(__name__) and verified by executing the hook, not by compiling it.",
+      "PYTHONPATH=. py -3.11 -m pytest tests/test_ibg_2b_session_store_fail_closed.py tests/test_ibg_2b_infrastructure.py -q --no-cov -> 30 passed, 1 failed",
+      "The single failure is test_expired_session_is_not_served_before_sweep, and it is NOT caused by this review pass. session_store.py:140 compares with a strict '>' (_utcnow() - ts > self._ttl), so ttl_seconds=0 only expires after strictly positive elapsed time. It passes on the Linux CI runner's nanosecond clock and fails on a Windows ~15ms tick where both timestamps land in the same tick. Reported, not fixed: changing '>' to '>=' would alter expiry semantics for every TTL, which is outside this review's scope."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/body/ibg/session_store.py",
+      "intent": "Raise IBGSessionStoreUnavailable when redis is requested and unreachable; permit degrade-to-memory only behind an explicit, loudly-warned environment variable.",
+      "risk": "medium",
+      "behavior_change": "redis-requested-and-unreachable now raises instead of downgrading"
+    },
+    {
+      "path": "services/api/app/main.py",
+      "intent": "Initialise the session store at startup so misconfiguration fails at boot; warn at startup when the fail-closed protection is disarmed by ALLOW_FALLBACK, independently of whether Redis is currently reachable.",
+      "risk": "medium",
+      "behavior_change": "boot fails on redis misconfiguration; additive warning otherwise"
+    },
+    {
+      "path": "services/api/app/instrument_geometry/body/ibg/__init__.py",
+      "intent": "Export the new exception type.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/handoffs/IBG_2B_PRODUCTION_INFRASTRUCTURE_HANDOFF.md",
+      "intent": "Document IBG_SESSION_STORE_ALLOW_FALLBACK and when to use it, correct the now-false 'Auto-fallback to memory' line, and add a rollout checklist for the breaking change.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "services/api/tests/test_ibg_2b_session_store_fail_closed.py",
+      "intent": "Witness the fail-closed path, the escape hatch, and session-store semantics.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_ibg_2b_infrastructure.py",
+      "intent": "Existing IBG-2B infrastructure coverage, updated for the new behaviour.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".cbsp21/patches/ibg-2b-session-store-fail-closed.json",
+      "intent": "Per-PR CBSP21 patch manifest. Its absence is what failed the CBSP21 Patch Manifest Gate at 0.0% coverage.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "No new architectural surface: one startup hook and one environment variable, both inside the existing IBG session-store boundary. The medium items are the two deliberate risks this change accepts. First, boot now fails on a configuration that previously came up degraded -- that is the intended trade and it is documented with a rollout checklist. Second, IBG_SESSION_STORE_ALLOW_FALLBACK reintroduces the old silent-degradation path on request; it is mitigated by two warnings, one at startup whenever the hatch is armed and one when the fallback is actually taken, and by documentation stating it is local-development only."
+  }
+}
