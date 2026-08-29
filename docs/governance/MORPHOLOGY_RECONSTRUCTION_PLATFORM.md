@@ -1,7 +1,47 @@
 # Morphology Reconstruction Platform (MRP)
 
 **Status:** ACTIVE GOVERNANCE FRAMEWORK  
-**Effective:** 2026-05-11
+**Effective:** 2026-05-11 — **amended 2026-08-29**
+
+---
+
+> ## AMENDMENT — 2026-08-29 (descriptive-capture correction)
+>
+> **APPROVED BY:** Ross (repository owner), 2026-08-29, by direct instruction in session.
+>
+> **Defect corrected:** *descriptive capture*. Statements of what the system did on
+> 2026-05-11 were written into canonical documents in the imperative register, which
+> converted present-tense observations into permanent prohibitions on future work. No
+> decision was ever recorded barring the capability; the prohibition arose from document
+> formatting, not from an argument.
+>
+> **Diagnostic signature:** a prohibition whose reason column restates the prohibition.
+> Compare the Math Authority section of `IBG_ROLE_DEFINITION.md`, which cites Sevy
+> (*American Lutherie* #58), Mottola (#78), and a plus/minus 0.01 inch tolerance. The
+> corrected rows cited nothing.
+>
+> **Rule applied:** permanent prohibition -> present-tense description.
+>
+> **What did NOT change:** every sourced authority row. IBG math remains `LOCKED` under
+> Sevy/Mottola. Image processing and photo input remain out of scope. The Blueprint Reader
+> MVP protections stand. Human oversight is preserved: its authority is relocated from a
+> tool to a role, not removed.
+>
+> **This amendment authorizes nothing.** It removes a governance bar that was never
+> deliberately raised. Any implementation requires its own Dev Order.
+>
+> **Lines changed in this file:** 46 and 111 of the 2026-05-11 text, the only two lines in
+> this document carrying the defect.
+>
+> | Was | Now |
+> |---|---|
+> | `\| BOE \| Human correction/editor \| AUTHORITATIVE \|` | `HUMAN-IN-THE-LOOP` |
+> | `- Bypass BOE authority` | `- Bypass required human review` |
+>
+> **Contradiction resolved:** line 45 assigns the IBG Morphology Layer *Shape intelligence /
+> EVOLUTIONARY*, while `IBG_ROLE_DEFINITION.md` barred IBG from learning. Both were effective
+> 2026-05-11. **Resolved in favour of line 45**, which stands unchanged; the companion
+> document is corrected to match.
 
 ---
 
@@ -43,10 +83,17 @@ Image/PDF
 | Blueprint Reader MVP | Deterministic extraction | PROTECTED |
 | DXF Translator Layer | Serialization compatibility | STABILIZED |
 | IBG Morphology Layer | Shape intelligence | EVOLUTIONARY |
-| BOE | Human correction/editor | AUTHORITATIVE |
+| BOE | Human correction/editor | HUMAN-IN-THE-LOOP |
 | Export Object | Canonical manufacturing representation | DXF-AGNOSTIC |
 | Translators | Serialization targets | ISOLATED |
 | CAM/Postprocessors | Machine execution | DOWNSTREAM |
+
+**On the BOE row (amended 2026-08-29).** BOE is the surface through which a human exercises
+correction authority. The authority belongs to the human review step, not to the tool. Any
+approval surface satisfying the same requirement — an alternative editor, an API
+confirmation, a customer review step, a threshold-based auto-accept where one has been
+explicitly approved — satisfies this row. Nothing in this framework requires that human
+review occur in a particular application.
 
 ---
 
@@ -108,7 +155,7 @@ Agents may NOT:
 - Remove restored_baseline
 - Collapse representation into DXF
 - Inject AI mutation into production path
-- Bypass BOE authority
+- Bypass required human review
 - Optimize without regression verification
 
 ### Mandatory Requirements
