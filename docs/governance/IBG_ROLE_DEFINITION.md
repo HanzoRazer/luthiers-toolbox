@@ -1,7 +1,71 @@
-# Image Body Generator (IBG) — Role Definition
+# Instrument Body Generator (IBG) — Role Definition
 
 **Status:** ACTIVE GOVERNANCE  
-**Effective:** 2026-05-11
+**Effective:** 2026-05-11 — **amended 2026-08-29**
+
+> **Where the 2026-08-29 amendment lives.** The amendment is the **preamble block below**,
+> which runs to the "authorizes nothing" note and includes a line-by-line table of what
+> changed. The body sections that follow are the amended text itself — they carry no
+> per-line markers, so a reader who jumps straight to
+> [Not Currently Implemented](#not-currently-implemented) or
+> [Math Authority](#math-authority) will read amended wording without seeing that it was
+> amended, or why.
+>
+> Search `amended 2026-08-29` to find every amended passage. The `Effective` line above says
+> the document changed; it does not say where.
+
+---
+
+> ## AMENDMENT — 2026-08-29 (descriptive-capture correction)
+>
+> **APPROVED BY:** Ross (repository owner), 2026-08-29, by direct instruction in session.
+>
+> **Defect corrected:** *descriptive capture*. On 2026-05-11 three documents were written in
+> 106 minutes: `VECTOR_1B_LOOP2_PROVENANCE_AUDIT.md` (`ccb30161`, 10:50) reported findings;
+> `IBG_FUNCTIONAL_CAPABILITY_ASSESSMENT` (`b5c51220`, 11:54) restated them as status; this
+> document (`c9da01bd`, 12:36) restated them a third time as `NEVER`. Observation became
+> status became prohibition. **No decision was ever recorded barring the capability.** The
+> prohibition arose from the imperative register of a canonical document, not from an argument.
+>
+> **Diagnostic signature:** a prohibition whose reason column restates the prohibition. The
+> Math Authority section below cites Sevy (*American Lutherie* #58), Mottola (#78), and a
+> plus/minus 0.01 inch tolerance. The four corrected rows cited nothing. The document
+> convicted itself by contrast.
+>
+> **Rule applied:** permanent prohibition -> present-tense description. The prohibition table
+> is split so that sourced boundaries and present-state facts no longer share one header.
+>
+> **Changes to the 2026-05-11 text:**
+>
+> | Line | Was | Now |
+> |---|---|---|
+> | 1 | `# Image Body Generator` | `# Instrument Body Generator` (owner namespace ruling) |
+> | 32 | `## What IBG Does NOT Do` | split into two sections |
+> | 37 | `Strategy caching (Loop 2) \| NEVER \| Not a learning system` | `Not currently implemented` |
+> | 38 | `ML classification \| NEVER \| Uses deterministic lutherie math` | scoped to the math solver |
+> | 64 | `No feedback loop exists upstream.` | `As currently implemented...` |
+> | 89 | `No learning systems.` | `Learning systems: not currently implemented` |
+>
+> **What did NOT change:** Image processing and Photo input remain `NEVER`. IBG math remains
+> `LOCKED` under Sevy/Mottola with its change-control procedure intact. Protected interfaces
+> stand. **IBG still renders nothing.**
+>
+> **Namespace.** `IBG = Instrument Body Generator`. The April source is authoritative:
+> `instrument_body_generator.py`, class `InstrumentBodyGenerator`, docstring dated 2026-04-16.
+> The first git occurrence of "Image Body Generator" is `ccb30161` (2026-05-11) — 24 days
+> after the code, with no `git mv`, no class rename, and no code change. Documents dated
+> 2026-05-11 or later using the other expansion refer to this same system; do not infer an
+> image-processing capability from them.
+>
+> **Known defect left uncorrected.** The Canonical Role block states an input of
+> "82-88% complete". That figure originated as a shop note from a test during the March 2026
+> sprint, not as a specification or a measured ceiling. It is **out of scope for this
+> amendment** and needs its own decision.
+>
+> **This amendment authorizes nothing.** `VectorizerAGE`, `AdaptiveExtractor`,
+> `strategy_cache`, and `try_all_strategies` return zero hits in both `luthiers-toolbox` and
+> `vectorizer-sandbox`. Nothing here asserts a selector exists or that one is owed. It removes
+> a governance bar that was never deliberately raised. Implementation requires its own Dev Order.
 
 ---
 
@@ -29,14 +93,30 @@ Output: Solved body model (100% complete)
 
 ---
 
-## What IBG Does NOT Do
+## Out of Scope (permanent)
+
+These are boundaries on what IBG *is*. Changing one requires an explicit decision recorded
+in this document.
 
 | Capability | Status | Reason |
 |------------|--------|--------|
 | Image processing | NEVER | Works on DXF geometry only |
-| Strategy caching (Loop 2) | NEVER | Not a learning system |
-| ML classification | NEVER | Uses deterministic lutherie math |
 | Photo input | NEVER | Requires vectorizer preprocessing |
+
+---
+
+## Not Currently Implemented
+
+Present-state descriptions, not prohibitions. A row here records what IBG does not do today.
+It does not forbid future development, which proceeds under the `EVOLUTIONARY` governance of
+the IBG Morphology Layer and the Mandatory Requirements in
+`MORPHOLOGY_RECONSTRUCTION_PLATFORM.md` (feature flags, regression corpus, audit logs,
+rollback paths, documented confidence).
+
+| Capability | Status | Note |
+|------------|--------|------|
+| Strategy caching (Loop 2) | Not currently implemented | IBG presently uses deterministic solving |
+| ML classification | Not used in the IBG math solver | The solver uses deterministic lutherie math — see Math Authority |
 
 ---
 
@@ -61,7 +141,8 @@ Blueprint Reader (upstream)
   → CAM pipeline (downstream)
 ```
 
-IBG is a **one-way consumer** of vectorizer output. No feedback loop exists upstream.
+As currently implemented, IBG consumes vectorizer output without an upstream feedback loop.
+This describes the present wiring, not a constraint on future work.
 
 ---
 
@@ -84,6 +165,25 @@ Changes to IBG core math require:
 3. Regression test passage
 4. Explicit approval
 
+**Boundaries marked `LOCKED` follow their own change-control procedure and are not governed
+by the four steps above.** The four steps are the bar for changing *IBG core math*; a
+`LOCKED` boundary is a separate commitment that the thing does not change at all without its
+own procedure being satisfied first. The 2026-08-29 amendment explicitly left every one of
+them intact:
+
+| `LOCKED` boundary | Change-control authority |
+|---|---|
+| `BodyContourSolver` math | [Math Authority](#math-authority) — Sevy (*American Lutherie* #58), Mottola (#78) |
+| `SolvedBodyModel` schema | [Protected Interfaces](#protected-interfaces) |
+| API response contract | [Protected Interfaces](#protected-interfaces) |
+| DXF layer naming | [Protected Interfaces](#protected-interfaces) |
+
+The distinction matters because the two can be confused in the direction that does damage:
+satisfying steps 1–4 does **not** unlock a `LOCKED` boundary. Publishing a lutherie
+reference and passing regression is sufficient to change core math; it is **not** sufficient
+to change the Sevy/Mottola arc-parameter or side-contour derivations, whose authority is the
+published sources named in Math Authority.
+
 ---
 
-*IBG role definition. No learning systems. No image processing.*
+*IBG role definition. No image processing. Learning systems: not currently implemented — see "Not Currently Implemented".*

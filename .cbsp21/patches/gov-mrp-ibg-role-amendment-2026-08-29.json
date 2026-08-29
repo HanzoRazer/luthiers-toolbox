@@ -1,0 +1,74 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GOV_MRP_IBG_ROLE_AMENDMENT_2026_08_29",
+  "title": "docs(governance): descriptive-capture amendment for MRP and IBG role definitions",
+  "intent": "Replace the 2026-05-11 imperative prohibition bars in IBG_ROLE_DEFINITION.md and MORPHOLOGY_RECONSTRUCTION_PLATFORM.md with present-tense descriptive language that reflects current reality. BOE authority is moved to the human review role. Loop 2 / learning rows are no longer marked NEVER. The unmerged PR #336 §4 evaluator text is preserved as an unreified scratch document before that PR is closed.",
+  "change_type": "docs",
+  "behavior_change": "No runtime behavior changes. Documentation only.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/governance/",
+      "docs/archive/2026/plans/",
+      ".cbsp21/patches/gov-mrp-ibg-role-amendment-2026-08-29.json"
+    ],
+    "files_expected_to_change": [
+      "docs/governance/IBG_ROLE_DEFINITION.md",
+      "docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+      "docs/archive/2026/plans/IBG_ROLE_DEFINITION_SECTION_4_SCRATCH_2026-08-29.md",
+      ".cbsp21/patches/gov-mrp-ibg-role-amendment-2026-08-29.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "IBG_ROLE_DEFINITION.md: imperative prohibition bars replaced with present-tense descriptions reflecting actual current role boundaries; BOE authority clarified as belonging to the human review role. MORPHOLOGY_RECONSTRUCTION_PLATFORM.md: Loop 2 / learning rows updated from NEVER to descriptive present-tense language. New scratch file docs/archive/2026/plans/IBG_ROLE_DEFINITION_SECTION_4_SCRATCH_2026-08-29.md preserves the PR #336 §4 evaluator text for reference before that PR is closed. Review follow-up 2026-08-29: three navigability improvements added, no governance content changed. (1) The scratch file now links PR #336 and commit a6b5fea8 rather than citing them by number only. (2) Both amended documents gained a 'where the amendment lives' pointer under the Effective line -- MRP's amendment is in two places (preamble plus an inline BOE-row qualification) and IBG's body sections are amended text carrying no per-line markers, so a reader arriving mid-document reads amended wording without knowing it was amended. (3) IBG Governance Authority now states that LOCKED boundaries follow their own change-control and are NOT unlocked by satisfying its four steps, with a table routing each LOCKED row to its authority.",
+    "why_not_redundant": "These are targeted governance document amendments that correct imperative language added in May 2026 which no longer matches the current understanding of IBG role boundaries and MRP loop architecture. The scratch file preserves evaluator text from an unmerged PR for continuity."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --changed-files docs/archive/2026/plans/IBG_ROLE_DEFINITION_SECTION_4_SCRATCH_2026-08-29.md docs/governance/IBG_ROLE_DEFINITION.md docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+      "gate diagnosis 2026-08-29: no GitHub Actions workflow ran on c0007d0e -- all 15 runs report action_required (awaiting approval), so only the two Railway deploys reported. mergeStateStatus BLOCKED is the draft state, not a check failure; main is not branch-protected and no required check is red.",
+      "anchors verified against actual headings: #canonical-layer-definitions (MRP), #not-currently-implemented / #math-authority / #protected-interfaces (IBG)",
+      "no governance text altered: LOCKED rows, Sevy/Mottola math authority, protected interfaces and H0 (AGE != IBG) all unchanged"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/IBG_ROLE_DEFINITION.md",
+      "intent": "Replace imperative prohibition bars with present-tense descriptive language; clarify BOE authority to human review role.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/MORPHOLOGY_RECONSTRUCTION_PLATFORM.md",
+      "intent": "Update Loop 2 / learning rows from NEVER to descriptive present-tense language.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/archive/2026/plans/IBG_ROLE_DEFINITION_SECTION_4_SCRATCH_2026-08-29.md",
+      "intent": "Preserve PR #336 §4 evaluator text as unreified scratch before that PR is closed.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/gov-mrp-ibg-role-amendment-2026-08-29.json",
+      "intent": "CBSP21 patch manifest for this governance document amendment.",
+      "risk": "low",
+      "behavior_change": "CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-29-GOV-MRP-IBG-ROLE-AMENDMENT",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only change. No runtime code modified."
+  }
+}
