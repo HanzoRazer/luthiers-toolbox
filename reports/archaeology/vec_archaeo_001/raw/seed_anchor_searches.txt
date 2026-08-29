@@ -1,0 +1,118 @@
+==== A1 march6 metrics / AC1009 / CONTOURS ====
+
+9895b6639ae26e17c8eb0a9226623db5912df0a6	2026-06-25T21:20:35-05:00	ci(blueprint): add dedupe fixture regression workflow
+db9a7a1ba9b99e03dfa93026ca0dfaf21557da2f	2026-06-23T02:59:33-05:00	DXF version-selection convergence: make contour reconstruction R12-safe by default (#150)
+a553d9e0f15f427d51d05ffbc41dede4068e9c7b	2026-06-23T01:00:35-05:00	fix(dxf): R12-safe-by-default for contour reconstruction (version-selection convergence)
+de1d150c7fcba0ba300126a8ed49bf3d33d4d4e7	2026-06-08T04:06:20-05:00	fix(cam): revert ungated VINE-12 R2000 default to R12 in dxf_exporter (bucket 2, Scope 1) (#91)
+579b77ee743655209e743aab383e0581d1f8871f	2026-06-08T00:11:41-05:00	fix(cam): revert ungated VINE-12 R2000 default to R12 in dxf_exporter (bucket 2, Scope 1)
+b521f4163c9c03804975025cb4f513b6312802d8	2026-05-11T04:23:35-05:00	test(dxf): add R12 compliance and semantic determinism tests (VECTOR-1A)
+cb94ebff208e75f62247e70fc74d344f68c2e63c	2026-04-29T20:11:56-05:00	feat(api): add /api/v1/fretboard/dxf with tier gating
+c7b77b53661ebce7d819983fcb6d0c94b0e6f1da	2026-04-29T10:53:02-05:00	fix(tests): update test_dxf_writer for R12 default format
+a2688de162f0fbaf8d047647f7f48c5c672abd89	2026-04-29T10:53:02-05:00	fix(tests): update test_dxf_writer for R12 default format
+db9929d5b5b8f0866f6a577d3782274763e80e41	2026-04-29T03:06:12-05:00	docs(claude): lift R12-only gate, document R2000 dual-format policy
+36bfbec0db61cc41228347d8a080d49185f6c5f2	2026-04-29T03:06:12-05:00	docs(claude): lift R12-only gate, document R2000 dual-format policy
+cbfee5eae75be1eceb399af1e1f0f3974f717cbb	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
+207858a18189101e9414c5bde4189acd87185645	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
+964105008dc9dbcc988bf966a259d26522ffaca7	2026-04-16T13:53:27-05:00	feat(vectorizer): implement phase 6b confidence-gated body polyline output
+ec56946a624e35a0000682374529d1342b6316be	2026-04-16T13:53:27-05:00	feat(vectorizer): implement phase 6b confidence-gated body polyline output
+89f4a9b8e140b9a038a06b176df5b304f4cd735b	2026-04-11T01:41:12-05:00	fix(cleaner): add extract_chains and write_selected_chains methods
+f13b749eb5e40c6d55659f457bd15e9af2bdc015	2026-04-11T01:41:12-05:00	fix(cleaner): add extract_chains and write_selected_chains methods
+d39d3ac9b3635898190ccdd117269bdb065ccd37	2026-04-06T11:32:57-05:00	docs(vectorizer): add file naming conventions + Sprint 4 validation artifacts
+91628c3b398e01fd9d58bcf55332545be22fdfe5	2026-04-06T11:32:57-05:00	docs(vectorizer): add file naming conventions + Sprint 4 validation artifacts
+3c453feaaea04e897eaf70cef3053bf78db48382	2026-04-06T11:01:37-05:00	fix(vectorizer): enforce width constraint + R12 DXF format
+==== A2 measure_march6 ====
+==== A3 march_pipeline_restore ====
+3e75a7cb16a60d209a01ce144d1fa841ddf015e6	Sun Apr 19 05:17:58 2026 -0500	feat(api): add instrument geometry, curvature, and vectorizer modules
+944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b	Sun Apr 19 05:17:58 2026 -0500	feat(api): add instrument geometry, curvature, and vectorizer modules==== A4 BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF ====
+6fb853ddcb9d6b408b533b45c3ecd83ca8d3ed93	Sat May 2 15:18:09 2026 -0500	data(wood_species): audit khaya — rename mahogany_african, add CITES II
+2d0980c7b4d491038988a35fef6a38871038f3a7	Sun Mar 8 12:41:14 2026 -0500	docs(handoffs): add 11 CNC build handoff documents
+5c25ba345a4ecbd996c3cd1722a95262ade0d7c2	Sun Mar 8 12:41:14 2026 -0500	docs(handoffs): add 11 CNC build handoff documents
+b229d09ebbcc35be72150e095569b5b124b3f4ec	Fri Mar 6 02:32:38 2026 -0600	feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+55034f6bce5f6f158404919368240214ec10f90f	Fri Mar 6 02:32:38 2026 -0600	feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer==== A5 vectorizer_phase3 b05b4c6 ====
+fatal: Needed a single revision
+fatal: ambiguous argument 'b05b4c6': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+==== A6 DEVELOPER_HANDOFF 854497f ====
+fatal: Needed a single revision
+fatal: ambiguous argument '854497f': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+==== A7 50c60bc ====
+fatal: Needed a single revision
+fatal: ambiguous argument '50c60bc': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+==== A8 edge_to_dxf ====
+7656d5c98e7ef4a4fab26bd6a19c63ac46846c01	2026-04-27T22:32:33-05:00	@ feat(photo-vectorizer): entity caps and batch modes for edge_to_dxf
+3f315dfe81c21f840c1ae7c9dfff4e75ee1b62cf	2026-04-27T22:32:33-05:00	@ feat(photo-vectorizer): entity caps and batch modes for edge_to_dxf
+dd6cb7e7b68703675699314f7f2227cbc574a131	2026-04-01T21:52:20-05:00	feat(blueprint): make Phase 3 default + add PDF support to Phase 2
+b692cbfa5ed2ceee8026e7c1a591fdfc9713044b	2026-04-01T21:52:20-05:00	feat(blueprint): make Phase 3 default + add PDF support to Phase 2
+55c3062265e783f9bf0ef442b63eea595170bc86	2026-04-01T01:08:52-05:00	feat(photo-vectorizer): add edge_to_dxf high-fidelity exporter
+9417fd9bc0857e08f8a604101f9f55f5a608c326	2026-04-01T01:08:52-05:00	feat(photo-vectorizer): add edge_to_dxf high-fidelity exporter==== A9 calibration module births ====
+a2d24bed5b694ac63220ee5c9f36d3192f9bc7cc	2026-07-07T12:24:42-05:00	CI-RED-016-C: calibrate legacy /exports consumer map (map correction + disposition) (#204)
+75fdce636ffb089439b8e87e377f815f8ec870e9	2026-07-07T09:51:12-05:00	CI-RED-016-C: calibrate legacy /exports consumer map (map correction + disposition)
+7dd09eb26c46a35c77a5f08a5f44a52d9ad8d5b4	2026-05-14T01:42:10-05:00	feat(aperture): complete Phase-3B+ acoustic comparison scaffold (Dev Orders 16-45)
+4a72f1de9e5f4e7b8631d64bca300aa695824993	2026-03-21T02:37:30-05:00	chore: relocate misplaced root directories
+292e63b00e4a7f7434cdb8e78bb897b875534211	2026-03-21T02:37:30-05:00	chore: relocate misplaced root directories
+73a2703d0faf67dcc0ce30b160bda52396805b12	2026-03-21T02:14:07-05:00	chore: archive photo-vectorizer patch history
+fd70a8db15a1dc36852e4432c0acaaf8e82f3905	2026-03-21T02:14:07-05:00	chore: archive photo-vectorizer patch history
+3855579cce1c253526011f4b19e3a37f464fd7e0	2026-03-18T03:41:43-05:00	feat(acoustics): port plate design math from tap-tone-pi (PORT-001)
+aa63c1e320d278b28b2ebc037de621c2aaec382b	2026-03-18T03:41:43-05:00	feat(acoustics): port plate design math from tap-tone-pi (PORT-001)
+752d5dd266464b9db792fd57ead9661141e43178	2026-03-14T17:57:10-05:00	feat(photo-vectorizer): deploy patches 14+13+15 — gated closer, family classifier, feature-scale calibration\n\nPatch 14: GatedAdaptiveCloser — exterior-ring-gated morphological close\n  bridges cutaway gaps (~6mm) without merging interior features\nPatch 13A: InstrumentFamilyClassifier — scale-independent family classification\nPatch 13B: FeatureScaleCalibrator — priority 4.5 calibration from feature sizes\nPatch 13C: BatchCalibrationSmoother — median z-score outlier correction\nPatch 15B: compute_rough_mpp — pre-calibration mpp for adaptive kernels\nPatch 15A: ScaleSource.FEATURE_SCALE enum member\n\nPipeline wiring:\n- Stage 4.6: rough mpp before edge detection\n- Stage 5: edge detection receives mpp/body_region/input_type\n- Stage 6.5: instrument family classification\n- Stage 7: calibrate() passes family_classification + edge_image\n- Post-extraction: batch smoother applied\n- batch_extract(): session summary logging\n\nAlso includes:\n- material_bom.py (Patch 08): 33 tests\n- test_real_image_comparison.py: 11 real-image tests\n- test_patches_14_13_15.py: 29 new component tests\n\nTotal: 100/100 tests pass (38 v2 + 33 BOM + 29 patch)"
+39482abb188411cb525d9c943adc15fef2d87ca9	2026-03-14T17:57:10-05:00	feat(photo-vectorizer): deploy patches 14+13+15 — gated closer, family classifier, feature-scale calibration\n\nPatch 14: GatedAdaptiveCloser — exterior-ring-gated morphological close\n  bridges cutaway gaps (~6mm) without merging interior features\nPatch 13A: InstrumentFamilyClassifier — scale-independent family classification\nPatch 13B: FeatureScaleCalibrator — priority 4.5 calibration from feature sizes\nPatch 13C: BatchCalibrationSmoother — median z-score outlier correction\nPatch 15B: compute_rough_mpp — pre-calibration mpp for adaptive kernels\nPatch 15A: ScaleSource.FEATURE_SCALE enum member\n\nPipeline wiring:\n- Stage 4.6: rough mpp before edge detection\n- Stage 5: edge detection receives mpp/body_region/input_type\n- Stage 6.5: instrument family classification\n- Stage 7: calibrate() passes family_classification + edge_image\n- Post-extraction: batch smoother applied\n- batch_extract(): session summary logging\n\nAlso includes:\n- material_bom.py (Patch 08): 33 tests\n- test_real_image_comparison.py: 11 real-image tests\n- test_patches_14_13_15.py: 29 new component tests\n\nTotal: 100/100 tests pass (38 v2 + 33 BOM + 29 patch)"
+55034f6bce5f6f158404919368240214ec10f90f	2026-03-06T02:32:38-06:00	feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+b229d09ebbcc35be72150e095569b5b124b3f4ec	2026-03-06T02:32:38-06:00	feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+811aee361ce22a3c9e66d99c9bad828c0eb484c9	2026-03-06T01:45:47-06:00	feat(blueprint): add pixel calibration module + grid zone classifier
+994c3453ad83eb62a5d34a28ae865457e3adecfc	2026-03-06T01:45:47-06:00	feat(blueprint): add pixel calibration module + grid zone classifier
+0f6e56e2a2e610d28140fb8e9a7499c176b3a471	2026-03-04T14:21:02-06:00	Add blueprint dimension extraction with EasyOCR
+65b3af05ada33dc8c3a0d690be3067874d2a39e0	2026-03-04T14:21:02-06:00	Add blueprint dimension extraction with EasyOCR==== A10 height error / ADR-2026-04-21 ====
+==== A1 exact paths ====
+==== A4 exact handoff + VEC-GAP-08 ====
+6fb853ddcb9d6b408b533b45c3ecd83ca8d3ed93 Sat May 2 15:18:09 2026 -0500 data(wood_species): audit khaya — rename mahogany_african, add CITES II
+2d0980c7b4d491038988a35fef6a38871038f3a7 Sun Mar 8 12:41:14 2026 -0500 docs(handoffs): add 11 CNC build handoff documents
+5c25ba345a4ecbd996c3cd1722a95262ade0d7c2 Sun Mar 8 12:41:14 2026 -0500 docs(handoffs): add 11 CNC build handoff documents
+b229d09ebbcc35be72150e095569b5b124b3f4ec Fri Mar 6 02:32:38 2026 -0600 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+55034f6bce5f6f158404919368240214ec10f90f Fri Mar 6 02:32:38 2026 -0600 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizerb870f7f07d057ce96f67334af9441ee0db9d4130 Wed Mar 18 13:09:50 2026 -0500 docs: fix SPRINT_BOARD gap counts and remove phantom GEN-5
+9b69043423dc0917e464bf7520c91ecc9de5a9c2 Wed Mar 18 13:09:50 2026 -0500 docs: fix SPRINT_BOARD gap counts and remove phantom GEN-5
+f4b4c1cfcadf4cad7435a7c419f80bd855b9d228 Tue Mar 17 18:53:19 2026 -0500 docs: reconcile GAP_ANALYSIS_MASTER.md against actual commits
+279f8a80d988a44d882dde90dbc2b3071f7c2d79 Tue Mar 17 18:53:19 2026 -0500 docs: reconcile GAP_ANALYSIS_MASTER.md against actual commits==== A4 show handoff date line ====
+# Blueprint Vectorizer Integration - Developer Handoff
+
+**Document Type:** Annotated Executive Summary
+**Created:** 2026-03-06
+**Status:** Ready for Implementation
+**Priority:** High
+
+---
+
+## Executive Summary
+
+The Production Shop has a 3-phase Blueprint Lab UI and backend infrastructure that is **80% complete**. The missing piece is the **pixel calibration module** (`services/blueprint-import/calibration/`) which extracts accurate real-world dimensions from blueprints. This module exists but is **not wired** into the web application.
+
+**Goal:** Wire the calibration module into the existing Blueprint Lab workflow to solve the core pain point: *vendors sell garbage "CNC-ready" files with unknown scaling*.
+
+docs/CHIEF_ENGINEER_HANDOFF.md
+docs/CODE_QUALITY_HANDOFF.md
+docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md
+docs/handoffs/VECTORIZER_UPGRADE_HANDOFF.md
+scripts/Test-RMOS-PipelineHandoff.ps1
+services/api/app/core/pipeline_handoff.py
+services/api/app/rmos/handoff.py
+services/api/app/schemas/pipeline_handoff.py
+==== A5 wave 2 phase3 around 2026-03-31 ====
+==== A6 DEVELOPER_HANDOFF.md adds ====
+43b070173a8d9298a19fe2873e5614c7debb91d4 Wed May 20 01:56:45 2026 -0500 feat(governance): add governance document inventory
+6fb853ddcb9d6b408b533b45c3ecd83ca8d3ed93 Sat May 2 15:18:09 2026 -0500 data(wood_species): audit khaya — rename mahogany_african, add CITES II
+4cd1b2bb991c19247f49d48dd2b7183d33c5d5e1 Mon Mar 9 11:16:25 2026 -0500 docs: add photo-vectorizer developer handoff
+94e4095153a3530ef542b7f06df9b3f09359984b Mon Mar 9 11:16:25 2026 -0500 docs: add photo-vectorizer developer handoff
+2564673540a5235a58f1927e2aef109c005a45e4 Tue Jan 13 20:18:32 2026 -0600 docs: add developer handoff document for repository onboarding
+d757bbd32690b66d103d850774c6aae142435f37 Tue Jan 13 20:18:32 2026 -0600 docs: add developer handoff document for repository onboarding
+090cd808622cbae9b998bd8ccdcba0c9bf71c1dc Mon Dec 15 00:36:48 2025 -0600 fix: Wrap experimental routers in try/except for graceful fallback
+9cb9804ce7942755705065404d5acd0e0f1fe86a Sun Nov 9 10:28:31 2025 -0600 Initial commit: Luthier's Tool Box - CNC Guitar Lutherie CAD/CAM System==== A7 over-simplification ====
+==== A8 edge_to_dxf_refined ====
+==== A10 41% 68% height ADR ====
+2b7074b0b81c2996c47b03c0c566e9421bff1247 Fri Aug 28 10:09:04 2026 -0500 docs(audit): pixel technology development, testing, and the sufficiency verdict==== A3 loc march_pipeline_restore ====
+3e75a7cb16a60d209a01ce144d1fa841ddf015e6 Sun Apr 19 05:17:58 2026 -0500 feat(api): add instrument geometry, curvature, and vectorizer modules
+944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b Sun Apr 19 05:17:58 2026 -0500 feat(api): add instrument geometry, curvature, and vectorizer modules3e75a7cb16a60d209a01ce144d1fa841ddf015e6
+944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b

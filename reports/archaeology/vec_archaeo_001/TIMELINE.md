@@ -1,0 +1,13696 @@
+# Canonical Vectorizer Build History — 2026-01-01 → 2026-04-01
+
+## Method
+
+- Target repo: `HanzoRazer/luthiers-toolbox` (isolated mirror `/tmp/vec-archaeo-001.git`).
+- Mirror HEAD at scan: `2646992fc294a904438042d529b939ec6db80662`.
+- Scan timestamp (UTC): see `raw/SCAN_META.txt`.
+- git version: `git version 2.43.0`.
+- Parent working checkout was not written, fetched, or gc'd. Mirror cloned from GitHub.
+- Scope: `luthiers-toolbox` parent mirror only. `vectorizer-sandbox` is out of scope for this inventory (not scanned, not required).
+- Refs included: `git log --all --source` (all refs in the mirror, including `refs/pull/*` and tags).
+- Excluded: nothing from `--all`. Path filters were not applied to the primary log.
+- Window for `commits.jsonl`: `git rev-list --all --since=2026-01-01 --until=2026-04-01` (git default = **committer** date). Count **4254**, unique SHAs **4254**, 1:1 with `commits.jsonl`.
+- Author-date interval [2026-01-01T00:00:00Z, 2026-04-01T00:00:00Z): **4245** of those 4254 commits. Difference is recorded; not estimated.
+- Session definition: maximal run of commits ordered by **author** date; gap <= **4 hours** continues a session; gap > 4 hours starts a new session. Parameter `gap_hours=4`.
+- Sensitivity: 2h → 216 sessions; 4h → 125 sessions; 8h → 47 sessions.
+- Session count **changes** when the gap parameter changes (2h / 4h / 8h). Treat 4h as the navigation index, not a single fact.
+- Known distortions: commit clustering measures agent-output timestamps, not hours worked. Parallel worktrees emit duplicate-subject commits with different SHAs/refs. Squash-on-merge still leaves the pre-merge commits in `--all`. Window boundary uses committer `--since/--until` for the reconcile count, author date for sessions.
+- Tags listed on a commit are tags whose peeled object **is** that commit (direct). Ancestry-containment is UNKNOWN (not computed).
+- Subjects in this file that contain inventory-forbidden tokens are replaced with `‹token›`. Full subject text remains in `commits.jsonl`.
+
+## Summary counts
+
+- commits (jsonl / rev-list): 4254
+- merges (`is_merge`): 16
+- sessions (4h): 125
+- sessions (2h / 8h): 216 / 47
+- distinct files touched: 6061
+- files with a first_seen in-window record: 6061
+- files deleted_in_window: 2202
+- document-kind paths: 1429
+- active author-days (distinct author-date calendar days): 85
+- longest author-date gap between consecutive window commits (hours): 74.17
+- commits with author-date inside [2026-01-01Z, 2026-04-01Z): 4245
+
+## Session log
+
+### S001 — 2025-12-27T17:33:50+00:00 → 2025-12-27T22:16:22+00:00 (6 commits, 4.71h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `cf70d5b7` feat(sdk): H8.3 typed endpoint helpers - foundation complete
+- `02325463` feat(sdk): H8.3.1 + H8.3.2 - Request-id tracking and UI error normalization
+- `08730207` feat(rmos): Variant Status & Filters UX bundle
+- `478b1989` refactor(rmos): Clean Variant Status & Filters implementation
+- `7ea73635` feat(rmos): Add Reject Variant + Reason Codes product surface
+- `38ac2ace` feat(rmos): undo reject + rejection hover details bundle
+Files by surface:
+- docs: 6 paths
+  - A docs/H8.3_SDK_MIGRATION_TRACKING.md
+  - A docs/handoffs/H8.3_SDK_EXECUTIVE_HANDOFF.md
+  - A docs/quickref/H8.3_SDK_QUICKREF.md
+  - A packages/client/src/sdk/endpoints/README.md
+  - A packages/client/src/sdk/endpoints/cam/USAGE.md
+  - M .github/copilot-instructions.md
+- other: 25 paths
+  - A packages/client/src/sdk/core/apiFetchRaw.ts
+  - A packages/client/src/sdk/endpoints/cam/__tests__/cam.endpoints.test.ts
+  - A packages/client/src/sdk/endpoints/cam/cam.ts
+  - A packages/client/src/sdk/endpoints/cam/pipeline.ts
+  - A packages/client/src/sdk/endpoints/cam/roughing.ts
+  - A packages/client/src/sdk/endpoints/cam/types.ts
+  - A packages/client/src/sdk/endpoints/index.ts
+  - A packages/client/src/components/rmos/VariantFilters.vue
+  - A packages/client/src/components/rmos/VariantRiskBadge.vue
+  - A packages/client/src/components/rmos/VariantStatusBadge.vue
+  - A packages/client/src/components/rmos/RejectVariantButton.vue
+  - A services/api/app/rmos/runs_v2/advisory_variant_state.py
+  - A services/api/app/rmos/runs_v2/schemas_advisory_reject.py
+  - A packages/client/src/components/rmos/UndoRejectButton.vue
+  - M packages/client/package-lock.json
+  - M packages/client/src/sdk/index.ts
+  - M packages/client/src/components/CAMPreview.vue
+  - M packages/client/src/sdk/core/errors.ts
+  - M packages/client/src/views/Runs/RunVariantsReviewPage.vue
+  - M services/api/app/rmos/runs_v2/schemas_variant_review.py
+  - M services/api/app/rmos/runs_v2/variant_review_service.py
+  - M packages/client/src/api/rmosRuns.ts
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - D packages/client/src/components/rmos/VariantFilters.vue
+  - D packages/client/src/components/rmos/VariantRiskBadge.vue
+Documents produced:
+- `docs/H8.3_SDK_MIGRATION_TRACKING.md` — # H8.3 SDK Migration Tracking
+- `docs/handoffs/H8.3_SDK_EXECUTIVE_HANDOFF.md` — # H8.3 SDK Typed Helpers - Executive Handoff
+- `docs/quickref/H8.3_SDK_QUICKREF.md` — # H8.3 Quick Reference - SDK Endpoint Helpers
+- `packages/client/src/sdk/endpoints/README.md` — # SDK Endpoints (H8.3) - Architecture & Implementation
+- `packages/client/src/sdk/endpoints/cam/USAGE.md` — # H8.3 CAM Endpoint Helpers - Usage Examples
+Annotations:
+- (none harvested)
+
+### S002 — 2025-12-28T06:46:32+00:00 → 2025-12-28T06:46:32+00:00 (1 commits, 0.0h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `e237c22b` feat(rmos): inline decision note editor + copilot instructions update
+Files by surface:
+- docs: 3 paths
+  - A .github/copilot-instructions-new.md
+  - M .github/copilot-instructions.md
+  - M docs/ENDPOINT_TRUTH_MAP.md
+- other: 9 paths
+  - A packages/client/src/components/rmos/BulkDecisionModal.vue
+  - A packages/client/src/components/rmos/BulkPromoteModal.vue
+  - M packages/client/src/api/rmosRuns.ts
+  - M packages/client/src/components/rmos/BulkRejectModal.vue
+  - M packages/client/src/components/rmos/ManufacturingCandidatesPanel.vue
+  - M packages/client/src/views/Runs/RunVariantsReviewPage.vue
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/rmos/runs_v2/schemas_variant_review.py
+  - M services/api/app/rmos/runs_v2/variant_review_service.py
+Documents produced:
+- `.github/copilot-instructions-new.md` — # Luthier's Tool Box – AI Agent Quick Guide
+Annotations:
+- (none harvested)
+
+### S003 — 2025-12-29T04:43:15+00:00 → 2025-12-29T04:43:15+00:00 (1 commits, 0.0h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `b132412c` docs: streamline copilot-instructions.md header for AI agents
+Files by surface:
+- docs: 1 paths
+  - M .github/copilot-instructions.md
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S004 — 2025-12-30T00:25:08+00:00 → 2025-12-30T00:25:08+00:00 (1 commits, 0.0h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `f5d841bb` Enhance AI agent instructions with request ID requirement and full-stack dev workflow
+Files by surface:
+- docs: 4 paths
+  - A docs/ARCH/BoundarySpec.md
+  - A docs/BOUNDARY_RULES.md
+  - M .github/copilot-instructions.md
+  - M README.md
+- other: 3 paths
+  - A boundary_spec.json
+  - M services/api/app/main.py
+  - M services/api/app/saw_lab/batch_router.py
+- tests: 1 paths
+  - M services/api/tests/conftest.py
+Documents produced:
+- `docs/ARCH/BoundarySpec.md` — he next micro after this: add --scan-all-malformed-classify that prints a rough tag per sample (TRUNCATED_JSON, NON_JSON_GARBAGE, BOM/ENCODING, etc.) based on simple heuristics (still no dependencies).# BoundarySpec — ToolBox ↔ Analyzer Bou
+- `docs/BOUNDARY_RULES.md` — <a id="boundary-rules"></a>
+Annotations:
+- (none harvested)
+
+### S005 — 2026-01-01T01:21:11-06:00 → 2026-01-01T02:40:19-06:00 (6 commits, 1.32h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `bce79e68` fix(rmos): consolidate acoustics namespace and fix router prefix duplication
+- `b1eaa54d` feat(rmos): implement H7.2.2.1 unified signing, schemas, and hardening tests
+- `1f78ecee` docs: add build readiness evaluations and H7.2.2.1 implementation report
+- `d23991bc` feat(rmos): add glob fallback for attachment resolution (Decision B)
+- `177ab6ef` feat(rmos): add GET /index/attachment_meta/{sha256} endpoint
+- `93a7547d` feat(rmos): add GET /index/attachment_meta browse endpoint
+Files by surface:
+- docs: 5 paths
+  - A BIDIRECTIONAL_WORKFLOW_ANALYSIS_REPORT.md
+  - A Commit 3 Completion Checklist_Confidence Before Push.md
+  - A RMOS Acoustics H7.2.2.1 Implementation Report.md
+  - A docs/BUILD_READINESS_EVALUATION.md
+  - M .github/copilot-instructions.md
+- other: 13 paths
+  - A services/api/app/rmos/runs_v2/acoustics_schemas.py
+  - M services/api/app/main.py
+  - M services/api/app/rmos/acoustics/router.py
+  - M services/api/app/rmos/acoustics/router_import.py
+  - M services/api/app/rmos/acoustics/router_query.py
+  - M services/api/app/rmos/acoustics/router_zip_export.py
+  - M services/api/app/rmos/acoustics/persist_glue.py
+  - M services/api/app/rmos/acoustics/signed_urls.py
+  - M services/api/app/rmos/runs_v2/acoustics_router.py
+  - M services/api/app/rmos/runs_v2/signed_urls.py
+  - M .github/workflows/client_smoke.yml
+  - M services/api/app/rmos/runs_v2/attachments.py
+  - D .github/workflows/client_lint_build.yml
+- tests: 1 paths
+  - A services/api/tests/rmos/test_acoustics_hardening.py
+Documents produced:
+- `BIDIRECTIONAL_WORKFLOW_ANALYSIS_REPORT.md` — UNKNOWN
+- `Commit 3 Completion Checklist_Confidence Before Push.md` — ## Commit 3 Completion Checklist (Confidence Before Push)
+- `RMOS Acoustics H7.2.2.1 Implementation Report.md` — ● RMOS Acoustics H7.2.2.1 Implementation Report
+- `docs/BUILD_READINESS_EVALUATION.md` — # Luthiers-Toolbox Build Readiness Evaluation
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bce79e68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b1eaa54d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f78ecee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d23991bc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (177ab6ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93a7547d)
+
+### S006 — 2026-01-01T20:16:54-06:00 → 2026-01-02T08:40:36-06:00 (53 commits, 12.39h)
+Branches: refs/heads/feature/cnc-saw-labs
+Commits:
+- `90bad7eb` ci: add coverage artifact + fix client path refs in CICD_SETUP
+- `308c726a` feat(ai): add AI availability gate - boot without ANTHROPIC_API_KEY
+- `62e5a344` feat(sdk): add frontend deprecation banner (H8.5)
+- `bc94785e` refactor(sdk): consolidate deprecation banner into headers.ts
+- `837e70d1` fix: resolve all 3 critical blockers - ready for beta
+- `6cd5a276` feat(blueprint): make AI dependencies optional (H1)
+- `69427475` chore: remove redundant client_smoke.yml workflow
+- `c3a26bff` feat(health): wire get_ai_status into /api/health endpoint
+- `d74baf8a` feat(client): add Actionable Confidence Signals (Bundle 32.3.0)
+- `84f6de4b` fix(client): Bundle 32.3.0 store-based selection + add CBSP21 protocol
+- `872c51cb` feat(client): Bundle 32.3.1 ring focus functionality
+- `116383f6` feat(client): Bundle 32.3.2 + 32.3.3 inline ring warnings & jump nav
+- `7cc3127b` feat(client): Bundle 32.3.4 jump to previous problematic ring
+- `8669ecfb` feat(client): Bundle 03/04 - Keyboard hints system for SnapshotComparePanel
+- `3657df1c` fix(api): rename _run_id to run_id for Pydantic JSON serialization
+- `7a5b16ad` feat(rmos): H7.2.2.x Acoustics subsystem hardening
+- `e3f0b39f` feat(rmos): Undo Reject workflow for variant review
+- `16a2ac5d` docs: add SCAFFOLDING_TRUTH_v1.md architecture guide
+- `6d958280` docs: update copilot-instructions.md with comprehensive patterns
+- `a8e193df` docs(cbsp21): add repo-enforced CI gates and patch packet validation
+- `c15c0ac1` feat(rosette): Bundle 32.3.5 + 32.3.6 — Severity toggle and Status HUD
+- `28d67e12` feat(art): Bundle 06 — Confidence trend arrows
+- `bd535e24` feat(cbsp21): add enforcement scripts, workflows, and directory structure
+- `1e09cbaa` feat(art): Bundle 07 — Tooltip explaining confidence and trend
+- `e7a4e97b` Bundle 08: Centralized confidence heuristic + unit tests
+- `c237ed15` Bundle 32.3.7: Jump to Worst (w) + HUD Pulse on Filter Change
+- `56903f21` Bundle 09: ConfidenceLegendModal + Bundle 10: DisabledReasonWrap
+- `6b045a5b` Bundle 32.3.8: Jump HUD Help Tooltip (Hotkeys Cheat Sheet)
+- `7f427332` Bundle 10 fix: Conditional DisabledReasonWrap pattern
+- `78822d06` Bundle 32.4.0: Fix-it Micro-Actions - Safe Ring Width Nudges + Undo Stack
+- `1e0eae7e` Bundle 32.4.1: Blocked by RED Inline Toast/Snackbar
+- `a642b7e5` Bundle 11: Gate bulk candidate ZIP download to GREEN-only with blocked-reason tooltip
+- `79e117a7` Bundle 12: Add Select GREEN only quick action for candidate selection
+- `ea9400ab` Fix geometry_parity workflow API paths
+- `ba0e9aa0` Bundle 32.4.2: History Mini-Stack UI (Last 5 Edits, Click to Revert)
+- `7605e3cf` Fix geometry_router double prefix issue
+- `90c71dc6` Bundle 32.4.3: Redo Stack (Ctrl+Shift+Z / Cmd+Shift+Z)
+- `66c84480` Add compat legacy routes for CI backwards compatibility
+- `258cf94a` Bundle 13: Auto-prune selection to GREEN after decision changes (UI-only)
+- `c050d042` Fix adaptive_router compat mount - use empty prefix (router has internal /cam/pocket/adaptive)
+- `7ec6ef11` Bundle 14: CI gate preventing legacy (/cam, /geometry, etc.) workflow URLs; enforce /api canonical
+- `aaed3a37` Bundle 32.4.3.1: Add Redo button + disabled state
+- `d3dec058` Fix CI test failures: - adaptive_router: Use 'adaptive:plan' tool_id format for feasibility check - api_tests.yml: Fix simulate endpoint URL to /api/sim/cam/simulate_gcode
+- `cc1b7802` Fix geometry_parity test: use matching geometry and G-code data (simple rectangle)
+- `b401297c` Fix rmos_ci workflow: Add PYTHONPATH for app module discovery
+- `08f8ec19` Bundle 15: API_BASE workflow normalization + CI gate
+- `8dcbc6f3` Fix proxy workflows: Use docker/nginx instead of missing docker/proxy
+- `56a07291` Fix proxy workflows: Use context: . for Dockerfile COPY paths
+- `f7fc0f90` Bundle 32.4.4: Label history entries by action name
+- `9791811a` Bundle 32.4.5: History timestamp + relative age display
+- `f452b22f` fix(docker): correct uvicorn module path for PYTHONPATH
+- `d94cc81e` Bundle 17: Docker health + adaptive batch_export stabilization
+- `24bce088` fix: batch_export dict access + Docker healthcheck start period
+Files by surface:
+- docs: 7 paths
+  - A docs/ROUTING_TRUTH_CONTRACT_v1.md
+  - A CBSP21.md
+  - A packages/client/src/docs/KEYBOARD_HINTS_DEVELOPER_GUIDE.md
+  - A docs/SCAFFOLDING_TRUTH_v1.md
+  - M .github/CICD_SETUP.md
+  - M docs/BUILD_READINESS_EVALUATION.md
+  - M .github/copilot-instructions.md
+- other: 66 paths
+  - A services/api/app/ai/availability.py
+  - A packages/client/src/sdk/core/deprecationBanner.ts
+  - A .github/workflows/client_lint_build.yml
+  - A packages/client/.eslintrc.cjs
+  - A services/api/requirements-ai.txt
+  - A packages/client/src/components/art/ConfidenceBadge.vue
+  - A packages/client/src/components/art/ConfidenceDetails.vue
+  - A packages/client/src/utils/confidenceReasons.ts
+  - A packages/client/src/utils/designConfidence.ts
+  - A packages/client/src/utils/ringFocus.ts
+  - A packages/client/src/components/rosette/RingRiskBadge.vue
+  - A .github/workflows/cbsp21_coverage_gate.yml
+  - A .github/workflows/cbsp21_patch_packet_format.yml
+  - A cbsp21/full_source/.gitkeep
+  - A cbsp21/patch_packets/.gitkeep
+  - A cbsp21/scanned_source/.gitkeep
+  - A logs/.gitkeep
+  - A scripts/cbsp21/cbsp21_coverage_check.py
+  - A scripts/cbsp21/cbsp21_coverage_with_audit.py
+  - A scripts/cbsp21/check_patch_packet_format.py
+  - A packages/client/src/utils/rmosConfidence.spec.ts
+  - A packages/client/src/utils/rmosConfidence.ts
+  - A packages/client/src/components/rmos/ConfidenceLegendModal.vue
+  - A packages/client/src/components/rmos/DisabledReasonWrap.vue
+  - A packages/client/src/components/rmos/__tests__/ConfidenceLegendModal.test.ts
+  - A packages/client/src/utils/exportBlockReason.ts
+  - A packages/client/src/components/ui/ToastHost.vue
+  - A packages/client/src/stores/uiToastStore.ts
+  - A packages/client/src/components/rosette/HistoryStackPanel.vue
+  - A .github/workflows/workflow_api_path_gate.yml
+  - A .github/workflows/workflow_api_base_gate.yml
+  - M services/api/app/rmos/api_ai_routes.py
+  - M packages/client/src/sdk/core/index.ts
+  - M packages/client/src/sdk/http.ts
+  - M packages/client/src/sdk/core/headers.ts
+  - M packages/client/package.json
+  - M services/api/requirements.txt
+  - M services/api/app/main.py
+  - M services/api/app/routers/blueprint_router.py
+  - M packages/client/src/components/art/index.ts
+  - … 26 more (see sessions.json / files.jsonl)
+- tests: 2 paths
+  - A services/api/tests/rmos/test_ai_disabled.py
+  - A services/api/tests/routers/test_blueprint_ai_disabled.py
+Documents produced:
+- `docs/ROUTING_TRUTH_CONTRACT_v1.md` — # ROUTING_TRUTH_CONTRACT_v1
+- `CBSP21.md` — # CBSP21 — Complete Boundary-Safe Processing Protocol
+- `packages/client/src/docs/KEYBOARD_HINTS_DEVELOPER_GUIDE.md` — # Keyboard Hints System — Developer Guide
+- `docs/SCAFFOLDING_TRUTH_v1.md` — # Scaffolding Truth Document v1
+Annotations:
+- Fixes: ['H8.4'] (308c726a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (837e70d1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69427475)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3a26bff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d74baf8a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (84f6de4b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (872c51cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (116383f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7cc3127b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8669ecfb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3657df1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7a5b16ad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3f0b39f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (16a2ac5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d958280)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8e193df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bd535e24)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f452b22f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (24bce088)
+
+### S007 — 2026-01-02T13:09:12-06:00 → 2026-01-03T01:47:37-06:00 (102 commits, 12.64h)
+Branches: refs/heads/feature/cnc-saw-labs, refs/pull/3/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `2512cfd9` fix: remove internal prefixes from CAM routers (double prefix bug)
+- `6cbc997b` fix: canonical URLs in workflow + test imports + doc clarification
+- `636af889` fix: mount adaptive_router at /api (has internal /cam/pocket/adaptive prefix)
+- `4734bb04` ci: make endpoint truth gate non-blocking (warning only)
+- `d54ffa81` fix(docker): add start_period to healthcheck (matches Dockerfile)
+- `e4196c70` debug(cam_metrics): add logging to energy_csv for CI diagnosis
+- `6b6b818d` fix(proxy): Add proxy service to docker-compose + fix nginx /api path
+- `00383fa0` ci: add debug logging for Docker container failures
+- `cd414ecd` fix: prevent Docker container crash + fix thermal_report_bundle KeyError
+- `d76079d2` fix(docker): Wrap vectorizer import in try/except for Docker compatibility
+- `d65bcd22` fix(docker): Move cnc_production mkdir from import-time to write-time
+- `54725d16` fix(docker): Remove all module-level mkdir calls causing container crashes
+- `a708ce95` fix(docker): Ensure SQLite DB parent directory exists before connect
+- `0ca6da1c` fix(docker): Use absolute path for art_studio.db SQLite database
+- `5365b855` fix(docker): Create writable data directory with correct ownership
+- `3f45c509` fix(ci): Use /tmp for art_studio.db in CI to avoid volume mount permission issues
+- `f89af50b` fix(router): Remove duplicate prefix from tooling_router
+- `b0609582` fix(ci): Use case-insensitive grep for post-processor IDs
+- `725abfd3` fix(ci): Fix parity test with matching geometry and G-code
+- `bb8485e7` fix(ci): Add ART_STUDIO_DB_PATH to containers.yml
+- `2109a6c5` fix(ci): Use actual tooling endpoints in containers.yml smoke test
+- `56f88462` fix(ci): use JSON-accepting /api/sim/simulate_gcode endpoint
+- `f3d871d7` fix(ci): use correct path /api/sim/cam/simulate_gcode
+- `fca546d4` fix(api): add prefix parameter to safe_stem function
+- `2e6ad5f8` Merge branch 'main' into feature/cnc-saw-labs
+- `554ba214` Merge branch 'main' into feature/cnc-saw-labs
+- `99798605` Merge pull request #3 from HanzoRazer/feature/cnc-saw-labs
+- `d2e810a4` Merge pull request #3 from HanzoRazer/feature/cnc-saw-labs
+- `6ba58502` docs: update documentation for PR #3 CI fixes
+- `ca1f5f03` docs: update documentation for PR #3 CI fixes
+- `172cdc7d` fix(ci): use valid machine profile ID in Adaptive Pocket tests
+- `834091ff` fix(ci): use valid machine profile ID in Adaptive Pocket tests
+- `8f18443a` chore(ci): Phase 1 B01-B05 workflow cleanup - Establish core green PR signal
+- `c899d2c0` chore(ci): Phase 1 B01-B05 workflow cleanup - Establish core green PR signal
+- `659a3ebb` fix(ci): handle CRLF line endings in CSV validation tests
+- `758ccd25` fix(ci): handle CRLF line endings in CSV validation tests
+- `2b14aabe` feat(governance): Add machine-readable endpoint truth + artifact linkage contract
+- `e95f6f98` feat(governance): Add machine-readable endpoint truth + artifact linkage contract
+- `00ae31b5` docs: Add AI Code Bundle Lock Points v1 - authoritative reference for AI code bundles
+- `505a48b8` docs: Add AI Code Bundle Lock Points v1 - authoritative reference for AI code bundles
+- `ab8eeead` ci: Add routing truth gate with self-validation and endpoint auto-detect
+- `e6766bc6` ci: Add routing truth gate with self-validation and endpoint auto-detect
+- `43a15a06` fix(api): fix CAM logs SQLite schema issues
+- `6d73de75` fix(api): fix CAM logs SQLite schema issues
+- `04468396` test: add routing truth endpoint existence test
+- `a00b0f6b` test: add routing truth endpoint existence test
+- `59916fe6` docs: update documentation for Adaptive Pocket CI fixes
+- `5b4d077d` docs: update documentation for Adaptive Pocket CI fixes
+- `100e13c9` feat(sdk): add H8.3-compliant advisory variants and manufacturing candidates SDK
+- `b8cff55f` feat(sdk): add H8.3-compliant advisory variants and manufacturing candidates SDK
+- `936ffe41` refactor(ui): migrate ManufacturingCandidatesPanel to H8.3 SDK
+- `e6694005` refactor(ui): migrate ManufacturingCandidatesPanel to H8.3 SDK
+- `0f48c799` feat(governance): add legacy endpoint usage gate script and CI
+- `af6ecb24` feat(governance): add legacy endpoint usage gate script and CI
+- `8a194e04` refactor(ui): migrate BulkRejectModal and RunVariantsReviewPage to H8.3 SDK
+- `caff9b01` refactor(ui): migrate BulkRejectModal and RunVariantsReviewPage to H8.3 SDK
+- `79c362dc` ci: add debug logging to proxy adaptive workflow
+- `a550cb08` ci: add debug logging to proxy adaptive workflow
+- `9b0a5e70` docs(archive): document regressive patch bundles rejected per CBSP21
+- `9dec601b` docs(archive): document regressive patch bundles rejected per CBSP21
+- `4acee637` ci(governance): add artifact linkage invariants gate for OPERATION lane
+- `fba285f1` ci(governance): add artifact linkage invariants gate for OPERATION lane
+- `9a48d096` ci: add API logs to proxy adaptive debug output
+- `dee38550` ci: add API logs to proxy adaptive debug output
+- `74b2ed57` feat(sdk): add bulkReviewAdvisoryVariants() to RMOS runs SDK
+- `89936465` feat(sdk): add bulkReviewAdvisoryVariants() to RMOS runs SDK
+- `1c78793c` ci: ensure data directory is writable in proxy adaptive workflow
+- `de42dba5` ci: ensure data directory is writable in proxy adaptive workflow
+- `b0492892` ci: fix runs.json initialization to empty dict (not list)
+- `c1a388dc` ci: fix runs.json initialization to empty dict (not list)
+- `c32fb862` docs: update documentation for Adaptive Pocket (Proxy) CI fix
+- `edc2d3b0` docs: update documentation for Adaptive Pocket (Proxy) CI fix
+- `131197c1` docs(archive): add patch bundles 4-5 (runs.ts SDK + RunVariantsReviewPage v2)
+- `7eb49e10` docs(archive): add patch bundles 4-5 (runs.ts SDK + RunVariantsReviewPage v2)
+- `2103ae1a` ci(phase1): B01-B05 consolidated CI + optional router imports
+- `a999f703` ci(phase1): B01-B05 consolidated CI + optional router imports
+- `3f0328a1` ci: rewrite CAM Essentials workflow to use Ubuntu/bash
+- `724f8690` ci: rewrite CAM Essentials workflow to use Ubuntu/bash
+- `65806b8f` ci(governance): add RunArtifact contract validator + CI gate
+- `b38cc80c` ci(governance): add RunArtifact contract validator + CI gate
+- `7ef3ecc9` ci: fix YAML syntax error in CAM Essentials workflow
+- `b25f3470` ci: fix YAML syntax error in CAM Essentials workflow
+- `7bf30adf` docs(CBSP21): add Section 23 - PR-Level Enforcement as real repo gate
+- `e9bdfac4` docs(CBSP21): add Section 23 - PR-Level Enforcement as real repo gate
+- `8a4d52e5` ci: remove non-existent endpoints from CAM Essentials tests
+- `d5f25a75` ci: remove non-existent endpoints from CAM Essentials tests
+- `4df70b12` ci: fix simulation JSON newline escaping in CAM Essentials
+- `8bba21da` ci: fix simulation JSON newline escaping in CAM Essentials
+- `5abfe253` ci(dxf): extract inline DXF to fixture files (CBSP21)
+- `c76ba716` ci(dxf): extract inline DXF to fixture files (CBSP21)
+- `337efaf8` ci: rewrite blueprint_phase3 to use DXF fixtures
+- `3938f748` ci: rewrite blueprint_phase3 to use DXF fixtures
+- `2939118c` ci: fix blueprint_phase3 - install requests globally, fix summary
+- `7c1e1576` ci: fix blueprint_phase3 - install requests globally, fix summary
+- `473906f3` fix(ci): correct Blueprint Phase 3 endpoint paths
+- `825fb2ac` fix(ci): correct Blueprint Phase 3 endpoint paths
+- `d34e152f` fix(cam): repair server-side errors in Blueprint Phase 3
+- `d9d9574f` fix(cam): repair server-side errors in Blueprint Phase 3
+- `216225d2` fix(test): correct HTML preflight test expectations
+- `afecdbad` fix(test): correct HTML preflight test expectations
+- `b096009b` fix(api): add Form() annotation to preflight format parameter
+- `dc283a0b` fix(api): add Form() annotation to preflight format parameter
+Files by surface:
+- docs: 9 paths
+  - A docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md
+  - A scripts/governance/README.md
+  - A docs/ARCHIVE/REGRESSIVE_PATCH_BUNDLES_2026-01-02.md
+  - M ROUTER_MAP.md
+  - M docs/BUILD_READINESS_EVALUATION.md
+  - M docs/ENDPOINT_TRUTH_MAP.md
+  - M docs/LEGACY_CODE_STATUS.md
+  - M docs/ROUTING_TRUTH_CONTRACT_v1.md
+  - M CBSP21.md
+- other: 54 paths
+  - A services/api/app/data/endpoint_truth.json
+  - A .github/workflows/routing_truth.yml
+  - A services/api/scripts/check_routing_truth.py
+  - A services/api/scripts/validate_endpoint_truth.py
+  - A .github/workflows/legacy_endpoint_usage_gate.yml
+  - A scripts/governance/__init__.py
+  - A scripts/governance/check_legacy_endpoint_usage.py
+  - A scripts/governance/testdata_min_truth.json
+  - A .github/workflows/artifact_linkage_gate.yml
+  - A scripts/governance/check_artifact_linkage_invariants.py
+  - A .github/workflows/core_ci.yml
+  - A .github/workflows/run_artifact_contract_gate.yml
+  - A scripts/governance/validate_run_artifact_contract.py
+  - A scripts/governance/generate_dxf_fixture_patch.py
+  - M services/api/app/routers/cam_learn_router.py
+  - M services/api/app/routers/cam_logs_router.py
+  - M services/api/app/routers/cam_metrics_router.py
+  - M services/api/app/routers/cam_opt_router.py
+  - M .github/workflows/adaptive_pocket.yml
+  - M services/api/app/cam/routers/monitoring/metrics_router.py
+  - M services/api/app/main.py
+  - M .github/workflows/rmos_ci.yml
+  - M docker-compose.production.yml
+  - M docker-compose.yml
+  - M .github/workflows/proxy_adaptive.yml
+  - M .github/workflows/proxy_parity.yml
+  - M docker/nginx/default.conf
+  - M services/api/app/learn/overrides_learner.py
+  - M services/api/app/routers/blueprint_router.py
+  - M services/api/app/_experimental/cnc_production/joblog/storage.py
+  - M services/api/app/models/tool_db.py
+  - M services/api/app/routers/job_insights_router.py
+  - M services/api/app/routers/job_risk_router.py
+  - M services/api/app/routers/pipeline_presets_router.py
+  - M services/api/app/routers/post_router.py
+  - M services/api/app/services/compare_baseline_store.py
+  - M services/api/app/art_studio_rosette_store.py
+  - M docker/api/Dockerfile
+  - M services/api/app/routers/tooling_router.py
+  - M .github/workflows/containers.yml
+  - … 14 more (see sessions.json / files.jsonl)
+- tests: 10 paths
+  - A services/api/tests/test_routing_truth_endpoint_exists.py
+  - A services/api/tests/test_legacy_endpoint_usage_gate_smoke.py
+  - A services/api/tests/test_artifact_linkage_gate_smoke.py
+  - A services/api/tests/test_blueprint_ai_disabled.py
+  - A services/api/tests/fixtures/dxf/contours_rectangle.dxf
+  - A services/api/tests/fixtures/dxf/minimal.dxf
+  - A services/api/tests/test_blueprint_phase3_ci.py
+  - M services/api/tests/helpers/__init__.py
+  - M services/api/tests/test_adaptive_router.py
+  - M services/api/tests/test_helical_router.py
+Documents produced:
+- `docs/AI_CODE_BUNDLE_LOCK_POINTS_v1.md` — UNKNOWN
+- `scripts/governance/README.md` — # Governance Scripts
+- `docs/ARCHIVE/REGRESSIVE_PATCH_BUNDLES_2026-01-02.md` — # Regressive Patch Bundles Archive
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2512cfd9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6cbc997b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (636af889)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (00383fa0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cd414ecd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (56f88462)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3d871d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fca546d4)
+- PR #3 (99798605)
+- PR #3 (d2e810a4)
+- PR #3 (6ba58502)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ba58502)
+- PR #3 (ca1f5f03)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca1f5f03)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (172cdc7d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (834091ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (659a3ebb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (758ccd25)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (43a15a06)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d73de75)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59916fe6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b4d077d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f0328a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (724f8690)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7ef3ecc9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b25f3470)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a4d52e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d5f25a75)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4df70b12)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8bba21da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (337efaf8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3938f748)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2939118c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7c1e1576)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (473906f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (825fb2ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d34e152f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d9d9574f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (216225d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afecdbad)
+- … 2 more
+
+### S008 — 2026-01-03T08:24:33-06:00 → 2026-01-04T01:11:08-06:00 (56 commits, 16.78h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `2bf5bce2` fix(ci): add missing fi to api_health_and_smoke.yml
+- `8dc96205` fix(ci): add missing fi to api_health_and_smoke.yml
+- `3617f899` feat(ui): add decision history hover + inline note editor guards
+- `3b70a94a` feat(ui): add decision history hover + inline note editor guards
+- `9bbb4b07` fix(ci): replace job-level runner.temp with step-level RUNNER_TEMP
+- `e0e5325e` fix(ci): replace job-level runner.temp with step-level RUNNER_TEMP
+- `2c4fa38e` fix(ci): remove invalid secrets/env checks from workflow if conditions
+- `8a41e089` fix(ci): remove invalid secrets/env checks from workflow if conditions
+- `0bd7fec9` fix(ci): indent heredoc content in api_health_and_smoke.yml
+- `0da3ba5e` fix(ci): indent heredoc content in api_health_and_smoke.yml
+- `0fb389da` feat(cbsp21): add PR-level enforcement gate and manifest validation
+- `7c84642e` feat(cbsp21): add PR-level enforcement gate and manifest validation
+- `1550450b` fix(ci): add missing CI scripts and fix docker service name
+- `e71ce2d9` fix(ci): add missing CI scripts and fix docker service name
+- `0ba20a1b` fix(ci): replace hardcoded API URLs with $API_BASE env var
+- `7228713d` fix(ci): replace hardcoded API URLs with $API_BASE env var
+- `0f1456d4` fix(ci): use full paths in .api_base_ignore.txt
+- `48812c8f` fix(ci): use full paths in .api_base_ignore.txt
+- `412dd545` fix: update legacy API path gate to allow canonical /api/... paths
+- `8bf46662` fix: update legacy API path gate to allow canonical /api/... paths
+- `aff88007` fix(ci): correct legacy path detection logic in gate script
+- `bde42e56` fix(ci): correct legacy path detection logic in gate script
+- `9b17f8ef` fix(ci): add CI ignore files to git tracking
+- `bc4a6c2c` fix(ci): add CI ignore files to git tracking
+- `af6e1ca2` fix(ci): correct truth file path in routing-truth workflow
+- `ced26499` fix(ci): correct truth file path in routing-truth workflow
+- `1a6f9538` fix(ci): mark unimplemented endpoints as deprecated in truth file
+- `6d532874` fix(ci): mark unimplemented endpoints as deprecated in truth file
+- `82ed75d1` fix(ci): move deprecated endpoints to LEGACY lane
+- `d5fc2494` fix(ci): move deprecated endpoints to LEGACY lane
+- `56e98c72` fix(ci): add missing CI modules and requests dependency
+- `7621aefb` fix(ci): add missing CI modules and requests dependency
+- `412350e0` fix(api): add create_app factory and RejectVariantRequest export
+- `b9dcb0b4` fix(api): add create_app factory and RejectVariantRequest export
+- `1699fbaf` docs(cbsp21): add diff-range lock and clarify coverage metrics
+- `4f585818` docs(cbsp21): add diff-range lock and clarify coverage metrics
+- `35251df2` refactor: move advisory_routes out of AI sandbox
+- `96cd81a7` refactor: move advisory_routes out of AI sandbox
+- `b29fe275` refactor: Phase 1 advisory neutral zone migration
+- `ef17edfb` refactor: Phase 1 advisory neutral zone migration
+- `c584aa58` fix: add RequestStore alias for backwards compatibility
+- `ccb41615` fix: add RequestStore alias for backwards compatibility
+- `41d09927` fix: add RejectVariantRequest re-export to schemas_variant_review
+- `4fa47f88` fix: add RejectVariantRequest re-export to schemas_variant_review
+- `8a93f199` fix: add missing RejectVariantResponse and variant rejection functions
+- `921fc873` fix: add missing RejectVariantResponse and variant rejection functions
+- `31dfedda` fix(ci): remove duplicate /api prefix in geometry parity URL
+- `78173c4e` fix(ci): remove duplicate /api prefix in geometry parity URL
+- `02f24cef` feat(CBSP21): Audio Analyzer Evidence Viewer with dual-schema support
+- `6d5c0cc7` feat(CBSP21): Audio Analyzer Evidence Viewer with dual-schema support
+- `79a41612` feat(cam): add two-lane architecture to roughing G-code endpoint
+- `cf22e2f8` feat(cam): add two-lane architecture to roughing G-code endpoint
+- `23cd742b` feat(cam): add two-lane architecture to drill G-code endpoint
+- `2d98f367` feat(cam): add two-lane architecture to drill G-code endpoint
+- `0dff8c34` feat(cam): add two-lane architecture to biarc G-code endpoint
+- `1935b18a` feat(cam): add two-lane architecture to biarc G-code endpoint
+Files by surface:
+- docs: 1 paths
+  - M CBSP21.md
+- other: 63 paths
+  - A .cbsp21/patch_input.json
+  - A .cbsp21/patch_input.json.example
+  - A .github/workflows/cbsp21_gate.yml
+  - A scripts/ci/check_cbsp21_gate.py
+  - A scripts/ci/check_workflow_api_base.py
+  - A scripts/ci/check_workflow_api_paths.py
+  - A .github/workflows/.api_base_ignore.txt
+  - A .github/workflows/.legacy_paths_ignore.txt
+  - A services/api/app/ci/check_cam_intent_schema_hash.py
+  - A services/api/app/ci/endpoint_truth_gate.py
+  - A services/api/app/advisory/__init__.py
+  - A services/api/app/rmos/handoff.py
+  - A .github/workflows/cbsp21_patch_input_gate.yml
+  - A packages/client/src/evidence/index.ts
+  - A packages/client/src/evidence/types.ts
+  - A packages/client/src/evidence/validate.ts
+  - A packages/client/src/evidence/zip_loader.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/AudioRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/CsvRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/ImageRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/JsonRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/MarkdownRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/UnknownRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/index.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/pickRenderer.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/types.ts
+  - A packages/client/src/views/tools/AudioAnalyzerViewer.vue
+  - A scripts/ci/check_cbsp21_patch_input.py
+  - A scripts/governance/check_routing_truth.py
+  - A services/api/app/learn/models/overrides_Mach4_Router_4x8.json
+  - M .github/workflows/api_health_and_smoke.yml
+  - M packages/client/src/components/rmos/ManufacturingCandidatesPanel.vue
+  - M .github/workflows/artifact_linkage_gate.yml
+  - M .github/workflows/routing_truth.yml
+  - M .github/workflows/run_artifact_contract_gate.yml
+  - M .github/workflows/api_health_check.yml
+  - M .github/workflows/api_dxf_tests.yml
+  - M .github/workflows/api_pytest.yml
+  - M .github/workflows/server-env-check.yml
+  - M .gitignore
+  - … 23 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2bf5bce2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8dc96205)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9bbb4b07)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0e5325e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c4fa38e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a41e089)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0bd7fec9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0da3ba5e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1550450b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e71ce2d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ba20a1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7228713d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f1456d4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48812c8f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (412dd545)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8bf46662)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aff88007)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bde42e56)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b17f8ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc4a6c2c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af6e1ca2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ced26499)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a6f9538)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d532874)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82ed75d1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d5fc2494)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (56e98c72)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7621aefb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (412350e0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b9dcb0b4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1699fbaf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f585818)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35251df2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96cd81a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b29fe275)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ef17edfb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c584aa58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ccb41615)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (41d09927)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4fa47f88)
+- … 10 more
+
+### S009 — 2026-01-04T06:54:31-06:00 → 2026-01-04T08:06:34-06:00 (10 commits, 1.2h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `04fc7c0b` feat(cam): add two-lane architecture to drill pattern and polygon offset G-code endpoints
+- `2a34de02` feat(cam): add two-lane architecture to drill pattern and polygon offset G-code endpoints
+- `340a064d` feat(cam): add two-lane architecture to adaptive spiral, fret slots, and probe endpoints
+- `dc43b2e3` feat(cam): add two-lane architecture to adaptive spiral, fret slots, and probe endpoints
+- `1b2698cb` feat(cam): add two-lane architecture to retract and probe endpoints
+- `490a8cb2` feat(cam): add two-lane architecture to retract and probe endpoints
+- `36b481fe` feat(cam): add two-lane architecture to pocket, vise_square, and geometry export endpoints
+- `d8662bee` feat(cam): add two-lane architecture to pocket, vise_square, and geometry export endpoints
+- `0077aae6` feat(cam): complete two-lane architecture migration for all G-code endpoints
+- `ea69c1c0` feat(cam): complete two-lane architecture migration for all G-code endpoints
+Files by surface:
+- other: 10 paths
+  - M services/api/app/routers/cam_drill_pattern_router.py
+  - M services/api/app/routers/cam_polygon_offset_router.py
+  - M services/api/app/routers/polygon_offset_router.py
+  - M services/api/app/routers/adaptive_poly_gcode_router.py
+  - M services/api/app/routers/cam_fret_slots_export_router.py
+  - M services/api/app/routers/probe_router.py
+  - M services/api/app/routers/retract_router.py
+  - M services/api/app/routers/geometry_router.py
+  - M services/api/app/routers/adaptive_router.py
+  - M services/api/app/routers/drilling_router.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (04fc7c0b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a34de02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (340a064d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc43b2e3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b2698cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (490a8cb2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36b481fe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8662bee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0077aae6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ea69c1c0)
+
+### S010 — 2026-01-04T13:02:50-06:00 → 2026-01-04T14:36:51-06:00 (8 commits, 1.57h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `cf58b653` feat(ui): add ManufacturingCandidateList with decision history + audit hover + inline note editor
+- `eefd49cb` feat(ui): add ManufacturingCandidateList with decision history + audit hover + inline note editor
+- `41fda32c` feat(ui): add bulk export GREEN-only + hover block reason
+- `8d5176e9` feat(ui): add bulk export GREEN-only + hover block reason
+- `1b4e08a4` feat(rmos): bulk set decision to GREEN/YELLOW/RED with undo
+- `dce5d047` feat(rmos): bulk set decision to GREEN/YELLOW/RED with undo
+- `28e23b65` feat(rmos): candidate list filters (decision, status, search, selected-only)
+- `d637f607` feat(rmos): candidate list filters (decision, status, search, selected-only)
+Files by surface:
+- other: 3 paths
+  - A packages/client/src/components/rmos/ManufacturingCandidateList.vue
+  - M packages/client/src/views/Runs/RunVariantsReviewPage.vue
+  - M services/api/app/routers/body_generator_router.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S011 — 2026-01-04T18:40:41-06:00 → 2026-01-05T04:39:24-06:00 (38 commits, 9.98h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `c94ca823` feat(rmos): decision history popover component for manufacturing candidates
+- `ef8765a9` feat(rmos): decision history popover component for manufacturing candidates
+- `9f69f4c9` feat(rmos): bulk clear decision + hard-wire CandidatesPanel to canonical list
+- `d9c567e8` feat(rmos): bulk clear decision + hard-wire CandidatesPanel to canonical list
+- `a464bdeb` feat(rmos): selection ergonomics + sort dropdown for candidate triage
+- `b67e65c0` feat(rmos): selection ergonomics + sort dropdown for candidate triage
+- `1310aad2` feat(rmos): keyboard shortcuts for candidate triage workflow
+- `f4974815` feat(rmos): keyboard shortcuts for candidate triage workflow
+- `75b649e6` feat(rmos): density toggle (compact mode) + sticky header for candidate list
+- `be4c6993` feat(rmos): density toggle (compact mode) + sticky header for candidate list
+- `1ece2ab1` fix(api): repair corrupted newline escapes in router files
+- `c6195c94` fix(api): repair corrupted newline escapes in router files
+- `53542cd5` feat(rmos): copy candidate_id/advisory_id buttons + toast confirmation
+- `f8c33930` feat(rmos): copy candidate_id/advisory_id buttons + toast confirmation
+- `af8cc21d` refactor(saw-lab): extract artifact store and add pluggable reader for gcode export
+- `ddcfc9af` refactor(saw-lab): extract artifact store and add pluggable reader for gcode export
+- `081301e1` feat(rmos): persist candidate list view prefs to localStorage
+- `27c1f707` feat(rmos): persist candidate list view prefs to localStorage
+- `019475b1` docs: add test gaps bookmark for future session
+- `470c8bc4` docs: add test gaps bookmark for future session
+- `00a42505` docs: add Build Readiness Evaluation for luthiers-toolbox
+- `fb2d118a` docs: add Build Readiness Evaluation for luthiers-toolbox
+- `1db4dd78` feat(rmos): add summary chips with counts + one-click filters
+- `3109d9c2` feat(rmos): add summary chips with counts + one-click filters
+- `3556abc8` feat(governance): add Architecture Scan Harness (Phase 1)
+- `e12eb248` feat(governance): add Architecture Scan Harness (Phase 1)
+- `19b60987` feat(rmos): add multi-select UX + decision history enhancements
+- `bfd091ca` feat(rmos): add multi-select UX + decision history enhancements
+- `61243d1f` feat(cbsp21): add architecture scan integration (Phase 2)
+- `9f4a89bd` feat(cbsp21): add architecture scan integration (Phase 2)
+- `1894849f` test(arch-scan): add comprehensive test suite (68 tests)
+- `966dce58` test(arch-scan): add comprehensive test suite (68 tests)
+- `2f4611a2` feat(rmos): add bulk decision controls v2 + visual history panel
+- `939691b2` feat(rmos): add bulk decision controls v2 + visual history panel
+- `0f3199c7` feat(arch-scan): add scan metadata fields for clarity
+- `82a0ae58` feat(arch-scan): add scan metadata fields for clarity
+- `862816a0` feat(rmos): add bulk clear decision + decided-by filter
+- `b4ba4a0a` feat(rmos): add bulk clear decision + decided-by filter
+Files by surface:
+- docs: 5 paths
+  - A BOOKMARK_TEST_GAPS.md
+  - A docs/evaluations/Build_Readiness_Evaluation.md
+  - A docs/architecture/findings.md
+  - A docs/architecture/invariants.md
+  - M .github/copilot-instructions.md
+- other: 21 paths
+  - A packages/client/src/components/rmos/CandidateDecisionHistoryPopover.vue
+  - A services/api/app/saw_lab/store.py
+  - A .github/workflows/architecture_scan.yml
+  - A reports/architecture_scan.json
+  - A scripts/architecture/scan_architecture.py
+  - A .cbsp21/patch_input.schema.json
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+  - M packages/client/src/components/rmos/ManufacturingCandidatesPanel.vue
+  - M services/api/app/routers/adaptive_router.py
+  - M services/api/app/routers/body_generator_router.py
+  - M services/api/app/routers/cam_biarc_router.py
+  - M services/api/app/routers/cam_drill_pattern_router.py
+  - M services/api/app/routers/cam_drill_router.py
+  - M services/api/app/routers/cam_polygon_offset_router.py
+  - M services/api/app/routers/geometry_router.py
+  - M services/api/app/routers/polygon_offset_router.py
+  - M services/api/app/routers/retract_router.py
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/services/saw_lab_gcode_emit_service.py
+  - M .cbsp21/patch_input.json.example
+  - M scripts/ci/check_cbsp21_gate.py
+- tests: 1 paths
+  - A services/api/tests/test_architecture_scan.py
+Documents produced:
+- `BOOKMARK_TEST_GAPS.md` — # Test Gaps Bookmark - Session 2026-01-04
+- `docs/evaluations/Build_Readiness_Evaluation.md` — UNKNOWN
+- `docs/architecture/findings.md` — UNKNOWN
+- `docs/architecture/invariants.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ece2ab1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6195c94)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af8cc21d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ddcfc9af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (019475b1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (470c8bc4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (00a42505)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fb2d118a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3556abc8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e12eb248)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (61243d1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f4a89bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1894849f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (966dce58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f3199c7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82a0ae58)
+
+### S012 — 2026-01-05T10:51:27-06:00 → 2026-01-05T11:08:01-06:00 (4 commits, 0.28h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `4c14675c` fix(arch-scan): ignore docstrings/comments for authority-critical signals
+- `7b62c197` fix(arch-scan): ignore docstrings/comments for authority-critical signals
+- `1a981902` fix(rmos): remove meaningless ternary in clearBulkDecision record init
+- `a188a9ce` fix(rmos): remove meaningless ternary in clearBulkDecision record init
+Files by surface:
+- other: 2 paths
+  - M scripts/architecture/scan_architecture.py
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+- tests: 1 paths
+  - M services/api/tests/test_architecture_scan.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c14675c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b62c197)
+
+### S013 — 2026-01-05T16:43:25-06:00 → 2026-01-06T01:12:56-06:00 (32 commits, 8.49h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `810ca761` feat(rmos): add visible Audit column showing decided_by + timestamp
+- `953b0e81` feat(rmos): add visible Audit column showing decided_by + timestamp
+- `159045ee` feat(rmos): add 'Show only my decisions' filter + expanded sort options
+- `5f792afe` feat(rmos): add 'Show only my decisions' filter + expanded sort options
+- `4fba66a2` style(rmos): refine Audit column CSS with auditBy/auditAt classes
+- `8d9f8eb7` style(rmos): refine Audit column CSS with auditBy/auditAt classes
+- `1dcec2ab` feat(editor): add history hotkeys 1-5 to revert with toast confirm (Bundle 32.4.6)
+- `3bea7ba4` feat(editor): add history hotkeys 1-5 to revert with toast confirm (Bundle 32.4.6)
+- `5edc32f5` feat(rmos): clickable Audit header cycles sort (time/operator)
+- `b72e865d` feat(rmos): clickable Audit header cycles sort (time/operator)
+- `1a6b723f` feat(editor): add hotkeys hint badge to HistoryStackPanel (Bundle 32.4.7)
+- `97f6cf95` feat(editor): add hotkeys hint badge to HistoryStackPanel (Bundle 32.4.7)
+- `b0d7eb9c` feat(rmos): add currentOperator prop with localStorage fallback
+- `bc8b9a31` feat(rmos): add currentOperator prop with localStorage fallback
+- `e9abe651` feat(editor): flash history row when reverted via 1-5 hotkey (Bundle 32.4.8)
+- `fd6029dd` feat(editor): flash history row when reverted via 1-5 hotkey (Bundle 32.4.8)
+- `268b1980` fix(client): remove duplicate content from AnalyticsDashboard.vue
+- `75b9ccae` fix(client): remove duplicate content from AnalyticsDashboard.vue
+- `37ef583a` feat(editor): flash history row on click revert (Bundle 32.4.9)
+- `b0d185d2` feat(editor): flash history row on click revert (Bundle 32.4.9)
+- `99cea251` feat(rmos): stamp decided_by on all decision API calls
+- `d466a41c` feat(rmos): stamp decided_by on all decision API calls
+- `48ee1f06` feat(rmos): implement hybrid architecture for AI → RMOS flow
+- `967b052a` feat(rmos): implement hybrid architecture for AI → RMOS flow
+- `0e960b38` feat(vision+rmos): Phase B migration to canonical hybrid architecture
+- `9b1ac36c` feat(vision+rmos): Phase B migration to canonical hybrid architecture
+- `6b54d234` feat(rmos): extend AdvisoryInputRef with review fields
+- `716428a7` feat(rmos): extend AdvisoryInputRef with review fields
+- `2e671b1b` feat(ai_images): add Vision Attach-to-Run widget
+- `e327e0f9` feat(ai_images): add Vision Attach-to-Run widget
+- `3d55cefa` chore: remove sandbox server files after Phase B migration
+- `5cd72ab1` chore: remove sandbox server files after Phase B migration
+Files by surface:
+- docs: 1 paths
+  - A docs/ISSUE_BLANK_ROOT_PAGE.md
+- other: 28 paths
+  - A services/api/app/data/runs.json
+  - A services/api/data/art_jobs.json
+  - A server/app.py
+  - A server/rmos_router.py
+  - A .github/workflows/ai-import-guard.yml
+  - A scripts/architecture/ai_import_guard.py
+  - A services/api/app/rmos/runs_v2/advisory_router.py
+  - A services/api/app/rmos/runs_v2/schemas/__init__.py
+  - A services/api/app/rmos/runs_v2/schemas/advisory_schemas.py
+  - A services/api/app/vision/__init__.py
+  - A services/api/app/vision/router.py
+  - A services/api/app/vision/schemas.py
+  - A packages/client/src/features/ai_images/VisionAttachToRunWidget.vue
+  - A packages/client/src/features/ai_images/api/visionApi.ts
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+  - M reports/architecture_scan.json
+  - M packages/client/src/components/rosette/RosetteEditorView.vue
+  - M packages/client/src/stores/rosetteStore.ts
+  - M packages/client/src/components/rosette/HistoryStackPanel.vue
+  - M packages/client/src/views/Runs/RunVariantsReviewPage.vue
+  - M packages/client/src/components/rmos/AnalyticsDashboard.vue
+  - M packages/client/src/utils/geometry.ts
+  - M .gitignore
+  - M services/api/app/main.py
+  - M services/api/app/rmos/runs_v2/schemas.py
+  - M packages/client/src/features/ai_images/index.ts
+  - D server/app.py
+  - D server/rmos_router.py
+Documents produced:
+- `docs/ISSUE_BLANK_ROOT_PAGE.md` — # Issue: Blank Page on Root Route (/)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1dcec2ab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3bea7ba4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a6b723f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (97f6cf95)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9abe651)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fd6029dd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (268b1980)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (75b9ccae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37ef583a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0d185d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48ee1f06)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (967b052a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e960b38)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b1ac36c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6b54d234)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (716428a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e671b1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e327e0f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3d55cefa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cd72ab1)
+
+### S014 — 2026-01-06T13:04:01-06:00 → 2026-01-07T04:09:36-06:00 (102 commits, 15.09h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `01987744` fix(vision): add url field and blob download endpoint for image display
+- `05d226e5` fix(vision): add url field and blob download endpoint for image display
+- `4a1d5d7f` fix(schemas): add model_rebuild() for Pydantic V2 forward references
+- `d8cbc3ac` fix(schemas): add model_rebuild() for Pydantic V2 forward references
+- `029fe1a8` feat(vision): add Create Run button and deep-link to review page
+- `38e6669f` feat(vision): add Create Run button and deep-link to review page
+- `10a719fe` style(vision): improve run selector UI with Refresh button and dropdown
+- `42512aaa` style(vision): improve run selector UI with Refresh button and dropdown
+- `354880e2` test(vision): add smoke tests for Vision → Attach → Review flow
+- `4ee49fab` test(vision): add smoke tests for Vision → Attach → Review flow
+- `8e3f148b` feat(vision): add cursor pagination, search, and deep-link to VisionAttachToRunWidget
+- `cfd0d4fa` feat(vision): add cursor pagination, search, and deep-link to VisionAttachToRunWidget
+- `2c0713a0` feat(vision): add localStorage selection memory, autoNavigateToReview prop, and Go to Review button
+- `f449ef0a` feat(vision): add localStorage selection memory, autoNavigateToReview prop, and Go to Review button
+- `d6c087a9` fix(client): upgrade vue-tsc to v2 and make type-check non-blocking
+- `ea948005` fix(client): upgrade vue-tsc to v2 and make type-check non-blocking
+- `0b92f779` fix(client): fix failing tests in compare features
+- `bf83b4f8` fix(client): fix failing tests in compare features
+- `44f844b3` fix(ci): add packages/client/index.html to git
+- `6dbce9a9` fix(ci): add packages/client/index.html to git
+- `c80c0557` feat(vision): add AiImageGalleryRmos with RMOS Attach/Review/Promote spine
+- `c9bfe383` feat(vision): add AiImageGalleryRmos with RMOS Attach/Review/Promote spine
+- `57ea6ff5` fix(ci): fix ai_import_guard path matching and allow _experimental/
+- `685beaff` fix(ci): fix ai_import_guard path matching and allow _experimental/
+- `6e7fe1e7` fix(tests): provide required decision/hashes fields in split store tests
+- `b98b7d68` fix(tests): provide required decision/hashes fields in split store tests
+- `25de724d` feat(vision): Review Hardening Bundle (A+B) - state-aware buttons + inline review panel
+- `464d6597` feat(vision): Review Hardening Bundle (A+B) - state-aware buttons + inline review panel
+- `4f271e22` fix(ci): update rmos_ci_test.py to use correct API endpoints
+- `d72a5040` fix(ci): update rmos_ci_test.py to use correct API endpoints
+- `6fb68380` fix(ci): update RMOS_BASE_URL in workflow to match script
+- `e5b5f41f` fix(ci): update RMOS_BASE_URL in workflow to match script
+- `922f85a6` fix(ci): use correct endpoint paths and payload schema in rmos_ci_test
+- `a1d7f507` fix(ci): use correct endpoint paths and payload schema in rmos_ci_test
+- `c4e83211` fix(ci): simplify rmos_ci_test to use stateless math endpoints
+- `fe19f201` fix(ci): simplify rmos_ci_test to use stateless math endpoints
+- `20cce690` fix(ci): use actually mounted RMOS endpoints in smoke test
+- `3b9af539` fix(ci): use actually mounted RMOS endpoints in smoke test
+- `1b534c8a` fix(ci): add explicit exit 0 when legacy usage within budget
+- `4e97bf5f` fix(ci): add explicit exit 0 when legacy usage within budget
+- `3e4cfb85` fix(ci): disable set -e to capture Python exit code
+- `505439b3` fix(ci): disable set -e to capture Python exit code
+- `080170d0` fix(api): handle SQLite init gracefully in CI/Docker environments
+- `f9d7f306` fix(api): handle SQLite init gracefully in CI/Docker environments
+- `a71eea9e` fix(ci): use canonical /api/geometry/parity endpoint path
+- `dcd306c8` fix(ci): use canonical /api/geometry/parity endpoint path
+- `36dbed41` fix(api): return status 'ok' from /health endpoint for CI compatibility
+- `63860160` fix(api): return status 'ok' from /health endpoint for CI compatibility
+- `70554988` fix(ci): use literal /api/geometry/parity path in core_ci.yml
+- `9bd448b4` fix(ci): use literal /api/geometry/parity path in core_ci.yml
+- `7b079707` fix(ci): escape newlines in gcode string in core_ci.yml
+- `982bee51` fix(ci): escape newlines in gcode string in core_ci.yml
+- `392a8457` fix(ci): remove SDK Codegen job (packages/sdk doesn't exist)
+- `8dc45790` fix(ci): remove SDK Codegen job (packages/sdk doesn't exist)
+- `10282913` fix(blueprint): replace dwg.comment() with dwg.desc() for svgwrite compatibility
+- `bbf21c0c` fix(blueprint): replace dwg.comment() with dwg.desc() for svgwrite compatibility
+- `4aa630d9` fix(blueprint): use CSS comments for SVG metadata instead of dwg.desc()
+- `a290adbb` fix(blueprint): use CSS comments for SVG metadata instead of dwg.desc()
+- `7bdd250a` fix(ci): add --profile proxy to docker compose up
+- `b43e5d1c` fix(ci): add --profile proxy to docker compose up
+- `5e6850b8` fix(api): register missing art_studio routers (bracing, inlay, root_art)
+- `e503a847` fix(api): register missing art_studio routers (bracing, inlay, root_art)
+- `c9df9b34` feat(vision): auto-create run on attach if none selected
+- `fda4974d` feat(vision): auto-create run on attach if none selected
+- `33e6b4bf` fix(api): add compat routes for bridge_router and dxf_preflight_router
+- `58bd71c6` fix(api): add compat routes for bridge_router and dxf_preflight_router
+- `05b7ecba` feat(saw-batch): add GET /api/saw/batch/execution endpoint
+- `593ed6f9` feat(saw-batch): add GET /api/saw/batch/execution endpoint
+- `1369e5ef` feat(vision): quick reject/promote actions + auto-navigate to run review
+- `746ab35e` feat(vision): quick reject/promote actions + auto-navigate to run review
+- `8f39432d` fix(saw-batch): add setdefault fallbacks for index_meta fields
+- `c4c14a5b` fix(saw-batch): add setdefault fallbacks for index_meta fields
+- `cf322e12` feat(saw-batch): add executions/by-decision and links endpoints
+- `ea65b536` feat(saw-batch): add executions/by-decision and links endpoints
+- `5d0b38be` feat(vision): undo reject + rejection hover details
+- `a2e172f3` feat(vision): undo reject + rejection hover details
+- `8f37ceda` fix(saw-batch): make job-log body optional, add job-log/by-execution
+- `d67b0bf7` fix(saw-batch): make job-log body optional, add job-log/by-execution
+- `4a647e63` feat(saw-batch): implement all missing SAW batch endpoints
+- `d2efec3f` feat(saw-batch): implement all missing SAW batch endpoints
+- `5d3a3ade` feat(vision): lastAttachedRunId + goToReview toolbar fallback navigation
+- `f581b41d` feat(vision): lastAttachedRunId + goToReview toolbar fallback navigation
+- `16f431e3` refactor(vision): cherry-pick isRowBusy + _setBusy DRY helpers
+- `865f7b1a` refactor(vision): cherry-pick isRowBusy + _setBusy DRY helpers
+- `26190c32` feat(vision): auto-deeplink to RunVariantsReview on every attach
+- `ec75cf8f` feat(vision): auto-deeplink to RunVariantsReview on every attach
+- `d30e33eb` feat(saw-batch): add learning-overrides/apply/status endpoint
+- `eedd5580` feat(saw-batch): add learning-overrides/apply/status endpoint
+- `38246cc4` feat(saw-batch): add learning hook fields and by-execution endpoint
+- `d9c5fa79` feat(saw-batch): add learning hook fields and by-execution endpoint
+- `a6ecc185` feat(saw-batch): add CSV export endpoints for job logs and rollups
+- `e5747fbb` feat(saw-batch): add CSV export endpoints for job logs and rollups
+- `d1137860` refactor(vision): extract ensureRunSelected helper for reusability
+- `fd103efd` refactor(vision): extract ensureRunSelected helper for reusability
+- `901d1873` feat(saw-lab): add metrics-rollup endpoints and fix rollup hook
+- `be19b2bc` feat(saw-lab): add metrics-rollup endpoints and fix rollup hook
+- `066ba6c9` feat(saw-lab): add learning workflow endpoints and test isolation
+- `9faa1eff` feat(saw-lab): add learning workflow endpoints and test isolation
+- `25ddc497` fix(helical): use proper tool_id prefix format for feasibility check
+- `ae800a41` fix(helical): use proper tool_id prefix format for feasibility check
+- `1cf853e7` fix: add query_runs function and fix artifact mode/event_type
+- `541e70d4` fix: add query_runs function and fix artifact mode/event_type
+Files by surface:
+- blueprint_import: 2 paths
+  - M services/blueprint-import/vectorizer.py
+  - M services/blueprint-import/vectorizer_phase2.py
+- docs: 1 paths
+  - A VISION_IMAGE_FIX_HANDOFF.md
+- other: 45 paths
+  - A packages/client/src/views/VisionAttachTestView.vue
+  - A services/api/app/advisory/blob_router.py
+  - A packages/client/src/features/ai_images/VisionAttachFlow.spec.ts
+  - A packages/client/index.html
+  - A packages/client/src/features/ai_images/AiImageGalleryRmos.vue
+  - A packages/client/src/features/ai_images/components/VariantReviewPanel.vue
+  - M packages/client/src/features/ai_images/VisionAttachToRunWidget.vue
+  - M packages/client/src/features/ai_images/api/index.ts
+  - M packages/client/src/features/ai_images/api/visionApi.ts
+  - M packages/client/src/features/ai_images/index.ts
+  - M packages/client/src/main.ts
+  - M packages/client/src/router/index.ts
+  - M services/api/app/main.py
+  - M services/api/app/rmos/runs_v2/schemas/__init__.py
+  - M services/api/app/vision/router.py
+  - M services/api/app/vision/schemas.py
+  - M services/api/app/rmos/runs_v2/schemas.py
+  - M services/api/app/rmos/runs_v2/schemas/advisory_schemas.py
+  - M packages/client/package-lock.json
+  - M packages/client/package.json
+  - M packages/client/src/components/GeometryToolbar.vue
+  - M packages/client/src/views/art/RiskDashboardCrossLab.vue
+  - M .github/workflows/client_lint_build.yml
+  - M packages/client/tsconfig.json
+  - M packages/client/src/components/compare/compareBlinkBehavior.spec.ts
+  - M packages/client/src/components/compare/compareBlinkBehavior.ts
+  - M packages/client/src/components/compare/compareViewportMath.ts
+  - M packages/client/src/composables/useCompareState.spec.ts
+  - M .gitignore
+  - M scripts/architecture/ai_import_guard.py
+  - M packages/client/src/features/ai_images/AiImageGallery.vue
+  - M scripts/rmos_ci_test.py
+  - M .github/workflows/rmos_ci.yml
+  - M services/api/app/art_studio/api/rosette_jobs_routes.py
+  - M services/api/app/routers/art_studio_rosette_router.py
+  - M .github/workflows/core_ci.yml
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/saw_lab/store.py
+  - M services/api/app/cam/routers/toolpath/helical_router.py
+  - M services/api/app/rmos/runs_v2/diff.py
+  - … 5 more (see sessions.json / files.jsonl)
+- tests: 3 paths
+  - A services/api/tests/test_vision_attach_smoke.py
+  - M services/api/tests/test_runs_v2_split_store.py
+  - M services/api/tests/conftest.py
+Documents produced:
+- `VISION_IMAGE_FIX_HANDOFF.md` — # Vision Image Display Fix — Complete
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01987744)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (05d226e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a1d5d7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8cbc3ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (029fe1a8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38e6669f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10a719fe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (42512aaa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (354880e2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ee49fab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6c087a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ea948005)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b92f779)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf83b4f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (44f844b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6dbce9a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (57ea6ff5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (685beaff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e7fe1e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b98b7d68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f271e22)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d72a5040)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fb68380)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e5b5f41f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (922f85a6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a1d7f507)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4e83211)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe19f201)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20cce690)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3b9af539)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b534c8a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e97bf5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3e4cfb85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (505439b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (080170d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f9d7f306)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a71eea9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dcd306c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36dbed41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (63860160)
+- … 40 more
+
+### S015 — 2026-01-07T10:49:32-06:00 → 2026-01-08T00:38:49-06:00 (40 commits, 13.82h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `2998303a` docs: update BUILD_READINESS_EVALUATION with A_N.6 and A_N.7 fixes
+- `c521b2ce` docs: update BUILD_READINESS_EVALUATION with A_N.6 and A_N.7 fixes
+- `636631a6` docs: enhance copilot instructions with error handling and testing patterns
+- `964e4403` docs: enhance copilot instructions with error handling and testing patterns
+- `17831b25` feat(rosette): Bundle 32.4.11 - Undo/Redo toast with source tracking
+- `b9843b94` feat(rosette): Bundle 32.4.11 - Undo/Redo toast with source tracking
+- `023c3ffb` docs: update copilot-instructions.md to 2026-01-07
+- `f2482ae8` docs: update copilot-instructions.md to 2026-01-07
+- `a807f58d` feat(rosette): Bundle 32.4.12 - no-op suppression for undo/redo toasts
+- `b82907c4` feat(rosette): Bundle 32.4.12 - no-op suppression for undo/redo toasts
+- `2a07bd4c` feat(rosette): Bundle 32.4.13 - subtle shake on disabled undo/redo
+- `79e98cb9` feat(rosette): Bundle 32.4.13 - subtle shake on disabled undo/redo
+- `425e4130` feat(rosette): Bundle 32.4.14 - disabled tooltip reason + correct hotkeys
+- `f25872bf` feat(rosette): Bundle 32.4.14 - disabled tooltip reason + correct hotkeys
+- `458b802a` feat(rosette): Bundle 32.4.15 - keyboard hint overlay
+- `a088d888` feat(rosette): Bundle 32.4.15 - keyboard hint overlay
+- `a7ae2156` Bundle 32.4.16: Re-show hotkey hint on History header hover
+- `b1102f23` Bundle 32.4.16: Re-show hotkey hint on History header hover
+- `ab6b2f00` Bundle 32.4.17: Hotkey hint cooldown with localStorage
+- `cbec5517` Bundle 32.4.17: Hotkey hint cooldown with localStorage
+- `69cfb955` Bundle 32.4.18: Reset tips button (clears localStorage)
+- `e00b99f3` Bundle 32.4.18: Reset tips button (clears localStorage)
+- `a3e787e5` feat(governance): add Art Studio Scope Governance v1.0
+- `e88f4515` feat(governance): add Art Studio Scope Governance v1.0
+- `2fdc691b` fix(governance): refine Art Studio Scope Gate integration
+- `53649bee` fix(governance): refine Art Studio Scope Gate integration
+- `6068c8f0` feat(governance): implement comprehensive architectural fence system
+- `c5134f6b` feat(governance): implement comprehensive architectural fence system
+- `4b2e60d2` docs(governance): add Art Studio Scope Guidance v1.0
+- `a2a95866` docs(governance): add Art Studio Scope Guidance v1.0
+- `082fb3d5` feat(ci): add fence_runner.py - unified boundary enforcement
+- `f27e40e8` feat(ci): add fence_runner.py - unified boundary enforcement
+- `4021491a` docs(governance): add CBSP21 compliance audit report for FENCE_REGISTRY.json
+- `8b3f5094` docs(governance): add CBSP21 compliance audit report for FENCE_REGISTRY.json
+- `a6ac8094` feat(ci): implement Art Studio Scope Gate v1
+- `fca799a9` feat(ci): implement Art Studio Scope Gate v1
+- `6bf702d2` chore: sync copilot-instructions, fence architecture, fix visionApi duplicate export
+- `ac397a2a` chore: sync copilot-instructions, fence architecture, fix visionApi duplicate export
+- `1df4c574` chore(devcontainer): add Codespace configuration
+- `90343327` chore(devcontainer): add Codespace configuration
+Files by surface:
+- docs: 8 paths
+  - A docs/governance/ART_STUDIO_SCOPE_GOVERNANCE_v1.md
+  - A docs/governance/FENCE_ARCHITECTURE.md
+  - A docs/governance/FENCE_SYSTEM_SUMMARY.md
+  - A docs/governance/ART_STUDIO_SCOPE_GUIDANCE_v1.md
+  - A .cbsp21/fence_registry_scan_report.md
+  - A .devcontainer/README.md
+  - M docs/BUILD_READINESS_EVALUATION.md
+  - M .github/copilot-instructions.md
+- other: 12 paths
+  - A scripts/ci/check_art_studio_scope.py
+  - A FENCE_REGISTRY.json
+  - A services/api/app/ci/fence_runner.py
+  - A .github/workflows/art_studio_scope_gate.yml
+  - A .devcontainer/devcontainer.json
+  - A .devcontainer/setup.sh
+  - M .cbsp21/patch_input.json
+  - M packages/client/src/components/rosette/RosetteEditorView.vue
+  - M packages/client/src/components/rosette/HistoryStackPanel.vue
+  - M .github/workflows/core_ci.yml
+  - M Makefile
+  - M packages/client/src/features/ai_images/api/visionApi.ts
+- tests: 1 paths
+  - A services/api/tests/test_art_studio_scope_gate.py
+Documents produced:
+- `docs/governance/ART_STUDIO_SCOPE_GOVERNANCE_v1.md` — # Art Studio Scope Governance v1.0
+- `docs/governance/FENCE_ARCHITECTURE.md` — # 🔒 Fence Architecture - Governance Boundaries
+- `docs/governance/FENCE_SYSTEM_SUMMARY.md` — # Fence System Implementation Summary
+- `docs/governance/ART_STUDIO_SCOPE_GUIDANCE_v1.md` — # Art Studio Scope Guidance v1.0
+- `.cbsp21/fence_registry_scan_report.md` — UNKNOWN
+- `.devcontainer/README.md` — # Codespace Configuration
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2998303a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c521b2ce)
+- PR #9 (636631a6)
+- PR #9 (964e4403)
+- PR #11 (6068c8f0)
+- PR #11 (c5134f6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b2e60d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a2a95866)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (082fb3d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f27e40e8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a6ac8094)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fca799a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1df4c574)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (90343327)
+
+### S016 — 2026-01-08T22:08:34+00:00 → 2026-01-09T01:59:54+00:00 (8 commits, 3.86h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `5499f86d` fix(scope-gate): Art Studio preview-only + CAM OPERATION endpoints
+- `a786b1fc` fix(scope-gate): Art Studio preview-only + CAM OPERATION endpoints
+- `9bf2b381` fix(bridge): replace subprocess DXF export with inline R12 generator
+- `d597afc0` fix(bridge): replace subprocess DXF export with inline R12 generator
+- `77841a46` fix(dxf): resolve LogRecord conflict and DFS path explosion
+- `d1d49cea` fix(dxf): resolve LogRecord conflict and DFS path explosion
+- `a689885f` fix(rmos): normalize runs API response shapes for E2E tests
+- `b49e2305` fix(rmos): normalize runs API response shapes for E2E tests
+Files by surface:
+- docs: 1 paths
+  - M .github/copilot-instructions.md
+- other: 12 paths
+  - A services/api/app/cam/routers/toolpath/relief_export_router.py
+  - A services/api/app/rmos/api/response_utils.py
+  - M scripts/ci/check_art_studio_scope.py
+  - M services/api/app/art_studio/relief_router.py
+  - M services/api/app/art_studio/svg/styles.py
+  - M services/api/app/art_studio/vcarve_router.py
+  - M services/api/app/cam/routers/toolpath/__init__.py
+  - M services/api/app/cam/routers/toolpath/vcarve_router.py
+  - M services/api/app/routers/bridge_router.py
+  - M services/api/app/cam/dxf_upload_guard.py
+  - M services/api/app/cam/graph_algorithms.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+- tests: 2 paths
+  - M services/api/tests/test_art_studio_scope_gate.py
+  - M services/api/tests/test_rmos_runs_e2e.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S017 — 2026-01-09T10:57:59-06:00 → 2026-01-10T03:19:37-06:00 (64 commits, 16.36h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `7b74e674` feat(saw-lab): add Decision Intelligence with apply-on-next-plan
+- `ce3f5c42` feat(saw-lab): add Decision Intelligence with apply-on-next-plan
+- `078e12d2` feat(saw-lab): wire decision intel advisory into /api/saw/batch/plan response
+- `6c7e4687` feat(saw-lab): wire decision intel advisory into /api/saw/batch/plan response
+- `98403738` refactor(saw-lab): simplify decision intel advisory with helper module
+- `b202d2fb` refactor(saw-lab): simplify decision intel advisory with helper module
+- `52a41b49` feat(rmos): add include_types + collapse_other filters to batch-timeline-grouped
+- `7d00fcef` feat(rmos): add include_types + collapse_other filters to batch-timeline-grouped
+- `6b26c388` feat(saw-lab): add /api/saw/batch/plan/choose endpoint for operator approval
+- `769b35d4` feat(saw-lab): add /api/saw/batch/plan/choose endpoint for operator approval
+- `17fd9eab` fix(rmos): roughing metrics + runs filter pydantic fixes
+- `63e41823` fix(rmos): roughing metrics + runs filter pydantic fixes
+- `6516284f` feat(saw-lab): add GET /api/saw/batch/toolpaths/by-decision lookup endpoint
+- `96dd6f97` feat(saw-lab): add GET /api/saw/batch/toolpaths/by-decision lookup endpoint
+- `5af73749` feat(saw-lab): add POST /api/saw/batch/toolpaths/from-decision endpoint
+- `9bdfca47` feat(saw-lab): add POST /api/saw/batch/toolpaths/from-decision endpoint
+- `3799a609` fix: rosette compare test and CLI audit JSON defaults
+- `9b370b7f` fix: rosette compare test and CLI audit JSON defaults
+- `6c5e9f62` feat(rmos): add GET /api/rmos/runs/batch-summary dashboard endpoint
+- `96bb2a7d` feat(rmos): add GET /api/rmos/runs/batch-summary dashboard endpoint
+- `4db1328b` feat(saw-lab): add GET /api/saw/batch/execution/by-decision lookup alias
+- `d06db018` feat(saw-lab): add GET /api/saw/batch/execution/by-decision lookup alias
+- `1068c87d` feat(gate): add viewer_pack_v1 validation gate for tap_tone_pi interop
+- `2c5dd604` feat(gate): add viewer_pack_v1 validation gate for tap_tone_pi interop
+- `6c53fb5c` fix(evidence): add 'coherence' kind to EvidenceFileKind type
+- `b256af48` fix(evidence): add 'coherence' kind to EvidenceFileKind type
+- `7a90ef9a` feat(gate): harden VIEWER_PACK_V1_CONTRACT_GATE
+- `f7fea94c` feat(gate): harden VIEWER_PACK_V1_CONTRACT_GATE
+- `4c6afda0` fix(saw_lab): align decision apply service with actual API
+- `5cf81f79` fix(saw_lab): align decision apply service with actual API
+- `2f6cac8c` feat(runs_v2): diff attachments bundle - fix truncated diffs
+- `8c95c621` feat(runs_v2): diff attachments bundle - fix truncated diffs
+- `b457492b` fix(runs_v2): finalize diff attachments locked contract
+- `cb80dcdc` fix(runs_v2): finalize diff attachments locked contract
+- `54204c7b` docs(governance): cross-reference decision payload persistence from index query contract
+- `aef468b9` docs(governance): cross-reference decision payload persistence from index query contract
+- `4f2db0f4` feat(saw_lab): add list-by-decision executions endpoint
+- `92abb628` feat(saw_lab): add list-by-decision executions endpoint
+- `8c525e99` fix(governance): remove /api/art-studio/inlay/fret-positions route
+- `a07daeca` fix(governance): remove /api/art-studio/inlay/fret-positions route
+- `5ac4aea0` fix(governance): add art-studio/inlay exception for fret domain rule
+- `6cb22bf7` fix(governance): add art-studio/inlay exception for fret domain rule
+- `b92f112e` chore: ignore environment secrets files
+- `f2d72154` chore: ignore environment secrets files
+- `1ab65e30` test: remove test for removed fret-positions endpoint
+- `774348f7` test: remove test for removed fret-positions endpoint
+- `3d3ffe42` chore(ci): make CI scripts executable
+- `6c2ac74b` chore(ci): make CI scripts executable
+- `df9d6940` fix(tests): update diff endpoint params from a/b to left_id/right_id
+- `e8bf495e` fix(tests): update diff endpoint params from a/b to left_id/right_id
+- `16d633ee` fix(cam): always coerce types in normalize_cam_intent_v1
+- `2186a412` fix(cam): always coerce types in normalize_cam_intent_v1
+- `7f486fac` fix(cam): add request_id logging for strict mode rejection (H7.2.3.1)
+- `9c33ad73` fix(cam): add request_id logging for strict mode rejection (H7.2.3.1)
+- `2e6cffbd` fix(runs_v2): add store_artifact helper and fix test monkeypatch paths
+- `e2508218` fix(runs_v2): add store_artifact helper and fix test monkeypatch paths
+- `2dc0f591` fix(runs_v2): remove duplicate /runs prefix from batch-summary router
+- `5bccb315` fix(runs_v2): remove duplicate /runs prefix from batch-summary router
+- `960b9fa2` feat(governance): add artifact linkage invariants checker script
+- `e98eaf52` feat(governance): add artifact linkage invariants checker script
+- `5a42ed26` feat(governance): add legacy endpoint usage gate script
+- `80bfefaf` feat(governance): add legacy endpoint usage gate script
+- `14b088ff` fix(api): correct diff attachment sha256 retrieval and update tests
+- `5d59926e` fix(api): correct diff attachment sha256 retrieval and update tests
+Files by surface:
+- docs: 4 paths
+  - A Art Studio Drift Audit.md
+  - A docs/gates/VIEWER_PACK_V1_GATE.md
+  - M .github/copilot-instructions.md
+  - M docs/governance/RUN_ARTIFACT_INDEX_QUERY_API_CONTRACT_v1.md
+- other: 65 paths
+  - A .gitattributes
+  - A services/api/app/saw_lab/decision_intel_apply_router.py
+  - A services/api/app/saw_lab/decision_intel_apply_service.py
+  - A services/api/app/saw_lab/decision_intelligence_router.py
+  - A services/api/app/saw_lab/decision_intelligence_service.py
+  - A services/api/app/saw_lab/schemas_apply_on_next_plan.py
+  - A services/api/app/saw_lab/schemas_decision_intelligence.py
+  - A services/api/app/saw_lab/decision_intel_advisory.py
+  - A services/api/app/rmos/runs_v2/api_audit_export.py
+  - A services/api/app/rmos/runs_v2/api_batch_timeline.py
+  - A services/api/app/rmos/runs_v2/api_batch_tree.py
+  - A services/api/app/rmos/runs_v2/api_grouped_timeline.py
+  - A services/api/app/rmos/runs_v2/audit_export.py
+  - A services/api/app/rmos/runs_v2/batch_grouped_timeline.py
+  - A services/api/app/rmos/runs_v2/batch_timeline.py
+  - A services/api/app/rmos/runs_v2/batch_tree.py
+  - A services/api/app/rmos/runs_v2/index_meta.py
+  - A services/api/app/saw_lab/decision_apply_service.py
+  - A services/api/app/saw_lab/toolpaths_lookup_service.py
+  - A services/api/app/saw_lab/saw_lab_toolpaths_from_decision_service.py
+  - A services/api/app/saw_lab_run_service.py
+  - A services/api/app/rmos/runs_v2/api_batch_summary.py
+  - A services/api/app/rmos/runs_v2/batch_summary.py
+  - A services/api/app/saw_lab/executions_lookup_service.py
+  - A contracts/viewer_pack_v1.schema.json
+  - A scripts/validate/check_viewer_pack_schema_parity.py
+  - A scripts/validate/generate_minimal_viewer_pack_fixture.py
+  - A scripts/validate/validate_viewer_pack_v1.py
+  - A services/api/app/rmos/runs_v2/diff_attachments.py
+  - A services/api/app/saw_lab/executions_list_service.py
+  - A services/api/scripts/governance/check_artifact_linkage_invariants.py
+  - A services/api/scripts/governance/check_legacy_endpoint_usage.py
+  - A services/api/scripts/governance/testdata_min_truth.json
+  - M services/api/app/main.py
+  - M services/api/app/saw_lab/__init__.py
+  - M services/api/data/art_presets.json
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/rmos/runs_v2/__init__.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/rmos/runs_v2/store.py
+  - … 25 more (see sessions.json / files.jsonl)
+- tests: 26 paths
+  - A services/api/tests/test_apply_on_next_plan_contract.py
+  - A services/api/tests/test_saw_decision_intel_smoke.py
+  - A services/api/tests/test_audit_export_zip_builder_unit.py
+  - A services/api/tests/test_batch_timeline_builder_unit.py
+  - A services/api/tests/test_batch_tree_resolver.py
+  - A services/api/tests/test_grouped_timeline_builder_unit.py
+  - A services/api/tests/test_grouped_timeline_endpoint_exists.py
+  - A services/api/tests/test_index_meta_normalization.py
+  - A services/api/tests/test_plan_choose_persists_decision_payload_unit.py
+  - A services/api/tests/test_toolpaths_lookup_by_decision_unit.py
+  - A services/api/tests/test_toolpaths_from_decision_applies_patch_and_stamps_unit.py
+  - A services/api/tests/test_batch_summary_builder_unit.py
+  - A services/api/tests/test_batch_summary_endpoint_exists.py
+  - A services/api/tests/test_execution_lookup_by_decision_unit.py
+  - A services/api/tests/fixtures/viewer_packs/session_minimal.zip
+  - A services/api/tests/test_viewer_pack_v1_ingestion_gate.py
+  - A services/api/tests/test_run_diff_persists_attachment_when_large.py
+  - A services/api/tests/test_executions_list_by_decision_unit.py
+  - M services/api/tests/test_runs_filter_batch_label.py
+  - M services/api/tests/test_runs_filter_debug.py
+  - M services/api/tests/test_runs_filters_parent_plan_and_spec.py
+  - M services/api/tests/test_spec_contract_matrix.py
+  - M services/api/tests/test_art_studio_rosette_compare.py
+  - M services/api/tests/test_route_governance.py
+  - M services/api/tests/test_art_studio_inlay.py
+  - M services/api/tests/test_rmos_runs_e2e.py
+Documents produced:
+- `Art Studio Drift Audit.md` — UNKNOWN
+- `docs/gates/VIEWER_PACK_V1_GATE.md` — # Viewer Pack v1 Validation Gate
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (17fd9eab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (63e41823)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3799a609)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b370b7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1068c87d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c5dd604)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6c53fb5c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b256af48)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7a90ef9a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f7fea94c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c6afda0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cf81f79)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b457492b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cb80dcdc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (54204c7b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aef468b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8c525e99)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a07daeca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ab65e30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (774348f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df9d6940)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e8bf495e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (16d633ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2186a412)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f486fac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9c33ad73)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e6cffbd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e2508218)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2dc0f591)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5bccb315)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (960b9fa2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e98eaf52)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5a42ed26)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (80bfefaf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14b088ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5d59926e)
+
+### S018 — 2026-01-10T10:37:41-06:00 → 2026-01-10T17:14:38+00:00 (6 commits, 0.62h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `2b478d6b` docs: update BUILD_READINESS_EVALUATION with A_N.8 CI green status
+- `61e0a37c` docs: update BUILD_READINESS_EVALUATION with A_N.8 CI green status
+- `85601381` docs: normalize BUILD_READINESS to 96-98% RC status
+- `dd84f4fe` docs: normalize BUILD_READINESS to 96-98% RC status
+- `4d2842f3` docs: update copilot-instructions.md date and clarify package scripts location
+- `7f568a9e` docs: update copilot-instructions.md date and clarify package scripts location
+Files by surface:
+- docs: 2 paths
+  - M docs/BUILD_READINESS_EVALUATION.md
+  - M .github/copilot-instructions.md
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2b478d6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (61e0a37c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (85601381)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dd84f4fe)
+
+### S019 — 2026-01-10T15:16:42-06:00 → 2026-01-11T02:13:19-06:00 (28 commits, 10.94h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `3f48d754` docs(governance): add A_N.9 entry criteria section
+- `a6a80480` docs(governance): add A_N.9 entry criteria section
+- `47abf823` docs: mark A_N.9 Docker smoke and governance gates as PASS
+- `76afbd87` docs: mark A_N.9 Docker smoke and governance gates as PASS
+- `3b1c717a` docs: enhance copilot-instructions with architecture overview, test markers, and Vue conventions
+- `5f599f9c` docs: enhance copilot-instructions with architecture overview, test markers, and Vue conventions
+- `71515b0a` feat(frontend): add Visual Analyzer production UI and navigation
+- `ff9cb06f` feat(frontend): add Visual Analyzer production UI and navigation
+- `1b38bc20` docs: fix broken relative link in ART_STUDIO_SCOPE_GOVERNANCE
+- `b4af8c5d` docs: fix broken relative link in ART_STUDIO_SCOPE_GOVERNANCE
+- `59701602` refactor: import Smart Guitar schemas from sg-spec
+- `886af134` refactor: import Smart Guitar schemas from sg-spec
+- `d10b16a8` feat(saw-lab): add Decision Intelligence plan_auto_suggest
+- `ea7d130a` feat(saw-lab): add Decision Intelligence plan_auto_suggest
+- `b2d36c52` feat(rmos): add batch summary dashboard endpoint with KPI rollups
+- `c4261324` feat(rmos): add batch summary dashboard endpoint with KPI rollups
+- `3e3285f0` feat(rmos): add batch summary dashboard endpoint
+- `b39d80a7` feat(rmos): add batch summary dashboard endpoint
+- `1e08957d` feat: add ToolBox -> Smart Guitar safe export contract
+- `d74a70a8` feat: add ToolBox -> Smart Guitar safe export contract
+- `189bbf81` test: add sample Smart Guitar export bundle fixture
+- `955b60f6` test: add sample Smart Guitar export bundle fixture
+- `c2ae4d9f` feat: add Smart Guitar -> ToolBox telemetry ingestion contract
+- `ff656506` feat: add Smart Guitar -> ToolBox telemetry ingestion contract
+- `2362a121` feat(saw-lab): Add KPI rollup artifact writer for execution metrics
+- `f99488b2` feat(saw-lab): Add KPI rollup artifact writer for execution metrics
+- `4b3932bd` feat: add telemetry ingestion API endpoint
+- `9467b451` feat: add telemetry ingestion API endpoint
+Files by surface:
+- docs: 8 paths
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/1c63eb441cc2eace692ceae6c707e457ebae2b1bd98f53611e2902736e46d21f.md
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/28944af1b888d97f04592fadf474aae0a28151a78052112a223ad0fe173f5647.md
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/78eb926d2df562df5bfb5928630365a998f5ea36fc5a3cf310ab00f22c7c1afe.md
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/fa80ade89c6475121c813b60ab3d726302154405382d0e2d06c9ab52cd917f80.md
+  - A docs/governance/SMART_GUITAR_TOOLBOX_TELEMETRY_CONTRACT_v1.md
+  - M docs/BUILD_READINESS_EVALUATION.md
+  - M .github/copilot-instructions.md
+  - M docs/governance/ART_STUDIO_SCOPE_GOVERNANCE_v1.md
+- other: 39 paths
+  - A packages/client/src/views/AiImagesView.vue
+  - A services/api/app/saw_lab/plan_choose_service.py
+  - A services/api/app/saw_lab/tuning_decision_service.py
+  - A services/api/app/rmos/runs_v2/api_batch_dashboard.py
+  - A services/api/app/rmos/runs_v2/batch_dashboard.py
+  - A .github/workflows/smart_guitar_export_gate.yml
+  - A contracts/toolbox_smart_guitar_safe_export_v1.schema.json
+  - A services/api/app/smart_guitar_export/__init__.py
+  - A services/api/app/smart_guitar_export/exporter.py
+  - A services/api/app/smart_guitar_export/schemas.py
+  - A services/api/app/smart_guitar_export/validator.py
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/index/drills.json
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/index/lessons.json
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/index/topics.json
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/manifest.json
+  - A services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/provenance/build.json
+  - A contracts/fixtures/telemetry_invalid_pedagogy_leak.json
+  - A contracts/fixtures/telemetry_valid_hardware_performance.json
+  - A contracts/smart_guitar_toolbox_telemetry_v1.schema.json
+  - A services/api/app/smart_guitar_telemetry/__init__.py
+  - A services/api/app/smart_guitar_telemetry/schemas.py
+  - A services/api/app/smart_guitar_telemetry/validator.py
+  - A services/api/app/saw_lab/__init_router__.py
+  - A services/api/app/saw_lab/execution_metrics_rollup_service.py
+  - A services/api/app/saw_lab/execution_metrics_router.py
+  - A services/api/app/smart_guitar_telemetry/api.py
+  - M packages/client/src/App.vue
+  - M packages/client/src/components/AppNav.vue
+  - M packages/client/src/router/index.ts
+  - M services/api/data/art_jobs.json
+  - M services/api/data/art_presets.json
+  - M services/api/app/sandboxes/smart_guitar/schemas.py
+  - M services/api/app/schemas/smart_guitar.py
+  - M services/api/requirements.txt
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/rmos/runs_v2/__init__.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/main.py
+  - M services/api/app/saw_lab/__init__.py
+- tests: 8 paths
+  - A services/api/tests/test_plan_response_auto_suggest_unit.py
+  - A services/api/tests/test_batch_summary_dashboard_endpoint_exists.py
+  - A services/api/tests/test_batch_summary_dashboard_unit.py
+  - A services/api/tests/test_smart_guitar_export_gate.py
+  - A services/api/tests/test_smart_guitar_telemetry_gate.py
+  - A services/api/tests/test_execution_metrics_rollup_endpoint_exists.py
+  - A services/api/tests/test_execution_metrics_rollup_writer_unit.py
+  - A services/api/tests/test_smart_guitar_telemetry_api.py
+Documents produced:
+- `services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/1c63eb441cc2eace692ceae6c707e457ebae2b1bd98f53611e2902736e46d21f.md` — # The Major Scale Pattern
+- `services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/28944af1b888d97f04592fadf474aae0a28151a78052112a223ad0fe173f5647.md` — # Five Minute Daily Warmup
+- `services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/78eb926d2df562df5bfb5928630365a998f5ea36fc5a3cf310ab00f22c7c1afe.md` — # Clean Fretting Basics
+- `services/api/data/smart_guitar_exports/smart_guitar_export_v1_sample_001/assets/fa80ade89c6475121c813b60ab3d726302154405382d0e2d06c9ab52cd917f80.md` — # Alternate Picking Fundamentals
+- `docs/governance/SMART_GUITAR_TOOLBOX_TELEMETRY_CONTRACT_v1.md` — # SMART_GUITAR ↔ TOOLBOX_TELEMETRY_CONTRACT_v1
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f48d754)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a6a80480)
+- PR #20884529719 (47abf823)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47abf823)
+- PR #20884529719 (76afbd87)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (76afbd87)
+- PR #10 (3b1c717a)
+- PR #10 (5f599f9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b38bc20)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b4af8c5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59701602)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (886af134)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3e3285f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b39d80a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1e08957d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d74a70a8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (189bbf81)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (955b60f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c2ae4d9f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff656506)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b3932bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9467b451)
+
+### S020 — 2026-01-11T11:28:16-06:00 → 2026-01-12T02:56:45-06:00 (36 commits, 15.47h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `892d4774` feat(telemetry): add date-partitioned storage for Smart Guitar telemetry
+- `c172c3ac` feat(telemetry): add date-partitioned storage for Smart Guitar telemetry
+- `4e0b7e8b` feat(telemetry): add metric key smuggling prevention
+- `ea97dda3` feat(telemetry): add metric key smuggling prevention
+- `4f341c90` feat(art-studio): add placement presets panel (Bundle 32.6.1)
+- `a83f68ad` feat(art-studio): add placement presets panel (Bundle 32.6.1)
+- `30bb650d` feat(art-studio): add preset quick save ★ button (Bundle 32.6.2)
+- `d345d211` feat(art-studio): add preset quick save ★ button (Bundle 32.6.2)
+- `902f53c0` feat(rmos): Bundle C+D manufacturing decisions & bulk export
+- `b9c631d1` feat(rmos): Bundle C+D manufacturing decisions & bulk export
+- `0da8312f` feat(telemetry): add JSON Schema validator CLI and pytest gate (Scenario B)
+- `85d38c88` feat(telemetry): add JSON Schema validator CLI and pytest gate (Scenario B)
+- `386f738e` docs: update copilot-instructions.md with formatting fix
+- `4c994939` docs: update copilot-instructions.md with formatting fix
+- `201b341f` feat(rmos): add Run Ready badge with hover explainers to ManufacturingCandidateList
+- `35edf022` feat(rmos): add Run Ready badge with hover explainers to ManufacturingCandidateList
+- `3b9e5682` fix(rmos): align exportPackageDisabledReason with RUN READY semantics
+- `a19529fe` fix(rmos): align exportPackageDisabledReason with RUN READY semantics
+- `07f86dd9` docs: fix copilot-instructions.md header formatting
+- `87b949c6` docs: fix copilot-instructions.md header formatting
+- `c2ba2a7f` fix(tests): resolve 4 failing tests
+- `fe9ad8af` fix(tests): resolve 4 failing tests
+- `3708035c` feat(art-studio): prevent accidental preset overwrite (Bundle 32.6.4)
+- `c74eed82` feat(art-studio): prevent accidental preset overwrite (Bundle 32.6.4)
+- `d324b5f8` feat(art-studio): replace prompt() with modal + toast (Bundle 32.6.5)
+- `e1d83b3c` feat(art-studio): replace prompt() with modal + toast (Bundle 32.6.5)
+- `db788f93` feat(contracts): add governance gate (Scenario B)
+- `f929734c` feat(contracts): add governance gate (Scenario B)
+- `3c0f9ff2` docs(contracts): add Scenario B governance policy + tighten gate
+- `4d7f80d4` docs(contracts): add Scenario B governance policy + tighten gate
+- `3007c4c5` ci(contracts): wire Scenario B gate into core_ci.yml
+- `5ddb0d2b` ci(contracts): wire Scenario B gate into core_ci.yml
+- `74fc871e` ci: configure git auth for sg-spec private repo
+- `ce1b9fc6` ci: configure git auth for sg-spec private repo
+- `35be5d4d` ci: use SG_SPEC_TOKEN for cross-repo access
+- `4ee4a163` ci: use SG_SPEC_TOKEN for cross-repo access
+Files by surface:
+- docs: 3 paths
+  - A contracts/CHANGELOG.md
+  - A docs/governance/CONTRACTS_GOVERNANCE_SCENARIO_B_v1.md
+  - M .github/copilot-instructions.md
+- other: 19 paths
+  - A services/api/app/smart_guitar_telemetry/store.py
+  - A contracts/fixtures/telemetry_invalid_metric_key_smuggle.json
+  - A packages/client/src/components/rosette/PlacementPreviewPanel.vue
+  - A scripts/validate/validate_sg_telemetry_v1.py
+  - A packages/client/src/components/rosette/PresetSaveModal.vue
+  - A contracts/CONTRACTS_VERSION.json
+  - A contracts/smart_guitar_toolbox_telemetry_v1.schema.sha256
+  - A contracts/toolbox_smart_guitar_safe_export_v1.schema.sha256
+  - A contracts/viewer_pack_v1.schema.sha256
+  - A scripts/ci/check_contracts_governance.py
+  - M services/api/app/smart_guitar_telemetry/__init__.py
+  - M services/api/app/smart_guitar_telemetry/api.py
+  - M services/api/app/smart_guitar_telemetry/validator.py
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+  - M services/api/app/rmos/runs_v2/manufacturing_candidate_service.py
+  - M services/api/app/rmos/runs_v2/schemas_manufacturing_ops.py
+  - M services/api/requirements.txt
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M .github/workflows/core_ci.yml
+- tests: 8 paths
+  - A services/api/tests/test_smart_guitar_telemetry_store.py
+  - A services/api/tests/test_sg_telemetry_contract_gate.py
+  - A services/api/tests/test_contracts_governance_gate.py
+  - M services/api/tests/test_smart_guitar_telemetry_api.py
+  - M services/api/tests/test_smart_guitar_telemetry_gate.py
+  - M services/api/tests/test_manufacturing_candidates.py
+  - M services/api/tests/test_plan_response_auto_suggest_unit.py
+  - M services/api/tests/test_vision_attach_smoke.py
+Documents produced:
+- `contracts/CHANGELOG.md` — UNKNOWN
+- `docs/governance/CONTRACTS_GOVERNANCE_SCENARIO_B_v1.md` — # CONTRACTS_GOVERNANCE_SCENARIO_B_v1
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (892d4774)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c172c3ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e0b7e8b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ea97dda3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f341c90)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a83f68ad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30bb650d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d345d211)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0da8312f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (85d38c88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c2ba2a7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe9ad8af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3708035c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c74eed82)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d324b5f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1d83b3c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db788f93)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f929734c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c0f9ff2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4d7f80d4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3007c4c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ddb0d2b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (74fc871e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ce1b9fc6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35be5d4d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ee4a163)
+
+### S021 — 2026-01-12T08:19:05-06:00 → 2026-01-12T11:13:30-06:00 (22 commits, 2.91h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `a95fb486` ci: pass SG_SPEC_TOKEN to Docker build for sg-spec access
+- `e9cbc6b9` ci: pass SG_SPEC_TOKEN to Docker build for sg-spec access
+- `d6b67709` feat(contracts): add SHA256 hashes for cam_policy and qa_core
+- `f4093a95` feat(contracts): add SHA256 hashes for cam_policy and qa_core
+- `445823bc` ci: add SG_SPEC_TOKEN auth to routing_truth workflow
+- `aa4139f3` ci: add SG_SPEC_TOKEN auth to routing_truth workflow
+- `8e3545b6` ci: add SG_SPEC_TOKEN auth to 15 workflows
+- `ddb9d9fb` ci: add SG_SPEC_TOKEN auth to 15 workflows
+- `24ecdc9c` ci: add SG_SPEC_TOKEN to Windows job in rmos_migration
+- `45ec580a` ci: add SG_SPEC_TOKEN to Windows job in rmos_migration
+- `6431964b` ci: add SG_SPEC_TOKEN to dxf-pytest job
+- `9b5dc7d7` ci: add SG_SPEC_TOKEN to dxf-pytest job
+- `841d3a26` ci: add SG_SPEC_TOKEN to containers.yml Docker build
+- `d6232036` ci: add SG_SPEC_TOKEN to containers.yml Docker build
+- `6cb4311c` ci: add SG_SPEC_TOKEN to docker compose and proxy workflows
+- `edddbaab` ci: add SG_SPEC_TOKEN to docker compose and proxy workflows
+- `31eea869` fix(tests): use find_spec instead of direct import for openai check
+- `8e008c34` fix(tests): use find_spec instead of direct import for openai check
+- `13a36971` ci: fix api_dxf_tests - upgrade upload-artifact to v4, add SG_SPEC_TOKEN
+- `6d81dbb9` ci: fix api_dxf_tests - upgrade upload-artifact to v4, add SG_SPEC_TOKEN
+- `5dc21dc6` ci: disable api_dxf_tests - legacy endpoints not in current API
+- `f58e1015` ci: disable api_dxf_tests - legacy endpoints not in current API
+Files by surface:
+- docs: 1 paths
+  - M contracts/CHANGELOG.md
+- other: 25 paths
+  - A contracts/cam_policy.schema.sha256
+  - A contracts/qa_core.schema.sha256
+  - M .github/workflows/core_ci.yml
+  - M docker/api/Dockerfile
+  - M .github/workflows/routing_truth.yml
+  - M .github/workflows/adaptive_pocket.yml
+  - M .github/workflows/api_dxf_tests.yml
+  - M .github/workflows/api_health_and_smoke.yml
+  - M .github/workflows/api_health_check.yml
+  - M .github/workflows/api_tests.yml
+  - M .github/workflows/artifact_linkage_gate.yml
+  - M .github/workflows/blueprint_phase3.yml
+  - M .github/workflows/cam_essentials.yml
+  - M .github/workflows/comparelab-golden.yml
+  - M .github/workflows/geometry_parity.yml
+  - M .github/workflows/helical_badges.yml
+  - M .github/workflows/rmos_ci.yml
+  - M .github/workflows/rmos_migration.yml
+  - M .github/workflows/run_artifact_contract_gate.yml
+  - M .github/workflows/sdk_codegen.yml
+  - M .github/workflows/containers.yml
+  - M .github/workflows/proxy_adaptive.yml
+  - M .github/workflows/proxy_parity.yml
+  - M .github/workflows/server-env-check.yml
+  - M docker-compose.yml
+- tests: 1 paths
+  - M services/api/tests/test_vision_attach_smoke.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a95fb486)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9cbc6b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6b67709)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f4093a95)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (445823bc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aa4139f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e3545b6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ddb9d9fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (24ecdc9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45ec580a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6431964b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b5dc7d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (841d3a26)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6232036)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6cb4311c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (edddbaab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (31eea869)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e008c34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (13a36971)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d81dbb9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5dc21dc6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f58e1015)
+
+### S022 — 2026-01-12T15:56:13-06:00 → 2026-01-12T22:29:05-06:00 (18 commits, 6.55h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `5f540291` feat: migrate legacy DXF exports from ./server to services/api
+- `a4d2002d` feat: migrate legacy DXF exports from ./server to services/api
+- `35f2209c` ci: use API_BASE env var in api_dxf_tests workflow
+- `98d9eae1` ci: use API_BASE env var in api_dxf_tests workflow
+- `5726f6d0` ci: add .env file creation for docker compose in api_dxf_tests
+- `6e10a498` ci: add .env file creation for docker compose in api_dxf_tests
+- `4b388ecc` fix(dxf): make history tracking optional for Docker compatibility
+- `fa9cfa97` fix(dxf): make history tracking optional for Docker compatibility
+- `2170f2dd` docs: add governance executive summary for luthiers-toolbox ↔ sg-spec
+- `c36c852a` docs: add governance executive summary for luthiers-toolbox ↔ sg-spec
+- `7afb8a66` docs: add detailed schema field tables to governance summary
+- `d3ef30e6` docs: add detailed schema field tables to governance summary
+- `8a981bd2` docs: add comprehensive telemetry system audit
+- `cf99efe9` docs: add comprehensive telemetry system audit
+- `0ce552ca` docs: add comprehensive safe export system audit
+- `0ed503aa` docs: add comprehensive safe export system audit
+- `42b9912e` docs: add governance documentation links to README
+- `461ad7f9` docs: add governance documentation links to README
+Files by surface:
+- docs: 4 paths
+  - A docs/GOVERNANCE_EXECUTIVE_SUMMARY.md
+  - A docs/TELEMETRY_SYSTEM_AUDIT.md
+  - A docs/SAFE_EXPORT_SYSTEM_AUDIT.md
+  - M README.md
+- other: 7 paths
+  - A services/api/app/exports/__init__.py
+  - A services/api/app/exports/curvemath_biarc.py
+  - A services/api/app/exports/dxf_helpers.py
+  - A services/api/app/exports/history_store.py
+  - A services/api/app/routers/legacy_dxf_exports_router.py
+  - M .github/workflows/api_dxf_tests.yml
+  - M services/api/app/main.py
+- tests: 1 paths
+  - A services/api/tests/test_legacy_dxf_exports.py
+Documents produced:
+- `docs/GOVERNANCE_EXECUTIVE_SUMMARY.md` — UNKNOWN
+- `docs/TELEMETRY_SYSTEM_AUDIT.md` — UNKNOWN
+- `docs/SAFE_EXPORT_SYSTEM_AUDIT.md` — # Safe Export System Audit: luthiers-toolbox
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5f540291)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4d2002d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35f2209c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98d9eae1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5726f6d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e10a498)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b388ecc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa9cfa97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2170f2dd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c36c852a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7afb8a66)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3ef30e6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a981bd2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cf99efe9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ce552ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ed503aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (42b9912e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (461ad7f9)
+
+### S023 — 2026-01-13T02:31:12-06:00 → 2026-01-13T03:59:37-06:00 (6 commits, 1.47h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `bc028522` docs: add CI gate scripts and workflow locations to governance summary
+- `c3b8be9c` docs: add CI gate scripts and workflow locations to governance summary
+- `40fc28c1` docs: add SHA256 generation commands for all platforms
+- `8376347c` docs: add SHA256 generation commands for all platforms
+- `3ef0c3d8` fix(governance): tighten stem check to added-lines-only with token boundaries
+- `6bfab1fb` fix(governance): tighten stem check to added-lines-only with token boundaries
+Files by surface:
+- docs: 1 paths
+  - M docs/GOVERNANCE_EXECUTIVE_SUMMARY.md
+- other: 1 paths
+  - M scripts/ci/check_contracts_governance.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc028522)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3b8be9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (40fc28c1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8376347c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3ef0c3d8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6bfab1fb)
+
+### S024 — 2026-01-13T11:22:44-06:00 → 2026-01-14T03:46:15-06:00 (68 commits, 16.39h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/heads/feat/ai-context-adapter, refs/pull/4/head, refs/heads/feat/design-first-workflow, refs/pull/5/head
+Commits:
+- `81967dd6` test(governance): add unit tests for stem_mentioned regex
+- `e87c1545` test(governance): add unit tests for stem_mentioned regex
+- `634a6985` ci: add governance unit tests to Core CI workflow
+- `8faf167e` ci: add governance unit tests to Core CI workflow
+- `5c0664e6` feat: add telemetry cost attribution bundle v1
+- `fe48e9c6` feat: add telemetry cost attribution bundle v1
+- `72da081d` ci: add cost attribution unit tests to Core CI workflow
+- `910c48db` ci: add cost attribution unit tests to Core CI workflow
+- `5cf6d050` docs: add cost attribution system to governance summary
+- `c276e2cf` docs: add cost attribution system to governance summary
+- `25646735` docs: add developer handoff document for repository onboarding
+- `d757bbd3` docs: add developer handoff document for repository onboarding
+- `053042fb` docs: add CAM system analysis and Wave 18 migration details to handoff
+- `5595d5e7` docs: add CAM system analysis and Wave 18 migration details to handoff
+- `8c16a450` docs: add Path to MVP section with definitive roadmap
+- `8cdd788a` docs: add Path to MVP section with definitive roadmap
+- `0e2a7655` docs: add Art Studio and Blueprint Reader system audits
+- `8c7eb526` docs: add Art Studio and Blueprint Reader system audits
+- `0998ce39` docs: add RMOS system audit and update handoff to v1.5.0
+- `5cd2c714` docs: add RMOS system audit and update handoff to v1.5.0
+- `7308e941` docs: add CNC Saw Lab system audit and update handoff to v1.6.0
+- `c3e92d85` docs: add CNC Saw Lab system audit and update handoff to v1.6.0
+- `66741b85` docs: add AI system audit and update handoff to v1.7.0
+- `eb087de1` docs: add AI system audit and update handoff to v1.7.0
+- `661fe345` docs: add comprehensive CAM system audit with implementation code
+- `dab950e0` docs: add comprehensive CAM system audit with implementation code
+- `02f69079` docs: add DXF to G-code workflow guide
+- `3c864092` docs: add DXF to G-code workflow guide
+- `6202e511` docs: update DXF workflow with correct post-processors
+- `ca5a4765` docs: update DXF workflow with correct post-processors
+- `9fc601fd` feat(cam): add spindle commands to Mach4 post-processor
+- `aea47e48` feat(cam): add spindle commands to Mach4 post-processor
+- `37aebbba` feat(cam): add spindle commands to GRBL post-processor
+- `ee287ef1` feat(cam): add spindle commands to GRBL post-processor
+- `ae968d02` feat(cam): add spindle commands to all post-processors
+- `ff54e56f` feat(cam): add spindle commands to all post-processors
+- `0d3b5887` docs: update workflow with spindle command details
+- `14ed2cf2` docs: update workflow with spindle command details
+- `4704f6af` docs: fix API response format in workflow examples
+- `9008133e` docs: fix API response format in workflow examples
+- `4926eb90` docs: fix Step 2 curl - use query params for to-adaptive
+- `bbe4c2ef` docs: fix Step 2 curl - use query params for to-adaptive
+- `a0736ae6` docs: fix curl examples for copy-paste correctness
+- `c53c1e6c` docs: fix curl examples for copy-paste correctness
+- `580258d8` docs: fix DXF workflow doc to use plan_from_dxf golden path
+- `6577e640` docs: fix DXF workflow doc to use plan_from_dxf golden path
+- `5f6af75c` docs: consolidate DXF workflow around plan_from_dxf golden path
+- `d718c2ef` docs: consolidate DXF workflow around plan_from_dxf golden path
+- `78b86c09` feat(ai-context): add AI Context Adapter v1
+- `8073c8b0` feat(ai-context): add AI Context Adapter v1
+- `4eb0ff47` feat(art-studio): add Design-First Workflow (Bundle 32.7.0)
+- `4f5418a1` feat(art-studio): add Design-First Workflow (Bundle 32.7.0)
+- `73b57d76` chore: gitignore local test artifacts
+- `75c56f9c` chore: gitignore local test artifacts
+- `2469120b` Merge pull request #4 from HanzoRazer/feat/ai-context-adapter
+- `a0151508` Merge pull request #4 from HanzoRazer/feat/ai-context-adapter
+- `4f6f20c1` Merge pull request #5 from HanzoRazer/feat/design-first-workflow
+- `817b063a` Merge pull request #5 from HanzoRazer/feat/design-first-workflow
+- `47ec63b9` fix(cam): fix ezdxf DXF parsing for plan_from_dxf endpoint
+- `c945f0b0` fix(cam): fix ezdxf DXF parsing for plan_from_dxf endpoint
+- `416f0303` test(cam): lock MVP DXF→GRBL gcode golden path
+- `ab84db63` test(cam): lock MVP DXF→GRBL gcode golden path
+- `1562e2d0` ci: add MVP golden gate workflow and test README
+- `eec932b7` ci: add MVP golden gate workflow and test README
+- `534db342` feat(ai-context): Add AI Context Adapter v1 envelope
+- `d5ac968c` feat(ai-context): Add AI Context Adapter v1 envelope
+- `cbe5d280` fix: add allow_missing_request_id marker to MVP golden test
+- `e67d3aeb` fix: add allow_missing_request_id marker to MVP golden test
+Files by surface:
+- docs: 12 paths
+  - A docs/DEVELOPER_HANDOFF.md
+  - A docs/ART_STUDIO_SYSTEM_AUDIT.md
+  - A docs/BLUEPRINT_READER_SYSTEM_AUDIT.md
+  - A docs/RMOS_SYSTEM_AUDIT.md
+  - A docs/SAW_LAB_SYSTEM_AUDIT.md
+  - A docs/AI_SYSTEM_AUDIT.md
+  - A docs/CAM_SYSTEM_AUDIT.md
+  - A docs/DXF_TO_GCODE_WORKFLOW.md
+  - A docs/AI_CONTEXT_ADAPTER_v1.md
+  - A services/api/tests/README.md
+  - M contracts/CHANGELOG.md
+  - M docs/GOVERNANCE_EXECUTIVE_SUMMARY.md
+- other: 53 paths
+  - A contracts/telemetry_cost_mapping_policy_v1.json
+  - A services/api/app/cost_attribution/__init__.py
+  - A services/api/app/cost_attribution/api.py
+  - A services/api/app/cost_attribution/mapper.py
+  - A services/api/app/cost_attribution/models.py
+  - A services/api/app/cost_attribution/policy.py
+  - A services/api/app/cost_attribution/store.py
+  - A contracts/AI_CONTEXT_ADAPTER_INTERFACE_v1.json
+  - A services/api/app/ai_context/__init__.py
+  - A services/api/app/ai_context/assembler/__init__.py
+  - A services/api/app/ai_context/assembler/default.py
+  - A services/api/app/ai_context/providers/__init__.py
+  - A services/api/app/ai_context/providers/design_intent.py
+  - A services/api/app/ai_context/providers/docs_excerpt.py
+  - A services/api/app/ai_context/providers/governance_notes.py
+  - A services/api/app/ai_context/providers/run_summary.py
+  - A services/api/app/ai_context/providers/ui_state_hint.py
+  - A services/api/app/ai_context/redactor/__init__.py
+  - A services/api/app/ai_context/redactor/strict.py
+  - A services/api/app/ai_context/routes.py
+  - A services/api/app/ai_context/schemas.py
+  - A services/api/app/ai_context/validator.py
+  - A packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - A packages/client/src/components/ui/SmallModal.vue
+  - A packages/client/src/sdk/endpoints/artDesignFirstWorkflow.ts
+  - A packages/client/src/stores/artDesignFirstWorkflowStore.ts
+  - A packages/client/src/types/designFirstWorkflow.ts
+  - A services/api/app/art_studio/api/design_first_workflow_routes.py
+  - A services/api/app/art_studio/schemas/workflow_design_first.py
+  - A services/api/app/art_studio/services/design_first_workflow_service.py
+  - A services/api/app/art_studio/stores/__init__.py
+  - A services/api/app/art_studio/stores/design_first_workflow_store.py
+  - A services/api/scripts/regenerate_mvp_golden_gcode.py
+  - A .github/workflows/mvp_golden_gate.yml
+  - A contracts/toolbox_ai_context_envelope_v1.schema.json
+  - A scripts/validate/validate_toolbox_ai_context_envelope_v1.py
+  - A services/api/app/ai_context_adapter/__init__.py
+  - A services/api/app/ai_context_adapter/assembler/__init__.py
+  - A services/api/app/ai_context_adapter/assembler/default.py
+  - A services/api/app/ai_context_adapter/providers/__init__.py
+  - … 13 more (see sessions.json / files.jsonl)
+- tests: 8 paths
+  - A scripts/ci/test_check_contracts_governance.py
+  - A services/api/tests/test_cost_attribution_mapper_unit.py
+  - A services/api/tests/test_ai_context_adapter.py
+  - A services/api/tests/test_art_studio_design_first_workflow.py
+  - A services/api/tests/golden/mvp_rect_with_island__grbl.nc
+  - A services/api/tests/test_mvp_dxf_to_gcode_grbl_golden.py
+  - A services/api/tests/testdata/mvp_rect_with_island.dxf
+  - A services/api/tests/test_ai_context_envelope_gate.py
+Documents produced:
+- `docs/DEVELOPER_HANDOFF.md` — # Developer Handoff: Luthiers-ToolBox Repository
+- `docs/ART_STUDIO_SYSTEM_AUDIT.md` — # Art Studio System Audit
+- `docs/BLUEPRINT_READER_SYSTEM_AUDIT.md` — # Blueprint Reader System Audit
+- `docs/RMOS_SYSTEM_AUDIT.md` — UNKNOWN
+- `docs/SAW_LAB_SYSTEM_AUDIT.md` — # CNC Saw Lab System Audit
+- `docs/AI_SYSTEM_AUDIT.md` — # AI System Audit
+- `docs/CAM_SYSTEM_AUDIT.md` — # CAM System Audit
+- `docs/DXF_TO_GCODE_WORKFLOW.md` — # DXF to G-code Workflow Guide
+- `docs/AI_CONTEXT_ADAPTER_v1.md` — # AI Context Adapter Interface v1 - Implementation Summary
+- `services/api/tests/README.md` — # API Tests
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (81967dd6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e87c1545)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (634a6985)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8faf167e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5c0664e6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe48e9c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (72da081d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (910c48db)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cf6d050)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c276e2cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25646735)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d757bbd3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (053042fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5595d5e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8c16a450)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8cdd788a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e2a7655)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8c7eb526)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0998ce39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cd2c714)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7308e941)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3e92d85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66741b85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb087de1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (661fe345)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dab950e0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02f69079)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c864092)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6202e511)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca5a4765)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9fc601fd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aea47e48)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37aebbba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee287ef1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae968d02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff54e56f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d3b5887)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14ed2cf2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4704f6af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9008133e)
+- … 24 more
+
+### S025 — 2026-01-14T11:36:14-06:00 → 2026-01-14T20:23:20-06:00 (16 commits, 8.79h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `002c54e0` docs: add session bookmark for MVP golden path work
+- `6e46e1b8` docs: add session bookmark for MVP golden path work
+- `7d94c4d4` feat(rmos): add MVP DXF->GRBL wrapper with governance
+- `d8144abf` feat(rmos): add MVP DXF->GRBL wrapper with governance
+- `8e126144` feat(ai-context): add POST /build endpoint with hard boundary gate
+- `c59cfcd5` feat(ai-context): add POST /build endpoint with hard boundary gate
+- `728056fb` refactor(rmos): improve MVP wrapper response schema
+- `812fb756` refactor(rmos): improve MVP wrapper response schema
+- `067472e9` ci: add AI context governance comment gate
+- `3bdc3dac` ci: add AI context governance comment gate
+- `15b9d4f9` ci: wire AI context governance gate into sandbox workflow
+- `5606df52` ci: wire AI context governance gate into sandbox workflow
+- `4c0ef4e4` feat(ui): wire BlueprintLab Phase 3 to MVP wrapper endpoint
+- `5ad80eb1` feat(ui): wire BlueprintLab Phase 3 to MVP wrapper endpoint
+- `0b83e86c` fix(ui): fix corrupted JS syntax in BlueprintLab CAM functions
+- `6ea06f2f` fix(ui): fix corrupted JS syntax in BlueprintLab CAM functions
+Files by surface:
+- docs: 1 paths
+  - A SESSION_2026-01-14.md
+- other: 6 paths
+  - A services/api/app/rmos/mvp_wrapper.py
+  - A scripts/ci/check_ai_context_governance_comment.py
+  - M services/api/app/main.py
+  - M services/api/app/ai_context_adapter/routes.py
+  - M .github/workflows/ai_sandbox_enforcement.yml
+  - M packages/client/src/views/BlueprintLab.vue
+- tests: 2 paths
+  - A services/api/tests/test_rmos_mvp_wrapper.py
+  - A services/api/tests/test_ai_context_adapter_build.py
+Documents produced:
+- `SESSION_2026-01-14.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (002c54e0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e46e1b8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d94c4d4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8144abf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e126144)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c59cfcd5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (728056fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (812fb756)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (067472e9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3bdc3dac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (15b9d4f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5606df52)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c0ef4e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ad80eb1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b83e86c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ea06f2f)
+
+### S026 — 2026-01-15T02:51:31-06:00 → 2026-01-15T03:55:17-06:00 (22 commits, 1.06h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `270d5923` feat(ai-context): add art_studio_first mode with snapshot_id lookup
+- `45581bda` feat(ai-context): add art_studio_first mode with snapshot_id lookup
+- `6088f5c6` feat(rmos): add operator pack ZIP export endpoint
+- `e3390038` feat(rmos): add operator pack ZIP export endpoint
+- `69f71fd8` feat(ui): add AI Context tab to Visual Analyzer
+- `cc030bf1` feat(ui): add AI Context tab to Visual Analyzer
+- `6b751727` feat(ui): add route for DXF to G-code view
+- `6f0c077f` feat(ui): add route for DXF to G-code view
+- `98190124` fix(ai-context): remove forbidden keyword from governance notes
+- `e029cc27` fix(ai-context): remove forbidden keyword from governance notes
+- `28f16d5e` fix(ai-context): exclude copilot-instructions from docs index
+- `51971689` fix(ai-context): exclude copilot-instructions from docs index
+- `7df3d7b0` fix(ai-context): allow CAM terms in doc sources
+- `d8923542` fix(ai-context): allow CAM terms in doc sources
+- `437531d5` docs: add StorePorts pattern to copilot instructions
+- `e7075066` docs: add StorePorts pattern to copilot instructions
+- `2e25ac86` chore(contracts): add AI context envelope schema hash
+- `64c534ba` chore(contracts): add AI context envelope schema hash
+- `9c5627ff` feat(ui): add DXF to G-code lab card to navigation
+- `c69932c4` feat(ui): add DXF to G-code lab card to navigation
+- `3f1e34d0` polish(ui): improve DXF to G-code UX
+- `cae7fdd9` polish(ui): improve DXF to G-code UX
+Files by surface:
+- docs: 1 paths
+  - M .github/copilot-instructions.md
+- other: 11 paths
+  - A packages/client/src/views/DxfToGcodeView.vue
+  - A services/api/app/rmos/runs_v2/exports.py
+  - A contracts/toolbox_ai_context_envelope_v1.schema.sha256
+  - M services/api/app/ai_context_adapter/routes.py
+  - M services/api/app/rmos/runs_v2/diff.py
+  - M services/api/app/main.py
+  - M packages/client/src/views/AiImagesView.vue
+  - M packages/client/src/router/index.ts
+  - M services/api/app/ai_context/providers/governance_notes.py
+  - M services/api/app/ai_context/providers/docs_excerpt.py
+  - M packages/client/src/views/LabsIndex.vue
+- tests: 4 paths
+  - A services/api/tests/test_ai_context_adapter_art_studio_first.py
+  - A services/api/tests/test_ai_context_adapter_gate.py
+  - A services/api/tests/test_rmos_operator_pack_export.py
+  - M services/api/tests/test_ai_context_adapter.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (270d5923)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45581bda)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6088f5c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3390038)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69f71fd8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc030bf1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6b751727)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f0c077f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98190124)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e029cc27)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28f16d5e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (51971689)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7df3d7b0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8923542)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (437531d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e7075066)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e25ac86)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (64c534ba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9c5627ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c69932c4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f1e34d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cae7fdd9)
+
+### S027 — 2026-01-15T09:14:30-06:00 → 2026-01-15T09:34:12-06:00 (6 commits, 0.33h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head
+Commits:
+- `474d81b3` feat(ui): add Run Viewer page for single run artifact display
+- `68b15d5f` feat(ui): add Run Viewer page for single run artifact display
+- `3d906d4f` feat(ui): add Open link to run viewer from artifact detail
+- `646ab279` feat(ui): add Open link to run viewer from artifact detail
+- `125a7584` feat(rmos): add attachment download endpoint and Run Viewer upgrades
+- `d90d920f` feat(rmos): add attachment download endpoint and Run Viewer upgrades
+Files by surface:
+- other: 4 paths
+  - A packages/client/src/views/RmosRunViewerView.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/components/rmos/RunArtifactDetail.vue
+  - M services/api/app/rmos/runs_v2/exports.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (474d81b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (68b15d5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3d906d4f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (646ab279)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (125a7584)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d90d920f)
+
+### S028 — 2026-01-15T15:33:40-06:00 → 2026-01-16T05:36:18-06:00 (44 commits, 14.04h)
+Branches: refs/pull/6/head, refs/heads/feat/wave-6a-6b1-linked-cursor-wsi
+Commits:
+- `24f29b92` fix(rmos): compute attachments path from module location
+- `ee754bdb` fix(rmos): compute attachments path from module location
+- `2810bcd0` feat(rmos): add deterministic feasibility engine for pre-CAM validation
+- `a0bff0e9` feat(rmos): add deterministic feasibility engine for pre-CAM validation
+- `583d25c9` feat(audio-analyzer): add SpectrumChartRenderer with hardening
+- `d3651882` feat(audio-analyzer): add SpectrumChartRenderer with hardening
+- `50cb8a0d` test(audio-analyzer): add viewer_pack test fixtures
+- `9da785fb` test(audio-analyzer): add viewer_pack test fixtures
+- `4725e105` test: add viewer_pack_v1 contract gate tests
+- `f00630c9` test: add viewer_pack_v1 contract gate tests
+- `398e1d4c` test(evidence): add vitest loader tests for viewer_pack_v1
+- `beae6d22` test(evidence): add vitest loader tests for viewer_pack_v1
+- `7f67a239` test(evidence): harden loader tests + add coherence JSON fixture
+- `eb2de3db` test(evidence): harden loader tests + add coherence JSON fixture
+- `92a3bb31` feat(audio-analyzer): add Phase 4 Bode Plot renderer
+- `cda4a6f6` feat(audio-analyzer): add Phase 4 Bode Plot renderer
+- `60de7fde` test(rmos): add feasibility unit tests for determinism and RED/YELLOW rules
+- `98075e68` test(rmos): add feasibility unit tests for determinism and RED/YELLOW rules
+- `12c2513f` feat(rmos): include feasibility.json in operator pack (optional)
+- `c3e03e88` feat(rmos): include feasibility.json in operator pack (optional)
+- `0ece958d` test(rmos): add wrapper integration tests for feasibility Phase 1
+- `2bd24903` test(rmos): add wrapper integration tests for feasibility Phase 1
+- `4c7e807d` docs: update DXF workflow + developer handoff for feasibility Phase 1
+- `fdd9369a` docs: update DXF workflow + developer handoff for feasibility Phase 1
+- `027daebc` test(rmos): refactor feasibility tests to use canonical hash function
+- `7be933e3` test(rmos): refactor feasibility tests to use canonical hash function
+- `d865d82d` feat(audio-analyzer): add peaks overlay to spectrum chart renderer
+- `da01aed4` feat(audio-analyzer): add peaks overlay to spectrum chart renderer
+- `5fc8fe8d` feat(saw-lab): add Decision Intelligence with apply-on-next-plan
+- `ab9d0f6b` feat(saw-lab): add Decision Intelligence with apply-on-next-plan
+- `194d8262` docs: add tap-tone-pi integration handoff package
+- `25897a9f` docs: add tap-tone-pi integration handoff package
+- `6d9a81a5` feat(audio-analyzer): add Wave 6A linked cursor selection
+- `caa84d02` feat(audio-analyzer): add Wave 6A linked cursor selection
+- `c4f98a0d` feat(audio-analyzer): enhance Wave 6A with details sidebar + audio jump
+- `c8dd2b38` feat(audio-analyzer): enhance Wave 6A with details sidebar + audio jump
+- `3efa0527` feat(audio-analyzer): add persistent cursor pill in header
+- `9f3f207c` feat(audio-analyzer): add persistent cursor pill in header
+- `07730288` chore: remove wave6a_code_bundle from repo
+- `5a2fd087` chore: remove wave6a_code_bundle from repo
+- `807426cc` feat(audio-analyzer): add WSI Curve Renderer (Wave 6B.1)
+- `d05b9bb9` feat(audio-analyzer): add WSI Curve Renderer (Wave 6B.1)
+- `5c56fcc4` feat(audio-analyzer): enhance selection details for WSI source
+- `762eaf1e` feat(audio-analyzer): enhance selection details for WSI source
+Files by surface:
+- docs: 10 paths
+  - A docs/AUDIO_ANALYZER_RENDERER_HANDOFF.md
+  - A packages/client/src/tools/audio_analyzer/renderers/RENDERER_KINDS.md
+  - A docs/TAP_TONE_PI_INTEGRATION_HANDOFF.md
+  - A docs/TAP_TONE_PI_SCAFFOLDING_GUIDE.md
+  - A wave6a_code_bundle/README.md
+  - A wave6a_code_bundle/patches/WAVE6A_CHANGES.md
+  - M docs/DEVELOPER_HANDOFF.md
+  - M docs/DXF_TO_GCODE_WORKFLOW.md
+  - D wave6a_code_bundle/README.md
+  - D wave6a_code_bundle/patches/WAVE6A_CHANGES.md
+- other: 66 paths
+  - A services/api/app/rmos/feasibility/__init__.py
+  - A services/api/app/rmos/feasibility/engine.py
+  - A services/api/app/rmos/feasibility/rules.py
+  - A services/api/app/rmos/feasibility/schemas.py
+  - A packages/client/src/tools/audio_analyzer/renderers/SpectrumChartRenderer.vue
+  - A packages/client/src/evidence/__tests__/zip_loader.spec.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/TransferFunctionRenderer.vue
+  - A packages/client/src/tools/audio_analyzer/renderers/__tests__/pickRenderer.spec.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/__tests__/transferFunctionParsing.spec.ts
+  - A packages/client/src/tools/audio_analyzer/renderers/__tests__/types.spec.ts
+  - A packages/client/src/tools/audio_analyzer/__tests__/packHelpers.spec.ts
+  - A packages/client/src/tools/audio_analyzer/packHelpers.ts
+  - A Screenshot 2026-01-15 033523.png
+  - A Screenshot 2026-01-15 033954.png
+  - A services/api/data/run_attachments/07/9a/079a3f9b4a549997874e06798233ced96fee7cf8902ace429ad9872a61b581ea
+  - A services/api/data/run_attachments/11/17/1117d97ea6fbdcd270cddc305af7534b47353304a1fe95ee9ead8cbea377b309.json
+  - A services/api/data/run_attachments/18/5d/185df51c75fed77dab6dc6579619d2f880d9225f6fcdefca4b9cbaa9b98ad214.json
+  - A services/api/data/run_attachments/21/bc/21bc09c8c19519ff7c94b6f349456cf5bfe5270bebe032ee38efdf4efd4d67ae.json
+  - A services/api/data/run_attachments/25/d2/25d2b7100e3caac077e8b7280252de42057f68efb5c228c79c81ad363c064ff0.json
+  - A services/api/data/run_attachments/29/dc/29dc27e47e7c0d3740400d2b7651361bdc7d12a2b069140831b5288f9f726dd8.json
+  - A services/api/data/run_attachments/2a/c8/2ac871d339f8322ae88cae29cd2f645dcb5d61196ce207f2ae17995ad7bb0810
+  - A services/api/data/run_attachments/45/51/4551a6f296b60ededde8c302b7b5af9eb8420b1106bb60638c990e0c2407607a.json
+  - A services/api/data/run_attachments/56/d1/56d18afa52dbabe8091922c663c35fa4541ab10d06bcb69cf3923dcee19cf3db.json
+  - A services/api/data/run_attachments/5b/0f/5b0ff52a5dfac3f4ca643334a85c190661a4ba04ccc92d535fb04b6e52182ac9
+  - A services/api/data/run_attachments/5c/1a/5c1a63f47d44b42fd638a57bc9fa1a2be5fdc8bd8e725e51d0a09488d1a2e208.json
+  - A services/api/data/run_attachments/64/27/6427b715d80d6e3d3cbc0e14ecc419a31af79a2d7077214a252934a4c1f59683.json
+  - A services/api/data/run_attachments/66/27/6627dfecb0a0dcb64df24884245336f142461b562afca10e14c2bd43b277b02c.json
+  - A services/api/data/run_attachments/6b/9d/6b9d5026f8744df487df775946a3afce5ff95ecdcf4d49bc2f930d6d57548ece.json
+  - A services/api/data/run_attachments/78/6c/786ce3c14da2c654de041aa41ab7980d7c2b356d1840c1b96a20d10e2f2a7444.json
+  - A services/api/data/run_attachments/86/e4/86e4717eac6fb29f9d69ff7cfe970d37ca1a8e52507ad856d93897ce024ff0be.json
+  - A services/api/data/run_attachments/89/39/8939cea59beaba7677cfb90a503641da527e9d524f4648398c78018b412c4311.json
+  - A services/api/data/run_attachments/8c/14/8c14ebe775f7bdac2d6065c0755db4bcebaf19cbf1a996041c2046e10cb43baf
+  - A services/api/data/run_attachments/92/6e/926e2168416134ef3b83adf7f6a0b3948d23eadd8d91f4534525a1cd0c512348.json
+  - A services/api/data/run_attachments/a3/fa/a3fa04b9457ff5ffed4e9c32d215d30d1403352f9f4073d0b215f5e7c3706591.nc
+  - A services/api/data/run_attachments/b1/25/b1250ad7dc1a5e7260f5830fccda5637a8094ba7f08a7d190e889a0c1f318384.nc
+  - A services/api/data/run_attachments/bb/60/bb602f3c3f084f38ded2a03b7aac1832c7cd5816041a836eb665afb06335b740.nc
+  - A services/api/data/run_attachments/c3/af/c3afb71f708d49b823c3abc9e83b36f240ec2a3b58925d31db9113ef22f95f47.json
+  - A services/api/data/run_attachments/cc/88/cc883ac2b3b430bec5ff38d861923eeccdc3d14eb0a6f435847e98add7b08e5d
+  - A services/api/data/run_attachments/cd/12/cd12a4b9dfbb3293a596d83fb49a2c5b9ab2bce8ee9131e224eee334804f9227.nc
+  - A services/api/data/run_attachments/d1/2c/d12cf8b3e3617cf777449c7c66dbc53d720a297265e9450baaed2b7280a5335d.json
+  - … 26 more (see sessions.json / files.jsonl)
+- tests: 6 paths
+  - A services/api/tests/fixtures/viewer_packs/generate_fixtures.py
+  - A services/api/tests/fixtures/viewer_packs/session_unknown_kind.zip
+  - A services/api/tests/fixtures/viewer_packs/session_with_coherence.zip
+  - A services/api/tests/test_viewer_pack_contract.py
+  - A services/api/tests/test_feasibility_engine.py
+  - A services/api/tests/test_rmos_wrapper_feasibility_phase1.py
+Documents produced:
+- `docs/AUDIO_ANALYZER_RENDERER_HANDOFF.md` — UNKNOWN
+- `packages/client/src/tools/audio_analyzer/renderers/RENDERER_KINDS.md` — UNKNOWN
+- `docs/TAP_TONE_PI_INTEGRATION_HANDOFF.md` — UNKNOWN
+- `docs/TAP_TONE_PI_SCAFFOLDING_GUIDE.md` — UNKNOWN
+- `wave6a_code_bundle/README.md` — UNKNOWN
+- `wave6a_code_bundle/patches/WAVE6A_CHANGES.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (24f29b92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee754bdb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2810bcd0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a0bff0e9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (583d25c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3651882)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (50cb8a0d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9da785fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4725e105)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f00630c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (398e1d4c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (beae6d22)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f67a239)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb2de3db)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92a3bb31)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cda4a6f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60de7fde)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98075e68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (12c2513f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3e03e88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ece958d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2bd24903)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c7e807d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fdd9369a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (027daebc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7be933e3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d865d82d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da01aed4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (194d8262)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25897a9f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d9a81a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (caa84d02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4f98a0d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c8dd2b38)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3efa0527)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f3f207c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (807426cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d05b9bb9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5c56fcc4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (762eaf1e)
+
+### S029 — 2026-01-16T12:24:09-06:00 → 2026-01-16T20:59:57-06:00 (30 commits, 8.6h)
+Branches: refs/heads/feat/wave-6a-6b1-linked-cursor-wsi, refs/pull/6/head, refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `26e294da` docs: add acceptance test spec for Wave 6A + 6B.1
+- `985b1ed3` docs: add acceptance test spec for Wave 6A + 6B.1
+- `3b6056e7` docs: add PR checklist and test stubs for Wave 6A + 6B.1
+- `b993ce5f` docs: add PR checklist and test stubs for Wave 6A + 6B.1
+- `2375c2b3` docs: add governance note above SelectedPeak type
+- `edbfd9e4` docs: add governance note above SelectedPeak type
+- `16201f87` docs: add governance note to WsiCurveRenderer
+- `8bad023f` docs: add governance note to WsiCurveRenderer
+- `1ff14469` test: add tmp_path-isolated variant for feasibility persistence
+- `3ef25924` test: add tmp_path-isolated variant for feasibility persistence
+- `7cc89bd2` feat(wsi): improve tooltip and emphasize selected sample (6B.1-safe)
+- `f2eb424f` feat(wsi): improve tooltip and emphasize selected sample (6B.1-safe)
+- `c64ccdd1` test: add hasattr guard to singleton reset for robustness
+- `e11411c6` test: add hasattr guard to singleton reset for robustness
+- `4a66faa7` docs: add Wave 7 boundary memo for interpretation governance
+- `e853578e` docs: add Wave 7 boundary memo for interpretation governance
+- `09f0ea14` docs: add Wave 7 governance check to PR template
+- `367cb494` docs: add Wave 7 governance check to PR template
+- `a1eb4dfa` feat(rmos): add auditable override for YELLOW runs + RED gating
+- `f1740d70` feat(rmos): add auditable override for YELLOW runs + RED gating
+- `14704fa8` test(rmos): add operator pack feasibility gate integration tests
+- `33e2a910` test(rmos): add operator pack feasibility gate integration tests
+- `215447ae` docs: simplify Wave boundary check for contributors
+- `9335e34a` docs: simplify Wave boundary check for contributors
+- `27570293` feat(rmos): add dedicated override endpoint with index-based storage
+- `9adec29c` feat(rmos): add dedicated override endpoint with index-based storage
+- `38b5cb3c` feat(ui): add override modal for YELLOW feasibility in DxfToGcodeView
+- `79b538c7` feat(ui): add override modal for YELLOW feasibility in DxfToGcodeView
+- `339a188a` docs(ai): update instructions with Decision Intelligence and refactor canonical refresh
+- `df70cc9f` docs(ai): update instructions with Decision Intelligence and refactor canonical refresh
+Files by surface:
+- docs: 5 paths
+  - A packages/client/src/tools/audio_analyzer/__tests__/ACCEPTANCE_WAVE6A_6B1.md
+  - A docs/PR_CHECKLIST_WAVE6A_6B1.md
+  - A docs/GOVERNANCE_WAVE7_BOUNDARY.md
+  - M .github/PULL_REQUEST_TEMPLATE.md
+  - M .github/copilot-instructions.md
+- other: 5 paths
+  - A packages/client/src/tools/audio_analyzer/__tests__/AudioAnalyzerViewer.wave6.spec.ts
+  - M packages/client/src/views/tools/AudioAnalyzerViewer.vue
+  - M packages/client/src/tools/audio_analyzer/renderers/WsiCurveRenderer.vue
+  - M services/api/app/rmos/runs_v2/exports.py
+  - M packages/client/src/views/DxfToGcodeView.vue
+- tests: 3 paths
+  - A services/api/tests/test_rmos_operator_pack_feasibility_gate.py
+  - A services/api/tests/test_rmos_operator_pack_override_gate.py
+  - M services/api/tests/test_rmos_wrapper_feasibility_phase1.py
+Documents produced:
+- `packages/client/src/tools/audio_analyzer/__tests__/ACCEPTANCE_WAVE6A_6B1.md` — UNKNOWN
+- `docs/PR_CHECKLIST_WAVE6A_6B1.md` — # PR Checklist — Wave 6A + 6B.1 (Linked Cursor + WSI)
+- `docs/GOVERNANCE_WAVE7_BOUNDARY.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (26e294da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (985b1ed3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3b6056e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b993ce5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2375c2b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (edbfd9e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (16201f87)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8bad023f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ff14469)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3ef25924)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7cc89bd2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f2eb424f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c64ccdd1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e11411c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a66faa7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e853578e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09f0ea14)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (367cb494)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a1eb4dfa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1740d70)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14704fa8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (33e2a910)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (215447ae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9335e34a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27570293)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9adec29c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38b5cb3c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (79b538c7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (339a188a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df70cc9f)
+
+### S030 — 2026-01-17T01:43:50-06:00 → 2026-01-17T02:59:50-06:00 (18 commits, 1.27h)
+Branches: refs/tags/toolbox-v0.32.0, refs/pull/10/head
+Commits:
+- `92b4d514` docs: add API test catalogue for RMOS runs_v2 and Saw Lab
+- `97b2f55d` docs: add API test catalogue for RMOS runs_v2 and Saw Lab
+- `394002b2` feat(rmos): add attachment meta facets endpoint
+- `98af7de5` feat(rmos): add attachment meta facets endpoint
+- `8fe59e1c` docs: add tap-tone-pi sandbox handoff and failure modes
+- `cfbcf76f` docs: add tap-tone-pi sandbox handoff and failure modes
+- `54cfbc5f` docs: add Acoustics Library UI bundle checklist
+- `fcbddcf8` docs: add Acoustics Library UI bundle checklist
+- `6cc3515c` docs: add Acoustics API typed contracts
+- `9850d003` docs: add Acoustics API typed contracts
+- `ba5601e7` feat(sdk): add rmosAcoustics endpoint module for Acoustics Library
+- `cdfbf6e8` feat(sdk): add rmosAcoustics endpoint module for Acoustics Library
+- `2369c577` feat(ui): add Acoustics Library UI + Viewer deep-link
+- `ced03c09` feat(ui): add Acoustics Library UI + Viewer deep-link
+- `33ab6568` feat(acoustics-ui): Library + Viewer deep-link (sha256)
+- `edaafa7a` feat(acoustics-ui): Library + Viewer deep-link (sha256)
+- `5bc09c7f` fix(api): reorder acoustics routes to fix /facets 404
+- `e2457e7e` fix(api): reorder acoustics routes to fix /facets 404
+Files by surface:
+- docs: 5 paths
+  - A docs/API_TEST_CATALOGUE.md
+  - A docs/TAP_TONE_PI_SANDBOX_FAILURE_MODES.md
+  - A docs/TAP_TONE_PI_SANDBOX_HANDOFF.md
+  - A docs/ACOUSTICS_LIBRARY_UI_BUNDLE_CHECKLIST.md
+  - A docs/ACOUSTICS_API_TYPED_CONTRACTS.md
+- other: 10 paths
+  - A packages/client/src/sdk/endpoints/rmosAcoustics.ts
+  - A packages/client/src/types/rmosAcoustics.ts
+  - A packages/client/src/views/tools/AudioAnalyzerLibrary.vue
+  - M services/api/app/rmos/acoustics/router_query.py
+  - M services/api/app/rmos/runs_v2/attachment_meta.py
+  - M packages/client/src/sdk/endpoints/index.ts
+  - M packages/client/src/components/AppNav.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/views/tools/AudioAnalyzerViewer.vue
+  - M services/api/app/rmos/runs_v2/acoustics_router.py
+Documents produced:
+- `docs/API_TEST_CATALOGUE.md` — # API Test Catalogue
+- `docs/TAP_TONE_PI_SANDBOX_FAILURE_MODES.md` — # Appendix A — Analyzer Failure Modes → Viewer Symptoms
+- `docs/TAP_TONE_PI_SANDBOX_HANDOFF.md` — # Tap-Tone-Pi Sandbox → Evidence Viewer
+- `docs/ACOUSTICS_LIBRARY_UI_BUNDLE_CHECKLIST.md` — # Acoustics Library UI + Import Workflow — Bundle Checklist
+- `docs/ACOUSTICS_API_TYPED_CONTRACTS.md` — # Acoustics API Typed Contracts
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92b4d514)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (97b2f55d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (394002b2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98af7de5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8fe59e1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cfbcf76f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (54cfbc5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fcbddcf8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6cc3515c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9850d003)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ba5601e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cdfbf6e8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2369c577)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ced03c09)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5bc09c7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e2457e7e)
+
+### S031 — 2026-01-17T10:19:31-06:00 → 2026-01-17T12:26:29-06:00 (6 commits, 2.12h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `86a7f7d6` feat(acoustics-ui): Recent panel with SDK getRecent()
+- `9b077a8f` feat(acoustics-ui): Recent panel with SDK getRecent()
+- `9aadd26f` feat(acoustics-ui): Runs browser (session/run-centric library)
+- `f622561c` feat(acoustics-ui): Runs browser (session/run-centric library)
+- `339e5fdc` fix(client): resolve 454 TypeScript type errors
+- `37fa902f` fix(client): resolve 454 TypeScript type errors
+Files by surface:
+- other: 78 paths
+  - A packages/client/src/views/tools/AudioAnalyzerRunsLibrary.vue
+  - A packages/client/src/cnc_production/PresetManagerPanel.vue
+  - A packages/client/src/components/art/ReliefRiskPresetPanel.vue
+  - A packages/client/src/sdk/endpoints/artPlacement.ts
+  - M packages/client/src/sdk/endpoints/rmosAcoustics.ts
+  - M packages/client/src/types/rmosAcoustics.ts
+  - M packages/client/src/views/tools/AudioAnalyzerLibrary.vue
+  - M packages/client/src/components/AppNav.vue
+  - M packages/client/src/router/index.ts
+  - M services/api/app/rmos/runs_v2/acoustics_router.py
+  - M services/api/app/rmos/runs_v2/acoustics_schemas.py
+  - M packages/client/package-lock.json
+  - M packages/client/package.json
+  - M packages/client/src/components/AdaptivePocketLab.vue
+  - M packages/client/src/components/BlueprintImporter.vue
+  - M packages/client/src/components/CAMPreview.vue
+  - M packages/client/src/components/CamBackplotPanel.vue
+  - M packages/client/src/components/CamMachineEnvelopePanel.vue
+  - M packages/client/src/components/PreviewPane.vue
+  - M packages/client/src/components/RosettePatternLibrary.vue
+  - M packages/client/src/components/RosettePhotoImport.vue
+  - M packages/client/src/components/ToastHost.vue
+  - M packages/client/src/components/ToolTable.vue
+  - M packages/client/src/components/art/SnapshotComparePanel.vue
+  - M packages/client/src/components/artstudio/ArtStudioSidebar.vue
+  - M packages/client/src/components/cam/CamIssuesList.vue
+  - M packages/client/src/components/cam/CamPresetEvolutionTrend.vue
+  - M packages/client/src/components/compare/CompareRunsPanel.vue
+  - M packages/client/src/components/compare/PanZoomSvg.vue
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+  - M packages/client/src/components/rmos/ManufacturingCandidatesPanel.vue
+  - M packages/client/src/components/rmos/MixedMaterialStripFamilyEditor.vue
+  - M packages/client/src/components/rmos/PlanAttachmentsInspector.vue
+  - M packages/client/src/components/rmos/RmosAiLogViewer.vue
+  - M packages/client/src/components/rosette/FeasibilityBanner.vue
+  - M packages/client/src/components/rosette/GeneratorPicker.vue
+  - M packages/client/src/components/rosette/SnapshotPanel.vue
+  - M packages/client/src/components/saw_lab/SawBatchPanel.vue
+  - M packages/client/src/components/saw_lab/SawContourPanel.vue
+  - M packages/client/src/components/saw_lab/SawSlicePanel.vue
+  - … 38 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (339e5fdc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37fa902f)
+
+### S032 — 2026-01-17T17:00:59-06:00 → 2026-01-18T02:06:44-06:00 (52 commits, 9.1h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `1a8f6f5d` feat(deploy): add Railway deployment configuration
+- `b1e01853` feat(deploy): add Railway deployment configuration
+- `a8d6f4ae` fix(railway): add local Dockerfiles to fix build path resolution
+- `d7a7ec2e` fix(railway): add local Dockerfiles to fix build path resolution
+- `833057cc` fix(railway): use dynamic PORT env var for nginx
+- `ace7b699` fix(railway): use dynamic PORT env var for nginx
+- `6ab981d2` fix(railway): simplify nginx startup script for PORT injection
+- `dc94aa38` fix(railway): simplify nginx startup script for PORT injection
+- `36a78c68` fix(api): handle different path structures in health_router
+- `c7689c5f` fix(api): handle different path structures in health_router
+- `02e79474` fix(railway): increase API health check timeout to 120s
+- `5ddfb2a7` fix(railway): increase API health check timeout to 120s
+- `4c31197e` fix(railway): clear startCommand to use Dockerfile CMD
+- `8aad4817` fix(railway): clear startCommand to use Dockerfile CMD
+- `083f0dea` fix(railway): switch client to Nixpacks builder
+- `e0b2056f` fix(railway): switch client to Nixpacks builder
+- `e236a3a5` fix(railway): explicit npm build/start commands for client
+- `fd0e4c96` fix(railway): explicit npm build/start commands for client
+- `0d91f7e4` fix(railway): add nixpacks.toml for explicit Node.js configuration
+- `2eaae969` fix(railway): add nixpacks.toml for explicit Node.js configuration
+- `c308f9e8` fix(railway): switch client back to Dockerfile builder
+- `d0812241` fix(railway): switch client back to Dockerfile builder
+- `15d8bd28` fix(railway): add root Dockerfile.client for client service
+- `4afe0856` fix(railway): add root Dockerfile.client for client service
+- `3e9dce02` fix(railway): add root railway.json to override pnpm start command
+- `aba0a00a` fix(railway): add root railway.json to override pnpm start command
+- `712b5de4` fix(railway): use fixed port 3000 for nginx client
+- `9847beec` fix(railway): use fixed port 3000 for nginx client
+- `6dac439b` fix(railway): restore start.sh for stuck Railway command
+- `e895a1ef` fix(railway): restore start.sh for stuck Railway command
+- `0330abc1` fix(railway): force cache bust and combine RUN commands
+- `40a4c144` fix(railway): force cache bust and combine RUN commands
+- `bd9b33bf` fix(railway): COPY start.sh instead of RUN to avoid caching
+- `e3618443` fix(railway): COPY start.sh instead of RUN to avoid caching
+- `0c3d821f` fix(railway): use dynamic PORT in nginx startup script
+- `776ef6df` fix(railway): use dynamic PORT in nginx startup script
+- `069e2550` fix(client): use COPY for start.sh, dynamic PORT
+- `0e365b36` fix(client): use COPY for start.sh, dynamic PORT
+- `a9a73ae9` fix(railway): create start.sh inline in Dockerfile
+- `b1e3c96e` fix(railway): create start.sh inline in Dockerfile
+- `478f8906` fix(railway): remove root configs, use packages/client/Dockerfile
+- `90c7c2c6` fix(railway): remove root configs, use packages/client/Dockerfile
+- `5632e18f` fix(railway): point to Dockerfile not Dockerfile.client
+- `71b6d0e0` fix(railway): point to Dockerfile not Dockerfile.client
+- `4903d978` chore: remove orphaned temp deployment files
+- `6e4b2426` chore: remove orphaned temp deployment files
+- `b5ebcc8a` chore: test auto-deploy
+- `ba98c55b` chore: test auto-deploy
+- `99bc054b` fix(railway): add startCommand to override stuck pnpm
+- `fd511d70` fix(railway): add startCommand to override stuck pnpm
+- `830eb720` docs: add Railway deployment guide
+- `e18e5819` docs: add Railway deployment guide
+Files by surface:
+- docs: 1 paths
+  - A docs/RAILWAY_DEPLOYMENT.md
+- other: 18 paths
+  - A .github/workflows/railway-deploy.yml
+  - A docker/client/Dockerfile.railway
+  - A packages/client/railway.json
+  - A railway.toml
+  - A services/api/railway.json
+  - A packages/client/Dockerfile
+  - A services/api/Dockerfile
+  - A packages/client/.dockerignore
+  - A services/api/.dockerignore
+  - A packages/client/nixpacks.toml
+  - A Dockerfile.client
+  - A docker/client-start.sh
+  - A packages/client/start.sh
+  - M services/api/app/routers/health_router.py
+  - D Dockerfile.client
+  - D railway.json
+  - D docker/client-start.sh
+  - D packages/client/nixpacks.toml
+Documents produced:
+- `docs/RAILWAY_DEPLOYMENT.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a8f6f5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b1e01853)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8d6f4ae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d7a7ec2e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (833057cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ace7b699)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36a78c68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7689c5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d91f7e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2eaae969)
+
+### S033 — 2026-01-18T07:46:49-06:00 → 2026-01-18T10:10:58-06:00 (14 commits, 2.4h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `92dfde00` feat(ui): add Copy cURL + Open logs buttons (Bundle 32.7.3)
+- `a1ec5dcc` feat(ui): add Copy cURL + Open logs buttons (Bundle 32.7.3)
+- `08a8dbe3` feat(api): dashboard prefers latest metrics by execution id
+- `512ea16f` feat(api): dashboard prefers latest metrics by execution id
+- `1ea31820` fix(test): correct monkeypatch path for metrics lookup test
+- `d51f074e` fix(test): correct monkeypatch path for metrics lookup test
+- `48a4c4fc` feat(saw-lab): add execution metrics autorollup + latest batch chain
+- `742360e9` feat(saw-lab): add execution metrics autorollup + latest batch chain
+- `06562946` feat(saw-lab): add latest metrics by execution endpoint
+- `d3175501` feat(saw-lab): add latest metrics by execution endpoint
+- `0b6b1a28` fix(test): correct monkeypatch path for execution metrics test
+- `23075d5f` fix(test): correct monkeypatch path for execution metrics test
+- `1209d05f` feat(art-studio): add PromotionIntentV1 schema + builder (32.8.0-32.8.2)
+- `1d4d2385` feat(art-studio): add PromotionIntentV1 schema + builder (32.8.0-32.8.2)
+Files by surface:
+- other: 18 paths
+  - A services/api/app/saw_lab/metrics_lookup_router.py
+  - A services/api/app/saw_lab/metrics_lookup_service.py
+  - A packages/client/src/components/ui/SideDrawer.vue
+  - A services/api/app/saw_lab/execution_metrics_autorollup.py
+  - A services/api/app/saw_lab/latest_batch_chain_router.py
+  - A services/api/app/saw_lab/latest_batch_chain_service.py
+  - A services/api/app/saw_lab/metrics_latest_by_execution_router.py
+  - A services/api/app/art_studio/schemas/promotion_intent.py
+  - A services/api/app/art_studio/services/fingerprint.py
+  - A services/api/app/art_studio/services/promotion_intent_explain.py
+  - M packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - M services/api/app/rmos/runs_v2/batch_dashboard.py
+  - M services/api/app/saw_lab/__init_router__.py
+  - M packages/client/src/stores/artDesignFirstWorkflowStore.ts
+  - M services/api/app/art_studio/services/design_first_workflow_service.py
+  - M services/api/app/rmos/logs.py
+  - M services/api/app/saw_lab/__init__.py
+  - M services/api/app/saw_lab/batch_router.py
+- tests: 8 paths
+  - A services/api/tests/test_latest_metrics_by_decision_endpoint_exists.py
+  - A services/api/tests/test_latest_metrics_by_decision_unit.py
+  - A services/api/tests/test_execution_metrics_autorollup_on_job_log_unit.py
+  - A services/api/tests/test_job_log_wires_autorollup_smoke_unit.py
+  - A services/api/tests/test_latest_metrics_by_batch_endpoint_exists.py
+  - A services/api/tests/test_latest_metrics_by_batch_endpoint_smoke.py
+  - A services/api/tests/test_latest_metrics_by_batch_unit.py
+  - A services/api/tests/test_latest_metrics_by_execution_endpoint.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48a4c4fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (742360e9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (06562946)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3175501)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1209d05f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1d4d2385)
+
+### S034 — 2026-01-18T14:27:57-06:00 → 2026-01-19T04:21:38-06:00 (48 commits, 13.89h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `6d141c7d` feat(saw-lab): add toolpaths validate endpoint + Download Intent button
+- `6e55d793` feat(saw-lab): add toolpaths validate endpoint + Download Intent button
+- `4e1d3832` feat: workflow sessions, feasibility explain, toolpaths lookup, global attachments
+- `b4244c41` feat: workflow sessions, feasibility explain, toolpaths lookup, global attachments
+- `7b18d95a` feat(ui): add download intent with overrides (32.8.4.2)
+- `96762913` feat(ui): add download intent with overrides (32.8.4.2)
+- `62603f98` feat(ui): add risk badge to action row with tooltip
+- `a0f3c418` feat(ui): add risk badge to action row with tooltip
+- `29128ee3` feat(ui): remember download overrides in localStorage (32.8.4.3)
+- `6a8052c8` feat(ui): remember download overrides in localStorage (32.8.4.3)
+- `3455ebcf` test(saw-lab): add toolpaths validate endpoint smoke test
+- `eef77be7` test(saw-lab): add toolpaths validate endpoint smoke test
+- `bf2bb2f2` feat(saw-lab): CAM hardening bundle - lint, auto-gate execution, machine profile bounds
+- `dd55b0c6` feat(saw-lab): CAM hardening bundle - lint, auto-gate execution, machine profile bounds
+- `0e8ade54` fix(tests): use import-based monkeypatching for CAM tests
+- `694e4411` fix(tests): use import-based monkeypatching for CAM tests
+- `797a63d2` feat(saw-lab): add toolpaths download convenience endpoint
+- `ff0230ed` feat(saw-lab): add toolpaths download convenience endpoint
+- `3c404ba5` feat(rmos): add Phase 5 on-demand AI-assisted explanation endpoint
+- `e2c88beb` feat(rmos): add Phase 5 on-demand AI-assisted explanation endpoint
+- `46f91767` Phase 5: AI explain endpoint + Bundle 32.8.4.4 per-mode overrides
+- `a5767fdc` Phase 5: AI explain endpoint + Bundle 32.8.4.4 per-mode overrides
+- `68ddbf2d` fix(docker): two-stage pip install to prevent total failure on sg-spec auth
+- `ffceb239` fix(docker): two-stage pip install to prevent total failure on sg-spec auth
+- `4e668a4d` fix(docker): embed token in URL and make sg-spec optional
+- `a471b0a1` fix(docker): embed token in URL and make sg-spec optional
+- `2e2d456c` fix(docker): try classic PAT format for sg-spec auth
+- `96da0193` fix(docker): try classic PAT format for sg-spec auth
+- `0f0ff87c` ci: test new SG_SPEC_TOKEN
+- `53c5dc55` ci: test new SG_SPEC_TOKEN
+- `1de71427` fix(docker): use git credential store for sg-spec auth
+- `753d083e` fix(docker): use git credential store for sg-spec auth
+- `46eda1f9` feat(saw-lab): add execution confirmation endpoint + export URL preview
+- `c685971d` feat(saw-lab): add execution confirmation endpoint + export URL preview
+- `391cccf1` ci: test new SG_SPEC_TOKEN
+- `b74f2804` ci: test new SG_SPEC_TOKEN
+- `788d5585` ci: test RAILWAY_TOKEN
+- `dfb1e643` ci: test RAILWAY_TOKEN
+- `4b4e27dd` fix(ci): add Railway project ID to deploy workflow
+- `92bf6f21` fix(ci): add Railway project ID to deploy workflow
+- `09db23d6` fix(ci): pass RAILWAY_PROJECT_ID as env var to deploy steps
+- `75cfb7d1` fix(ci): pass RAILWAY_PROJECT_ID as env var to deploy steps
+- `0b90f419` Phase 5 UI + test fixes for Railway deploy
+- `1a431e92` Phase 5 UI + test fixes for Railway deploy
+- `391edd93` fix(tests): update broken unit tests
+- `6e8fd50d` fix(tests): update broken unit tests
+- `2fd89602` feat(saw-lab): add execution status + abort endpoints
+- `a902d2c7` feat(saw-lab): add execution status + abort endpoints
+Files by surface:
+- other: 47 paths
+  - A services/api/app/saw_lab/toolpaths_validate_router.py
+  - A services/api/app/saw_lab/toolpaths_validate_service.py
+  - A packages/client/src/components/rosette/WorkflowSessionPicker.vue
+  - A packages/client/src/lib/feasibilityRuleRegistry.ts
+  - A packages/client/src/sdk/endpoints/artDesignFirstWorkflowSessions.ts
+  - A services/api/app/art_studio/schemas/workflow_sessions.py
+  - A services/api/app/rmos/feasibility/explain.py
+  - A services/api/app/rmos/feasibility/rule_registry.py
+  - A services/api/app/rmos/runs_v2/api_global_attachments.py
+  - A services/api/app/saw_lab/toolpaths_lookup_router.py
+  - A services/api/app/shared/__init__.py
+  - A services/api/app/shared/fingerprint.py
+  - A services/api/app/shared/stablejson.py
+  - A services/api/app/saw_lab/execution_start_from_toolpaths_router.py
+  - A services/api/app/saw_lab/machine_profile_resolver.py
+  - A services/api/app/saw_lab/toolpaths_lint_router.py
+  - A services/api/app/saw_lab/toolpaths_lint_service.py
+  - A services/api/app/saw_lab/toolpaths_download_router.py
+  - A services/api/app/rmos/explain_ai/__init__.py
+  - A services/api/app/rmos/explain_ai/engine.py
+  - A services/api/app/rmos/explain_ai/schemas.py
+  - A services/api/app/saw_lab/execution_confirmation_router.py
+  - A services/api/app/saw_lab/execution_confirmation_service.py
+  - A services/api/app/saw_lab/execution_abort_router.py
+  - A services/api/app/saw_lab/execution_abort_service.py
+  - A services/api/app/saw_lab/execution_status_router.py
+  - A services/api/app/saw_lab/execution_status_service.py
+  - M packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - M services/api/app/saw_lab/__init_router__.py
+  - M packages/client/src/stores/artDesignFirstWorkflowStore.ts
+  - M packages/client/src/views/DxfToGcodeView.vue
+  - M packages/client/src/views/RmosRunViewerView.vue
+  - M services/api/app/art_studio/api/design_first_workflow_routes.py
+  - M services/api/app/art_studio/schemas/promotion_intent.py
+  - M services/api/app/art_studio/services/fingerprint.py
+  - M services/api/app/art_studio/stores/design_first_workflow_store.py
+  - M services/api/app/rmos/feasibility/__init__.py
+  - M services/api/app/rmos/feasibility/engine.py
+  - M services/api/app/rmos/feasibility/rules.py
+  - M services/api/app/rmos/feasibility/schemas.py
+  - … 7 more (see sessions.json / files.jsonl)
+- tests: 15 paths
+  - A services/api/tests/test_global_attachment_endpoint_exists.py
+  - A services/api/tests/test_phase3_explainability.py
+  - A services/api/tests/test_stable_fingerprint.py
+  - A services/api/tests/test_toolpaths_latest_aliases_endpoint_exists.py
+  - A services/api/tests/test_toolpaths_latest_aliases_unit.py
+  - A services/api/tests/test_toolpaths_validate_endpoint_smoke.py
+  - A services/api/tests/test_execution_start_from_toolpaths_gates_blocked_unit.py
+  - A services/api/tests/test_toolpaths_lint_writes_artifact_unit.py
+  - A services/api/tests/test_toolpaths_download_gcode_redirect.py
+  - A services/api/tests/test_rmos_runs_v2_explain_on_demand.py
+  - A services/api/tests/test_execution_confirmation_endpoint_smoke.py
+  - A services/api/tests/test_execution_abort_endpoint_smoke.py
+  - M services/api/tests/test_job_log_wires_autorollup_smoke_unit.py
+  - M services/api/tests/test_latest_metrics_by_batch_endpoint_smoke.py
+  - M services/api/tests/test_latest_metrics_by_batch_unit.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d141c7d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e55d793)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e1d3832)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b4244c41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b18d95a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96762913)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (62603f98)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a0f3c418)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29128ee3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6a8052c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3455ebcf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eef77be7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf2bb2f2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dd55b0c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e8ade54)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (694e4411)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (797a63d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff0230ed)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c404ba5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e2c88beb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (68ddbf2d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ffceb239)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e668a4d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a471b0a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e2d456c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96da0193)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (46eda1f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c685971d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (391edd93)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e8fd50d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fd89602)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a902d2c7)
+
+### S035 — 2026-01-19T12:05:37-06:00 → 2026-01-19T12:05:37-06:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `30150f1f` feat(saw-lab): add execution complete endpoint
+- `caa2de8c` feat(saw-lab): add execution complete endpoint
+Files by surface:
+- other: 3 paths
+  - A services/api/app/saw_lab/execution_complete_router.py
+  - A services/api/app/saw_lab/execution_complete_service.py
+  - M services/api/app/saw_lab/__init_router__.py
+- tests: 1 paths
+  - A services/api/tests/test_execution_complete_endpoint_smoke.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30150f1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (caa2de8c)
+
+### S036 — 2026-01-19T21:43:46-06:00 → 2026-01-20T03:07:19-06:00 (14 commits, 5.39h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0
+Commits:
+- `a3902eae` fix(docker): replace client Dockerfile stub with multi-stage build
+- `f3698d6d` fix(docker): replace client Dockerfile stub with multi-stage build
+- `38e7fbee` feat(ui): add Copy Python requests snippet (Bundle 32.8.4.9)
+- `bca40926` feat(ui): add Copy Python requests snippet (Bundle 32.8.4.9)
+- `15e9e6db` feat(rmos): add override primitive for YELLOW unlock (Commit A)
+- `884eff57` feat(rmos): add override primitive for YELLOW unlock (Commit A)
+- `14b293f7` test(rmos): add override router integration tests
+- `c1dfbb29` test(rmos): add override router integration tests
+- `900f4158` docs: update copilot-instructions with RMOS runs_v2 operator pack patterns
+- `d747ea09` docs: update copilot-instructions with RMOS runs_v2 operator pack patterns
+- `0d0e5217` feat(rmos): add GET /runs_v2 list endpoint with envelope response and cursor pagination
+- `67dca458` feat(rmos): add GET /runs_v2 list endpoint with envelope response and cursor pagination
+- `1111cf18` fix(ui): fix Node snippet syntax + add GitHub Actions step (32.8.4.10)
+- `eb9e72b4` fix(ui): fix Node snippet syntax + add GitHub Actions step (32.8.4.10)
+Files by surface:
+- docs: 1 paths
+  - M .github/copilot-instructions.md
+- other: 11 paths
+  - A services/api/app/rmos/runs_v2/override_service.py
+  - A services/api/app/rmos/runs_v2/router_override.py
+  - A services/api/app/rmos/runs_v2/schemas_override.py
+  - A temp_node_funcs.js
+  - A services/api/app/rmos/runs_v2/router_query.py
+  - M .env.example
+  - M docker/client/Dockerfile
+  - M packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - M services/api/app/rmos/runs_v2/__init__.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/main.py
+- tests: 3 paths
+  - A services/api/tests/rmos/test_rmos_override_yellow_unblocks.py
+  - A services/api/tests/test_rmos_runs_v2_override.py
+  - A services/api/tests/test_rmos_runs_v2_list_envelope.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3902eae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3698d6d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38e7fbee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bca40926)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14b293f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1dfbb29)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1111cf18)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb9e72b4)
+
+### S037 — 2026-01-20T07:36:51-06:00 → 2026-01-20T13:37:01-06:00 (38 commits, 6.0h)
+Branches: refs/tags/toolbox-v0.32.0, refs/pull/10/head
+Commits:
+- `3a2c0c7c` feat(rmos): add run diff endpoint for comparing two runs
+- `55ab8bb4` feat(rmos): add run diff endpoint for comparing two runs
+- `05723df5` feat(ui): add Compare with Parent/Previous buttons + wire diff endpoint
+- `085373b5` feat(ui): add Compare with Parent/Previous buttons + wire diff endpoint
+- `17881978` feat(frontend): DxfToGcodeView run-to-run compare with previous
+- `27e3f9ca` feat(frontend): DxfToGcodeView run-to-run compare with previous
+- `69bd7e1e` feat(ui): add Copy GHA Job button (32.8.4.12)
+- `da4a3b3c` feat(ui): add Copy GHA Job button (32.8.4.12)
+- `940621c1` feat(saw-lab): add ExecutionOutcome enum + terminal-state guardrails
+- `e6e64ca9` feat(saw-lab): add ExecutionOutcome enum + terminal-state guardrails
+- `16b6d698` feat(frontend): enhanced sectioned compare UI for DxfToGcodeView
+- `2a74d670` feat(frontend): enhanced sectioned compare UI for DxfToGcodeView
+- `0744caef` fix(ui): hide empty compare sections when 'Only changed' is OFF
+- `7ff6edb7` fix(ui): hide empty compare sections when 'Only changed' is OFF
+- `8655186a` feat(saw-lab): require job log before execution complete
+- `c59d7d55` feat(saw-lab): require job log before execution complete
+- `9a8f06e4` feat(ui): add Copy GH Workflow (File-Ready) button (32.8.4.13)
+- `a5e9d806` feat(ui): add Copy GH Workflow (File-Ready) button (32.8.4.13)
+- `b3afcadf` feat(ui): add GHA validation job + repo auto-detect (32.8.4.14)
+- `c999aa24` feat(ui): add GHA validation job + repo auto-detect (32.8.4.14)
+- `73f769b6` feat(ui): auto-switch compare tab to first section with diffs
+- `e62ac883` feat(ui): auto-switch compare tab to first section with diffs
+- `2f02a13b` feat(saw-lab): tighten execution complete guardrail to require qualifying job log
+- `e8c4cf7d` feat(saw-lab): tighten execution complete guardrail to require qualifying job log
+- `09348a24` refactor(saw_lab): require LATEST job log to be qualifying for execution complete
+- `36e96a92` refactor(saw_lab): require LATEST job log to be qualifying for execution complete
+- `a3bf5bfb` fix(saw_lab): _created_ts handles RunArtifact models + created_at_utc field
+- `bd02620a` fix(saw_lab): _created_ts handles RunArtifact models + created_at_utc field
+- `3dacec6e` chore(saw_lab): polish _created_ts docstring and logic
+- `c7864ee4` chore(saw_lab): polish _created_ts docstring and logic
+- `2427b8fb` feat(art-studio): add canonical GET /promotion_intent.json endpoint (32.8.5)
+- `729cfcc0` feat(art-studio): add canonical GET /promotion_intent.json endpoint (32.8.5)
+- `59b29b51` feat(runs_v2): add compare endpoint for structured run artifact diffs
+- `f86182d8` feat(runs_v2): add compare endpoint for structured run artifact diffs
+- `0ec7aa99` feat(art-studio): add POST /promotion_intent_v1 wrapper endpoint
+- `218ae401` feat(art-studio): add POST /promotion_intent_v1 wrapper endpoint
+- `9491f5e6` feat: inline run compare panel + analyzer release ingest smoke workflow
+- `ff8eacef` feat: inline run compare panel + analyzer release ingest smoke workflow
+Files by surface:
+- docs: 1 paths
+  - A SESSION_2026-01-20_SUMMARY.md
+- other: 14 paths
+  - A services/api/app/rmos/runs_v2/compare.py
+  - A .github/workflows/analyzer_release_ingest_smoke.yml
+  - A packages/client/src/components/rmos/RunComparePanel.vue
+  - M services/api/app/rmos/runs_v2/router_query.py
+  - M packages/client/src/api/rmosRuns.ts
+  - M packages/client/src/views/DxfToGcodeView.vue
+  - M packages/client/src/views/RmosRunViewerView.vue
+  - M packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - M services/api/app/saw_lab/execution_complete_router.py
+  - M services/api/app/saw_lab/execution_complete_service.py
+  - M services/api/app/art_studio/api/design_first_workflow_routes.py
+  - M services/api/app/art_studio/services/promotion_intent_explain.py
+  - M services/api/app/art_studio/schemas/workflow_design_first.py
+  - D temp_node_funcs.js
+- tests: 4 paths
+  - A services/api/tests/test_rmos_runs_v2_diff.py
+  - A services/api/tests/test_promotion_intent_export_endpoint.py
+  - A services/api/tests/test_rmos_runs_v2_compare.py
+  - M services/api/tests/test_execution_complete_endpoint_smoke.py
+Documents produced:
+- `SESSION_2026-01-20_SUMMARY.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3a2c0c7c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55ab8bb4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (05723df5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (085373b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69bd7e1e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da4a3b3c)
+- Fixes: ['execution lifecycle governance'] (940621c1)
+- Fixes: ['execution lifecycle governance'] (e6e64ca9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2427b8fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (729cfcc0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ec7aa99)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (218ae401)
+
+### S038 — 2026-01-20T17:58:37-06:00 → 2026-01-21T02:15:06-06:00 (44 commits, 8.27h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.32.0, refs/tags/toolbox-v0.33.0-wave22.1, refs/heads/feature/mesh-pipeline-scaffold, refs/heads/feature/adapter-guide
+Commits:
+- `653c2e8e` fix(ci): add SG_SPEC_TOKEN auth to analyzer ingest smoke workflow
+- `969cbd01` fix(ci): add SG_SPEC_TOKEN auth to analyzer ingest smoke workflow
+- `3498aab8` feat(ci): add boundary import checker for component isolation
+- `ef681328` feat(ci): add boundary import checker for component isolation
+- `3d07caf1` feat(ci): add fence-aware boundary checker with baseline mode
+- `6b71b5aa` feat(ci): add fence-aware boundary checker with baseline mode
+- `02356a4b` feat(ci): add boundary allowlist entries + baseline mode
+- `41c35836` feat(ci): add boundary allowlist entries + baseline mode
+- `787b76eb` feat(ci): add pattern boundary checker with baseline support
+- `d4b4e00b` feat(ci): add pattern boundary checker with baseline support
+- `ab269dbf` feat(ci): add check_all_fences umbrella command
+- `d020f3c0` feat(ci): add check_all_fences umbrella command
+- `16cb858d` Phase 32.0: Promotion Intent Export Contract - strict validator
+- `2f339114` Phase 32.0: Promotion Intent Export Contract - strict validator
+- `88356036` ci: update workflow to use check_all_fences umbrella command
+- `b21bd76d` ci: update workflow to use check_all_fences umbrella command
+- `3c741180` Ship Execution Complete: symmetry fix + terminal state docs
+- `c35a6936` Ship Execution Complete: symmetry fix + terminal state docs
+- `1579384b` Add Phase 32.0 Promotion Intent Export Contract tests
+- `e5a9f6d2` Add Phase 32.0 Promotion Intent Export Contract tests
+- `8e240674` ci: add blocking Fence Checks job to architecture_scan workflow
+- `dd6c5e61` ci: add blocking Fence Checks job to architecture_scan workflow
+- `603bca31` fix(ci): use true repo root for stable baseline paths
+- `7fd0bf46` fix(ci): use true repo root for stable baseline paths
+- `1cb6038a` ci: add governance controls for baseline changes
+- `a600f326` ci: add governance controls for baseline changes
+- `01e84256` Add Phase 33.0 CAM Promotion Request Bridge
+- `6c16b04e` Add Phase 33.0 CAM Promotion Request Bridge
+- `7c3d6a12` Add Phase 32.0/33.0 Promotion Bridge docs to ART_STUDIO_WORKFLOW_INTEGRATION.md
+- `e1574f30` Add Phase 32.0/33.0 Promotion Bridge docs to ART_STUDIO_WORKFLOW_INTEGRATION.md
+- `6bb051ea` Simplify CamPromotionRequestV1 schema, embed PromotionIntentV1
+- `fd7cf900` Simplify CamPromotionRequestV1 schema, embed PromotionIntentV1
+- `56d1f079` Add toolbox-v0.32.0 CHANGELOG entry and missing test file
+- `e4594cdd` Add toolbox-v0.32.0 CHANGELOG entry and missing test file
+- `39e4eedb` Add governance baseline diff report workflow
+- `aa8a68aa` Add governance baseline diff report workflow
+- `45c47385` Add RMOS 30-Run Validation Protocol checklist
+- `4f0f8b48` Add RMOS 30-Run Validation Protocol checklist
+- `1f820cb9` feat(ui): add operator UX polish components
+- `35093ede` feat(ui): add operator UX polish components
+- `60610cec` ci: add Analyzer ingest smoke (validates demo artifacts against contracts)
+- `e3a5dc2c` ci: add Analyzer ingest smoke (validates demo artifacts against contracts)
+- `f6cf2911` feat(mesh-pipeline): scaffold v0.1.0 — retopo adapters, fields integration, CAM policy export
+- `b05281d0` feat(retopo): adapter guide + hardened shims for QRM/MIQ
+Files by surface:
+- docs: 7 paths
+  - A docs/art_studio/PROMOTION_CONTRACTS.md
+  - A docs/RMOS_30_RUN_VALIDATION_PROTOCOL.md
+  - A services/api/app/retopo/README.md
+  - A docs/RETOPO_ADAPTERS.md
+  - M docs/CNC_SAW_LAB_DEVELOPER_GUIDE.md
+  - M CHANGELOG.md
+  - M services/api/app/art_studio/ART_STUDIO_WORKFLOW_INTEGRATION.md
+- other: 48 paths
+  - A services/api/app/ci/check_boundary_imports.py
+  - A services/api/app/ci/fence_baseline.json
+  - A services/api/app/ci/check_boundary_patterns.py
+  - A services/api/app/ci/fence_patterns_baseline.json
+  - A services/api/app/ci/check_all_fences.py
+  - A .github/CODEOWNERS
+  - A .github/workflows/governance_baseline_guard.yml
+  - A services/api/app/art_studio/schemas/cam_promotion_request.py
+  - A services/api/app/art_studio/services/cam_promotion_service.py
+  - A services/api/app/art_studio/api/cam_promotion_routes.py
+  - A .github/workflows/governance_baseline_diff_report.yml
+  - A scripts/governance/render_fence_baseline_delta.py
+  - A .github/workflows/api_verify.yml
+  - A packages/client/src/components/ui/OverrideBanner.vue
+  - A packages/client/src/components/ui/RiskBadge.vue
+  - A packages/client/src/components/ui/WhyCard.vue
+  - A .github/workflows/analyzer-ingest-smoke.yml
+  - A scripts/analyzer_ingest_smoke.py
+  - A .github/workflows/mesh-pipeline-ci.yml
+  - A contracts/schema_registry.json
+  - A examples/retopo/intake.obj
+  - A examples/retopo/run.sh
+  - A presets/retopo/miq/preset.json
+  - A presets/retopo/qrm/preset.json
+  - A presets/retopo/sidecar_logger.py
+  - A scripts/validate_schemas.py
+  - A services/api/app/retopo/__init__.py
+  - A services/api/app/retopo/miq_adapter.py
+  - A services/api/app/retopo/qrm_adapter.py
+  - A services/api/app/retopo/run.py
+  - A services/api/app/retopo/util.py
+  - M .github/workflows/analyzer_release_ingest_smoke.yml
+  - M services/api/app/ci/__init__.py
+  - M packages/client/src/components/rosette/DesignFirstWorkflowPanel.vue
+  - M services/api/app/saw_lab/execution_complete_router.py
+  - M .github/workflows/architecture_scan.yml
+  - M .github/workflows/api_tests.yml
+  - M Makefile
+  - M packages/client/src/evidence/types.ts
+  - M packages/client/src/evidence/zip_loader.ts
+  - … 8 more (see sessions.json / files.jsonl)
+- tests: 4 paths
+  - A services/api/app/tests/test_art_studio_promotion_intent_export_contract.py
+  - A services/api/app/tests/test_art_studio_cam_promotion_contract.py
+  - A services/api/tests/test_art_studio_cam_promotion_contract.py
+  - M services/api/tests/test_execution_complete_endpoint_smoke.py
+Documents produced:
+- `docs/art_studio/PROMOTION_CONTRACTS.md` — # Art Studio Promotion Contracts
+- `docs/RMOS_30_RUN_VALIDATION_PROTOCOL.md` — UNKNOWN
+- `services/api/app/retopo/README.md` — UNKNOWN
+- `docs/RETOPO_ADAPTERS.md` — # Retopo Adapters (QRM/MIQ) — Integration Guide
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (653c2e8e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (969cbd01)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3498aab8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ef681328)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02356a4b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (41c35836)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (787b76eb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d4b4e00b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ab269dbf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d020f3c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (88356036)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b21bd76d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e240674)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dd6c5e61)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (603bca31)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7fd0bf46)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1cb6038a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a600f326)
+- tag toolbox-v0.32.0 (6bb051ea)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f820cb9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35093ede)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60610cec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3a5dc2c)
+
+### S039 — 2026-01-21T09:05:02-06:00 → 2026-01-21T13:32:20-06:00 (14 commits, 4.46h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.33.0-wave22.1, refs/tags/toolbox-mesh-pipeline-v0.1.0, refs/tags/toolbox-v0.34.0
+Commits:
+- `adc89782` feat(acoustics): add ingest audit log with browse/detail endpoints
+- `f288065b` feat(acoustics): add ingest audit log with browse/detail endpoints
+- `2b2e23ec` fix(contracts): align schemas with actual retopo pipeline output
+- `d61d17dd` fix(contracts): align schemas with actual retopo pipeline output
+- `6da99c81` feat(rmos): add Run Log audit surface (Wave 22.2)
+- `dc9c3adc` feat(rmos): add Run Log audit surface (Wave 22.2)
+- `0f4f62c9` feat(rmos): add adversarial detection rules (F020-F029) — 0 red leaks
+- `b31a228c` feat(rmos): add adversarial detection rules (F020-F029) — 0 red leaks
+- `4c9c79a1` feat(rmos): add edge pressure rules (F030-F037) — 26/30 validation
+- `b5d2529b` feat(rmos): add edge pressure rules (F030-F037) — 26/30 validation
+- `2b0440a5` feat(rmos): complete edge pressure rules — 30/30 validation PASSED
+- `9632ab0f` feat(rmos): complete edge pressure rules — 30/30 validation PASSED
+- `2fb826a0` docs: add RMOS Feasibility Rules Reference v1
+- `43a707df` docs: add RMOS Feasibility Rules Reference v1
+Files by surface:
+- docs: 5 paths
+  - A docs/RELEASE_BODY_TEMPLATE.md
+  - A docs/RMOS_V1_VALIDATION_PROTOCOL.md
+  - A examples/retopo/README.md
+  - A services/api/app/retopo/README.md
+  - A docs/RMOS_FEASIBILITY_RULES_v1.md
+- other: 322 paths
+  - A .github/workflows/mesh-pipeline-ci.yml
+  - A contracts/schema_registry.json
+  - A examples/retopo/intake.obj
+  - A examples/retopo/run.sh
+  - A packages/client/src/components/rmos/WhyPanel.vue
+  - A packages/client/src/sdk/endpoints/rmosAcousticsIngest.ts
+  - A packages/client/src/types/rmosAcousticsIngest.ts
+  - A packages/client/src/views/tools/AcousticsIngestEvents.vue
+  - A presets/retopo/miq/preset.json
+  - A presets/retopo/qrm/preset.json
+  - A presets/retopo/sidecar_logger.py
+  - A scripts/tag_preview.sh
+  - A scripts/validate_schemas.py
+  - A services/api/app/mesh/__init__.py
+  - A services/api/app/mesh/o3d_heal.py
+  - A services/api/app/retopo/__init__.py
+  - A services/api/app/retopo/miq_adapter.py
+  - A services/api/app/retopo/qrm_adapter.py
+  - A services/api/app/retopo/run.py
+  - A services/api/app/retopo/util.py
+  - A services/api/app/rmos/runs_v2/ingest_audit.py
+  - A services/api/app/rmos/runs_v2/router_ingest_audit.py
+  - A services/api/app/rmos/validation/__init__.py
+  - A services/api/app/rmos/validation/harness.py
+  - A services/api/app/rmos/validation/router.py
+  - A services/api/app/rmos/validation/scenarios_v1.json
+  - A services/api/app/rmos/validation/store.py
+  - A services/api/app/rmos/logs/__init__.py
+  - A services/api/app/rmos/logs/exporters.py
+  - A services/api/app/rmos/logs/projector.py
+  - A services/api/app/rmos/logs/router.py
+  - A services/api/app/rmos/logs/schemas.py
+  - M Makefile
+  - M packages/client/src/cnc_production/CompareRunsPanel.vue
+  - M packages/client/src/cnc_production/PresetManagerPanel.vue
+  - M packages/client/src/components/AdaptivePocketLab.vue
+  - M packages/client/src/components/AdaptivePreview.vue
+  - M packages/client/src/components/AppNav.vue
+  - M packages/client/src/components/ArtPresetCompareAB.vue
+  - M packages/client/src/components/BlueprintImporter.vue
+  - … 282 more (see sessions.json / files.jsonl)
+- tests: 5 paths
+  - A services/api/tests/test_acoustics_ingest_audit.py
+  - A services/api/tests/test_o3d_heal_unit.py
+  - A services/api/tests/test_validation_endpoints_smoke.py
+  - A tests/test_o3d_heal_topology.py
+  - A services/api/tests/test_run_logs_endpoint_smoke.py
+Documents produced:
+- `docs/RELEASE_BODY_TEMPLATE.md` — UNKNOWN
+- `docs/RMOS_V1_VALIDATION_PROTOCOL.md` — UNKNOWN
+- `examples/retopo/README.md` — UNKNOWN
+- `services/api/app/retopo/README.md` — UNKNOWN
+- `docs/RMOS_FEASIBILITY_RULES_v1.md` — # RMOS Feasibility Rules Reference v1
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (adc89782)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f288065b)
+- tag toolbox-v0.33.0-wave22.1 (f288065b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2b2e23ec)
+- tag toolbox-mesh-pipeline-v0.1.0 (2b2e23ec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d61d17dd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6da99c81)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc9c3adc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f4f62c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b31a228c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c9c79a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5d2529b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2b0440a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9632ab0f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fb826a0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (43a707df)
+
+### S040 — 2026-01-22T09:13:10-06:00 → 2026-01-22T09:13:10-06:00 (2 commits, 0.0h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head
+Commits:
+- `3cfa1847` chore: remove orphaned backup files from VCS
+- `8cb578b9` chore: remove orphaned backup files from VCS
+Files by surface:
+- other: 2 paths
+  - D packages/client/src/labs/ReliefKernelLab_backup_phase24_6.vue
+  - D packages/client/src/views/PipelineLabView_backup.vue
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3cfa1847)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8cb578b9)
+
+### S041 — 2026-01-22T20:55:52-06:00 → 2026-01-23T01:49:41-06:00 (12 commits, 4.9h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head
+Commits:
+- `6ea2bf1a` fix: replace bare except clauses with specific exception types
+- `fa8d1e2d` fix: replace bare except clauses with specific exception types
+- `19efd4a7` fix(tests): resolve 33 test failures from feasibility + art_studio changes
+- `fc2802a9` fix(tests): resolve 33 test failures from feasibility + art_studio changes
+- `384b052e` feat(rmos): wire ai-integrator CLI as subprocess
+- `c43de87e` feat(rmos): wire ai-integrator CLI as subprocess
+- `14283ede` refactor(rmos): rename logs module to run_logs + update gitignore
+- `5269557f` refactor(rmos): rename logs module to run_logs + update gitignore
+- `042999f9` feat(ai): integrate AI advisory frontend bundles
+- `4c3354e7` feat(ai): integrate AI advisory frontend bundles
+- `1a5618f4` feat(ai): add advisory renderer + end-to-end dev scripts
+- `e1c70697` feat(ai): add advisory renderer + end-to-end dev scripts
+Files by surface:
+- blueprint_import: 1 paths
+  - M services/blueprint-import/vectorizer.py
+- docs: 2 paths
+  - A scripts/mock_rmos/README.md
+  - A scripts/ai_dev/DEV_FLOW.md
+- other: 47 paths
+  - A services/api/app/rmos/ai_advisory/__init__.py
+  - A services/api/app/rmos/ai_advisory/config.py
+  - A services/api/app/rmos/ai_advisory/exceptions.py
+  - A services/api/app/rmos/ai_advisory/hashing.py
+  - A services/api/app/rmos/ai_advisory/router.py
+  - A services/api/app/rmos/ai_advisory/runner.py
+  - A services/api/app/rmos/ai_advisory/schemas.py
+  - A services/api/app/rmos/ai_advisory/service.py
+  - A services/api/app/rmos/ai_advisory/store.py
+  - A packages/client/src/components/ai/AiAdvisoryPanel.vue
+  - A packages/client/src/components/ai/AiExplainSelectionButton.vue
+  - A packages/client/src/components/ai/aiAdvisoryApi.ts
+  - A packages/client/src/components/ai/aiButtonTypes.ts
+  - A packages/client/src/components/ai/helpers.ts
+  - A packages/client/src/stores/aiAdvisoryStore.ts
+  - A packages/client/src/utils/ai/contextBuilder.ts
+  - A packages/client/src/utils/ai/excerptExtractors.ts
+  - A packages/client/src/utils/ai/relpathUtils.ts
+  - A packages/client/src/utils/ai/types.ts
+  - A scripts/mock_rmos/main.py
+  - A packages/client/src/components/ai/AiAdvisoryRenderer.vue
+  - A packages/client/src/components/ai/advisoryRenderers.ts
+  - A packages/client/src/components/ai/advisoryTypes.ts
+  - A scripts/ai_dev/curl_explain_selection.sh
+  - A scripts/ai_dev/run_mock_rmos.sh
+  - A scripts/ai_dev/run_toolbox_dev.sh
+  - A scripts/ai_dev/sample_context.json
+  - M services/api/app/ai/transport/image_client.py
+  - M services/api/app/cam/contour_reconstructor.py
+  - M services/api/app/cam/dxf_advanced_validation.py
+  - M services/api/app/cam/dxf_preflight.py
+  - M services/api/app/generators/lespaul_body_generator.py
+  - M services/api/app/rmos/feasibility_scorer.py
+  - M services/api/app/routers/adaptive_router.py
+  - M services/api/app/routers/cam_vcarve_router.py
+  - M services/api/app/routers/geometry_router.py
+  - M services/api/app/routers/sim_validate.py
+  - M services/api/app/art_studio/services/cam_promotion_service.py
+  - M services/api/app/art_studio/services/design_first_workflow_service.py
+  - M services/api/app/rmos/feasibility/rules.py
+  - … 7 more (see sessions.json / files.jsonl)
+- tests: 4 paths
+  - A services/api/tests/test_rmos_ai_advisory.py
+  - M services/api/test_n14_fix.py
+  - M services/api/tests/test_feasibility_engine.py
+  - M services/api/tests/test_phase3_explainability.py
+Documents produced:
+- `scripts/mock_rmos/README.md` — # Mock RMOS Server (FastAPI)
+- `scripts/ai_dev/DEV_FLOW.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ea2bf1a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa8d1e2d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (19efd4a7)
+- Fixes: ['- F024 rule backward compatibility: Only triggers RED when material_hardness'] (19efd4a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fc2802a9)
+- Fixes: ['- F024 rule backward compatibility: Only triggers RED when material_hardness'] (fc2802a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14283ede)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5269557f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (042999f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c3354e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a5618f4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1c70697)
+
+### S042 — 2026-01-23T06:00:12-06:00 → 2026-01-23T16:14:22-06:00 (26 commits, 10.24h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.34.0
+Commits:
+- `9b74e5a9` feat(vision): unify vision stacks - canonical prompt/vocabulary + new endpoints
+- `dcf07037` feat(vision): unify vision stacks - canonical prompt/vocabulary + new endpoints
+- `2a31199c` ci: add vision debt lock to prevent new legacy imports
+- `b948debb` ci: add vision debt lock to prevent new legacy imports
+- `20a465f1` ci: add GitHub Actions workflow for vision debt lock
+- `4df28303` ci: add GitHub Actions workflow for vision debt lock
+- `688ba898` fix: resolve 2 fence violations (import boundary + deprecated API)
+- `df0fd565` fix: resolve 2 fence violations (import boundary + deprecated API)
+- `30dcd37a` feat(api): complete temperament router migration to Option C
+- `744e9dcf` feat(api): complete temperament router migration to Option C
+- `7d7e1cff` feat(ci): add self-executing deprecation sunset governance
+- `f612334c` feat(ci): add self-executing deprecation sunset governance
+- `626bfeb6` docs: update router inventory + add pending patches tracker
+- `c8d5bf5b` docs: update router inventory + add pending patches tracker
+- `01feef0a` feat(fret-math): PATCH-001 - explicit 12-TET default + opt-in custom ratios
+- `0733dead` feat(fret-math): PATCH-001 - explicit 12-TET default + opt-in custom ratios
+- `388d3b24` test(fret-math): add PATCH-001 unit tests + template example
+- `f9c63ca5` test(fret-math): add PATCH-001 unit tests + template example
+- `008d2404` fix(fret-math): reject ratio_set_id at CAM export, require explicit ratios[]
+- `23b1e457` fix(fret-math): reject ratio_set_id at CAM export, require explicit ratios[]
+- `3f2be1ee` feat(fret-math): add dev-mode template hint for ratio_set_id rejection
+- `aedf7745` feat(fret-math): add dev-mode template hint for ratio_set_id rejection
+- `5df6c780` fix(client): resolve 7 TypeScript errors for build readiness
+- `f01bf1a5` fix(client): resolve 7 TypeScript errors for build readiness
+- `599d2161` fix(ci): add ANALYZER_REPO_TOKEN for private repo checkout
+- `709461d4` fix(ci): add ANALYZER_REPO_TOKEN for private repo checkout
+Files by surface:
+- docs: 4 paths
+  - A docs/DEBT_LOCK_VISION.md
+  - A docs/PENDING_PATCHES.md
+  - A docs/tests/ratios_template.json
+  - M docs/ROUTER_INVENTORY_AND_DEPRECATION_PLAN.md
+- other: 27 paths
+  - A services/api/app/vision/prompt_engine.py
+  - A services/api/app/vision/vocabulary.py
+  - A ci/guard_no_legacy_vision_imports.sh
+  - A services/api/app/_experimental/ai_graphics/DEPRECATED_HEADER.txt
+  - A .github/workflows/vision_debt_lock.yml
+  - A services/api/app/routers/legacy/temperament_legacy_router.py
+  - A .github/workflows/deprecation_sunset_guard.yml
+  - A services/api/app/ci/check_deprecation_sunset.py
+  - A services/api/app/ci/deprecation_registry.json
+  - M services/api/app/_experimental/ai_graphics/prompt_engine.py
+  - M services/api/app/_experimental/ai_graphics/vocabulary.py
+  - M services/api/app/vision/router.py
+  - M services/api/app/vision/schemas.py
+  - M packages/client/src/views/RmosRunViewerView.vue
+  - M services/api/app/rmos/run_logs/projector.py
+  - M services/api/app/main.py
+  - M services/api/app/routers/legacy/__init__.py
+  - M services/api/app/calculators/alternative_temperaments.py
+  - M services/api/app/calculators/fret_slots_export.py
+  - M services/api/app/schemas/cam_fret_slots.py
+  - M packages/client/src/components/ai/AiAdvisoryPanel.vue
+  - M packages/client/src/components/ai/AiExplainSelectionButton.vue
+  - M packages/client/src/components/ai/helpers.ts
+  - M packages/client/src/sdk/rmos/runs.ts
+  - M packages/client/src/stores/aiAdvisoryStore.ts
+  - M .github/workflows/analyzer-ingest-smoke.yml
+  - D services/api/app/routers/temperament_router.py
+- tests: 1 paths
+  - A services/api/tests/test_fret_slots_intonation_model.py
+Documents produced:
+- `docs/DEBT_LOCK_VISION.md` — # Vision Stack Debt Lock (Micro Patch)
+- `docs/PENDING_PATCHES.md` — UNKNOWN
+- `docs/tests/ratios_template.json` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b74e5a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dcf07037)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a31199c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b948debb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20a465f1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4df28303)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (688ba898)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df0fd565)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30dcd37a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (744e9dcf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d7e1cff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f612334c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (626bfeb6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c8d5bf5b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01feef0a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0733dead)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (388d3b24)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f9c63ca5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (008d2404)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (23b1e457)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f2be1ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aedf7745)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5df6c780)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f01bf1a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (599d2161)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (709461d4)
+
+### S043 — 2026-01-23T20:32:40-06:00 → 2026-01-23T20:48:32-06:00 (4 commits, 0.26h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head
+Commits:
+- `9a162c7a` fix(scripts): handle dict-format registry + schema_id inference
+- `c502d291` fix(scripts): handle dict-format registry + schema_id inference
+- `b0680510` fix(scripts): add version normalization + fix phase2 artifact paths
+- `f15869aa` fix(scripts): add version normalization + fix phase2 artifact paths
+Files by surface:
+- other: 1 paths
+  - M scripts/analyzer_ingest_smoke.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9a162c7a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c502d291)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0680510)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f15869aa)
+
+### S044 — 2026-01-26T03:45:59-06:00 → 2026-01-26T04:10:47-06:00 (16 commits, 0.41h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.34.0
+Commits:
+- `5e730b13` chore: PR1 Stop the Bleeding - delete orphan vision code, add AI fence rule
+- `634fc4d3` chore: PR1 Stop the Bleeding - delete orphan vision code, add AI fence rule
+- `48a19d9c` docs: Add Vision AI Architecture Cleanup Report
+- `b8fa8960` docs: Add Vision AI Architecture Cleanup Report
+- `2123e95b` docs: update LEGACY_CODE_STATUS - all P1 stubs resolved
+- `7b9847f8` docs: update LEGACY_CODE_STATUS - all P1 stubs resolved
+- `6fbfe700` docs: update LEGACY_CODE_STATUS - all P2 features also resolved
+- `f2ef13d2` docs: update LEGACY_CODE_STATUS - all P2 features also resolved
+- `23a2fdf3` docs: update LEGACY_CODE_STATUS - P3 investigation complete
+- `431eb7c6` docs: update LEGACY_CODE_STATUS - P3 investigation complete
+- `86016ed4` docs: update consolidation candidates with actual router counts
+- `bda8885b` docs: update consolidation candidates with actual router counts
+- `3c06f748` docs: mark December 2025 handoff as ‹token›
+- `fe174faa` docs: mark December 2025 handoff as ‹token›
+- `030d0732` docs: add technical debt update notices to handoff documents
+- `e3b2f265` docs: add technical debt update notices to handoff documents
+Files by surface:
+- docs: 8 paths
+  - A docs/products/DESIGNER_SOURCE_MAP.md
+  - A docs/products/EXTRACTION_QUICKREF.md
+  - A docs/VISION_AI_ARCHITECTURE_CLEANUP.md
+  - M .github/copilot-instructions.md
+  - M docs/LEGACY_CODE_STATUS.md
+  - M docs/handoffs/TECHNICAL_DEBT_HANDOFF_2025-12.md
+  - M docs/DEVELOPER_HANDOFF.md
+  - M docs/SYSTEM_EVALUATION_EXECUTIVE_SUMMARY.md
+- other: 5 paths
+  - A scripts/Extract-Designer.ps1
+  - M FENCE_REGISTRY.json
+  - M services/api/app/rmos/rosette_rmos_adapter.py
+  - D services/api/app/routers/vision_router.py
+  - D services/api/app/services/vision_service.py
+- tests: 1 paths
+  - A services/api/tests/test_vision_routes_are_canonical.py
+Documents produced:
+- `docs/products/DESIGNER_SOURCE_MAP.md` — UNKNOWN
+- `docs/products/EXTRACTION_QUICKREF.md` — UNKNOWN
+- `docs/VISION_AI_ARCHITECTURE_CLEANUP.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2123e95b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b9847f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fbfe700)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f2ef13d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (23a2fdf3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (431eb7c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86016ed4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bda8885b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c06f748)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe174faa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (030d0732)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3b2f265)
+
+### S045 — 2026-01-26T08:18:52-06:00 → 2026-01-26T08:18:52-06:00 (2 commits, 0.0h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head
+Commits:
+- `1daee848` docs: add legacy cleanup bookmark for standalone product extraction
+- `3da3f854` docs: add legacy cleanup bookmark for standalone product extraction
+Files by surface:
+- docs: 1 paths
+  - A docs/BOOKMARK_LEGACY_CLEANUP_2026-01-26.md
+Documents produced:
+- `docs/BOOKMARK_LEGACY_CLEANUP_2026-01-26.md` — # Legacy Code Cleanup Bookmark
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1daee848)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3da3f854)
+
+### S046 — 2026-01-27T01:44:43-06:00 → 2026-01-27T02:42:13-06:00 (4 commits, 0.96h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head
+Commits:
+- `407a5f0c` fix(arch): delete _experimental/ai_graphics/ — resolve all Layer 1 legacy debt
+- `eb868fff` fix(arch): delete _experimental/ai_graphics/ — resolve all Layer 1 legacy debt
+- `712e6ae0` fix(arch): resolve Layers 2+3 legacy debt — delete compat mounts + redirect routers
+- `dc41a572` fix(arch): resolve Layers 2+3 legacy debt — delete compat mounts + redirect routers
+Files by surface:
+- docs: 1 paths
+  - M docs/DEBT_LOCK_VISION.md
+- other: 51 paths
+  - M ci/guard_no_legacy_vision_imports.sh
+  - M services/api/app/ai/transport/image_client.py
+  - M services/api/app/ai/transport/llm_client.py
+  - M services/api/app/main.py
+  - M services/api/app/rmos/rosette_rmos_adapter.py
+  - M services/api/app/vision/prompt_engine.py
+  - M services/api/app/vision/vocabulary.py
+  - M packages/client/src/api/camRisk.ts
+  - M packages/client/src/components/CamMachineEnvelopePanel.vue
+  - M packages/client/src/components/CamPipelinePresetList.vue
+  - M packages/client/src/components/cam/CamPipelineRunner.vue
+  - M packages/client/src/components/toolbox/BridgeCalculator.vue
+  - M packages/client/src/views/AdaptiveLabView.vue
+  - M packages/client/src/views/MachineManagerView.vue
+  - M packages/client/src/views/OffsetLabView.vue
+  - M services/api/app/ci/deprecation_registry.json
+  - D services/api/app/_experimental/ai_graphics/DEPRECATED_HEADER.txt
+  - D services/api/app/_experimental/ai_graphics/__init__.py
+  - D services/api/app/_experimental/ai_graphics/advisory_store.py
+  - D services/api/app/_experimental/ai_graphics/api/__init__.py
+  - D services/api/app/_experimental/ai_graphics/api/advisory_routes.py
+  - D services/api/app/_experimental/ai_graphics/api/ai_routes.py
+  - D services/api/app/_experimental/ai_graphics/api/session_routes.py
+  - D services/api/app/_experimental/ai_graphics/api/teaching_routes.py
+  - D services/api/app/_experimental/ai_graphics/api/vision_routes.py
+  - D services/api/app/_experimental/ai_graphics/db/__init__.py
+  - D services/api/app/_experimental/ai_graphics/db/models.py
+  - D services/api/app/_experimental/ai_graphics/db/store.py
+  - D services/api/app/_experimental/ai_graphics/image_providers.py
+  - D services/api/app/_experimental/ai_graphics/image_transport.py
+  - D services/api/app/_experimental/ai_graphics/prompt_engine.py
+  - D services/api/app/_experimental/ai_graphics/rosette_generator.py
+  - D services/api/app/_experimental/ai_graphics/schemas/__init__.py
+  - D services/api/app/_experimental/ai_graphics/schemas/advisory_schemas.py
+  - D services/api/app/_experimental/ai_graphics/schemas/ai_schemas.py
+  - D services/api/app/_experimental/ai_graphics/services/__init__.py
+  - D services/api/app/_experimental/ai_graphics/services/ai_parameter_suggester.py
+  - D services/api/app/_experimental/ai_graphics/services/kohya_config.py
+  - D services/api/app/_experimental/ai_graphics/services/llm_client.py
+  - D services/api/app/_experimental/ai_graphics/services/pattern_visualizer.py
+  - … 11 more (see sessions.json / files.jsonl)
+- tests: 7 paths
+  - M services/api/app/tests/test_e2e_workflow_integration.py
+  - M services/api/tests/test_adaptive_router.py
+  - M services/api/tests/test_bridge_router.py
+  - M services/api/tests/test_curve_preflight_router.py
+  - M services/api/tests/test_geometry_router.py
+  - M services/api/tests/test_helical_router.py
+  - D services/api/app/test_dalle_advisory.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (407a5f0c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb868fff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (712e6ae0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc41a572)
+
+### S047 — 2026-01-27T07:35:18-06:00 → 2026-01-27T10:05:26-06:00 (8 commits, 2.5h)
+Branches: refs/tags/toolbox-v0.34.0, refs/pull/10/head, refs/tags/toolbox-v0.34.1
+Commits:
+- `6d16670d` feat(saw-lab): close physics layer gaps — 7 calculators, beam theory, thermodynamics
+- `6e5819ef` feat(saw-lab): close physics layer gaps — 7 calculators, beam theory, thermodynamics
+- `dde3a1c7` fix(tests): resolve all 8 skipped tests — 0 skips, 1199 passed
+- `eaa5d422` fix(tests): resolve all 8 skipped tests — 0 skips, 1199 passed
+- `6d295e79` fix(tests): stabilize 2 flaky tests — 1201 passed, 0 ‹token›
+- `dc0dc0af` fix(tests): stabilize 2 flaky tests — 1201 passed, 0 ‹token›
+- `47cbc795` docs: add physics audit report for CAM + Saw Lab (v0.34)
+- `82fc75de` docs: add physics audit report for CAM + Saw Lab (v0.34)
+Files by surface:
+- docs: 1 paths
+  - A docs/PHYSICS_AUDIT_v0.34.md
+- other: 11 paths
+  - A services/api/app/saw_lab/calculators/saw_blade_dynamics.py
+  - A services/api/app/saw_lab/calculators/saw_cutting_force.py
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/saw_lab/calculators/__init__.py
+  - M services/api/app/saw_lab/calculators/saw_deflection.py
+  - M services/api/app/saw_lab/calculators/saw_heat.py
+  - M services/api/app/saw_lab/models.py
+  - M services/api/app/saw_lab/toolpath_builder.py
+  - M services/api/app/saw_lab/tuning_decision_service.py
+  - M services/api/app/rmos/ai/coercion.py
+  - M services/api/app/rmos/models/__init__.py
+- tests: 8 paths
+  - M services/api/tests/test_art_studio_scope_gate.py
+  - M services/api/tests/test_geometry_router.py
+  - M services/api/tests/test_job_log_wires_autorollup_smoke_unit.py
+  - M services/api/tests/test_latest_metrics_by_batch_endpoint_smoke.py
+  - M services/api/tests/test_latest_metrics_by_batch_unit.py
+  - M services/api/tests/test_rmos_ai_factory_pattern.py
+  - M services/api/tests/test_runs_v2_cli_audit_tail.py
+  - M services/api/tests/test_saw_batch_execution_list_by_decision_alias.py
+Documents produced:
+- `docs/PHYSICS_AUDIT_v0.34.md` — # Physics Audit Report — Luthier's ToolBox v0.34.0
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d16670d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e5819ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dde3a1c7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eaa5d422)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d295e79)
+- tag toolbox-v0.34.0 (6d295e79)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc0dc0af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47cbc795)
+- tag toolbox-v0.34.1 (47cbc795)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82fc75de)
+
+### S048 — 2026-01-29T14:32:11-06:00 → 2026-01-30T17:44:38-06:00 (88 commits, 27.21h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.35.0
+Commits:
+- `1ce10f96` feat(smart-guitar): add 17 DXF cavity templates
+- `36c96509` feat(smart-guitar): add 17 DXF cavity templates
+- `28c85e0b` feat(smart-guitar): add geometry resolver for CAM pipeline
+- `c75cf8f1` feat(smart-guitar): add geometry resolver for CAM pipeline
+- `d331a088` feat(smart-guitar): add G-code generator for cavity map pipeline
+- `d93ef777` feat(smart-guitar): add G-code generator for cavity map pipeline
+- `84b4f8a5` feat(smart-guitar): expose full CAM pipeline via REST API
+- `a7fa3e69` feat(smart-guitar): expose full CAM pipeline via REST API
+- `5238369c` feat(vision): add AI guitar segmentation pipeline
+- `fa693d9d` feat(vision): add AI guitar segmentation pipeline
+- `13177168` fix(blueprint): support JPEG images and add Benedetto dimensions
+- `80305031` fix(blueprint): support JPEG images and add Benedetto dimensions
+- `683566e7` docs: add AI-CAM Advisor product specification
+- `9316b419` docs: add AI-CAM Advisor product specification
+- `0ad86a0c` fix(parametric): fix CAM integration in guitar design endpoint
+- `efbf0634` fix(parametric): fix CAM integration in guitar design endpoint
+- `0aa2769e` feat(rosette): add German tricolor rope pattern preset
+- `65cdae1a` feat(rosette): add German tricolor rope pattern preset
+- `556beb81` feat(rosette): add simple beginner-friendly pattern presets
+- `949507fd` feat(rosette): add simple beginner-friendly pattern presets
+- `abc80f59` feat(rosette): add corrected AI image generation prompts
+- `b143ae8c` feat(rosette): add corrected AI image generation prompts
+- `bf6a8ebf` feat(rosette): add formula-accurate pattern renderer
+- `f53fed2f` feat(rosette): add formula-accurate pattern renderer
+- `2851c17e` feat(rosette): add traditional builder interface for craftsmen
+- `a3de803a` feat(rosette): add traditional builder interface for craftsmen
+- `430da78a` feat(headstock): add headstock inlay art prompt module
+- `a9f911cf` feat(headstock): add headstock inlay art prompt module
+- `885d9d58` feat(headstock): add dragon_dreadnought template
+- `9c16d36c` feat(headstock): add dragon_dreadnought template
+- `46a1ae49` feat(calculators): add memory, hyperbolic, statistics, and Streamlit demo
+- `867f5f5f` feat(calculators): add memory, hyperbolic, statistics, and Streamlit demo
+- `633b9003` feat(demo): add Fret Calculator tab to Guitar Designer
+- `ff9ad8c2` feat(demo): add Fret Calculator tab to Guitar Designer
+- `a255984a` feat(demo): add Blueprint Reader with DXF import/export
+- `bb538bc6` feat(demo): add Blueprint Reader with DXF import/export
+- `158acf5e` refactor(demo): consolidate Art Studio as parent for Rosette/Headstock/Inlay
+- `34c57d49` refactor(demo): consolidate Art Studio as parent for Rosette/Headstock/Inlay
+- `a003cd34` feat(demo): add CNC Studio and architecture realignment plan
+- `f1b87624` feat(demo): add CNC Studio and architecture realignment plan
+- `163dcfb7` docs: add comprehensive demo gap analysis
+- `ea0865c3` docs: add comprehensive demo gap analysis
+- `259afbae` feat(cam): wire real feeds & speeds implementation
+- `79b74e54` feat(cam): wire real feeds & speeds implementation
+- `3689a56a` feat(demo): wire Blueprint Reader AI analysis with GPT-4o Vision
+- `970e54c3` feat(demo): wire Blueprint Reader AI analysis with GPT-4o Vision
+- `03afbf2f` feat(rosette): implement real tile segmentation geometry
+- `c628d944` feat(rosette): implement real tile segmentation geometry
+- `26c6f37e` feat(saw-lab): wire placeholders to real cnc_production implementation
+- `a3714d4e` feat(saw-lab): wire placeholders to real cnc_production implementation
+- `8cf5bd13` feat(joblog): wire production run tracking to SQLite stores
+- `f641b70c` feat(joblog): wire production run tracking to SQLite stores
+- `a812ffcf` feat(saw-lab): wire queue placeholder to SQLite joblog store
+- `e5c654a8` feat(saw-lab): wire queue placeholder to SQLite joblog store
+- `61b1195f` feat(infra): add production facade for live_monitor
+- `d7a297c2` feat(infra): add production facade for live_monitor
+- `351934d1` fix(P3): resolve all P3 enhancement TODOs
+- `b6a1b8ab` fix(P3): resolve all P3 enhancement TODOs
+- `4f41d7b2` refactor: consolidate routers and remove deprecated modules
+- `7c3a1089` refactor: consolidate routers and remove deprecated modules
+- `2bb3ab17` refactor: aggressive legacy cleanup - migrate frontend to canonical API paths
+- `9acbc92e` refactor: aggressive legacy cleanup - migrate frontend to canonical API paths
+- `40c638cb` refactor: Phase 2+3 legacy router removal - delete 19 legacy routers
+- `cdb89fd3` refactor: Phase 2+3 legacy router removal - delete 19 legacy routers
+- `3b8934a2` docs: update router documentation after Phase 2+3 legacy cleanup
+- `7e709cdb` docs: update router documentation after Phase 2+3 legacy cleanup
+- `4e13b1d7` docs: add architectural note on rosette pattern API duality
+- `dc41bdb5` docs: add architectural note on rosette pattern API duality
+- `1a6eafeb` test: fix stale references to deleted legacy routers
+- `1d1041a6` test: fix stale references to deleted legacy routers
+- `54f4db7e` fix: update cam_roughing_intent_router endpoint and tests
+- `c2f62699` fix: update cam_roughing_intent_router endpoint and tests
+- `433aaa16` fix: update roughing_gcode_intent_metrics tests for new API
+- `4860c737` fix: update roughing_gcode_intent_metrics tests for new API
+- `667aff5f` test: skip rosette router tests - API schema changed
+- `da507633` test: skip rosette router tests - API schema changed
+- `282ad6aa` test: skip risk_reports_index test - endpoint deleted
+- `3b27f5cb` test: skip risk_reports_index test - endpoint deleted
+- `3404bd7e` config: register ai_context pytest marker
+- `708f5aaf` config: register ai_context pytest marker
+- `2fef17f9` feat(H7.2): restore JSON response for roughing intent endpoint
+- `b7e2687a` feat(H7.2): restore JSON response for roughing intent endpoint
+- `6835ec1e` test: delete obsolete rosette router tests
+- `bdef65cb` test: delete obsolete rosette router tests
+- `8798c43e` test: delete obsolete risk_reports_index test
+- `a671fd8b` test: delete obsolete risk_reports_index test
+- `1620333f` test: add 10 router test scaffolds covering 136 endpoints
+- `ea272dd5` test: add 10 router test scaffolds covering 136 endpoints
+Files by surface:
+- blueprint_import: 1 paths
+  - M services/blueprint-import/analyzer.py
+- docs: 6 paths
+  - A docs/product-specs/AI_CAM_ADVISOR_SPEC.md
+  - A docs/plans/ROSETTE_REALIGNMENT_PLAN.md
+  - A docs/plans/DEMO_GAP_ANALYSIS.md
+  - M docs/LEGACY_CODE_STATUS.md
+  - M ROUTER_MAP.md
+  - M docs/ROUTER_INVENTORY_AND_DEPRECATION_PLAN.md
+- other: 100 paths
+  - A services/api/app/sandboxes/smart_guitar/templates/__init__.py
+  - A services/api/app/sandboxes/smart_guitar/templates/bracket_arduino_uno_r4_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/bracket_battery_pack_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/bracket_fan_40mm_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/bracket_hifiberry_dac_adc_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/bracket_pi5_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/cavity_bass_main_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/cavity_tail_wing_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/cavity_treble_main_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/control_cavity_lp_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/drill_passages_lh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/drill_passages_rh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/pickup_humbucker_bridge_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/pickup_humbucker_neck_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/pod_lh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/pod_rh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/wire_routes_lh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/templates/wire_routes_rh_v1.dxf
+  - A services/api/app/sandboxes/smart_guitar/geometry_resolver.py
+  - A services/api/data/smart_guitar_combined.dxf
+  - A services/api/app/sandboxes/smart_guitar/generate_gcode.py
+  - A services/api/app/ai/transport/vision_client.py
+  - A services/api/app/vision/segmentation_prompts.py
+  - A services/api/app/vision/segmentation_service.py
+  - A services/api/app/cam/rosette/image_prompts.py
+  - A services/api/app/cam/rosette/pattern_renderer.py
+  - A services/api/app/cam/rosette/traditional_builder.py
+  - A services/api/app/cam/headstock/__init__.py
+  - A services/api/app/cam/headstock/inlay_prompts.py
+  - A streamlit_demo/app.py
+  - A streamlit_demo/pages/guitar_designer.py
+  - A streamlit_demo/pages/headstock_art.py
+  - A streamlit_demo/pages/rosette_builder.py
+  - A services/api/app/cam_core/feeds_speeds/chipload_calc.py
+  - A services/api/app/cam_core/feeds_speeds/configs/saw/veneer_6in.json
+  - A services/api/app/cam_core/feeds_speeds/configs/wood/mahogany_router.json
+  - A services/api/app/cam_core/feeds_speeds/configs/wood/maple_router.json
+  - A services/api/app/cam_core/feeds_speeds/deflection_model.py
+  - A services/api/app/cam_core/feeds_speeds/heat_model.py
+  - A services/api/app/cam_core/feeds_speeds/presets_db.py
+  - … 60 more (see sessions.json / files.jsonl)
+- tests: 16 paths
+  - A services/api/tests/test_analytics_router.py
+  - A services/api/tests/test_body_generator_router.py
+  - A services/api/tests/test_calculators_consolidated_router.py
+  - A services/api/tests/test_fret_router.py
+  - A services/api/tests/test_ltb_calculator_router.py
+  - A services/api/tests/test_machines_consolidated_router.py
+  - A services/api/tests/test_posts_consolidated_router.py
+  - A services/api/tests/test_probe_router.py
+  - A services/api/tests/test_saw_telemetry_router.py
+  - A services/api/tests/test_temperament_router.py
+  - M services/api/tests/test_helical_router.py
+  - M services/api/tests/test_route_governance.py
+  - M services/api/tests/test_cam_roughing_intent_strict.py
+  - M services/api/tests/test_roughing_gcode_intent_metrics.py
+  - M services/api/tests/test_art_studio_rosette.py
+  - D services/api/tests/test_risk_reports_index.py
+Documents produced:
+- `docs/product-specs/AI_CAM_ADVISOR_SPEC.md` — # AI-CAM Advisor Product Specification
+- `docs/plans/ROSETTE_REALIGNMENT_PLAN.md` — UNKNOWN
+- `docs/plans/DEMO_GAP_ANALYSIS.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ce10f96)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36c96509)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28c85e0b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c75cf8f1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d331a088)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d93ef777)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (84b4f8a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7fa3e69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5238369c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa693d9d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (13177168)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (80305031)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (683566e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9316b419)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ad86a0c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (efbf0634)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0aa2769e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (65cdae1a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (556beb81)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (949507fd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (abc80f59)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b143ae8c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf6a8ebf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f53fed2f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2851c17e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3de803a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (430da78a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a9f911cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (885d9d58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9c16d36c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (46a1ae49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (867f5f5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (633b9003)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff9ad8c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a255984a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb538bc6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (158acf5e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (34c57d49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a003cd34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1b87624)
+- … 46 more
+
+### S049 — 2026-01-31T00:17:10-06:00 → 2026-01-31T02:17:41-06:00 (4 commits, 2.01h)
+Branches: refs/tags/toolbox-v0.35.0, refs/pull/10/head
+Commits:
+- `4ed79147` fix(body-generator): correct API usage for LesPaulDXFReader and generator
+- `bc14e57e` fix(body-generator): correct API usage for LesPaulDXFReader and generator
+- `96df2cec` test: add comprehensive CAM system E2E test script
+- `c1fcda94` test: add comprehensive CAM system E2E test script
+Files by surface:
+- other: 1 paths
+  - M services/api/app/routers/body_generator_router.py
+- tests: 1 paths
+  - A services/api/tests/e2e_cam_system.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ed79147)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc14e57e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96df2cec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1fcda94)
+
+### S050 — 2026-02-02T10:03:21-06:00 → 2026-02-02T10:03:21-06:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.35.0
+Commits:
+- `2fac7fd8` feat: add art studio workflows, tests, and CNC learned overrides
+- `3b87e3bc` feat: add art studio workflows, tests, and CNC learned overrides
+Files by surface:
+- other: 9 paths
+  - A services/api/app/_experimental/cnc_production/data/cnc_production/learned_overrides.json
+  - A services/api/app/_experimental/cnc_production/data/cnc_production/learned_overrides_audit.json
+  - A services/api/data/art_studio_design_first_workflows/40439a123c644dc383cbd00f597c8178.json
+  - A services/api/data/art_studio_design_first_workflows/72e6efd7f7a74d5e872fce6e4ac46031.json
+  - A services/api/data/art_studio_design_first_workflows/7e6b636c809b4d229454dabfb8eb0ba0.json
+  - A services/api/data/art_studio_design_first_workflows/91d1b2a406c2402e8f0e2a5d532599df.json
+  - M .gitignore
+  - M services/api/data/art_jobs.json
+  - M services/api/data/art_presets.json
+- tests: 4 paths
+  - A services/api/tests/test_blueprint_cam_bridge.py
+  - A services/api/tests/test_vision_segmentation.py
+  - M services/api/app/tests/test_art_studio_vcarve_router.py
+  - M services/api/tests/test_blueprint_ai_disabled.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fac7fd8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3b87e3bc)
+
+### S051 — 2026-02-05T12:13:43-06:00 → 2026-02-05T13:15:57-06:00 (4 commits, 1.04h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.35.0
+Commits:
+- `752c29bd` docs: add Chief Engineer handoff with design review, fact-check, and remediation plan
+- `fc2ecc1c` docs: add Chief Engineer handoff with design review, fact-check, and remediation plan
+- `5d97938c` docs(handoff): add Q&A Response Log + update checklist with resolution status
+- `8a61cbed` docs(handoff): add Q&A Response Log + update checklist with resolution status
+Files by surface:
+- docs: 4 paths
+  - A CHIEF_ENGINEER_HANDOFF.md
+  - A REMEDIATION_PLAN.md
+  - A luthiers-toolbox-design-review-factcheck.md
+  - A luthiers-toolbox-design-review.md
+Documents produced:
+- `CHIEF_ENGINEER_HANDOFF.md` — UNKNOWN
+- `REMEDIATION_PLAN.md` — UNKNOWN
+- `luthiers-toolbox-design-review-factcheck.md` — UNKNOWN
+- `luthiers-toolbox-design-review.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (752c29bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fc2ecc1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5d97938c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a61cbed)
+
+### S052 — 2026-02-05T18:27:23-06:00 → 2026-02-05T21:43:04-06:00 (14 commits, 3.26h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.35.0
+Commits:
+- `0ac6f9c0` docs: resolve all 15 Q&A items, update timeline for March 02 ship
+- `7b71d3a4` docs: resolve all 15 Q&A items, update timeline for March 02 ship
+- `6e94c4c9` chore(WP-0): Remove dead code - client/, streamlit_demo/, backup Vue
+- `e3d6faae` chore(WP-0): Remove dead code - client/, streamlit_demo/, backup Vue
+- `58b25083` chore(WP-0): Remove backup documentation file
+- `a1611f45` chore(WP-0): Remove backup documentation file
+- `c7476a65` fix(security): fail closed on malformed override token expiry dates
+- `db208c07` fix(security): fail closed on malformed override token expiry dates
+- `37a5fddf` docs(README): fix false coverage claims with actual metrics
+- `cd69b53a` docs(README): fix false coverage claims with actual metrics
+- `0ac3c9ee` docs(bookmark): add WP execution log with completed tasks
+- `66497ae7` docs(bookmark): add WP execution log with completed tasks
+- `04a25a66` chore(WP-2): Remove 13 duplicate routes - legacy rosette + compare_automation + rmos_runs_api
+- `c5f94f0e` chore(WP-2): Remove 13 duplicate routes - legacy rosette + compare_automation + rmos_runs_api
+Files by surface:
+- docs: 8 paths
+  - A AGENT_SESSION_BOOKMARK.md
+  - M .github/copilot-instructions.md
+  - M CHIEF_ENGINEER_HANDOFF.md
+  - M REMEDIATION_PLAN.md
+  - M README.md
+  - D client/VITEST_QUICKREF.md
+  - D client/VITEST_SETUP.md
+  - D docs/ARCHIVE/2025-12/misc/README_CAM_SETTINGS_BACKUP.md
+- other: 9 paths
+  - M services/api/app/core/rmos_safety_policy.py
+  - M services/api/app/main.py
+  - M services/api/app/routers/art/root_art_router.py
+  - D client/vite.config.ts
+  - D packages/client/src/components/toolbox/SimLab_BACKUP_Enhanced.vue
+  - D streamlit_demo/app.py
+  - D streamlit_demo/pages/guitar_designer.py
+  - D streamlit_demo/pages/headstock_art.py
+  - D streamlit_demo/pages/rosette_builder.py
+Documents produced:
+- `AGENT_SESSION_BOOKMARK.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ac6f9c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b71d3a4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7476a65)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db208c07)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37a5fddf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cd69b53a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ac3c9ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66497ae7)
+
+### S053 — 2026-02-06T04:29:11-06:00 → 2026-02-06T23:34:12-06:00 (118 commits, 19.08h)
+Branches: refs/tags/toolbox-v0.35.0, refs/pull/10/head
+Commits:
+- `1bbaa3a0` WP-2: API surface reduction Phase 2 - routes 727 -> 692 (-35)
+- `414a0f5f` WP-2: API surface reduction Phase 2 - routes 727 -> 692 (-35)
+- `298f0f68` chore: remove __REFERENCE__/ (archived to ltb-reference-archive)
+- `e1929a57` chore: remove __REFERENCE__/ (archived to ltb-reference-archive)
+- `5bf71a52` docs: update Rule 5 - __REFERENCE__/ archived and deleted
+- `7bda04e0` docs: update Rule 5 - __REFERENCE__/ archived and deleted
+- `36f09346` docs(bookmark): final status - all WP tasks complete
+- `b9f5a352` docs(bookmark): final status - all WP tasks complete
+- `0a428557` WP-2: API surface reduction Phase 2B - routes 692 -> 674 (-18)
+- `dd88ae03` WP-2: API surface reduction Phase 2B - routes 692 -> 674 (-18)
+- `0d147246` WP-2 Phase 2C: Disable unused routers - learn, dashboard, sg_telemetry, music
+- `6bfaa314` WP-2 Phase 2C: Disable unused routers - learn, dashboard, sg_telemetry, music
+- `552dd4a8` WP-2 Phase 2D: Disable more unused routers
+- `ff04d6b1` WP-2 Phase 2D: Disable more unused routers
+- `7605f3a9` WP-2 Phase 2E: Disable more unused routers and duplicate CAM subrouters
+- `ec4ac8d3` WP-2 Phase 2E: Disable more unused routers and duplicate CAM subrouters
+- `02289b56` Add developer handoff doc for route reduction phase 2
+- `6e24b682` Add developer handoff doc for route reduction phase 2
+- `8eec8cb4` fix(api): disable 5 more zero-usage routers (WP-2 Phase 2)
+- `b140dbbd` fix(api): disable 5 more zero-usage routers (WP-2 Phase 2)
+- `35e49723` fix(api): disable 14 more zero-usage routers (WP-2 Phase 2 batch 2)
+- `b77aa4f0` fix(api): disable 14 more zero-usage routers (WP-2 Phase 2 batch 2)
+- `2e8f65ab` fix(api): disable 6 more zero-usage routers (WP-2 Phase 2 batch 3)
+- `8671c7b1` fix(api): disable 6 more zero-usage routers (WP-2 Phase 2 batch 3)
+- `1b445e39` fix(api): disable 2 unused subrouters in CAM/Compare aggregators (WP-2)
+- `45107ed8` fix(api): disable 2 unused subrouters in CAM/Compare aggregators (WP-2)
+- `077516b9` docs: update route audit results (530 → 414, -116 routes)
+- `48a365ec` docs: update route audit results (530 → 414, -116 routes)
+- `962dc9a3` refactor(api): disable cam_smoke_v155 + cam_adaptive_benchmark routers (WP-2)
+- `a44f4fc3` refactor(api): disable cam_smoke_v155 + cam_adaptive_benchmark routers (WP-2)
+- `48bd520e` refactor(api): disable 6 zero-usage routers (WP-2 Batch 6)
+- `61a29251` refactor(api): disable 6 zero-usage routers (WP-2 Batch 6)
+- `5ed1f0f7` refactor(api): disable legacy_dxf_exports_router (WP-2 Batch 7)
+- `fcddaf1d` refactor(api): disable legacy_dxf_exports_router (WP-2 Batch 7)
+- `0323223e` refactor(api): disable saw_batch_router + cam_polygon_offset_router (WP-2 Batch 8)
+- `a6e47942` refactor(api): disable saw_batch_router + cam_polygon_offset_router (WP-2 Batch 8)
+- `4cbea75b` refactor(api): disable decision intelligence router (WP-2 Batch 9)
+- `6b3775fc` refactor(api): disable decision intelligence router (WP-2 Batch 9)
+- `0d3c27c4` docs: update route audit with batches 5-9 (WP-2)
+- `cb826357` docs: update route audit with batches 5-9 (WP-2)
+- `6332b00a` refactor(api): disable 4 more zero-usage routers (WP-2 Batch 10)
+- `aafe8356` refactor(api): disable 4 more zero-usage routers (WP-2 Batch 10)
+- `d1fa9aff` refactor(api): batch 11 - disable rmos_ai_advisory_router (-3 routes)
+- `ded759ef` refactor(api): batch 11 - disable rmos_ai_advisory_router (-3 routes)
+- `4dec40bb` docs(api): update WP-2 route audit results (45 routers, 221 routes)
+- `9898e05d` docs(api): update WP-2 route audit results (45 routers, 221 routes)
+- `2d5d9849` refactor(api): batch 12 - disable 3 zero-usage routers (-3 routes)
+- `729500ee` refactor(api): batch 12 - disable 3 zero-usage routers (-3 routes)
+- `c3ac8fc1` refactor(api): batch 13 - disable analytics_router (-19 routes) - TARGET ACHIEVED
+- `d4eb6d84` refactor(api): batch 13 - disable analytics_router (-19 routes) - TARGET ACHIEVED
+- `04a90d2d` fix(ui): align AnalyticsDashboard API paths with actual routes
+- `c694236d` fix(ui): align AnalyticsDashboard API paths with actual routes
+- `2ba86afb` refactor(api): batch 14 - disable 4 zero-usage routers (-8 routes) - TARGET ACHIEVED
+- `424c41cc` refactor(api): batch 14 - disable 4 zero-usage routers (-8 routes) - TARGET ACHIEVED
+- `7ba3f191` fix(tests): resolve 16 errors + update tests for WP-2 disabled routers
+- `ee490fc9` fix(tests): resolve 16 errors + update tests for WP-2 disabled routers
+- `2645b0de` chore(tests): delete 90 test files for WP-2 disabled routers
+- `aeb71a0e` chore(tests): delete 90 test files for WP-2 disabled routers
+- `4b3d46fd` refactor(api): batch 15 - disable rmos_workflow_router (-17 routes)
+- `843bc4d2` refactor(api): batch 15 - disable rmos_workflow_router (-17 routes)
+- `5aee75ed` refactor(api): batch 16 - disable 6 RMOS batch sub-routers (-8 routes)
+- `91cb2a1b` refactor(api): batch 16 - disable 6 RMOS batch sub-routers (-8 routes)
+- `4bd63f49` refactor(api): batch 17 - disable rosette_pattern_router_v2 (-6 routes)
+- `5f13adfa` refactor(api): batch 17 - disable rosette_pattern_router_v2 (-6 routes)
+- `c05a0c4e` refactor(api): WP-2 Batch 18 - disable cam_post_v155_router (-2 routes)
+- `ffecaf56` refactor(api): WP-2 Batch 18 - disable cam_post_v155_router (-2 routes)
+- `05fddf37` refactor(api): WP-2 Batch 19 - disable feeds_router (-6 routes)
+- `57d4ff73` refactor(api): WP-2 Batch 19 - disable feeds_router (-6 routes)
+- `6aba7190` docs: add WP-2 API Surface Reduction changelog entry
+- `a8f31c1a` docs: add WP-2 API Surface Reduction changelog entry
+- `7298deb4` Update handoff doc with full inventory, decomposition plan, and coordination notes
+- `80a0d04c` Update handoff doc with full inventory, decomposition plan, and coordination notes
+- `14f2ff9a` fix(safety): WP-1 exception hardening - cam/ and calculators/ (49 blocks narrowed)
+- `fe8d815f` fix(safety): WP-1 exception hardening - cam/ and calculators/ (49 blocks narrowed)
+- `15757e19` feat(agentic): add cross-repo contracts for agent orchestration
+- `3b34a97c` feat(agentic): add cross-repo contracts for agent orchestration
+- `31f967a9` fix(safety): WP-1 exception hardening - saw_lab/ (31 blocks narrowed)
+- `3b4f7e5f` fix(safety): WP-1 exception hardening - saw_lab/ (31 blocks narrowed)
+- `8cc3ffbf` docs: add Agentic Contracts Engineer Handoff
+- `c256db86` docs: add Agentic Contracts Engineer Handoff
+- `54895a61` docs(agentic): add Phase 2/3 spine specifications
+- `bf388d7b` docs(agentic): add Phase 2/3 spine specifications
+- `7ecc0b53` docs(agentic): append condensed quick-reference appendices to spine docs
+- `9f64c7d1` docs(agentic): append condensed quick-reference appendices to spine docs
+- `a3c2e6cc` docs(agentic): add test cases + architecture one-pager
+- `c647bf6a` docs(agentic): add test cases + architecture one-pager
+- `a86612b1` test(agentic): add executable pytest suites for spine contracts
+- `c816d461` test(agentic): add executable pytest suites for spine contracts
+- `16f93bd6` feat(agentic): add spine reference implementation (moments + policy)
+- `b4920ebd` feat(agentic): add spine reference implementation (moments + policy)
+- `9671dc80` feat(agentic): add UWSM update engine + shadow replay harness
+- `9c3ac92f` feat(agentic): add UWSM update engine + shadow replay harness
+- `6fbc7650` feat(agentic): add spine test suite with replay smoke test
+- `a2238516` feat(agentic): add spine test suite with replay smoke test
+- `4a3ff807` docs(spine): add CI/local parity troubleshooting to Section 5
+- `7b25446d` docs(spine): add CI/local parity troubleshooting to Section 5
+- `97914656` docs(spine): add new event type checklist to Section 6
+- `e370cdc8` docs(spine): add new event type checklist to Section 6
+- `519aa8f9` docs(spine): replace event type checklist with comprehensive 10-step version
+- `cfb7b0c9` docs(spine): replace event type checklist with comprehensive 10-step version
+- `59b276dc` docs(agentic): add Shadow Mode Integration Plan
+- `db31fc81` docs(agentic): add Shadow Mode Integration Plan
+- `34c5bf38` WP-1: harden rmos/ except Exception blocks (197 blocks across 63 files)
+- `5667b893` WP-1: harden rmos/ except Exception blocks (197 blocks across 63 files)
+- `103ebea2` docs: add Advisory Mode Thin Slice handoff (M1) v1.0
+- `9be87d07` docs: add Advisory Mode Thin Slice handoff (M1) v1.0
+- `4419ade4` ci: add spine test suite + CI workflow (Step 1 complete)
+- `cc4806f6` ci: add spine test suite + CI workflow (Step 1 complete)
+- `b4c09cd7` feat(ui): add M1 Advisory Mode - CoachBubble + directive store (Step 2)
+- `ff3c88ae` feat(ui): add M1 Advisory Mode - CoachBubble + directive store (Step 2)
+- `34ed664b` docs: add agentic integration snippets + IdleDetector component
+- `69b5d488` docs: add agentic integration snippets + IdleDetector component
+- `488a8c02` feat(agentic): wire AudioAnalyzerViewer + add debounce to directive store
+- `b645e7c1` feat(agentic): wire AudioAnalyzerViewer + add debounce to directive store
+- `39151e98` docs: add M1 advisory mode golden path test checklist
+- `7e8df232` docs: add M1 advisory mode golden path test checklist
+- `a8470017` feat(agentic): add Python spine module for replay determinism testing
+- `aa14722c` feat(agentic): add Python spine module for replay determinism testing
+Files by surface:
+- docs: 70 paths
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/Golden_Idea_Package_White_Paper.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/copilot-instructions.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/CBSP21.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/CHANGELOG.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/CONSOLIDATION_PROGRESS.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/CONTRIBUTING.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/Critical Design Review_tap-tone-pi.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/DEV_HANDOFF.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/FIRST_MEASUREMENT_CHECKLIST.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/GOLD_STANDARD_EXAMPLE_RUN.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/INSTRUMENT_SCOPE.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/QUICKSTART.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/README.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schemas/SCHEMA_INDEX.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0001-measurement-scope.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0002-multi-channel-expansion.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0003-artifact-schema-multichannel.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0004-acoustic-vs-structural-boundary.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0005-repeatability-and-confidence.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0006-rmos-integration-mapping.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0007_PHASE2_ODS_COHERENCE.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/BOUNDARY_RULES.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/BUILD_READINESS_EVALUATION.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/DEVELOPER_HANDOFF_CROSS_REPO.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/ENGINEER_HANDOFF.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/FAILURE_MODES_VIEWER.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/GOLD_RUN_COMMAND_SPEC.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/GOVERNANCE.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/INTEGRATION_HANDOFF_TOOLBOX.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/MEASUREMENT_BOUNDARY.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/MEASUREMENT_README.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/PACK_METADATA_SPEC.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/PHASE2_PROMOTION_CHECKLIST.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/PRE_EXPORT_VALIDATION.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/TAP_TONE_PI_SANDBOX_HANDOFF.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/architecture/BoundarySpec.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/contracts/EVIDENCE_PACK_CONTRACT_v1.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/phase2/README.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/docs/schemas/README.md
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/engineer_handoff.md
+  - … 30 more (see sessions.json / files.jsonl)
+- other: 422 paths
+  - A 0
+  - A services/api/app/sandboxes/smart_guitar/templates/__pycache__/__init__.cpython-314.pyc
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/bending_stiffness_validate.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/boundary_guard.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/cbsp21_coverage_gate.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/cbsp21_patch_packet_format.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/contracts-validate.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/dispatch_toolbox_ingest.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/examples_matrix.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/no_logic_creep.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/phase2_validate.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/pr-title-lint.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/precommit.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/schema-bump-guard.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/schemas_validate.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/test.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.github/workflows/wav-io-guard.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.gitignore
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/.pre-commit-config.yaml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/CODEOWNERS
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/Makefile
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/boundary_spec.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/cbsp21/full_source/.gitkeep
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/cbsp21/patch_packets/.gitkeep
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/cbsp21/scanned_source/.gitkeep
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/ci/__init__.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/ci/boundary_spec.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/ci/check_boundary_imports.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/ci/no_logic_creep.yml
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/config/devices/dial_indicator_example.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/config/devices/loadcell_example.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/config/grids/guitar_top_35pt.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/phase2_grid.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/phase2_ods_snapshot.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/phase2_point_capture_meta.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/phase2_session_meta.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/phase2_wolf_candidates.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schema_registry.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schemas/chladni_run.schema.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schemas/manifest.schema.json
+  - … 382 more (see sessions.json / files.jsonl)
+- tests: 243 paths
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/test_export_viewer_pack_v1_golden.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/tests/__init__.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/tests/test_validate_viewer_pack_v1_real_sessions.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A2/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A2/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/viewer_pack.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_missing_manifest/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_missing_manifest/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/viewer_pack.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/viewer_pack.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/wolf/wsi_curve.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/viewer_pack.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/wolf/wsi_curve.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/spectra/points/A1/analysis.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/spectra/points/A1/spectrum.csv
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/viewer_pack.json
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/test_viewer_pack_v1_validation.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/__init__.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/_util/__init__.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/_util/gen_tone.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_auto_trigger.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_manifest.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_pipeline_integration.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_policy.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_config_and_analysis.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_gold_run_dry_run.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_gold_run_open_urls.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_ingest_toolbox.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_measurement_schemas.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_open_url.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_phase1_pipeline_integration.py
+  - A tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_phase2_schemas.py
+  - … 203 more (see sessions.json / files.jsonl)
+Documents produced:
+- `tap_tone_pi-main (5)/tap_tone_pi-main/.github/Golden_Idea_Package_White_Paper.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/.github/copilot-instructions.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/CBSP21.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/CHANGELOG.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/CONSOLIDATION_PROGRESS.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/CONTRIBUTING.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/Critical Design Review_tap-tone-pi.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/DEV_HANDOFF.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/FIRST_MEASUREMENT_CHECKLIST.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/GOLD_STANDARD_EXAMPLE_RUN.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/INSTRUMENT_SCOPE.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/QUICKSTART.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schemas/SCHEMA_INDEX.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0001-measurement-scope.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0002-multi-channel-expansion.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0003-artifact-schema-multichannel.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0004-acoustic-vs-structural-boundary.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0005-repeatability-and-confidence.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0006-rmos-integration-mapping.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0007_PHASE2_ODS_COHERENCE.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/BOUNDARY_RULES.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/BUILD_READINESS_EVALUATION.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/DEVELOPER_HANDOFF_CROSS_REPO.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/ENGINEER_HANDOFF.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/FAILURE_MODES_VIEWER.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/GOLD_RUN_COMMAND_SPEC.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/GOVERNANCE.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/INTEGRATION_HANDOFF_TOOLBOX.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/MEASUREMENT_BOUNDARY.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/MEASUREMENT_README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/PACK_METADATA_SPEC.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/PHASE2_PROMOTION_CHECKLIST.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/PRE_EXPORT_VALIDATION.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/TAP_TONE_PI_SANDBOX_HANDOFF.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/architecture/BoundarySpec.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/contracts/EVIDENCE_PACK_CONTRACT_v1.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/phase2/README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/docs/schemas/README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/engineer_handoff.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/examples/reference/README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/executive_summary.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/schemas/README.md` — UNKNOWN
+- `tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone_pi_design_review.md` — UNKNOWN
+- `TODO_HIGH_PRIORITY.md` — UNKNOWN
+- `services/api/DEVELOPER_HANDOFF_ROUTE_REDUCTION_PHASE2.md` — UNKNOWN
+- `services/api/ROUTE_AUDIT_PHASE2_RESULTS.md` — UNKNOWN
+- `services/api/app/agentic/ARCHITECTURE_MAPPING.md` — UNKNOWN
+- `docs/AGENTIC_CONTRACTS_ENGINEER_HANDOFF.md` — UNKNOWN
+- `docs/AGENT_DECISION_POLICY_V1.md` — UNKNOWN
+- `docs/EVENT_MOMENTS_CATALOG_V1.md` — UNKNOWN
+- `docs/UWSM_UPDATE_RULES_V1.md` — UNKNOWN
+- `docs/AGENTIC_SPINE_ARCHITECTURE_ONEPAGER.md` — UNKNOWN
+- `tests/test_moments_v1.md` — UNKNOWN
+- `tests/test_policy_v1.md` — UNKNOWN
+- `services/api/docs/README_SPINE.md` — UNKNOWN
+- `services/api/docs/SHADOW_MODE_INTEGRATION_PLAN.md` — UNKNOWN
+- `services/api/docs/ADVISORY_MODE_THIN_SLICE.md` — UNKNOWN
+- `docs/AGENTIC_INTEGRATION_SNIPPETS.md` — UNKNOWN
+- `docs/M1_GOLDEN_PATH_TESTS.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (298f0f68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1929a57)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8eec8cb4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b140dbbd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35e49723)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b77aa4f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e8f65ab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8671c7b1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b445e39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45107ed8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (962dc9a3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a44f4fc3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48bd520e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (61a29251)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ed1f0f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fcddaf1d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0323223e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a6e47942)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4cbea75b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6b3775fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d3c27c4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cb826357)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6332b00a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aafe8356)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d1fa9aff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ded759ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4dec40bb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9898e05d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2d5d9849)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (729500ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3ac8fc1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d4eb6d84)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (04a90d2d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c694236d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2ba86afb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (424c41cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7ba3f191)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee490fc9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2645b0de)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aeb71a0e)
+- … 50 more
+
+### S054 — 2026-02-07T04:31:22-06:00 → 2026-02-07T08:04:12-06:00 (32 commits, 3.55h)
+Branches: refs/tags/toolbox-v0.35.0, refs/pull/10/head
+Commits:
+- `c3147212` WP-1 Bucket B+C: harden remaining 438 except Exception blocks across 188 files
+- `c4f1749f` WP-1 Bucket B+C: harden remaining 438 except Exception blocks across 188 files
+- `0ab4cfc9` feat(agentic): implement Option B for stable directive UX
+- `ae8ccd1f` feat(agentic): implement Option B for stable directive UX
+- `25ec5bc7` WP-4: Documentation triage — 828 -> 50 markdown files
+- `666bb912` WP-4: Documentation triage — 828 -> 50 markdown files
+- `10114e27` fix(agentic): tighten Option B patches for determinism + resurrection prevention
+- `aa197b6f` fix(agentic): tighten Option B patches for determinism + resurrection prevention
+- `21c8b950` feat(agentic): add one-shot FIRST_SIGNAL + 10s cooldown between directives
+- `dffbd3aa` feat(agentic): add one-shot FIRST_SIGNAL + 10s cooldown between directives
+- `08d5c6b7` feat(agentic): add session-level gate — only critical moments after first directive
+- `ecd92b69` feat(agentic): add session-level gate — only critical moments after first directive
+- `146bd6be` feat(agentic): add make verify-policy + FIRST_SIGNAL grace selector
+- `58e730f4` feat(agentic): add make verify-policy + FIRST_SIGNAL grace selector
+- `0de8c5e4` fix(tools): handle Windows console encoding for emoji output
+- `810c0fd9` fix(tools): handle Windows console encoding for emoji output
+- `402ca141` ci(release): add verify-policy gate + attach golden sessions to releases
+- `aad5d4c5` ci(release): add verify-policy gate + attach golden sessions to releases
+- `18c5350f` ci(release): add two-tier policy verification + cross-version replay
+- `4c17f4ff` ci(release): add two-tier policy verification + cross-version replay
+- `09fc1cc4` fix(ci): use requirements.txt instead of pyproject.toml for API deps
+- `c3a6b6a9` fix(ci): use requirements.txt instead of pyproject.toml for API deps
+- `58306e9e` fix(ci): use absolute path in package_sessions.sh
+- `7406c20c` fix(ci): use absolute path in package_sessions.sh
+- `633dc95e` fix(ci): fix Docker metadata tag patterns for toolbox-v* tags
+- `cbf69391` fix(ci): fix Docker metadata tag patterns for toolbox-v* tags
+- `3c62b7d0` fix(docker): correct client path from client/ to packages/client/
+- `7fb2d5f4` fix(docker): correct client path from client/ to packages/client/
+- `141614dc` fix(ci): add id-token and attestations permissions for build-and-push
+- `550f8c7e` fix(ci): add id-token and attestations permissions for build-and-push
+- `36a8e447` fix(ci): use lowercase image names in verify-images step
+- `a3b79db9` fix(ci): use lowercase image names in verify-images step
+Files by surface:
+- docs: 848 paths
+  - D .github/CICD_SETUP.md
+  - D .github/COMPARE_MODE_REMINDER.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-1.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-10.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-11.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-12.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-13.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-14.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-15.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-2.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-3.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-4.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-5.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-6.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-7.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-8.md
+  - D .github/ISSUE_TEMPLATE/bundle_mm-9.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_0.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_1.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_2.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_3.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_4.md
+  - D .github/ISSUE_TEMPLATE/bundle_n10_5.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_1.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_2.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_3.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_4.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_5.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_6.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7_1.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7_2.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7_3.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7_4.md
+  - D .github/ISSUE_TEMPLATE/bundle_n8_7_5.md
+  - D .github/ISSUE_TEMPLATE/bundle_n9_0.md
+  - D .github/ISSUE_TEMPLATE/bundle_n9_1.md
+  - D .github/ISSUE_TEMPLATE/bundle_n9_2.md
+  - D .github/ISSUE_TEMPLATE/bundle_n9_3.md
+  - D .github/ISSUE_TEMPLATE/bundle_n9_4.md
+  - … 808 more (see sessions.json / files.jsonl)
+- other: 200 paths
+  - A tools/verify_policy.py
+  - A .github/workflows/verify-policy.yml
+  - A tools/package_sessions.sh
+  - M services/api/app/_experimental/ai_cam/advisor.py
+  - M services/api/app/_experimental/ai_cam/optimize.py
+  - M services/api/app/_experimental/analytics/advanced_analytics.py
+  - M services/api/app/_experimental/analytics/job_analytics.py
+  - M services/api/app/_experimental/cnc_production/feeds_speeds/core/learned_overrides.py
+  - M services/api/app/_experimental/cnc_production/feeds_speeds/core/presets_db.py
+  - M services/api/app/_experimental/cnc_production/joblog/storage.py
+  - M services/api/app/_experimental/cnc_production/learn/live_learn_ingestor.py
+  - M services/api/app/_experimental/cnc_production/learn/saw_live_learn_dashboard.py
+  - M services/api/app/_experimental/cnc_production/routers.py
+  - M services/api/app/advisory/store.py
+  - M services/api/app/ai/observability/audit_log.py
+  - M services/api/app/ai/transport/image_client.py
+  - M services/api/app/ai/transport/llm_client.py
+  - M services/api/app/ai/transport/vision_client.py
+  - M services/api/app/ai_context/assembler/default.py
+  - M services/api/app/ai_context/providers/docs_excerpt.py
+  - M services/api/app/ai_context/providers/run_summary.py
+  - M services/api/app/ai_context_adapter/routes.py
+  - M services/api/app/api/routes/b22_diff_export_routes.py
+  - M services/api/app/api/routes/pipeline_handoff.py
+  - M services/api/app/api/routes/rmos_analytics_api.py
+  - M services/api/app/api/routes/rmos_pattern_api.py
+  - M services/api/app/api/routes/rmos_pipeline_run_api.py
+  - M services/api/app/api/routes/rmos_presets_api.py
+  - M services/api/app/api/routes/rmos_rosette_api.py
+  - M services/api/app/api/routes/rmos_stores_api.py
+  - M services/api/app/art_studio/api/cam_promotion_routes.py
+  - M services/api/app/art_studio/api/design_first_workflow_routes.py
+  - M services/api/app/art_studio/api/rosette_compare_routes.py
+  - M services/api/app/art_studio/api/rosette_jobs_routes.py
+  - M services/api/app/art_studio/api/rosette_pattern_routes.py
+  - M services/api/app/art_studio/api/snapshot_routes.py
+  - M services/api/app/art_studio/api/workflow_routes.py
+  - M services/api/app/art_studio/inlay_router.py
+  - M services/api/app/art_studio/prompts/validators.py
+  - M services/api/app/art_studio/services/cam_promotion_service.py
+  - … 160 more (see sessions.json / files.jsonl)
+- tests: 3 paths
+  - A services/api/tests/fixtures/golden_m1_session.jsonl
+  - A services/api/tests/test_golden_m1_replay.py
+  - A services/api/tests/fixtures/first_signal_grace_wins.jsonl
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ab4cfc9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae8ccd1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10114e27)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aa197b6f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (21c8b950)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dffbd3aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08d5c6b7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ecd92b69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (146bd6be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (58e730f4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (402ca141)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aad5d4c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (18c5350f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c17f4ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (58306e9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7406c20c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (633dc95e)
+- Fixes: ['- Use type=ref,event=tag to capture full tag name (toolbox-v0.35.0)'] (633dc95e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cbf69391)
+- Fixes: ['- Use type=ref,event=tag to capture full tag name (toolbox-v0.35.0)'] (cbf69391)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c62b7d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7fb2d5f4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (141614dc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (550f8c7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36a8e447)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3b79db9)
+- tag toolbox-v0.35.0 (a3b79db9)
+
+### S055 — 2026-02-08T07:23:12-06:00 → 2026-02-08T07:24:20-06:00 (4 commits, 0.02h)
+Branches: refs/tags/toolbox-v0.36.0, refs/pull/10/head
+Commits:
+- `523f4b6a` WP-3: decompose 7 god-objects (batch 3)
+- `b0af39cc` WP-3: decompose 7 god-objects (batch 3)
+- `a65eb636` WP-3: update REMEDIATION_PLAN.md — mark 7+1 files done (batch 3)
+- `f5a26a09` WP-3: update REMEDIATION_PLAN.md — mark 7+1 files done (batch 3)
+Files by surface:
+- docs: 1 paths
+  - M REMEDIATION_PLAN.md
+- other: 14 paths
+  - A services/api/app/calculators/temperament_ratios.py
+  - A services/api/app/cam/routers/monitoring/metrics_thermal.py
+  - A services/api/app/data_registry/registry_products.py
+  - A services/api/app/sandboxes/smart_guitar/toolpath_strategies.py
+  - A services/api/app/saw_lab/batch_router_toolpaths.py
+  - A services/api/app/services/relief_helpers.py
+  - A services/api/app/util/poly_arc_smooth.py
+  - M services/api/app/calculators/alternative_temperaments.py
+  - M services/api/app/cam/routers/monitoring/metrics_router.py
+  - M services/api/app/data_registry/registry.py
+  - M services/api/app/sandboxes/smart_guitar/generate_gcode.py
+  - M services/api/app/saw_lab/batch_router.py
+  - M services/api/app/services/relief_kernels.py
+  - M services/api/app/util/poly_offset_spiral.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S056 — 2026-02-08T17:16:51-06:00 → 2026-02-09T02:09:33-06:00 (74 commits, 8.88h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.36.0
+Commits:
+- `03c53b87` WP-3: Batch 4 decomposition — 3 files under 500, 1 needs 2nd pass
+- `448a0888` WP-3: Batch 4 decomposition — 3 files under 500, 1 needs 2nd pass
+- `010d93cf` WP-3: 2nd pass fret_slots_cam.py — 793 -> 499 lines
+- `f7b9a63e` WP-3: 2nd pass fret_slots_cam.py — 793 -> 499 lines
+- `00f64724` WP-3: scientific_calculator.py — 515 -> 498 lines
+- `eb9c1c91` WP-3: scientific_calculator.py — 515 -> 498 lines
+- `1afce184` WP-3: acoustics_router.py — 544 -> 499 lines
+- `bc29fde3` WP-3: acoustics_router.py — 544 -> 499 lines
+- `6b2a0958` WP-3: saw_blade_validator.py — 509 -> 490 lines
+- `d6d2fd7c` WP-3: saw_blade_validator.py — 509 -> 490 lines
+- `d3f4c8fd` WP-3: unified_presets_router.py — 509 -> 491 lines
+- `e4060df4` WP-3: unified_presets_router.py — 509 -> 491 lines
+- `577fd437` WP-3: feasibility/rules.py — 519 -> 477 lines
+- `ee566c39` WP-3: feasibility/rules.py — 519 -> 477 lines
+- `4f7609b1` WP-3: batch_metrics_router.py — 528 -> 492 lines
+- `710a844e` WP-3: batch_metrics_router.py — 528 -> 492 lines
+- `186ed57a` WP-3: state_machine.py — 531 -> 483 lines
+- `9409b4e5` WP-3: state_machine.py — 531 -> 483 lines
+- `5fa4c742` WP-3: probe_svg.py — 536 -> 499 lines
+- `891cefde` WP-3: probe_svg.py — 536 -> 499 lines
+- `3f38d509` WP-3: pipeline_router.py — 1381 → 497 lines
+- `bb2286b7` WP-3: pipeline_router.py — 1381 → 497 lines
+- `27451f3e` WP-3: mvp_wrapper.py — 552 -> 477 lines
+- `3bcdde6e` WP-3: mvp_wrapper.py — 552 -> 477 lines
+- `516ac663` WP-3: body_generator_router.py — 600 -> 459 lines
+- `af3d5f97` WP-3: body_generator_router.py — 600 -> 459 lines
+- `2a6e158f` WP-3: art_studio_rosette_router.py — 594 -> 455 lines
+- `5728ee02` WP-3: art_studio_rosette_router.py — 594 -> 455 lines
+- `043035c9` WP-3: api_runs.py — 593 -> 492 lines
+- `b61abde1` WP-3: api_runs.py — 593 -> 492 lines
+- `7637265e` WP-3: variant_review_service.py — 585 -> 470 lines
+- `95330382` WP-3: variant_review_service.py — 585 -> 470 lines
+- `5f0e35ca` docs: update session bookmark — WP-3 Batch 5 complete
+- `9d753169` docs: update session bookmark — WP-3 Batch 5 complete
+- `0b061529` WP-3: workflow_integration.py — 825 -> 500 lines
+- `cc0437b8` WP-3: workflow_integration.py — 825 -> 500 lines
+- `22ba92d0` docs: update session bookmark after workflow_integration.py decomposition
+- `f35780fd` docs: update session bookmark after workflow_integration.py decomposition
+- `19c6c6d7` WP-3: rmos_rosette_api.py — 769 -> 485 lines
+- `6e2ecb08` WP-3: rmos_rosette_api.py — 769 -> 485 lines
+- `0bc5424f` WP-3: store.py — 709 -> 478 lines
+- `f63f9ecf` WP-3: store.py — 709 -> 478 lines
+- `3ce3902b` docs: WP-3 complete - all app files under 500 lines
+- `d6807f6a` docs: WP-3 complete - all app files under 500 lines
+- `86180642` fix(WP-3): add missing imports after store.py decomposition
+- `e48b1e82` fix(WP-3): add missing imports after store.py decomposition
+- `513010ec` docs: update session bookmark with WP-3 import fixes
+- `d04d061c` docs: update session bookmark with WP-3 import fixes
+- `47f11992` fix(tests): correct singleton reset in delete audit test fixtures
+- `80aa6a41` fix(tests): correct singleton reset in delete audit test fixtures
+- `d86c8cf3` fix(agentic): implement priority suppression in moments engine
+- `fb93d22d` fix(agentic): implement priority suppression in moments engine
+- `7b80dbb2` fix(tests): correct mock paths in plan choose unit tests
+- `c7436563` fix(tests): correct mock paths in plan choose unit tests
+- `24ffea85` fix(agentic): implement selective suppression in moments engine
+- `cc069e70` fix(agentic): implement selective suppression in moments engine
+- `4fb6757d` fix(tests): resolve test isolation issues with store_api singleton
+- `a90e3ab0` fix(tests): resolve test isolation issues with store_api singleton
+- `3109680e` docs: update session bookmark with test fix summary
+- `d4576098` docs: update session bookmark with test fix summary
+- `23420c44` docs: update remediation plan with Phase 3 complete + test fixes
+- `a0256258` docs: update remediation plan with Phase 3 complete + test fixes
+- `8f708678` docs: add phase status summary + mark Phase 1.1 complete (bare except=0)
+- `ee545e5c` docs: add phase status summary + mark Phase 1.1 complete (bare except=0)
+- `10f1e93d` fix(rmos): narrow except Exception to specific types in store_delete.py
+- `f07ba4ba` fix(rmos): narrow except Exception to specific types in store_delete.py
+- `31c16cb1` docs: update remediation plan with Phase 1.2 progress
+- `3809dc92` docs: update remediation plan with Phase 1.2 progress
+- `cdbabb78` docs: update session bookmark with Phase 1.2 progress
+- `dc96a24d` docs: update session bookmark with Phase 1.2 progress
+- `2875a585` feat(safety): add @safety_critical decorator for fail-closed behavior
+- `7dbbb9bb` feat(safety): add @safety_critical decorator for fail-closed behavior
+- `128cb303` docs: update remediation plan with Phase 1.3 complete
+- `62128c78` docs: update remediation plan with Phase 1.3 complete
+Files by surface:
+- docs: 2 paths
+  - A AGENT_SESSION_BOOKMARK.md
+  - M REMEDIATION_PLAN.md
+- other: 37 paths
+  - A services/api/app/calculators/fret_slots_fan_cam.py
+  - A services/api/app/saw_lab/batch_metrics_router.py
+  - A services/api/app/routers/pipeline_schemas.py
+  - A services/api/app/rmos/mvp_wrapper_schemas.py
+  - A services/api/app/routers/body_generator_schemas.py
+  - A services/api/app/routers/art_studio_rosette_schemas.py
+  - A services/api/app/rmos/runs_v2/store_api.py
+  - A services/api/app/rmos/runs_v2/store_delete.py
+  - A services/api/app/core/safety.py
+  - M services/api/app/calculators/fret_slots_cam.py
+  - M services/api/app/calculators/inlay_calc.py
+  - M services/api/app/routers/calculators_router.py
+  - M services/api/app/routers/retract_router.py
+  - M services/api/app/calculators/suite/scientific_calculator.py
+  - M services/api/app/rmos/runs_v2/acoustics_router.py
+  - M services/api/app/cam_core/saw_lab/saw_blade_validator.py
+  - M services/api/app/routers/unified_presets_router.py
+  - M services/api/app/rmos/feasibility/rules.py
+  - M services/api/app/workflow/state_machine.py
+  - M services/api/app/cam/probe_svg.py
+  - M services/api/app/routers/pipeline_router.py
+  - M services/api/app/rmos/mvp_wrapper.py
+  - M services/api/app/routers/body_generator_router.py
+  - M services/api/app/routers/art_studio_rosette_router.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/rmos/runs_v2/variant_review_service.py
+  - M services/api/app/art_studio/services/workflow_integration.py
+  - M services/api/app/api/routes/rmos_rosette_api.py
+  - M services/api/app/rmos/runs_v2/store.py
+  - M services/api/app/agentic/__init__.py
+  - M services/api/app/agentic/spine/moments.py
+  - M services/api/app/calculators/fret_slots_export.py
+  - M services/api/app/cam/rosette/cnc/cnc_gcode_exporter.py
+  - M services/api/app/rmos/feasibility/engine.py
+  - M services/api/app/rmos/operations/cam_adapter.py
+  - M services/api/app/rmos/operations/saw_adapter.py
+  - M services/api/app/services/saw_lab_gcode_emit_service.py
+- tests: 5 paths
+  - M services/api/tests/test_runs_v2_delete_audit.py
+  - M services/api/tests/test_plan_choose_persists_decision_payload_unit.py
+  - M services/api/tests/test_rmos_wrapper_feasibility_phase1.py
+  - M services/api/tests/test_runs_v2_delete_api.py
+  - M services/api/tests/test_runs_v2_split_store.py
+Documents produced:
+- `AGENT_SESSION_BOOKMARK.md` — # Agent Session Bookmark
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (03c53b87)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (448a0888)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (010d93cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f7b9a63e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (00f64724)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb9c1c91)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1afce184)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc29fde3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6b2a0958)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6d2fd7c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3f4c8fd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e4060df4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (577fd437)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee566c39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f7609b1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (710a844e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (186ed57a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9409b4e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5fa4c742)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (891cefde)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f38d509)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb2286b7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27451f3e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3bcdde6e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (516ac663)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af3d5f97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a6e158f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5728ee02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (043035c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b61abde1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7637265e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95330382)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b061529)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc0437b8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (19c6c6d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e2ecb08)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0bc5424f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f63f9ecf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86180642)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e48b1e82)
+- … 20 more
+
+### S057 — 2026-02-09T07:18:46-06:00 → 2026-02-10T01:43:55-06:00 (78 commits, 18.42h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.36.0, refs/tags/toolbox-v0.36.1, refs/tags/toolbox-v0.37.0, refs/tags/toolbox-v0.38.0, refs/tags/toolbox-v0.39.0
+Commits:
+- `0f037801` docs: remove non-essential docs (Phase 4 triage)
+- `50f2e798` docs: remove non-essential docs (Phase 4 triage)
+- `b89ced3c` docs: rewrite README.md for accuracy (Phase 4)
+- `bbd64579` docs: rewrite README.md for accuracy (Phase 4)
+- `0dc995e5` docs: update remediation plan and bookmark with Phase 4 complete
+- `8cb77333` docs: update remediation plan and bookmark with Phase 4 complete
+- `8b7798b8` feat(ui): add Quick Cut mode - simplified DXF to G-code flow (Phase 5)
+- `d1814d23` feat(ui): add Quick Cut mode - simplified DXF to G-code flow (Phase 5)
+- `46078a3f` docs: update plan and bookmark with Phase 5 complete
+- `69e3d1e2` docs: update plan and bookmark with Phase 5 complete
+- `9bcdf056` feat(health): add /api/health/detailed endpoint (Phase 6)
+- `e7587136` feat(health): add /api/health/detailed endpoint (Phase 6)
+- `05166b9d` feat(api): add /api/features endpoint + feature registry (Phase 2)
+- `92e1b6d9` feat(api): add /api/features endpoint + feature registry (Phase 2)
+- `543f7401` refactor: WP-3 store decomposition + god-object cleanup
+- `a3afb7c2` refactor: WP-3 store decomposition + god-object cleanup
+- `288e0941` docs: update session bookmark with WP-3 complete
+- `82117438` docs: update session bookmark with WP-3 complete
+- `29e62fb3` docs: update bookmark with v0.36.0 tag and release
+- `d2562431` docs: update bookmark with v0.36.0 tag and release
+- `1934bfb9` docs: update bookmark with cross-repo cleanup summary
+- `c21a8814` docs: update bookmark with cross-repo cleanup summary
+- `83eb6a0e` chore: remove accidental tap_tone_pi copy (-2MB, 282 files)
+- `9dc28547` chore: remove accidental tap_tone_pi copy (-2MB, 282 files)
+- `5ee76ef5` docs: add review remediation plan (Phases 7-11)
+- `cc59e786` docs: add review remediation plan (Phases 7-11)
+- `7a2062f6` chore: Phase 7 root directory cleanup
+- `b2d9de93` chore: Phase 7 root directory cleanup
+- `0a1b4bca` feat(health): Phase 10 startup validation for safety-critical modules
+- `848c7fc9` feat(health): Phase 10 startup validation for safety-critical modules
+- `3dc43f8b` chore: Phase 8 exception hardening - document broad catches + add types
+- `a019f7ca` chore: Phase 8 exception hardening - document broad catches + add types
+- `098700c5` refactor: Phase 9 god-object decomposition - extract schemas + router registry
+- `b3e388c0` refactor: Phase 9 god-object decomposition - extract schemas + router registry
+- `29d9e56a` docs: Phase 11 API surface documentation
+- `904151a3` docs: Phase 11 API surface documentation
+- `1ef6d444` refactor: Phase 9 schema extraction for geometry + blueprint_cam_bridge
+- `b986545a` refactor: Phase 9 schema extraction for geometry + blueprint_cam_bridge
+- `8c0d8c30` refactor: simplify main.py using router_registry (915 → 207 lines)
+- `ab981d25` refactor: simplify main.py using router_registry (915 → 207 lines)
+- `37bca482` docs: update remediation plan with Phase 9 completion
+- `adaceaf7` docs: update remediation plan with Phase 9 completion
+- `3a1fcc9d` docs: add design review v2 (5.41 → 7.2/10)
+- `47c4d27c` docs: add design review v2 (5.41 → 7.2/10)
+- `40bd77eb` chore: remove design review v2
+- `e3c011d7` chore: remove design review v2
+- `5ea8dd49` docs: update remediation plan with re-review score (7.2/10)
+- `a4579acd` docs: update remediation plan with re-review score (7.2/10)
+- `25863c0b` docs: Phase 12 - fix metrics accuracy with external review data
+- `d2fe8942` docs: Phase 12 - fix metrics accuracy with external review data
+- `77306fc7` feat(safety): Phase 14 - expand @safety_critical to 26 sites
+- `78a0bc67` feat(safety): Phase 14 - expand @safety_critical to 26 sites
+- `4637615b` docs: update remediation plan with Phase 14 completion
+- `f37df1bc` docs: update remediation plan with Phase 14 completion
+- `3f09c417` refactor: Phase 13 God-Object Decomposition (17→10 files over 500 lines)
+- `e92afb5d` refactor: Phase 13 God-Object Decomposition (17→10 files over 500 lines)
+- `7843712a` chore(test): trim e2e workflow test from 567 to 499 lines
+- `f112d747` chore(test): trim e2e workflow test from 567 to 499 lines
+- `9d694bed` chore(data): add Safe Default rosette preset
+- `b6725260` chore(data): add Safe Default rosette preset
+- `1d6d131c` refactor(api): remove 24 duplicate /health endpoints
+- `b7080add` refactor(api): remove 24 duplicate /health endpoints
+- `008bff81` refactor(api): remove 7 orphaned router files (Phase 2)
+- `034edff4` refactor(api): remove 7 orphaned router files (Phase 2)
+- `545fccad` refactor(api): remove 25 more orphaned router files (Phase 2 batch 2)
+- `b404cbc2` refactor(api): remove 25 more orphaned router files (Phase 2 batch 2)
+- `34963aa4` refactor(api): remove duplicate calculators and orphaned modules (Phase 3)
+- `612f8eac` refactor(api): remove duplicate calculators and orphaned modules (Phase 3)
+- `9d20f8b8` refactor(api): remove orphaned feature modules (Phase 4)
+- `ee36ddf1` refactor(api): remove orphaned feature modules (Phase 4)
+- `67d55d6b` refactor(api): remove orphaned routers, services, and schemas (Phase 5)
+- `a24c1b4c` refactor(api): remove orphaned routers, services, and schemas (Phase 5)
+- `19a4d33e` refactor(api): cascade cleanup - remove 65 more orphaned files
+- `9566b9fd` refactor(api): cascade cleanup - remove 65 more orphaned files
+- `362f92ab` refactor(api): final cascade cleanup - 23 more orphaned files
+- `b9121f30` refactor(api): final cascade cleanup - 23 more orphaned files
+- `939d08e6` fix: repair broken imports after cascade cleanup
+- `fa16a7f7` fix: repair broken imports after cascade cleanup
+Files by surface:
+- docs: 61 paths
+  - A REVIEW_REMEDIATION_PLAN.md
+  - A DESIGN_REVIEW_v2.md
+  - A REMEDIATION_PLAN_v2.md
+  - A luthiers-toolbox-16-design-review.md
+  - M README.md
+  - M AGENT_SESSION_BOOKMARK.md
+  - M REMEDIATION_PLAN.md
+  - M .github/copilot-instructions.md
+  - D docs/ENDPOINT_TRUTH_MAP.md
+  - D docs/Runs_Advisory_Integration/__init__.py
+  - D docs/Runs_Advisory_Integration/hashing.py
+  - D docs/Runs_Advisory_Integration/router.py
+  - D docs/Runs_Advisory_Integration/schemas.py
+  - D docs/Runs_Advisory_Integration/store.py
+  - D docs/products/FOUNDERS_PREFACE.md
+  - D docs/products/MASTER_SEGMENTATION_STRATEGY.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/.github/Golden_Idea_Package_White_Paper.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/.github/copilot-instructions.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/CBSP21.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/CHANGELOG.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/CONSOLIDATION_PROGRESS.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/CONTRIBUTING.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/Critical Design Review_tap-tone-pi.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/DEV_HANDOFF.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/FIRST_MEASUREMENT_CHECKLIST.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/GOLD_STANDARD_EXAMPLE_RUN.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/INSTRUMENT_SCOPE.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/QUICKSTART.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/README.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/contracts/schemas/SCHEMA_INDEX.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0001-measurement-scope.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0002-multi-channel-expansion.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0003-artifact-schema-multichannel.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0004-acoustic-vs-structural-boundary.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0005-repeatability-and-confidence.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0006-rmos-integration-mapping.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/ADR-0007_PHASE2_ODS_COHERENCE.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/BOUNDARY_RULES.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/BUILD_READINESS_EVALUATION.md
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/docs/DEVELOPER_HANDOFF_CROSS_REPO.md
+  - … 21 more (see sessions.json / files.jsonl)
+- other: 610 paths
+  - A packages/client/src/stores/appModeStore.ts
+  - A packages/client/src/views/QuickCutView.vue
+  - A scripts/create_quickcut.py
+  - A services/api/app/core/observability.py
+  - A services/api/app/core/features.py
+  - A scripts/wp3_store_decompose.py
+  - A services/api/app/_experimental/cnc_production/feeds_speeds/core/learned_overrides_models.py
+  - A services/api/app/advisory/budget_store.py
+  - A services/api/app/advisory/schemas_features.py
+  - A services/api/app/api/routes/rmos_rosette_schemas.py
+  - A services/api/app/art_studio/services/workflow_schemas.py
+  - A services/api/app/calculators/cam_cutting_evaluator.py
+  - A services/api/app/calculators/suite/scientific_stats_mixin.py
+  - A services/api/app/cam/rosette/modern_pattern_generator.py
+  - A services/api/app/cam/rosette/pattern_schemas.py
+  - A services/api/app/cam/rosette/photo_batch.py
+  - A services/api/app/cam/rosette/presets.py
+  - A services/api/app/data_registry/registry_config.py
+  - A services/api/app/generators/lespaul_config.py
+  - A services/api/app/generators/lespaul_dxf_reader.py
+  - A services/api/app/generators/neck_headstock_config.py
+  - A services/api/app/instrument_geometry/body/body_outlines.json
+  - A services/api/app/ltb_calculators/financial_calculator_cli.py
+  - A services/api/app/ltb_calculators/fraction_calculator_cli.py
+  - A services/api/app/rmos/api/rmos_workflow_schemas.py
+  - A services/api/app/rmos/api/rmos_workflow_transitions.py
+  - A services/api/app/rmos/pipeline/services_execution.py
+  - A services/api/app/rmos/runs_v2/acoustics_helpers.py
+  - A services/api/app/rmos/runs_v2/acoustics_index_routes.py
+  - A services/api/app/rmos/runs_v2/api_runs_advisory.py
+  - A services/api/app/rmos/runs_v2/api_runs_attachments.py
+  - A services/api/app/rmos/runs_v2/api_runs_explain.py
+  - A services/api/app/rmos/runs_v2/api_runs_variants.py
+  - A services/api/app/rmos/runs_v2/schemas_attachments.py
+  - A services/api/app/rmos/runs_v2/store_completeness.py
+  - A services/api/app/rmos/runs_v2/store_filter.py
+  - A services/api/app/rmos/runs_v2/store_ratelimit.py
+  - A services/api/app/saw_lab/batch_gcode_router.py
+  - A services/api/app/saw_lab/batch_learning_router.py
+  - A services/api/app/saw_lab/batch_query_router.py
+  - … 570 more (see sessions.json / files.jsonl)
+- tests: 73 paths
+  - A services/api/tests/test_health_detailed.py
+  - M services/api/app/tests/test_e2e_workflow_integration.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/test_export_viewer_pack_v1_golden.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/tests/__init__.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/scripts/phase2/tests/test_validate_viewer_pack_v1_real_sessions.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A2/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/spectra/points/A2/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_freq_grid_mismatch/viewer_pack.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_missing_manifest/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_missing_manifest/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_peak_off_grid/viewer_pack.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/viewer_pack.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_freq_grid_mismatch/wolf/wsi_curve.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/viewer_pack.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/bad_wsi_header/wolf/wsi_curve.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/spectra/points/A1/analysis.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/spectra/points/A1/spectrum.csv
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/fixtures/viewer_pack_v1/good_minimal/viewer_pack.json
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tap_tone/tests/test_viewer_pack_v1_validation.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/__init__.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/_util/__init__.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/_util/gen_tone.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_auto_trigger.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_manifest.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_pipeline_integration.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_chladni_policy.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_config_and_analysis.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_gold_run_dry_run.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_gold_run_open_urls.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_ingest_toolbox.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_measurement_schemas.py
+  - D tap_tone_pi-main (5)/tap_tone_pi-main/tests/test_open_url.py
+  - … 33 more (see sessions.json / files.jsonl)
+Documents produced:
+- `REVIEW_REMEDIATION_PLAN.md` — UNKNOWN
+- `DESIGN_REVIEW_v2.md` — UNKNOWN
+- `REMEDIATION_PLAN_v2.md` — UNKNOWN
+- `luthiers-toolbox-16-design-review.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f037801)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (50f2e798)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b89ced3c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bbd64579)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0dc995e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8cb77333)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8b7798b8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d1814d23)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (46078a3f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69e3d1e2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9bcdf056)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e7587136)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (05166b9d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92e1b6d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (543f7401)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3afb7c2)
+- tag toolbox-v0.36.0 (288e0941)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1934bfb9)
+- tag toolbox-v0.36.1 (1934bfb9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c21a8814)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (83eb6a0e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9dc28547)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ee76ef5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc59e786)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7a2062f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b2d9de93)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0a1b4bca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (848c7fc9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3dc43f8b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a019f7ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (098700c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b3e388c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29d9e56a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (904151a3)
+- tag toolbox-v0.37.0 (904151a3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ef6d444)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b986545a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8c0d8c30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ab981d25)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37bca482)
+- … 34 more
+
+### S058 — 2026-02-10T07:25:08-06:00 → 2026-02-11T01:52:15-06:00 (42 commits, 18.45h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `2adc2d39` test: delete 10 orphan test files for removed modules
+- `95dce40f` test: delete 10 orphan test files for removed modules
+- `21271be2` fix: restore pipelines.bracing module needed by art_studio
+- `60ebe8c2` fix: restore pipelines.bracing module needed by art_studio
+- `36a10dd6` fix: restore pipelines.rosette module needed by calculators
+- `ffe44a58` fix: restore pipelines.rosette module needed by calculators
+- `6fd24449` refactor(rmos): extract AdvisoryLinkStore from RunStoreV2 (SRP)
+- `8e593e09` refactor(rmos): extract AdvisoryLinkStore from RunStoreV2 (SRP)
+- `4129a526` test(ci): add technical debt gate tests for decomposition targets
+- `d0112c50` test(ci): add technical debt gate tests for decomposition targets
+- `698e0d41` refactor(routers): remove 3 legacy routers ‹token› by consolidated versions
+- `d8549949` refactor(routers): remove 3 legacy routers ‹token› by consolidated versions
+- `2f743ecc` refactor(routers): delete 3 legacy CAM routers, use consolidated modules
+- `db3a6ecb` refactor(routers): delete 3 legacy CAM routers, use consolidated modules
+- `45fec182` refactor(art-studio): delete dead rosette router + schemas (569 lines)
+- `8839194f` refactor(art-studio): delete dead rosette router + schemas (569 lines)
+- `b208ee31` refactor: delete 8 dead router files in api/routes/ (1,112 lines)
+- `c90ec579` refactor: delete 8 dead router files in api/routes/ (1,112 lines)
+- `7138a12a` refactor: delete 5 legacy CAM routers (660 lines)
+- `90cf93df` refactor: delete 5 legacy CAM routers (660 lines)
+- `18eaef12` refactor: delete 10 dead router files (3,172 lines)
+- `cc59138a` refactor: delete 10 dead router files (3,172 lines)
+- `74324ea9` refactor: delete 11 dead files (3,428 lines)
+- `f13c6712` refactor: delete 11 dead files (3,428 lines)
+- `11f0138f` refactor(instruments): consolidate 4 dedicated routers into registry_router
+- `df94e6cf` refactor(instruments): consolidate 4 dedicated routers into registry_router
+- `01d6286c` refactor(geometry): split geometry_router.py into modular package (1,100→929 lines)
+- `b9948d09` refactor(geometry): split geometry_router.py into modular package (1,100→929 lines)
+- `21f43648` refactor(routers): split adaptive_router.py (1,245 lines) into modular package
+- `db27999c` refactor(routers): split adaptive_router.py (1,245 lines) into modular package
+- `55d3cc63` refactor(routers): split blueprint_router.py (1,125 lines) into modular package
+- `b2299681` refactor(routers): split blueprint_router.py (1,125 lines) into modular package
+- `a84b1bb5` refactor(routers): split blueprint_cam_bridge.py (917 lines) into modular package
+- `da584159` refactor(routers): split blueprint_cam_bridge.py (917 lines) into modular package
+- `12323f07` refactor(ci): split check_boundary_imports.py (745 lines) into modular package
+- `f16b9f08` refactor(ci): split check_boundary_imports.py (745 lines) into modular package
+- `7bcb9ca9` refactor(routers): split probe_router.py (695 lines) into modular package
+- `c73a3f41` refactor(routers): split probe_router.py (695 lines) into modular package
+- `8a81b1ff` refactor(generators): split lespaul_gcode_gen.py (593 lines) into mixin package
+- `aeb0165c` refactor(generators): split lespaul_gcode_gen.py (593 lines) into mixin package
+- `1a9f4939` refactor(app): split router_registry.py (503 lines) into package
+- `bec7d3e6` refactor(app): split router_registry.py (503 lines) into package
+Files by surface:
+- api_routing: 4 paths
+  - A services/api/app/routers/blueprint/__init__.py
+  - A services/api/app/routers/blueprint/constants.py
+  - A services/api/app/routers/blueprint/phase1_router.py
+  - A services/api/app/routers/blueprint/phase2_router.py
+- docs: 1 paths
+  - A luthiers-toolbox-design-review.md
+- other: 122 paths
+  - A services/api/app/pipelines/__init__.py
+  - A services/api/app/pipelines/bracing/__init__.py
+  - A services/api/app/pipelines/bracing/bracing_calc.py
+  - A services/api/app/pipelines/rosette/__init__.py
+  - A services/api/app/pipelines/rosette/rosette_calc.py
+  - A services/api/app/pipelines/rosette/rosette_make_gcode.py
+  - A services/api/app/pipelines/rosette/rosette_post_fill.py
+  - A services/api/app/pipelines/rosette/rosette_to_dxf.py
+  - A services/api/app/rmos/runs_v2/advisory_link_store.py
+  - A services/api/metrics/debt_history.json
+  - A services/api/app/routers/geometry/__init__.py
+  - A services/api/app/routers/geometry/bundle_router.py
+  - A services/api/app/routers/geometry/export_router.py
+  - A services/api/app/routers/geometry/helpers.py
+  - A services/api/app/routers/geometry/import_router.py
+  - A services/api/app/routers/adaptive/__init__.py
+  - A services/api/app/routers/adaptive/batch_router.py
+  - A services/api/app/routers/adaptive/dxf_router.py
+  - A services/api/app/routers/adaptive/gcode_router.py
+  - A services/api/app/routers/adaptive/helpers.py
+  - A services/api/app/routers/adaptive/plan_router.py
+  - A services/api/app/routers/blueprint_cam/__init__.py
+  - A services/api/app/routers/blueprint_cam/adaptive_router.py
+  - A services/api/app/routers/blueprint_cam/contour_router.py
+  - A services/api/app/routers/blueprint_cam/extraction.py
+  - A services/api/app/routers/blueprint_cam/preflight_router.py
+  - A services/api/app/ci/boundary_imports/__init__.py
+  - A services/api/app/ci/boundary_imports/__main__.py
+  - A services/api/app/ci/boundary_imports/baseline.py
+  - A services/api/app/ci/boundary_imports/cli.py
+  - A services/api/app/ci/boundary_imports/config.py
+  - A services/api/app/ci/boundary_imports/core.py
+  - A services/api/app/ci/boundary_imports/fences.py
+  - A services/api/app/ci/boundary_imports/models.py
+  - A services/api/app/ci/boundary_imports/parser.py
+  - A services/api/app/ci/boundary_imports/reporter.py
+  - A services/api/app/routers/probe/__init__.py
+  - A services/api/app/routers/probe/boss_router.py
+  - A services/api/app/routers/probe/corner_router.py
+  - A services/api/app/routers/probe/pocket_router.py
+  - … 82 more (see sessions.json / files.jsonl)
+- tests: 11 paths
+  - A services/api/tests/test_technical_debt_gates.py
+  - D services/api/tests/test_ai_context_adapter_build.py
+  - D services/api/tests/test_ai_context_adapter_gate.py
+  - D services/api/tests/test_art_studio_rosette.py
+  - D services/api/tests/test_blueprint_ai_disabled.py
+  - D services/api/tests/test_curve_preflight_router.py
+  - D services/api/tests/test_helical_router.py
+  - D services/api/tests/test_moments_engine_v1.py
+  - D services/api/tests/test_pipelines.py
+  - D services/api/tests/test_policy_engine_v1.py
+  - D services/api/tests/test_rmos_operator_pack_export.py
+Documents produced:
+- `luthiers-toolbox-design-review.md` — # luthiers-toolbox — 1% Critical Design Review
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2adc2d39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95dce40f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (21271be2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60ebe8c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36a10dd6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ffe44a58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fd24449)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e593e09)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4129a526)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d0112c50)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (698e0d41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8549949)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2f743ecc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db3a6ecb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45fec182)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8839194f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b208ee31)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c90ec579)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7138a12a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (90cf93df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (18eaef12)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc59138a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (74324ea9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f13c6712)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (11f0138f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df94e6cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01d6286c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b9948d09)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (21f43648)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db27999c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55d3cc63)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b2299681)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a84b1bb5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da584159)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (12323f07)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f16b9f08)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7bcb9ca9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c73a3f41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a81b1ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aeb0165c)
+- … 2 more
+
+### S059 — 2026-02-11T10:24:08-06:00 → 2026-02-11T11:30:46-06:00 (14 commits, 1.11h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `d9634886` refactor: eliminate ~180 lines of duplicate code (Quick Wins)
+- `e9fbfee9` refactor: eliminate ~180 lines of duplicate code (Quick Wins)
+- `3cebc7ae` chore: delete dead code relief_sim_bridge.py (315 lines)
+- `6e6cce81` chore: delete dead code relief_sim_bridge.py (315 lines)
+- `063cbd21` refactor: extract shared helpers to reduce ~80 lines of duplicate code
+- `764dd615` refactor: extract shared helpers to reduce ~80 lines of duplicate code
+- `d1028e32` feat(ci): add technical debt gate checks with ratchet baselines
+- `f43df15e` feat(ci): add technical debt gate checks with ratchet baselines
+- `bd7d6986` feat(ci): add fence_checker_v2 with safety decorator detection
+- `c6624c18` feat(ci): add fence_checker_v2 with safety decorator detection
+- `536f731b` feat(safety): add @safety_critical decorator and apply to safety functions
+- `5aeb807e` feat(safety): add @safety_critical decorator and apply to safety functions
+- `71a61bd5` ci: add technical debt gates workflow with consolidated reporting
+- `7593d701` ci: add technical debt gates workflow with consolidated reporting
+Files by surface:
+- other: 36 paths
+  - A scripts/oneshot_duplicate_scan.py
+  - A services/api/app/cam/move_helpers.py
+  - A services/api/app/rmos/runs_v2/artifact_helpers.py
+  - A services/api/app/ci/check_bare_except.py
+  - A services/api/app/ci/check_complexity.py
+  - A services/api/app/ci/check_file_sizes.py
+  - A services/api/app/ci/complexity_baseline.json
+  - A services/api/app/ci/file_sizes_baseline.json
+  - A services/api/app/ci/fence_checker_v2.py
+  - A services/api/app/safety/__init__.py
+  - A .github/workflows/technical_debt.yml
+  - A services/api/app/ci/check_duplication.py
+  - A services/api/app/ci/generate_debt_report.py
+  - M services/api/app/instrument_geometry/guitars/__init__.py
+  - M services/api/app/instrument_geometry/guitars/es_335.py
+  - M services/api/app/instrument_geometry/guitars/explorer.py
+  - M services/api/app/instrument_geometry/guitars/firebird.py
+  - M services/api/app/instrument_geometry/guitars/flying_v.py
+  - M services/api/app/instrument_geometry/guitars/les_paul.py
+  - M services/api/app/instrument_geometry/guitars/moderne.py
+  - M services/api/app/instrument_geometry/guitars/sg.py
+  - M services/api/app/rmos/posts/base.py
+  - M services/api/app/rmos/posts/grbl.py
+  - M services/api/app/rmos/posts/linuxcnc.py
+  - M services/api/app/rmos/runs_v2/schemas_advisories.py
+  - M services/api/app/cam/energy_model.py
+  - M services/api/app/cam/heat_timeseries.py
+  - M services/api/app/rmos/runs_v2/batch_timeline.py
+  - M services/api/app/rmos/runs_v2/batch_tree.py
+  - M services/api/app/saw_lab/toolpaths_lookup_service.py
+  - M services/api/app/rmos/api/rmos_feasibility_router.py
+  - M services/api/app/rmos/api_contracts.py
+  - M services/api/app/saw_lab/toolpaths_validate_router.py
+  - M services/api/app/saw_lab/toolpaths_validate_service.py
+  - M services/api/app/workflow/directional_workflow.py
+  - D services/api/app/services/relief_sim_bridge.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d9634886)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9fbfee9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3cebc7ae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e6cce81)
+- PR #6 (063cbd21)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (063cbd21)
+- PR #6 (764dd615)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (764dd615)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d1028e32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f43df15e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bd7d6986)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6624c18)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (536f731b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5aeb807e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (71a61bd5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7593d701)
+
+### S060 — 2026-02-12T08:38:39-06:00 → 2026-02-12T23:30:01-06:00 (54 commits, 14.86h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `07e6698f` chore: Phase 1.1 dead code purge + score improvement plan
+- `f926f911` chore: Phase 1.1 dead code purge + score improvement plan
+- `6f667878` ci: add file size ratchet gate (Phase 1.2)
+- `d416937c` ci: add file size ratchet gate (Phase 1.2)
+- `4ada80a6` refactor(posts): extract types to separate module (583→460 lines)
+- `81702a16` refactor(posts): extract types to separate module (583→460 lines)
+- `48071044` ci: add router count gate with ratchet baseline
+- `bf7102dd` ci: add router count gate with ratchet baseline
+- `7073b358` docs: add router consolidation roadmap
+- `ec7ad06d` docs: add router consolidation roadmap
+- `401aaac3` feat(api): add curated API v1 with 17 golden-path endpoints
+- `88aa2052` feat(api): add curated API v1 with 17 golden-path endpoints
+- `726c9788` ci: update router baseline for API v1 (+17 routes)
+- `dd54133a` ci: update router baseline for API v1 (+17 routes)
+- `4cb48685` feat(ui): add guided workflow components (Phase 2.2)
+- `69e7e238` feat(ui): add guided workflow components (Phase 2.2)
+- `81d6b4af` feat(ui): add error recovery UI + composable (Phase 2.3)
+- `ff0c0b29` feat(ui): add error recovery UI + composable (Phase 2.3)
+- `b251d379` refactor(saw_lab): consolidate 13 routers into 3 (143→133 files)
+- `fbf16c03` refactor(saw_lab): consolidate 13 routers into 3 (143→133 files)
+- `59345c74` feat(reliability): add Phase 3 reliability infrastructure
+- `92f6e925` feat(reliability): add Phase 3 reliability infrastructure
+- `60263e6c` feat(ui): add Phase 4 aesthetics - design system foundation
+- `7c92e927` feat(ui): add Phase 4 aesthetics - design system foundation
+- `a7f8a70a` fix(debt-gates): trim execution_lifecycle_router + update baselines
+- `f79275d9` fix(debt-gates): trim execution_lifecycle_router + update baselines
+- `af6617b0` refactor(ui): extract composables + components from god files
+- `e9fcf1d3` refactor(ui): extract composables + components from god files
+- `9ecb3164` docs: update SCORE_7_PLAN with Phase 1.3 progress
+- `d3f5f8ba` docs: update SCORE_7_PLAN with Phase 1.3 progress
+- `8ac4494b` refactor(rmos): wire useCandidateSelection composable into ManufacturingCandidateList
+- `da58b922` refactor(rmos): wire useCandidateSelection composable into ManufacturingCandidateList
+- `13df18bb` refactor(rmos): wire useCandidateFilters composable into ManufacturingCandidateList
+- `9a835e98` refactor(rmos): wire useCandidateFilters composable into ManufacturingCandidateList
+- `1772a476` refactor(adaptive): wire usePocketSettings composable into AdaptivePocketLab
+- `63901d70` refactor(adaptive): wire usePocketSettings composable into AdaptivePocketLab
+- `389b7688` refactor(ui): extract CandidateRowItem from ManufacturingCandidateList
+- `7f30bdfb` refactor(ui): extract CandidateRowItem from ManufacturingCandidateList
+- `2fa57c68` refactor(ui): extract CandidateFiltersSection from ManufacturingCandidateList
+- `db01a420` refactor(ui): extract CandidateFiltersSection from ManufacturingCandidateList
+- `66f8c314` test(client): add lightweight composable verification harness
+- `b0874267` test(client): add lightweight composable verification harness
+- `0c9d470a` feat(toolbox): extract 4 composables from toolbox god files + 35 tests
+- `94e3b93f` feat(toolbox): extract 4 composables from toolbox god files + 35 tests
+- `b215b969` refactor(toolbox): wire composables into ScaleLengthDesigner + ScientificCalculator
+- `ba82550a` refactor(toolbox): wire composables into ScaleLengthDesigner + ScientificCalculator
+- `2f60a9c8` feat(toolbox): add Data category to useUnitConverter composable
+- `770387eb` feat(toolbox): add Data category to useUnitConverter composable
+- `410a534f` feat(analytics): add route analytics middleware for router consolidation
+- `def961e5` feat(analytics): add route analytics middleware for router consolidation
+- `3ec7fd27` docs: add MkDocs user manual with GitHub Pages deployment
+- `96436df6` docs: add MkDocs user manual with GitHub Pages deployment
+- `7deba0f3` docs: add README with setup instructions for docs site
+- `e99b6ed3` docs: add README with setup instructions for docs site
+Files by surface:
+- docs: 26 paths
+  - A SCORE_7_PLAN.md
+  - A docs/ROUTER_CONSOLIDATION_ROADMAP.md
+  - A services/api/app/router_rewire_report/ROUTER_CONSOLIDATION.md
+  - A docs/api/authentication.md
+  - A docs/api/endpoints.md
+  - A docs/api/overview.md
+  - A docs/cam/gcode-preview.md
+  - A docs/cam/machine-profiles.md
+  - A docs/cam/overview.md
+  - A docs/cam/post-processors.md
+  - A docs/cam/safety-rmos.md
+  - A docs/contributing.md
+  - A docs/features/dxf-import.md
+  - A docs/features/fret-calculator.md
+  - A docs/features/overview.md
+  - A docs/features/rosette-designer.md
+  - A docs/features/scale-length.md
+  - A docs/features/toolpaths.md
+  - A docs/features/unit-converter.md
+  - A docs/features/woodwork-calculator.md
+  - A docs/getting-started/configuration.md
+  - A docs/getting-started/installation.md
+  - A docs/getting-started/quickstart.md
+  - A docs/index.md
+  - A docs/troubleshooting.md
+  - M docs/README.md
+- other: 81 paths
+  - A .github/workflows/file_size_gate.yml
+  - A ci/file_size_baseline.json
+  - A ci/file_size_gate.py
+  - A services/api/app/rmos/posts/types.py
+  - A .github/workflows/router_count_gate.yml
+  - A ci/router_count_baseline.json
+  - A ci/router_count_gate.py
+  - A services/api/app/api_v1/__init__.py
+  - A services/api/app/api_v1/dxf_workflow.py
+  - A services/api/app/api_v1/fret_math.py
+  - A services/api/app/api_v1/instrument.py
+  - A services/api/app/api_v1/rmos_safety.py
+  - A packages/client/src/components/guided/GuidedWorkflow.vue
+  - A packages/client/src/components/guided/StepIndicator.vue
+  - A packages/client/src/components/guided/index.ts
+  - A packages/client/src/components/guided/workflows/DxfToGcodeWorkflow.vue
+  - A packages/client/src/components/ui/ErrorRecovery.vue
+  - A packages/client/src/composables/useErrorRecovery.ts
+  - A services/api/app/saw_lab/execution_lifecycle_router.py
+  - A services/api/app/saw_lab/metrics_lookup_consolidated_router.py
+  - A services/api/app/saw_lab/toolpaths_router.py
+  - A services/api/app/core/reliability.py
+  - A services/api/app/middleware/request_id.py
+  - A packages/client/src/components/ui/LoadingSpinner.vue
+  - A packages/client/src/components/ui/SkeletonLoader.vue
+  - A packages/client/src/components/ui/index.ts
+  - A packages/client/src/styles/design-tokens.css
+  - A packages/client/src/components/adaptive/PocketSettingsPanel.vue
+  - A packages/client/src/components/adaptive/composables/index.ts
+  - A packages/client/src/components/adaptive/composables/usePocketSettings.ts
+  - A packages/client/src/components/adaptive/index.ts
+  - A packages/client/src/components/rmos/CandidateBulkBar.vue
+  - A packages/client/src/components/rmos/CandidateFiltersBar.vue
+  - A packages/client/src/components/rmos/composables/index.ts
+  - A packages/client/src/components/rmos/composables/useCandidateFilters.ts
+  - A packages/client/src/components/rmos/composables/useCandidateSelection.ts
+  - A packages/client/src/composables/useDxfWorkflow.ts
+  - A packages/client/src/components/rmos/CandidateRowItem.vue
+  - A packages/client/src/components/rmos/CandidateFiltersSection.vue
+  - A packages/client/src/testing/ComposableVerifier.ts
+  - … 41 more (see sessions.json / files.jsonl)
+- tests: 3 paths
+  - M services/api/tests/test_technical_debt_gates.py
+  - D services/api/test_registry_phase1.py
+  - D services/api/test_registry_phase2.py
+Documents produced:
+- `SCORE_7_PLAN.md` — # Luthier's ToolBox: Path to 7/10
+- `docs/ROUTER_CONSOLIDATION_ROADMAP.md` — UNKNOWN
+- `services/api/app/router_rewire_report/ROUTER_CONSOLIDATION.md` — # Router Consolidation Report
+- `docs/api/authentication.md` — UNKNOWN
+- `docs/api/endpoints.md` — UNKNOWN
+- `docs/api/overview.md` — UNKNOWN
+- `docs/cam/gcode-preview.md` — UNKNOWN
+- `docs/cam/machine-profiles.md` — UNKNOWN
+- `docs/cam/overview.md` — UNKNOWN
+- `docs/cam/post-processors.md` — UNKNOWN
+- `docs/cam/safety-rmos.md` — UNKNOWN
+- `docs/contributing.md` — UNKNOWN
+- `docs/features/dxf-import.md` — UNKNOWN
+- `docs/features/fret-calculator.md` — UNKNOWN
+- `docs/features/overview.md` — UNKNOWN
+- `docs/features/rosette-designer.md` — UNKNOWN
+- `docs/features/scale-length.md` — UNKNOWN
+- `docs/features/toolpaths.md` — UNKNOWN
+- `docs/features/unit-converter.md` — UNKNOWN
+- `docs/features/woodwork-calculator.md` — UNKNOWN
+- `docs/getting-started/configuration.md` — UNKNOWN
+- `docs/getting-started/installation.md` — UNKNOWN
+- `docs/getting-started/quickstart.md` — UNKNOWN
+- `docs/index.md` — UNKNOWN
+- `docs/troubleshooting.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (07e6698f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f926f911)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f667878)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d416937c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ada80a6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (81702a16)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48071044)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf7102dd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7073b358)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ec7ad06d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (401aaac3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (88aa2052)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4cb48685)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69e7e238)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (81d6b4af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff0c0b29)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b251d379)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fbf16c03)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59345c74)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92f6e925)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60263e6c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7c92e927)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7f8a70a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f79275d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af6617b0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9fcf1d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9ecb3164)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3f5f8ba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8ac4494b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da58b922)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (13df18bb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9a835e98)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1772a476)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (63901d70)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (389b7688)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f30bdfb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fa57c68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db01a420)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66f8c314)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0874267)
+- … 10 more
+
+### S061 — 2026-02-13T22:01:06-06:00 → 2026-02-14T04:10:23-06:00 (40 commits, 6.15h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `0dd0cd58` fix(railway): use dynamic $PORT env var for API service
+- `408d2743` fix(railway): use dynamic $PORT env var for API service
+- `76f8516d` feat(client): add production env with Railway API URL
+- `c05efadb` feat(client): add production env with Railway API URL
+- `03e508be` fix(client): add missing composables for Railway build
+- `37012199` fix(client): add missing composables for Railway build
+- `5205200a` fix(client): add VITE_API_BASE support for cross-origin Railway deployment
+- `e4586f39` fix(client): add VITE_API_BASE support for cross-origin Railway deployment
+- `5b7bc826` fix(client): add missing routes + Calculator Hub to navigation
+- `75bff72d` fix(client): add missing routes + Calculator Hub to navigation
+- `1b51bd09` fix(client): add global fetch interceptor for cross-origin API calls
+- `8e2cd21b` fix(client): add global fetch interceptor for cross-origin API calls
+- `2732a4da` fix(docker): explicitly set VITE_API_BASE env var during build
+- `7cff7b67` fix(docker): explicitly set VITE_API_BASE env var during build
+- `795bf9ba` fix(api): use explicit CORS origins instead of wildcard
+- `f891941b` fix(api): use explicit CORS origins instead of wildcard
+- `34f017eb` fix(deploy): correct API endpoint paths for Railway deployment
+- `455aaa0e` fix(deploy): correct API endpoint paths for Railway deployment
+- `1f012e9c` fix(ui): use /api/posts/ instead of /api/posts/all
+- `dfbedf88` fix(ui): use /api/posts/ instead of /api/posts/all
+- `36c6c2d6` feat(api): add /api/cam/bridge/presets endpoint
+- `ff64b7ff` feat(api): add /api/cam/bridge/presets endpoint
+- `13060d83` feat(ci): add API contract validation system
+- `53c425a4` feat(ci): add API contract validation system
+- `cd1d91d6` fix(api): use correct method name list() in settings router
+- `cda1248c` fix(api): use correct method name list() in settings router
+- `29ebabc5` fix(docker): set RMOS_RUNS_DIR env var for Railway deployment
+- `bae1a904` fix(docker): set RMOS_RUNS_DIR env var for Railway deployment
+- `7c4a61df` feat(api): add stub project assets endpoints for AI Images page
+- `8726c4c5` feat(api): add stub project assets endpoints for AI Images page
+- `3e24f7c8` fix(api): add missing endpoints for Pipeline Lab + Risk Timeline
+- `fe903b70` fix(api): add missing endpoints for Pipeline Lab + Risk Timeline
+- `aec39615` feat(rmos): add acoustics router for Acoustics Library UI
+- `b280537b` feat(rmos): add acoustics router for Acoustics Library UI
+- `1ebb260a` feat(scripts): add endpoint validation harness
+- `f8af3260` feat(scripts): add endpoint validation harness
+- `64a432e6` feat(acoustics): add import-zip and attachments download endpoints
+- `da3d0dad` feat(acoustics): add import-zip and attachments download endpoints
+- `2fb8b443` feat: add comprehensive stub routers for missing frontend endpoints
+- `6986e56e` feat: add comprehensive stub routers for missing frontend endpoints
+Files by surface:
+- docs: 1 paths
+  - A contracts/README.md
+- other: 44 paths
+  - A packages/client/.env.production
+  - A packages/client/src/composables/__tests__/generic-composables.test.ts
+  - A packages/client/src/composables/index.ts
+  - A packages/client/src/composables/useDimensionEditor.ts
+  - A packages/client/src/composables/useFormulaCalculator.ts
+  - A packages/client/src/composables/useListFilters.ts
+  - A packages/client/src/composables/useListSelection.ts
+  - A packages/client/src/composables/useMaterialCalculator.ts
+  - A packages/client/src/composables/useParametricSettings.ts
+  - A packages/client/src/composables/useUnitConverter.ts
+  - A packages/client/src/views/CalculatorHubView.vue
+  - A services/api/app/routers/bridge_presets_router.py
+  - A .github/workflows/api_contract_check.yml
+  - A contracts/api_calls_baseline.json
+  - A contracts/api_endpoints.json
+  - A scripts/generate_api_contract.py
+  - A scripts/validate_api_contracts.py
+  - A services/api/app/routers/project_assets_router.py
+  - A services/api/app/routers/cam_risk_router.py
+  - A services/api/app/rmos/runs_v2/acoustics_router.py
+  - A scripts/find_missing_endpoints.py
+  - A services/api/app/cam/routers/stub_routes.py
+  - A services/api/app/rmos/stub_routes.py
+  - A services/api/app/routers/misc_stub_routes.py
+  - M services/api/Dockerfile
+  - M packages/client/src/features/ai_images/api.ts
+  - M packages/client/src/features/ai_images/api/advisory.ts
+  - M packages/client/src/features/ai_images/api/ai.ts
+  - M packages/client/src/features/ai_images/api/http.ts
+  - M packages/client/src/features/ai_images/api/session.ts
+  - M packages/client/src/features/ai_images/api/teaching.ts
+  - M packages/client/src/features/ai_images/api/visionApi.ts
+  - M packages/client/src/components/AppNav.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/main.ts
+  - M packages/client/Dockerfile
+  - M services/api/app/main.py
+  - M packages/client/src/components/BridgeCalculatorPanel.vue
+  - M packages/client/src/views/BridgeLabView.vue
+  - M services/api/app/router_registry/manifest.py
+  - … 4 more (see sessions.json / files.jsonl)
+Documents produced:
+- `contracts/README.md` — # API Contracts
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0dd0cd58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (408d2743)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (76f8516d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c05efadb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (03e508be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37012199)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5205200a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e4586f39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b7bc826)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (75bff72d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b51bd09)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e2cd21b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (34f017eb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (455aaa0e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f012e9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dfbedf88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36c6c2d6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff64b7ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (13060d83)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (53c425a4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cd1d91d6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cda1248c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29ebabc5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bae1a904)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7c4a61df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8726c4c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3e24f7c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe903b70)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aec39615)
+- Fixes: ['- 404 on /rmos/acoustics/runs (Acoustics Runs page)'] (aec39615)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b280537b)
+- Fixes: ['- 404 on /rmos/acoustics/runs (Acoustics Runs page)'] (b280537b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ebb260a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8af3260)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (64a432e6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da3d0dad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fb8b443)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6986e56e)
+
+### S062 — 2026-02-14T10:19:47-06:00 → 2026-02-14T14:29:00-06:00 (10 commits, 4.15h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `1865dde8` fix(client): add missing /api prefix to fetch calls
+- `7ebf21e4` fix(client): add missing /api prefix to fetch calls
+- `65f97db8` fix(sdk): add missing /api prefix to acoustics SDK endpoints
+- `f1fd5aa4` fix(sdk): add missing /api prefix to acoustics SDK endpoints
+- `31335fc5` fix(sdk): add missing /api prefix to artDesignFirstWorkflow endpoint
+- `fb82ccd6` fix(sdk): add missing /api prefix to artDesignFirstWorkflow endpoint
+- `69fb8458` fix: replace mutable default arguments with None pattern
+- `ffa89bbc` fix: replace mutable default arguments with None pattern
+- `1ff78929` fix: eliminate remaining mutable default arguments
+- `77902b9f` fix: eliminate remaining mutable default arguments
+Files by surface:
+- other: 12 paths
+  - M packages/client/src/api/camRisk.ts
+  - M packages/client/src/components/compare/CompareSvgDualViewer.vue
+  - M packages/client/src/components/toolbox/DxfPreflightValidator.vue
+  - M packages/client/src/stores/useRmosSafetyStore.ts
+  - M packages/client/src/sdk/endpoints/rmosAcoustics.ts
+  - M packages/client/src/sdk/endpoints/rmosAcousticsIngest.ts
+  - M packages/client/src/sdk/endpoints/artDesignFirstWorkflow.ts
+  - M services/api/app/cam/routers/stub_routes.py
+  - M services/api/app/rmos/stub_routes.py
+  - M services/api/app/routers/misc_stub_routes.py
+  - M services/api/app/cam/rosette/photo_batch.py
+  - M services/api/app/instrument_geometry/neck_taper/api_router.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1865dde8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7ebf21e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (65f97db8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1fd5aa4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69fb8458)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ffa89bbc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ff78929)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (77902b9f)
+
+### S063 — 2026-02-14T20:13:45-06:00 → 2026-02-15T01:22:54-06:00 (26 commits, 5.15h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `6c36f0be` fix(railway): add production environment to deploy commands
+- `e58c085c` fix(railway): add production environment to deploy commands
+- `d62cff24` fix(railway): update project ID to exquisite-balance
+- `e4f98bca` fix(railway): update project ID to exquisite-balance
+- `31425d08` fix(railway): use luthiers-toolbox-client service name
+- `99b0332a` fix(railway): use luthiers-toolbox-client service name
+- `66bb5af9` fix(railway): use service ID instead of name for client
+- `d85be2aa` fix(railway): use service ID instead of name for client
+- `01374c83` fix(railway): add API service ID for deployment
+- `7d5230ff` fix(railway): add API service ID for deployment
+- `0562dfc2` fix(client): update VITE_API_BASE to new Railway API URL
+- `21d85fb5` fix(client): update VITE_API_BASE to new Railway API URL
+- `91dd9c91` fix(ai-images): map API 'configured' field to frontend 'available'
+- `d4941ba4` fix(ai-images): map API 'configured' field to frontend 'available'
+- `92abcffe` debug: add console.log to verify provider fix deployment
+- `b144c18b` debug: add console.log to verify provider fix deployment
+- `64bb81bd` fix(docker): force rebuild with cache bust + update API URL
+- `857a4857` fix(docker): force rebuild with cache bust + update API URL
+- `00138307` fix(railway): add watchPatterns and cache bust to force rebuild
+- `a06c1894` fix(railway): add watchPatterns and cache bust to force rebuild
+- `3a471da6` fix(api): add openai package to requirements for DALL-E image generation
+- `e830d98e` fix(api): add openai package to requirements for DALL-E image generation
+- `6aa3d9f7` fix(docker): add run_attachments directory for CAS storage
+- `e36b3599` fix(docker): add run_attachments directory for CAS storage
+- `eafbe211` feat(ci): add deployment validation harness + fix cross-origin image URLs
+- `ed1f63f3` feat(ci): add deployment validation harness + fix cross-origin image URLs
+Files by surface:
+- docs: 1 paths
+  - A docs/DEPLOYMENT_VALIDATION.md
+- other: 11 paths
+  - A .github/workflows/deployment_validation.yml
+  - A scripts/ci/check_deployment_ready.sh
+  - A scripts/ci/validate_deployment.py
+  - M .github/workflows/railway-deploy.yml
+  - M packages/client/.env.production
+  - M packages/client/src/features/ai_images/api.ts
+  - M packages/client/Dockerfile
+  - M packages/client/railway.json
+  - M services/api/requirements.txt
+  - M services/api/Dockerfile
+  - M packages/client/src/features/ai_images/VisionAttachToRunWidget.vue
+Documents produced:
+- `docs/DEPLOYMENT_VALIDATION.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (91dd9c91)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d4941ba4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eafbe211)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ed1f63f3)
+
+### S064 — 2026-02-15T05:43:06-06:00 → 2026-02-15T06:35:01-06:00 (8 commits, 0.87h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `5b386e6b` fix(ci): improve deployment validation script accuracy
+- `82f45665` fix(ci): improve deployment validation script accuracy
+- `0112b1d7` fix(ai-images): add resolveAssetUrl to remaining gallery components
+- `72599f70` fix(ai-images): add resolveAssetUrl to remaining gallery components
+- `cbfe56c1` fix(client): centralize API calls for cross-origin deployment support
+- `d8330b51` fix(client): centralize API calls for cross-origin deployment support
+- `1aaedf99` fix(scripts): handle multi-line imports in fetch migration script
+- `9f3533ff` fix(scripts): handle multi-line imports in fetch migration script
+Files by surface:
+- other: 89 paths
+  - A scripts/ci/migrate_fetch_to_api.py
+  - M scripts/ci/validate_deployment.py
+  - M packages/client/src/features/ai_images/AiImageGallery.vue
+  - M packages/client/src/features/ai_images/AiImageGalleryRmos.vue
+  - M packages/client/src/features/ai_images/AiImageProperties.vue
+  - M packages/client/src/api/camRisk.ts
+  - M packages/client/src/api/curvelab.ts
+  - M packages/client/src/api/rmosRuns.ts
+  - M packages/client/src/cnc_production/CompareRunsPanel.vue
+  - M packages/client/src/components/AdaptivePocketLab.vue
+  - M packages/client/src/components/AdaptivePreview.vue
+  - M packages/client/src/components/ArtPresetCompareAB.vue
+  - M packages/client/src/components/BlueprintImporter.vue
+  - M packages/client/src/components/BridgeCalculatorPanel.vue
+  - M packages/client/src/components/CamBackupPanel.vue
+  - M packages/client/src/components/CamBridgePreflightPanel.vue
+  - M packages/client/src/components/CamBridgeToPipelinePanel.vue
+  - M packages/client/src/components/CamJobInsightsPanel.vue
+  - M packages/client/src/components/CamMachineEnvelopePanel.vue
+  - M packages/client/src/components/CamPipelinePresetList.vue
+  - M packages/client/src/components/CompareAfModes.vue
+  - M packages/client/src/components/DrillingLab.vue
+  - M packages/client/src/components/GeometryOverlay.vue
+  - M packages/client/src/components/GeometryToolbar.vue
+  - M packages/client/src/components/GeometryUpload.vue
+  - M packages/client/src/components/MachineEditorModal.vue
+  - M packages/client/src/components/MachinePane.vue
+  - M packages/client/src/components/PostChooser.vue
+  - M packages/client/src/components/PostPreviewDrawer.vue
+  - M packages/client/src/components/PostTemplatesEditor.vue
+  - M packages/client/src/components/RosettePatternLibrary.vue
+  - M packages/client/src/components/RosettePhotoImport.vue
+  - M packages/client/src/components/ToolTable.vue
+  - M packages/client/src/components/cam/CamBridgeToPipelinePanel.vue
+  - M packages/client/src/components/cam/CamPipelineRunner.vue
+  - M packages/client/src/components/cam/JobIntHistoryPanel.vue
+  - M packages/client/src/components/compare/CompareRunsPanel.vue
+  - M packages/client/src/components/compare/CompareSvgDualViewer.vue
+  - M packages/client/src/components/guided/workflows/DxfToGcodeWorkflow.vue
+  - M packages/client/src/components/rmos/AnalyticsDashboard.vue
+  - … 49 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b386e6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82f45665)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0112b1d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (72599f70)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cbfe56c1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8330b51)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1aaedf99)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f3533ff)
+
+### S065 — 2026-02-15T15:36:13-06:00 → 2026-02-15T15:36:13-06:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `8ed7b0ee` fix(orm): add missing primary keys to SQLAlchemy models
+- `efa3c03e` fix(orm): add missing primary keys to SQLAlchemy models
+Files by surface:
+- other: 2 paths
+  - M services/api/app/rmos/runs_v2/db/models.py
+  - M services/api/app/workflow/db/models.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8ed7b0ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (efa3c03e)
+
+### S066 — 2026-02-15T19:41:51-06:00 → 2026-02-16T01:21:05-06:00 (18 commits, 5.65h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `2eea9547` refactor(cam): reduce pipeline_router complexity from CC=78 to modular design
+- `fe492451` refactor(cam): reduce pipeline_router complexity from CC=78 to modular design
+- `5614c8da` refactor(cam): extract helpers from post_v155 to reduce CC=65 → modular
+- `cb91917d` refactor(cam): extract helpers from post_v155 to reduce CC=65 → modular
+- `67da98b8` refactor(saw-lab): extract helpers from validate_gcode_static CC=62 → CC=9
+- `ee6a645f` refactor(saw-lab): extract helpers from validate_gcode_static CC=62 → CC=9
+- `87e55a9e` ci: remove tap_tone_pi cross-repo CI workflows
+- `b8e464e5` ci: remove tap_tone_pi cross-repo CI workflows
+- `14ad144c` fix(safety): add @safety_critical decorator to G-code and feasibility functions
+- `bb7d3f1c` fix(safety): add @safety_critical decorator to G-code and feasibility functions
+- `157daafa` fix(exceptions): replace broad except clauses with specific types
+- `30d03908` fix(exceptions): replace broad except clauses with specific types
+- `e1bb1ddc` ci: add high-severity complexity baseline (threshold 25)
+- `f27fd89d` ci: add high-severity complexity baseline (threshold 25)
+- `34b6315c` fix(util): escape backslash in docstring to fix SyntaxWarning
+- `999444fa` fix(util): escape backslash in docstring to fix SyntaxWarning
+- `8aa1ab3c` fix(util): escape all backslashes in names.py docstring
+- `dda09393` fix(util): escape all backslashes in names.py docstring
+Files by surface:
+- other: 16 paths
+  - A services/api/app/ci/complexity_baseline_high.json
+  - M services/api/app/routers/pipeline_router.py
+  - M services/api/app/routers/cam_post_v155_router.py
+  - M services/api/app/saw_lab/toolpaths_validate_service.py
+  - M services/api/app/api_v1/dxf_workflow.py
+  - M ci/router_count_gate.py
+  - M scripts/rmos_ci_test.py
+  - M services/api/app/ci/check_bare_except.py
+  - M services/api/app/ci/check_complexity.py
+  - M services/api/app/ci/check_duplication.py
+  - M services/api/app/ci/check_file_sizes.py
+  - M services/api/app/governance/endpoint_middleware.py
+  - M services/api/app/governance/endpoint_stats.py
+  - M services/api/app/util/names.py
+  - D .github/workflows/analyzer-ingest-smoke.yml
+  - D .github/workflows/analyzer_release_ingest_smoke.yml
+- tests: 1 paths
+  - M services/api/tests/fake_rmos_engine.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2eea9547)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe492451)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5614c8da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cb91917d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (67da98b8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee6a645f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (87e55a9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b8e464e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14ad144c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb7d3f1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (157daafa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30d03908)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1bb1ddc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f27fd89d)
+
+### S067 — 2026-02-16T19:12:17-06:00 → 2026-02-16T19:12:17-06:00 (2 commits, 0.0h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `27b6e908` feat(generators): add Bézier body outline generator for acoustic guitars
+- `9f88a9b6` feat(generators): add Bézier body outline generator for acoustic guitars
+Files by surface:
+- other: 2 paths
+  - A services/api/app/generators/bezier_body.py
+  - M services/api/app/generators/__init__.py
+- tests: 1 paths
+  - A services/api/tests/test_bezier_body_generator.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27b6e908)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f88a9b6)
+
+### S068 — 2026-02-18T10:50:09-06:00 → 2026-02-18T17:20:19-06:00 (56 commits, 6.5h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `07b6fedd` docs: Phase 1 remediation - product scope + honest metrics
+- `4fb45cb0` docs: Phase 1 remediation - product scope + honest metrics
+- `7679cf1f` feat(ui): Quick Cut uses real RMOS API + safety display
+- `80390a0a` feat(ui): Quick Cut uses real RMOS API + safety display
+- `b1c38dab` refactor(ui): Phase 3 - decompose Vue god objects into focused components
+- `c7fa59ad` refactor(ui): Phase 3 - decompose Vue god objects into focused components
+- `730effef` refactor(ui): extract DxfToGcodeView components (Phase 3.1 continued)
+- `cde90620` refactor(ui): extract DxfToGcodeView components (Phase 3.1 continued)
+- `b25eb889` docs(phase4): add RMOS documentation + tooltip component
+- `f1fc9902` docs(phase4): add RMOS documentation + tooltip component
+- `26f6d422` test(phase4): add testing strategy doc + rule registry tests
+- `5b24985d` test(phase4): add testing strategy doc + rule registry tests
+- `93503db4` feat(ui): integrate RiskBadge + RmosTooltip into QuickCutView
+- `af2ae9ee` feat(ui): integrate RiskBadge + RmosTooltip into QuickCutView
+- `314ba927` feat(ui): add reusable components for god object decomposition
+- `4e7991da` feat(ui): add reusable components for god object decomposition
+- `2a26f0d1` feat(ui): add ScaleCard component + toolbox barrel export
+- `3ea11aad` feat(ui): add ScaleCard component + toolbox barrel export
+- `6c9fcb81` docs: add Vue component decomposition guide
+- `cffe2857` docs: add Vue component decomposition guide
+- `1ebfb1ab` refactor(adaptive): wire up MachineSelector component in AdaptivePocketLab
+- `2647bb1b` refactor(adaptive): wire up MachineSelector component in AdaptivePocketLab
+- `574cad77` refactor(adaptive): wire up PostProcessorConfig in AdaptivePocketLab
+- `b18a83af` refactor(adaptive): wire up PostProcessorConfig in AdaptivePocketLab
+- `3d82e888` feat(ui): wire up HudOverlayControls and JerkAwareSettings in AdaptivePocketLab
+- `66162cca` feat(ui): wire up HudOverlayControls and JerkAwareSettings in AdaptivePocketLab
+- `94127468` feat(ui): wire up OptimizeForMachinePanel in AdaptivePocketLab
+- `c3894f79` feat(ui): wire up OptimizeForMachinePanel in AdaptivePocketLab
+- `2a44f47e` feat(ui): wire up ToolpathStatsPanel in AdaptivePocketLab
+- `40f996fc` feat(ui): wire up ToolpathStatsPanel in AdaptivePocketLab
+- `8c552bd3` feat(ui): wire up DXF components in DxfToGcodeView
+- `c0795bd7` feat(ui): wire up DXF components in DxfToGcodeView
+- `1be2d8c2` feat(ui): add useSavedViews composable + SavedViewsPanel component
+- `972067e1` feat(ui): add useSavedViews composable + SavedViewsPanel component
+- `20188c49` docs: update Vue decomposition guide with progress
+- `dd24a0f9` docs: update Vue decomposition guide with progress
+- `35baec89` refactor(ui): wire SavedViewsPanel into RiskDashboardCrossLab (-35% LOC)
+- `c3c753be` refactor(ui): wire SavedViewsPanel into RiskDashboardCrossLab (-35% LOC)
+- `2f26431c` docs: update decomposition guide with RiskDashboardCrossLab progress
+- `4305152b` docs: update decomposition guide with RiskDashboardCrossLab progress
+- `10615433` refactor(ui): extract FiltersBar component from RiskDashboardCrossLab
+- `14d7d51c` refactor(ui): extract FiltersBar component from RiskDashboardCrossLab
+- `10b82f1b` docs: update decomposition guide with FiltersBar progress
+- `d68813c3` docs: update decomposition guide with FiltersBar progress
+- `520c789c` refactor(ui): extract BucketsTable + BucketDetailsPanel from RiskDashboardCrossLab
+- `822a93ba` refactor(ui): extract BucketsTable + BucketDetailsPanel from RiskDashboardCrossLab
+- `34cfcde5` docs: mark RiskDashboardCrossLab decomposition complete
+- `9e7440f4` docs: mark RiskDashboardCrossLab decomposition complete
+- `00134370` refactor(ui): extract pocket components from AdaptivePocketLab (-21% LOC)
+- `c5238728` refactor(ui): extract pocket components from AdaptivePocketLab (-21% LOC)
+- `46660715` docs: update decomposition guide with AdaptivePocketLab progress
+- `922a20b9` docs: update decomposition guide with AdaptivePocketLab progress
+- `7d08eb90` refactor(ui): extract 3 more pocket components (-10% LOC)
+- `c3ce5054` refactor(ui): extract 3 more pocket components (-10% LOC)
+- `a9b8c1ca` docs: update decomposition guide - 6 pocket components
+- `afb04063` docs: update decomposition guide - 6 pocket components
+Files by surface:
+- docs: 7 paths
+  - A docs/DESIGN_REVIEW_2026-02-18.md
+  - A docs/PRODUCT_SCOPE.md
+  - A docs/RMOS_CONCEPTS_GUIDE.md
+  - A docs/TESTING_STRATEGY.md
+  - A docs/VUE_DECOMPOSITION_GUIDE.md
+  - M README.md
+  - M docs/canonical/ARCHITECTURE.md
+- other: 46 paths
+  - A packages/client/src/components/adaptive/HudOverlayControls.vue
+  - A packages/client/src/components/adaptive/JerkAwareSettings.vue
+  - A packages/client/src/components/adaptive/MachineSelector.vue
+  - A packages/client/src/components/adaptive/OptimizeForMachinePanel.vue
+  - A packages/client/src/components/adaptive/PostProcessorConfig.vue
+  - A packages/client/src/components/adaptive/ToolpathStatsPanel.vue
+  - A packages/client/src/components/adaptive/TrochoidSettings.vue
+  - A packages/client/src/components/rmos/BulkDecisionPanel.vue
+  - A packages/client/src/components/rmos/CandidateSummaryChips.vue
+  - A packages/client/src/components/rmos/RunReadyBadge.vue
+  - A packages/client/src/components/toolbox/scale-length/IntonationPanel.vue
+  - A packages/client/src/components/toolbox/scale-length/MultiscalePanel.vue
+  - A packages/client/src/components/toolbox/scale-length/ScalePresetsPanel.vue
+  - A packages/client/src/components/toolbox/scale-length/TensionCalculatorPanel.vue
+  - A packages/client/src/components/toolbox/scale-length/index.ts
+  - A packages/client/src/components/dxf/CamParametersForm.vue
+  - A packages/client/src/components/dxf/DxfUploadZone.vue
+  - A packages/client/src/components/dxf/RunCompareCard.vue
+  - A packages/client/src/components/dxf/index.ts
+  - A packages/client/src/components/rmos/RmosTooltip.vue
+  - A packages/client/src/components/rmos/index.ts
+  - A packages/client/src/components/ui/ActionButton.vue
+  - A packages/client/src/components/ui/CardPanel.vue
+  - A packages/client/src/components/ui/LabeledInput.vue
+  - A packages/client/src/components/toolbox/ScaleCard.vue
+  - A packages/client/src/components/toolbox/index.ts
+  - A packages/client/src/components/ui/SavedViewsPanel.vue
+  - A packages/client/src/composables/useSavedViews.ts
+  - A packages/client/src/components/dashboard/FiltersBar.vue
+  - A packages/client/src/components/dashboard/index.ts
+  - A packages/client/src/components/dashboard/BucketDetailsPanel.vue
+  - A packages/client/src/components/dashboard/BucketsTable.vue
+  - A packages/client/src/components/pocket/BottleneckMapPanel.vue
+  - A packages/client/src/components/pocket/EnergyHeatPanel.vue
+  - A packages/client/src/components/pocket/HeatTimeSeriesPanel.vue
+  - A packages/client/src/components/pocket/index.ts
+  - A packages/client/src/components/pocket/ActionButtonsBar.vue
+  - A packages/client/src/components/pocket/ExportConfigPanel.vue
+  - A packages/client/src/components/pocket/ToolParametersPanel.vue
+  - M packages/client/src/views/QuickCutView.vue
+  - … 6 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - A services/api/tests/test_feasibility_rule_registry.py
+Documents produced:
+- `docs/DESIGN_REVIEW_2026-02-18.md` — # Critical Systems Design Review: luthiers-toolbox
+- `docs/PRODUCT_SCOPE.md` — # Luthier's ToolBox - Product Scope
+- `docs/RMOS_CONCEPTS_GUIDE.md` — UNKNOWN
+- `docs/TESTING_STRATEGY.md` — # Testing Strategy
+- `docs/VUE_DECOMPOSITION_GUIDE.md` — # Vue Component Decomposition Guide
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (07b6fedd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4fb45cb0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7679cf1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (80390a0a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b1c38dab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7fa59ad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (730effef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cde90620)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b25eb889)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1fc9902)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (26f6d422)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b24985d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93503db4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af2ae9ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (314ba927)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e7991da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a26f0d1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3ea11aad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6c9fcb81)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cffe2857)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ebfb1ab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2647bb1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (574cad77)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b18a83af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1be2d8c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (972067e1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20188c49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dd24a0f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35baec89)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3c753be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10615433)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14d7d51c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (520c789c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (822a93ba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (00134370)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c5238728)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d08eb90)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3ce5054)
+
+### S069 — 2026-02-18T21:29:26-06:00 → 2026-02-19T11:27:12-06:00 (20 commits, 13.96h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `18652a7e` feat(data): expand wood species database to 472 species (v4.0.0)
+- `904b5d1b` feat(data): expand wood species database to 472 species (v4.0.0)
+- `309f3a10` refactor(ui): extract bulk decision components + add useBulkDecision composable
+- `3fbe402d` refactor(ui): extract bulk decision components + add useBulkDecision composable
+- `2946aa2b` refactor(ui): decompose ScaleLengthDesigner.vue into tab components
+- `7d58e7e5` refactor(ui): decompose ScaleLengthDesigner.vue into tab components
+- `22d7323e` refactor(ui): decompose DxfToGcodeView.vue (1503→650 LOC, 57% reduction)
+- `28f83b27` refactor(ui): decompose DxfToGcodeView.vue (1503→650 LOC, 57% reduction)
+- `61022b39` refactor(rmos): decompose ManufacturingCandidateList.vue (2183→1559 LOC)
+- `fbd473c9` refactor(rmos): decompose ManufacturingCandidateList.vue (2183→1559 LOC)
+- `8d71539c` refactor(toolbox): decompose ScientificCalculator.vue (1562→214 LOC orchestrator)
+- `afd822b2` refactor(toolbox): decompose ScientificCalculator.vue (1562→214 LOC orchestrator)
+- `4a24e33e` refactor(ui): decompose DesignFirstWorkflowPanel (1548→458 LOC orchestrator)
+- `c407d708` refactor(ui): decompose DesignFirstWorkflowPanel (1548→458 LOC orchestrator)
+- `7538fec4` refactor(ui): decompose AdaptivePocketLab.vue (1424→523 LOC, 63% reduction)
+- `c0ed36e6` refactor(ui): decompose AdaptivePocketLab.vue (1424→523 LOC, 63% reduction)
+- `7273b369` refactor(ui): decompose RiskDashboardCrossLab.vue (948→268 LOC, 72% reduction)
+- `d594fd96` refactor(ui): decompose RiskDashboardCrossLab.vue (948→268 LOC, 72% reduction)
+- `4f0e7a30` refactor(rmos): decompose ManufacturingCandidateList (1559→578 LOC)
+- `c69d353f` refactor(rmos): decompose ManufacturingCandidateList (1559→578 LOC)
+Files by surface:
+- docs: 5 paths
+  - A services/api/app/data_registry/system/materials/SOURCES.md
+  - A services/api/app/data_registry/system/materials/WOOD_SPECIES_REFERENCE.md
+  - A docs/DECOMPOSITION_GUIDELINES.md
+  - M services/api/app/data_registry/README.md
+  - M README.md
+- other: 71 paths
+  - A scripts/_check_unmatched.py
+  - A scripts/_dedup_species.py
+  - A scripts/_find_dupes.py
+  - A scripts/_gen_species_md.py
+  - A scripts/_spotcheck.py
+  - A scripts/_validate_species.py
+  - A scripts/bulk_import_wood_species.py
+  - A scripts/cross_ref_wood.py
+  - A scripts/merge_wood_data.py
+  - A packages/client/src/components/rmos/BulkDecisionBar.vue
+  - A packages/client/src/components/rmos/BulkDecisionControlsV2.vue
+  - A packages/client/src/components/rmos/BulkHistoryPanel.vue
+  - A packages/client/src/components/rmos/ExportPolicyCard.vue
+  - A packages/client/src/components/rmos/UndoHistoryPanel.vue
+  - A packages/client/src/composables/useBulkDecision.ts
+  - A packages/client/src/components/toolbox/scale-length/IntonationTab.vue
+  - A packages/client/src/components/toolbox/scale-length/MultiScaleTab.vue
+  - A packages/client/src/components/toolbox/scale-length/ScalePresetsTab.vue
+  - A packages/client/src/components/toolbox/scale-length/TensionCalculatorTab.vue
+  - A packages/client/src/components/dxf/GcodeResultPanel.vue
+  - A packages/client/src/components/dxf/OverrideModal.vue
+  - A packages/client/src/components/dxf/useDxfToGcode.ts
+  - A packages/client/src/components/rmos/ManufacturingSummaryBar.vue
+  - A packages/client/src/components/rmos/composables/useBulkDecisionV2.ts
+  - A packages/client/src/components/rmos/composables/useBulkExport.ts
+  - A packages/client/src/components/toolbox/ScientificCalculatorV2.vue
+  - A packages/client/src/components/toolbox/calculator/BasicCalculatorPad.vue
+  - A packages/client/src/components/toolbox/calculator/CalculatorDisplay.vue
+  - A packages/client/src/components/toolbox/calculator/ScientificCalculatorPad.vue
+  - A packages/client/src/components/toolbox/calculator/UnitConverterPanel.vue
+  - A packages/client/src/components/toolbox/calculator/WoodworkPanel.vue
+  - A packages/client/src/components/toolbox/calculator/index.ts
+  - A packages/client/src/components/toolbox/composables/useCalculatorCore.ts
+  - A packages/client/src/components/rosette/DesignFirstWorkflowPanelV2.vue
+  - A packages/client/src/components/rosette/composables/useExportSnippets.ts
+  - A packages/client/src/components/rosette/composables/useLogDrawer.ts
+  - A packages/client/src/components/rosette/composables/useWorkflowOverrides.ts
+  - A packages/client/src/components/rosette/workflow/ExportUrlToolbar.vue
+  - A packages/client/src/components/rosette/workflow/IntentPreview.vue
+  - A packages/client/src/components/rosette/workflow/OverrideSelector.vue
+  - … 31 more (see sessions.json / files.jsonl)
+Documents produced:
+- `services/api/app/data_registry/system/materials/SOURCES.md` — # Wood Species Data — Sources & Methodology
+- `services/api/app/data_registry/system/materials/WOOD_SPECIES_REFERENCE.md` — # Wood Species Reference
+- `docs/DECOMPOSITION_GUIDELINES.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (18652a7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (904b5d1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (309f3a10)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3fbe402d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2946aa2b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d58e7e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (22d7323e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28f83b27)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (61022b39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fbd473c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8d71539c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afd822b2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a24e33e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c407d708)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7538fec4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c0ed36e6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7273b369)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d594fd96)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f0e7a30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c69d353f)
+
+### S070 — 2026-02-20T01:17:23-06:00 → 2026-02-20T02:14:09-06:00 (10 commits, 0.95h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `8aeffac9` refactor(ui): decompose PipelineLab.vue into modular components
+- `b5ac2878` refactor(ui): decompose PipelineLab.vue into modular components
+- `71eb97f9` refactor(ui): decompose BlueprintLab.vue into modular components (1459→322 LOC)
+- `73c126c8` refactor(ui): decompose BlueprintLab.vue into modular components (1459→322 LOC)
+- `1d30204d` refactor(ui): decompose ScientificCalculator.vue (1562 → 220 LOC)
+- `d2f07a22` refactor(ui): decompose ScientificCalculator.vue (1562 → 220 LOC)
+- `183093fb` refactor(ui): decompose GuitarDimensionsForm.vue (1383 → 430 LOC)
+- `c32d5ac6` refactor(ui): decompose GuitarDimensionsForm.vue (1383 → 430 LOC)
+- `20620bc4` refactor(ui): decompose ManufacturingCandidateList.vue (1559 → 1113 LOC)
+- `5a79bc15` refactor(ui): decompose ManufacturingCandidateList.vue (1559 → 1113 LOC)
+Files by surface:
+- other: 28 paths
+  - A packages/client/src/components/pipeline/BlueprintPresetPanel.vue
+  - A packages/client/src/components/pipeline/Stage1UploadPanel.vue
+  - A packages/client/src/components/pipeline/Stage2PreflightPanel.vue
+  - A packages/client/src/components/pipeline/Stage3ReconstructionPanel.vue
+  - A packages/client/src/components/pipeline/Stage4ToolpathPanel.vue
+  - A packages/client/src/composables/usePipelineWorkflow.ts
+  - A packages/client/src/components/blueprint/BlueprintUploadZone.vue
+  - A packages/client/src/components/blueprint/Phase1AnalysisPanel.vue
+  - A packages/client/src/components/blueprint/Phase2VectorizationPanel.vue
+  - A packages/client/src/components/blueprint/Phase3CamPanel.vue
+  - A packages/client/src/composables/useBlueprintWorkflow.ts
+  - A packages/client/src/components/toolbox/composables/useGuitarCAM.ts
+  - A packages/client/src/components/toolbox/composables/useGuitarExport.ts
+  - A packages/client/src/components/toolbox/guitar-dimensions/CamResultsPanel.vue
+  - A packages/client/src/components/toolbox/guitar-dimensions/DimensionInputGrid.vue
+  - A packages/client/src/components/toolbox/guitar-dimensions/GuitarBodyPreview.vue
+  - A packages/client/src/components/toolbox/guitar-dimensions/GuitarTypeSelector.vue
+  - A packages/client/src/components/toolbox/guitar-dimensions/PresetSelector.vue
+  - A packages/client/src/components/toolbox/guitar-dimensions/index.ts
+  - A packages/client/src/components/rmos/composables/useCandidateKeyboard.ts
+  - A packages/client/src/components/rmos/composables/useClipboardToast.ts
+  - A packages/client/src/components/rmos/composables/useUndoStack.ts
+  - M packages/client/src/views/PipelineLab.vue
+  - M packages/client/src/views/BlueprintLab.vue
+  - M packages/client/src/components/toolbox/ScientificCalculator.vue
+  - M packages/client/src/components/toolbox/GuitarDimensionsForm.vue
+  - M packages/client/src/components/toolbox/composables/useGuitarDimensions.ts
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.vue
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8aeffac9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5ac2878)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (71eb97f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73c126c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1d30204d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d2f07a22)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (183093fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c32d5ac6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20620bc4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5a79bc15)
+
+### S071 — 2026-02-20T08:32:20-06:00 → 2026-02-21T01:29:38-06:00 (60 commits, 16.95h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `04914580` refactor(ui): wire AdaptivePocketLab to existing composables (1424 → 1282 LOC)
+- `627f2938` refactor(ui): wire AdaptivePocketLab to existing composables (1424 → 1282 LOC)
+- `07fb586d` refactor(ui): extract useClipboardExport composable from DesignFirstWorkflowPanel
+- `459674d2` refactor(ui): extract useClipboardExport composable from DesignFirstWorkflowPanel
+- `86907c3a` refactor(ui): extract composables from SawSlicePanel
+- `d65cb46d` refactor(ui): extract composables from SawSlicePanel
+- `4028e4b9` refactor(ui): extract composables from SawBatchPanel
+- `b08f4db3` refactor(ui): extract composables from SawBatchPanel
+- `1654b972` refactor(ui): extract composables from VisionAttachToRunWidget
+- `d679754b` refactor(ui): extract composables from VisionAttachToRunWidget
+- `b1df6856` refactor(ui): extract CSS module from DxfToGcodeView
+- `d1886c5d` refactor(ui): extract CSS module from DxfToGcodeView
+- `1cb2b375` refactor(ui): extract CSS to module - InstrumentGeometryPanel
+- `bbb3b972` refactor(ui): extract CSS to module - InstrumentGeometryPanel
+- `31209268` refactor(ui): extract CSS to module - CamBridgePreflightPanel
+- `ad1012f7` refactor(ui): extract CSS to module - CamBridgePreflightPanel
+- `6f7d0b9c` refactor(ui): extract RmosRunViewerView CSS to module
+- `bda0332b` refactor(ui): extract RmosRunViewerView CSS to module
+- `5c09d5f6` refactor(ui): extract PipelineLab CSS to module
+- `bf4f29d7` refactor(ui): extract PipelineLab CSS to module
+- `3b4cbc9f` refactor(ui): extract TeachingLoopPanel CSS to module
+- `3e515956` refactor(ui): extract TeachingLoopPanel CSS to module
+- `2aeb75a2` refactor(ui): extract VisionAttachToRunWidget CSS to module
+- `2cf69ec3` refactor(ui): extract VisionAttachToRunWidget CSS to module
+- `5216b4f1` refactor(ui): extract CSS modules from scale-length components
+- `a35c1677` refactor(ui): extract CSS modules from scale-length components
+- `0b6199b4` refactor(ui): extract CSS module from AudioAnalyzerViewer
+- `b92e3852` refactor(ui): extract CSS module from AudioAnalyzerViewer
+- `5b61f5d3` refactor(ui): extract CSS module from CompareLabView.vue
+- `6c2e7d50` refactor(ui): extract CSS module from CompareLabView.vue
+- `319cef68` refactor(ui): extract CSS modules from 3 large Vue components
+- `55877f7f` refactor(ui): extract CSS modules from 3 large Vue components
+- `62300332` refactor(client): extract CSS modules from 3 high-priority Vue components
+- `f2163521` refactor(client): extract CSS modules from 3 high-priority Vue components
+- `03919ebb` feat(client): enhance useSavedViews with versioning and statistics
+- `f5b2ce16` feat(client): enhance useSavedViews with versioning and statistics
+- `9dd08263` refactor(ui): extract CSS modules from 3 medium-priority components
+- `b31bd4a9` refactor(ui): extract CSS modules from 3 medium-priority components
+- `336b16f6` refactor(css): consolidate duplicate CSS into shared modules (-120 lines)
+- `afef506a` refactor(css): consolidate duplicate CSS into shared modules (-120 lines)
+- `572fb91c` refactor(css): migrate RmosRunViewerView to shared CSS modules (-90 lines)
+- `6115c2a9` refactor(css): migrate RmosRunViewerView to shared CSS modules (-90 lines)
+- `7c96f75f` refactor(css): consolidate scale-length CSS with shared module (~500 lines saved)
+- `a062fbcb` refactor(css): consolidate scale-length CSS with shared module (~500 lines saved)
+- `5c70fd1b` refactor(css): migrate MultiScaleTab to scale-length-shared module
+- `923cad9f` refactor(css): migrate MultiScaleTab to scale-length-shared module
+- `707545a8` feat(css): create generic dark-theme-shared.module.css
+- `bb42b960` feat(css): create generic dark-theme-shared.module.css
+- `8589afc0` refactor(css): migrate InstrumentGeometryPanel to dark-theme-shared (~315 lines saved)
+- `dfeb7dd2` refactor(css): migrate InstrumentGeometryPanel to dark-theme-shared (~315 lines saved)
+- `62604b01` fix(scripts): escape regex special chars in Vue extraction analyzer
+- `cdb23a69` fix(scripts): escape regex special chars in Vue extraction analyzer
+- `438b423d` refactor(ui): extract contour type params into child components
+- `dd3b4c67` refactor(ui): extract contour type params into child components
+- `150ededb` refactor(ui): extract ContourSvgPreview from SawContourPanel
+- `da2bea1a` refactor(ui): extract ContourSvgPreview from SawContourPanel
+- `53b51687` refactor(ui): extract 4 preview section cards from SawContourPanel
+- `b9806e02` refactor(ui): extract 4 preview section cards from SawContourPanel
+- `a1e55ee5` refactor(ui): extract drill pattern components from DrillingLab
+- `e503d7c4` refactor(ui): extract drill pattern components from DrillingLab
+Files by surface:
+- docs: 1 paths
+  - A scripts/README_vue_extraction.md
+- other: 92 paths
+  - A packages/client/src/views/composables/useJobTooltip.ts
+  - A packages/client/src/views/composables/usePresetFilters.ts
+  - A packages/client/src/views/composables/usePresetForm.ts
+  - A packages/client/src/components/rosette/composables/useClipboardExport.ts
+  - A packages/client/src/components/saw_lab/composables/index.ts
+  - A packages/client/src/components/saw_lab/composables/useSawBladeRegistry.ts
+  - A packages/client/src/components/saw_lab/composables/useSawSliceApi.ts
+  - A packages/client/src/components/saw_lab/composables/useSawSliceGcode.ts
+  - A packages/client/src/components/saw_lab/composables/useSawBatchGcode.ts
+  - A packages/client/src/components/saw_lab/composables/useSawBatchStats.ts
+  - A packages/client/src/features/ai_images/composables/index.ts
+  - A packages/client/src/features/ai_images/composables/useRunSelection.ts
+  - A packages/client/src/features/ai_images/composables/useVisionAttach.ts
+  - A packages/client/src/features/ai_images/composables/useVisionGeneration.ts
+  - A packages/client/src/features/ai_images/composables/useVisionProviders.ts
+  - A packages/client/src/views/DxfToGcodeView.module.css
+  - A packages/client/src/components/InstrumentGeometryPanel.module.css
+  - A packages/client/src/components/CamBridgePreflightPanel.module.css
+  - A packages/client/src/views/RmosRunViewerView.module.css
+  - A packages/client/src/views/PipelineLab.module.css
+  - A packages/client/src/features/ai_images/TeachingLoopPanel.module.css
+  - A packages/client/src/features/ai_images/VisionAttachToRunWidget.module.css
+  - A packages/client/src/components/toolbox/scale-length/IntonationPanel.module.css
+  - A packages/client/src/components/toolbox/scale-length/IntonationTab.module.css
+  - A packages/client/src/components/toolbox/scale-length/MultiScaleTab.module.css
+  - A packages/client/src/components/toolbox/scale-length/MultiscalePanel.module.css
+  - A packages/client/src/components/toolbox/scale-length/ScalePresetsPanel.module.css
+  - A packages/client/src/components/toolbox/scale-length/ScalePresetsTab.module.css
+  - A packages/client/src/components/toolbox/scale-length/TensionCalculatorPanel.module.css
+  - A packages/client/src/components/toolbox/scale-length/TensionCalculatorTab.module.css
+  - A packages/client/src/views/tools/AudioAnalyzerViewer.module.css
+  - A packages/client/src/views/CompareLabView.module.css
+  - A packages/client/src/components/rmos/ManufacturingCandidateList.module.css
+  - A packages/client/src/components/toolbox/FinishingDesigner.module.css
+  - A packages/client/src/views/PresetHubView.module.css
+  - A packages/client/src/components/DrillingLab.module.css
+  - A packages/client/src/components/rmos/MixedMaterialStripFamilyEditor.module.css
+  - A packages/client/src/components/saw_lab/SawContourPanel.module.css
+  - A packages/client/src/components/toolbox/DxfPreflightValidator.module.css
+  - A packages/client/src/features/ai_images/AiImagePanel.module.css
+  - … 52 more (see sessions.json / files.jsonl)
+Documents produced:
+- `scripts/README_vue_extraction.md` — # Vue Component Extraction Analyzer (Enhanced)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (04914580)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (627f2938)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (07fb586d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (459674d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86907c3a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d65cb46d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4028e4b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b08f4db3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1654b972)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d679754b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b1df6856)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d1886c5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1cb2b375)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bbb3b972)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (31209268)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad1012f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f7d0b9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bda0332b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5c09d5f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf4f29d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3b4cbc9f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3e515956)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2aeb75a2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2cf69ec3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5216b4f1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a35c1677)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b6199b4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b92e3852)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b61f5d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6c2e7d50)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (319cef68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55877f7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (62300332)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f2163521)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (03919ebb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f5b2ce16)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9dd08263)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b31bd4a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (336b16f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afef506a)
+- … 24 more
+
+### S072 — 2026-02-21T08:47:09-06:00 → 2026-02-21T12:27:12-06:00 (30 commits, 3.67h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `466ba01d` refactor(ui): extract AmortizationSection + PricingStrategyPanel from BusinessCalculator
+- `9ea06f5d` refactor(ui): extract AmortizationSection + PricingStrategyPanel from BusinessCalculator
+- `057e4ffc` refactor(ui): extract 4 components from FinishingDesigner
+- `e8f24b13` refactor(ui): extract 4 components from FinishingDesigner
+- `49506c15` refactor(ui): extract TraditionalPanel + ModernPanel from RosettePatternLibrary
+- `a7bfa772` refactor(ui): extract TraditionalPanel + ModernPanel from RosettePatternLibrary
+- `a4967334` refactor(art): extract CompareOpenPanel from SnapshotComparePanel
+- `f8f26c5d` refactor(art): extract CompareOpenPanel from SnapshotComparePanel
+- `0793a978` refactor(views): extract 6 HIGH candidates from ArtStudioRosetteCompare
+- `dc711749` refactor(views): extract 6 HIGH candidates from ArtStudioRosetteCompare
+- `11014b51` refactor(ui): extract 5 HIGH candidates from DrillingLab.vue
+- `39e6d032` refactor(ui): extract 5 HIGH candidates from DrillingLab.vue
+- `a7672822` refactor(ui): extract 2 HIGH candidates from AdaptiveKernelLab.vue
+- `ff6460b8` refactor(ui): extract 2 HIGH candidates from AdaptiveKernelLab.vue
+- `0a20d5d5` docs(decomposition): add systematic extraction workflow + generator script
+- `e368bf27` docs(decomposition): add systematic extraction workflow + generator script
+- `b55f79f0` refactor(ui): extract 2 HIGH candidates from ArtStudioRosette.vue
+- `cabd9382` refactor(ui): extract 2 HIGH candidates from ArtStudioRosette.vue
+- `0814b7e6` refactor(ui): extract 4 HIGH candidates from CompareLabView.vue
+- `1f58f1a5` refactor(ui): extract 4 HIGH candidates from CompareLabView.vue
+- `62b780ee` refactor(ui): extract 3 HIGH candidates from SawLabDashboard.vue
+- `fb082d47` refactor(ui): extract 3 HIGH candidates from SawLabDashboard.vue
+- `14fc0ed2` refactor(ui): extract 3 child components from BridgeLabView
+- `dcd16d2d` refactor(ui): extract 3 child components from BridgeLabView
+- `1273db00` refactor(ui): extract 4 child components from ReliefKernelLab
+- `5586dfde` refactor(ui): extract 4 child components from ReliefKernelLab
+- `25903130` refactor(ui): extract 2 child components from RosettePhotoImport
+- `6ab62763` refactor(ui): extract 2 child components from RosettePhotoImport
+- `45ba01bb` refactor(ui): extract 2 child components from CompareRunsPanel
+- `840a9c78` refactor(ui): extract 2 child components from CompareRunsPanel
+Files by surface:
+- docs: 1 paths
+  - M docs/VUE_DECOMPOSITION_GUIDE.md
+- other: 50 paths
+  - A packages/client/src/components/toolbox/business/AmortizationSection.vue
+  - A packages/client/src/components/toolbox/business/PricingStrategyPanel.vue
+  - A packages/client/src/components/toolbox/finishing/BurstPreviewCanvas.vue
+  - A packages/client/src/components/toolbox/finishing/FinishTypesPanel.vue
+  - A packages/client/src/components/toolbox/finishing/LaborInputSection.vue
+  - A packages/client/src/components/toolbox/finishing/LaborResultsSection.vue
+  - A packages/client/src/components/rosette_library/ModernPanel.vue
+  - A packages/client/src/components/rosette_library/TraditionalPanel.vue
+  - A packages/client/src/components/art/snapshot_compare/CompareOpenPanel.vue
+  - A packages/client/src/views/rosette_compare/CompareDiffSummary.vue
+  - A packages/client/src/views/rosette_compare/CompareHistorySidebar.vue
+  - A packages/client/src/components/drilling/DrillCycleType.vue
+  - A packages/client/src/components/drilling/DrillDepthSettings.vue
+  - A packages/client/src/components/drilling/DrillHoleList.vue
+  - A packages/client/src/components/drilling/DrillPatternSelector.vue
+  - A packages/client/src/components/drilling/DrillToolSetup.vue
+  - A packages/client/src/views/adaptive_kernel/KernelOutputPanel.vue
+  - A packages/client/src/views/adaptive_kernel/LoopsPreviewSvg.vue
+  - A scripts/generate_vue_child.py
+  - A packages/client/src/views/art_studio_rosette/RosettePreviewSvg.vue
+  - A packages/client/src/views/compare_lab/ExportDialog.vue
+  - A packages/client/src/views/compare_lab/SavePresetModal.vue
+  - A packages/client/src/views/saw_lab_dashboard/LaneScaleHistoryTable.vue
+  - A packages/client/src/views/saw_lab_dashboard/RunTelemetryCard.vue
+  - A packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue
+  - A packages/client/src/views/bridge_lab/GcodeExportPanel.vue
+  - A packages/client/src/views/bridge_lab/SimulationResultsPanel.vue
+  - A packages/client/src/views/bridge_lab/ToolpathResultsPanel.vue
+  - A packages/client/src/labs/relief_kernel_lab/ParametersGrid.vue
+  - A packages/client/src/labs/relief_kernel_lab/PresetComparisonTable.vue
+  - A packages/client/src/labs/relief_kernel_lab/RunButtonsPanel.vue
+  - A packages/client/src/labs/relief_kernel_lab/SimBridgeResultsPanel.vue
+  - A packages/client/src/components/rosette_photo_import/SettingsGrid.vue
+  - A packages/client/src/components/rosette_photo_import/StatsGrid.vue
+  - A packages/client/src/cnc_production/compare_runs_panel/ComparisonTable.vue
+  - A packages/client/src/cnc_production/compare_runs_panel/JobSelectionList.vue
+  - M packages/client/src/components/toolbox/BusinessCalculator.vue
+  - M packages/client/src/components/toolbox/FinishingDesigner.vue
+  - M packages/client/src/components/RosettePatternLibrary.vue
+  - M packages/client/src/components/art/SnapshotComparePanel.vue
+  - … 10 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (466ba01d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9ea06f5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (057e4ffc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e8f24b13)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (49506c15)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7bfa772)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4967334)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8f26c5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0793a978)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc711749)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (11014b51)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (39e6d032)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7672822)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff6460b8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0a20d5d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e368bf27)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b55f79f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cabd9382)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0814b7e6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f58f1a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (62b780ee)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fb082d47)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14fc0ed2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dcd16d2d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1273db00)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5586dfde)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25903130)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ab62763)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45ba01bb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (840a9c78)
+
+### S073 — 2026-02-21T20:36:20-06:00 → 2026-02-22T00:22:14-06:00 (16 commits, 3.77h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `7f3270a5` refactor(ui): extract PreviewCard from BridgeCalculatorPanel
+- `b85f46c6` refactor(ui): extract PreviewCard from BridgeCalculatorPanel
+- `59a70dcb` refactor(ui): extract 4 children from RosetteCompareHistory
+- `be55ed92` refactor(ui): extract 4 children from RosetteCompareHistory
+- `8249e059` refactor(ui): extract 3 children from SawBatchPanel
+- `d8a5bf42` refactor(ui): extract 3 children from SawBatchPanel
+- `02901ea6` refactor(ui): decompose AdaptivePocketLab into 6 composables (−60.9%)
+- `4fa2b015` refactor(ui): decompose AdaptivePocketLab into 6 composables (−60.9%)
+- `2c3fe23e` fix(test): align useGuitarDimensions tests with actual composable behavior
+- `4a4f758d` fix(test): align useGuitarDimensions tests with actual composable behavior
+- `097fbf92` docs: add comprehensive toolbox evaluation (7.5/10)
+- `8cf05aab` docs: add comprehensive toolbox evaluation (7.5/10)
+- `29d15847` feat(testing): add composable tooling improvements
+- `c7c7660c` feat(testing): add composable tooling improvements
+- `65c6fdad` refactor(ui): extract CSS to module files + add saw contour composables
+- `e7bd62aa` refactor(ui): extract CSS to module files + add saw contour composables
+Files by surface:
+- docs: 1 paths
+  - A docs/TOOLBOX_EVALUATION.md
+- other: 45 paths
+  - A packages/client/src/components/bridge_calculator_panel/PreviewCard.vue
+  - A packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue
+  - A packages/client/src/components/art/rosette_compare_history/HistoryTable.vue
+  - A packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue
+  - A packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue
+  - A packages/client/src/components/saw_lab/saw_batch_panel/BatchSetupSection.vue
+  - A packages/client/src/components/saw_lab/saw_batch_panel/LearnedParamsDisplay.vue
+  - A packages/client/src/components/saw_lab/saw_batch_panel/SvgPreview.vue
+  - A packages/client/src/components/adaptive/composables/useCompareModal.ts
+  - A packages/client/src/components/adaptive/composables/useMachineProfiles.ts
+  - A packages/client/src/components/adaptive/composables/useOptimizer.ts
+  - A packages/client/src/components/adaptive/composables/usePocketPlanning.ts
+  - A packages/client/src/components/adaptive/composables/useRunLogging.ts
+  - A packages/client/src/components/adaptive/composables/useTrochoidSettings.ts
+  - A packages/client/src/composables/types.ts
+  - A packages/client/src/testing/withSetup.ts
+  - A packages/client/src/components/BlueprintImporter.module.css
+  - A packages/client/src/components/PostEditor.module.css
+  - A packages/client/src/components/guided/workflows/DxfToGcodeWorkflow.module.css
+  - A packages/client/src/components/rosette/RosetteEditorView.module.css
+  - A packages/client/src/components/saw_lab/SawBatchPanel.module.css
+  - A packages/client/src/components/saw_lab/SawSlicePanel.module.css
+  - A packages/client/src/components/saw_lab/composables/useSawContourApi.ts
+  - A packages/client/src/components/saw_lab/composables/useSawContourGcode.ts
+  - A packages/client/src/components/saw_lab/composables/useSawContourPath.ts
+  - A packages/client/src/views/QuickCutView.module.css
+  - A packages/client/src/views/tools/AcousticsIngestEvents.module.css
+  - M packages/client/src/components/BridgeCalculatorPanel.vue
+  - M packages/client/src/components/art/RosetteCompareHistory.vue
+  - M packages/client/src/components/saw_lab/SawBatchPanel.vue
+  - M packages/client/src/components/AdaptivePocketLab.vue
+  - M packages/client/src/components/adaptive/composables/index.ts
+  - M packages/client/src/components/adaptive/composables/usePocketSettings.ts
+  - M packages/client/src/testing/__tests__/toolbox-composables.test.ts
+  - M packages/client/.eslintrc.cjs
+  - M packages/client/src/composables/index.ts
+  - M packages/client/src/testing/index.ts
+  - M packages/client/src/components/BlueprintImporter.vue
+  - M packages/client/src/components/PostEditor.vue
+  - M packages/client/src/components/guided/workflows/DxfToGcodeWorkflow.vue
+  - … 5 more (see sessions.json / files.jsonl)
+Documents produced:
+- `docs/TOOLBOX_EVALUATION.md` — # Luthiers Toolbox Evaluation
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f3270a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b85f46c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59a70dcb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (be55ed92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8249e059)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8a5bf42)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02901ea6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4fa2b015)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c3fe23e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a4f758d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (097fbf92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8cf05aab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29d15847)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7c7660c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (65c6fdad)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e7bd62aa)
+
+### S074 — 2026-02-22T04:57:25-06:00 → 2026-02-23T00:44:03-06:00 (120 commits, 19.78h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `352cf3c0` refactor(toolbox): decompose CAMEssentialsLab.vue (923→509 lines)
+- `fde884be` refactor(toolbox): decompose CAMEssentialsLab.vue (923→509 lines)
+- `c04029a7` refactor(views): decompose SawLabDashboard.vue (924→652 lines)
+- `ce7ceaf8` refactor(views): decompose SawLabDashboard.vue (924→652 lines)
+- `026a2923` refactor(ui): decompose RmosLogViewerPanel.vue (867→445 lines)
+- `f563d7f5` refactor(ui): decompose RmosLogViewerPanel.vue (867→445 lines)
+- `5ffc7da3` refactor(ui): decompose RiskDashboardCrossLab.vue (948→276 lines)
+- `7d1a82ae` refactor(ui): decompose RiskDashboardCrossLab.vue (948→276 lines)
+- `a58a09b3` refactor(ui): decompose BusinessCalculator.vue (823→501 lines)
+- `fdc3895b` refactor(ui): decompose BusinessCalculator.vue (823→501 lines)
+- `490375a5` feat(cam): add pipeline-runner composables for CamPipelineRunner decomposition
+- `aa5944d2` feat(cam): add pipeline-runner composables for CamPipelineRunner decomposition
+- `5e0c6b58` refactor(ui): decompose ArtStudioBracing.vue into composables
+- `dc983c1c` refactor(ui): decompose ArtStudioBracing.vue into composables
+- `4280bd9e` refactor(ui): decompose BridgeLabView.vue into composables
+- `9f3650e3` refactor(ui): decompose BridgeLabView.vue into composables
+- `9697f11a` refactor(ui): extract workflow actions + CAM promotion from DesignFirstWorkflowPanel
+- `c0883e55` refactor(ui): extract workflow actions + CAM promotion from DesignFirstWorkflowPanel
+- `864f866e` refactor(ui): decompose AiImageGallery.vue into composables
+- `b44426df` refactor(ui): decompose AiImageGallery.vue into composables
+- `c398ce2f` refactor(ui): decompose CurveLabModal.vue into composables
+- `d6c42623` refactor(ui): decompose CurveLabModal.vue into composables
+- `3864f0b9` refactor(ui): decompose AudioAnalyzerViewer.vue into composables
+- `b487e065` refactor(ui): decompose AudioAnalyzerViewer.vue into composables
+- `34e9d140` refactor(ui): decompose JobIntHistoryPanel.vue into composables
+- `8e0de907` refactor(ui): decompose JobIntHistoryPanel.vue into composables
+- `109391c4` refactor(ui): decompose CamPipelineRunner.vue into composables (805→523 LOC)
+- `f8448121` refactor(ui): decompose CamPipelineRunner.vue into composables (805→523 LOC)
+- `14eecc89` refactor(ui): decompose ArtStudioRosetteCompare.vue into composables (699→407 LOC)
+- `a19854b5` refactor(ui): decompose ArtStudioRosetteCompare.vue into composables (699→407 LOC)
+- `70dd249d` refactor(ui): decompose CompareLabView.vue into composables (682→256 LOC)
+- `e5028c98` refactor(ui): decompose CompareLabView.vue into composables (682→256 LOC)
+- `1ce9c832` refactor(ui): decompose RmosRunViewerView.vue into composables (648→529 LOC)
+- `35416291` refactor(ui): decompose RmosRunViewerView.vue into composables (648→529 LOC)
+- `70c47ed3` refactor(ui): decompose AdaptiveKernelLab.vue into composables (641→396 LOC)
+- `df135515` refactor(ui): decompose AdaptiveKernelLab.vue into composables (641→396 LOC)
+- `2fe14ee8` refactor(ui): decompose SpectrumChartRenderer.vue into composables (640→265 LOC)
+- `b139130d` refactor(ui): decompose SpectrumChartRenderer.vue into composables (640→265 LOC)
+- `710898f8` refactor(ui): decompose LesPaulNeckGenerator.vue into composables (640→451 LOC)
+- `edae12b2` refactor(ui): decompose LesPaulNeckGenerator.vue into composables (640→451 LOC)
+- `91ed2ba9` refactor(generators): move LesPaulNeckGenerator to components/generators/neck/
+- `cc71405b` refactor(generators): move LesPaulNeckGenerator to components/generators/neck/
+- `802d0bd0` refactor(views): decompose MultiRunComparisonView into composables (662->213 LOC)
+- `c08b45a0` refactor(views): decompose MultiRunComparisonView into composables (662->213 LOC)
+- `79dc9f44` refactor(ui): decompose AdvisoryReviewPanel into composables
+- `fbe2c4ea` refactor(ui): decompose AdvisoryReviewPanel into composables
+- `093f8287` refactor(ui): decompose ArtStudioRelief into composables
+- `e8a5aaa5` refactor(ui): decompose ArtStudioRelief into composables
+- `6be12c72` refactor(ui): decompose WsiCurveRenderer into composables
+- `6e67d524` refactor(ui): decompose WsiCurveRenderer into composables
+- `75620413` refactor(ui): decompose RosetteCompareHistory into composables
+- `8d94dd78` refactor(ui): decompose RosetteCompareHistory into composables
+- `410f4bf7` refactor(ui): decompose TransferFunctionRenderer into composables
+- `58e74a8e` refactor(ui): decompose TransferFunctionRenderer into composables
+- `745db0ce` refactor(ui): decompose SnapshotComparePanel into composables
+- `95317d28` refactor(ui): decompose SnapshotComparePanel into composables
+- `6c93e7fb` refactor(ui): decompose ReliefKernelLab into composables
+- `92c66107` refactor(ui): decompose ReliefKernelLab into composables
+- `ceb2e0f5` refactor(ui): decompose RiskTimelineRelief.vue into composables (543 → 207 LOC)
+- `f1f1b27d` refactor(ui): decompose RiskTimelineRelief.vue into composables (543 → 207 LOC)
+- `2675e5f0` refactor(ui): decompose DrillingLab.vue into composables (547 → 267 LOC)
+- `6987a39b` refactor(ui): decompose DrillingLab.vue into composables (547 → 267 LOC)
+- `56ac5c5e` refactor(ui): decompose ArtStudioCanvas.vue into composables (474 → 230 LOC)
+- `d1445caf` refactor(ui): decompose ArtStudioCanvas.vue into composables (474 → 230 LOC)
+- `14c4fd39` refactor(ui): decompose ArtStudioHeadstock.vue into composables (510 → 266 LOC)
+- `8619ad8c` refactor(ui): decompose ArtStudioHeadstock.vue into composables (510 → 266 LOC)
+- `9781960e` refactor(ui): decompose ArtStudioInlay.vue into composables
+- `ced2aba6` refactor(ui): decompose ArtStudioInlay.vue into composables
+- `2e6ed7fd` refactor(ui): decompose BridgeCalculatorPanel.vue into composables (583 → 383 LOC)
+- `da2929be` refactor(ui): decompose BridgeCalculatorPanel.vue into composables (583 → 383 LOC)
+- `4c45174a` chore(scripts): add Vue component structure analyzer
+- `89748a1a` chore(scripts): add Vue component structure analyzer
+- `7c925b94` refactor(client): remove duplicate Vue components + fix type issues
+- `8bb34275` refactor(client): remove duplicate Vue components + fix type issues
+- `2c369f73` refactor(client): remove more duplicate/orphan Vue components
+- `a0cdb8e3` refactor(client): remove more duplicate/orphan Vue components
+- `5215941b` refactor(client): organize components into domain subdirectories
+- `e0b4302b` refactor(client): organize components into domain subdirectories
+- `05d78bec` refactor(client): decompose large Vue components into composables
+- `fb08bf15` refactor(client): decompose large Vue components into composables
+- `b60d57e9` feat(safety): add mandatory simulation gate for G-code exports (Priority #3)
+- `f543f2aa` feat(safety): add mandatory simulation gate for G-code exports (Priority #3)
+- `046a2aca` refactor: archive 9 dormant router files (Priority #4 - Prune Endpoints)
+- `13477c48` refactor: archive 9 dormant router files (Priority #4 - Prune Endpoints)
+- `7eefd217` chore: delete archived routers + remove dead optional imports
+- `cc144aab` chore: delete archived routers + remove dead optional imports
+- `8e51c9ce` refactor(routers): decompose pipeline_router.py god object
+- `9a5a23d5` refactor(routers): decompose pipeline_router.py god object
+- `830cb664` chore(tests): update technical debt baselines post-Wave 25
+- `b94a7cd9` chore(tests): update technical debt baselines post-Wave 25
+- `d8f752c4` fix(api): remove `from __future__ import annotations` to fix Pydantic v2 forward refs
+- `e2959c2a` fix(api): remove `from __future__ import annotations` to fix Pydantic v2 forward refs
+- `5a19f7c3` ci: update complexity baseline with 148 violations
+- `f1043577` ci: update complexity baseline with 148 violations
+- `2e332edf` fix(ci): normalize path separators in complexity check for cross-platform
+- `d2bb771f` fix(ci): normalize path separators in complexity check for cross-platform
+- `41071ec0` fix(ci): add path normalization to file size check + update baseline
+- `c1d0dfdd` fix(ci): add path normalization to file size check + update baseline
+- `397946f8` fix(ci): correct simulate_gcode endpoint URL in workflows
+- `a4b1afd6` fix(ci): correct simulate_gcode endpoint URL in workflows
+- `331e954b` fix(tests): correct import paths in test_dxf_security_patch.py
+- `55bace77` fix(tests): correct import paths in test_dxf_security_patch.py
+- `06358691` test: skip test_dxf_security_patch.py (API mismatch with actual implementation)
+- `61a98c74` test: skip test_dxf_security_patch.py (API mismatch with actual implementation)
+- `013ba7c2` test: skip test_llm_client_isolation.py (tested files don't exist)
+- `6178470a` test: skip test_llm_client_isolation.py (tested files don't exist)
+- `0ed5633d` test: fix broken tests (llm_client skip + RiskLevel assertion)
+- `beea5f60` test: fix broken tests (llm_client skip + RiskLevel assertion)
+- `402ae331` test: skip broken/incomplete tests to fix CI
+- `410a29b1` test: skip broken/incomplete tests to fix CI
+- `13971da4` fix(ci): add /api/vision/generate to API calls baseline
+- `59990174` fix(ci): add /api/vision/generate to API calls baseline
+- `77fe3c60` ci: trigger API Contract Check on baseline changes
+- `89c3f138` ci: trigger API Contract Check on baseline changes
+- `4b214fa0` ci: add workflow_dispatch + self-trigger for API Contract Check
+- `908c922a` ci: add workflow_dispatch + self-trigger for API Contract Check
+- `5157a729` fix(docker): update client Dockerfile paths to packages/client/
+- `817b7b2f` fix(docker): update client Dockerfile paths to packages/client/
+- `2d76d08a` fix(client): add missing CamBridgePreflightPanel CSS module
+- `9d708566` fix(client): add missing CamBridgePreflightPanel CSS module
+Files by surface:
+- docs: 1 paths
+  - M ROUTER_MAP.md
+- other: 353 paths
+  - A packages/client/src/components/toolbox/CAMEssentialsLab.module.css
+  - A packages/client/src/components/toolbox/cam-essentials/index.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useContourOperation.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useDrillingOperation.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useGcodeExport.ts
+  - A packages/client/src/components/toolbox/cam-essentials/usePatternOperation.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useProbeOperation.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useRetractOperation.ts
+  - A packages/client/src/components/toolbox/cam-essentials/useRoughingOperation.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/index.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts
+  - A packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts
+  - A packages/client/src/components/rmos/log-viewer/RmosLogViewer.module.css
+  - A packages/client/src/components/rmos/log-viewer/index.ts
+  - A packages/client/src/components/rmos/log-viewer/logFormatters.ts
+  - A packages/client/src/components/rmos/log-viewer/useLogEntries.ts
+  - A packages/client/src/components/rmos/log-viewer/useLogFilters.ts
+  - A packages/client/src/components/rmos/log-viewer/useLogPolling.ts
+  - A packages/client/src/components/rmos/log-viewer/useLogSelection.ts
+  - A packages/client/src/views/art/risk-dashboard/index.ts
+  - A packages/client/src/views/art/risk-dashboard/riskFormatters.ts
+  - A packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts
+  - A packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts
+  - A packages/client/src/views/art/risk-dashboard/useRiskExports.ts
+  - A packages/client/src/views/art/risk-dashboard/useRiskFilters.ts
+  - A packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts
+  - A packages/client/src/components/toolbox/business-calculator/BusinessCalculator.module.css
+  - A packages/client/src/components/toolbox/business-calculator/index.ts
+  - A packages/client/src/components/toolbox/business-calculator/useCashflowCalculator.ts
+  - A packages/client/src/components/toolbox/business-calculator/useCostingCalculator.ts
+  - A packages/client/src/components/toolbox/business-calculator/useGrowthCalculator.ts
+  - A packages/client/src/components/toolbox/business-calculator/usePricingCalculator.ts
+  - A packages/client/src/components/toolbox/business-calculator/useStartupCalculator.ts
+  - A packages/client/src/components/cam/pipeline-runner/index.ts
+  - A packages/client/src/components/cam/pipeline-runner/pipelineTypes.ts
+  - A packages/client/src/components/cam/pipeline-runner/usePipelineControls.ts
+  - A packages/client/src/components/cam/pipeline-runner/usePipelineExecution.ts
+  - … 313 more (see sessions.json / files.jsonl)
+- tests: 13 paths
+  - A services/api/tests/test_simulation_gate.py
+  - M services/api/tests/test_mvp_dxf_to_gcode_grbl_golden.py
+  - M services/api/tests/test_technical_debt_gates.py
+  - M services/api/app/tests/test_dxf_security_patch.py
+  - M services/api/app/tests/ai_graphics/test_llm_client_isolation.py
+  - M services/api/app/tests/rmos/test_safety_policy.py
+  - M services/api/app/tests/calculators/test_fret_slots_cam_guard.py
+  - M services/api/app/tests/calculators/test_wiring.py
+  - M services/api/app/tests/test_art_studio_cam_promotion_contract.py
+  - M services/api/app/tests/test_art_studio_promotion_intent_export_contract.py
+  - M services/api/app/tests/test_cam_fret_slots_export.py
+  - M services/api/app/tests/test_data_registry.py
+  - M services/api/app/tests/test_e2e_workflow_integration.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (352cf3c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fde884be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c04029a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ce7ceaf8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (026a2923)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f563d7f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ffc7da3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d1a82ae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a58a09b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fdc3895b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (490375a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aa5944d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e0c6b58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc983c1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4280bd9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f3650e3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9697f11a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c0883e55)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (864f866e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b44426df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c398ce2f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6c42623)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3864f0b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b487e065)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (34e9d140)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e0de907)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (109391c4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8448121)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14eecc89)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a19854b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (70dd249d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e5028c98)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ce9c832)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (35416291)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (70c47ed3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df135515)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fe14ee8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b139130d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (710898f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (edae12b2)
+- … 72 more
+
+### S075 — 2026-02-23T06:55:15-06:00 → 2026-02-23T14:38:16-06:00 (62 commits, 7.72h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `b5110b32` fix(ci): fix remaining failing workflows
+- `df0e1604` fix(ci): fix remaining failing workflows
+- `8712e20d` fix(ci): fix Technical Debt Gates + verify-policy workflows
+- `cda62d25` fix(ci): fix Technical Debt Gates + verify-policy workflows
+- `358eb9e9` fix(ci): replace Makefile heredocs with script files
+- `8aa95385` fix(ci): replace Makefile heredocs with script files
+- `4f76eb35` fix(ci): correct module names in check-boundaries target
+- `952ccc18` fix(ci): correct module names in check-boundaries target
+- `0745a86f` fix(ci): use baseline mode for boundary imports check
+- `b302dff9` fix(ci): use baseline mode for boundary imports check
+- `0193d3d3` fix(ci): regenerate fence_baseline.json
+- `d779f252` fix(ci): regenerate fence_baseline.json
+- `64c56aac` fix(ci): legacy_usage_gate returns 0 for within-budget
+- `c636e358` fix(ci): legacy_usage_gate returns 0 for within-budget
+- `03d16d9c` fix(tests): skip agentic tests + update large files target
+- `9f7ff8d8` fix(tests): skip agentic tests + update large files target
+- `4b0e0a58` fix(ci): skip missing test files in spine and rmos workflows
+- `4ce68491` fix(ci): skip missing test files in spine and rmos workflows
+- `1264b6b4` fix(ci): update RMOS smoke test to use v1 API endpoints
+- `f3a9fd60` fix(ci): update RMOS smoke test to use v1 API endpoints
+- `96191b30` feat(governance): add /api/_meta/routing-truth endpoint for CI gate
+- `ceebcfb1` feat(governance): add /api/_meta/routing-truth endpoint for CI gate
+- `8a3b99c1` ci: update router count baseline to reflect Wave 22-25 additions
+- `f350d75a` ci: update router count baseline to reflect Wave 22-25 additions
+- `55c0c404` ci: add debug logging to server-env-check workflow
+- `b3d6f57e` ci: add debug logging to server-env-check workflow
+- `539a6582` ci: mark planned RMOS endpoints as not required in endpoint_truth
+- `bf7c0e2b` ci: mark planned RMOS endpoints as not required in endpoint_truth
+- `28650e8c` ci: move planned RMOS endpoints to LEGACY lane
+- `b99ee7f8` ci: move planned RMOS endpoints to LEGACY lane
+- `a50d2c88` fix(ci): create data directory before Docker Compose up
+- `ade25f17` fix(ci): create data directory before Docker Compose up
+- `623dc8c2` fix(api): support CORS_ORIGINS env var (comma-separated list)
+- `93cd0bfb` fix(api): support CORS_ORIGINS env var (comma-separated list)
+- `0ec92a04` ci: update file size baseline for Wave 25-26 files
+- `c1445825` ci: update file size baseline for Wave 25-26 files
+- `5ecf8221` ci: trigger File Size Gate on baseline/script changes
+- `f75ecb05` ci: trigger File Size Gate on baseline/script changes
+- `2f2d6eda` fix(ci): create data directory in Core CI containers-smoke job
+- `a1c61769` fix(ci): create data directory in Core CI containers-smoke job
+- `2d54ca33` chore: remove 4 unused stub endpoints + add stub debt report
+- `5d60afc0` chore: remove 4 unused stub endpoints + add stub debt report
+- `07b4bd10` fix(api): resolve 2 route path conflicts causing endpoint shadowing
+- `2c9e8ed6` fix(api): resolve 2 route path conflicts causing endpoint shadowing
+- `2f9d3e2f` fix(api): resolve 8 route conflicts preventing route shadowing
+- `d97d2f5c` fix(api): resolve 8 route conflicts preventing route shadowing
+- `7908f461` feat(ci): add stub endpoint scanner for technical debt tracking
+- `d2e3c3e5` feat(ci): add stub endpoint scanner for technical debt tracking
+- `64cd8c7b` feat(ci): add comprehensive API wiring verification tool
+- `9cef002a` feat(ci): add comprehensive API wiring verification tool
+- `039f2089` ci: add API Wiring Gate workflow
+- `9151a8eb` ci: add API Wiring Gate workflow
+- `6a80f14e` fix: add rosette_feasibility_scorer.py to version control
+- `ab9b6840` fix: add rosette_feasibility_scorer.py to version control
+- `1248ccd7` refactor(ui): decompose DesignFirstWorkflowPanel (680 → 322 LOC)
+- `ec9207eb` refactor(ui): decompose DesignFirstWorkflowPanel (680 → 322 LOC)
+- `15c9deb9` feat(ci): add Vue decomposition analyzer for LOC enforcement
+- `2186cadb` feat(ci): add Vue decomposition analyzer for LOC enforcement
+- `3024ecb8` ci: add Vue decomposition gate workflow
+- `a8adf2fa` ci: add Vue decomposition gate workflow
+- `aae90454` ci: make Vue decomposition gate blocking
+- `ec96ef13` ci: make Vue decomposition gate blocking
+Files by surface:
+- docs: 1 paths
+  - A docs/STUB_DEBT_REPORT.md
+- other: 45 paths
+  - A services/api/app/agentic/__init__.py
+  - A services/api/app/agentic/spine/__init__.py
+  - A services/api/app/agentic/spine/moments.py
+  - A services/api/app/agentic/spine/replay.py
+  - A scripts/smoke/helix_smoke.py
+  - A scripts/smoke/save_helix_results.py
+  - A services/api/app/governance/meta_router.py
+  - A scripts/ci/check_route_conflicts.py
+  - A scripts/ci/scan_stub_endpoints.py
+  - A scripts/ci/verify_api_wiring.py
+  - A .github/workflows/api_wiring_gate.yml
+  - A services/api/app/art_studio/services/rosette_feasibility_scorer.py
+  - A packages/client/src/components/rosette/DownloadOverridesPanel.vue
+  - A packages/client/src/components/rosette/ExportUrlPreview.vue
+  - A packages/client/src/components/rosette/IntentPreviewPanel.vue
+  - A packages/client/src/components/rosette/WorkflowActionsBar.vue
+  - A packages/client/src/components/rosette/WorkflowHistoryPanel.vue
+  - A scripts/ci/analyze_vue_decomposition.py
+  - A .github/workflows/vue_decomposition_gate.yml
+  - M services/api/app/ci/complexity_baseline.json
+  - M services/api/app/main.py
+  - M tools/verify_policy.py
+  - M services/api/app/ci/file_sizes_baseline.json
+  - M .gitattributes
+  - M Makefile
+  - M services/api/app/ci/fence_baseline.json
+  - M services/api/app/ci/legacy_usage_gate.py
+  - M .github/workflows/rmos_ci.yml
+  - M .github/workflows/spine-ci.yml
+  - M scripts/rmos_ci_test.py
+  - M ci/router_count_baseline.json
+  - M .github/workflows/server-env-check.yml
+  - M services/api/app/data/endpoint_truth.json
+  - M ci/file_size_baseline.json
+  - M .github/workflows/file_size_gate.yml
+  - M .github/workflows/core_ci.yml
+  - M services/api/app/cam/routers/stub_routes.py
+  - M services/api/app/rmos/stub_routes.py
+  - M services/api/app/routers/misc_stub_routes.py
+  - M packages/client/src/components/generators/neck/les_paul_neck/composables/useLesPaulNeckPresets.ts
+  - … 5 more (see sessions.json / files.jsonl)
+- tests: 3 paths
+  - M services/api/tests/test_golden_m1_replay.py
+  - M services/api/tests/test_replay_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `docs/STUB_DEBT_REPORT.md` — # Stub Debt Report
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5110b32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df0e1604)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8712e20d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cda62d25)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (358eb9e9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8aa95385)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4f76eb35)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (952ccc18)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0745a86f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b302dff9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0193d3d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d779f252)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (64c56aac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c636e358)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (03d16d9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f7ff8d8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b0e0a58)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ce68491)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1264b6b4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3a9fd60)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96191b30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ceebcfb1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a3b99c1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f350d75a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55c0c404)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b3d6f57e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (539a6582)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf7c0e2b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28650e8c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b99ee7f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a50d2c88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ade25f17)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (623dc8c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93cd0bfb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ec92a04)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1445825)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5ecf8221)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f75ecb05)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2f2d6eda)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a1c61769)
+- … 22 more
+
+### S076 — 2026-02-23T18:56:35-06:00 → 2026-02-24T03:03:43-06:00 (64 commits, 8.12h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `1c90313f` fix(client): resolve all TypeScript type errors + decompose large views
+- `8432a715` fix(client): resolve all TypeScript type errors + decompose large views
+- `57487117` ci: make Vue Decomposition Gate informational only
+- `586c13c7` ci: make Vue Decomposition Gate informational only
+- `9761a5b1` refactor(ui): decompose ArtStudioBracing.vue (622 → 140 LOC)
+- `fe253c3c` refactor(ui): decompose ArtStudioBracing.vue (622 → 140 LOC)
+- `a111c496` refactor(ui): decompose ArtStudioRosette.vue (534 → 189 LOC)
+- `f48a1fc3` refactor(ui): decompose ArtStudioRosette.vue (534 → 189 LOC)
+- `2f7ca4a4` feat(ui): add DXF preflight validator composables
+- `5770076d` feat(ui): add DXF preflight validator composables
+- `17a30da9` refactor(ui): wire DxfPreflightValidator to use composables (536 → 345 LOC)
+- `a369160b` refactor(ui): wire DxfPreflightValidator to use composables (536 → 345 LOC)
+- `a08403f0` docs: add critical system design review (2026-02-23)
+- `b53b2cc6` docs: add critical system design review (2026-02-23)
+- `1579731c` docs: add authoritative product definition
+- `1e8bbe87` docs: add authoritative product definition
+- `4250548e` docs: add architecture migration assessment
+- `5371dbe6` docs: add architecture migration assessment
+- `62ccfc2a` feat(analyzer): add interpretation layer for tap_tone_pi integration
+- `ae4518af` feat(analyzer): add interpretation layer for tap_tone_pi integration
+- `278decca` feat(business): add Business Startup Suite module
+- `f61b68de` feat(business): add Business Startup Suite module
+- `394ccca4` feat(business): wire business router into router_registry
+- `fd55ffe3` feat(business): wire business router into router_registry
+- `cf54d1c0` feat(analyzer): wire analyzer router into router_registry
+- `cfc03c96` feat(analyzer): wire analyzer router into router_registry
+- `625dfdc7` feat(business): add Engineering Cost Estimator module
+- `f4cee5a1` feat(business): add Engineering Cost Estimator module
+- `3785169a` fix(business): correct WBS attribute names in estimator endpoint
+- `aaa957a1` fix(business): correct WBS attribute names in estimator endpoint
+- `66de363e` feat(client): add Engineering Estimator Vue wrapper (Pro feature)
+- `a02e214d` feat(client): add Engineering Estimator Vue wrapper (Pro feature)
+- `0b687e8f` chore: update art presets, debt metrics, and add design review doc
+- `587cdd11` chore: update art presets, debt metrics, and add design review doc
+- `a6739828` chore(api): delete 21 dormant router files (85 dead routes)
+- `b5f48a4c` chore(api): delete 21 dormant router files (85 dead routes)
+- `3c66c52b` refactor(rmos): delete runs v1, migrate to runs_v2
+- `456d9148` refactor(rmos): delete runs v1, migrate to runs_v2
+- `8648abe4` fix(rmos): migrate RunArtifact instantiations to runs_v2 schema
+- `9fe1622a` fix(rmos): migrate RunArtifact instantiations to runs_v2 schema
+- `901a70a4` refactor(ui): decompose EngineeringEstimatorView.vue (841 → 622 LOC)
+- `f4b8b497` refactor(ui): decompose EngineeringEstimatorView.vue (841 → 622 LOC)
+- `1c394074` docs: update Vue decomposition guide with current status
+- `b4914357` docs: update Vue decomposition guide with current status
+- `1b4f1cbe` refactor(ui): decompose CurveLabModal.vue (590 → 183 LOC, -69%)
+- `cbe0d7d1` refactor(ui): decompose CurveLabModal.vue (590 → 183 LOC, -69%)
+- `887e335e` docs: update decomposition guide with CurveLabModal progress
+- `9bc22186` docs: update decomposition guide with CurveLabModal progress
+- `34c926e7` refactor(ui): extract WBS + Materials tabs from EngineeringEstimatorView (623 → 530 LOC)
+- `dcb124ad` refactor(ui): extract WBS + Materials tabs from EngineeringEstimatorView (623 → 530 LOC)
+- `16fb4187` docs: update decomposition guide with EngineeringEstimatorView progress
+- `3a20fcd0` docs: update decomposition guide with EngineeringEstimatorView progress
+- `57c371e6` refactor(ui): extract 3 HIGH candidates from ArtStudioInlay.vue
+- `dbbeb274` refactor(ui): extract 3 HIGH candidates from ArtStudioInlay.vue
+- `c354859d` docs: update decomposition guide with ArtStudioInlay status
+- `fcde3ea9` docs: update decomposition guide with ArtStudioInlay status
+- `325663fa` refactor(ui): extract 2 HIGH candidates from CamPipelineRunner.vue
+- `d9cda490` refactor(ui): extract 2 HIGH candidates from CamPipelineRunner.vue
+- `340495d9` docs: update decomposition guide with CamPipelineRunner status
+- `b84926d3` docs: update decomposition guide with CamPipelineRunner status
+- `0d491fa4` refactor(ui): extract 3 HIGH candidates from AdvisoryReviewPanel.vue
+- `4da7d398` refactor(ui): extract 3 HIGH candidates from AdvisoryReviewPanel.vue
+- `d2e3bef0` docs: update decomposition guide with AdvisoryReviewPanel status
+- `e177f403` docs: update decomposition guide with AdvisoryReviewPanel status
+Files by surface:
+- docs: 7 paths
+  - A docs/SYSTEM_DESIGN_REVIEW_2026-02-23.md
+  - A docs/PRODUCT_DEFINITION.md
+  - A docs/ARCHITECTURE_MIGRATION_ASSESSMENT.md
+  - A docs/ANALYZER_BOUNDARY_SPEC.md
+  - A docs/BUSINESS_SUITE_SPEC.md
+  - A docs/DESIGN_REVIEW_2026-02-22.md
+  - M docs/VUE_DECOMPOSITION_GUIDE.md
+- other: 165 paths
+  - A packages/client/src/views/Runs/run_variants_review/SelectedVariantPanel.vue
+  - A packages/client/src/views/Runs/run_variants_review/VariantListPanel.vue
+  - A packages/client/src/views/adaptive_lab/AdaptiveParamsForm.vue
+  - A packages/client/src/views/adaptive_lab/DxfImportPanel.vue
+  - A packages/client/src/views/adaptive_lab/LoopsJsonEditor.vue
+  - A packages/client/src/views/adaptive_lab/PipelineActions.vue
+  - A packages/client/src/views/ai_images/AiContextPanel.vue
+  - A packages/client/src/views/ai_images/GenerateTabPanel.vue
+  - A packages/client/src/views/bridge_lab/AdaptiveParamsPanel.vue
+  - A packages/client/src/views/bridge_lab/SimulatePanel.vue
+  - A packages/client/src/views/cam/risk_preset_compare/ControlsPanel.vue
+  - A packages/client/src/views/cnc_production/JobHistoryPanel.vue
+  - A packages/client/src/views/offset_lab/PassListPanel.vue
+  - A packages/client/src/views/preset_hub/JobTooltip.vue
+  - A packages/client/src/views/preset_hub/PresetCard.vue
+  - A packages/client/src/views/preset_hub/PresetFormModal.vue
+  - A packages/client/src/views/rmos_run_viewer/AdvisoryExplanationPanel.vue
+  - A packages/client/src/views/rmos_run_viewer/AttachmentsSection.vue
+  - A packages/client/src/views/rmos_run_viewer/HashesSection.vue
+  - A packages/client/src/views/rmos_run_viewer/RunInfoSection.vue
+  - A packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue
+  - A packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue
+  - A packages/client/src/views/saw_lab_dashboard/DashboardControls.vue
+  - A packages/client/src/views/saw_lab_dashboard/RiskActionsModal.vue
+  - A packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue
+  - A packages/client/src/views/saw_lab_dashboard/SummaryCards.vue
+  - A packages/client/src/views/tools/acoustics_ingest/EventDetailModal.vue
+  - A packages/client/src/views/tools/audio_analyzer_library/BrowseTable.vue
+  - A packages/client/src/views/tools/audio_analyzer_runs/RunDetailPanel.vue
+  - A packages/client/src/views/tools/audio_analyzer_runs/RunsListPanel.vue
+  - A packages/client/src/views/tools/audio_analyzer_viewer/PreviewPanel.vue
+  - A packages/client/src/views/tools/audio_analyzer_viewer/ValidationReportCard.vue
+  - A packages/client/src/components/art/bracing/BraceBatchPanel.vue
+  - A packages/client/src/components/art/bracing/BraceResultsPanel.vue
+  - A packages/client/src/components/art/bracing/BraceSinglePanel.vue
+  - A packages/client/src/components/art/rosette/RosetteParametersPanel.vue
+  - A packages/client/src/components/art/rosette/RosettePreviewPanel.vue
+  - A packages/client/src/components/art/rosette/index.ts
+  - A packages/client/src/components/toolbox/dxf-preflight/index.ts
+  - A packages/client/src/components/toolbox/dxf-preflight/types.ts
+  - … 125 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - M services/api/tests/test_plan_choose_persists_decision_payload_unit.py
+Documents produced:
+- `docs/SYSTEM_DESIGN_REVIEW_2026-02-23.md` — UNKNOWN
+- `docs/PRODUCT_DEFINITION.md` — # Luthiers-ToolBox: Product Definition
+- `docs/ARCHITECTURE_MIGRATION_ASSESSMENT.md` — # Architecture Migration Assessment
+- `docs/ANALYZER_BOUNDARY_SPEC.md` — UNKNOWN
+- `docs/BUSINESS_SUITE_SPEC.md` — UNKNOWN
+- `docs/DESIGN_REVIEW_2026-02-22.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1c90313f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8432a715)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (57487117)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (586c13c7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9761a5b1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe253c3c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a111c496)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f48a1fc3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2f7ca4a4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5770076d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (17a30da9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a369160b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a08403f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b53b2cc6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1579731c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1e8bbe87)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4250548e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5371dbe6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (62ccfc2a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae4518af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (278decca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f61b68de)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (394ccca4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fd55ffe3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cf54d1c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cfc03c96)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (625dfdc7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f4cee5a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66de363e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a02e214d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b687e8f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (587cdd11)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a6739828)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5f48a4c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c66c52b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (456d9148)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8648abe4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9fe1622a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (901a70a4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f4b8b497)
+- … 12 more
+
+### S077 — 2026-02-24T07:28:42-06:00 → 2026-02-24T19:20:44-06:00 (118 commits, 11.87h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `7443cf93` refactor(ui): extract 3 HIGH candidates from CAMEssentialsLab.vue
+- `ca7c2a41` refactor(ui): extract 3 HIGH candidates from CAMEssentialsLab.vue
+- `e5a8e189` docs: update decomposition guide with CAMEssentialsLab (-52%)
+- `e63e5c94` docs: update decomposition guide with CAMEssentialsLab (-52%)
+- `9cc3c97a` refactor(ui): extract 3 HIGH candidates from VisionAttachToRunWidget.vue
+- `d8f4c7a3` refactor(ui): extract 3 HIGH candidates from VisionAttachToRunWidget.vue
+- `31a7b985` docs: update decomposition guide with VisionAttachToRunWidget (-36%)
+- `eb8e7393` docs: update decomposition guide with VisionAttachToRunWidget (-36%)
+- `e9711d1a` refactor(ui): extract AssetQuickOpsPanel from AiImageGallery.vue
+- `fe0ce2ca` refactor(ui): extract AssetQuickOpsPanel from AiImageGallery.vue
+- `1bb0c029` docs: update decomposition guide with AiImageGallery (-8%)
+- `7d33eb97` docs: update decomposition guide with AiImageGallery (-8%)
+- `a8a06d6e` refactor(ui): extract CalculatorResultCards from ArtStudioCalculatorDebugPanel.vue
+- `ad050965` refactor(ui): extract CalculatorResultCards from ArtStudioCalculatorDebugPanel.vue
+- `895ca827` docs: update decomposition guide with ArtStudioCalculatorDebugPanel (-35%)
+- `a10b680c` docs: update decomposition guide with ArtStudioCalculatorDebugPanel (-35%)
+- `3564c7d3` refactor(curvelab): extract mode panels to reduce CurveLab.vue LOC
+- `9f068bd5` refactor(curvelab): extract mode panels to reduce CurveLab.vue LOC
+- `ade331f7` docs: add CurveLab mode-panels extraction to decomposition guide
+- `d8e3ed73` docs: add CurveLab mode-panels extraction to decomposition guide
+- `2651f460` refactor(toolbox): extract mode panels from AdaptivePoly.vue
+- `95b3c733` refactor(toolbox): extract mode panels from AdaptivePoly.vue
+- `2bd31d42` docs: add AdaptivePoly mode panels extraction to decomposition guide
+- `88eadacc` docs: add AdaptivePoly mode panels extraction to decomposition guide
+- `10214d49` refactor(compare): extract skeleton and layers from DualSvgDisplay.vue
+- `48df7670` refactor(compare): extract skeleton and layers from DualSvgDisplay.vue
+- `2c68eac9` docs: add DualSvgDisplay extraction to decomposition guide
+- `a2044dbf` docs: add DualSvgDisplay extraction to decomposition guide
+- `66b7b053` refactor(ui): extract MaterialEditorCard from MixedMaterialStripFamilyEditor
+- `786e576e` refactor(ui): extract MaterialEditorCard from MixedMaterialStripFamilyEditor
+- `87140b87` docs: update decomposition guide with MixedMaterialStripFamilyEditor extraction
+- `8bb7dc6d` docs: update decomposition guide with MixedMaterialStripFamilyEditor extraction
+- `27c6f4f3` refactor(ui): extract GcodeOutputPanel from PolygonOffsetLab
+- `788bb1bd` refactor(ui): extract GcodeOutputPanel from PolygonOffsetLab
+- `a8697a96` docs: update decomposition guide with PolygonOffsetLab extraction
+- `c6cd66a5` docs: update decomposition guide with PolygonOffsetLab extraction
+- `b58914cc` refactor(ui): extract BenchResultsPanel from AdaptiveBenchLab
+- `e84b2e84` refactor(ui): extract BenchResultsPanel from AdaptiveBenchLab
+- `21bdfd6f` docs: update decomposition guide with AdaptiveBenchLab extraction
+- `38d1d375` docs: update decomposition guide with AdaptiveBenchLab extraction
+- `0772a0df` refactor(ui): extract OperationHistoryPanel from RmosOperationE2EPanel
+- `66869a90` refactor(ui): extract OperationHistoryPanel from RmosOperationE2EPanel
+- `3f3a6b19` docs: update decomposition guide with RmosOperationE2EPanel extraction
+- `9553db65` docs: update decomposition guide with RmosOperationE2EPanel extraction
+- `4db7c95b` refactor(ui): extract SnapshotCard from CompareOpenPanel.vue
+- `95149f26` refactor(ui): extract SnapshotCard from CompareOpenPanel.vue
+- `ad1b2692` docs: update decomposition guide with CompareOpenPanel extraction
+- `d89a4f67` docs: update decomposition guide with CompareOpenPanel extraction
+- `94f41291` refactor(ui): extract CloneToPresetForm from JobIntHistoryPanel.vue
+- `b5823136` refactor(ui): extract CloneToPresetForm from JobIntHistoryPanel.vue
+- `13ab2971` docs: update decomposition guide with JobIntHistoryPanel extraction
+- `67df925d` docs: update decomposition guide with JobIntHistoryPanel extraction
+- `623d46e7` refactor(ui): extract PipelineStatsGrid from BlueprintPresetPanel.vue
+- `b0f84081` refactor(ui): extract PipelineStatsGrid from BlueprintPresetPanel.vue
+- `215cb700` docs: update decomposition guide with BlueprintPresetPanel extraction
+- `947287d2` docs: update decomposition guide with BlueprintPresetPanel extraction
+- `b326bc56` refactor(ui): extract EventMetadataDisplay from LiveMonitor.vue
+- `ba780e1c` refactor(ui): extract EventMetadataDisplay from LiveMonitor.vue
+- `e88465ed` docs: add LiveMonitor.vue decomposition to guide
+- `f219c14c` docs: add LiveMonitor.vue decomposition to guide
+- `0f670b40` refactor(ui): extract InstrumentGeometryForm from ArtStudioSidebar.vue
+- `29c6ae65` refactor(ui): extract InstrumentGeometryForm from ArtStudioSidebar.vue
+- `a2f71c41` docs: add ArtStudioSidebar.vue decomposition to guide
+- `ca3cf0e9` docs: add ArtStudioSidebar.vue decomposition to guide
+- `18f16bf4` refactor(ui): extract RingNudgePanel + JumpHUD from RosetteEditorView.vue
+- `bc1d99c8` refactor(ui): extract RingNudgePanel + JumpHUD from RosetteEditorView.vue
+- `bbe9aa99` docs: add RosetteEditorView.vue decomposition to guide
+- `f2190237` docs: add RosetteEditorView.vue decomposition to guide
+- `2d4be455` refactor(ui): extract ToolCard + DesignPhaseSection from GuitarDesignHub
+- `33779186` refactor(ui): extract ToolCard + DesignPhaseSection from GuitarDesignHub
+- `7c920793` docs: update decomposition guide with GuitarDesignHub extraction
+- `8f0903c1` docs: update decomposition guide with GuitarDesignHub extraction
+- `49b27350` refactor(ui): extract BurstControlsPanel from FinishingDesigner
+- `4b9374a8` refactor(ui): extract BurstControlsPanel from FinishingDesigner
+- `77b02672` docs: update decomposition guide with FinishingDesigner extraction
+- `f4db8a5b` docs: update decomposition guide with FinishingDesigner extraction
+- `97c442d3` refactor(ui): extract ImageActionsPanel + ImageSessionStats from AiImageProperties
+- `a4523084` refactor(ui): extract ImageActionsPanel + ImageSessionStats from AiImageProperties
+- `850d52f4` docs: update decomposition guide with AiImageProperties extraction
+- `b71ceb6c` docs: update decomposition guide with AiImageProperties extraction
+- `abe0ef4d` refactor(ui): extract VariantCard from VariantReviewPanel (445 → 273 LOC, -39%)
+- `dc54c118` refactor(ui): extract VariantCard from VariantReviewPanel (445 → 273 LOC, -39%)
+- `0a464211` docs: add VariantReviewPanel extraction to decomposition guide
+- `1a7d787e` docs: add VariantReviewPanel extraction to decomposition guide
+- `10d97759` refactor(ui): extract PresetColumn from ArtPresetCompareAB (449 → 189 LOC, -58%)
+- `786efa45` refactor(ui): extract PresetColumn from ArtPresetCompareAB (449 → 189 LOC, -58%)
+- `0eb9bb7a` docs: add ArtPresetCompareAB extraction to decomposition guide
+- `666c0a3d` docs: add ArtPresetCompareAB extraction to decomposition guide
+- `1a7987ba` refactor(ui): extract PlacementControlsPanel from PlacementPreviewPanel
+- `d5fa8761` refactor(ui): extract PlacementControlsPanel from PlacementPreviewPanel
+- `986da28e` docs: update decomposition guide with PlacementControlsPanel extraction
+- `dbe07cc7` docs: update decomposition guide with PlacementControlsPanel extraction
+- `35bb2fa9` refactor(ui): extract AttemptsTable and RunsTable from RmosAiLogViewer
+- `c00c1cfc` refactor(ui): extract AttemptsTable and RunsTable from RmosAiLogViewer
+- `327b89ca` docs: update decomposition guide with RmosAiLogViewer extraction
+- `6deae086` docs: update decomposition guide with RmosAiLogViewer extraction
+- `464b3c52` refactor(ui): extract VectorizationControls and VectorizationResults from Phase2VectorizationPanel
+- `fa87c97d` refactor(ui): extract VectorizationControls and VectorizationResults from Phase2VectorizationPanel
+- `b789687d` docs: update decomposition guide with Phase2VectorizationPanel extraction
+- `dc42eee3` docs: update decomposition guide with Phase2VectorizationPanel extraction
+- `7258cf9f` refactor(ui): extract CamParametersCard and CamResultsCard from Phase3CamPanel
+- `a177e686` refactor(ui): extract CamParametersCard and CamResultsCard from Phase3CamPanel
+- `459b1702` docs: update decomposition guide with Phase3CamPanel extraction
+- `afa7cb0a` docs: update decomposition guide with Phase3CamPanel extraction
+- `47672cbb` refactor(ui): extract SawSlicePanel child components (559 -> 244 LOC, -56%)
+- `8c0b7bda` refactor(ui): extract SawSlicePanel child components (559 -> 244 LOC, -56%)
+- `4a2f65e0` docs: update decomposition guide with SawSlicePanel extraction
+- `c10ab19f` docs: update decomposition guide with SawSlicePanel extraction
+- `805289b6` refactor(client): extract ToolConfigGrid and ToolpathPreviewSvg from BlueprintPresetPanel
+- `b1033145` refactor(client): extract ToolConfigGrid and ToolpathPreviewSvg from BlueprintPresetPanel
+- `0be2a448` refactor(ui): extract BusinessCalculator tab panels (502→169 LOC)
+- `1f26c6a5` refactor(ui): extract BusinessCalculator tab panels (502→169 LOC)
+- `a49d3730` refactor(ui): decompose RadiusDishDesigner.vue into 4 child components
+- `e122938a` refactor(ui): decompose RadiusDishDesigner.vue into 4 child components
+- `190b1ee0` refactor(ui): decompose AdaptiveBenchLab.vue (489 → 100 LOC, -79%)
+- `a34d331f` refactor(ui): decompose AdaptiveBenchLab.vue (489 → 100 LOC, -79%)
+- `823f8758` refactor(ui): extract rosette-compare composables for future adoption
+- `b4d60cab` refactor(ui): extract rosette-compare composables for future adoption
+Files by surface:
+- docs: 1 paths
+  - M docs/VUE_DECOMPOSITION_GUIDE.md
+- other: 112 paths
+  - A packages/client/src/components/toolbox/cam-essentials/PatternOperationCard.vue
+  - A packages/client/src/components/toolbox/cam-essentials/ProbeOperationCard.vue
+  - A packages/client/src/components/toolbox/cam-essentials/RetractOperationCard.vue
+  - A packages/client/src/features/ai_images/vision_attach/AttachActionSection.vue
+  - A packages/client/src/features/ai_images/vision_attach/GeneratedAssetsSection.vue
+  - A packages/client/src/features/ai_images/vision_attach/RunSelectionSection.vue
+  - A packages/client/src/features/ai_images/components/AssetQuickOpsPanel.vue
+  - A packages/client/src/components/artstudio/calculator-debug/CalculatorResultCards.vue
+  - A packages/client/src/components/curvelab/mode-panels/ClothoidModePanel.vue
+  - A packages/client/src/components/curvelab/mode-panels/FairModePanel.vue
+  - A packages/client/src/components/curvelab/mode-panels/FilletModePanel.vue
+  - A packages/client/src/components/curvelab/mode-panels/OffsetModePanel.vue
+  - A packages/client/src/components/curvelab/mode-panels/index.ts
+  - A packages/client/src/components/toolbox/adaptive-poly/PreviewLinkModePanel.vue
+  - A packages/client/src/components/toolbox/adaptive-poly/SpiralParamsPanel.vue
+  - A packages/client/src/components/toolbox/adaptive-poly/index.ts
+  - A packages/client/src/components/compare/dual-svg/DiffSkeletonLoader.vue
+  - A packages/client/src/components/compare/dual-svg/LayersPanel.vue
+  - A packages/client/src/components/compare/dual-svg/index.ts
+  - A packages/client/src/components/rmos/strip-family/MaterialEditorCard.vue
+  - A packages/client/src/components/rmos/strip-family/index.ts
+  - A packages/client/src/components/toolbox/polygon-offset/GcodeOutputPanel.vue
+  - A packages/client/src/components/toolbox/polygon-offset/index.ts
+  - A packages/client/src/components/toolbox/adaptive-bench/BenchResultsPanel.vue
+  - A packages/client/src/components/toolbox/adaptive-bench/index.ts
+  - A packages/client/src/components/rmos/operation-e2e/OperationHistoryPanel.vue
+  - A packages/client/src/components/rmos/operation-e2e/index.ts
+  - A packages/client/src/components/art/snapshot_compare/components/SnapshotCard.vue
+  - A packages/client/src/components/art/snapshot_compare/components/index.ts
+  - A packages/client/src/components/cam/job-int-history/CloneToPresetForm.vue
+  - A packages/client/src/components/cam/job-int-history/index.ts
+  - A packages/client/src/components/pipeline/blueprint-preset/PipelineStatsGrid.vue
+  - A packages/client/src/components/pipeline/blueprint-preset/index.ts
+  - A packages/client/src/components/rmos/live-monitor/EventMetadataDisplay.vue
+  - A packages/client/src/components/rmos/live-monitor/index.ts
+  - A packages/client/src/components/artstudio/sidebar/InstrumentGeometryForm.vue
+  - A packages/client/src/components/artstudio/sidebar/index.ts
+  - A packages/client/src/components/rosette/rosette-editor/JumpHUD.vue
+  - A packages/client/src/components/rosette/rosette-editor/RingNudgePanel.vue
+  - A packages/client/src/components/rosette/rosette-editor/index.ts
+  - … 72 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7443cf93)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca7c2a41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9cc3c97a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8f4c7a3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9711d1a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe0ce2ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8a06d6e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad050965)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3564c7d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f068bd5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2651f460)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95b3c733)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10214d49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48df7670)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66b7b053)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (786e576e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27c6f4f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (788bb1bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b58914cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e84b2e84)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0772a0df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66869a90)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4db7c95b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95149f26)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (94f41291)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5823136)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (623d46e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0f84081)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b326bc56)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ba780e1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f670b40)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29c6ae65)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (18f16bf4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc1d99c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2d4be455)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (33779186)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (49b27350)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b9374a8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (97c442d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4523084)
+- … 24 more
+
+### S078 — 2026-02-25T01:14:30-06:00 → 2026-02-25T01:14:30-06:00 (2 commits, 0.0h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `178a7118` feat(client): Phase 1 code quality — useAsyncAction, named constants, eval removal\n\n1A: useAsyncAction composable\n- Generic async wrapper with loading/error/data refs, callbacks, external-ref binding\n- 14 unit tests\n- Refactored 5 stores: useJobLogStore, useManufacturingPlanStore,\n  useRmosAnalyticsStore, useLiveMonitorStore, fretSlotsCamStore\n\n1B: Named constants (timing + dimensions)\n- constants/timing.ts (16 constants), constants/dimensions.ts (13 constants)\n- Replaced magic numbers in 13 files across components, composables, utils, views\n\n1C: eval() removal in ScientificCalculator.vue\n- Replaced with safe parseFraction() — eliminates XSS risk\n\nValidation: 0 type errors, 372 tests pass, 0 failures"
+- `bc1d128d` feat(client): Phase 1 code quality — useAsyncAction, named constants, eval removal\n\n1A: useAsyncAction composable\n- Generic async wrapper with loading/error/data refs, callbacks, external-ref binding\n- 14 unit tests\n- Refactored 5 stores: useJobLogStore, useManufacturingPlanStore,\n  useRmosAnalyticsStore, useLiveMonitorStore, fretSlotsCamStore\n\n1B: Named constants (timing + dimensions)\n- constants/timing.ts (16 constants), constants/dimensions.ts (13 constants)\n- Replaced magic numbers in 13 files across components, composables, utils, views\n\n1C: eval() removal in ScientificCalculator.vue\n- Replaced with safe parseFraction() — eliminates XSS risk\n\nValidation: 0 type errors, 372 tests pass, 0 failures"
+Files by surface:
+- docs: 2 paths
+  - A CODE_QUALITY_EXECUTION_PLAN.md
+  - A CODE_QUALITY_HANDOFF.md
+- other: 25 paths
+  - A packages/client/src/composables/__tests__/useAsyncAction.test.ts
+  - A packages/client/src/composables/useAsyncAction.ts
+  - A packages/client/src/constants/dimensions.ts
+  - A packages/client/src/constants/index.ts
+  - A packages/client/src/constants/timing.ts
+  - M packages/client/src/components/Toast.vue
+  - M packages/client/src/components/artstudio/sidebar/InstrumentGeometryForm.vue
+  - M packages/client/src/components/rmos/composables/useBulkDecisionV2.ts
+  - M packages/client/src/components/rmos/composables/useBulkExport.ts
+  - M packages/client/src/components/rosette/RosetteEditorView.vue
+  - M packages/client/src/components/rosette/SnapshotPanel.vue
+  - M packages/client/src/components/toolbox/ScientificCalculator.vue
+  - M packages/client/src/components/toolbox/ToolTable.vue
+  - M packages/client/src/composables/index.ts
+  - M packages/client/src/composables/useBulkDecision.ts
+  - M packages/client/src/features/ai_images/AiImageGallery.vue
+  - M packages/client/src/features/ai_images/AiImagePanel.vue
+  - M packages/client/src/stores/fretSlotsCamStore.ts
+  - M packages/client/src/stores/useJobLogStore.ts
+  - M packages/client/src/stores/useLiveMonitorStore.ts
+  - M packages/client/src/stores/useManufacturingPlanStore.ts
+  - M packages/client/src/stores/useRmosAnalyticsStore.ts
+  - M packages/client/src/utils/analytics.ts
+  - M packages/client/src/utils/downloadBlob.ts
+  - M packages/client/src/views/business/EngineeringEstimatorView.vue
+Documents produced:
+- `CODE_QUALITY_EXECUTION_PLAN.md` — # Code Quality Execution Plan
+- `CODE_QUALITY_HANDOFF.md` — # Code Quality Handoff - Luthiers Toolbox Client
+Annotations:
+- (none harvested)
+
+### S079 — 2026-02-25T09:34:38-06:00 → 2026-02-26T00:23:10-06:00 (30 commits, 14.81h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `244bd54d` Phase 2: Duplicate code extraction — new composables + domain consolidation
+- `c4f71df7` Phase 2: Duplicate code extraction — new composables + domain consolidation
+- `3652da5d` docs: update execution plan with Phase 2 completion log
+- `c7e03e27` docs: update execution plan with Phase 2 completion log
+- `91942683` Phase 3: Dead CSS cleanup — remove 57 dead selectors from ManufacturingCandidateList.module.css, clean dead template classes, add CSS audit script
+- `ed293794` Phase 3: Dead CSS cleanup — remove 57 dead selectors from ManufacturingCandidateList.module.css, clean dead template classes, add CSS audit script
+- `8590c959` docs: update execution plan with Phase 3 completion log
+- `b1052a79` docs: update execution plan with Phase 3 completion log
+- `ccc50b76` Phase 4: Memory leak & safety audit — 12 files fixed
+- `fce86311` Phase 4: Memory leak & safety audit — 12 files fixed
+- `6dc907af` Phase 5: TODO/FIXME triage — 16 TODOs audited, 5 cleaned
+- `a5e1fa7c` Phase 5: TODO/FIXME triage — 16 TODOs audited, 5 cleaned
+- `3c08a212` Phase 6: consolidate download/CSV utilities into shared downloadBlob
+- `9a8d0423` Phase 6: consolidate download/CSV utilities into shared downloadBlob
+- `6f46d5f4` Update execution plan: Phase 6 completed
+- `7a8e8b42` Update execution plan: Phase 6 completed
+- `17f1aa62` fix(security): Phase 1-2 — replace weak hashes, parameterize SQL, defuse XML, replace eval(), fix hardcoded /tmp
+- `2bcdf97e` fix(security): Phase 1-2 — replace weak hashes, parameterize SQL, defuse XML, replace eval(), fix hardcoded /tmp
+- `58e3557d` refactor(dead-code): Phase 3 — remove 21 dead imports, 3 dead functions, 145 lines of dead code
+- `e1f49d62` refactor(dead-code): Phase 3 — remove 21 dead imports, 3 dead functions, 145 lines of dead code
+- `6892bd30` refactor(complexity): Phase 5 — decompose 3 F-grade god-functions (CC 46-53 → ≤14)
+- `dcc7cd95` refactor(complexity): Phase 5 — decompose 3 F-grade god-functions (CC 46-53 → ≤14)
+- `6ee2b90f` refactor(vue): decompose 500+ LOC components per analyzer guidelines
+- `c6e3eb44` refactor(vue): decompose 500+ LOC components per analyzer guidelines
+- `6b8009ae` refactor(complexity): decompose 9 E-grade functions (CC 26-39 -> <=15)
+- `75d736d8` refactor(complexity): decompose 9 E-grade functions (CC 26-39 -> <=15)
+- `0b70f041` refactor(dead-code): Phase 4 — clean 16 high-density dead-code files (-2502 lines)
+- `520f3ea3` refactor(dead-code): Phase 4 — clean 16 high-density dead-code files (-2502 lines)
+- `4f3de097` Exception hardening: narrow all except Exception in safety paths (rmos/cam/saw_lab/calculators)
+- `5fe27b40` Exception hardening: narrow all except Exception in safety paths (rmos/cam/saw_lab/calculators)
+Files by surface:
+- docs: 1 paths
+  - M CODE_QUALITY_EXECUTION_PLAN.md
+- other: 174 paths
+  - A packages/client/src/components/adaptive/composables/runLogHelpers.ts
+  - A packages/client/src/composables/useFetchTransform.test.ts
+  - A packages/client/src/composables/useFetchTransform.ts
+  - A packages/client/src/composables/useFormState.test.ts
+  - A packages/client/src/composables/useFormState.ts
+  - A packages/client/src/composables/useLocalStorageRef.ts
+  - A packages/client/src/utils/keyboard.ts
+  - A packages/client/scripts/audit-dead-css.mjs
+  - M packages/client/src/components/adaptive/composables/index.ts
+  - M packages/client/src/components/adaptive/composables/useLiveLearning.ts
+  - M packages/client/src/components/adaptive/composables/useRunLogging.ts
+  - M packages/client/src/components/compare/compareViewportMath.ts
+  - M packages/client/src/components/rmos/composables/useCandidateKeyboard.ts
+  - M packages/client/src/components/rmos/composables/useClipboardToast.ts
+  - M packages/client/src/components/rmos/composables/useKeyboardShortcuts.ts
+  - M packages/client/src/components/rmos/composables/useLegacyBulkDecision.ts
+  - M packages/client/src/components/rosette/composables/useClipboardExport.ts
+  - M packages/client/src/composables/index.ts
+  - M packages/client/package.json
+  - M packages/client/src/components/rmos/ManufacturingCandidateList.module.css
+  - M packages/client/src/components/toolbox/calculator/BasicCalculatorPad.vue
+  - M packages/client/src/components/toolbox/calculator/ScientificCalculatorPad.vue
+  - M packages/client/src/components/Toast.vue
+  - M packages/client/src/components/art/snapshot_compare/composables/useSnapshotCompareNavigation.ts
+  - M packages/client/src/components/curvelab/CurveLab.vue
+  - M packages/client/src/components/rmos/composables/useCandidateFilters.ts
+  - M packages/client/src/components/rmos/log-viewer/useLogPolling.ts
+  - M packages/client/src/components/rosette/RosetteEditorView.vue
+  - M packages/client/src/composables/useListFilters.ts
+  - M packages/client/src/composables/useWebSocket.ts
+  - M packages/client/src/features/ai_images/AiImageGallery.vue
+  - M packages/client/src/features/ai_images/AiImagePanel.vue
+  - M packages/client/src/views/business/EngineeringEstimatorView.vue
+  - M packages/client/src/views/tools/AudioAnalyzerRunsLibrary.vue
+  - M packages/client/src/components/rosette/RosetteCanvas.vue
+  - M packages/client/src/utils/neck_generator.ts
+  - M packages/client/src/views/CamProductionView.vue
+  - M packages/client/src/views/art/ArtStudioRelief.vue
+  - M packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts
+  - M packages/client/src/utils/downloadBlob.ts
+  - … 134 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S080 — 2026-02-26T07:36:05-06:00 → 2026-02-26T09:48:31-06:00 (8 commits, 2.21h)
+Branches: refs/tags/toolbox-v0.39.0, refs/pull/10/head
+Commits:
+- `aaa0c6f6` Route consolidation: delete 15 dead router files, fix docstring false positives, clean __init__ refs
+- `f26b4c3a` Route consolidation: delete 15 dead router files, fix docstring false positives, clean __init__ refs
+- `4eb5bc26` Exception narrowing: 92->12 except Exception blocks
+- `c12e061f` Exception narrowing: 92->12 except Exception blocks
+- `118a9c12` fix(static-analysis): remove dead imports, fix XML vulnerabilities, fix syntax error
+- `9af1f05e` fix(static-analysis): remove dead imports, fix XML vulnerabilities, fix syntax error
+- `08e741f8` fix(static-analysis): prefix 24 unused variables with underscore
+- `ad373115` fix(static-analysis): prefix 24 unused variables with underscore
+Files by surface:
+- api_routing: 2 paths
+  - M services/api/app/routers/blueprint/phase1_router.py
+  - M services/api/app/routers/blueprint/phase2_router.py
+- other: 92 paths
+  - A services/api/app/business/estimator/material_estimation.py
+  - M services/api/app/ai/availability.py
+  - M services/api/app/api/deps/__init__.py
+  - M services/api/app/auth/deps.py
+  - M services/api/app/cam/dxf_upload_guard.py
+  - M services/api/app/cost_attribution/__init__.py
+  - M services/api/app/middleware/edition_middleware.py
+  - M services/api/app/rmos/__init__.py
+  - M services/api/app/rmos/api/__init__.py
+  - M services/api/app/_experimental/ai_cam/advisor.py
+  - M services/api/app/_experimental/ai_cam/optimize.py
+  - M services/api/app/ai/transport/image_client.py
+  - M services/api/app/ai/transport/llm_client.py
+  - M services/api/app/ai/transport/vision_client.py
+  - M services/api/app/analyzer/router.py
+  - M services/api/app/api_v1/dxf_workflow.py
+  - M services/api/app/api_v1/fret_math.py
+  - M services/api/app/art_studio/api/rosette_compare_routes.py
+  - M services/api/app/art_studio/api/snapshot_routes.py
+  - M services/api/app/ci/boundary_imports/cli.py
+  - M services/api/app/ci/check_duplication.py
+  - M services/api/app/ci/endpoint_truth_gate.py
+  - M services/api/app/ci/generate_debt_report.py
+  - M services/api/app/core/features.py
+  - M services/api/app/core/observability.py
+  - M services/api/app/dxf/preflight_service.py
+  - M services/api/app/instrument_geometry/queries/pocket_solid_mesh.py
+  - M services/api/app/routers/adaptive/batch_router.py
+  - M services/api/app/routers/adaptive/dxf_router.py
+  - M services/api/app/routers/advanced_analytics_router.py
+  - M services/api/app/routers/blueprint_cam/adaptive_router.py
+  - M services/api/app/routers/blueprint_cam/contour_router.py
+  - M services/api/app/routers/blueprint_cam/preflight_router.py
+  - M services/api/app/routers/dxf_plan_router.py
+  - M services/api/app/routers/dxf_preflight_router.py
+  - M services/api/app/routers/geometry/import_router.py
+  - M services/api/app/routers/learned_overrides_router.py
+  - M services/api/app/routers/neck_router.py
+  - M services/api/app/routers/pipeline_operations.py
+  - M services/api/app/routers/probe/boss_router.py
+  - … 52 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (118a9c12)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9af1f05e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08e741f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad373115)
+
+### S081 — 2026-02-26T21:28:17-06:00 → 2026-02-27T02:31:11-06:00 (18 commits, 5.05h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0
+Commits:
+- `87d70ad8` refactor(routers): remove duplicate cam_polygon_offset_router
+- `b8fe8c98` refactor(routers): remove duplicate cam_polygon_offset_router
+- `7d234f5d` refactor(stubs): remove 7 dead code CAM stubs (metrics + compare)
+- `ada94528` refactor(stubs): remove 7 dead code CAM stubs (metrics + compare)
+- `6155330b` fix(calculators): restore LTBLuthierCalculator erroneously deleted
+- `ad74b7a1` fix(calculators): restore LTBLuthierCalculator erroneously deleted
+- `2c998f4e` refactor: remove 10 confirmed dead schemas (Phase 4 cleanup)
+- `f87a6bd0` refactor: remove 10 confirmed dead schemas (Phase 4 cleanup)
+- `0ef4faff` fix: restore 3 incorrectly deleted routers (modules were broken)
+- `2d417c31` fix: restore 3 incorrectly deleted routers (modules were broken)
+- `a24f6514` fix: restore 6 more incorrectly deleted routers (modules broken)
+- `ee2e22c7` fix: restore 6 more incorrectly deleted routers (modules broken)
+- `66393a34` fix: restore 6 more incorrectly deleted routers (modules broken)
+- `72282b6f` fix: restore 6 more incorrectly deleted routers (modules broken)
+- `4152809d` fix(tests): update debt baselines after 15 router restorations
+- `9656da74` fix(tests): update debt baselines after 15 router restorations
+- `8a248a17` fix(cam): rename underscore-prefixed parameters to match call sites
+- `d8a45099` fix(cam): rename underscore-prefixed parameters to match call sites
+Files by surface:
+- other: 28 paths
+  - A services/api/app/ltb_calculators/luthier_calculator.py
+  - A services/api/app/rmos/validation/router.py
+  - A services/api/app/saw_lab/decision_intel_apply_router.py
+  - A services/api/app/saw_lab/decision_intelligence_router.py
+  - A services/api/app/art_studio/api/preview_routes.py
+  - A services/api/app/art_studio/bracing_router.py
+  - A services/api/app/art_studio/inlay_router.py
+  - A services/api/app/art_studio/relief_router.py
+  - A services/api/app/art_studio/vcarve_router.py
+  - A services/api/app/routers/music/temperament_router.py
+  - A services/api/app/art_studio/api/rosette_pattern_routes.py
+  - A services/api/app/cam_core/api/saw_lab_router.py
+  - A services/api/app/instrument_geometry/neck_taper/api_router.py
+  - A services/api/app/rmos/operations/router.py
+  - A services/api/app/routers/instruments/guitar/assets_router.py
+  - A services/api/app/routers/instruments/guitar/registry_router.py
+  - M services/api/app/router_registry/manifest.py
+  - M services/api/app/cam/routers/stub_routes.py
+  - M services/api/app/ltb_calculators/__init__.py
+  - M services/api/app/business/schemas.py
+  - M services/api/app/rmos/pipeline/schemas.py
+  - M services/api/app/saw_lab/batch_router_schemas.py
+  - M services/api/app/vision/schemas.py
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/cam/adaptive_core.py
+  - M services/api/app/cam/adaptive_core_l1.py
+  - M services/api/app/routers/adaptive/helpers.py
+  - D services/api/app/routers/cam_polygon_offset_router.py
+- tests: 2 paths
+  - M services/api/tests/test_technical_debt_gates.py
+  - M services/api/tests/test_vision_segmentation.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (87d70ad8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b8fe8c98)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d234f5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ada94528)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6155330b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad74b7a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c998f4e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f87a6bd0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ef4faff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2d417c31)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a24f6514)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee2e22c7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66393a34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (72282b6f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4152809d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9656da74)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a248a17)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8a45099)
+
+### S082 — 2026-02-27T09:01:36-06:00 → 2026-02-28T01:04:02-06:00 (90 commits, 16.04h)
+Branches: refs/pull/10/head, refs/tags/toolbox-v0.39.0, refs/tags/toolbox-v0.39.1
+Commits:
+- `1b581f75` fix(workflow): restore sessions/routes.py (broken __init__.py import)
+- `72dd7b0c` fix(workflow): restore sessions/routes.py (broken __init__.py import)
+- `1562923a` fix: restore cam_core/tools/models.py + fix runs v1 → v2 imports
+- `f28996af` fix: restore cam_core/tools/models.py + fix runs v1 → v2 imports
+- `af56eb0c` fix: restore meta_router + material_router (CI import failures)
+- `c3e9f10c` fix: restore meta_router + material_router (CI import failures)
+- `7b47ad4e` ci: add pre-existing large files to size baseline
+- `f9d0092f` ci: add pre-existing large files to size baseline
+- `2ac45666` ci: update endpoint truth + regenerate complexity baseline
+- `7871daaf` ci: update endpoint truth + regenerate complexity baseline
+- `bf0462ec` ci: add /api/compare/baselines/ to API calls baseline
+- `d65e4e74` ci: add /api/compare/baselines/ to API calls baseline
+- `23e5902c` fix(calculators): rename _pickup_dcr_kohm → pickup_dcr_kohm
+- `df6810fc` fix(calculators): rename _pickup_dcr_kohm → pickup_dcr_kohm
+- `2ffa33f1` ci: regenerate fence baselines for current codebase state
+- `c32ed432` ci: regenerate fence baselines for current codebase state
+- `0c18ac45` ci: update large files target from 4 to 5
+- `32da31c0` ci: update large files target from 4 to 5
+- `6d6fb9c8` ci: regenerate complexity baseline for current codebase (85 violations)
+- `7ad61005` ci: regenerate complexity baseline for current codebase (85 violations)
+- `10912177` ci: regenerate complexity baseline from scratch (139 violations)
+- `c3bad74d` ci: regenerate complexity baseline from scratch (139 violations)
+- `757dbbfc` ci: add estimator_service._calculate_all_factors to complexity baseline
+- `7f11e032` ci: add estimator_service._calculate_all_factors to complexity baseline
+- `02b624da` ci: add estimator_service.py and cam_router.py to file size baseline
+- `5cff4525` ci: add estimator_service.py and cam_router.py to file size baseline
+- `d8c1628a` fix: restore 5 unmounted art_studio routers to manifest
+- `e0112bf7` fix: restore 5 unmounted art_studio routers to manifest
+- `4b9d9e1b` fix: restore meta_router for CI routing truth validation
+- `f3bf3701` fix: restore meta_router for CI routing truth validation
+- `6fdef797` fix: restore 3 additional orphaned routers to manifest
+- `c51343b2` fix: restore 3 additional orphaned routers to manifest
+- `066b8ea9` fix(ci): update TARGET_MAX_LARGE_FILES to 6
+- `bc59122e` fix(ci): update TARGET_MAX_LARGE_FILES to 6
+- `01760dfe` fix(cam): add M3/M5 spindle commands to emit_xy_with_arcs
+- `7804e38e` fix(cam): add M3/M5 spindle commands to emit_xy_with_arcs
+- `1624e387` fix(cam): correct parameter name for insert_trochoids call
+- `321cc4bb` fix(cam): correct parameter name for insert_trochoids call
+- `30c432cf` fix(cam): correct key path for thermal bundle energy data
+- `3840ac56` fix(cam): correct key path for thermal bundle energy data
+- `0d007d8a` fix(cam): use sync get_material from material_router
+- `b61e8d72` fix(cam): use sync get_material from material_router
+- `36c13f65` fix(docker): align RMOS_RUNS_DIR with volume mount path
+- `59a438df` fix(docker): align RMOS_RUNS_DIR with volume mount path
+- `87055ef5` fix(ci): resolve workflow configuration issues
+- `ce5cbf20` fix(ci): resolve workflow configuration issues
+- `53203f45` fix(ci): add api-smoke-posts Makefile target for API Health workflow
+- `cd9a2c79` fix(ci): add api-smoke-posts Makefile target for API Health workflow
+- `625fbe73` fix(ci): install API requirements in Health workflow
+- `7790c188` fix(ci): install API requirements in Health workflow
+- `4ad75442` fix(ci): remove duplicate core import in github-script
+- `9b4cc8ad` fix(ci): remove duplicate core import in github-script
+- `0ba46014` chore(ci): remove broken workflows with missing test files
+- `99646525` chore(ci): remove broken workflows with missing test files
+- `de57de2b` chore(ci): remove broken CompareLab workflows
+- `f74d4487` chore(ci): remove broken CompareLab workflows
+- `a49900ee` chore(ci): update file sizes baseline for manifest.py
+- `cf3f4764` chore(ci): update file sizes baseline for manifest.py
+- `bc568180` chore(ci): add baseline support to route conflict checker
+- `c87b0723` chore(ci): add baseline support to route conflict checker
+- `432efef7` fix(ci): use route conflict baseline in API wiring gate
+- `d5ed82f8` fix(ci): use route conflict baseline in API wiring gate
+- `0da0aa11` feat(cam): wire up Rosette Photo Batch Processor (Wave 27)
+- `340909c3` feat(cam): wire up Rosette Photo Batch Processor (Wave 27)
+- `97284bf8` fix(cam): repair broken post_injection_helpers import chain + add recovery docs
+- `bc8c3cf4` fix(cam): repair broken post_injection_helpers import chain + add recovery docs
+- `cb90c922` docs: add 4 missing routers to recovery assessment
+- `ec009893` docs: add 4 missing routers to recovery assessment
+- `3c4464b1` feat: restore 9 incorrectly deleted modules (Wave 27.1 Dead Code Recovery)
+- `d3a0b92b` feat: restore 9 incorrectly deleted modules (Wave 27.1 Dead Code Recovery)
+- `83d7551e` docs: mark Wave 27.1 Dead Code Recovery as complete
+- `fd94878c` docs: mark Wave 27.1 Dead Code Recovery as complete
+- `08dc029a` chore: update debt gates baseline for Wave 27.1 router restoration
+- `705e57d3` chore: update debt gates baseline for Wave 27.1 router restoration
+- `3117c6fa` refactor: remove 9 dead code stubs shadowed by real implementations
+- `d93b0585` refactor: remove 9 dead code stubs shadowed by real implementations
+- `55fd5c4c` fix: resolve circular import in photo_batch_router
+- `73e6198c` fix: resolve circular import in photo_batch_router
+- `12eacb54` refactor: code quality improvements + estimator decomposition
+- `a858bb0b` refactor: code quality improvements + estimator decomposition
+- `2334416b` chore: update art presets and debt history
+- `8e8fcf0e` chore: update art presets and debt history
+- `8a3178d7` docs: add critical systems design review (2026-02-28)
+- `ac6e45ce` docs: add critical systems design review (2026-02-28)
+- `2081dbee` fix(docs): remove broken links causing MkDocs strict mode failures
+- `60d2cc45` fix(docs): remove broken links causing MkDocs strict mode failures
+- `70f60532` fix(docs): rename README.md to DEVELOPMENT.md to fix MkDocs conflict
+- `af332844` fix(docs): rename README.md to DEVELOPMENT.md to fix MkDocs conflict
+- `26035da2` docs: add CBSP21 protocol documentation
+- `5951fc49` docs: add CBSP21 protocol documentation
+Files by surface:
+- docs: 10 paths
+  - A docs/DEAD_CODE_RECOVERY_ASSESSMENT.md
+  - A docs/DESIGN_REVIEW_2026-02-28.md
+  - A docs/CBSP21.md
+  - M docs/BOUNDARY_RULES.md
+  - M docs/adr/ADR-001-fields-and-policy-ownership.md
+  - M docs/adr/ADR-003-cam-operation-lane-promotion.md
+  - M docs/cam/safety-rmos.md
+  - M docs/governance/ART_STUDIO_SCOPE_GOVERNANCE_v1.md
+  - M docs/governance/FENCE_ARCHITECTURE.md
+  - M docs/DEVELOPMENT.md
+- other: 57 paths
+  - A services/api/app/workflow/sessions/routes.py
+  - A services/api/app/cam_core/tools/models.py
+  - A services/api/app/governance/meta_router.py
+  - A services/api/app/routers/material_router.py
+  - A scripts/smoke/api_smoke_posts.py
+  - A scripts/smoke/run_api_smoke_posts.sh
+  - A services/api/app/ci/route_conflicts_baseline.json
+  - A services/api/app/cam/rosette/photo_batch_router.py
+  - A services/api/app/ai/prompts/templates.py
+  - A services/api/app/art_studio/services/workflow_schemas.py
+  - A services/api/app/cam_core/saw_lab/queue.py
+  - A services/api/app/routers/cam_dxf_adaptive_router.py
+  - A services/api/app/routers/cam_relief_router.py
+  - A services/api/app/routers/cnc_production/presets_router.py
+  - A services/api/app/schemas/job_log.py
+  - A services/api/app/services/rmos_stores.py
+  - A services/api/app/websocket/monitor.py
+  - A services/api/app/business/estimator/risk_assessment.py
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/rmos/pipeline/feedback/__init__.py
+  - M services/api/app/rmos/pipeline/feedback/job_log.py
+  - M services/api/app/rmos/pipeline/feedback/learning.py
+  - M services/api/app/rmos/pipeline/services.py
+  - M services/api/app/rmos/pipeline/services_execution.py
+  - M ci/file_size_baseline.json
+  - M services/api/app/ci/complexity_baseline.json
+  - M services/api/app/data/endpoint_truth.json
+  - M contracts/api_calls_baseline.json
+  - M services/api/app/calculators/wiring/impedance_math.py
+  - M services/api/app/ci/fence_baseline.json
+  - M services/api/app/ci/fence_patterns_baseline.json
+  - M services/api/app/ci/file_sizes_baseline.json
+  - M services/api/app/router_registry/manifest.py
+  - M services/api/app/util/gcode_emit_advanced.py
+  - M services/api/app/routers/adaptive/plan_router.py
+  - M services/api/app/cam/routers/monitoring/metrics_thermal.py
+  - M .github/workflows/proxy_adaptive.yml
+  - M docker-compose.yml
+  - M .github/workflows/api_health_and_smoke.yml
+  - M .github/workflows/cam_essentials.yml
+  - … 17 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `docs/DEAD_CODE_RECOVERY_ASSESSMENT.md` — # Dead Code Recovery Assessment
+- `docs/DESIGN_REVIEW_2026-02-28.md` — UNKNOWN
+- `docs/CBSP21.md` — # CBSP21: Code Batch Submission Protocol v2.1
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b581f75)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (72dd7b0c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1562923a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f28996af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af56eb0c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3e9f10c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2ac45666)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7871daaf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0c18ac45)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (32da31c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d6fb9c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7ad61005)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10912177)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3bad74d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (757dbbfc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f11e032)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02b624da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cff4525)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8c1628a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0112bf7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b9d9e1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3bf3701)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fdef797)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c51343b2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (066b8ea9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc59122e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01760dfe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7804e38e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1624e387)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (321cc4bb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30c432cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3840ac56)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d007d8a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b61e8d72)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (36c13f65)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59a438df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (87055ef5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ce5cbf20)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (53203f45)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cd9a2c79)
+- … 44 more
+
+### S083 — 2026-02-28T09:01:02-06:00 → 2026-02-28T09:01:02-06:00 (2 commits, 0.0h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `99dd903e` docs: add Snapshot 19 independent design review
+- `af72bdf7` docs: add Snapshot 19 independent design review
+Files by surface:
+- docs: 1 paths
+  - A docs/DESIGN_REVIEW_SNAPSHOT_19.md
+Documents produced:
+- `docs/DESIGN_REVIEW_SNAPSHOT_19.md` — # Critical Design Review: luthiers-toolbox-main (Snapshot 19)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (99dd903e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af72bdf7)
+
+### S084 — 2026-02-28T18:29:43-06:00 → 2026-02-28T23:41:42-06:00 (12 commits, 5.2h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `9fe51f51` feat(ui): add global command palette (Ctrl+K)
+- `c39ac30e` feat(ui): add global command palette (Ctrl+K)
+- `319bd60f` feat(estimator): Phase 1 - wire operator UX patterns + Pinia store
+- `f86c3afd` feat(estimator): Phase 1 - wire operator UX patterns + Pinia store
+- `25ce535b` feat(estimator): Phase 2 - persistence + cognitive load reduction
+- `89ec4b05` feat(estimator): Phase 2 - persistence + cognitive load reduction
+- `2626eeec` feat(estimator): Phase 3 - transparency features
+- `3456481d` feat(estimator): Phase 3 - transparency features
+- `a7a99430` feat(estimator): Phase 4 - integration + export
+- `fcdaa825` feat(estimator): Phase 4 - integration + export
+- `a446fe7e` feat(estimator): Phase 5 - Analytics + Insights
+- `c4757281` feat(estimator): Phase 5 - Analytics + Insights
+Files by surface:
+- other: 20 paths
+  - A packages/client/src/components/ui/CommandPalette.vue
+  - A packages/client/src/composables/useCommandPalette.ts
+  - A packages/client/src/stores/estimatorStore.ts
+  - A packages/client/src/views/business/useEstimatorDraft.ts
+  - A packages/client/src/views/business/BackCalcTab.vue
+  - A packages/client/src/views/business/EstimatorDiffPanel.vue
+  - A packages/client/src/views/business/EstimatorValidationStep.vue
+  - A packages/client/src/views/business/QuoteTab.vue
+  - A packages/client/src/views/business/EstimatorExportPanel.vue
+  - A packages/client/src/views/business/EstimatorHistoryPanel.vue
+  - A packages/client/src/views/business/EstimatorPresetsPanel.vue
+  - A packages/client/src/views/business/EstimatorAnalyticsDashboard.vue
+  - A packages/client/src/views/business/EstimatorComparePanel.vue
+  - A packages/client/src/views/business/EstimatorTemplatesPanel.vue
+  - M ci/file_size_baseline.json
+  - M packages/client/src/App.vue
+  - M packages/client/src/composables/index.ts
+  - M packages/client/src/types/businessEstimator.ts
+  - M packages/client/src/views/business/EngineeringEstimatorView.vue
+  - M packages/client/src/views/business/EstimatorInputsPanel.vue
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9fe51f51)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c39ac30e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (319bd60f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f86c3afd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25ce535b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (89ec4b05)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2626eeec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3456481d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7a99430)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fcdaa825)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a446fe7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4757281)
+
+### S085 — 2026-03-01T06:47:25-06:00 → 2026-03-01T07:42:36-06:00 (6 commits, 0.92h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `4bac1239` feat(estimator): Phase 6 - API integration + pricing goals
+- `b9173d78` feat(estimator): Phase 6 - API integration + pricing goals
+- `196d6fe5` fix(business): restore schemas.py + add Phase 6 estimator service
+- `359c105e` fix(business): restore schemas.py + add Phase 6 estimator service
+- `5011b5a1` chore(tests): update endpoint baseline for Phase 6
+- `b73c991a` chore(tests): update endpoint baseline for Phase 6
+Files by surface:
+- other: 13 paths
+  - A packages/client/src/views/business/EstimatorGoalsPanel.vue
+  - A packages/client/src/views/business/EstimatorSyncStatus.vue
+  - A services/api/app/business/goals_service.py
+  - A services/api/app/business/estimator_router.py
+  - A services/api/app/business/estimator_service.py
+  - M packages/client/src/sdk/endpoints/businessEstimator.ts
+  - M packages/client/src/views/business/EngineeringEstimatorView.vue
+  - M packages/client/src/views/business/WbsBreakdownTab.vue
+  - M services/api/app/business/__init__.py
+  - M services/api/app/business/router.py
+  - M services/api/app/business/schemas.py
+  - M services/api/app/router_registry/manifest.py
+  - M services/api/metrics/debt_history.json
+- tests: 1 paths
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4bac1239)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b9173d78)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (196d6fe5)
+- Fixes: ['- Restore original schemas.py (Material, BOM, Labor, COGS, Pricing types)'] (196d6fe5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (359c105e)
+- Fixes: ['- Restore original schemas.py (Material, BOM, Labor, COGS, Pricing types)'] (359c105e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5011b5a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b73c991a)
+
+### S086 — 2026-03-01T13:13:28-06:00 → 2026-03-01T16:19:20-06:00 (10 commits, 3.1h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `6d6d016b` fix(client): resolve 4 TypeScript errors in AdaptivePocketLabV2
+- `7cf877da` fix(client): resolve 4 TypeScript errors in AdaptivePocketLabV2
+- `c5237c35` fix(exceptions): harden remaining broad exceptions (P0)
+- `f018659a` fix(exceptions): harden remaining broad exceptions (P0)
+- `7e07e913` chore(root): clean up root directory (P1)
+- `e1d684c2` chore(root): clean up root directory (P1)
+- `aad53fdd` docs(api): add OpenAPI summaries to priority endpoints (P3)
+- `fe40a869` docs(api): add OpenAPI summaries to priority endpoints (P3)
+- `0e86ec70` feat(ui): add dev sandbox with design system tools
+- `c7671105` feat(ui): add dev sandbox with design system tools
+Files by surface:
+- docs: 16 paths
+  - M docs/AGENT_SESSION_BOOKMARK.md
+  - M docs/CHIEF_ENGINEER_HANDOFF.md
+  - M docs/CODE_QUALITY_EXECUTION_PLAN.md
+  - M docs/CODE_QUALITY_HANDOFF.md
+  - M docs/REMEDIATION_PLAN.md
+  - M docs/REMEDIATION_PLAN_v2.md
+  - M docs/REVIEW_REMEDIATION_PLAN.md
+  - M docs/ROUTER_MAP.md
+  - M docs/SCORE_7_PLAN.md
+  - M docs/reviews/DESIGN_REVIEW_2026-02-18.md
+  - M docs/reviews/DESIGN_REVIEW_2026-02-22.md
+  - M docs/reviews/DESIGN_REVIEW_2026-02-28.md
+  - M docs/reviews/DESIGN_REVIEW_SNAPSHOT_19.md
+  - M docs/reviews/SYSTEM_DESIGN_REVIEW_2026-02-23.md
+  - M docs/reviews/luthiers-toolbox-16-design-review.md
+  - M docs/reviews/luthiers-toolbox-design-review.md
+- other: 18 paths
+  - A packages/client/src/views/dev/ComponentGallery.vue
+  - A packages/client/src/views/dev/LayoutProto.vue
+  - A packages/client/src/views/dev/NavProto.vue
+  - A packages/client/src/views/dev/SandboxView.vue
+  - A packages/client/src/views/dev/TokenExplorer.vue
+  - A packages/client/src/views/dev/TypographyScale.vue
+  - M packages/client/src/components/adaptive/AdaptivePocketLabV2.vue
+  - M packages/client/src/components/adaptive/ToolpathStatsPanel.vue
+  - M packages/client/src/components/adaptive/composables/usePocketPlanning.ts
+  - M packages/client/src/components/pocket/BottleneckMapPanel.vue
+  - M services/api/app/business/estimator_router.py
+  - M services/api/app/core/safety.py
+  - M services/api/app/safety/__init__.py
+  - M services/api/app/business/router.py
+  - M services/api/app/rmos/runs_v2/api_runs.py
+  - M services/api/app/vision/router.py
+  - M packages/client/src/components/ui/CardPanel.vue
+  - M packages/client/src/router/index.ts
+- tests: 1 paths
+  - M services/api/app/tests/test_e2e_workflow_integration.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d6d016b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7cf877da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c5237c35)
+- Fixes: ['- estimator_router.py: narrow to (ValueError, TypeError, KeyError, AttributeError)'] (c5237c35)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f018659a)
+- Fixes: ['- estimator_router.py: narrow to (ValueError, TypeError, KeyError, AttributeError)'] (f018659a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7e07e913)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1d684c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aad53fdd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe40a869)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e86ec70)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7671105)
+
+### S087 — 2026-03-03T12:19:50-06:00 → 2026-03-04T02:46:23-06:00 (60 commits, 14.44h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `1643142f` fix(client): resolve 79 ESLint errors and adjust warning threshold
+- `833abcbd` fix(client): resolve 79 ESLint errors and adjust warning threshold
+- `3476e791` feat(client): scaffold 5 orphaned feature routes from marketing site
+- `c557664b` feat(client): scaffold 5 orphaned feature routes from marketing site
+- `93519f49` fix(client): resolve PostCSS composition error in PresetHubView
+- `fecc5a33` fix(client): resolve PostCSS composition error in PresetHubView
+- `09b66ea2` fix(api): change presets router prefix from /cnc/presets to /presets
+- `c60c4ec6` fix(api): change presets router prefix from /cnc/presets to /presets
+- `6fff2472` docs: merge session 2 progress into original SESSION_BOOKMARK
+- `9a204676` docs: merge session 2 progress into original SESSION_BOOKMARK
+- `2100d113` fix(api): resolve estimator_router import errors
+- `28430808` fix(api): resolve estimator_router import errors
+- `1a806127` docs: update SESSION_BOOKMARK with defusedxml and router fixes
+- `695d5b77` docs: update SESSION_BOOKMARK with defusedxml and router fixes
+- `55c6a507` feat(client): connect ReliefCarvingView to CAM relief API
+- `9d1b7925` feat(client): connect ReliefCarvingView to CAM relief API
+- `2d229bc8` feat(client): connect InlayDesignerView to art-studio inlay API
+- `90250d97` feat(client): connect InlayDesignerView to art-studio inlay API
+- `56492a67` feat(client): connect VCarveView to art-studio and CAM vcarve APIs
+- `b8f9bfcb` feat(client): connect VCarveView to art-studio and CAM vcarve APIs
+- `ceef1fa0` feat(client): connect MachineManagerView to machines and posts APIs
+- `f9e02bd0` feat(client): connect MachineManagerView to machines and posts APIs
+- `2790aef8` fix(client): add /lab/machine-manager route alias
+- `80c0bdc3` fix(client): add /lab/machine-manager route alias
+- `2f3c7f25` docs: update session bookmark with API connection progress
+- `e3297bec` docs: update session bookmark with API connection progress
+- `3241a426` docs: add orphaned apps status tracking
+- `a74f2a7e` docs: add orphaned apps status tracking
+- `1e0f9ebe` docs: clarify orphaned apps are missing from marketing, not API
+- `df94b2d6` docs: clarify orphaned apps are missing from marketing, not API
+- `73ee8480` feat(marketing): add 5 new feature cards to Production section
+- `7dad6f88` feat(marketing): add 5 new feature cards to Production section
+- `4616e02d` docs: add comprehensive UX/UI master plan
+- `b4df1791` docs: add comprehensive UX/UI master plan
+- `02534b02` feat(marketing): rebuild features.html with 7 tabs
+- `82903318` feat(marketing): rebuild features.html with 7 tabs
+- `4d4ddee4` fix(marketing): add real Calculator Hub to Calculators tab
+- `a8ac508a` fix(marketing): add real Calculator Hub to Calculators tab
+- `73c42045` fix(marketing): add Basic, Unit Converter, and Woodwork calculators
+- `d13ecc96` fix(marketing): add Basic, Unit Converter, and Woodwork calculators
+- `86e2bc0d` fix(marketing): reorganize features - move design tools, add Blueprint Lab
+- `dccda2a7` fix(marketing): reorganize features - move design tools, add Blueprint Lab
+- `1758b191` fix(marketing): move Blueprint Reader to Design, remove Blueprint Lab card
+- `1bf2c4d0` fix(marketing): move Blueprint Reader to Design, remove Blueprint Lab card
+- `6e4fb23d` fix(marketing): move Design Tools to top of Design tab
+- `a77e5d6a` fix(marketing): move Design Tools to top of Design tab
+- `3f8f65a6` feat: rename Visual Analyzer to AI Design Studio
+- `a65591b3` feat: rename Visual Analyzer to AI Design Studio
+- `4e1da083` fix(marketing): move AI Design Studio to top of Design Tools
+- `5f4b4de0` fix(marketing): move AI Design Studio to top of Design Tools
+- `2d63176d` fix(marketing): update instrument list to match codebase
+- `f1e84188` fix(marketing): update instrument list to match codebase
+- `30680bcc` feat: add Jaguar, Jazzmaster, Mustang body outlines via AI extraction
+- `3cbbfe7a` feat: add Jaguar, Jazzmaster, Mustang body outlines via AI extraction
+- `1cf95546` feat: add mandolin body outline with OTHER_INSTRUMENT_PROMPT
+- `de13f425` feat: add mandolin body outline with OTHER_INSTRUMENT_PROMPT
+- `2d8131da` feat(marketing): add F-Style Mandolin to instrument list
+- `ccca6efc` feat(marketing): add F-Style Mandolin to instrument list
+- `ddcb36fd` feat(marketing): add missing acoustic guitars to instrument list
+- `f17f6c1c` feat(marketing): add missing acoustic guitars to instrument list
+Files by surface:
+- docs: 3 paths
+  - A production_shop_agent/SESSION_BOOKMARK.md
+  - A production_shop_agent/site_agent/output/production_shop/ORPHANED_APPS_STATUS.md
+  - A production_shop_agent/UX_UI_MASTER_PLAN.md
+- other: 167 paths
+  - A packages/client/src/views/art-studio/InlayDesignerView.vue
+  - A packages/client/src/views/art-studio/ReliefCarvingView.vue
+  - A packages/client/src/views/art-studio/VCarveView.vue
+  - A packages/client/src/views/lab/MachineManagerView.vue
+  - A production_shop_agent/site_agent/output/production_shop/features.html
+  - A services/api/app/instrument_geometry/body/dxf/electric/jaguar_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/jazzmaster_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/mustang_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/mandolin_body.dxf
+  - M packages/client/package.json
+  - M packages/client/src/App.vue
+  - M packages/client/src/cam/compare/compare_storage.ts
+  - M packages/client/src/components/InstrumentGeometryPanel.vue
+  - M packages/client/src/components/MachinePane.vue
+  - M packages/client/src/components/ToolpathPreview3D.vue
+  - M packages/client/src/components/adaptive/AdaptivePocketLab.vue
+  - M packages/client/src/components/adaptive/AdaptivePocketLabV2.vue
+  - M packages/client/src/components/adaptive/OptimizeForMachinePanel.vue
+  - M packages/client/src/components/adaptive/PocketSettingsPanel.vue
+  - M packages/client/src/components/adaptive/PostProcessorConfig.vue
+  - M packages/client/src/components/adaptive/composables/useLiveLearning.ts
+  - M packages/client/src/components/agentic/CoachBubble.vue
+  - M packages/client/src/components/agentic/IdleDetector.vue
+  - M packages/client/src/components/ai/AiAdvisoryPanel.vue
+  - M packages/client/src/components/ai/AiAdvisoryRenderer.vue
+  - M packages/client/src/components/ai/AiExplainSelectionButton.vue
+  - M packages/client/src/components/art/ArtStudioBracing.vue
+  - M packages/client/src/components/bridge_calculator_panel/BridgeCalculatorPanel.vue
+  - M packages/client/src/components/cam/CAMPreview.vue
+  - M packages/client/src/components/cam/CamBackplotViewer.vue
+  - M packages/client/src/components/cam/CamOffsetVisualizer.vue
+  - M packages/client/src/components/compare/CompareMachines.vue
+  - M packages/client/src/components/compare/DiffModeToggle.vue
+  - M packages/client/src/components/compare/DualSvgDisplay.vue
+  - M packages/client/src/components/drilling/DrillPatternSelector.vue
+  - M packages/client/src/components/drilling_lab/DrillingLab.vue
+  - M packages/client/src/components/dxf/CamParametersForm.vue
+  - M packages/client/src/components/dxf/DxfUploadZone.vue
+  - M packages/client/src/components/dxf/GcodeResultPanel.vue
+  - M packages/client/src/components/dxf/RunCompareCard.vue
+  - … 127 more (see sessions.json / files.jsonl)
+- tests: 2 paths
+  - M services/api/tests/test_fret_slots_intonation_model.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `production_shop_agent/SESSION_BOOKMARK.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/ORPHANED_APPS_STATUS.md` — UNKNOWN
+- `production_shop_agent/UX_UI_MASTER_PLAN.md` — # Luthier's ToolBox - UX/UI Master Plan
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1643142f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (833abcbd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3476e791)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c557664b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93519f49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fecc5a33)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09b66ea2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c60c4ec6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fff2472)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9a204676)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2100d113)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28430808)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a806127)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (695d5b77)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55c6a507)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9d1b7925)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2d229bc8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (90250d97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (56492a67)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b8f9bfcb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ceef1fa0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f9e02bd0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2790aef8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (80c0bdc3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2f3c7f25)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3297bec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3241a426)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a74f2a7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1e0f9ebe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df94b2d6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73ee8480)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7dad6f88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02534b02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82903318)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4d4ddee4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8ac508a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73c42045)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d13ecc96)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86e2bc0d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dccda2a7)
+- … 18 more
+
+### S088 — 2026-03-04T07:48:54-06:00 → 2026-03-04T14:39:37-06:00 (22 commits, 6.85h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `1b95835b` fix(marketing): update total instrument count to 32
+- `df358703` fix(marketing): update total instrument count to 32
+- `28aa92fa` fix(marketing): replace Parlor with Gibson J-200
+- `c6606b48` fix(marketing): replace Parlor with Gibson J-200
+- `213830f5` feat: expand AI Design Studio to all instruments + add Instruments tab
+- `39d9ff61` feat: expand AI Design Studio to all instruments + add Instruments tab
+- `303e2fab` feat: add Carlos Jumbo acoustic guitar body
+- `5d578dc1` feat: add Carlos Jumbo acoustic guitar body
+- `15500ca8` fix: re-extract Jazzmaster DXF using ezdxf R12 LINE format
+- `b0dd110f` fix: re-extract Jazzmaster DXF using ezdxf R12 LINE format
+- `26f16a67` feat(vectorizer): add guitar feature extraction with gap closing
+- `abeb5767` feat(vectorizer): add guitar feature extraction with gap closing
+- `bb0b2454` feat(vectorizer): add acoustic features and non-strict classification mode
+- `d66e2ed6` feat(vectorizer): add acoustic features and non-strict classification mode
+- `e220b36d` Add auto-threshold detection to vectorizer
+- `e231fe35` Add auto-threshold detection to vectorizer
+- `09b0e009` Add auto-threshold test scripts
+- `4421eb48` Add auto-threshold test scripts
+- `0f6e56e2` Add blueprint dimension extraction with EasyOCR
+- `65b3af05` Add blueprint dimension extraction with EasyOCR
+- `99d38ae2` Filter false positives from dimension extraction
+- `af5b851f` Filter false positives from dimension extraction
+Files by surface:
+- blueprint_import: 2 paths
+  - A services/blueprint-import/dimension_extractor.py
+  - M services/blueprint-import/vectorizer_phase2.py
+- docs: 13 paths
+  - A GUITAR_PLANS_REFERENCE.md
+  - A SVG_ARTWORK_GUIDE.md
+  - A TEST_RESULTS.md
+  - A packages/client/src/assets/rosette-presets/README.md
+  - A production_shop_agent/API_README.md
+  - A production_shop_agent/INSTRUMENT_SHOWCASE_PLAN.md
+  - A production_shop_agent/QUICKSTART.md
+  - A production_shop_agent/site_agent/README.md
+  - A production_shop_agent/site_agent/output/production_shop/FEATURE_GAP_REPORT.md
+  - A production_shop_agent/site_agent/output/production_shop/FEATURE_TEST_RESULTS.md
+  - A production_shop_agent/site_agent/output/production_shop/LINK_MAPPINGS.md
+  - A production_shop_agent/site_agent/output/production_shop/WEBSITE_REVIEW.md
+  - A production_shop_agent/site_agent/output/production_shop/WEBSITE_TEST_REPORT.md
+- other: 65 paths
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/carlos_jumbo_body.dxf
+  - A scripts/extract_jazzmaster_ezdxf.py
+  - A features.html
+  - A packages/client/src/assets/rosette-presets/herringbone-24.svg
+  - A packages/client/src/components/rmos/RosettePatternLibraryEnhanced.vue
+  - A packages/client/src/components/rmos/RosettePresetBrowser.vue
+  - A packages/client/src/lib/rosettePresets.ts
+  - A packages/client/src/views/AppDashboardView.vue
+  - A production_shop_agent/.env.example
+  - A production_shop_agent/admin_ui.html
+  - A production_shop_agent/api/__init__.py
+  - A production_shop_agent/api/auth.py
+  - A production_shop_agent/api/config.py
+  - A production_shop_agent/api/site_generator_router.py
+  - A production_shop_agent/main.py
+  - A production_shop_agent/requirements.txt
+  - A production_shop_agent/site_agent/agent.py
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/.agent_logs/calls.jsonl
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/.agent_logs/manifest.json
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/.agent_logs/spec.json
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/contact.html
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/gallery.html
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/main.js
+  - A production_shop_agent/site_agent/output/lutherie_portfolio/styles.css
+  - A production_shop_agent/site_agent/output/production_shop/.agent_logs/calls.jsonl
+  - A production_shop_agent/site_agent/output/production_shop/.agent_logs/manifest.json
+  - A production_shop_agent/site_agent/output/production_shop/.agent_logs/spec.json
+  - A production_shop_agent/site_agent/output/production_shop/Production-Shop.html
+  - A production_shop_agent/site_agent/output/production_shop/about.html
+  - A production_shop_agent/site_agent/output/production_shop/contact.html
+  - A production_shop_agent/site_agent/output/production_shop/main.js
+  - A production_shop_agent/site_agent/output/production_shop/patch_marketing_ctas.py
+  - A production_shop_agent/site_agent/output/production_shop/pricing.html
+  - A production_shop_agent/site_agent/output/production_shop/styles.css
+  - A production_shop_agent/site_agent/run_agent.bat
+  - A production_shop_agent/site_agent/run_agent.py
+  - A production_shop_agent/site_agent/specs/lutherie_portfolio.json
+  - A production_shop_agent/site_agent/specs/production_shop.json
+  - A scripts/analyze_jazzmaster_contours.py
+  - A scripts/analyze_pdf_colors.py
+  - … 25 more (see sessions.json / files.jsonl)
+- tests: 8 paths
+  - A scripts/test_auto_threshold.py
+  - A scripts/test_gap_closing.py
+  - A scripts/test_integrated_vectorizer.py
+  - A scripts/test_vectorizer_darklines.py
+  - A scripts/test_vectorizer_debug.py
+  - A scripts/test_vectorizer_jazzmaster.py
+  - A scripts/test_jazzmaster_auto.py
+  - A scripts/test_dimension_ocr.py
+Documents produced:
+- `GUITAR_PLANS_REFERENCE.md` — UNKNOWN
+- `SVG_ARTWORK_GUIDE.md` — UNKNOWN
+- `TEST_RESULTS.md` — UNKNOWN
+- `packages/client/src/assets/rosette-presets/README.md` — UNKNOWN
+- `production_shop_agent/API_README.md` — UNKNOWN
+- `production_shop_agent/INSTRUMENT_SHOWCASE_PLAN.md` — UNKNOWN
+- `production_shop_agent/QUICKSTART.md` — UNKNOWN
+- `production_shop_agent/site_agent/README.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/FEATURE_GAP_REPORT.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/FEATURE_TEST_RESULTS.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/LINK_MAPPINGS.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/WEBSITE_REVIEW.md` — UNKNOWN
+- `production_shop_agent/site_agent/output/production_shop/WEBSITE_TEST_REPORT.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b95835b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df358703)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28aa92fa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6606b48)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (213830f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (39d9ff61)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (303e2fab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5d578dc1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (15500ca8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0dd110f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (26f16a67)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (abeb5767)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb0b2454)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d66e2ed6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e220b36d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e231fe35)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09b0e009)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4421eb48)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f6e56e2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (65b3af05)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (99d38ae2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af5b851f)
+
+### S089 — 2026-03-04T22:03:30-06:00 → 2026-03-05T02:47:45-06:00 (24 commits, 4.74h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `145c9a6a` feat(instruments): add Gibson Melody Maker and Cuatro to database
+- `370c04c5` feat(instruments): add Gibson Melody Maker and Cuatro to database
+- `6ff61806` feat(instruments): add detailed specs for Melody Maker and Cuatro
+- `fb20a214` feat(instruments): add detailed specs for Melody Maker and Cuatro
+- `1ce27294` feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer
+- `66894d49` feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer
+- `0cbd3079` chore: bump vectorizer version to 3.6.0
+- `6cb7610d` chore: bump vectorizer version to 3.6.0
+- `08c20162` feat(blueprint): add Phase 4.0 scaffold for leader line association
+- `7445c30c` feat(blueprint): add Phase 4.0 scaffold for leader line association
+- `1dc68d8d` docs(blueprint): add Vectorizer Upgrade Plan with rating history
+- `ff4b245b` docs(blueprint): add Vectorizer Upgrade Plan with rating history
+- `41896ed0` feat(blueprint): add Phase 4.0 Annotation Layer Architecture
+- `fe917d37` feat(blueprint): add Phase 4.0 Annotation Layer Architecture
+- `0f09c719` docs(blueprint): update vectorizer rating to 7.5 after annotation architecture
+- `0fa25019` docs(blueprint): update vectorizer rating to 7.5 after annotation architecture
+- `5e3f2e4b` feat(blueprint): implement ArrowDetector with full detection logic
+- `cfa27090` feat(blueprint): implement ArrowDetector with full detection logic
+- `bbd8882d` feat(blueprint): implement LeaderLineAssociator ranking algorithm
+- `d052de8d` feat(blueprint): implement LeaderLineAssociator ranking algorithm
+- `5a051855` feat(blueprint): complete Phase 4.0 dimension linking pipeline
+- `cfa95a47` feat(blueprint): complete Phase 4.0 dimension linking pipeline
+- `69799e00` docs(blueprint): update to 8.0 rating - Phase 4.0 complete
+- `717176a4` docs(blueprint): update to 8.0 rating - Phase 4.0 complete
+Files by surface:
+- blueprint_import: 29 paths
+  - A services/blueprint-import/train_classifier.py
+  - A services/blueprint-import/debug_ocr.py
+  - A services/blueprint-import/test_ocr_integration.py
+  - A services/blueprint-import/vectorizer_phase3.py
+  - A services/blueprint-import/classifiers/__init__.py
+  - A services/blueprint-import/classifiers/latin_american/__init__.py
+  - A services/blueprint-import/classifiers/latin_american/classifier.py
+  - A services/blueprint-import/classifiers/latin_american/instruments.py
+  - A services/blueprint-import/config/__init__.py
+  - A services/blueprint-import/config/processing_tiers.py
+  - A services/blueprint-import/config/shop_config.yaml
+  - A services/blueprint-import/phase4/__init__.py
+  - A services/blueprint-import/phase4/arrow_detector.py
+  - A services/blueprint-import/phase4/dimension_linker.py
+  - A services/blueprint-import/phase4/leader_associator.py
+  - A services/blueprint-import/docs/VECTORIZER_UPGRADE_PLAN.md
+  - A services/blueprint-import/phase4/annotations/__init__.py
+  - A services/blueprint-import/phase4/annotations/base.py
+  - A services/blueprint-import/phase4/annotations/dimensions.py
+  - A services/blueprint-import/phase4/annotations/exporter.py
+  - A services/blueprint-import/phase4/annotations/json_exporter.py
+  - A services/blueprint-import/tests/test_annotation_layer.py
+  - A services/blueprint-import/tests/test_arrow_detector.py
+  - A services/blueprint-import/tests/test_leader_associator.py
+  - A services/blueprint-import/phase4/pipeline.py
+  - A services/blueprint-import/run_phase4.py
+  - A services/blueprint-import/tests/test_dimension_linker.py
+  - A services/blueprint-import/tests/test_pipeline.py
+  - M services/blueprint-import/dimension_extractor.py
+- other: 28 paths
+  - A Cuatro/El Cuatro 1.dxf
+  - A Cuatro/El Cuatro 1_primitives.dxf
+  - A Cuatro/El Cuatro 2.dxf
+  - A Cuatro/El Cuatro 2_primitives.dxf
+  - A Cuatro/El Cuatro 3.dxf
+  - A Cuatro/El Cuatro 3_primitives.dxf
+  - A Cuatro/El Cuatro 4.dxf
+  - A Cuatro/El Cuatro 4_primitives.dxf
+  - A Cuatro/El Cuatro 5.dxf
+  - A Cuatro/El Cuatro 5_primitives.dxf
+  - A Cuatro/El Cuatro 6.dxf
+  - A Cuatro/El Cuatro 6_primitives.dxf
+  - A Cuatro/El Cuatro 7.dxf
+  - A Cuatro/El Cuatro 7_primitives.dxf
+  - A Cuatro/El Cuatro 8.dxf
+  - A Cuatro/El Cuatro 8_primitives.dxf
+  - A "Cuatro/cuatro puertorique\303\261o.dxf"
+  - A "Cuatro/cuatro puertorique\303\261o_primitives.dxf"
+  - A Cuatro/plano cuatro venezolano.dxf
+  - A Cuatro/plano cuatro venezolano_primitives.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/Gibson-Melody-Maker_phase3.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/Gibson-Melody-Maker_phase3_primitives.dxf
+  - A services/api/app/instrument_geometry/body/dxf/other/Cuatro_Venezolano_body.dxf
+  - A services/api/app/instrument_geometry/models/cuatro_puertorriqueno.json
+  - A services/api/app/instrument_geometry/models/cuatro_venezolano.json
+  - A services/api/app/instrument_geometry/models/gibson_melody_maker.json
+  - M services/api/app/instrument_geometry/body/catalog.json
+  - M services/api/app/instrument_geometry/instrument_model_registry.json
+Documents produced:
+- `services/blueprint-import/docs/VECTORIZER_UPGRADE_PLAN.md` — # Vectorizer Upgrade Plan
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (145c9a6a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (370c04c5)
+- PR #4 (6ff61806)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ff61806)
+- PR #4 (fb20a214)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fb20a214)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ce27294)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (66894d49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08c20162)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7445c30c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1dc68d8d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff4b245b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (41896ed0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe917d37)
+- PR #4 (0f09c719)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f09c719)
+- PR #4 (0fa25019)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0fa25019)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e3f2e4b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cfa27090)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bbd8882d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d052de8d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5a051855)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cfa95a47)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69799e00)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (717176a4)
+
+### S090 — 2026-03-05T08:26:49-06:00 → 2026-03-05T08:26:49-06:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `ae94845f` chore(blueprint): ignore generated ML model files
+- `fc88ca6c` chore(blueprint): ignore generated ML model files
+Files by surface:
+- blueprint_import: 1 paths
+  - A services/blueprint-import/.gitignore
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- (none harvested)
+
+### S091 — 2026-03-05T22:14:29-06:00 → 2026-03-06T03:19:01-06:00 (18 commits, 5.08h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `0445bc4d` feat(calculators): add acoustic guitar body volume calculator
+- `4fdb5660` feat(calculators): add acoustic guitar body volume calculator
+- `811aee36` feat(blueprint): add pixel calibration module + grid zone classifier
+- `994c3453` feat(blueprint): add pixel calibration module + grid zone classifier
+- `ab3dff70` chore(blueprint): ignore test result JSON files
+- `b107ad3d` chore(blueprint): ignore test result JSON files
+- `8defa79b` feat(smart-guitar): add v1 spec and preliminary DXF from mockup analysis
+- `f973d684` feat(smart-guitar): add v1 spec and preliminary DXF from mockup analysis
+- `a2e527bd` docs: add origin story + rebrand to Production Shop
+- `a9074c95` docs: add origin story + rebrand to Production Shop
+- `55034f6b` feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+- `b229d09e` feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+- `0b8bb4e1` feat(blueprint): add CalibrationPanel for PPI-aware geometry vectorization
+- `9297014a` feat(blueprint): add CalibrationPanel for PPI-aware geometry vectorization
+- `0eac2723` fix(blueprint): resolve null vs undefined type mismatch in calibration handler
+- `7409c020` fix(blueprint): resolve null vs undefined type mismatch in calibration handler
+- `834c44be` fix(blueprint): sync VectorizationControls with backend parameters
+- `a9bd0a1e` fix(blueprint): sync VectorizationControls with backend parameters
+Files by surface:
+- api_routing: 4 paths
+  - A services/api/app/routers/blueprint/calibration_router.py
+  - M services/api/app/routers/blueprint/__init__.py
+  - M services/api/app/routers/blueprint/constants.py
+  - M services/api/app/routers/blueprint/phase2_router.py
+- blueprint_import: 19 paths
+  - A services/blueprint-import/BATCH_CLASSIFICATION_REPORT.md
+  - A services/blueprint-import/CALIBRATION_REPORT.md
+  - A services/blueprint-import/DIMENSIONS_REPORT.md
+  - A services/blueprint-import/calibration/__init__.py
+  - A services/blueprint-import/calibration/dimension_extractor.py
+  - A services/blueprint-import/calibration/pixel_calibrator.py
+  - A services/blueprint-import/calibration/scale_detector.py
+  - A services/blueprint-import/calibration_integration.py
+  - A services/blueprint-import/classifiers/grid_zone/__init__.py
+  - A services/blueprint-import/classifiers/grid_zone/classifier.py
+  - A services/blueprint-import/classifiers/grid_zone/zones.py
+  - A services/blueprint-import/extract_dimensions.py
+  - A services/blueprint-import/test_batch_blueprints.py
+  - A services/blueprint-import/test_pixel_calibration.py
+  - A services/blueprint-import/test_strat_grid.py
+  - A services/blueprint-import/tests/test_grid_zone_classifier.py
+  - M services/blueprint-import/classifiers/__init__.py
+  - M services/blueprint-import/vectorizer_phase3.py
+  - M services/blueprint-import/.gitignore
+- docs: 7 paths
+  - A docs/ORIGIN_STORY.md
+  - A docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md
+  - A docs/handoffs/VECTORIZER_UPGRADE_HANDOFF.md
+  - M CHANGELOG.md
+  - M docs/PRODUCT_DEFINITION.md
+  - M docs/index.md
+  - M packages/client/README.md
+- other: 14 paths
+  - A services/api/app/calculators/acoustic_body_volume.py
+  - A scripts/generate_smart_guitar_dxf.py
+  - A services/api/app/instrument_geometry/body/dxf/electric/Smart-Guitar-v1_preliminary.dxf
+  - A services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+  - A packages/client/src/components/blueprint/CalibrationPanel.vue
+  - M .devcontainer/devcontainer.json
+  - M .devcontainer/setup.sh
+  - M Makefile
+  - M mkdocs.yml
+  - M packages/client/index.html
+  - M packages/client/package.json
+  - M packages/client/src/composables/useBlueprintWorkflow.ts
+  - M packages/client/src/views/BlueprintLab.vue
+  - M packages/client/src/components/blueprint/phase2-vectorization/VectorizationControls.vue
+Documents produced:
+- `services/blueprint-import/BATCH_CLASSIFICATION_REPORT.md` — UNKNOWN
+- `services/blueprint-import/CALIBRATION_REPORT.md` — UNKNOWN
+- `services/blueprint-import/DIMENSIONS_REPORT.md` — UNKNOWN
+- `docs/ORIGIN_STORY.md` — UNKNOWN
+- `docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md` — UNKNOWN
+- `docs/handoffs/VECTORIZER_UPGRADE_HANDOFF.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0445bc4d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4fdb5660)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (811aee36)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (994c3453)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8defa79b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f973d684)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a2e527bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a9074c95)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (55034f6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b229d09e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b8bb4e1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9297014a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (834c44be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a9bd0a1e)
+
+### S092 — 2026-03-06T09:04:55-06:00 → 2026-03-07T02:17:40-06:00 (66 commits, 17.21h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `b41b3abd` fix(blueprint): handle large PDFs exceeding Claude 5MB image limit
+- `bc1f8c2a` fix(blueprint): handle large PDFs exceeding Claude 5MB image limit
+- `977e81a1` docs(blueprint): add March 6 session log to vectorizer plan
+- `bed5d0ec` docs(blueprint): add March 6 session log to vectorizer plan
+- `775fa271` fix(rmos): fix double /rmos path + show actual server error message
+- `c7aff701` fix(rmos): fix double /rmos path + show actual server error message
+- `611d9883` fix(rmos): fix double /rmos path in all RMOS components
+- `a12f9a29` fix(rmos): fix double /rmos path in all RMOS components
+- `4eca5d9a` feat(rmos): streamlined QuickActionsPanel replaces multi-step workflow
+- `dc623d69` feat(rmos): streamlined QuickActionsPanel replaces multi-step workflow
+- `20cd61b5` feat(rmos): simplify Manufacturing Candidates UI
+- `99852d28` feat(rmos): simplify Manufacturing Candidates UI
+- `b4b8859a` feat(rmos): ultra-simple Manufacturing Candidates UI
+- `f4e19aa2` feat(rmos): ultra-simple Manufacturing Candidates UI
+- `25290aaa` fix: correct component name ManufacturingCandidatesSimple in template
+- `2f744b95` fix: correct component name ManufacturingCandidatesSimple in template
+- `08fb5d07` fix(ui): add auth headers to ManufacturingCandidatesSimple SDK calls
+- `f52f089b` fix(ui): add auth headers to ManufacturingCandidatesSimple SDK calls
+- `4e300f5e` fix(ui): correct Authorization header syntax
+- `8597821e` fix(ui): correct Authorization header syntax
+- `192083b5` fix(ui): disable metadata fetch to prevent 404 console noise
+- `f329eed3` fix(ui): disable metadata fetch to prevent 404 console noise
+- `1acd73df` fix(ui): disable Promote/Reject when already done
+- `b87b2bc0` fix(ui): disable Promote/Reject when already done
+- `c5453e8a` feat: AI Images, Blueprint Lab, and DXF parser enhancements
+- `d01b24a9` feat: AI Images, Blueprint Lab, and DXF parser enhancements
+- `9d75d692` chore: exclude Cuatro DXF output directories from git
+- `b47fef7b` chore: exclude Cuatro DXF output directories from git
+- `234afbd7` feat(vectorizer): add SIMPLE extraction mode for non-guitar instruments
+- `5b5a3a38` feat(vectorizer): add SIMPLE extraction mode for non-guitar instruments
+- `4b443693` feat(blueprint-lab): add extraction mode toggle (Smart/Simple)
+- `5f8a47d7` feat(blueprint-lab): add extraction mode toggle (Smart/Simple)
+- `2fa4ce26` feat(router): add /guitar-dimensions route for Blueprint Lab handoff
+- `b9411957` feat(router): add /guitar-dimensions route for Blueprint Lab handoff
+- `289e1380` docs: add Phase 2/3 implementation plan for 3-tier SaaS
+- `e5c491da` docs: add Phase 2/3 implementation plan for 3-tier SaaS
+- `192ca9ef` feat(client): add 20 missing route views for feature parity
+- `7a8ec55f` feat(client): add 20 missing route views for feature parity
+- `63996b01` feat(ui): add navigation links for all new routes in dashboard
+- `67805a5d` feat(ui): add navigation links for all new routes in dashboard
+- `b0be1ba9` fix(ui): update dashboard stats to reflect actual counts
+- `e5499c8c` fix(ui): update dashboard stats to reflect actual counts
+- `6f9c4b7e` feat(ui): add Quick Access cards for new features
+- `db909cce` feat(ui): add Quick Access cards for new features
+- `6eb38096` docs: add Toolpath Simulator developer handoff
+- `e08468c6` docs: add Toolpath Simulator developer handoff
+- `099023ab` docs: add detailed Toolpath Animated Visualizer handoff
+- `29707b34` docs: add detailed Toolpath Animated Visualizer handoff
+- `393c6825` fix(client): resolve TypeScript errors + add HelpTooltip component
+- `88272383` fix(client): resolve TypeScript errors + add HelpTooltip component
+- `6408461d` feat(rmos): implement real analytics endpoints (stub debt reduction)
+- `a4cce187` feat(rmos): implement real analytics endpoints (stub debt reduction)
+- `09ee066e` feat(cam): add feeds-speeds calculation endpoint
+- `a40c8f96` feat(cam): add feeds-speeds calculation endpoint
+- `25c3f86f` feat(cam): register drilling router with G81/G83 modal cycles
+- `c05deb59` feat(cam): register drilling router with G81/G83 modal cycles
+- `983207d2` feat(cam): remove what_if stub - real implementation exists
+- `eb0696ec` feat(cam): remove what_if stub - real implementation exists
+- `26b0a51f` feat(cam): wire adaptive2 stubs to real benchmark_router
+- `36e38127` feat(cam): wire adaptive2 stubs to real benchmark_router
+- `5d557a38` feat(cam): wire probe setup sheet stub to real setup_router
+- `dd5b560a` feat(cam): wire probe setup sheet stub to real setup_router
+- `9dc90bed` feat(cam): wire /cam/posts stub to real posts_consolidated_router
+- `ae9635dd` feat(cam): wire /cam/posts stub to real posts_consolidated_router
+- `2d92e1ff` feat(cam): wire /cam/logs/write stub to real logs_router
+- `740238b2` feat(cam): wire /cam/logs/write stub to real logs_router
+Files by surface:
+- api_routing: 2 paths
+  - M services/api/app/routers/blueprint/phase1_router.py
+  - M services/api/app/routers/blueprint/phase2_router.py
+- blueprint_import: 4 paths
+  - A services/blueprint-import/dxf_parser.py
+  - M services/blueprint-import/analyzer.py
+  - M services/blueprint-import/docs/VECTORIZER_UPGRADE_PLAN.md
+  - M services/blueprint-import/vectorizer_phase3.py
+- docs: 3 paths
+  - A docs/PHASE_2_3_IMPLEMENTATION_PLAN.md
+  - A docs/handoff/TOOLPATH_SIMULATOR_HANDOFF.md
+  - A docs/handoffs/TOOLPATH_ANIMATED_VISUALIZER_HANDOFF.md
+- other: 66 paths
+  - A packages/client/src/components/rmos/QuickActionsPanel.vue
+  - A packages/client/src/components/rmos/ManufacturingCandidatesSimple.vue
+  - A packages/client/src/views/GuitarDesignHubView.vue
+  - A packages/client/src/views/GuitarDimensionsView.vue
+  - A packages/client/src/views/InstrumentDesignView.vue
+  - A packages/client/src/views/ai/AssistantView.vue
+  - A packages/client/src/views/ai/DefectDetectionView.vue
+  - A packages/client/src/views/ai/RecommendationsView.vue
+  - A packages/client/src/views/ai/WoodGradingView.vue
+  - A packages/client/src/views/art-studio/BindingDesignerView.vue
+  - A packages/client/src/views/art-studio/FretMarkersView.vue
+  - A packages/client/src/views/art-studio/HeadstockDesignerView.vue
+  - A packages/client/src/views/art-studio/PurflingDesignerView.vue
+  - A packages/client/src/views/art-studio/SoundholeDesignerView.vue
+  - A packages/client/src/views/cam/ContourCuttingView.vue
+  - A packages/client/src/views/cam/DrillingView.vue
+  - A packages/client/src/views/cam/FretSlottingView.vue
+  - A packages/client/src/views/cam/PocketClearingView.vue
+  - A packages/client/src/views/cam/SurfacingView.vue
+  - A packages/client/src/views/cam/ToolpathSimulatorView.vue
+  - A packages/client/src/views/rmos/InventoryView.vue
+  - A packages/client/src/views/rmos/OrdersView.vue
+  - A packages/client/src/views/rmos/QualityControlView.vue
+  - A packages/client/src/views/rmos/TimeTrackingView.vue
+  - A packages/client/src/components/ui/HelpTooltip.vue
+  - A services/api/app/rmos/analytics/__init__.py
+  - A services/api/app/rmos/analytics/router.py
+  - A services/api/app/rmos/analytics/service.py
+  - M packages/client/src/services/apiBase.ts
+  - M production_shop_agent/site_agent/output/production_shop/features.html
+  - M packages/client/src/components/rmos/PromoteToManufacturingButton.vue
+  - M packages/client/src/features/ai_images/composables/useAssetAttachment.ts
+  - M packages/client/src/features/ai_images/composables/useRunSelection.ts
+  - M packages/client/src/features/ai_images/composables/useVariantActions.ts
+  - M packages/client/src/components/rmos/AdvisoryBlobBrowser.vue
+  - M packages/client/src/components/rmos/BulkDecisionModal.vue
+  - M packages/client/src/components/rmos/BulkPromoteModal.vue
+  - M packages/client/src/components/rmos/PromptLineageViewer.vue
+  - M packages/client/src/components/rmos/RunArtifactDetail.vue
+  - M packages/client/src/components/rmos/RunComparePanel.vue
+  - … 26 more (see sessions.json / files.jsonl)
+- tests: 8 paths
+  - A services/api/tests/test_rmos_analytics_smoke.py
+  - A services/api/tests/test_cam_feeds_speeds_smoke.py
+  - A services/api/tests/test_cam_drilling_smoke.py
+  - A services/api/tests/test_cam_what_if_smoke.py
+  - A services/api/tests/test_cam_adaptive2_smoke.py
+  - A services/api/tests/test_cam_probe_setup_smoke.py
+  - A services/api/tests/test_cam_posts_smoke.py
+  - A services/api/tests/test_cam_logs_write_smoke.py
+Documents produced:
+- `docs/PHASE_2_3_IMPLEMENTATION_PLAN.md` — UNKNOWN
+- `docs/handoff/TOOLPATH_SIMULATOR_HANDOFF.md` — UNKNOWN
+- `docs/handoffs/TOOLPATH_ANIMATED_VISUALIZER_HANDOFF.md` — # Toolpath Animated Path Visualizer — Developer Handoff
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b41b3abd)
+- Fixes: ['- Add aggressive image resizing with pixel count limits (16M max)'] (b41b3abd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc1f8c2a)
+- Fixes: ['- Add aggressive image resizing with pixel count limits (16M max)'] (bc1f8c2a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (977e81a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bed5d0ec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (775fa271)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7aff701)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (611d9883)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a12f9a29)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4eca5d9a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc623d69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20cd61b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (99852d28)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b4b8859a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f4e19aa2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (234afbd7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b5a3a38)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b443693)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5f8a47d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fa4ce26)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b9411957)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (289e1380)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e5c491da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (192ca9ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7a8ec55f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (63996b01)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (67805a5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0be1ba9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e5499c8c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f9c4b7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db909cce)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6eb38096)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e08468c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (099023ab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29707b34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (393c6825)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (88272383)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6408461d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4cce187)
+- … 22 more
+
+### S093 — 2026-03-07T08:41:01-06:00 → 2026-03-08T01:43:02-06:00 (94 commits, 17.03h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `92e33ebc` feat(cam): wire job-int stubs to real job_int_log service
+- `d044f5f7` feat(cam): wire job-int stubs to real job_int_log service
+- `a309939c` feat(cam): wire /fret_slots/preview stub to real calculator (7 tests)
+- `b6ffc32a` feat(cam): wire /fret_slots/preview stub to real calculator (7 tests)
+- `3acd2452` docs: add Progress Log to Phase 2/3 plan + mark completed items
+- `96ebce68` docs: add Progress Log to Phase 2/3 plan + mark completed items
+- `2eb1438f` feat(cam): wire /risk/reports_index stub to cam_risk_router (5 tests)
+- `a7f73118` feat(cam): wire /risk/reports_index stub to cam_risk_router (5 tests)
+- `567f65fa` refactor(rmos): remove redundant analytics stubs (real impl exists)
+- `8eaea53f` refactor(rmos): remove redundant analytics stubs (real impl exists)
+- `c6aa5ed5` feat(rmos): wire /rosette/cnc-history and /rosette/cnc-job stubs to art_jobs_store (5 tests)
+- `da61935f` feat(rmos): wire /rosette/cnc-history and /rosette/cnc-job stubs to art_jobs_store (5 tests)
+- `5eb8d7c2` feat(rmos): wire /rosette/segment-ring, /generate-slices, /preview stubs to real engines (10 tests)
+- `ad2e8126` feat(rmos): wire /rosette/segment-ring, /generate-slices, /preview stubs to real engines (10 tests)
+- `51100285` refactor(stubs): remove redundant blueprint stubs (real impl in app.routers.blueprint)
+- `99ed3cb7` refactor(stubs): remove redundant blueprint stubs (real impl in app.routers.blueprint)
+- `20365b85` feat(rmos): wire /safety/evaluate and /safety/mode stubs to real RMOS engine (9 tests)
+- `da6b23aa` feat(rmos): wire /safety/evaluate and /safety/mode stubs to real RMOS engine (9 tests)
+- `2a3b09f6` feat(stubs): wire /ai/advisories/request to rmos.ai_advisory service
+- `7f9de088` feat(stubs): wire /ai/advisories/request to rmos.ai_advisory service
+- `ad7dff9a` refactor(stubs): remove vestigial rosette compare snapshot GET stub
+- `fae9e114` refactor(stubs): remove vestigial rosette compare snapshot GET stub
+- `146e260f` feat(rmos): implement functional override token generator
+- `7ecb18df` feat(rmos): implement functional override token generator
+- `19095e04` feat(stubs): wire acoustics /import-zip and /rebuild_attachment_meta to real implementations
+- `a90b7502` feat(stubs): wire acoustics /import-zip and /rebuild_attachment_meta to real implementations
+- `d8258881` feat(stubs): wire /rosette/export-cnc to real CNC wiring (N16.3)
+- `ff39868e` feat(stubs): wire /rosette/export-cnc to real CNC wiring (N16.3)
+- `86dbab2e` feat(cam): wire /bridge/export_dxf stub to real DXF generator
+- `8d269bcb` feat(cam): wire /bridge/export_dxf stub to real DXF generator
+- `4cc640e4` feat(rmos): wire /wrap/mvp/dxf-to-grbl to real DXF->G-code pipeline
+- `4e5ff710` feat(rmos): wire /wrap/mvp/dxf-to-grbl to real DXF->G-code pipeline
+- `45ab08df` feat(cam): wire /job_log/insights/* to real job_int_log analysis
+- `8875bc94` feat(cam): wire /job_log/insights/* to real job_int_log analysis
+- `40dbc383` feat(rmos): wire /live-monitor/{job_id}/drilldown to runs_v2 store
+- `73645d05` feat(rmos): wire /live-monitor/{job_id}/drilldown to runs_v2 store
+- `1344d64f` feat(cam): wire risk reports to persistent JSONL storage
+- `ab112f0d` feat(cam): wire risk reports to persistent JSONL storage
+- `509f23ca` feat(cam): wire machines_router.py to machine_profiles.json
+- `f888d22d` feat(cam): wire machines_router.py to machine_profiles.json
+- `7103e34a` fix(art): wire art_presets_router.py to persistent art_presets_store.py
+- `a852bd63` fix(art): wire art_presets_router.py to persistent art_presets_store.py
+- `12efcb65` test(tooling): add 31 smoke tests for tooling endpoints
+- `f20ef825` test(tooling): add 31 smoke tests for tooling endpoints
+- `b8464af4` feat(api): register music/temperament router + add 39 smoke tests
+- `cd3cbf47` feat(api): register music/temperament router + add 39 smoke tests
+- `c6c6c9af` feat(api): register material_router + add 20 smoke tests
+- `cfee511a` feat(api): register material_router + add 20 smoke tests
+- `1d749aff` test(art-studio): add 35 smoke tests for bracing endpoints
+- `7598afb0` test(art-studio): add 35 smoke tests for bracing endpoints
+- `17f5b245` test(art-studio): add 39 smoke tests for inlay endpoints
+- `cd84f243` test(art-studio): add 39 smoke tests for inlay endpoints
+- `5202c2bb` test(art-studio): add 22 smoke tests for relief/vcarve preview endpoints
+- `e7b42d32` test(art-studio): add 22 smoke tests for relief/vcarve preview endpoints
+- `50087667` test(instrument): add 38 smoke tests for geometry + bridge presets
+- `548b6f3e` test(instrument): add 38 smoke tests for geometry + bridge presets
+- `0e0bbce5` test(neck): add neck generator endpoint smoke tests
+- `4933168d` test(neck): add neck generator endpoint smoke tests
+- `1d30f47e` test(registry): add data registry endpoint smoke tests
+- `8199abb9` test(registry): add data registry endpoint smoke tests
+- `7202a474` test(api): add CAM polygon offset endpoint smoke tests (36 tests)
+- `b24a7e79` test(api): add CAM polygon offset endpoint smoke tests (36 tests)
+- `92023020` test(api): add DXF preflight endpoint smoke tests (45 tests)
+- `b2619528` test(api): add DXF preflight endpoint smoke tests (45 tests)
+- `598012b2` chore: recover 88 files (18,927 lines) from decomposition cleanup
+- `e7854fad` chore: recover 88 files (18,927 lines) from decomposition cleanup
+- `189f8d79` test(cam): add G-code backplot endpoint smoke tests (36 tests)
+- `a19dd75a` test(cam): add G-code backplot endpoint smoke tests (36 tests)
+- `4cb8a3a0` test(cam): add adaptive preview endpoint smoke tests (35 tests)
+- `812580db` test(cam): add adaptive preview endpoint smoke tests (35 tests)
+- `d750c6df` test(cam): add bridge presets endpoint smoke tests (37 tests)
+- `f6e17108` test(cam): add bridge presets endpoint smoke tests (37 tests)
+- `6850eb63` test(api): add 41 posts endpoint smoke tests
+- `bbf8cf17` test(api): add 41 posts endpoint smoke tests
+- `1f0f1671` test(api): add 79 retract endpoint smoke tests + fix download bug
+- `7f25ee39` test(api): add 79 retract endpoint smoke tests + fix download bug
+- `7835e4c0` test(api): add 17 strip family endpoint smoke tests
+- `c16a13a3` test(api): add 17 strip family endpoint smoke tests
+- `1de68064` test(api): add CAM learn endpoint smoke tests (18 tests)
+- `f7ce3c80` test(api): add CAM learn endpoint smoke tests (18 tests)
+- `5e304cab` test(api): add advanced analytics endpoint smoke tests (24 tests)
+- `dea2f2fb` test(api): add advanced analytics endpoint smoke tests (24 tests)
+- `641dab56` test(api): add analytics endpoint smoke tests (50 tests)
+- `9a154b57` test(api): add analytics endpoint smoke tests (50 tests)
+- `5933c127` test(api): add instrument geometry endpoint smoke tests (36 tests)
+- `d8643c3a` test(api): add instrument geometry endpoint smoke tests (36 tests)
+- `2bea963c` test(api): add DXF plan endpoint smoke tests (24 tests)
+- `c6da1ced` test(api): add DXF plan endpoint smoke tests (24 tests)
+- `435e000f` test(api): add blueprint endpoint smoke tests (34 tests)
+- `62a6c280` test(api): add blueprint endpoint smoke tests (34 tests)
+- `2d0b574b` test(api): add simulation consolidated router smoke tests (36 tests)
+- `f5b40807` test(api): add simulation consolidated router smoke tests (36 tests)
+- `890bcfbd` test(api): add business router smoke tests (58 tests)
+- `a2d08a6a` test(api): add business router smoke tests (58 tests)
+Files by surface:
+- docs: 3 paths
+  - A __RECOVERED__/C_archtop_pipeline/ARCHTOP_LEGACY_DISCOVERY_SUMMARY.md
+  - A __RECOVERED__/README.md
+  - M docs/PHASE_2_3_IMPLEMENTATION_PLAN.md
+- other: 100 paths
+  - A services/api/app/services/risk_reports_store.py
+  - A __RECOVERED__/A_cam_core/advanced_offset.py
+  - A __RECOVERED__/A_cam_core/cam_post_v155_router.py
+  - A __RECOVERED__/A_cam_core/modal_cycles.py
+  - A __RECOVERED__/A_cam_core/saw_gcode_generator.py
+  - A __RECOVERED__/B_instrument_data/martin_d28_1937.py
+  - A __RECOVERED__/B_instrument_data/selmer_maccaferri_dhole.py
+  - A __RECOVERED__/C_archtop_pipeline/archtop_cam_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/cam_pipeline_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/learn_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/om_cam_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/posts_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/registry_cam_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/smart_cam_router.py
+  - A __RECOVERED__/D_guitar_cam_routers/stratocaster_cam_router.py
+  - A __RECOVERED__/E_rosette_fabrication/image_prompts.py
+  - A __RECOVERED__/E_rosette_fabrication/rmos_rosette_api.py
+  - A __RECOVERED__/E_rosette_fabrication/rosette_design_sheet_api.py
+  - A __RECOVERED__/E_rosette_fabrication/rosette_rmos_adapter.py
+  - A __RECOVERED__/E_rosette_fabrication/traditional_builder.py
+  - A __RECOVERED__/F_validation_tooling/cam_cutting_evaluator.py
+  - A __RECOVERED__/F_validation_tooling/dxf_advanced_validation.py
+  - A __RECOVERED__/F_validation_tooling/pipeline_spec_validator.py
+  - A __RECOVERED__/G_rmos_orchestration/api_ai_snapshots.py
+  - A __RECOVERED__/G_rmos_orchestration/api_logs_viewer.py
+  - A __RECOVERED__/G_rmos_orchestration/api_presets.py
+  - A __RECOVERED__/G_rmos_orchestration/api_profile_history.py
+  - A __RECOVERED__/G_rmos_orchestration/mvp_wrapper.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_analytics_api.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_pattern_api.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_pipeline_run_api.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_presets_api.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_safety_api.py
+  - A __RECOVERED__/G_rmos_orchestration/rmos_stores_api.py
+  - A __RECOVERED__/H_services_utilities/cam_notifier.py
+  - A __RECOVERED__/H_services_utilities/compare_automation_helpers.py
+  - A __RECOVERED__/H_services_utilities/job_int_favorites.py
+  - A __RECOVERED__/H_services_utilities/job_risk_store.py
+  - A __RECOVERED__/H_services_utilities/live_monitor_drilldown_api.py
+  - A __RECOVERED__/H_services_utilities/metrics_registry.py
+  - … 60 more (see sessions.json / files.jsonl)
+- tests: 43 paths
+  - A services/api/tests/test_cam_job_int_smoke.py
+  - A services/api/tests/test_cam_fret_slots_preview_smoke.py
+  - A services/api/tests/test_cam_risk_reports_index_smoke.py
+  - A services/api/tests/test_rmos_rosette_cnc_smoke.py
+  - A services/api/tests/test_rmos_rosette_engines_smoke.py
+  - A services/api/tests/test_rmos_safety_endpoints_smoke.py
+  - A services/api/tests/test_ai_advisory_endpoint_smoke.py
+  - A services/api/tests/test_override_token_endpoint_smoke.py
+  - A services/api/tests/test_acoustics_import_endpoint_smoke.py
+  - A services/api/tests/test_rosette_cnc_export_endpoint_smoke.py
+  - A services/api/tests/test_bridge_dxf_export_endpoint_smoke.py
+  - A services/api/tests/test_dxf_to_grbl_endpoint_smoke.py
+  - A services/api/tests/test_job_log_insights_endpoint_smoke.py
+  - A services/api/tests/test_live_monitor_drilldown_endpoint_smoke.py
+  - A services/api/tests/test_cam_risk_reports_endpoint_smoke.py
+  - A services/api/tests/test_cam_machines_endpoint_smoke.py
+  - A services/api/tests/test_art_presets_aggregate_endpoint_smoke.py
+  - A services/api/tests/test_tooling_endpoint_smoke.py
+  - A services/api/tests/test_temperament_endpoint_smoke.py
+  - A services/api/tests/test_material_endpoint_smoke.py
+  - A services/api/tests/test_bracing_endpoint_smoke.py
+  - A services/api/tests/test_inlay_endpoint_smoke.py
+  - A services/api/tests/test_relief_vcarve_endpoint_smoke.py
+  - A services/api/tests/test_instrument_geometry_endpoint_smoke.py
+  - A services/api/tests/test_neck_endpoint_smoke.py
+  - A services/api/tests/test_registry_endpoint_smoke.py
+  - A services/api/tests/test_polygon_offset_endpoint_smoke.py
+  - A services/api/tests/test_dxf_preflight_endpoint_smoke.py
+  - A __RECOVERED__/F_validation_tooling/test_mvp_dxf_to_gcode_grbl_golden.py
+  - A services/api/tests/test_gcode_backplot_endpoint_smoke.py
+  - A services/api/tests/test_adaptive_preview_endpoint_smoke.py
+  - A services/api/tests/test_bridge_presets_endpoint_smoke.py
+  - A services/api/tests/test_posts_endpoint_smoke.py
+  - A services/api/tests/test_retract_endpoint_smoke.py
+  - A services/api/tests/test_strip_family_endpoint_smoke.py
+  - A services/api/tests/test_cam_learn_endpoint_smoke.py
+  - A services/api/tests/test_advanced_analytics_endpoint_smoke.py
+  - A services/api/tests/test_analytics_endpoint_smoke.py
+  - A services/api/tests/test_instrument_endpoint_smoke.py
+  - A services/api/tests/test_dxf_plan_endpoint_smoke.py
+  - … 3 more (see sessions.json / files.jsonl)
+Documents produced:
+- `__RECOVERED__/C_archtop_pipeline/ARCHTOP_LEGACY_DISCOVERY_SUMMARY.md` — # Archtop Legacy Assets Discovery Summary
+- `__RECOVERED__/README.md` — # DECOMPOSITION RECOVERY — Annotated Executive Summary
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92e33ebc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d044f5f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a309939c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b6ffc32a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3acd2452)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96ebce68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2eb1438f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7f73118)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (567f65fa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8eaea53f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6aa5ed5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da61935f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5eb8d7c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad2e8126)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (51100285)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (99ed3cb7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (20365b85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da6b23aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a3b09f6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f9de088)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad7dff9a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fae9e114)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (146e260f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7ecb18df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (19095e04)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a90b7502)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8258881)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff39868e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86dbab2e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8d269bcb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4cc640e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e5ff710)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45ab08df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8875bc94)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (40dbc383)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73645d05)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1344d64f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ab112f0d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (509f23ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f888d22d)
+- … 52 more
+
+### S094 — 2026-03-08T06:59:11-05:00 → 2026-03-09T16:10:22-05:00 (122 commits, 33.19h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `18ef8a6e` test(api): add workflow sessions endpoint smoke tests (42 tests)
+- `a6d380c1` test(api): add workflow sessions endpoint smoke tests (42 tests)
+- `6698bad5` test(saw-lab): add comprehensive smoke tests for all saw_lab routers (82 tests)
+- `9946de1b` test(saw-lab): add comprehensive smoke tests for all saw_lab routers (82 tests)
+- `70110851` test(rmos): add smoke tests for RMOS endpoints (78 tests)
+- `73a7415c` test(rmos): add smoke tests for RMOS endpoints (78 tests)
+- `c5092470` test(art-studio): add 61 endpoint smoke tests
+- `dc939a41` test(art-studio): add 61 endpoint smoke tests
+- `55147180` feat(specs): add instrument spec JSONs for 10 models + update registry to 24 models
+- `d4a298e8` feat(specs): add instrument spec JSONs for 10 models + update registry to 24 models
+- `8102d7ef` feat(dxf): add body outline DXFs for 16 instruments
+- `b249668b` feat(dxf): add body outline DXFs for 16 instruments
+- `100c958a` fix(vectorizer): add 5 INSTRUMENT_SPECS, fix ContourInfo comparison bug
+- `1e12c33c` fix(vectorizer): add 5 INSTRUMENT_SPECS, fix ContourInfo comparison bug
+- `53a4ea38` feat(scripts): add CNC build generators and J-45 extraction scripts
+- `61e6c075` feat(scripts): add CNC build generators and J-45 extraction scripts
+- `2d0980c7` docs(handoffs): add 11 CNC build handoff documents
+- `5c25ba34` docs(handoffs): add 11 CNC build handoff documents
+- `b9945ea2` feat(services): add CAM modules, governance, services, and utilities
+- `dd96cad5` feat(services): add CAM modules, governance, services, and utilities
+- `19b906e0` chore: update 19 modified files across services, routers, and geometry
+- `e8aaa972` chore: update 19 modified files across services, routers, and geometry
+- `3c74c84c` chore: update workspace config, architecture scan, toolpath visualizer plan
+- `699fb484` chore: update workspace config, architecture scan, toolpath visualizer plan
+- `05edea23` test(cam): add 58 endpoint smoke tests for CAM routers
+- `17e46987` test(cam): add 58 endpoint smoke tests for CAM routers
+- `01492897` feat(specs): add Jumbo Archtop — Carlos body scale + Benedetto construction
+- `bc990bf6` feat(specs): add Jumbo Archtop — Carlos body scale + Benedetto construction
+- `48289540` test: add remaining routers smoke tests (75 tests)
+- `9f430bf4` test: add remaining routers smoke tests (75 tests)
+- `1a1f1768` fix(services): restore missing risk_reports_store compatibility functions
+- `27303774` fix(services): restore missing risk_reports_store compatibility functions
+- `882dc5fb` fix(tests): align fan fret tests with FretSlotsPreviewRequest schema
+- `f1380d24` fix(tests): align fan fret tests with FretSlotsPreviewRequest schema
+- `a85a75f3` fix(ci): resolve 4 CI workflow failures
+- `f8c64b02` fix(ci): resolve 4 CI workflow failures
+- `363c09c8` fix(docker): create runs subdirectory + set RMOS_RUNS_DIR in CI
+- `9edaf100` fix(docker): create runs subdirectory + set RMOS_RUNS_DIR in CI
+- `7fad5600` fix(ci): regenerate complexity baseline (140 → 146 violations)
+- `9c32fade` fix(ci): regenerate complexity baseline (140 → 146 violations)
+- `53956dca` fix(ci): correct fence baseline line numbers (98→97, 125→124)
+- `d3f94a15` fix(ci): correct fence baseline line numbers (98→97, 125→124)
+- `4a1ffa39` fix(ci): regenerate file sizes baseline (23 violations)
+- `ed290e25` fix(ci): regenerate file sizes baseline (23 violations)
+- `89d5728a` fix(store): handle missing rosette_compare_risk table gracefully
+- `d5fe43da` fix(store): handle missing rosette_compare_risk table gracefully
+- `056e97fc` ci: update file size baseline with 9 new/updated entries
+- `322faf21` ci: update file size baseline with 9 new/updated entries
+- `5e5c32db` fix(ci): fix container smoke tests
+- `c4435532` fix(ci): fix container smoke tests
+- `3ec0b1cb` feat(restore): Wave 27.2 decomposition recovery - 12 files restored
+- `ca99bb63` feat(restore): Wave 27.2 decomposition recovery - 12 files restored
+- `7eeee901` ci: update file size baseline for Wave 27.2 restoration
+- `e6cb3606` ci: update file size baseline for Wave 27.2 restoration
+- `a8e618f2` ci: update complexity baseline for Wave 27.2 restored files
+- `d0183c26` ci: update complexity baseline for Wave 27.2 restored files
+- `1f75b84a` ci: update file sizes baseline in Technical Debt Gates
+- `fa98eec9` ci: update file sizes baseline in Technical Debt Gates
+- `53096f89` ci: update endpoint baseline for Wave 27.2 restoration
+- `623af5a5` ci: update endpoint baseline for Wave 27.2 restoration
+- `0fd3ca1b` feat(ui): wire ArchtopCalculator to /api/cam/guitar/archtop/fit endpoint
+- `b573a138` feat(ui): wire ArchtopCalculator to /api/cam/guitar/archtop/fit endpoint
+- `ca219aaf` wood-db: add Honey Mesquite + luthier tonewood reference + vectorizer pickguard-sheet detection
+- `faeead9c` wood-db: add Honey Mesquite + luthier tonewood reference + vectorizer pickguard-sheet detection
+- `7e6e6b3b` fix(client): update Vite proxy to use port 8010
+- `d4c9ae78` fix(client): update Vite proxy to use port 8010
+- `583a7034` feat(vectorizer): add sheet type detection + ukulele specs
+- `6f02b4b2` feat(vectorizer): add sheet type detection + ukulele specs
+- `dd1e8bef` feat(calculators): add bridge break angle calculator
+- `fc45b2df` feat(calculators): add bridge break angle calculator
+- `7a0efa2a` fix(contracts): add 18 missing API endpoints to contract
+- `dc1006ca` fix(contracts): add 18 missing API endpoints to contract
+- `6a20261a` fix(ci): add fastapi httpx to SG export gate deps
+- `aec040c0` fix(ci): add fastapi httpx to SG export gate deps
+- `28245097` fix(ci): add pytest-cov to SG export gate deps
+- `37974138` fix(ci): add pytest-cov to SG export gate deps
+- `2cc2e9d4` test(sg-export): add stub test for Smart Guitar Export Gate
+- `5beb1451` test(sg-export): add stub test for Smart Guitar Export Gate
+- `e4e54790` feat(calculators): add headstock/nut break angle calculator
+- `ff240c6e` feat(calculators): add headstock/nut break angle calculator
+- `2b8bbd45` ci: update file size baseline for neck_router.py (655→683)
+- `b6f988a4` ci: update file size baseline for neck_router.py (655→683)
+- `154198f9` ci: update file size baseline for neck_router.py (655→683)
+- `cf4fa22b` ci: update file size baseline for neck_router.py (655→683)
+- `46af6ef5` Phase 3.7: Vectorizer enhancements, SVG export, CAM-ready DXF post-processor
+- `a51d0418` Phase 3.7: Vectorizer enhancements, SVG export, CAM-ready DXF post-processor
+- `3e65de53` Fix 5 signature mismatches in Phase 3.7 extract() wiring
+- `fb834541` Fix 5 signature mismatches in Phase 3.7 extract() wiring
+- `3cb6092e` Add dark background detection and auto-inversion for white-on-black blueprints
+- `79e8c289` Add dark background detection and auto-inversion for white-on-black blueprints
+- `0bb31bf8` feat: Photo Vectorizer V2 — standalone photo-to-SVG/DXF extractor
+- `94d90243` feat: Photo Vectorizer V2 — standalone photo-to-SVG/DXF extractor
+- `2db0dff0` chore: rebrand from Luthier's ToolBox to The Production Shop
+- `ffecf39f` chore: rebrand from Luthier's ToolBox to The Production Shop
+- `10eab910` chore: ignore grid_classify.py
+- `5dca875d` chore: ignore grid_classify.py
+- `4aa5ccb9` test(auth): add Supabase auth test suite
+- `d4dc28fb` test(auth): add Supabase auth test suite
+- `9a8cdb19` docs: add Supabase auth setup guide
+- `eec3d164` docs: add Supabase auth setup guide
+- `0b5024db` feat(photo-vectorizer): add grid zone re-classification
+- `4ddf35aa` feat(photo-vectorizer): add grid zone re-classification
+- `39193728` fix(client): remove dead site-generator link + add env template
+- `7428d5c1` fix(client): remove dead site-generator link + add env template
+- `035afcba` fix(client): correct API endpoint paths + defensive null check
+- `a44daab5` fix(client): correct API endpoint paths + defensive null check
+- `67929e97` fix(dev): CORS and frontend error fixes for local development
+- `bcfd3d9f` fix(dev): CORS and frontend error fixes for local development
+- `4cd1b2bb` docs: add photo-vectorizer developer handoff
+- `94e40951` docs: add photo-vectorizer developer handoff
+- `21755827` fix(ui): add Acoustics Library and Runs to Analytics menu
+- `6da44468` fix(ui): add Acoustics Library and Runs to Analytics menu
+- `0b570645` fix(ui): resolve main page errors - fetchRuns and RunArtifactPanel
+- `83fc14c3` fix(ui): resolve main page errors - fetchRuns and RunArtifactPanel
+- `4f39ee61` fix(client): fix Vue Router missing route and advisory blobs 404
+- `6d6da3a6` fix(client): fix Vue Router missing route and advisory blobs 404
+- `14cda948` feat(auth): integrate useEdition with Supabase auth tier
+- `fa48d117` feat(auth): integrate useEdition with Supabase auth tier
+- `949e6690` fix(db): make auth migration SQLite-compatible
+- `dba52084` fix(db): make auth migration SQLite-compatible
+- `60ba2253` feat(vis): Toolpath Visualizer P1-P3 enhancements
+- `df1f052d` feat(vis): Toolpath Visualizer P1-P3 enhancements
+Files by surface:
+- blueprint_import: 44 paths
+  - A services/blueprint-import/tests/test_sheet_type_detection.py
+  - A services/blueprint-import/dxf_postprocessor.py
+  - A services/blueprint-import/export_svg.py
+  - A services/blueprint-import/vectorizer_enhancements.py
+  - A services/blueprint-import/tests/test_photo_pipeline_trial.py
+  - M services/blueprint-import/vectorizer_phase3.py
+  - M services/blueprint-import/BATCH_CLASSIFICATION_REPORT.md
+  - M services/blueprint-import/DIMENSIONS_REPORT.md
+  - M services/blueprint-import/calibration/__init__.py
+  - M services/blueprint-import/calibration/dimension_extractor.py
+  - M services/blueprint-import/calibration/pixel_calibrator.py
+  - M services/blueprint-import/calibration/scale_detector.py
+  - M services/blueprint-import/calibration_integration.py
+  - M services/blueprint-import/classifiers/__init__.py
+  - M services/blueprint-import/classifiers/grid_zone/__init__.py
+  - M services/blueprint-import/classifiers/grid_zone/classifier.py
+  - M services/blueprint-import/classifiers/grid_zone/zones.py
+  - M services/blueprint-import/classifiers/latin_american/__init__.py
+  - M services/blueprint-import/classifiers/latin_american/classifier.py
+  - M services/blueprint-import/classifiers/latin_american/instruments.py
+  - M services/blueprint-import/config/__init__.py
+  - M services/blueprint-import/config/processing_tiers.py
+  - M services/blueprint-import/config/shop_config.yaml
+  - M services/blueprint-import/docs/VECTORIZER_UPGRADE_PLAN.md
+  - M services/blueprint-import/dxf_compat.py
+  - M services/blueprint-import/extract_dimensions.py
+  - M services/blueprint-import/phase4/annotations/__init__.py
+  - M services/blueprint-import/phase4/annotations/base.py
+  - M services/blueprint-import/phase4/annotations/dimensions.py
+  - M services/blueprint-import/phase4/annotations/exporter.py
+  - M services/blueprint-import/phase4/annotations/json_exporter.py
+  - M services/blueprint-import/phase4/arrow_detector.py
+  - M services/blueprint-import/phase4/dimension_linker.py
+  - M services/blueprint-import/phase4/leader_associator.py
+  - M services/blueprint-import/phase4/pipeline.py
+  - M services/blueprint-import/run_phase4.py
+  - M services/blueprint-import/test_batch_blueprints.py
+  - M services/blueprint-import/test_pixel_calibration.py
+  - M services/blueprint-import/tests/test_annotation_layer.py
+  - M services/blueprint-import/tests/test_arrow_detector.py
+  - … 4 more (see sessions.json / files.jsonl)
+- docs: 63 paths
+  - A docs/handoffs/24_FRET_STRATOCASTER_DESIGN_HANDOFF.md
+  - A docs/handoffs/BENEDETTO_ARCHTOP_ROPE_BINDING_HANDOFF.md
+  - A docs/handoffs/CUSTOM_INLAY_FRETBOARD_HEADSTOCK_HANDOFF.md
+  - A docs/handoffs/FLYING_V_1958_CNC_HANDOFF.md
+  - A docs/handoffs/GIBSON_EXPLORER_1958_CNC_HANDOFF.md
+  - A docs/handoffs/J45_VINE_OF_LIFE_DESIGN_HANDOFF.md
+  - A docs/handoffs/LES_PAUL_1959_CNC_HANDOFF.md
+  - A docs/handoffs/OM_HERRINGBONE_ACOUSTIC_HANDOFF.md
+  - A docs/handoffs/OM_PURFLING_CNC_HANDOFF.md
+  - A docs/handoffs/SMART_GUITAR_V1_CNC_HANDOFF.md
+  - A docs/handoffs/STRATOCASTER_NECK_DESIGN_HANDOFF.md
+  - A docs/SUPABASE_AUTH_SETUP.md
+  - M docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md
+  - M docs/handoffs/TOOLPATH_ANIMATED_VISUALIZER_HANDOFF.md
+  - M .github/copilot-instructions.md
+  - M CHANGELOG.md
+  - M GUITAR_PLANS_REFERENCE.md
+  - M README.md
+  - M docs/CHIEF_ENGINEER_HANDOFF.md
+  - M docs/DEVELOPMENT.md
+  - M docs/OPERATION_EXECUTION_GOVERNANCE_v1.md
+  - M docs/ORIGIN_STORY.md
+  - M docs/PRODUCT_SCOPE.md
+  - M docs/REMEDIATION_PLAN.md
+  - M docs/RMOS_CONCEPTS_GUIDE.md
+  - M docs/ROUTER_MAP.md
+  - M docs/SCORE_7_PLAN.md
+  - M docs/SECURITY.md
+  - M docs/TESTING_STRATEGY.md
+  - M docs/VUE_DECOMPOSITION_GUIDE.md
+  - M docs/adr/ADR-001-fields-and-policy-ownership.md
+  - M docs/api/overview.md
+  - M docs/cam/overview.md
+  - M docs/cam/post-processors.md
+  - M docs/canonical/ARCHITECTURE.md
+  - M docs/canonical/CODING_POLICY.md
+  - M docs/canonical/GETTING_STARTED.md
+  - M docs/canonical/QUICKSTART.md
+  - M docs/canonical/governance/AI_SANDBOX_GOVERNANCE.md
+  - M docs/contributing.md
+  - … 23 more (see sessions.json / files.jsonl)
+- other: 272 paths
+  - A services/api/app/instrument_geometry/specs/benedetto_archtop_rope.json
+  - A services/api/app/instrument_geometry/specs/carlos_jumbo.json
+  - A services/api/app/instrument_geometry/specs/gibson_explorer.json
+  - A services/api/app/instrument_geometry/specs/gibson_flying_v_1958.json
+  - A services/api/app/instrument_geometry/specs/gibson_j45.json
+  - A services/api/app/instrument_geometry/specs/gibson_les_paul.json
+  - A services/api/app/instrument_geometry/specs/klein_guitar.json
+  - A services/api/app/instrument_geometry/specs/martin_d28_1937.py
+  - A services/api/app/instrument_geometry/specs/martin_om28.json
+  - A services/api/app/instrument_geometry/specs/selmer_maccaferri_dhole.py
+  - A services/api/app/instrument_geometry/specs/stratocaster.json
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/J45_body_outline.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/J45_body_outline_dense.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/Jumbo_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/classical_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/dreadnought_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/gibson_l_00_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/om_000_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/orchestra_model_body_view.dxf
+  - A services/api/app/instrument_geometry/body/dxf/acoustic/orchestra_model_clean.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/JS1000_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/LesPaul_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/Stratocaster_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/flying_v_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/flying_v_full.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/harmony_h44_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/other/concert_ukulele_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/other/octave_mandolin_body.dxf
+  - A services/api/app/instrument_geometry/body/dxf/other/soprano_ukulele_body.dxf
+  - A scripts/extract_j45_bracing.py
+  - A scripts/generate_explorer_full_build.py
+  - A scripts/generate_les_paul_full_build.py
+  - A scripts/generate_smart_guitar_full_build.py
+  - A scripts/inspect_j45_dims.py
+  - A services/api/app/calculators/cam_cutting_evaluator.py
+  - A services/api/app/cam/dxf_advanced_validation.py
+  - A services/api/app/cam/modal_cycles.py
+  - A services/api/app/cam/rosette/image_prompts.py
+  - A services/api/app/cam/rosette/traditional_builder.py
+  - … 232 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 3 paths
+  - A services/photo-vectorizer/photo_vectorizer_v2.py
+  - A services/photo-vectorizer/__init__.py
+  - A services/photo-vectorizer/DEVELOPER_HANDOFF.md
+- tests: 19 paths
+  - A services/api/tests/test_workflow_sessions_endpoint_smoke.py
+  - A services/api/tests/test_saw_lab_endpoint_smoke.py
+  - A services/api/tests/test_rmos_endpoint_smoke.py
+  - A services/api/tests/test_art_studio_api_endpoint_smoke.py
+  - A services/api/tests/test_cam_consolidated_endpoint_smoke.py
+  - A TOOLPATH_VISUALIZER_IMPLEMENTATION_PLAN/test_gcode_simulate.py
+  - A services/api/tests/test_remaining_routers_endpoint_smoke.py
+  - A services/api/tests/test_bridge_break_angle.py
+  - A services/api/tests/test_smart_guitar_export_gate.py
+  - A services/api/tests/test_headstock_break_angle.py
+  - A services/api/tests/test_auth_router.py
+  - A services/api/tests/test_auth_supabase.py
+  - A services/api/tests/test_tier_gate.py
+  - A services/api/tests/test_gcode_simulate.py
+  - M services/api/app/tests/test_fan_fret_perpendicular.py
+  - M services/api/tests/test_technical_debt_gates.py
+  - M services/api/tests/__init__.py
+  - M services/api/tests/conftest.py
+  - M tests/data/saw_lab_blades.json
+Documents produced:
+- `docs/handoffs/24_FRET_STRATOCASTER_DESIGN_HANDOFF.md` — # 24-Fret Stratocaster Design — Developer Handoff
+- `docs/handoffs/BENEDETTO_ARCHTOP_ROPE_BINDING_HANDOFF.md` — # Benedetto 17" Archtop — Spanish Rope Binding — Developer Handoff
+- `docs/handoffs/CUSTOM_INLAY_FRETBOARD_HEADSTOCK_HANDOFF.md` — # Custom Fretboard & Headstock Inlay System — Developer Handoff
+- `docs/handoffs/FLYING_V_1958_CNC_HANDOFF.md` — # 1958 Gibson Flying V — CNC Design & G-code Handoff
+- `docs/handoffs/GIBSON_EXPLORER_1958_CNC_HANDOFF.md` — # 1958 Gibson Explorer — Full CNC Build Handoff
+- `docs/handoffs/J45_VINE_OF_LIFE_DESIGN_HANDOFF.md` — # Gibson J45 Vine of Life — Developer Handoff
+- `docs/handoffs/LES_PAUL_1959_CNC_HANDOFF.md` — # 1956–1959 Gibson Les Paul Standard — Full CNC Build Handoff
+- `docs/handoffs/OM_HERRINGBONE_ACOUSTIC_HANDOFF.md` — # Martin OM-28 Herringbone Acoustic — Developer Handoff
+- `docs/handoffs/OM_PURFLING_CNC_HANDOFF.md` — # OM Acoustic Purfling & Binding CNC Handoff
+- `docs/handoffs/SMART_GUITAR_V1_CNC_HANDOFF.md` — # Smart Guitar v1.1 — Full CNC Build Handoff
+- `docs/handoffs/STRATOCASTER_NECK_DESIGN_HANDOFF.md` — # Stratocaster Neck Design — Developer Handoff
+- `docs/SUPABASE_AUTH_SETUP.md` — # Supabase Authentication Setup
+- `services/photo-vectorizer/DEVELOPER_HANDOFF.md` — # Photo Vectorizer V2 — Developer Handoff
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (18ef8a6e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a6d380c1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6698bad5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9946de1b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (70110851)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73a7415c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c5092470)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc939a41)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (05edea23)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (17e46987)
+- PR #17 (01492897)
+- PR #17 (bc990bf6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48289540)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9f430bf4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a1f1768)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27303774)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (882dc5fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1380d24)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a85a75f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8c64b02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (363c09c8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9edaf100)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7fad5600)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9c32fade)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (89d5728a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d5fe43da)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (056e97fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (322faf21)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e5c32db)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4435532)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3ec0b1cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca99bb63)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7eeee901)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e6cb3606)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8e618f2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d0183c26)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f75b84a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa98eec9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (53096f89)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (623af5a5)
+- … 40 more
+
+### S095 — 2026-03-10T01:02:57-05:00 → 2026-03-10T03:37:06-05:00 (30 commits, 2.57h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `10f5b022` feat(ui): integrate animated toolpath visualizer with CAD layout
+- `446506c1` feat(ui): integrate animated toolpath visualizer with CAD layout
+- `d39e90cb` feat(ui): add VCarve/Fusion 360 style CAD component library
+- `d487727b` feat(ui): add VCarve/Fusion 360 style CAD component library
+- `0f14e3b5` feat(router): add /dev/cad-layout-demo route
+- `38fbe1f7` feat(router): add /dev/cad-layout-demo route
+- `00889be1` feat(cam): implement P4 Animated Toolpath Visualizer features
+- `26975831` feat(cam): implement P4 Animated Toolpath Visualizer features
+- `0e73ba44` feat(cam): implement P5 Three.js 3D toolpath visualization
+- `bd291acf` feat(cam): implement P5 Three.js 3D toolpath visualization
+- `2cf9506c` feat(toolpath): add P5 G-code line sync - click segment to highlight source
+- `629cec39` feat(toolpath): add P5 G-code line sync - click segment to highlight source
+- `8d473348` feat(toolpath): add P5 tool engagement heatmap visualization
+- `fd84f150` feat(toolpath): add P5 tool engagement heatmap visualization
+- `33cad6eb` feat(toolpath): add P5 export animation (WebM/GIF)
+- `d6c66573` feat(toolpath): add P5 export animation (WebM/GIF)
+- `6bc66ce2` feat(toolpath): add P5 measurement tools
+- `ea6d66d9` feat(toolpath): add P5 measurement tools
+- `cc0d6c49` feat(toolpath): add P5 keyboard shortcuts for player controls
+- `d0c90864` feat(toolpath): add P5 keyboard shortcuts for player controls
+- `6decf3f2` feat(toolpath): add P5 statistics & analytics panel
+- `a1b6c395` feat(toolpath): add P5 statistics & analytics panel
+- `c450a4eb` feat(toolpath): add P5 segment filtering & highlighting
+- `f0a92923` feat(toolpath): add P5 segment filtering & highlighting
+- `6a6c8e87` feat(toolpath): add P5 annotations & bookmarks system (Step 9)
+- `bb707f31` feat(toolpath): add P5 annotations & bookmarks system (Step 9)
+- `1b208ec3` feat(toolpath): add P5 toolpath comparison system (Step 10)
+- `c33dd868` feat(toolpath): add P5 toolpath comparison system (Step 10)
+- `bc7ca217` feat(toolpath): add P5 machine sound simulation (Step 11)
+- `e4639e1d` feat(toolpath): add P5 machine sound simulation (Step 11)
+Files by surface:
+- other: 42 paths
+  - A packages/client/src/composables/useGcodeFetcher.ts
+  - A packages/client/src/components/layout/CadFeatureToggles.vue
+  - A packages/client/src/components/layout/CadHeaderBar.vue
+  - A packages/client/src/components/layout/CadPanel.vue
+  - A packages/client/src/components/layout/CadSidebar.vue
+  - A packages/client/src/components/layout/CadStatusBar.vue
+  - A packages/client/src/components/ui/CadCheckbox.vue
+  - A packages/client/src/components/ui/CadInput.vue
+  - A packages/client/src/composables/useFeatureToggles.ts
+  - A packages/client/src/layouts/CadLayout.vue
+  - A packages/client/src/styles/cad-theme.css
+  - A packages/client/src/views/dev/CadLayoutDemo.vue
+  - A packages/client/src/components/cam/ToolpathCompare.vue
+  - A packages/client/src/composables/useStockSimulation.ts
+  - A packages/client/src/util/collisionDetector.ts
+  - A packages/client/src/util/gcodeOptimizer.ts
+  - A packages/client/src/util/stockSimulator.ts
+  - A packages/client/src/components/cam/ToolpathCanvas3D.vue
+  - A packages/client/src/components/cam/GcodeViewer.vue
+  - A packages/client/src/util/engagementAnalyzer.ts
+  - A packages/client/src/util/animationExporter.ts
+  - A packages/client/src/util/measurementTool.ts
+  - A packages/client/src/composables/useToolpathShortcuts.ts
+  - A packages/client/src/components/cam/ToolpathStats.vue
+  - A packages/client/src/util/toolpathAnalytics.ts
+  - A packages/client/src/components/cam/ToolpathFilter.vue
+  - A packages/client/src/composables/useSegmentFilter.ts
+  - A packages/client/src/components/cam/ToolpathAnnotations.vue
+  - A packages/client/src/util/toolpathAnnotations.ts
+  - A packages/client/src/components/cam/ToolpathComparePanel.vue
+  - A packages/client/src/util/toolpathComparison.ts
+  - A packages/client/src/components/cam/ToolpathAudioPanel.vue
+  - A packages/client/src/util/toolpathAudio.ts
+  - M packages/client/src/composables/index.ts
+  - M packages/client/src/views/DxfToGcodeView.module.css
+  - M packages/client/src/views/DxfToGcodeView.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/components/cam/ToolpathPlayer.vue
+  - M packages/client/package-lock.json
+  - M packages/client/package.json
+  - … 2 more (see sessions.json / files.jsonl)
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (10f5b022)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (446506c1)
+- PR #242424 (d39e90cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d39e90cb)
+- PR #242424 (d487727b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d487727b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f14e3b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38fbe1f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (00889be1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (26975831)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e73ba44)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bd291acf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2cf9506c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (629cec39)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8d473348)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fd84f150)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (33cad6eb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6c66573)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6bc66ce2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ea6d66d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc0d6c49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d0c90864)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6decf3f2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a1b6c395)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c450a4eb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f0a92923)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6a6c8e87)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb707f31)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b208ec3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c33dd868)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc7ca217)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e4639e1d)
+
+### S096 — 2026-03-10T08:49:24-05:00 → 2026-03-11T04:13:17-05:00 (110 commits, 19.4h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `40dc46c4` feat(toolpath): add P6 extensions - multi-tool, feed analysis, stock sim, chip load
+- `c75edd71` feat(toolpath): add P6 extensions - multi-tool, feed analysis, stock sim, chip load
+- `a4871759` fix: wire auth guards + add @safety_critical to CNC endpoints
+- `eafaead0` fix: wire auth guards + add @safety_critical to CNC endpoints
+- `14260731` docs: add system evaluation, gap analysis, and remediation tracking
+- `af0136cc` docs: add system evaluation, gap analysis, and remediation tracking
+- `057ffe55` docs: add Remediation Log to GAP_ANALYSIS_MASTER
+- `e9c98098` docs: add Remediation Log to GAP_ANALYSIS_MASTER
+- `5160d3b2` refactor(auth): replace raw fetch() with SDK endpoints
+- `d80b0799` refactor(auth): replace raw fetch() with SDK endpoints
+- `b66f757b` docs: track auth SDK refactor in remediation log
+- `fe74d356` docs: track auth SDK refactor in remediation log
+- `7826e6ef` feat(cam): add CNC pre-flight validation gate
+- `f775ce07` feat(cam): add CNC pre-flight validation gate
+- `903561c0` docs: update GAP_ANALYSIS with preflight gate entry
+- `f656bbea` docs: update GAP_ANALYSIS with preflight gate entry
+- `8f74f599` feat(cam): add perimeter profiling toolpath generator
+- `d22515db` feat(cam): add perimeter profiling toolpath generator
+- `290e2a3f` docs: update GAP_ANALYSIS with profiling module entry
+- `e648d762` docs: update GAP_ANALYSIS with profiling module entry
+- `84225c32` feat(cam): add binding/purfling channel CAM module
+- `e60e2df0` feat(cam): add binding/purfling channel CAM module
+- `0f39b556` docs: update GAP_ANALYSIS with binding module entry
+- `1136c69e` docs: update GAP_ANALYSIS with binding module entry
+- `bc81f7c5` feat(ci): add DXF asset validation gate
+- `cc4025f3` feat(ci): add DXF asset validation gate
+- `c79e6d43` docs: update GAP_ANALYSIS with DXF validation entry
+- `e240fd94` docs: update GAP_ANALYSIS with DXF validation entry
+- `817e9e28` feat(cam): add drilling CAM module with G83 peck cycle
+- `ba9574fd` feat(cam): add drilling CAM module with G83 peck cycle
+- `4d1a626e` docs: update GAP_ANALYSIS with drilling module entry
+- `676eae65` docs: update GAP_ANALYSIS with drilling module entry
+- `64f1a87f` feat(cam): add production V-carve module with chipload + stepdown
+- `7f8df705` feat(cam): add production V-carve module with chipload + stepdown
+- `7db29027` docs: update GAP_ANALYSIS with V-carve module entry
+- `ed72dbe7` docs: update GAP_ANALYSIS with V-carve module entry
+- `49aac7d0` feat(api): mount CAM modules via routers (profiling, binding, vcarve)
+- `6e392a83` feat(api): mount CAM modules via routers (profiling, binding, vcarve)
+- `7f1f8d18` docs: update GAP_ANALYSIS_MASTER.md with router mounting (6e392a83)
+- `f594c9ee` docs: update GAP_ANALYSIS_MASTER.md with router mounting (49aac7d0)
+- `611addfa` feat(api): add headstock inlay prompt router
+- `adf4aaf1` feat(api): add headstock inlay prompt router
+- `10e8e480` docs: update GAP_ANALYSIS_MASTER.md with headstock inlay router (611addfa)
+- `a964c72c` docs: update GAP_ANALYSIS_MASTER.md with headstock inlay router (adf4aaf1)
+- `25ad1688` docs: mark VINE-08 and VINE-04 as false positives (already mounted)
+- `496d8474` docs: mark VINE-08 and VINE-04 as false positives (already mounted)
+- `c90e8f02` feat(geometry): add SVG-to-DXF /convert endpoint (VINE-02)
+- `fe2b4e62` feat(geometry): add SVG-to-DXF /convert endpoint (VINE-02)
+- `677b467c` docs: update VINE-02 commit hash
+- `f9033d42` docs: update VINE-02 commit hash
+- `6cfe4d12` feat(inlay): add pocket G-code export endpoint (VINE-01)
+- `bec7b24a` feat(inlay): add pocket G-code export endpoint (VINE-01)
+- `1e4bcbd2` docs: update VINE-01 commit hash
+- `8729fff2` docs: update VINE-01 commit hash
+- `08a7db0d` feat(blueprint): add Phase 3 vectorizer API endpoint (VEC-GAP-01)
+- `0dc83165` feat(blueprint): add Phase 3 vectorizer API endpoint (VEC-GAP-01)
+- `1abd9005` docs: update VEC-GAP-01 commit hash in remediation log
+- `bdbff050` docs: update VEC-GAP-01 commit hash in remediation log
+- `b8ba05b3` feat(blueprint): add Phase 4 dimension linking API endpoint (VEC-GAP-02)
+- `f3e95ef1` feat(blueprint): add Phase 4 dimension linking API endpoint (VEC-GAP-02)
+- `1e80f74b` docs: update VEC-GAP-02 commit hash in remediation log
+- `ab7d3330` docs: update VEC-GAP-02 commit hash in remediation log
+- `03acbb4f` feat(cam): add PipelineResult to CAM adapter (VEC-GAP-03)
+- `e3b0ba1a` feat(cam): add PipelineResult to CAM adapter (VEC-GAP-03)
+- `dd594565` docs: update VEC-GAP-03 commit hash in remediation log
+- `f5c9a5d6` docs: update VEC-GAP-03 commit hash in remediation log
+- `4a0af084` test(cam): add Blueprint → CAM integration tests (VEC-GAP-04)
+- `bd25470e` test(cam): add Blueprint → CAM integration tests (VEC-GAP-04)
+- `284fb5b6` docs: update VEC-GAP-04 commit hash in remediation log
+- `3ad025d3` docs: update VEC-GAP-04 commit hash in remediation log
+- `9aed464d` feat(blueprint): add Phase 1 → Phase 3 scale handoff (VEC-GAP-05)
+- `f8e4dded` feat(blueprint): add Phase 1 → Phase 3 scale handoff (VEC-GAP-05)
+- `22ce0b08` docs: update VEC-GAP-05 commit hash in remediation log
+- `7a6bd75e` docs: update VEC-GAP-05 commit hash in remediation log
+- `9ba15c85` feat(geometry): add Flying V CAM-ready DXF with closed LWPOLYLINE (FV-GAP-04)
+- `ec003681` feat(geometry): add Flying V CAM-ready DXF with closed LWPOLYLINE (FV-GAP-04)
+- `0b566571` docs: update gap analysis for FV-GAP-04 resolution
+- `53c1e89d` docs: update gap analysis for FV-GAP-04 resolution
+- `461caebc` feat(geometry): add Les Paul 8-layer CAM DXF (LP-GAP-01)
+- `d0b22304` feat(geometry): add Les Paul 8-layer CAM DXF (LP-GAP-01)
+- `edef016b` docs: update gap analysis for LP-GAP-01 resolution
+- `f6eebe54` docs: update gap analysis for LP-GAP-01 resolution
+- `a7a9ee24` feat(pipeline): add DXF preprocessor pipeline for CAM-ready output
+- `d0603eff` feat(pipeline): add DXF preprocessor pipeline for CAM-ready output
+- `81ba24ce` docs: mark EX-GAP-01/02/03 resolved via preprocessor pipeline
+- `9379ca4a` docs: mark EX-GAP-01/02/03 resolved via preprocessor pipeline
+- `638b7578` feat(pipeline): add DXF geometry correction for dimension + centerline fixes
+- `b2854c3e` feat(pipeline): add DXF geometry correction for dimension + centerline fixes
+- `24c95bc3` docs: mark SG-GAP-01/02 resolved via geometry correction pipeline
+- `554fb043` docs: mark SG-GAP-01/02 resolved via geometry correction pipeline
+- `30e50bb3` feat(blueprint-cam): add contour reconstruction pipeline (VINE-09)
+- `f3bdd779` feat(blueprint-cam): add contour reconstruction pipeline (VINE-09)
+- `1fb1b5be` docs: mark VINE-09 resolved (contour reconstruction pipeline)
+- `cc99b03e` docs: mark VINE-09 resolved (contour reconstruction pipeline)
+- `6dd8280a` refactor(saw-lab): SAW-LAB-GAP-01 - centralize duplicate artifact helpers
+- `b2017a2a` refactor(saw-lab): SAW-LAB-GAP-01 - centralize duplicate artifact helpers
+- `2181083c` docs: add SAW-LAB-GAP-01 to remediation log
+- `a30937f9` docs: add SAW-LAB-GAP-01 to remediation log
+- `528f577d` refactor(rmos): RMOS-GAP-01 - move artifact_helpers to rmos/, centralize across sectors
+- `cf5aebb6` refactor(rmos): RMOS-GAP-01 - move artifact_helpers to rmos/, centralize across sectors
+- `3a3e45e3` docs: add RMOS-GAP-01 to remediation log
+- `484ad99b` docs: add RMOS-GAP-01 to remediation log
+- `8f530691` fix(services): CORRUPT-GAP-01 - reconstruct 8 corrupted Python files
+- `e0847b9c` fix(services): CORRUPT-GAP-01 - reconstruct 8 corrupted Python files
+- `53f9a02e` docs: add CORRUPT-GAP-01 to remediation log
+- `e69e782b` docs: add CORRUPT-GAP-01 to remediation log
+- `4da6d3dd` docs: update session bookmark for system reset
+- `a13b58a1` docs: update session bookmark for system reset
+- `1018c953` docs: add system reset bookmark to remeditation_Sprint.md
+- `4b7679b2` docs: add system reset bookmark to remeditation_Sprint.md
+Files by surface:
+- api_routing: 4 paths
+  - A services/api/app/routers/blueprint/phase3_router.py
+  - A services/api/app/routers/blueprint/phase4_router.py
+  - M services/api/app/routers/blueprint/__init__.py
+  - M services/api/app/routers/blueprint/constants.py
+- docs: 9 paths
+  - A remeditation_Sprint.md
+  - A docs/BUILD_CHRONICLE_UI_REDESIGN.md
+  - A docs/GAP_ANALYSIS_MASTER.md
+  - A docs/SUPABASE_INTEGRATION_STATUS.md
+  - A docs/SYSTEM_EVALUATION.md
+  - A docs/UNFINISHED_REMEDIATION_EFFORTS.md
+  - A docs/tonewood_comparison_cherry_mahogany_walnut_mesquite.md
+  - A docs/tonewood_comparison_rosewoods_ebonies_mesquite.md
+  - M docs/AGENT_SESSION_BOOKMARK.md
+- other: 82 paths
+  - A packages/client/src/components/cam/ChipLoadPanel.vue
+  - A packages/client/src/components/cam/FeedAnalysisPanel.vue
+  - A packages/client/src/components/cam/StockSimulationPanel.vue
+  - A packages/client/src/components/cam/ToolLegendPanel.vue
+  - A packages/client/src/sdk/endpoints/cam/index.ts
+  - A packages/client/src/util/chipLoadAnalyzer.ts
+  - A packages/client/src/util/feedOptimizer.ts
+  - A packages/client/src/util/toolpathTools.ts
+  - A packages/client/src/sdk/endpoints/auth.ts
+  - A services/api/app/cam/preflight_gate.py
+  - A services/api/app/cam/profiling/__init__.py
+  - A services/api/app/cam/profiling/profile_toolpath.py
+  - A services/api/app/cam/profiling/tabs.py
+  - A services/api/app/cam/binding/__init__.py
+  - A services/api/app/cam/binding/channel_toolpath.py
+  - A services/api/app/cam/binding/offset_geometry.py
+  - A services/api/app/cam/binding/purfling_ledge.py
+  - A .github/workflows/dxf_validation.yml
+  - A scripts/validate_dxf_assets.py
+  - A services/api/app/cam/drilling/__init__.py
+  - A services/api/app/cam/drilling/patterns.py
+  - A services/api/app/cam/drilling/peck_cycle.py
+  - A services/api/app/cam/vcarve/__init__.py
+  - A services/api/app/cam/vcarve/chipload.py
+  - A services/api/app/cam/vcarve/geometry.py
+  - A services/api/app/cam/vcarve/toolpath.py
+  - A services/api/app/cam/routers/binding/__init__.py
+  - A services/api/app/cam/routers/binding/binding_router.py
+  - A services/api/app/cam/routers/profiling/__init__.py
+  - A services/api/app/cam/routers/profiling/profile_router.py
+  - A services/api/app/cam/routers/vcarve/__init__.py
+  - A services/api/app/cam/routers/vcarve/production_router.py
+  - A services/api/app/cam/headstock/router.py
+  - A services/api/app/art_studio/_inlay_gcode_addon.py
+  - A services/api/app/routers/blueprint_cam/pipeline_adapter_router.py
+  - A services/api/app/services/pipeline_cam_adapter.py
+  - A services/api/app/instrument_geometry/body/dxf/electric/flying_v_body_phase3.dxf
+  - A services/api/app/instrument_geometry/body/dxf/electric/LesPaul_CAM_Closed.dxf
+  - A services/api/app/routers/blueprint_cam/dxf_preprocessor.py
+  - A services/api/app/routers/blueprint_cam/preprocessor_router.py
+  - … 42 more (see sessions.json / files.jsonl)
+- tests: 4 paths
+  - A services/api/tests/test_blueprint_cam_integration.py
+  - A services/api/tests/test_dxf_preprocessor.py
+  - A services/api/tests/test_dxf_geometry_correction.py
+  - A services/api/tests/test_contour_reconstruction.py
+Documents produced:
+- `remeditation_Sprint.md` — # The Production Shop — Consolidated Gap Analysis
+- `docs/BUILD_CHRONICLE_UI_REDESIGN.md` — UNKNOWN
+- `docs/GAP_ANALYSIS_MASTER.md` — UNKNOWN
+- `docs/SUPABASE_INTEGRATION_STATUS.md` — UNKNOWN
+- `docs/SYSTEM_EVALUATION.md` — UNKNOWN
+- `docs/UNFINISHED_REMEDIATION_EFFORTS.md` — UNKNOWN
+- `docs/tonewood_comparison_cherry_mahogany_walnut_mesquite.md` — UNKNOWN
+- `docs/tonewood_comparison_rosewoods_ebonies_mesquite.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (40dc46c4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c75edd71)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4871759)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eafaead0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14260731)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af0136cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (057ffe55)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9c98098)
+- PR #3 (5160d3b2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5160d3b2)
+- PR #3 (d80b0799)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d80b0799)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7826e6ef)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f775ce07)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8f74f599)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d22515db)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (84225c32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e60e2df0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc81f7c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cc4025f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (817e9e28)
+- Fixes: ['FV-GAP-06 (String-through drilling has no backend API)'] (817e9e28)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ba9574fd)
+- Fixes: ['FV-GAP-06 (String-through drilling has no backend API)'] (ba9574fd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (64f1a87f)
+- Fixes: ['VINE-03 (V-carve G-code is demo quality)'] (64f1a87f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f8df705)
+- Fixes: ['VINE-03 (V-carve G-code is demo quality)'] (7f8df705)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (49aac7d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e392a83)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (611addfa)
+- Fixes: ['INLAY-01 (No headstock inlay router)'] (611addfa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (adf4aaf1)
+- Fixes: ['INLAY-01 (No headstock inlay router)'] (adf4aaf1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25ad1688)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (496d8474)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c90e8f02)
+- Fixes: ['VINE-02 (SVG -> DXF format converter missing)'] (c90e8f02)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe2b4e62)
+- Fixes: ['VINE-02 (SVG -> DXF format converter missing)'] (fe2b4e62)
+- … 78 more
+
+### S097 — 2026-03-11T11:58:21-05:00 → 2026-03-12T04:48:16-05:00 (104 commits, 16.83h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `c040a074` fix(saw-lab): restore POST /toolpaths/from-decision endpoint (P1-SAW pipeline fix)
+- `c9ac19ec` fix(saw-lab): restore POST /toolpaths/from-decision endpoint (P1-SAW pipeline fix)
+- `9e98104c` docs: mark P1-SAW pipeline fix complete in remediation tracking
+- `d23b613c` docs: mark P1-SAW pipeline fix complete in remediation tracking
+- `01a82f20` fix(tests): correct doubled /neck/ path in neck endpoint smoke tests
+- `c57d6474` fix(tests): correct doubled /neck/ path in neck endpoint smoke tests
+- `79994a4a` fix(cam): resolve drilling smoke test failures (FastAPI Body() resolution)
+- `c0569a49` fix(cam): resolve drilling smoke test failures (FastAPI Body() resolution)
+- `29d131fb` docs: update session bookmark with drilling fix
+- `7137e26c` docs: update session bookmark with drilling fix
+- `029abbbb` fix(tests): update technical debt gate baselines for GAP_ANALYSIS sprint
+- `5e91e514` fix(tests): update technical debt gate baselines for GAP_ANALYSIS sprint
+- `239fc181` docs: update session bookmark with debt gates fix
+- `638ea0e6` docs: update session bookmark with debt gates fix
+- `128f6fa9` feat(geometry): add Strat 24-fret preset and link spec to registry
+- `b83feeb2` feat(geometry): add Strat 24-fret preset and link spec to registry
+- `291ba84d` docs: update session bookmark with Strat preset completion
+- `4eb500ac` docs: update session bookmark with Strat preset completion
+- `289b4ac4` feat(geometry): add missing headstock outlines + tuner positions
+- `afdfa9bc` feat(geometry): add missing headstock outlines + tuner positions
+- `ac32bc3a` docs: update bookmark with headstock outline additions
+- `c240917d` docs: update bookmark with headstock outline additions
+- `65669faf` feat(geometry): add Telecaster and PRS neck endpoints + Strat 24fret variant
+- `82e3d860` feat(geometry): add Telecaster and PRS neck endpoints + Strat 24fret variant
+- `0f6c49d1` docs: update bookmark with Telecaster/PRS endpoints
+- `51840230` docs: update bookmark with Telecaster/PRS endpoints
+- `4c6764bc` feat(rosette): add COL_WIDTHS arrays for per-preset BOM strip-width calculations
+- `7f1b1a10` feat(rosette): add COL_WIDTHS arrays for per-preset BOM strip-width calculations
+- `53da4d60` docs: update session bookmark with COL_WIDTHS commit
+- `d314d6e1` docs: update session bookmark with COL_WIDTHS commit
+- `5cd6c2ba` feat(geometry): add Martin and Benedetto headstock outlines (OM-GAP-06, BEN-GAP-06)
+- `976b5ea9` feat(geometry): add Martin and Benedetto headstock outlines (OM-GAP-06, BEN-GAP-06)
+- `6cf648e7` docs: update session bookmark with Martin/Benedetto headstock commit
+- `db74c056` docs: update session bookmark with Martin/Benedetto headstock commit
+- `6fa4d61b` fix(spec): add corner_radius to Smart Guitar cavities (SG-GAP-12)
+- `e0a351fc` fix(spec): add corner_radius to Smart Guitar cavities (SG-GAP-12)
+- `f9656ff8` docs: update session bookmark with SG-GAP-12 corner_radius fix
+- `ff238830` docs: update session bookmark with SG-GAP-12 corner_radius fix
+- `892ed3dd` fix(spec): add screw positions + clarify antenna depth (SG-GAP-08, SG-GAP-10)
+- `a29cefa8` fix(spec): add screw positions + clarify antenna depth (SG-GAP-08, SG-GAP-10)
+- `af4c1017` feat(rosette): wave/spanish/celtic pattern engines, build simulation, prototypes
+- `f65931d6` feat(rosette): wave/spanish/celtic pattern engines, build simulation, prototypes
+- `3a090d98` docs: update session bookmark with SG-GAP-08/10 fixes
+- `6a1f70d4` docs: update session bookmark with SG-GAP-08/10 fixes
+- `6b947186` fix(spec): Smart Guitar coordinate system fixes (SG-GAP-03 thru 07)
+- `cf06ffaa` fix(spec): Smart Guitar coordinate system fixes (SG-GAP-03 thru 07)
+- `2c03eaa7` docs: update session bookmark with SG-GAP-03 thru 07 fixes
+- `5463394f` docs: update session bookmark with SG-GAP-03 thru 07 fixes
+- `6af07484` docs: document Les Paul inch mode + mark NECK-01/GAP-01 resolved (LP-GAP-10)
+- `a8739d63` docs: document Les Paul inch mode + mark NECK-01/GAP-01 resolved (LP-GAP-10)
+- `044406e0` docs: update session bookmark with LP-GAP-10 commit
+- `f0c2caa1` docs: update session bookmark with LP-GAP-10 commit
+- `90c5ce1f` docs: update GAP_ANALYSIS remediation log with commit hashes
+- `e43e49da` docs: update GAP_ANALYSIS remediation log with commit hashes
+- `36710948` docs: mark SG-GAP-11 and INLAY-05 as already resolved
+- `4e0e2a4d` docs: mark SG-GAP-11 and INLAY-05 as already resolved
+- `0b50a29e` docs: mark VINE-08 as resolved (bracing router in manifest)
+- `97cd0250` docs: mark VINE-08 as resolved (bracing router in manifest)
+- `23ffe663` docs: mark NECK-04 as resolved (82e3d860 added Strat endpoints)
+- `c6f3bbb5` docs: mark NECK-04 as resolved (65669faf added Strat endpoints)
+- `0be4dbab` docs: update session bookmark
+- `581e7b06` docs: update session bookmark
+- `06d28e5c` feat(geometry): add pickup position calculator (GAP-04)
+- `4a2ac908` feat(geometry): add pickup position calculator (GAP-04)
+- `11bfedc7` docs: mark GAP-04 as resolved
+- `5b31e275` docs: mark GAP-04 as resolved
+- `46d0fd1b` docs: mark 5 more gaps as already resolved (INLAY-01, VINE-01, VINE-02, VEC-GAP-01)
+- `7070cd32` docs: mark 5 more gaps as already resolved (INLAY-01, VINE-01, VINE-02, VEC-GAP-01)
+- `69439800` feat(geometry): add electric body outline generator (GAP-07)
+- `e0f34cf2` feat(geometry): add electric body outline generator (GAP-07)
+- `7c17c68e` docs: mark GAP-07 (Strat body outline generator) as resolved
+- `f30ab37e` docs: mark GAP-07 (Strat body outline generator) as resolved
+- `2c51f25e` feat(rosette): add 8 Python prototype viewers + JSX originals
+- `a06577c8` feat(rosette): add 8 Python prototype viewers + JSX originals
+- `8ba58c9c` refactor(rosette): Phase 1 — archive dead Layer 1 pipeline modules
+- `c470ddf1` refactor(rosette): Phase 1 — archive dead Layer 1 pipeline modules
+- `120935a3` feat(art-studio): add headstock inlay router (INLAY-01)
+- `bd75c058` feat(art-studio): add headstock inlay router (INLAY-01)
+- `1a979834` docs: mark INLAY-01 (headstock inlay router) as resolved
+- `9c3f5ff2` docs: mark INLAY-01 (headstock inlay router) as resolved
+- `23922d8e` feat(neck): add G-code generation API endpoint (OM-GAP-07)
+- `3d1b23dc` feat(neck): add G-code generation API endpoint (OM-GAP-07)
+- `1ba0e07a` docs(gap): mark OM-GAP-07 as resolved (23922d8e)
+- `d4d928f8` docs(gap): mark OM-GAP-07 as resolved (3d1b23dc)
+- `0153f9db` docs: mark 7 gaps as resolved in handoff docs
+- `8b0b617c` docs: mark 7 gaps as resolved in handoff docs
+- `0ad5db0b` docs: mark NECK-02 and VIS-07 as resolved in handoff docs
+- `ed2a48fb` docs: mark NECK-02 and VIS-07 as resolved in handoff docs
+- `8b7cfe7f` docs: mark all VIS gaps as resolved in visualizer handoff
+- `ad72b1e0` docs: mark all VIS gaps as resolved in visualizer handoff
+- `326c1e38` feat(rosette): Phase 2 — wire rosette_planner + TraditionalBuilder to API
+- `56399844` feat(rosette): Phase 2 — wire rosette_planner + TraditionalBuilder to API
+- `bf704cbf` feat(inlay): VINE-05 unified fretboard↔headstock canvas
+- `d48ab1a8` feat(inlay): VINE-05 unified fretboard↔headstock canvas
+- `b703a889` feat(calculators): GAP-05 fretboard overhang channel calculator
+- `f9a16867` feat(calculators): GAP-05 fretboard overhang channel calculator
+- `370b7782` docs: mark GAP-05 as resolved in 24-fret handoff
+- `81bc2c76` docs: mark GAP-05 as resolved in 24-fret handoff
+- `69218b9a` feat(rosette): Phase 3 — RosetteProject unified envelope + type bridge
+- `e4c632ab` feat(rosette): Phase 3 — RosetteProject unified envelope + type bridge
+- `8c0ddc23` docs: mark GAP-08 as resolved (Strat variant support implemented)
+- `ab37efca` docs: mark GAP-08 as resolved (Strat variant support implemented)
+- `0e312a3b` feat(rosette): Phase 4 — pattern-aware per-ring CAM toolpaths
+- `a06b8372` feat(rosette): Phase 4 — pattern-aware per-ring CAM toolpaths
+Files by surface:
+- docs: 22 paths
+  - A docs/rosette-prototypes/jsx/rosette-grid-designer-v1.jsx
+  - A docs/rosette-prototypes/jsx/rosette-grid-designer-v2.jsx
+  - A docs/rosette-prototypes/jsx/rosette-grid-designer-v3.jsx
+  - A docs/rosette-prototypes/jsx/rosette-grid-designer-v4-mothership.jsx
+  - A docs/rosette-prototypes/jsx/spanish-ladder-rosette.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v1.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v2.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v3-alt.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v3-patched.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v3.jsx
+  - A docs/rosette-prototypes/jsx/wave-rosette-v4.jsx
+  - A docs/SESSION_STATUS.md
+  - A docs/rosette-prototypes/placeholder.md
+  - M docs/AGENT_SESSION_BOOKMARK.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M remeditation_Sprint.md
+  - M docs/handoffs/24_FRET_STRATOCASTER_DESIGN_HANDOFF.md
+  - M docs/handoffs/CUSTOM_INLAY_FRETBOARD_HEADSTOCK_HANDOFF.md
+  - M docs/handoffs/OM_HERRINGBONE_ACOUSTIC_HANDOFF.md
+  - M docs/handoffs/J45_VINE_OF_LIFE_DESIGN_HANDOFF.md
+  - M docs/handoffs/STRATOCASTER_NECK_DESIGN_HANDOFF.md
+  - M docs/handoffs/TOOLPATH_ANIMATED_VISUALIZER_HANDOFF.md
+- other: 72 paths
+  - A services/api/app/cam/rosette/rosette_bom.py
+  - A scripts/extract_herringbone_quads.py
+  - A services/api/app/cam/rosette/prototypes/__init__.py
+  - A services/api/app/cam/rosette/prototypes/celtic_parametric_knots.py
+  - A services/api/app/cam/rosette/prototypes/generate_spanish_rosette.py
+  - A services/api/app/cam/rosette/prototypes/generate_wave_rosette.py
+  - A services/api/app/cam/rosette/prototypes/herringbone_embedded_quads.py
+  - A services/api/app/cam/rosette/prototypes/herringbone_parametric.py
+  - A services/api/app/cam/rosette/prototypes/rope_twist_rosette.py
+  - A services/api/app/cam/rosette/prototypes/rope_twist_rosette_v2.py
+  - A services/api/app/cam/rosette/prototypes/rosette_jsx_eval.py
+  - A services/api/app/cam/rosette/prototypes/spanish_ladder_parametric.py
+  - A services/api/app/cam/rosette/prototypes/wave_profile_jig.py
+  - A services/api/app/cam/rosette/prototypes/wave_segment_arches.py
+  - A services/api/app/cam/rosette/prototypes/wave_simple_sine.py
+  - A services/api/app/cam/rosette/prototypes/wave_vertical_strand.py
+  - A services/api/app/calculators/pickup_position_calc.py
+  - A services/api/app/routers/instruments/guitar/pickup_calculator_router.py
+  - A services/api/app/generators/electric_body_generator.py
+  - A services/api/app/routers/instruments/guitar/electric_body_router.py
+  - A diamond-chevron-rosette.jsx
+  - A hyperbolic-rosette.jsx
+  - A rosette-designer.jsx
+  - A rosette-studio.jsx
+  - A rosette-wheel.jsx
+  - A services/api/app/cam/rosette/prototypes/diamond_chevron_viewer.py
+  - A services/api/app/cam/rosette/prototypes/generative_explorer_viewer.py
+  - A services/api/app/cam/rosette/prototypes/hyperbolic_viewer.py
+  - A services/api/app/cam/rosette/prototypes/rosette_studio_viewer.py
+  - A services/api/app/cam/rosette/prototypes/rosette_wheel_viewer.py
+  - A services/api/app/cam/rosette/prototypes/shape_compositor_viewer.py
+  - A services/api/app/cam/rosette/prototypes/shape_library.py
+  - A services/api/app/cam/rosette/prototypes/wood_materials.py
+  - A shape-compositor (1).jsx
+  - A shape-compositor (2).jsx
+  - A shape-compositor.jsx
+  - A services/api/app/art_studio/headstock_inlay_router.py
+  - A services/api/app/art_studio/api/rosette_manufacturing_routes.py
+  - A services/api/app/cam/rosette/pattern_renderer.py
+  - A services/api/app/calculators/unified_canvas.py
+  - … 32 more (see sessions.json / files.jsonl)
+- tests: 9 paths
+  - A services/api/tests/test_pickup_calculator_smoke.py
+  - A services/api/tests/test_electric_body_smoke.py
+  - A services/api/tests/test_headstock_inlay_smoke.py
+  - A services/api/tests/test_neck_gcode_smoke.py
+  - A services/api/tests/test_unified_canvas_smoke.py
+  - A services/api/tests/test_overhang_channel_smoke.py
+  - A services/api/tests/test_strat_variants_smoke.py
+  - M services/api/tests/test_neck_endpoint_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `docs/rosette-prototypes/jsx/rosette-grid-designer-v1.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/rosette-grid-designer-v2.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/rosette-grid-designer-v3.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/rosette-grid-designer-v4-mothership.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/spanish-ladder-rosette.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v1.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v2.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v3-alt.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v3-patched.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v3.jsx` — UNKNOWN
+- `docs/rosette-prototypes/jsx/wave-rosette-v4.jsx` — UNKNOWN
+- `docs/SESSION_STATUS.md` — # Session Status — 2026-03-12
+- `docs/rosette-prototypes/placeholder.md` — # Rosette JSX Prototype Addendum — Batch 2
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c040a074)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c9ac19ec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9e98104c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d23b613c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01a82f20)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c57d6474)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (79994a4a)
+- Fixes: ['- drill_router.py: Remove `from __future__ import annotations` and add'] (79994a4a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c0569a49)
+- Fixes: ['- drill_router.py: Remove `from __future__ import annotations` and add'] (c0569a49)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (029abbbb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e91e514)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (128f6fa9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b83feeb2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (289b4ac4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afdfa9bc)
+- Fixes: ['NECK-04 (Strat API endpoint), GAP-01 (Telecaster/PRS endpoints)'] (65669faf)
+- Fixes: ['NECK-04 (Strat API endpoint), GAP-01 (Telecaster/PRS endpoints)'] (82e3d860)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c6764bc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f1b1a10)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cd6c2ba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (976b5ea9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fa4d61b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0a351fc)
+- PR #4 (892ed3dd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (892ed3dd)
+- PR #4 (a29cefa8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a29cefa8)
+- PR #8 (6b947186)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6b947186)
+- PR #8 (cf06ffaa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cf06ffaa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6af07484)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8739d63)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (06d28e5c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a2ac908)
+- VEC-GAP-01 (46d0fd1b)
+- VEC-GAP-01 (7070cd32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (69439800)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0f34cf2)
+- … 24 more
+
+### S098 — 2026-03-12T10:31:14-05:00 → 2026-03-13T10:55:28-05:00 (122 commits, 24.4h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `703be846` feat(art-studio): VINE-11 - connect bracing presets to instrument specs
+- `e1e8bd43` feat(art-studio): VINE-11 - connect bracing presets to instrument specs
+- `3fb6062d` docs: mark VINE-11 as resolved in GAP_ANALYSIS_MASTER.md
+- `845e774f` docs: mark VINE-11 as resolved in GAP_ANALYSIS_MASTER.md
+- `234e5c10` feat(client): Phase 5 — consolidate useRosettePatternStore into rosetteStore
+- `cc1360aa` feat(client): Phase 5 — consolidate useRosettePatternStore into rosetteStore
+- `6d21e96b` fix(ci): remove 3 broken workflows referencing deleted server/ directory
+- `afa0537a` fix(ci): remove 3 broken workflows referencing deleted server/ directory
+- `5e741bc9` fix(specs): resolve phantom references in instrument registry and specs
+- `ba9db4b6` fix(specs): resolve phantom references in instrument registry and specs
+- `4419a37b` docs: mark #23 and #24 as resolved in tracking document
+- `c6bccb44` docs: mark #23 and #24 as resolved in tracking document
+- `a699e7b8` feat(api): Phase 6 — prototype graduation for rosette engine
+- `b7e2d522` feat(api): Phase 6 — prototype graduation for rosette engine
+- `5dee3ae3` fix(ui): install Tailwind CSS v3 to fix 706 broken utility classes
+- `bc9042aa` fix(ui): install Tailwind CSS v3 to fix 706 broken utility classes
+- `6f86018b` feat(safety): add CNC preflight fail-closed validation (#16)
+- `bfb7161d` feat(safety): add CNC preflight fail-closed validation (#16)
+- `585403c6` docs: mark #16 (CNC safety fail-closed) as resolved
+- `a655adaa` docs: mark #16 (CNC safety fail-closed) as resolved
+- `27045afe` feat(core): add centralized StoreRegistry for DI (#14)
+- `c79dd1a7` feat(core): add centralized StoreRegistry for DI (#14)
+- `39310177` docs: mark #14 (Singleton Store Refactor) as resolved
+- `ac8fb61a` docs: mark #14 (Singleton Store Refactor) as resolved
+- `54918ac1` docs: update #17 with stub verification analysis
+- `8754a555` docs: update #17 with stub verification analysis
+- `2e18aba0` docs: update #17 status - auth infrastructure is complete
+- `f68c03d5` docs: update #17 status - auth infrastructure is complete
+- `467bc065` fix(middleware): gate route analytics behind ENABLE_ROUTE_ANALYTICS env var
+- `c4a4788f` fix(middleware): gate route analytics behind ENABLE_ROUTE_ANALYTICS env var
+- `38b92ede` docs: mark #28 as resolved (analytics middleware gated)
+- `93067e93` docs: mark #28 as resolved (analytics middleware gated)
+- `75907e0f` fix(rmos): add debug logging for optional import failures
+- `9648696f` fix(rmos): add debug logging for optional import failures
+- `200ab4ad` docs: mark #29 as resolved (bare pass replaced with debug logging)
+- `e59dff39` docs: mark #29 as resolved (bare pass replaced with debug logging)
+- `b6c35cb3` feat(util): add dxf_preflight wrapper for pipeline compatibility
+- `d17ed8dd` feat(util): add dxf_preflight wrapper for pipeline compatibility
+- `7df14bb5` docs: update #22 status (pipeline_ops NotImplementedError fixed)
+- `ab1226fe` docs: update #22 status (pipeline_ops NotImplementedError fixed)
+- `689c3343` fix(instrument): fix compute_compensation_estimate signature mismatch
+- `d7ce93e1` fix(instrument): fix compute_compensation_estimate signature mismatch
+- `4faeb31e` docs: update #21 status (1 skipped test fixed)
+- `6e885d53` docs: update #21 status (1 skipped test fixed)
+- `1eb09f6a` docs: mark #19 and #20 as resolved (both are working as designed)
+- `ad599276` docs: mark #19 and #20 as resolved (both are working as designed)
+- `45b7e12b` docs: add GitHub secrets and Supabase configuration
+- `4a73ecc4` docs: add GitHub secrets and Supabase configuration
+- `086d2440` docs: mark #30 secrets documentation as resolved
+- `37819779` docs: mark #30 secrets documentation as resolved
+- `16dec69b` fix(tests): remove stale skip marker from test_data_registry
+- `bf13b6d8` fix(tests): remove stale skip marker from test_data_registry
+- `01d44218` docs: mark #31 data_registry as resolved - module exists
+- `18547c10` docs: mark #31 data_registry as resolved - module exists
+- `3813d53a` fix(exceptions): complete exception hardening - 0 unmarked broad exceptions
+- `6e397cb6` fix(exceptions): complete exception hardening - 0 unmarked broad exceptions
+- `3f7ec03c` docs: mark #1 Exception Hardening as 100% complete
+- `f925dc78` docs: mark #1 Exception Hardening as 100% complete
+- `51ed4f6b` refactor(neck): decompose neck_router.py from 1,139 LOC to 205 LOC
+- `604c96d1` refactor(neck): decompose neck_router.py from 1,139 LOC to 205 LOC
+- `4852ead4` docs: update #2 God-Object Decomposition to ~90% complete
+- `78437d89` docs: update #2 God-Object Decomposition to ~90% complete
+- `1a2880a5` docs: update Score 7 Plan with March 2026 progress
+- `9086df6f` docs: update Score 7 Plan with March 2026 progress
+- `0c9cca8c` docs: update #7 Score 7 Plan to ~50% complete
+- `22d36c2e` docs: update #7 Score 7 Plan to ~50% complete
+- `38038ade` test(ui): add 52 unit tests for RMOS UI components
+- `e83faa0b` test(ui): add 52 unit tests for RMOS UI components
+- `9bcd373a` feat(art-studio): inlay pattern generators Python backend
+- `eb2b1bb2` feat(art-studio): inlay pattern generators Python backend
+- `332a5e14` docs: update #6 Vue decomposition + #9 frontend test coverage status
+- `89e0cbaf` docs: update #6 Vue decomposition + #9 frontend test coverage status
+- `d8cc3689` docs: clarify #20 RMOS v1→v2 migration status
+- `efa2b5e8` docs: clarify #20 RMOS v1→v2 migration status
+- `570b14cb` fix(security): use defusedxml for SVG parsing - prevents XXE attacks
+- `da6f3330` fix(security): use defusedxml for SVG parsing - prevents XXE attacks
+- `7c819044` fix: remove 15 unused imports flagged by vulture
+- `afd72185` fix: remove 15 unused imports flagged by vulture
+- `88313694` docs: baseline radon complexity metrics (#12)
+- `c5890a6e` docs: baseline radon complexity metrics (#12)
+- `854b1052` feat(art-studio): consolidate HTML prototypes into unified inlay engine
+- `ede6cd50` feat(art-studio): consolidate HTML prototypes into unified inlay engine
+- `3d8b97aa` refactor(batch_summary): reduce complexity from D(25) to A(1)
+- `f42b4293` refactor(batch_summary): reduce complexity from D(25) to A(1)
+- `23d565b6` refactor(_experimental): delete deprecated ai_core + add status docs
+- `ba7538fe` refactor(_experimental): delete deprecated ai_core + add status docs
+- `c07e3087` feat(art-studio): integrate geo band & rope generator into inlay engine\n\nPorted algorithms from geo_band_generator.html into the unified Python\ninlay engine with true geometric CNC offsets.\n\nMath infrastructure (inlay_geometry.py):\n  - compute_tangent_normal_arclen: per-vertex T/N/s for polylines\n  - build_centerline: 5 shapes (straight/cscroll/swave/spiral/custom)\n  - generate_strand_paths: N-strand phase-based rope weaving\n  - split_strand_at_crossings: depth sign-change detection\n  - MATERIALS expanded to 14 entries with grain colors\n\nNew generators (inlay_patterns.py):\n  - hex_chain, chevron_panel, parquet_panel, nested_diamond, rope_border_motif\n  - twisted_rope: parametric N-strand with 4 presets\n  - compose_band: multi-layer band compositor with gap/repeat/mirror\n\nAPI: /compose endpoint for band composition\nSchema: InlayShape Literal 10 -> 17, ComposeBandRequest model\nTests: 100 passing (was 61)
+- `e2a1b7f4` feat(art-studio): integrate geo band & rope generator into inlay engine\n\nPorted algorithms from geo_band_generator.html into the unified Python\ninlay engine with true geometric CNC offsets.\n\nMath infrastructure (inlay_geometry.py):\n  - compute_tangent_normal_arclen: per-vertex T/N/s for polylines\n  - build_centerline: 5 shapes (straight/cscroll/swave/spiral/custom)\n  - generate_strand_paths: N-strand phase-based rope weaving\n  - split_strand_at_crossings: depth sign-change detection\n  - MATERIALS expanded to 14 entries with grain colors\n\nNew generators (inlay_patterns.py):\n  - hex_chain, chevron_panel, parquet_panel, nested_diamond, rope_border_motif\n  - twisted_rope: parametric N-strand with 4 presets\n  - compose_band: multi-layer band compositor with gap/repeat/mirror\n\nAPI: /compose endpoint for band composition\nSchema: InlayShape Literal 10 -> 17, ComposeBandRequest model\nTests: 100 passing (was 61)
+- `0642b77c` feat(generators): add Stratocaster body outline generator (GAP-07)
+- `3bb0e738` feat(generators): add Stratocaster body outline generator (GAP-07)
+- `9fc8b865` docs: mark GAP-07, GAP-02, GAP-08, NECK-02, NECK-03 as resolved
+- `d4500006` docs: mark GAP-07, GAP-02, GAP-08, NECK-02, NECK-03 as resolved
+- `57dbbc72` docs: mark GAP-05 as resolved (overhang_channel_calc.py already exists)
+- `5a40a556` docs: mark GAP-05 as resolved (overhang_channel_calc.py already exists)
+- `8e1c9799` docs: update GAP_ANALYSIS + UNFINISHED_REMEDIATION — mark 67 gaps resolved
+- `eeaff824` docs: update GAP_ANALYSIS + UNFINISHED_REMEDIATION — mark 67 gaps resolved
+- `434fa6fa` feat(api): Phase 1.4 - Router consolidation complete (132→87)
+- `e35138ee` feat(api): Phase 1.4 - Router consolidation complete (132→87)
+- `62767f5f` feat(api): Phase 2.1 - API v1 curation complete (17→43 endpoints)
+- `65d0c41a` feat(api): Phase 2.1 - API v1 curation complete (17→43 endpoints)
+- `5cbaeed7` feat(ui): Phase 2.2 - Add 3 guided workflow wizards
+- `ec5aa6a1` feat(ui): Phase 2.2 - Add 3 guided workflow wizards
+- `3067789a` feat(agentic): implement Agentic Spine - moment detection + policy decisions
+- `e713de18` feat(agentic): implement Agentic Spine - moment detection + policy decisions
+- `3c613e9d` feat(ui): add comprehensive error recovery system (Phase 2.3)
+- `a2d20a22` feat(ui): add comprehensive error recovery system (Phase 2.3)
+- `25b755b1` fix(router-registry): fix manifest errors blocking test collection
+- `8385492e` fix(router-registry): fix manifest errors blocking test collection
+- `4b40449f` fix(tests): update monkeypatch path for art_presets tests
+- `7a22d0e7` fix(tests): update monkeypatch path for art_presets tests
+- `2071fc7d` feat(core): add async job queue system (Phase 3.3)
+- `5e1bccd9` feat(core): add async job queue system (Phase 3.3)
+- `01398f12` fix(ui): add typed template ref for file input in wizard
+- `eb90007a` fix(ui): add typed template ref for file input in wizard
+- `a7228c89` feat(inlay): session 4-5 — 5 new generators, BOM, frontend view with undo/redo + measure tool
+- `d2c324a2` feat(inlay): session 4-5 — 5 new generators, BOM, frontend view with undo/redo + measure tool
+- `81470f07` docs: update SESSION_STATUS.md — chronicle sessions 2-5
+- `d03fd4f9` docs: update SESSION_STATUS.md — chronicle sessions 2-5
+- `108b8cad` feat(inlay): port 3 generators from amsterdam_spiro_engine prototype\n\nNew generators: oak_medallion, floral_spray, open_flower_oval\n- oak_medallion: N-fold kite-ring medallion with 1-3 concentric layers\n- floral_spray: cubic Bezier stem with tangent-following lens petals\n- open_flower_oval: hook/comma petals around elliptical frame with pips\nHelper functions: _kite_path, _cubic_bezier_eval, _cubic_bezier_tangent,\n  _lens_polygon, _hook_petal_polygon\nRegistered in INLAY_GENERATORS dict (22->25)\nInlayShape Literal expanded (22->25)\n17 new tests (158 total passing)\nFixed HTML prototype: 3 onclick handler bugs + added missing export functions"
+- `385fba46` feat(inlay): port 3 generators from amsterdam_spiro_engine prototype\n\nNew generators: oak_medallion, floral_spray, open_flower_oval\n- oak_medallion: N-fold kite-ring medallion with 1-3 concentric layers\n- floral_spray: cubic Bezier stem with tangent-following lens petals\n- open_flower_oval: hook/comma petals around elliptical frame with pips\nHelper functions: _kite_path, _cubic_bezier_eval, _cubic_bezier_tangent,\n  _lens_polygon, _hook_petal_polygon\nRegistered in INLAY_GENERATORS dict (22->25)\nInlayShape Literal expanded (22->25)\n17 new tests (158 total passing)\nFixed HTML prototype: 3 onclick handler bugs + added missing export functions"
+- `4d54b90e` docs: update SESSION_STATUS.md with Session 6 — amsterdam spiro port"
+- `53ce165c` docs: update SESSION_STATUS.md with Session 6 — amsterdam spiro port"
+Files by surface:
+- api_routing: 3 paths
+  - M services/api/app/routers/blueprint/calibration_router.py
+  - M services/api/app/routers/blueprint/phase3_router.py
+  - M services/api/app/routers/blueprint/phase4_router.py
+- docs: 11 paths
+  - A services/api/app/_experimental/EXPERIMENTAL_STATUS.md
+  - A docs/ART_ENGINE_EXECUTIVE_SUMMARY.md
+  - A docs/GEO_BAND_ROPE_INTEGRATION_PLAN.md
+  - A docs/INLAY_PATTERN_GENERATORS_REVIEW.md
+  - A docs/VINE_GIRIH_INLAY_DESIGNER_REVIEW.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/UNFINISHED_REMEDIATION_EFFORTS.md
+  - M docs/getting-started/configuration.md
+  - M docs/SCORE_7_PLAN.md
+  - M docs/VUE_DECOMPOSITION_GUIDE.md
+  - M docs/SESSION_STATUS.md
+- other: 208 paths
+  - A services/api/app/art_studio/bracing_presets_bridge.py
+  - A packages/client/postcss.config.js
+  - A packages/client/src/styles/main.css
+  - A packages/client/tailwind.config.js
+  - A services/api/app/safety/cnc_preflight.py
+  - A services/api/app/core/store_registry.py
+  - A services/api/app/util/dxf_preflight.py
+  - A services/api/app/routers/neck/__init__.py
+  - A services/api/app/routers/neck/export.py
+  - A services/api/app/routers/neck/gcode_router.py
+  - A services/api/app/routers/neck/geometry.py
+  - A services/api/app/routers/neck/prs_router.py
+  - A services/api/app/routers/neck/schemas.py
+  - A services/api/app/routers/neck/strat_router.py
+  - A services/api/app/routers/neck/tele_router.py
+  - A packages/client/src/components/rmos/__tests__/WhyPanel.test.ts
+  - A packages/client/src/components/ui/__tests__/OverrideBanner.test.ts
+  - A packages/client/src/components/ui/__tests__/RiskBadge.test.ts
+  - A services/api/app/art_studio/api/inlay_pattern_routes.py
+  - A services/api/app/art_studio/schemas/inlay_patterns.py
+  - A services/api/app/art_studio/services/generators/inlay_export.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry.py
+  - A services/api/app/art_studio/services/generators/inlay_import.py
+  - A services/api/app/art_studio/services/generators/inlay_patterns.py
+  - A services/api/app/generators/stratocaster_body_generator.py
+  - A services/api/app/generators/stratocaster_config.py
+  - A services/api/app/art_studio/preview_consolidated_router.py
+  - A services/api/app/cam/routers/simulation/simulation_consolidated_router.py
+  - A services/api/app/cam/routers/utility/utility_consolidated_router.py
+  - A services/api/app/governance/governance_consolidated_router.py
+  - A services/api/app/routers/blueprint_cam/blueprint_cam_core_router.py
+  - A services/api/app/routers/cam/guitar/guitar_models_consolidated_router.py
+  - A services/api/app/routers/dxf_adaptive_consolidated_router.py
+  - A services/api/app/routers/gcode_consolidated_router.py
+  - A services/api/app/routers/neck/guitar_models_router.py
+  - A services/api/app/routers/probe/probe_consolidated_router.py
+  - A services/api/app/api_v1/acoustics.py
+  - A services/api/app/api_v1/art_studio.py
+  - A services/api/app/api_v1/cam_operations.py
+  - A services/api/app/api_v1/jobs.py
+  - … 168 more (see sessions.json / files.jsonl)
+- tests: 13 paths
+  - A services/api/tests/test_bracing_presets_bridge_smoke.py
+  - A services/api/tests/test_cnc_preflight_safety.py
+  - A services/api/tests/test_store_registry.py
+  - A services/api/tests/test_inlay_patterns.py
+  - A services/api/tests/test_agentic_spine.py
+  - A services/api/tests/test_job_queue.py
+  - M services/api/tests/test_instrument_geometry_endpoint_smoke.py
+  - M services/api/app/tests/test_data_registry.py
+  - M services/api/tests/test_art_presets_aggregate_endpoint_smoke.py
+  - M services/api/tests/test_relief_vcarve_endpoint_smoke.py
+  - M services/api/tests/test_remaining_routers_endpoint_smoke.py
+  - M services/api/tests/test_replay_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `services/api/app/_experimental/EXPERIMENTAL_STATUS.md` — # _experimental/ Module Status
+- `docs/ART_ENGINE_EXECUTIVE_SUMMARY.md` — UNKNOWN
+- `docs/GEO_BAND_ROPE_INTEGRATION_PLAN.md` — UNKNOWN
+- `docs/INLAY_PATTERN_GENERATORS_REVIEW.md` — UNKNOWN
+- `docs/VINE_GIRIH_INLAY_DESIGNER_REVIEW.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (703be846)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e1e8bd43)
+- PR #23 (6d21e96b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d21e96b)
+- PR #23 (afa0537a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afa0537a)
+- PR #24 (5e741bc9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e741bc9)
+- PR #24 (ba9db4b6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ba9db4b6)
+- PR #23 (4419a37b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4419a37b)
+- PR #23 (c6bccb44)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6bccb44)
+- PR #15 (5dee3ae3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5dee3ae3)
+- PR #15 (bc9042aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc9042aa)
+- PR #16 (6f86018b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f86018b)
+- PR #16 (bfb7161d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bfb7161d)
+- PR #16 (585403c6)
+- PR #16 (a655adaa)
+- PR #14 (27045afe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27045afe)
+- PR #14 (c79dd1a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c79dd1a7)
+- PR #14 (39310177)
+- PR #14 (ac8fb61a)
+- PR #17 (54918ac1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (54918ac1)
+- PR #17 (8754a555)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8754a555)
+- PR #17 (2e18aba0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2e18aba0)
+- PR #17 (f68c03d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f68c03d5)
+- PR #28 (467bc065)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (467bc065)
+- … 100 more
+
+### S099 — 2026-03-13T20:15:11-05:00 → 2026-03-14T04:07:55-05:00 (26 commits, 7.88h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `ce7cd2a8` fix(analytics): handle None duration_seconds in job summary
+- `db637803` fix(analytics): handle None duration_seconds in job summary
+- `659ea3d5` docs: add honest status sections to gap analysis + remediation
+- `d3efcd92` docs: add honest status sections to gap analysis + remediation
+- `5023f6a9` docs: correct remediation status - agentic spine IS done
+- `9d8bda7b` docs: correct remediation status - agentic spine IS done
+- `65d5c085` docs: fix remediation metrics + create authoritative status document
+- `7b01b0cc` docs: fix remediation metrics + create authoritative status document
+- `1999cb20` docs: verify P0 items - all resolved, update counts to 20 DONE
+- `1f782765` docs: verify P0 items - all resolved, update counts to 20 DONE
+- `d2e4ea1c` refactor(rosette): consolidate skeleton engines into receiver modules (Steps 1-3)
+- `f7133578` refactor(rosette): consolidate skeleton engines into receiver modules (Steps 1-3)
+- `72b88d0d` refactor(rosette): Step 4 - create RosetteEngine + consolidate rosette_designer.py
+- `a8b42829` refactor(rosette): Step 4 - create RosetteEngine + consolidate rosette_designer.py
+- `619557be` feat(sdk): add artRosetteWheel SDK endpoint (Step 5.1)
+- `7385a5b6` feat(sdk): add artRosetteWheel SDK endpoint (Step 5.1)
+- `116c5651` fix(ui): use Unicode double prime for inch symbols in RosetteWheelView
+- `60def095` fix(ui): use Unicode double prime for inch symbols in RosetteWheelView
+- `4ec32ef1` refactor(stores): Step 5.2 - update useRosetteWheelStore to use SDK
+- `ba46afae` refactor(stores): Step 5.2 - update useRosetteWheelStore to use SDK
+- `3796b335` docs: add rosette consolidation handoff documentation
+- `e0951a61` docs: add rosette consolidation handoff documentation
+- `2468ce82` refactor(rmos): decompose stub_routes.py into 4 domain routers
+- `d2b4d8f3` refactor(rmos): decompose stub_routes.py into 4 domain routers
+- `e4674e92` refactor(cam): decompose cam/routers/stub_routes.py into 3 domain routers
+- `f854cc03` refactor(cam): decompose cam/routers/stub_routes.py into 3 domain routers
+Files by surface:
+- docs: 8 paths
+  - A docs/REMEDIATION_STATUS_MARCH_2026.md
+  - A docs/ROSETTE_CONSOLIDATION_HANDOFF.md
+  - A docs/ROSETTE_WHEEL_ENGINE_INTEGRATION_PLAN.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/UNFINISHED_REMEDIATION_EFFORTS.md
+  - M docs/REMEDIATION_PLAN.md
+  - M docs/REMEDIATION_PLAN_v2.md
+  - M docs/REVIEW_REMEDIATION_PLAN.md
+- other: 42 paths
+  - A services/api/app/art_studio/api/rosette_designer_routes.py
+  - A services/api/app/art_studio/schemas/rosette_designer.py
+  - A services/api/app/art_studio/services/rosette_engine.py
+  - A packages/client/src/sdk/endpoints/artRosetteWheel.ts
+  - A packages/client/src/types/rosetteDesigner.ts
+  - A packages/client/src/views/art-studio/RosetteWheelView.vue
+  - A packages/client/src/stores/useRosetteWheelStore.ts
+  - A services/api/app/rmos/live_monitor_router.py
+  - A services/api/app/rmos/mvp_router.py
+  - A services/api/app/rmos/rosette_cam_router.py
+  - A services/api/app/rmos/safety_router.py
+  - A services/api/app/cam/routers/bridge_export_router.py
+  - A services/api/app/cam/routers/fret_slots_router.py
+  - A services/api/app/cam/routers/job_intelligence_router.py
+  - M services/api/app/_experimental/analytics/job_analytics.py
+  - M services/api/app/cam/rosette/__init__.py
+  - M services/api/app/cam/rosette/cnc/__init__.py
+  - M services/api/app/cam/rosette/cnc/cnc_exporter.py
+  - M services/api/app/cam/rosette/cnc/cnc_materials.py
+  - M services/api/app/cam/rosette/cnc/cnc_safety_validator.py
+  - M services/api/app/cam/rosette/tile_segmentation.py
+  - M services/api/app/art_studio/api/rosette_snapshot_routes.py
+  - M packages/client/src/sdk/endpoints/index.ts
+  - M services/api/app/ci/fence_baseline.json
+  - M services/api/app/ci/file_sizes_baseline.json
+  - M services/api/app/router_registry/manifest.py
+  - D services/api/app/cam/rosette/cnc/cnc_blade_model.py
+  - D services/api/app/cam/rosette/cnc/cnc_feed_table.py
+  - D services/api/app/cam/rosette/cnc/cnc_kerf_physics.py
+  - D services/api/app/cam/rosette/cnc/cnc_simulation.py
+  - D services/api/app/cam/rosette/herringbone.py
+  - D services/api/app/cam/rosette/kerf_compensation.py
+  - D services/api/app/cam/rosette/kerf_engine.py
+  - D services/api/app/cam/rosette/preview_engine.py
+  - D services/api/app/cam/rosette/ring_engine.py
+  - D services/api/app/cam/rosette/saw_batch_generator.py
+  - D services/api/app/cam/rosette/segmentation_engine.py
+  - D services/api/app/cam/rosette/slice_engine.py
+  - D services/api/app/cam/rosette/twist_engine.py
+  - D services/api/app/art_studio/services/rosette_feasibility_scorer.py
+  - … 2 more (see sessions.json / files.jsonl)
+- tests: 1 paths
+  - A services/api/tests/test_rosette_designer.py
+Documents produced:
+- `docs/REMEDIATION_STATUS_MARCH_2026.md` — UNKNOWN
+- `docs/ROSETTE_CONSOLIDATION_HANDOFF.md` — UNKNOWN
+- `docs/ROSETTE_WHEEL_ENGINE_INTEGRATION_PLAN.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ce7cd2a8)
+- Fixes: ["unsupported operand type(s) for /: 'NoneType' and 'int'"] (ce7cd2a8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db637803)
+- Fixes: ["unsupported operand type(s) for /: 'NoneType' and 'int'"] (db637803)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (659ea3d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3efcd92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5023f6a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9d8bda7b)
+- PR #18 (65d5c085)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (65d5c085)
+- PR #18 (7b01b0cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b01b0cc)
+- PR #15 (1999cb20)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1999cb20)
+- PR #15 (1f782765)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f782765)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d2e4ea1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f7133578)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (72b88d0d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8b42829)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (619557be)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7385a5b6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (116c5651)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60def095)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4ec32ef1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ba46afae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3796b335)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0951a61)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2468ce82)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d2b4d8f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e4674e92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f854cc03)
+
+### S100 — 2026-03-14T08:58:59-05:00 → 2026-03-15T01:05:58-05:00 (76 commits, 16.12h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `aad9753c` refactor: decompose large modules into focused sub-modules
+- `f8873532` refactor: decompose large modules into focused sub-modules
+- `2547c1db` chore: archive ‹token› matplotlib prototype viewers
+- `e7b703e9` chore: archive ‹token› matplotlib prototype viewers
+- `cdc49d69` refactor(art-studio): decompose rosette_engine.py into focused modules
+- `fcfc039b` refactor(art-studio): decompose rosette_engine.py into focused modules
+- `6da3d8d3` refactor(cam): decompose utility_consolidated_router.py into focused modules
+- `d381ab9b` refactor(cam): decompose utility_consolidated_router.py into focused modules
+- `bce33587` refactor(cam): decompose guitar_models_consolidated_router.py into focused modules
+- `eaa4d19d` refactor(cam): decompose guitar_models_consolidated_router.py into focused modules
+- `a4f591c0` refactor(business): split router.py (546 → 143 lines) into focused sub-modules
+- `efbab177` refactor(business): split router.py (546 → 143 lines) into focused sub-modules
+- `7e5582a3` refactor(tooling): split tooling_router.py (473 → 33 lines)
+- `bb8b016a` refactor(tooling): split tooling_router.py (473 → 33 lines)
+- `149f7705` refactor(vision): split router.py (493 → 67 lines)
+- `8e7de9fb` refactor(vision): split router.py (493 → 67 lines)
+- `14a92715` refactor(probe): split probe_consolidated_router.py (500 → 57 lines)
+- `cd3ffcbb` refactor(probe): split probe_consolidated_router.py (500 → 57 lines)
+- `97817d04` refactor(cam): split drilling_consolidated_router.py (420 → 61 lines)
+- `a4fee3ac` refactor(cam): split drilling_consolidated_router.py (420 → 61 lines)
+- `ed0f58d1` refactor(routers): split retract_router.py (502 → 66 lines)
+- `fdb781d9` refactor(routers): split retract_router.py (502 → 66 lines)
+- `0fac2124` refactor(rosette): split cam_router.py into focused sub-routers (507 → 63 lines)
+- `bb6d3d4f` refactor(rosette): split cam_router.py into focused sub-routers (507 → 63 lines)
+- `523abf88` refactor(saw-lab): split batch_metrics_router.py into focused sub-routers (492 → 52 lines)
+- `e6b04af0` refactor(saw-lab): split batch_metrics_router.py into focused sub-routers (492 → 52 lines)
+- `33fb909b` refactor(analytics): split analytics_router.py into focused sub-routers (452 → 50 lines)
+- `a479ca9a` refactor(analytics): split analytics_router.py into focused sub-routers (452 → 50 lines)
+- `242b343a` ci: update router count and file size baselines
+- `f37d594c` ci: update router count and file size baselines
+- `1c667cab` fix(scope): move headstock_inlay_router out of art_studio
+- `6fface6b` fix(scope): move headstock_inlay_router out of art_studio
+- `2c1632b5` ci: update complexity baseline (179 violations tracked)
+- `d6162c4e` ci: update complexity baseline (179 violations tracked)
+- `90ebb6d4` ci: update file sizes baseline for Technical Debt Gates (39 files)
+- `a691f564` ci: update file sizes baseline for Technical Debt Gates (39 files)
+- `4a0d5b5f` fix(contracts): add 3 missing API v1 endpoints to contract
+- `dca4df85` fix(contracts): add 3 missing API v1 endpoints to contract
+- `39482abb` feat(photo-vectorizer): deploy patches 14+13+15 — gated closer, family classifier, feature-scale calibration\n\nPatch 14: GatedAdaptiveCloser — exterior-ring-gated morphological close\n  bridges cutaway gaps (~6mm) without merging interior features\nPatch 13A: InstrumentFamilyClassifier — scale-independent family classification\nPatch 13B: FeatureScaleCalibrator — priority 4.5 calibration from feature sizes\nPatch 13C: BatchCalibrationSmoother — median z-score outlier correction\nPatch 15B: compute_rough_mpp — pre-calibration mpp for adaptive kernels\nPatch 15A: ScaleSource.FEATURE_SCALE enum member\n\nPipeline wiring:\n- Stage 4.6: rough mpp before edge detection\n- Stage 5: edge detection receives mpp/body_region/input_type\n- Stage 6.5: instrument family classification\n- Stage 7: calibrate() passes family_classification + edge_image\n- Post-extraction: batch smoother applied\n- batch_extract(): session summary logging\n\nAlso includes:\n- material_bom.py (Patch 08): 33 tests\n- test_real_image_comparison.py: 11 real-image tests\n- test_patches_14_13_15.py: 29 new component tests\n\nTotal: 100/100 tests pass (38 v2 + 33 BOM + 29 patch)"
+- `752d5dd2` feat(photo-vectorizer): deploy patches 14+13+15 — gated closer, family classifier, feature-scale calibration\n\nPatch 14: GatedAdaptiveCloser — exterior-ring-gated morphological close\n  bridges cutaway gaps (~6mm) without merging interior features\nPatch 13A: InstrumentFamilyClassifier — scale-independent family classification\nPatch 13B: FeatureScaleCalibrator — priority 4.5 calibration from feature sizes\nPatch 13C: BatchCalibrationSmoother — median z-score outlier correction\nPatch 15B: compute_rough_mpp — pre-calibration mpp for adaptive kernels\nPatch 15A: ScaleSource.FEATURE_SCALE enum member\n\nPipeline wiring:\n- Stage 4.6: rough mpp before edge detection\n- Stage 5: edge detection receives mpp/body_region/input_type\n- Stage 6.5: instrument family classification\n- Stage 7: calibrate() passes family_classification + edge_image\n- Post-extraction: batch smoother applied\n- batch_extract(): session summary logging\n\nAlso includes:\n- material_bom.py (Patch 08): 33 tests\n- test_real_image_comparison.py: 11 real-image tests\n- test_patches_14_13_15.py: 29 new component tests\n\nTotal: 100/100 tests pass (38 v2 + 33 BOM + 29 patch)"
+- `08cc6ca3` fix(agentic): fix verify-policy tests for DetectedMoment API
+- `22be73c4` fix(agentic): fix verify-policy tests for DetectedMoment API
+- `11981b71` fix(agentic): fix replay mode/shadow_mode precedence logic
+- `e1d3dedc` fix(agentic): fix replay mode/shadow_mode precedence logic
+- `1cecbad2` fix(manifest): remove 3 non-existent router entries
+- `561d2a0b` fix(manifest): remove 3 non-existent router entries
+- `3b40353d` fix(ci): add missing ban_experimental_ai_core_imports + update fence baseline
+- `a1dea608` fix(ci): add missing ban_experimental_ai_core_imports + update fence baseline
+- `6eb43121` Patch 17: ContourMerger + X-extent guard + coin position filter\n\nThree root-cause fixes for dimensional accuracy:\n1. ContourMerger — fills fragmented body contours onto mask, morphological\n   close, re-detect as single contour (targets Smart Guitar H=41% error)\n2. elect_body_contour_v2 — X-extent guard rejects contours wider than\n   body_region.width * 1.30 (targets Archtop W=112% error)\n3. filter_coin_by_position — rejects coin candidates whose centre is\n   inside fg_mask (targets Benedetto H=68% false coin detection)\n\nPipeline wiring:\n- ContourMerger instantiated in __init__, invoked at Stage 8.1\n- elect_body_contour_v2 replaces naive body election at Stage 8.2\n- filter_coin_by_position injected into ReferenceObjectDetector.detect()\n- fg_mask passed through ScaleCalibrator.calibrate() to detect()\n\nLive test results vs pre-Patch-17 baseline:\n- Archtop W: 111.7% -> 22.6% (improved -89pp) — X-extent guard working\n- Smart Guitar H: 41.3% -> 32.9% (improved -8pp) — merger partially helped\n- Smart Guitar W: 5.2% -> 95.4% (REGRESSED) — needs investigation\n- Benedetto: unchanged — coin filter did not trigger\n\nTests: 127/127 pass (38 v2 + 33 BOM + 29 patch-14/13/15 + 27 patch-17)"
+- `7d5d86c0` Patch 17: ContourMerger + X-extent guard + coin position filter\n\nThree root-cause fixes for dimensional accuracy:\n1. ContourMerger — fills fragmented body contours onto mask, morphological\n   close, re-detect as single contour (targets Smart Guitar H=41% error)\n2. elect_body_contour_v2 — X-extent guard rejects contours wider than\n   body_region.width * 1.30 (targets Archtop W=112% error)\n3. filter_coin_by_position — rejects coin candidates whose centre is\n   inside fg_mask (targets Benedetto H=68% false coin detection)\n\nPipeline wiring:\n- ContourMerger instantiated in __init__, invoked at Stage 8.1\n- elect_body_contour_v2 replaces naive body election at Stage 8.2\n- filter_coin_by_position injected into ReferenceObjectDetector.detect()\n- fg_mask passed through ScaleCalibrator.calibrate() to detect()\n\nLive test results vs pre-Patch-17 baseline:\n- Archtop W: 111.7% -> 22.6% (improved -89pp) — X-extent guard working\n- Smart Guitar H: 41.3% -> 32.9% (improved -8pp) — merger partially helped\n- Smart Guitar W: 5.2% -> 95.4% (REGRESSED) — needs investigation\n- Benedetto: unchanged — coin filter did not trigger\n\nTests: 127/127 pass (38 v2 + 33 BOM + 29 patch-14/13/15 + 27 patch-17)"
+- `145a8a8e` fix(tests): skip TestHealthEndpoint - endpoint not implemented
+- `30930d59` fix(tests): skip TestHealthEndpoint - endpoint not implemented
+- `16e7ef2b` fix(tools): update verify_policy.py for DetectedMoment dataclass API
+- `fb9e270a` fix(tools): update verify_policy.py for DetectedMoment dataclass API
+- `32d6c016` fix(ci): resolve Core CI failures in rosette and live_monitor tests
+- `e1ea8b27` fix(ci): resolve Core CI failures in rosette and live_monitor tests
+- `13ed7b50` fix(ci): resolve Core CI test failures
+- `aa518a56` fix(ci): resolve Core CI test failures
+- `a79b3f93` fix(tests): resolve 7 Core CI test failures
+- `e883ef40` fix(tests): resolve 7 Core CI test failures
+- `00b6822c` fix(tests): resolve headstock inlay and inlay pattern test failures
+- `fd9b3bd1` fix(tests): resolve headstock inlay and inlay pattern test failures
+- `70a67a88` feat(photo-vectorizer): contour plausibility scorer + typed stage result
+- `739664ff` feat(photo-vectorizer): contour plausibility scorer + typed stage result
+- `79ee17bd` docs: contour plausibility engineering specification
+- `7e14e06f` docs: contour plausibility engineering specification
+- `1c28482e` fix(rmos): resolve Core CI test failures for decision intel and toolpaths
+- `4a91ad08` fix(rmos): resolve Core CI test failures for decision intel and toolpaths
+- `c958ccfa` feat: extract Stage 8 into ContourStage + GeometryCoachV1
+- `ebc28864` feat: extract Stage 8 into ContourStage + GeometryCoachV1
+- `d9e3410d` feat(vectorizer): implement 3 blocking fixes from DEVELOPER_HANDOFF.md
+- `ed43a52d` feat(vectorizer): implement 3 blocking fixes from DEVELOPER_HANDOFF.md
+- `83f4a74f` chore(blueprint-import): cleanup - remove dead code, organize tests
+- `d9cd4d7d` chore(blueprint-import): cleanup - remove dead code, organize tests
+- `815c2295` feat(cam): implement archtop bridge and saddle DXF generators
+- `a107bf2c` feat(cam): implement archtop bridge and saddle DXF generators
+Files by surface:
+- blueprint_import: 6 paths
+  - A services/blueprint-import/tests/__init__.py
+  - M services/blueprint-import/tests/test_batch_blueprints.py
+  - M services/blueprint-import/tests/test_ocr_integration.py
+  - M services/blueprint-import/tests/test_pixel_calibration.py
+  - M services/blueprint-import/tests/test_strat_grid.py
+  - D services/blueprint-import/vectorizer.py
+- docs: 4 paths
+  - A Agentic Approach for Accurate Photo Vectorization.md
+  - A Rosette Designer/gpt-rosette-svg-prompt.md
+  - A rosette-designer-v2.html_chat.md
+  - A docs/CONTOUR_PLAUSIBILITY_ENGINEERING_SPEC.md
+- other: 196 paths
+  - A services/api/app/art_studio/services/generators/engines/__init__.py
+  - A services/api/app/art_studio/services/generators/engines/grid_engine.py
+  - A services/api/app/art_studio/services/generators/engines/medallion_engine.py
+  - A services/api/app/art_studio/services/generators/engines/path_engine.py
+  - A services/api/app/art_studio/services/generators/engines/radial_engine.py
+  - A services/api/app/art_studio/services/generators/inlay_engines.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_bezier.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_bom.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_core.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_rope.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_svg.py
+  - A services/api/app/art_studio/services/generators/inlay_geometry_transforms.py
+  - A services/api/app/art_studio/services/generators/inlay_primitives.py
+  - A services/api/app/util/gcode/__init__.py
+  - A services/api/app/util/gcode/cli.py
+  - A services/api/app/util/gcode/geometry.py
+  - A services/api/app/util/gcode/lexer.py
+  - A services/api/app/util/gcode/reader.py
+  - A services/api/app/util/gcode/render.py
+  - A services/api/app/util/gcode/report.py
+  - A services/api/app/util/gcode/simulator.py
+  - A services/api/app/util/gcode/types.py
+  - A services/api/app/cam/rosette/prototypes/__archived__/__init__.py
+  - A services/api/app/art_studio/services/rosette/__init__.py
+  - A services/api/app/art_studio/services/rosette/rosette_design.py
+  - A services/api/app/art_studio/services/rosette/rosette_geometry.py
+  - A services/api/app/art_studio/services/rosette/rosette_manufacturing.py
+  - A services/api/app/art_studio/services/rosette/rosette_recipes.py
+  - A services/api/app/art_studio/services/rosette/rosette_svg.py
+  - A services/api/app/cam/routers/utility/backup_router.py
+  - A services/api/app/cam/routers/utility/benchmark_router.py
+  - A services/api/app/cam/routers/utility/compare_router.py
+  - A services/api/app/cam/routers/utility/optimization_router.py
+  - A services/api/app/cam/routers/utility/polygon_router.py
+  - A services/api/app/cam/routers/utility/settings_router.py
+  - A services/api/app/routers/cam/guitar/archtop_cam_router.py
+  - A services/api/app/routers/cam/guitar/om_cam_router.py
+  - A services/api/app/routers/cam/guitar/stratocaster_cam_router.py
+  - A services/api/app/business/bom_router.py
+  - A services/api/app/business/breakeven_router.py
+  - … 156 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 12 paths
+  - A services/photo-vectorizer/material_bom.py
+  - A services/photo-vectorizer/test_material_bom.py
+  - A services/photo-vectorizer/test_patches_14_13_15.py
+  - A services/photo-vectorizer/test_photo_vectorizer_v2.py
+  - A services/photo-vectorizer/test_real_image_comparison.py
+  - A services/photo-vectorizer/live_test_summary.py
+  - A services/photo-vectorizer/test_patch_17.py
+  - A services/photo-vectorizer/test_plausibility_scorer.py
+  - A services/photo-vectorizer/contour_stage.py
+  - A services/photo-vectorizer/geometry_coach.py
+  - A services/photo-vectorizer/test_contour_stage.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+- tests: 14 paths
+  - M services/api/tests/test_inlay_patterns.py
+  - M services/api/tests/test_golden_m1_replay.py
+  - M services/api/app/tests/test_data_registry.py
+  - M services/api/tests/test_live_monitor_drilldown_endpoint_smoke.py
+  - M services/api/tests/test_agentic_spine.py
+  - M services/api/tests/test_analytics_endpoint_smoke.py
+  - M services/api/tests/test_cam_adaptive2_smoke.py
+  - M services/api/tests/test_cam_posts_smoke.py
+  - M services/api/tests/test_cam_probe_setup_smoke.py
+  - M services/api/tests/test_cam_risk_reports_index_smoke.py
+  - M services/api/tests/test_execution_lookup_by_decision_unit.py
+  - M services/api/tests/test_executions_list_by_decision_unit.py
+  - M services/api/tests/test_headstock_inlay_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `Agentic Approach for Accurate Photo Vectorization.md` — # Agentic Approach for Accurate Photo Vectorization
+- `Rosette Designer/gpt-rosette-svg-prompt.md` — # GPT Prompt: Luthier's Rosette Ring SVG with Geometric Tile Extensions
+- `rosette-designer-v2.html_chat.md` — rosette-designer-v2.html
+- `docs/CONTOUR_PLAUSIBILITY_ENGINEERING_SPEC.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aad9753c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8873532)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2547c1db)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e7b703e9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cdc49d69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fcfc039b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6da3d8d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d381ab9b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bce33587)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eaa4d19d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4f591c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (efbab177)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7e5582a3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb8b016a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (149f7705)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8e7de9fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (14a92715)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cd3ffcbb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (97817d04)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a4fee3ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ed0f58d1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fdb781d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0fac2124)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bb6d3d4f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (523abf88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e6b04af0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (33fb909b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a479ca9a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (242b343a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f37d594c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1c667cab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fface6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c1632b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d6162c4e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (90ebb6d4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a691f564)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a0d5b5f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dca4df85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08cc6ca3)
+- Fixes: ['- moments.py: Return ALL detected moments (not just highest priority)'] (08cc6ca3)
+- … 28 more
+
+### S101 — 2026-03-15T06:55:25-05:00 → 2026-03-16T01:44:51-05:00 (90 commits, 18.82h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1, refs/pull/7/head
+Commits:
+- `42d4811f` chore(_experimental): audit and cleanup modules
+- `d70d0eca` chore(_experimental): audit and cleanup modules
+- `6f7f324b` feat(instrument_geometry): add PHYS-02 body centerline and PHYS-03 cavity placement
+- `76a63d11` feat(instrument_geometry): add PHYS-02 body centerline and PHYS-03 cavity placement
+- `4b9dbf24` docs: add bridge break angle geometry derivation (v2 correction)
+- `e3bb02fb` docs: add bridge break angle geometry derivation (v2 correction)
+- `467838a6` fix(calculators): correct bridge break angle math to v2 (Carruth 6 deg)
+- `91b72a25` fix(calculators): correct bridge break angle math to v2 (Carruth 6 deg)
+- `370fa404` feat(db): add PostgreSQL support to RMOS stores (Store Migration)
+- `d7675fe3` feat(db): add PostgreSQL support to RMOS stores (Store Migration)
+- `d83fe834` feat(tests): add multi-post golden test coverage for CAM
+- `d8efd2f5` feat(tests): add multi-post golden test coverage for CAM
+- `645e95ed` chore: complete dead endpoint remediation (STUB_DEBT_REPORT)
+- `baae729c` chore: complete dead endpoint remediation (STUB_DEBT_REPORT)
+- `802694b1` feat(sdk): add RMOS rosette CAM SDK endpoints (registry integration)
+- `a0b54344` feat(sdk): add RMOS rosette CAM SDK endpoints (registry integration)
+- `34388e38` feat(cam): add mandatory DXF validation gate for G-code export (FAIL-CLOSED)
+- `747157d0` feat(cam): add mandatory DXF validation gate for G-code export (FAIL-CLOSED)
+- `190adf66` feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry authority\n\nNew files:\n- geometry_authority.py: family priors, export tolerance, issue-based retry policy, dimension fit scoring\n- body_isolation_result.py: typed BodyIsolationResult with 6-signal breakdown + issues\n- body_isolation_stage.py: BodyIsolationStage wrapping BodyIsolator with save/restore + scoring\n- geometry_coach_v2.py: GeometryCoachV2 with Rules A-D, monotonic improvement gate, evaluate() returning (body, contour, decision) tuple\n- test_geometry_coach_v2.py: 5 tests covering Rules A/B/C, retry exhaustion, accept path\n\nIntegration in photo_vectorizer_v2.py:\n- Stage 4.5: BodyIsolationStage.run() replaces bare body_isolator.isolate()\n- Stage 8.5: GeometryCoachV2 guarded retry loop after contour assembly\n- extract() gains enable_body_isolation_coach kwarg for per-call override\n- PhotoExtractionResult gains body_isolation and geometry_coach_v2 fields\n- Public attribute names (no underscore prefix) for all new components\n\n198 passed, 1 pre-existing failure (ScaleCalibrator confidence drift)"
+- `50123379` feat(photo-vectorizer): V2 body-isolation coaching pipeline + geometry authority\n\nNew files:\n- geometry_authority.py: family priors, export tolerance, issue-based retry policy, dimension fit scoring\n- body_isolation_result.py: typed BodyIsolationResult with 6-signal breakdown + issues\n- body_isolation_stage.py: BodyIsolationStage wrapping BodyIsolator with save/restore + scoring\n- geometry_coach_v2.py: GeometryCoachV2 with Rules A-D, monotonic improvement gate, evaluate() returning (body, contour, decision) tuple\n- test_geometry_coach_v2.py: 5 tests covering Rules A/B/C, retry exhaustion, accept path\n\nIntegration in photo_vectorizer_v2.py:\n- Stage 4.5: BodyIsolationStage.run() replaces bare body_isolator.isolate()\n- Stage 8.5: GeometryCoachV2 guarded retry loop after contour assembly\n- extract() gains enable_body_isolation_coach kwarg for per-call override\n- PhotoExtractionResult gains body_isolation and geometry_coach_v2 fields\n- Public attribute names (no underscore prefix) for all new components\n\n198 passed, 1 pre-existing failure (ScaleCalibrator confidence drift)"
+- `6a25a2f9` docs: fix stale PHYS-01 status in gap analysis summary
+- `7485aef0` docs: fix stale PHYS-01 status in gap analysis summary
+- `1ce75797` feat(api): add API rate limiting middleware using slowapi
+- `9db7d4ff` feat(api): add API rate limiting middleware using slowapi
+- `527d9591` docs: update rate limiting status in system evaluation
+- `cbe4a217` docs: update rate limiting status in system evaluation
+- `28cdf8bd` feat(websocket): implement live event streaming via WebSocket
+- `9ef30907` feat(websocket): implement live event streaming via WebSocket
+- `25a44339` test(golden): add comprehensive golden fixture tests
+- `af1e746c` test(golden): add comprehensive golden fixture tests
+- `01cd254f` feat(stores): migrate art_jobs and art_presets to SQLite
+- `9c4e4de9` feat(stores): migrate art_jobs and art_presets to SQLite
+- `859fd4c3` docs: add REMEDIATION_STATUS_MARCH_2026.md
+- `fdb375a5` docs: add REMEDIATION_STATUS_MARCH_2026.md
+- `37b3635d` docs: update remediation status with correct file counts
+- `e411bac1` docs: update remediation status with correct file counts
+- `657b0372` refactor(ui): extract ToolpathPlayer subcomponents (Phase 1)
+- `a78a705e` refactor(ui): extract ToolpathPlayer subcomponents (Phase 1)
+- `e2096062` refactor(ui): wire extracted ToolpathPlayer subcomponents (Phase 2)
+- `fa997a8b` refactor(ui): wire extracted ToolpathPlayer subcomponents (Phase 2)
+- `465352a9` refactor(ui): extract more ToolpathPlayer panels (Phase 3)
+- `5cef203b` refactor(ui): extract more ToolpathPlayer panels (Phase 3)
+- `dfbe0b7f` refactor(ui): extract ToolpathPlayer composables + PanelContainer (Phase 4)
+- `e29abdf3` refactor(ui): extract ToolpathPlayer composables + PanelContainer (Phase 4)
+- `01ff72ab` refactor(ui): extract audio/navigation composables + LoadingOverlay (Phase 5)
+- `72646ddb` refactor(ui): extract audio/navigation composables + LoadingOverlay (Phase 5)
+- `9e231574` refactor(ui): extract panel state + utility components (Phase 6)
+- `f01f7c13` refactor(ui): extract panel state + utility components (Phase 6)
+- `79a9bcda` refactor(ui): extract resolution slider + view controls (Phase 7)
+- `87f3c2d4` refactor(ui): extract resolution slider + view controls (Phase 7)
+- `319c1e65` refactor(ui): Phase 8 ToolpathPlayer decomposition (754 → 679 LOC)
+- `840202ef` refactor(ui): Phase 8 ToolpathPlayer decomposition (754 → 679 LOC)
+- `558eb40f` refactor(ui): Phase 9 ToolpathPlayer decomposition (679 → 532 LOC) 🎯
+- `b8b4ba34` refactor(ui): Phase 9 ToolpathPlayer decomposition (679 → 532 LOC) 🎯
+- `23c92dce` refactor(toolpath-player): Phase 10 - extract overlay/modal layers (532 → 462 LOC)
+- `e2e7805c` refactor(toolpath-player): Phase 10 - extract overlay/modal layers (532 → 462 LOC)
+- `63dde52a` refactor(toolpath-player): Phase 11 - extract canvas layer + lifecycle (462 → 395 LOC)
+- `fde80062` refactor(toolpath-player): Phase 11 - extract canvas layer + lifecycle (462 → 395 LOC)
+- `51eef4f0` refactor(cam): ToolpathPlayer Phase 12 - extract multi-tool filter composable
+- `6554fcac` refactor(cam): ToolpathPlayer Phase 12 - extract multi-tool filter composable
+- `9fefd1bf` feat(calculators): add binding geometry calculator for neck/headstock/body
+- `cd594cf3` feat(calculators): add binding geometry calculator for neck/headstock/body
+- `9a42f6c3` feat(ui): add StratocasterNeckGenerator.vue (NECK-05)
+- `d4341197` feat(ui): add StratocasterNeckGenerator.vue (NECK-05)
+- `790c4085` feat(calculators): add cavity position validator (LP-GAP-02, EX-GAP-04)
+- `8ee3175a` feat(calculators): add cavity position validator (LP-GAP-02, EX-GAP-04)
+- `567862c9` feat(photo-vectorizer): coach toggle, routing fixtures, named retry profiles
+- `e52e89a7` feat(photo-vectorizer): coach toggle, routing fixtures, named retry profiles
+- `11b9c75d` feat(photo-vectorizer): ContourStage merge guard
+- `cecfd40f` feat(photo-vectorizer): ContourStage merge guard
+- `3177a57f` test: add merge guard coverage for pre-vs-post contour election
+- `c5afce80` test: add merge guard coverage for pre-vs-post contour election
+- `19fdb7a1` feat(cam): add modular neck CNC pipeline with full-scale station awareness (LP-GAP-03)
+- `680e3258` feat(cam): add modular neck CNC pipeline with full-scale station awareness (LP-GAP-03)
+- `e17b705a` fix: make contour retry heuristic tolerant of older ContourStageResult stubs
+- `e762a831` fix: make contour retry heuristic tolerant of older ContourStageResult stubs
+- `3f4b1f62` feat(cam): add 3D surface carving module (BEN-GAP-08)
+- `5641a5df` feat(cam): add 3D surface carving module (BEN-GAP-08)
+- `0c1cbb21` feat(cam): add F-hole routing module (BEN-GAP-09)
+- `6beb2319` feat(cam): add F-hole routing module (BEN-GAP-09)
+- `2a90fafc` test: guard contour retry heuristic for legacy best_score-only stubs
+- `4f5e89c1` test: guard contour retry heuristic for legacy best_score-only stubs
+- `89b22696` feat(carving): add asymmetric carved top support (LP-GAP-05)
+- `9b96155c` feat(carving): add asymmetric carved top support (LP-GAP-05)
+- `c7673441` fix(test): correct serialization path for asymmetric carving surface_type
+- `d477bdb8` fix(test): correct serialization path for asymmetric carving surface_type
+- `6d7bbb5d` feat(cam): add centralized post-processor module (LP-GAP-06)
+- `fc83a56c` feat(cam): add centralized post-processor module (LP-GAP-06)
+- `358c7bfa` docs: add consolidated REMEDIATION_MASTER_2026_03_16.md
+- `dda4ff97` docs: add consolidated REMEDIATION_MASTER_2026_03_16.md
+Files by surface:
+- docs: 11 paths
+  - A services/api/app/_experimental/__ARCHIVED__/README.md
+  - A docs/BRIDGE_BREAK_ANGLE_DERIVATION.md
+  - A docs/STORE_MIGRATION_POSTGRES.md
+  - A docs/REMEDIATION_MASTER_2026_03_16.md
+  - M services/api/app/_experimental/EXPERIMENTAL_STATUS.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/STUB_DEBT_REPORT.md
+  - M docs/UNFINISHED_REMEDIATION_EFFORTS.md
+  - M docs/SYSTEM_EVALUATION.md
+  - M docs/api/overview.md
+  - M docs/REMEDIATION_STATUS_MARCH_2026.md
+- other: 101 paths
+  - A services/api/app/instrument_geometry/body/centerline.py
+  - A services/api/app/instrument_geometry/pickup/__init__.py
+  - A services/api/app/instrument_geometry/pickup/cavity_placement.py
+  - A services/api/scripts/regenerate_golden_gcode_all_posts.py
+  - A packages/client/src/sdk/endpoints/rmosRosetteCam.ts
+  - A packages/client/src/types/rmosRosetteCam.ts
+  - A .github/workflows/dxf_validation_gate.yml
+  - A services/api/app/cam/dxf_validation_gate.py
+  - A services/api/app/ci/check_dxf_files.py
+  - A services/api/app/middleware/rate_limit.py
+  - A services/api/app/websocket/router.py
+  - A services/api/app/stores/sqlite_art_jobs_store.py
+  - A services/api/app/stores/sqlite_art_presets_store.py
+  - A packages/client/src/components/cam/toolpath-player/ExportAnimationPanel.vue
+  - A packages/client/src/components/cam/toolpath-player/PlaybackControlsBar.vue
+  - A packages/client/src/components/cam/toolpath-player/PlayerHudBar.vue
+  - A packages/client/src/components/cam/toolpath-player/ToolbarButtonGroup.vue
+  - A packages/client/src/components/cam/toolpath-player/index.ts
+  - A packages/client/src/components/cam/toolpath-player/useToolpathPanels.ts
+  - A packages/client/src/components/cam/toolpath-player/CollisionPanel.vue
+  - A packages/client/src/components/cam/toolpath-player/GcodeSourcePanel.vue
+  - A packages/client/src/components/cam/toolpath-player/KeyboardShortcutsOverlay.vue
+  - A packages/client/src/components/cam/toolpath-player/MeasureModeIndicator.vue
+  - A packages/client/src/components/cam/toolpath-player/MeasurementsPanel.vue
+  - A packages/client/src/components/cam/toolpath-player/OptimizationPanel.vue
+  - A packages/client/src/components/cam/toolpath-player/PanelContainer.vue
+  - A packages/client/src/components/cam/toolpath-player/useToolpathAnalysis.ts
+  - A packages/client/src/components/cam/toolpath-player/useToolpathExport.ts
+  - A packages/client/src/components/cam/toolpath-player/LoadingOverlay.vue
+  - A packages/client/src/components/cam/toolpath-player/useToolpathAudio.ts
+  - A packages/client/src/components/cam/toolpath-player/useToolpathNavigation.ts
+  - A packages/client/src/components/cam/toolpath-player/EmptyState.vue
+  - A packages/client/src/components/cam/toolpath-player/FloatingPanel.vue
+  - A packages/client/src/components/cam/toolpath-player/ValidationOverlay.vue
+  - A packages/client/src/components/cam/toolpath-player/useToolpathPanelState.ts
+  - A packages/client/src/components/cam/toolpath-player/ResolutionSlider.vue
+  - A packages/client/src/components/cam/toolpath-player/useToolpathLoader.ts
+  - A packages/client/src/components/cam/toolpath-player/useToolpathViewControls.ts
+  - A packages/client/src/components/cam/toolpath-player/ControlsBarWrapper.vue
+  - A packages/client/src/components/cam/toolpath-player/useToolpathEventHandlers.ts
+  - … 61 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 11 paths
+  - A services/photo-vectorizer/body_isolation_result.py
+  - A services/photo-vectorizer/body_isolation_stage.py
+  - A services/photo-vectorizer/geometry_authority.py
+  - A services/photo-vectorizer/geometry_coach_v2.py
+  - A services/photo-vectorizer/test_geometry_coach_v2.py
+  - A services/photo-vectorizer/test_extract_coach_integration.py
+  - A services/photo-vectorizer/fixtures/body_ownership_routing_cases.json
+  - A services/photo-vectorizer/test_geometry_coach_v2_real_routing.py
+  - A services/photo-vectorizer/test_contour_stage_merge_guard.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/contour_stage.py
+- tests: 17 paths
+  - A services/api/tests/golden/mvp_rect_with_island__linuxcnc.nc
+  - A services/api/tests/golden/mvp_rect_with_island__mach4.nc
+  - A services/api/tests/test_mvp_gcode_multi_post_golden.py
+  - A services/api/tests/test_rate_limit_middleware.py
+  - A services/api/tests/test_websocket_router.py
+  - A services/api/tests/test_golden_dxf_preflight.py
+  - A services/api/tests/test_golden_fret_positions.py
+  - A services/api/tests/test_golden_rosette_geometry.py
+  - A services/api/tests/test_sqlite_art_stores.py
+  - A services/api/app/tests/calculators/test_binding_geometry.py
+  - A services/api/tests/test_cavity_position_validator.py
+  - A services/api/tests/test_coordinate_system.py
+  - A services/api/tests/test_neck_cnc_pipeline.py
+  - A services/api/tests/test_carving_pipeline.py
+  - A services/api/tests/test_fhole_routing.py
+  - A services/api/tests/test_post_processor.py
+  - M services/api/tests/test_bridge_break_angle.py
+Documents produced:
+- `services/api/app/_experimental/__ARCHIVED__/README.md` — UNKNOWN
+- `docs/BRIDGE_BREAK_ANGLE_DERIVATION.md` — # Bridge Break Angle — Corrected Geometry Derivation
+- `docs/STORE_MIGRATION_POSTGRES.md` — # Store Migration: SQLite → PostgreSQL
+- `docs/REMEDIATION_MASTER_2026_03_16.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (42d4811f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d70d0eca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f7f324b)
+- Fixes: ['PHYS-01, PHYS-02, PHYS-03, PHYS-04'] (6f7f324b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (76a63d11)
+- Fixes: ['PHYS-01, PHYS-02, PHYS-03, PHYS-04'] (76a63d11)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b9dbf24)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3bb02fb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (467838a6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (91b72a25)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (370fa404)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d7675fe3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d83fe834)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8efd2f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (645e95ed)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (baae729c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (802694b1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a0b54344)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (34388e38)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (747157d0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6a25a2f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7485aef0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1ce75797)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9db7d4ff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (527d9591)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cbe4a217)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (28cdf8bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9ef30907)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25a44339)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af1e746c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (01cd254f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9c4e4de9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (859fd4c3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fdb375a5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37b3635d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e411bac1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (657b0372)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a78a705e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e2096062)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa997a8b)
+- … 42 more
+
+### S102 — 2026-03-16T10:43:00-05:00 → 2026-03-16T23:50:54-05:00 (62 commits, 13.13h)
+Branches: refs/pull/7/head, refs/tags/v2.4.0-alpha.1, refs/pull/10/head, refs/pull/8/head, refs/pull/9/head
+Commits:
+- `13e40379` docs: update REMEDIATION_MASTER_2026_03_16.md with latest metrics and actions
+- `56de3168` docs: update REMEDIATION_MASTER_2026_03_16.md with latest metrics and actions
+- `3a24683e` Import PostProcessor and related classes in surface_carving.py for enhanced functionality.
+- `6cf6c295` Import PostProcessor and related classes in surface_carving.py for enhanced functionality.
+- `c9d24461` refactor(router): adjust import statement for dxf_validation_gate in dxf_adaptive_consolidated_router.py
+- `ec18ed46` refactor(router): adjust import statement for dxf_validation_gate in dxf_adaptive_consolidated_router.py
+- `04c4b986` docs: enhance REMEDIATION_MASTER_2026_03_16.md with additional cleanup actions
+- `2eab395d` docs: enhance REMEDIATION_MASTER_2026_03_16.md with additional cleanup actions
+- `0f948ed7` Update stub router documentation and clean up router registry manifest. Clarified that stub routers are real implementations with frontend dependencies, and removed references to non-existent router specifications in manifest.py.
+- `cc4068d6` Update stub router documentation and clean up router registry manifest. Clarified that stub routers are real implementations with frontend dependencies, and removed references to non-existent router specifications in manifest.py.
+- `7894d900` Merge pull request #7 from HanzoRazer/import-post-proc-7f310
+- `a572ca50` Merge pull request #7 from HanzoRazer/import-post-proc-7f310
+- `0c694f34` docs: add Part 10 _experimental/cnc_production dependency analysis
+- `762925e5` docs: add Part 10 _experimental/cnc_production dependency analysis
+- `114c5d32` feat(build): add shared G-code verification utility + wire into build scripts
+- `771b6b40` feat(build): add shared G-code verification utility + wire into build scripts
+- `2851485a` feat(ui): add unified inlay workspace + status docs
+- `dd43701f` feat(ui): add unified inlay workspace + status docs
+- `2a34b375` docs: add developer handoff document for March 2026 implementation phase
+- `93824ba1` docs: add developer handoff document for March 2026 implementation phase
+- `82560ac9` Merge pull request #8 from HanzoRazer/import-post-proc-7f310
+- `8c30a912` Merge pull request #8 from HanzoRazer/import-post-proc-7f310
+- `9b27a947` feat(cam): add Flying V pocket toolpath generator + depth validation
+- `e09bf2b0` feat(cam): add Flying V pocket toolpath generator + depth validation
+- `1d5860a7` docs: update session status + blueprint workflow improvements
+- `a951a14a` docs: update session status + blueprint workflow improvements
+- `70d9c404` fix(blueprint): use persistent temp dir for Phase 3 output files
+- `9a02ab85` fix(blueprint): use persistent temp dir for Phase 3 output files
+- `4789a448` feat: integrate Phase 7 staging bundles (4, 8, 1-3, 5-7, 9-10)
+- `ee31d921` feat: integrate Phase 7 staging bundles (4, 8, 1-3, 5-7, 9-10)
+- `27734519` feat(AI-1): POST /api/vision/analyze-generated — CAS to segmentation to blueprint bridge
+- `6658d240` feat(AI-1): POST /api/vision/analyze-generated — CAS to segmentation to blueprint bridge
+- `1f4b9b30` chore: cleanup staging patches + add SoundholeRosetteShell component
+- `98f49261` chore: cleanup staging patches + add SoundholeRosetteShell component
+- `2232f159` feat(photo-vectorizer): add retry diagnostics to geometry coach
+- `38675fd2` feat(photo-vectorizer): add retry diagnostics to geometry coach
+- `2602d407` docs(sprint): mark B4-B10 bundles DONE, unblock GEN-2 and BC-1
+- `37f9442e` docs(sprint): mark B4-B10 bundles DONE, unblock GEN-2 and BC-1
+- `489ca961` feat(projects): GEN-1 - seed project from model spec
+- `dcad0976` feat(projects): GEN-1 - seed project from model spec
+- `7b4e5188` chore: GEN-1 sprint board update + bare except fixes
+- `dfee8d82` chore: GEN-1 sprint board update + bare except fixes
+- `3d0a8732` test: record rejected retry attempts and preserve original contour result
+- `f3356ad3` test: record rejected retry attempts and preserve original contour result
+- `1a0b988e` fix: replace bare except with specific exceptions in RosetteCamRouter
+- `c975afa4` fix: replace bare except with specific exceptions in RosetteCamRouter
+- `909ecfed` Add BodyConfig schema and update design state creation logic
+- `a6d664d2` Add BodyConfig schema and update design state creation logic
+- `09ccf82d` Merge pull request #9 from HanzoRazer/import-post-proc-7f310
+- `1cce33b9` Merge pull request #9 from HanzoRazer/import-post-proc-7f310
+- `a317c779` chore: update sprint board with GEN-2 complete
+- `d717017c` chore: update sprint board with GEN-2 complete
+- `0cccae0b` feat(generators): add from_project() factory methods (GEN-3)
+- `545e07a6` feat(generators): add from_project() factory methods (GEN-3)
+- `bcd6593d` security: remove premium prototypes and brand assets from tracking
+- `ec0cacb8` security: remove premium prototypes and brand assets from tracking
+- `961ea4b4` feat: major sprint day - 93 gaps closed, platform architecture integrated
+- `d7ac202c` feat: major sprint day - 93 gaps closed, platform architecture integrated
+- `25da50ff` feat(binding): add POST /api/binding/design orchestration endpoint (BIND-GAP-01..03, 05)
+- `498bc17f` feat(binding): add POST /api/binding/design orchestration endpoint (BIND-GAP-01..03, 05)
+- `217e2ba1` Merge branch 'import-post-proc-7f310'
+- `7881c270` Merge branch 'import-post-proc-7f310'
+Files by surface:
+- api_routing: 1 paths
+  - M services/api/app/routers/blueprint/phase3_router.py
+- docs: 25 paths
+  - A services/api/app/ROUTER_CONSOLIDATION_MAP.md
+  - A services/api/app/ROUTER_SAFETY_AUDIT.md
+  - A Agentic AI as Quality Voter_A Self-Validating Vectorization System.md
+  - A Comprehensive_Migration_Plan.md
+  - A ENGINEERING MEMO.md
+  - A Luthiers_Toolbox_Platform_Architecture.md
+  - A The Production Shop_Platform Architecture.md
+  - A docs/adr/ADR-004-cnc-production-experimental-promotion.md
+  - A docs/DECOMPOSITION_BACKLOG_2026_03_16.md
+  - A docs/INLAY-06-Unified-Inlay-Workspace-Plan.md
+  - A docs/INSTRUMENT_BUILD_TEST_REPORT_2026_03_16.md
+  - A docs/MASTER_STATUS_2026_03_16.md
+  - A docs/DEVELOPER_HANDOFF_2026_03_16.md
+  - A docs/PLATFORM_ARCHITECTURE.md
+  - A docs/adr/ADR-002-instrument-project-graph.md
+  - A Executive Summary_AI Systems in The Production Shop.md
+  - A docs/CU-A1-SoundholeRosetteShell-Plan.md
+  - A docs/SPRINT_BOARD.md
+  - A docs/ROSETTE_SYSTEM_AUDIT.md
+  - A docs/adr/ADR-004-art-studio-rmos-boundary.md
+  - M docs/REMEDIATION_MASTER_2026_03_16.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/AGENT_SESSION_BOOKMARK.md
+  - M docs/REMEDIATION_PLAN.md
+  - M docs/SESSION_STATUS.md
+- other: 128 paths
+  - A cbsp21/cursorrules
+  - A patch_17_contour_merger.py
+  - A scripts/utils/__init__.py
+  - A scripts/utils/gcode_verify.py
+  - A packages/client/src/views/art-studio/InlayWorkspaceShell.vue
+  - A services/api/app/cam/flying_v/__init__.py
+  - A services/api/app/cam/flying_v/depth_validator.py
+  - A services/api/app/cam/flying_v/pocket_generator.py
+  - A packages/client/src/api/projects.ts
+  - A packages/client/src/composables/useTonewoods.ts
+  - A packages/client/src/design-intake/blueprint/BlueprintSavePanel.vue
+  - A packages/client/src/design-intake/blueprint/useBlueprintProjectWrite.ts
+  - A packages/client/src/design-utilities/CalculatorHub.vue
+  - A packages/client/src/design-utilities/index.ts
+  - A packages/client/src/design-utilities/lutherie/LutherieGeometryPanel.vue
+  - A packages/client/src/design-utilities/lutherie/ScientificCalculator.vue
+  - A packages/client/src/design-utilities/lutherie/WoodworkPanel.vue
+  - A packages/client/src/design-utilities/lutherie/calculator-index.ts
+  - A packages/client/src/design-utilities/lutherie/string-tension/StringTensionPanel.vue
+  - A packages/client/src/design-utilities/lutherie/string-tension/presets.ts
+  - A packages/client/src/design-utilities/lutherie/string-tension/types.ts
+  - A packages/client/src/design-utilities/lutherie/string-tension/useBreakAngle.ts
+  - A packages/client/src/design-utilities/lutherie/string-tension/useTension.ts
+  - A packages/client/src/design-utilities/lutherie/string-tension/uwTable.ts
+  - A packages/client/src/design-utilities/lutherie/useLutherieGeometry.ts
+  - A packages/client/src/design-utilities/scientific/ScientificCalculator.vue
+  - A packages/client/src/design-utilities/scientific/WoodworkPanel.vue
+  - A packages/client/src/design-utilities/wood-intelligence/stiffness/StiffnessIndexPanel.vue
+  - A packages/client/src/design-utilities/wood-intelligence/stiffness/tonewoodData.ts
+  - A packages/client/src/design-utilities/wood-intelligence/stiffness/useStiffnessIndex.ts
+  - A packages/client/src/instrument-workspace/acoustic/bridge/BridgeLabPanel.vue
+  - A packages/client/src/instrument-workspace/acoustic/bridge/useBridgeWorkspace.ts
+  - A packages/client/src/instrument-workspace/acoustic/materials/InstrumentMaterialSelector.vue
+  - A packages/client/src/instrument-workspace/hub/InstrumentHubShell.vue
+  - A packages/client/src/instrument-workspace/shared-state/project-types.ts
+  - A packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts
+  - A services/api/app/blueprint/__init__.py
+  - A services/api/app/blueprint/project_writer.py
+  - A services/api/app/blueprint/save_router.py
+  - A services/api/app/materials/__init__.py
+  - … 88 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 11 paths
+  - A services/photo-vectorizer/live_test_output/Black and White Benedetto_00_original_photo_v2.dxf
+  - A services/photo-vectorizer/live_test_output/Black and White Benedetto_00_original_photo_v2.svg
+  - A services/photo-vectorizer/live_test_output/Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway_00_original_photo_v2.dxf
+  - A services/photo-vectorizer/live_test_output/Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway_00_original_photo_v2.svg
+  - A services/photo-vectorizer/live_test_output/Smart Guitar_1_00_original_photo_v2.dxf
+  - A services/photo-vectorizer/live_test_output/Smart Guitar_1_00_original_photo_v2.svg
+  - A services/photo-vectorizer/live_test_run.py
+  - A services/photo-vectorizer/test_geometry_coach_v2_retry_diagnostics.py
+  - M services/photo-vectorizer/geometry_coach_v2.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_plausibility_scorer.py
+- tests: 5 paths
+  - A services/api/tests/test_flying_v_cam.py
+  - A services/api/test_novel_designs.py
+  - A services/api/tests/test_body_gcode_router_smoke.py
+  - M services/api/tests/test_bezier_body_generator.py
+  - M services/api/tests/test_golden_rosette_geometry.py
+Documents produced:
+- `services/api/app/ROUTER_CONSOLIDATION_MAP.md` — # Router Consolidation Map
+- `services/api/app/ROUTER_SAFETY_AUDIT.md` — # Router Safety Audit Report
+- `Agentic AI as Quality Voter_A Self-Validating Vectorization System.md` — UNKNOWN
+- `Comprehensive_Migration_Plan.md` — UNKNOWN
+- `ENGINEERING MEMO.md` — UNKNOWN
+- `Luthiers_Toolbox_Platform_Architecture.md` — UNKNOWN
+- `The Production Shop_Platform Architecture.md` — UNKNOWN
+- `docs/adr/ADR-004-cnc-production-experimental-promotion.md` — UNKNOWN
+- `docs/DECOMPOSITION_BACKLOG_2026_03_16.md` — UNKNOWN
+- `docs/INLAY-06-Unified-Inlay-Workspace-Plan.md` — UNKNOWN
+- `docs/INSTRUMENT_BUILD_TEST_REPORT_2026_03_16.md` — UNKNOWN
+- `docs/MASTER_STATUS_2026_03_16.md` — UNKNOWN
+- `docs/DEVELOPER_HANDOFF_2026_03_16.md` — UNKNOWN
+- `docs/PLATFORM_ARCHITECTURE.md` — # The Production Shop — Platform Architecture
+- `docs/adr/ADR-002-instrument-project-graph.md` — # ADR-002 — Instrument Project Graph as Platform Center
+- `Executive Summary_AI Systems in The Production Shop.md` — UNKNOWN
+- `docs/CU-A1-SoundholeRosetteShell-Plan.md` — UNKNOWN
+- `docs/SPRINT_BOARD.md` — UNKNOWN
+- `docs/ROSETTE_SYSTEM_AUDIT.md` — # Rosette System Audit — Merge Gap Report
+- `docs/adr/ADR-004-art-studio-rmos-boundary.md` — # ADR-004: Art Studio as User-Facing Interface, RMOS as Internal Spine
+Annotations:
+- PR #7 (7894d900)
+- PR #7 (a572ca50)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0c694f34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (762925e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (114c5d32)
+- Fixes: ['LP-GAP-04, LP-GAP-08, EX-GAP-12, SG-GAP-13, VEC-GAP-07'] (114c5d32)
+- VEC-GAP-07 (114c5d32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (771b6b40)
+- Fixes: ['LP-GAP-04, LP-GAP-08, EX-GAP-12, SG-GAP-13, VEC-GAP-07'] (771b6b40)
+- VEC-GAP-07 (771b6b40)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2851485a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dd43701f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2a34b375)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93824ba1)
+- PR #8 (82560ac9)
+- PR #8 (8c30a912)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b27a947)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e09bf2b0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1d5860a7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a951a14a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (70d9c404)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9a02ab85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4789a448)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee31d921)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f4b9b30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98f49261)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2232f159)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38675fd2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2602d407)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (37f9442e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (489ca961)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dcad0976)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b4e5188)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dfee8d82)
+- PR #9 (09ccf82d)
+- PR #9 (1cce33b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a317c779)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d717017c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0cccae0b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (545e07a6)
+- … 6 more
+
+### S103 — 2026-03-17T14:04:51-05:00 → 2026-03-18T04:11:56-05:00 (38 commits, 14.12h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `0a3d53b9` feat(cam): implement OM-PURF-03, OM-PURF-05, OM-PURF-08 binding/purfling gaps
+- `a8d3e657` feat(cam): implement OM-PURF-03, OM-PURF-05, OM-PURF-08 binding/purfling gaps
+- `0dc29a9f` docs: add SPRINT_BOARD.md + GEN-5 description system consolidation
+- `ebb3af8b` docs: add SPRINT_BOARD.md + GEN-5 description system consolidation
+- `126f54ca` feat(cam): GEN-6 acoustic body generator + CAM endpoints
+- `3466da7f` feat(cam): GEN-6 acoustic body generator + CAM endpoints
+- `863a3b65` feat: close 3 gaps (BIND-GAP-04, SG-GAP-09, VINE-12)
+- `db27b10f` feat: close 3 gaps (BIND-GAP-04, SG-GAP-09, VINE-12)
+- `a7e94fe5` feat: close 2 gaps (FV-GAP-09, OM-PURF-06)
+- `f03ccd7d` feat: close 2 gaps (FV-GAP-09, OM-PURF-06)
+- `e4247d66` feat(cursor): Smart Guitar shell + nav modules + file decomposition + gap fixes
+- `ebfc8b8a` feat(cursor): Smart Guitar shell + nav modules + file decomposition + gap fixes
+- `57878a2a` docs: mark 5 gaps resolved (BIND-GAP-01/02/03/05, EX-GAP-11)
+- `e7cb0050` docs: mark 5 gaps resolved (BIND-GAP-01/02/03/05, EX-GAP-11)
+- `279f8a80` docs: reconcile GAP_ANALYSIS_MASTER.md against actual commits
+- `f4b4c1cf` docs: reconcile GAP_ANALYSIS_MASTER.md against actual commits
+- `5493a29b` docs: sync SPRINT_BOARD gap count with reconciliation (111/9)
+- `662af66d` docs: sync SPRINT_BOARD gap count with reconciliation (111/9)
+- `3357c793` chore: remove orphaned files from repo root
+- `e5dae247` chore: remove orphaned files from repo root
+- `5e833a8b` feat(cam): add machines.py + fix sagitta formula + wire PostProcessor
+- `fe1e2f51` feat(cam): add machines.py + fix sagitta formula + wire PostProcessor
+- `aa0e5c3a` chore: delete _experimental chipload duplicates
+- `c1989ced` chore: delete _experimental chipload duplicates
+- `1d7dbd9e` fix(cam): wire PostProcessor into remaining neck generators
+- `42035f81` fix(cam): wire PostProcessor into remaining neck generators
+- `34e22a77` feat(cam): CAM Workspace wizard Phase 1
+- `64e680c1` feat(cam): CAM Workspace wizard Phase 1
+- `95ef35d5` feat(cam): integrate cam_workspace_router + NeckOpPanel wizard
+- `f9ebc962` feat(cam): integrate cam_workspace_router + NeckOpPanel wizard
+- `8c553069` feat(materials): add E_C_gpa cross-grain modulus
+- `f09b2a7a` feat(materials): add E_C_gpa cross-grain modulus
+- `0d65d043` data: add D'Aquisto archtop graduation data
+- `37bee8fc` data: add D'Aquisto archtop graduation data
+- `3855579c` feat(acoustics): port plate design math from tap-tone-pi (PORT-001)
+- `aa63c1e3` feat(acoustics): port plate design math from tap-tone-pi (PORT-001)
+- `52ebb632` fix(cam): update cam_cutting_evaluator.py with complete 7-function version
+- `5fc0de79` fix(cam): update cam_cutting_evaluator.py with complete 7-function version
+Files by surface:
+- api_routing: 1 paths
+  - A Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/photo_vectorizer_router.py
+- docs: 10 paths
+  - A docs/GENERATOR_REMEDIATION_PLAN.md
+  - A Interactive_Headstock_Generator/files - 2026-03-17T035340.928/DXF-INTEGRATION.md
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/INTEGRATION.md
+  - A Interactive_Neck and Cam _Modules/CAM_SURVEY.md
+  - A Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/DXF-INTEGRATION.md
+  - A Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/INTEGRATION.md
+  - A Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/INTEGRATION_CORRECTIONS.md
+  - A Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/INTEGRATION_CORRECTIONS.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/SPRINT_BOARD.md
+- other: 190 paths
+  - A services/api/app/cam/_om_purf_08_additions.py
+  - A services/api/app/cam/binding/binding_corner_miter.py
+  - A services/api/app/cam/binding/om_purf_03_additions.py
+  - A services/api/app/generators/acoustic_body_generator.py
+  - A services/api/app/routers/cam/guitar/acoustic_cam_router.py
+  - A services/api/app/schemas/smart_guitar_cam.py
+  - A Interactive_Headstock_Generator/files - 2026-03-17T035340.928/dxfImportClient.js
+  - A Interactive_Headstock_Generator/files - 2026-03-17T035340.928/dxf_service.py
+  - A Interactive_Headstock_Generator/files - 2026-03-17T091407.113/ImportView.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T091407.113/WorkspaceView.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T091407.113/package.json
+  - A Interactive_Headstock_Generator/files - 2026-03-17T091407.113/useDxfImport.ts
+  - A Interactive_Headstock_Generator/files - 2026-03-17T091407.113/vite.config.ts
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/App.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/AppShell.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/ParametricView.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/dxf_export.py
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/main.ts
+  - A Interactive_Headstock_Generator/files - 2026-03-17T092736.563/useExportDxf.ts
+  - A Interactive_Headstock_Generator/files - 2026-03-17T095439.331/WoodGrainPanel.vue
+  - A Interactive_Headstock_Generator/files - 2026-03-17T095439.331/useWoodGrain.ts
+  - A Interactive_Headstock_Generator/headstock-designer.html
+  - A Interactive_Headstock_Generator/ps-import-normalize.html
+  - A Interactive_Headstock_Generator/ps-parametric.html
+  - A Interactive_Headstock_Generator/ps-suite.html
+  - A packages/client/src/composables/useDxfImport.ts
+  - A packages/client/src/composables/useWoodGrain.ts
+  - A packages/client/src/views/smart-guitar/SmartGuitarShell.vue
+  - A services/api/app/agentic/replay_summary.py
+  - A services/api/app/cam/rosette/pattern_geometry.py
+  - A services/api/app/cam/rosette/preset_registry.py
+  - A services/api/app/core/job_queue/queue_execution.py
+  - A services/api/app/core/job_queue/queue_storage.py
+  - A services/api/app/router_registry/manifests/__init__.py
+  - A services/api/app/router_registry/manifests/art_studio_manifest.py
+  - A services/api/app/router_registry/manifests/business_manifest.py
+  - A services/api/app/router_registry/manifests/cam_manifest.py
+  - A services/api/app/router_registry/manifests/rmos_manifest.py
+  - A services/api/app/router_registry/manifests/system_manifest.py
+  - A services/api/app/cam/machines.py
+  - … 150 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 32 paths
+  - A services/photo-vectorizer/contour_election.py
+  - A services/photo-vectorizer/contour_plausibility.py
+  - A services/photo-vectorizer/test_body_isolation_retry_profiles.py
+  - A services/photo-vectorizer/test_body_isolation_stage_expansion.py
+  - A services/photo-vectorizer/test_body_ownership_score.py
+  - A services/photo-vectorizer/test_coaching_convergence.py
+  - A services/photo-vectorizer/test_contour_election_ownership_gate.py
+  - A services/photo-vectorizer/test_contour_plausibility_ownership.py
+  - A services/photo-vectorizer/test_geometry_coach_v2_ownership_retry.py
+  - A services/photo-vectorizer/test_retry_diagnostics_serialization.py
+  - A services/photo-vectorizer/test_fixture_e2e_ownership_regression.py
+  - A services/photo-vectorizer/fixtures/regression_replay_archtop.json
+  - A services/photo-vectorizer/fixtures/regression_replay_benedetto.json
+  - A services/photo-vectorizer/fixtures/regression_replay_smart_guitar.json
+  - A services/photo-vectorizer/fixtures/replay_retry_attempts_with_ownership.json
+  - A services/photo-vectorizer/replay_summary.py
+  - A services/photo-vectorizer/test_regression_replay_ownership.py
+  - A services/photo-vectorizer/test_replay_summary.py
+  - M services/photo-vectorizer/body_isolation_stage.py
+  - M services/photo-vectorizer/contour_stage.py
+  - M services/photo-vectorizer/fixtures/body_ownership_routing_cases.json
+  - M services/photo-vectorizer/geometry_coach_v2.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_contour_stage.py
+  - M services/photo-vectorizer/test_contour_stage_merge_guard.py
+  - M services/photo-vectorizer/test_geometry_coach_v2.py
+  - M services/photo-vectorizer/test_geometry_coach_v2_real_routing.py
+  - M services/photo-vectorizer/test_geometry_coach_v2_retry_diagnostics.py
+  - M services/photo-vectorizer/test_patch_17.py
+  - M services/photo-vectorizer/test_photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_plausibility_scorer.py
+  - M services/photo-vectorizer/grid_classify.py
+- tests: 8 paths
+  - A services/api/tests/fixtures/serialized_extraction_with_retry.json
+  - A services/api/tests/fixtures/serialized_extraction_with_two_retries.json
+  - A services/api/tests/test_replay_summary.py
+  - A services/api/tests/test_retry_diagnostics_replay_fixture.py
+  - A services/api/tests/test_retry_diagnostics_replay_ordering.py
+  - A services/api/tests/test_retry_diagnostics_replay_summary.py
+  - A services/api/tests/test_retry_diagnostics_schema.py
+  - M services/api/app/tests/test_dxf_exporter_versions.py
+Documents produced:
+- `docs/GENERATOR_REMEDIATION_PLAN.md` — # GEN-5: Generator Remediation Plan — Description System Consolidation
+- `Interactive_Headstock_Generator/files - 2026-03-17T035340.928/DXF-INTEGRATION.md` — UNKNOWN
+- `Interactive_Headstock_Generator/files - 2026-03-17T092736.563/INTEGRATION.md` — UNKNOWN
+- `Interactive_Neck and Cam _Modules/CAM_SURVEY.md` — # Production Shop — CAM Section Survey
+- `Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/DXF-INTEGRATION.md` — # DXF Service — Integration Notes
+- `Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/INTEGRATION.md` — # Headstock Suite — luthiers-toolbox-main Integration
+- `Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/INTEGRATION_CORRECTIONS.md` — # Neck Suite Integration Corrections
+- `Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/INTEGRATION_CORRECTIONS.md` — # Neck Suite Integration Corrections
+Annotations:
+- PR #3000 (0a3d53b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0a3d53b9)
+- PR #3000 (a8d3e657)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8d3e657)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0dc29a9f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ebb3af8b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (126f54ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3466da7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (863a3b65)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (db27b10f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7e94fe5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f03ccd7d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (57878a2a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e7cb0050)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (279f8a80)
+- VEC-GAP-06 (279f8a80)
+- VEC-GAP-08 (279f8a80)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f4b4c1cf)
+- VEC-GAP-06 (f4b4c1cf)
+- VEC-GAP-08 (f4b4c1cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5e833a8b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe1e2f51)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aa0e5c3a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1989ced)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1d7dbd9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (42035f81)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95ef35d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f9ebc962)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3855579c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (aa63c1e3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (52ebb632)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5fc0de79)
+
+### S104 — 2026-03-18T10:48:32-05:00 → 2026-03-18T13:58:11-05:00 (62 commits, 3.16h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `3d2bc11c` fix(ux): usability improvements from systems review
+- `98e6bf80` fix(ux): usability improvements from systems review
+- `5b3fe0b7` docs: document single-instance scale assumptions
+- `ce1b65bd` docs: document single-instance scale assumptions
+- `65497a8d` docs: add SAFETY.md operator safety guidelines
+- `e018873f` docs: add SAFETY.md operator safety guidelines
+- `76c3bc9b` fix(ci): update fence baselines + repair broken doc link
+- `af182429` fix(ci): update fence baselines + repair broken doc link
+- `b50cdf86` docs: standardize product name to The Production Shop
+- `ea96fd63` docs: standardize product name to The Production Shop
+- `5b3675fa` docs: add ARCHITECTURE.md domain map
+- `e8bfa6ad` docs: add ARCHITECTURE.md domain map
+- `b2e0cdc5` fix(reliability): consolidate safety_critical, wire router health endpoint, add coverage floor
+- `c0340737` fix(reliability): consolidate safety_critical, wire router health endpoint, add coverage floor
+- `1b722282` docs: update SPRINT_BOARD.md with reliability fixes session log
+- `9d87ef28` docs: update SPRINT_BOARD.md with reliability fixes session log
+- `13316eaf` docs: INLAY-03/INLAY-07 labeling fix
+- `3d111cfc` docs: INLAY-03/INLAY-07 labeling fix
+- `360ccc4f` test(safety): add preflight gate coverage tests
+- `5057328d` test(safety): add preflight gate coverage tests
+- `40aaff82` test(safety): add coverage tests for cnc_preflight and feasibility.explain
+- `7a19328c` test(safety): add coverage tests for cnc_preflight and feasibility.explain
+- `3f6aaaf4` test(safety): add cnc_preflight and feasibility explain coverage tests
+- `9ad4d053` test(safety): add cnc_preflight and feasibility explain coverage tests
+- `3bac45f5` feat(acoustics): ARCH-003 archtop graduation physics connection
+- `ac56ec6b` feat(acoustics): ARCH-003 archtop graduation physics connection
+- `85341627` feat(smart-guitar): ARCH-004 plate design wiring for semi-hollow variant
+- `97fe2385` feat(smart-guitar): ARCH-004 plate design wiring for semi-hollow variant
+- `afae1422` fix(geometry): correct bridge_break_angle v1→v2
+- `c0aea863` fix(geometry): correct bridge_break_angle v1→v2
+- `a1ff8417` feat(cam-workspace): wire machine selector to live backend
+- `ca6378cb` feat(cam-workspace): wire machine selector to live backend
+- `3cf4dceb` feat(binding): add binding strip length calculator (BIND-GAP-04)
+- `ee86e438` feat(binding): add binding strip length calculator (BIND-GAP-04)
+- `9b690434` docs: fix SPRINT_BOARD gap counts and remove phantom GEN-5
+- `b870f7f0` docs: fix SPRINT_BOARD gap counts and remove phantom GEN-5
+- `2c0ecced` docs(sprint): reconcile gap count with GAP_ANALYSIS_MASTER
+- `c1a45d30` docs(sprint): reconcile gap count with GAP_ANALYSIS_MASTER
+- `9a67e5e8` docs: fix gap doc inconsistencies — VINE-05 Category 6 table, INLAY-04 audit
+- `b5923e27` docs: fix gap doc inconsistencies — VINE-05 Category 6 table, INLAY-04 audit
+- `93a01da0` test(coverage): add tests for rmos/services/lineage.py
+- `bf829edc` test(coverage): add tests for rmos/services/lineage.py
+- `c963758d` test(safety): add preflight gate coverage tests
+- `eeaad032` test(safety): add preflight gate coverage tests
+- `0866952b` test(coverage): add tests for rmos/runs_v2/store_completeness.py
+- `fe75f693` test(coverage): add tests for rmos/runs_v2/store_completeness.py
+- `60587e01` fix(tests): update bridge_break_angle import to use CARRUTH_MIN_DEG
+- `c4cc5f0e` fix(tests): update bridge_break_angle import to use CARRUTH_MIN_DEG
+- `ec0e3163` docs(sprint): add session log entry for gap reconciliation and test coverage
+- `f9bc5182` docs(sprint): add session log entry for gap reconciliation and test coverage
+- `649235d5` test(coverage): add tests for rmos/saw_cam_guard.py
+- `edc033e7` test(coverage): add tests for rmos/saw_cam_guard.py
+- `5d0c225b` test(coverage): add tests for rmos/services/constraint_search.py
+- `f67223fc` test(coverage): add tests for rmos/services/constraint_search.py
+- `0c6786ac` test(coverage): add tests for rmos/runs_v2/store_filter.py
+- `3eb94398` test(coverage): add tests for rmos/runs_v2/store_filter.py
+- `488b367c` docs(sprint): add RMOS test coverage session log entry
+- `c8a71f5c` docs(sprint): add RMOS test coverage session log entry
+- `347befb6` chore(backlog): clear completed items, add arch_height to Benedetto graduation map
+- `8ef349c9` chore(backlog): clear completed items, add arch_height to Benedetto graduation map
+- `b12397e9` feat(instrument): add bridge saddle compensation calculator
+- `ece7ea3d` feat(instrument): add bridge saddle compensation calculator
+Files by surface:
+- docs: 11 paths
+  - A docs/reviews/CRITICAL_SYSTEMS_REVIEW_2026-03-18.md
+  - A docs/SAFETY.md
+  - A docs/ARCHITECTURE.md
+  - A docs/BACKLOG.md
+  - M docs/SPRINT_BOARD.md
+  - M README.md
+  - M docs/DEPLOYMENT_VALIDATION.md
+  - M docs/ROUTER_MAP.md
+  - M docs/PRODUCT_DEFINITION.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M CHANGELOG.md
+- other: 39 paths
+  - A packages/client/src/composables/useConfirm.ts
+  - A services/api/app/calculators/plate_design/archtop_graduation.py
+  - A services/api/app/calculators/saddle_compensation.py
+  - A services/api/app/routers/saddle_compensation_router.py
+  - M packages/client/src/App.vue
+  - M packages/client/src/components/CamPipelinePresetList.vue
+  - M packages/client/src/components/GeometryToolbar.vue
+  - M packages/client/src/components/Toast.vue
+  - M packages/client/src/components/cam/ToolpathAnnotations.vue
+  - M packages/client/src/components/drilling_lab/composables/useDrillingHoles.ts
+  - M packages/client/src/components/rmos/RosettePatternLibrary.vue
+  - M packages/client/src/components/rmos/RosettePatternLibraryEnhanced.vue
+  - M packages/client/src/components/rmos/composables/useToast.ts
+  - M packages/client/src/components/toolbox/composables/useGuitarDimensions.ts
+  - M packages/client/src/components/ui/ToastHost.vue
+  - M packages/client/src/design-utilities/lutherie/neck/useHeadstockTransition.ts
+  - M packages/client/src/stores/uiToastStore.ts
+  - M packages/client/src/views/ArtPresetManager.vue
+  - M packages/client/src/views/PipelineLab.vue
+  - M packages/client/src/views/PresetHubView.vue
+  - M packages/client/src/views/lab/MachineManagerView.vue
+  - M services/api/app/ci/fence_baseline.json
+  - M services/api/app/ci/fence_patterns_baseline.json
+  - M services/api/app/core/safety.py
+  - M services/api/app/routers/health_router.py
+  - M services/api/app/safety/__init__.py
+  - M services/api/pytest.ini
+  - M packages/client/src/views/art-studio/FretMarkersView.vue
+  - M services/api/app/routers/acoustics/plate_router.py
+  - M packages/client/src/views/smart-guitar/SmartGuitarShell.vue
+  - M services/api/app/schemas/smart_guitar_cam.py
+  - M packages/client/src/design-utilities/lutherie/string-tension/types.ts
+  - M packages/client/src/design-utilities/lutherie/string-tension/useBreakAngle.ts
+  - M services/api/app/calculators/bridge_break_angle.py
+  - M packages/client/src/views/cam/CamWorkspaceView.vue
+  - M services/api/app/calculators/binding_geometry.py
+  - M services/api/app/routers/binding_design_router.py
+  - M services/api/app/instrument_geometry/models/benedetto_17/graduation_map.json
+  - M services/api/app/router_registry/manifests/business_manifest.py
+- tests: 15 paths
+  - A services/api/tests/test_preflight_gate.py
+  - A services/api/tests/test_cnc_preflight_coverage.py
+  - A services/api/tests/test_feasibility_explain_coverage.py
+  - A services/api/tests/test_cnc_preflight.py
+  - A services/api/tests/test_feasibility_explain.py
+  - A services/api/tests/test_archtop_graduation.py
+  - A services/api/tests/test_bridge_break_angle_v2.py
+  - A services/api/tests/test_binding_strip_length.py
+  - A services/api/tests/test_rmos_lineage_service.py
+  - A services/api/tests/test_rmos_store_completeness.py
+  - A services/api/tests/test_saw_cam_guard.py
+  - A services/api/tests/test_constraint_search.py
+  - A services/api/tests/test_store_filter.py
+  - A services/api/tests/test_saddle_compensation.py
+  - M services/api/tests/test_bridge_break_angle.py
+Documents produced:
+- `docs/reviews/CRITICAL_SYSTEMS_REVIEW_2026-03-18.md` — UNKNOWN
+- `docs/SAFETY.md` — # Operator Safety — The Production Shop
+- `docs/ARCHITECTURE.md` — # Architecture — The Production Shop
+- `docs/BACKLOG.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (76c3bc9b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af182429)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b2e0cdc5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c0340737)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (360ccc4f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5057328d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (40aaff82)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7a19328c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f6aaaf4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9ad4d053)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3bac45f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ac56ec6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (85341627)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (97fe2385)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (afae1422)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c0aea863)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a1ff8417)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca6378cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3cf4dceb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ee86e438)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b690434)
+- VEC-GAP-08 (9b690434)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b870f7f0)
+- VEC-GAP-08 (b870f7f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2c0ecced)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1a45d30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93a01da0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bf829edc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0866952b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe75f693)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60587e01)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4cc5f0e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ec0e3163)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f9bc5182)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (649235d5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (edc033e7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5d0c225b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f67223fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0c6786ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3eb94398)
+- … 4 more
+
+### S105 — 2026-03-18T19:30:23-05:00 → 2026-03-19T02:10:43-05:00 (66 commits, 6.67h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `bbcab0e2` test(coverage): add tests for toolpaths.py
+- `c37a98c9` test(coverage): add tests for toolpaths.py
+- `21fe1b1f` chore(backlog): mark PORT-001, HEADSTOCK-001, VECTORIZER-001 complete
+- `ec6c095f` chore(backlog): mark PORT-001, HEADSTOCK-001, VECTORIZER-001 complete
+- `1fdd5d53` docs(sprint): session summary — systems review 6.1→7.3, all gaps resolved
+- `47c917c2` docs(sprint): session summary — systems review 6.1→7.3, all gaps resolved
+- `5fc1e79d` feat(headstock): add DXF export with veneer + binding (HEADSTOCK-001) feat(vectorizer): add photo vectorizer router (VECTORIZER-001)
+- `98c0b58d` feat(headstock): add DXF export with veneer + binding (HEADSTOCK-001) feat(vectorizer): add photo vectorizer router (VECTORIZER-001)
+- `9417162c` feat(headstock): register transition export router — DXF + G-code for neck-to-headstock transition zone
+- `c2c332b8` feat(headstock): register transition export router — DXF + G-code for neck-to-headstock transition zone
+- `1aada15c` feat(geometry): promote neck angle to first-class calculator (GEOMETRY-001)
+- `2082f9ea` feat(geometry): promote neck angle to first-class calculator (GEOMETRY-001)
+- `7dd57dc8` feat(calculators): GEOMETRY-010 side bending parameters calculator
+- `cf727766` feat(calculators): GEOMETRY-010 side bending parameters calculator
+- `4741f084` chore(backlog): remove completed items — ARCH-001, NECK-001, CAM-SURVEY-001, ROOT-CLEANUP-001
+- `ebe027f8` chore(backlog): remove completed items — ARCH-001, NECK-001, CAM-SURVEY-001, ROOT-CLEANUP-001
+- `1fe59f1f` feat(calculators): CONSTRUCTION-001 nut slot depth schedule
+- `f6468f8f` feat(calculators): CONSTRUCTION-001 nut slot depth schedule
+- `3f543019` feat(calculators): CONSTRUCTION-004 string tension calculator
+- `512a2a53` feat(calculators): CONSTRUCTION-004 string tension calculator
+- `da25126c` feat(calculators): GEOMETRY-003 kerfing geometry calculator
+- `f1bfbde8` feat(calculators): GEOMETRY-003 kerfing geometry calculator
+- `adae5518` feat(calculators): GEOMETRY-002 soundhole placement and sizing
+- `c77a9e57` feat(calculators): GEOMETRY-002 soundhole placement and sizing
+- `27a10455` feat(calculators): GEOMETRY-004 bridge design geometry
+- `b3d62f68` feat(calculators): GEOMETRY-004 bridge design geometry
+- `451a91c8` feat(calculators): CONSTRUCTION-002 instrument setup cascade calculator
+- `bef5e931` feat(calculators): CONSTRUCTION-002 instrument setup cascade calculator
+- `26691e3c` feat(calculators): GEOMETRY-005 neck and tail block sizing
+- `313af5ca` feat(calculators): GEOMETRY-005 neck and tail block sizing
+- `98187d30` feat(calculators): CONSTRUCTION-003 fret leveling geometry
+- `b8f136fd` feat(calculators): CONSTRUCTION-003 fret leveling geometry
+- `2f6e6d60` feat(calculators): CONSTRUCTION-006 humidity and wood movement calculator
+- `d5ee32fc` feat(calculators): CONSTRUCTION-006 humidity and wood movement calculator
+- `16292bf4` feat(calculators): GEOMETRY-006 fret wire selection calculator
+- `ff5a5e08` feat(calculators): GEOMETRY-006 fret wire selection calculator
+- `12ac0eb7` feat(calculators): CONSTRUCTION-005 glue joint geometry calculator
+- `b50f58e8` feat(calculators): CONSTRUCTION-005 glue joint geometry calculator
+- `be1b31f4` feat(calculators): GEOMETRY-008 tuning machine post height and string tree selection
+- `ec6c8592` feat(calculators): GEOMETRY-008 tuning machine post height and string tree selection
+- `1f17e6aa` feat(calculators): GEOMETRY-007 nut compensation calculator
+- `345718cd` feat(calculators): GEOMETRY-007 nut compensation calculator
+- `090af221` test(calculators): add glue joint tests
+- `c15f609c` test(calculators): add glue joint tests
+- `1faa7701` feat(calculators): GEOMETRY-007 nut compensation zero-fret vs traditional
+- `d63cea3f` feat(calculators): GEOMETRY-007 nut compensation zero-fret vs traditional
+- `d3cd3326` feat(calculators): CONSTRUCTION-007 finish schedule calculator
+- `e964acbc` feat(calculators): CONSTRUCTION-007 finish schedule calculator
+- `a5e15e34` feat(calculators): CONSTRUCTION-008 electronics physical layout calculator
+- `e245bea0` feat(calculators): CONSTRUCTION-008 electronics physical layout calculator
+- `d3dbe3e6` feat(calculators): CONSTRUCTION-010 build sequence composition
+- `f96cecda` feat(calculators): CONSTRUCTION-010 build sequence composition
+- `3db758b5` feat(calculators): CONSTRUCTION-009 acoustic voicing history tracker
+- `eaf915f8` feat(calculators): CONSTRUCTION-009 acoustic voicing history tracker
+- `2521790e` chore: remove completed CONSTRUCTION-009 from backlog
+- `8ebdb8a6` chore: remove completed CONSTRUCTION-009 from backlog
+- `38c3ea38` docs: clean up BACKLOG.md — remove completed items
+- `54aef063` docs: clean up BACKLOG.md — remove completed items
+- `7da5f30e` fix(tests): add conftest.py session fixture to resolve numpy import isolation errors
+- `9a6878df` fix(tests): add conftest.py session fixture to resolve numpy import isolation errors
+- `35a93194` feat(materials): WOOD-001 wire plate_router to toolbox registry with calibration.py fallback
+- `f85643c8` feat(materials): WOOD-001 wire plate_router to toolbox registry with calibration.py fallback
+- `6f47454b` test: regenerate golden fixtures for fret positions and G-code
+- `e8159440` test: regenerate golden fixtures for fret positions and G-code
+- `b72faa65` fix(tests): TEST-001 — clear 73 pre-existing test failures
+- `f43f8986` fix(tests): TEST-001 — clear 73 pre-existing test failures
+Files by surface:
+- api_routing: 1 paths
+  - A services/api/app/routers/photo_vectorizer_router.py
+- docs: 3 paths
+  - M CHANGELOG.md
+  - M docs/BACKLOG.md
+  - M docs/SPRINT_BOARD.md
+- other: 38 paths
+  - A services/api/app/routers/neck/headstock_transition_export.py
+  - A services/api/app/routers/neck/neck_profile_export.py
+  - A services/api/app/routers/headstock/__init__.py
+  - A services/api/app/routers/headstock/dxf_export.py
+  - A services/api/app/instrument_geometry/neck/neck_angle.py
+  - A services/api/app/calculators/side_bending_calc.py
+  - A services/api/app/routers/instrument_geometry_router.py
+  - A services/api/app/calculators/nut_slot_calc.py
+  - A services/api/app/calculators/string_tension.py
+  - A services/api/app/calculators/kerfing_calc.py
+  - A services/api/app/calculators/soundhole_calc.py
+  - A services/api/app/calculators/bridge_calc.py
+  - A services/api/app/calculators/setup_cascade.py
+  - A services/api/app/calculators/neck_block_calc.py
+  - A services/api/app/calculators/fret_leveling_calc.py
+  - A services/api/app/calculators/wood_movement_calc.py
+  - A services/api/app/calculators/fret_wire_calc.py
+  - A services/api/app/calculators/glue_joint_calc.py
+  - A services/api/app/calculators/tuning_machine_calc.py
+  - A services/api/app/calculators/nut_comp_calc.py
+  - A services/api/app/calculators/nut_compensation_calc.py
+  - A services/api/app/calculators/finish_calc.py
+  - A services/api/app/calculators/electronics_layout_calc.py
+  - A services/api/app/calculators/build_sequence.py
+  - A services/api/app/calculators/voicing_history_calc.py
+  - M services/api/app/router_registry/manifests/cam_manifest.py
+  - M services/api/app/router_registry/manifests/business_manifest.py
+  - M packages/client/src/design-utilities/lutherie/string-tension/useBreakAngle.ts
+  - M services/api/app/calculators/saddle_compensation.py
+  - M services/api/app/instrument_geometry/neck/__init__.py
+  - M services/api/app/routers/neck/schemas.py
+  - M services/api/app/routers/neck_router.py
+  - M services/api/app/routers/instrument_router.py
+  - M services/api/app/routers/acoustics/plate_router.py
+  - M services/api/app/cam/dxf_advanced_validation.py
+  - M services/api/app/cam/dxf_validation_gate.py
+  - M services/api/app/websocket/monitor.py
+  - M services/api/metrics/debt_history.json
+- tests: 27 paths
+  - A services/api/tests/test_rmos_toolpaths.py
+  - A services/api/tests/test_neck_angle.py
+  - A services/api/tests/test_side_bending_calc.py
+  - A services/api/tests/test_nut_slot_calc.py
+  - A services/api/tests/test_string_tension.py
+  - A services/api/tests/test_kerfing_calc.py
+  - A services/api/tests/test_soundhole_calc.py
+  - A services/api/tests/test_bridge_calc.py
+  - A services/api/tests/test_setup_cascade.py
+  - A services/api/tests/test_neck_block_calc.py
+  - A services/api/tests/test_fret_leveling_calc.py
+  - A services/api/tests/test_wood_movement_calc.py
+  - A services/api/tests/test_fret_wire_calc.py
+  - A services/api/tests/test_tuning_machine_calc.py
+  - A services/api/tests/test_nut_comp_calc.py
+  - A services/api/tests/test_glue_joint_calc.py
+  - A services/api/tests/test_nut_compensation_calc.py
+  - A services/api/tests/test_finish_calc.py
+  - A services/api/tests/test_electronics_layout_calc.py
+  - A services/api/tests/test_build_sequence.py
+  - A services/api/tests/test_voicing_history_calc.py
+  - M services/api/tests/test_saddle_compensation.py
+  - M services/api/tests/conftest.py
+  - M services/api/tests/test_golden_fret_positions.py
+  - M services/api/tests/test_bridge_break_angle.py
+  - M services/api/tests/test_technical_debt_gates.py
+  - D services/api/tests/test_remaining_routers_endpoint_smoke.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (21fe1b1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ec6c095f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1fdd5d53)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47c917c2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5fc1e79d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98c0b58d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1aada15c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2082f9ea)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7dd57dc8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cf727766)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4741f084)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ebe027f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1fe59f1f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f6468f8f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f543019)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (512a2a53)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da25126c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1bfbde8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (adae5518)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c77a9e57)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27a10455)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b3d62f68)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (26691e3c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (313af5ca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (98187d30)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b8f136fd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2f6e6d60)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d5ee32fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (16292bf4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff5a5e08)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (be1b31f4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ec6c8592)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1f17e6aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (345718cd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1faa7701)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d63cea3f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3cd3326)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e964acbc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a5e15e34)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e245bea0)
+- … 12 more
+
+### S106 — 2026-03-19T09:19:26-05:00 → 2026-03-19T23:57:47-05:00 (100 commits, 14.64h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `2fc74872` fix(tests): add validate_dxf_bytes to preflight_service for golden DXF tests
+- `9b9d919a` fix(tests): add validate_dxf_bytes to preflight_service for golden DXF tests
+- `5ded022b` fix(tests): websocket ConnectionManager tests use pytest-asyncio
+- `d1a7d239` fix(tests): websocket ConnectionManager tests use pytest-asyncio
+- `034fb9e3` fix(tests): thickness_for_target_frequency use current API (f_target, rho, a, b)
+- `a8a334cd` fix(tests): thickness_for_target_frequency use current API (f_target, rho, a, b)
+- `d74cd859` fix(tests): feature_hunt PYTHONPATH/skip, legacy_gate paths, rate_limit handler, vision skip
+- `f8ec1791` fix(tests): feature_hunt PYTHONPATH/skip, legacy_gate paths, rate_limit handler, vision skip
+- `03c1695f` refactor: decompose neck_headstock_config.py into presets/enums/geometry modules
+- `39d5d40f` refactor: decompose neck_headstock_config.py into presets/enums/geometry modules
+- `67b55101` chore: delete archived _experimental modules + cleanup manifest
+- `a0a97317` chore: delete archived _experimental modules + cleanup manifest
+- `8bb7ce98` fix(safety): narrow broad except in flying_v depth_validator preflight path
+- `9c1716ac` fix(safety): narrow broad except in flying_v depth_validator preflight path
+- `5f00bb2b` refactor: graduate analytics from _experimental to app/analytics/ (CLEANUP-001)
+- `cf025a1e` refactor: graduate analytics from _experimental to app/analytics/ (CLEANUP-001)
+- `0f05416b` docs: cleanup sprint session log 2026-03-19
+- `1fea7570` docs: cleanup sprint session log 2026-03-19
+- `a24cc63d` refactor: graduate cnc_production from _experimental to app/cam_core/ (CLEANUP-002)
+- `f090ec73` refactor: graduate cnc_production from _experimental to app/cam_core/ (CLEANUP-002)
+- `4afc4c7f` docs: _experimental/ fully cleared — all modules graduated to production
+- `c5a28ebf` docs: _experimental/ fully cleared — all modules graduated to production
+- `3d2282fc` docs: update remediation docs to reflect 2026-03-19 state
+- `3d473abd` docs: update remediation docs to reflect 2026-03-19 state
+- `83620087` fix(dxf): add missing __init__.py to enable module import
+- `ac54c67b` fix(dxf): add missing __init__.py to enable module import
+- `87443b47` docs: add executive summary + bridge compensation + Benedetto specs
+- `ca9fe3f8` docs: add executive summary + bridge compensation + Benedetto specs
+- `0d1faaf6` docs: add PRODUCT_BOUNDARY.md — canonical product scope and status matrix
+- `ae1309ab` docs: add PRODUCT_BOUNDARY.md — canonical product scope and status matrix
+- `c12421fa` docs: add SYSTEM_MAP.md — 5 primary workflows and module map
+- `f3b19351` docs: add SYSTEM_MAP.md — 5 primary workflows and module map
+- `3bc7c530` docs: add PERSONAS.md — four explicit user personas and design principle
+- `7662d169` docs: add PERSONAS.md — four explicit user personas and design principle
+- `2ad1cbc4` docs: add SAFETY_CASE.md — formal hazard analysis and control mapping
+- `78b812e4` docs: add SAFETY_CASE.md — formal hazard analysis and control mapping
+- `22b51159` refactor: graduate analytics from
+- `39fd8b01` refactor: graduate analytics from
+- `1af99e04` docs: add SAFETY_CASE.md (CNC/RMOS safety narrative)
+- `4410a889` docs: add SAFETY_CASE.md (CNC/RMOS safety narrative)
+- `5bb705ea` docs: add PRODUCT_BOUNDARY.md — canonical product scope and status matrix
+- `dde18db6` docs: add PRODUCT_BOUNDARY.md — canonical product scope and status matrix
+- `9b235f50` refactor(api): split instrument_geometry_router.py into 9 domain routers
+- `e0319ebe` refactor(api): split instrument_geometry_router.py into 9 domain routers
+- `1b558519` refactor: extract binding_math.py from binding_geometry.py
+- `4557f3f9` refactor: extract binding_math.py from binding_geometry.py
+- `4e64cc09` refactor(calculators): extract binding_materials.py and binding_models.py
+- `979bff00` refactor(calculators): extract binding_materials.py and binding_models.py
+- `ca077bb7` docs: add WIRE-001/002/003 to BACKLOG.md from skipped test audit
+- `fe25bd6b` docs: add WIRE-001/002/003 to BACKLOG.md from skipped test audit
+- `6ce59431` refactor: split MachineManagerView.vue into 3 focused panel components
+- `d5fd3adf` refactor: split MachineManagerView.vue into 3 focused panel components
+- `a73d7392` fix(routing): correct workflow router prefix to /api/rmos/workflow/sessions
+- `c292802a` fix(routing): correct workflow router prefix to /api/rmos/workflow/sessions
+- `5c61ae5c` docs: mark WIRE-003 as resolved in BACKLOG.md
+- `ff6cc055` docs: mark WIRE-003 as resolved in BACKLOG.md
+- `0c743ac9` docs: correct misleading @deprecated comment in RosetteWheelView.vue
+- `3edf7b0a` docs: correct misleading @deprecated comment in RosetteWheelView.vue
+- `48ceeb99` fix(vision): resolve Pydantic ForwardRef error in segmentation router
+- `7c78fa03` fix(vision): resolve Pydantic ForwardRef error in segmentation router
+- `1e6ab0d4` refactor: extract string gauge data to string-gauges.json
+- `46d5ea70` refactor: extract string gauge data to string-gauges.json
+- `7c021a81` fix(test): align workflow sessions tests with router prefix
+- `93a74d15` fix(test): align workflow sessions tests with router prefix
+- `222ea78e` docs: 2026-03-19 full sprint session log
+- `78f9c546` docs: 2026-03-19 full sprint session log
+- `172fe488` refactor: extract useToolpathStats.ts composable from ToolpathStats.vue
+- `eb7f8b5f` refactor: extract useToolpathStats.ts composable from ToolpathStats.vue
+- `43e10c08` fix(routing): wire art_studio preview router (WIRE-002)
+- `4600b02f` fix(routing): wire art_studio preview router (WIRE-002)
+- `7ea9994b` feat(saw-lab): wire choose_batch_plan endpoint (WIRE-001)
+- `f586678a` feat(saw-lab): wire choose_batch_plan endpoint (WIRE-001)
+- `b429074a` fix(tests): conftest migration fix + golden dxf updates
+- `e75af487` fix(tests): conftest migration fix + golden dxf updates
+- `511b3099` fix(api): cam workspace and DXF router fixes
+- `7725b62d` fix(api): cam workspace and DXF router fixes
+- `807da661` docs: mark WIRE-002 resolved in BACKLOG
+- `d19f7bb7` docs: mark WIRE-002 resolved in BACKLOG
+- `b39a2bce` feat(vectorizer): photo vectorizer regression replay + body isolation
+- `bf65f46f` feat(vectorizer): photo vectorizer regression replay + body isolation
+- `36e8e8df` feat(client): neck component and design utilities
+- `4b192dc0` feat(client): neck component and design utilities
+- `532f52b9` data: update art presets and debt history
+- `80d95020` data: update art presets and debt history
+- `71759a42` ci: add photo vectorizer typecheck workflow
+- `81bd639f` ci: add photo vectorizer typecheck workflow
+- `2659f590` feat(vectorizer): add replay framework + type configs + smoke tests
+- `bfffc7af` feat(vectorizer): add replay framework + type configs + smoke tests
+- `c6111dd7` chore: add runs_v2 runtime data to gitignore
+- `fb75ef74` chore: add runs_v2 runtime data to gitignore
+- `57810ae3` docs: add evaluation and red-team review documents
+- `68097be5` docs: add evaluation and red-team review documents
+- `d3803e42` docs: reconciled status report with verified metrics (2026-03-19)
+- `fbe86d5b` docs: reconciled status report with verified metrics (2026-03-19)
+- `63003027` chore: delete __archived__/ dead code (-2,732 lines)
+- `d767832b` chore: delete __archived__/ dead code (-2,732 lines)
+- `154eee8e` fix(ui): wire 2 frontend TODOs to existing backends (Section #26)
+- `b5257721` fix(ui): wire 2 frontend TODOs to existing backends (Section #26)
+- `5daa40fc` docs(backlog): add BACKEND-001 and BACKEND-002 for blocked frontend TODOs
+- `a6f675d3` docs(backlog): add BACKEND-001 and BACKEND-002 for blocked frontend TODOs
+Files by surface:
+- docs: 20 paths
+  - A docs/BRIDGE_COMPENSATION_LAB_CODE_BUNDLE.md
+  - A docs/BRIDGE_COMPENSATION_THEORY_CHRONICLE.md
+  - A docs/REMEDIATION_EXECUTIVE_SUMMARY_2026_03_19.md
+  - A docs/specs/BENEDETTO_17_ARCHTOP_SPECS.md
+  - A docs/PRODUCT_BOUNDARY.md
+  - A docs/SYSTEM_MAP.md
+  - A docs/PERSONAS.md
+  - A docs/SAFETY_CASE.md
+  - A docs/PRODUCTION_SHOP_EVALUATION.md
+  - A docs/RED_TEAM_DESIGN_REVIEW.md
+  - A docs/RECONCILED_STATUS_2026_03_19.md
+  - M docs/BACKLOG.md
+  - M services/api/app/_experimental/EXPERIMENTAL_STATUS.md
+  - M docs/SPRINT_BOARD.md
+  - M docs/GAP_ANALYSIS_MASTER.md
+  - M docs/REMEDIATION_STATUS_MARCH_2026.md
+  - M docs/SCORE_7_PLAN.md
+  - M docs/UNFINISHED_REMEDIATION_EFFORTS.md
+  - M CHANGELOG.md
+  - D services/api/app/_experimental/__ARCHIVED__/README.md
+- other: 107 paths
+  - A services/api/app/generators/neck_headstock_enums.py
+  - A services/api/app/generators/neck_headstock_presets.py
+  - A services/api/app/dxf/__init__.py
+  - A services/api/app/routers/instrument_geometry/__init__.py
+  - A services/api/app/routers/instrument_geometry/body_construction_router.py
+  - A services/api/app/routers/instrument_geometry/bridge_router.py
+  - A services/api/app/routers/instrument_geometry/build_sequence_router.py
+  - A services/api/app/routers/instrument_geometry/electronics_router.py
+  - A services/api/app/routers/instrument_geometry/nut_fret_router.py
+  - A services/api/app/routers/instrument_geometry/setup_router.py
+  - A services/api/app/routers/instrument_geometry/soundhole_router.py
+  - A services/api/app/routers/instrument_geometry/voicing_router.py
+  - A services/api/app/routers/instrument_geometry/wood_movement_router.py
+  - A services/api/app/calculators/binding_math.py
+  - A services/api/app/calculators/binding_materials.py
+  - A services/api/app/calculators/binding_models.py
+  - A packages/client/src/views/lab/machine-manager/MachinePostsPanel.vue
+  - A packages/client/src/views/lab/machine-manager/MachineProfilePanel.vue
+  - A packages/client/src/views/lab/machine-manager/MachineToolsPanel.vue
+  - A packages/client/src/views/lab/machine-manager/machineManagerTypes.ts
+  - A packages/client/src/data/string-gauges.json
+  - A packages/client/src/composables/useToolpathStats.ts
+  - A packages/client/src/components/neck/CamSpecPanel.vue
+  - A .github/workflows/photo_vectorizer_typecheck.yml
+  - M services/api/app/dxf/preflight_service.py
+  - M services/api/app/schemas/dxf_preflight_schemas.py
+  - M services/api/app/generators/neck_headstock_config.py
+  - M services/api/app/generators/neck_headstock_geometry.py
+  - M services/api/app/router_registry/manifests/system_manifest.py
+  - M services/api/app/cam/flying_v/depth_validator.py
+  - M services/api/app/analytics/__init__.py
+  - M services/api/app/analytics/advanced_analytics.py
+  - M services/api/app/analytics/job_analytics.py
+  - M services/api/app/analytics/material_analytics.py
+  - M services/api/app/analytics/pattern_analytics.py
+  - M services/api/app/routers/analytics_advanced_router.py
+  - M services/api/app/routers/analytics_jobs_router.py
+  - M services/api/app/routers/analytics_materials_router.py
+  - M services/api/app/routers/analytics_patterns_router.py
+  - M services/api/app/cam_core/api/saw_lab_router.py
+  - … 67 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 18 paths
+  - A services/photo-vectorizer/mypy.ini
+  - A services/photo-vectorizer/pyrightconfig.json
+  - A services/photo-vectorizer/replay_execution.py
+  - A services/photo-vectorizer/replay_fixture_loader.py
+  - A services/photo-vectorizer/replay_objects.py
+  - A services/photo-vectorizer/test_body_region_protocol.py
+  - A services/photo-vectorizer/test_regression_replay_execution.py
+  - A services/photo-vectorizer/test_replay_fixture_loader.py
+  - A services/photo-vectorizer/test_replay_objects.py
+  - M services/photo-vectorizer/body_isolation_result.py
+  - M services/photo-vectorizer/body_isolation_stage.py
+  - M services/photo-vectorizer/fixtures/regression_replay_archtop.json
+  - M services/photo-vectorizer/fixtures/regression_replay_benedetto.json
+  - M services/photo-vectorizer/fixtures/regression_replay_smart_guitar.json
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_extract_coach_integration.py
+  - M services/photo-vectorizer/test_geometry_coach_v2_real_routing.py
+  - M services/photo-vectorizer/test_regression_replay_ownership.py
+- tests: 14 paths
+  - A services/api/tests/test_thickness_calculator.py
+  - A services/api/tests/test_cam_workspace_endpoint_smoke.py
+  - M services/api/tests/test_websocket_router.py
+  - M services/api/tests/test_job_queue.py
+  - M services/api/tests/test_feature_hunt_smoke.py
+  - M services/api/tests/test_legacy_endpoint_usage_gate_smoke.py
+  - M services/api/tests/test_rate_limit_middleware.py
+  - M services/api/tests/test_vision_segmentation.py
+  - M services/api/tests/test_rmos_workflow_e2e.py
+  - M services/api/tests/test_workflow_sessions_endpoint_smoke.py
+  - M services/api/tests/test_relief_vcarve_endpoint_smoke.py
+  - M services/api/tests/test_plan_choose_persists_decision_payload_unit.py
+  - M services/api/tests/conftest.py
+  - M services/api/tests/test_golden_dxf_preflight.py
+Documents produced:
+- `docs/BRIDGE_COMPENSATION_LAB_CODE_BUNDLE.md` — UNKNOWN
+- `docs/BRIDGE_COMPENSATION_THEORY_CHRONICLE.md` — UNKNOWN
+- `docs/REMEDIATION_EXECUTIVE_SUMMARY_2026_03_19.md` — UNKNOWN
+- `docs/specs/BENEDETTO_17_ARCHTOP_SPECS.md` — UNKNOWN
+- `docs/PRODUCT_BOUNDARY.md` — UNKNOWN
+- `docs/SYSTEM_MAP.md` — # Production Shop — System Map
+- `docs/PERSONAS.md` — UNKNOWN
+- `docs/SAFETY_CASE.md` — # Production Shop — Safety Case
+- `docs/PRODUCTION_SHOP_EVALUATION.md` — UNKNOWN
+- `docs/RED_TEAM_DESIGN_REVIEW.md` — UNKNOWN
+- `docs/RECONCILED_STATUS_2026_03_19.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (03c1695f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (39d5d40f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (67b55101)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a0a97317)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5f00bb2b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (cf025a1e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0f05416b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1fea7570)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a24cc63d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f090ec73)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4afc4c7f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c5a28ebf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3d2282fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3d473abd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (83620087)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ac54c67b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (87443b47)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca9fe3f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d1faaf6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae1309ab)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c12421fa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3b19351)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3bc7c530)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7662d169)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2ad1cbc4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (78b812e4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5bb705ea)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dde18db6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b235f50)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0319ebe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1b558519)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4557f3f9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4e64cc09)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (979bff00)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ca077bb7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fe25bd6b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a73d7392)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c292802a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (48ceeb99)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7c78fa03)
+- … 38 more
+
+### S107 — 2026-03-21T01:39:53-05:00 → 2026-03-21T04:13:27-05:00 (24 commits, 2.56h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `a3bea8ac` fix(tests): add workflow_sessions migrations to global test fixture
+- `da949c8f` fix(tests): add workflow_sessions migrations to global test fixture
+- `3215ef9b` feat(acoustics): add radius dish router for parametric G-code generation
+- `68223c71` feat(acoustics): add radius dish router for parametric G-code generation
+- `7e0d6d53` chore: update art presets data
+- `bed590fe` chore: update art presets data
+- `73a2703d` chore: archive photo-vectorizer patch history
+- `fd70a8db` chore: archive photo-vectorizer patch history
+- `22ca8304` feat(calculators): Session A — add 4 new calculator modules
+- `d8e51429` feat(calculators): Session A — add 4 new calculator modules
+- `6c47cd12` chore: remove unintegrated root prototypes
+- `e80308cc` chore: remove unintegrated root prototypes
+- `0219871e` feat(photo-vectorizer): Diff 3 — spec-prior contour election
+- `e9fcb385` feat(photo-vectorizer): Diff 3 — spec-prior contour election
+- `292e63b0` chore: relocate misplaced root directories
+- `4a72f1de` chore: relocate misplaced root directories
+- `031dfd3c` feat(calculators): Session A — replace stubs with complete implementations
+- `f0bea2ea` feat(calculators): Session A — replace stubs with complete implementations
+- `27408a0b` feat(gen): add Les Paul from_project() factory method (GEN-4, Session B-1)
+- `f3e3716f` feat(gen): add Les Paul from_project() factory method (GEN-4, Session B-1)
+- `a2165db2` feat(api): add LTB Calculator Router with 11 endpoints (Session B-2)
+- `abc17721` feat(api): add LTB Calculator Router with 11 endpoints (Session B-2)
+- `8dd17cd3` feat(calculator): add angle mode support (deg/rad) to expression evaluation
+- `928535cb` feat(calculator): add angle mode support (deg/rad) to expression evaluation
+Files by surface:
+- api_routing: 1 paths
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/photo_vectorizer_router.py
+- archive: 257 paths
+  - A docs/archive/photo_vectorizer_patches/README.md
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/CAM_SURVEY.md
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/DXF-INTEGRATION.md
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/dxfImportClient.js
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/dxf_service.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/ImportView.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/WorkspaceView.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/package.json
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/useDxfImport.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/vite.config.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/App.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/AppShell.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/INTEGRATION.md
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/ParametricView.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/dxf_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/main.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/useExportDxf.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T095439.331/WoodGrainPanel.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T095439.331/useWoodGrain.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/CamSpecPanel.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/WORKSPACE_CAM_INTEGRATION.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/drawCamOverlay.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/useCamSpec.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T141923.090/fretboard_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T141923.090/useFretboard.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T144112.077/neck_profile_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T144112.077/useNeckProfile.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/CamSpecPanel.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/INTEGRATION_CORRECTIONS.md
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/neck_profile_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/useCamSpec.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/useNeckTaper.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T155948.549/headstock_transition_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T155948.549/useHeadstockTransition.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160258.346/headstock_transition_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160258.346/useHeadstockTransition.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160517.587/headstock_transition_export.py
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160517.587/useHeadstockTransition.ts
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/AppShell.vue
+  - A docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/FretboardPanel.vue
+  - … 217 more (see sessions.json / files.jsonl)
+- docs: 2 paths
+  - D remeditation_Sprint.md
+  - D rosette-designer-v2.html_chat.md
+- other: 114 paths
+  - A services/api/app/routers/radius_dish_router.py
+  - A services/api/app/calculators/acoustic_bridge_calc.py
+  - A services/api/app/calculators/back_brace_calc.py
+  - A services/api/app/calculators/headstock_break_angle_calc.py
+  - A services/api/app/calculators/saddle_compensation_calc.py
+  - A files - 2026-03-21T021502.243/body_dimension_reference.json
+  - A files - 2026-03-21T021502.243/body_model.py
+  - A files - 2026-03-21T021502.243/contour_stage.py
+  - A files - 2026-03-21T021502.243/geometry_authority.py
+  - A files - 2026-03-21T021502.243/landmark_extractor.py
+  - A files - 2026-03-21T021502.243/photo_vectorizer_v2.py
+  - A scripts/merge_session_a_calculators.py
+  - A services/api/app/calculators/_bracing_physics.py
+  - A services/api/app/calculators/fret_wire_physics.py
+  - A services/api/app/calculators/kerfing_geometry_engine.py
+  - A services/api/app/calculators/nut_compensation_physics.py
+  - A services/api/app/instrument_geometry/bracing/back_brace.py
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_1_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_2_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_3_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_4_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_5_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_6_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_7_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/El_Cuatro_8_simple.dxf
+  - A "services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/cuatro_puertorique\303\261o_simple.dxf"
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/plano_cuatro_venezolano_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 2_phase3_primitives.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 4_phase3.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 4_phase3_primitives.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 6_phase3_primitives.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 7_phase3.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/El Cuatro 7_phase3_primitives.dxf
+  - A "services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/cuatro puertorique\303\261o_phase3.dxf"
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/regenerated_v3/plano cuatro venezolano_phase3.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/El_Cuatro_1_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/El_Cuatro_2_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/El_Cuatro_3_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/El_Cuatro_4_simple.dxf
+  - A services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/El_Cuatro_5_simple.dxf
+  - … 74 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 9 paths
+  - A services/photo-vectorizer/body_dimension_reference.json
+  - A services/photo-vectorizer/body_model.py
+  - A services/photo-vectorizer/landmark_extractor.py
+  - A services/photo-vectorizer/test_landmark_extractor.py
+  - M services/photo-vectorizer/contour_stage.py
+  - M services/photo-vectorizer/geometry_authority.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_contour_stage.py
+  - M services/photo-vectorizer/test_photo_vectorizer_v2.py
+- tests: 7 paths
+  - A files - 2026-03-21T021502.243/test_contour_stage.py
+  - A files - 2026-03-21T021502.243/test_landmark_extractor.py
+  - A files - 2026-03-21T021502.243/test_photo_vectorizer_v2.py
+  - M services/api/tests/conftest.py
+  - M services/api/app/instrument_geometry/reference_dxf/cuatro/test_raw/plano cuatro venezolano_phase3.dxf
+  - M services/api/app/instrument_geometry/reference_dxf/cuatro/test_raw/plano cuatro venezolano_phase3_primitives.dxf
+  - M services/api/tests/test_neck_block_calc.py
+Documents produced:
+- `docs/archive/photo_vectorizer_patches/README.md` — # Photo Vectorizer Patch History
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/CAM_SURVEY.md` — # Production Shop — CAM Section Survey
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/DXF-INTEGRATION.md` — # DXF Service — Integration Notes
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/dxfImportClient.js` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T035340.928/dxf_service.py` — """
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/ImportView.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/WorkspaceView.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/package.json` — {
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/useDxfImport.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T091407.113/vite.config.ts` — import { defineConfig } from 'vite'
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/App.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/AppShell.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/INTEGRATION.md` — # Headstock Suite — luthiers-toolbox-main Integration
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/ParametricView.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/dxf_export.py` — """
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/main.ts` — import { createApp }  from 'vue'
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T092736.563/useExportDxf.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T095439.331/WoodGrainPanel.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T095439.331/useWoodGrain.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/CamSpecPanel.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/WORKSPACE_CAM_INTEGRATION.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/drawCamOverlay.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T140231.201/useCamSpec.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T141923.090/fretboard_export.py` — """
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T141923.090/useFretboard.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T144112.077/neck_profile_export.py` — """
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T144112.077/useNeckProfile.ts` — /**
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/CamSpecPanel.vue` — <script setup lang="ts">
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/INTEGRATION_CORRECTIONS.md` — # Neck Suite Integration Corrections
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/neck_profile_export.py` — """
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/useCamSpec.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T153916.645/useNeckTaper.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T155948.549/headstock_transition_export.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T155948.549/useHeadstockTransition.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160258.346/headstock_transition_export.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160258.346/useHeadstockTransition.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160517.587/headstock_transition_export.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T160517.587/useHeadstockTransition.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/AppShell.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/FretboardPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/HeadstockTransitionPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/NeckProfilePanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/NeckTaperPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/NeckView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/neck.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T171011.806/useNeckProfile.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/NeckProfilePanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/VariantLibraryPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/WorkspaceView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/dxf_export.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/useNeckProfile.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T172741.143/variants.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/INTEGRATION_CORRECTIONS.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/ImportView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/dxf_export.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/neck_index.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/photo_vectorizer_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T181515.994/useDxfImport.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T182228.919/AppShell.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T182228.919/ConfiguratorView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/AppShell.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/CamWorkspaceView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/GateStatusBadge.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/GcodePreviewPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/NeckOpPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223828.607/cam_workspace_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/AppShell.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/CamWorkspaceView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/GateStatusBadge.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/GcodePreviewPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/NeckOpPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T223900.242/cam_workspace_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/AppShell.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/CamWorkspaceView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/GateStatusBadge.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/GcodePreviewPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/NeckOpPanel.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/Interactive_Neck and Cam _Modules/files - 2026-03-17T224205.344/cam_workspace_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/archtop_graduation_template.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/daquisto_graduation_measurements.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T011318.450/archtop_graduation_template.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T011318.450/daquisto_graduation_measurements.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/BACKLOG.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/__init__.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/alpha_beta.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/archtop_graduation_template.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/calibration.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/cam_cutting_evaluator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/cam_workspace_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/coupled_2osc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/gamma_calibration.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/graduation_measurements.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/inverse_solver.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/machines.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/orchestrator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/rayleigh_ritz.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T011318.450/files - 2026-03-18T031920.383/thickness_calculator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/BACKLOG.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/__init__.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/alpha_beta.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/archtop_graduation_template.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/calibration.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/cam_cutting_evaluator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/cam_workspace_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/coupled_2osc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/gamma_calibration.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/graduation_measurements.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/inverse_solver.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/machines.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/orchestrator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/rayleigh_ritz.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-18T031920.383/thickness_calculator.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/Kerf Spacing Calculator Bending Wood - Inch_files/ads(1).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/Kerf Spacing Calculator Bending Wood - Inch_files/ads(2).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/Kerf Spacing Calculator Bending Wood - Inch_files/ads.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/Kerf Spacing Calculator Bending Wood - Inch_files/aframe.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/ads(1).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/ads(2).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/ads.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/aframe.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/bl4.css` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/ca-pub-2954195544990546` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/css` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/css(1)` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/css(2)` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/js` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/logo.ico` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/s(1).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/s(2).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/s.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(1).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(10).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(11).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(2).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(3).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(4).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(5).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(6).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(7).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(8).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource(9).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/saved_resource.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/sodar` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/zrt_lookup_fy2021(1).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/zrt_lookup_fy2021(2).html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/Kerf Spacing Calculator Bending Wood - Inch_files/zrt_lookup_fy2021.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/acoustic_bridge_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/back_brace_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/bridge_geometry_path_pack.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T004339.752/README.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T004339.752/soundhole_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T004339.752/soundhole_designer.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T081356.604/README.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T081356.604/soundhole_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T081356.604/soundhole_designer.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T100901.491/LUTHERIE_MATH.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T100901.491/SESSION_NOTES.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T111505.329/soundhole_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T111505.329/soundhole_designer.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T124524.898/soundhole_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T124524.898/soundhole_designer.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T164605.777/neck_block_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T164605.777/neck_block_path_pack.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T213759.333/fret_wire_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T213759.333/fret_wire_path_pack.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T222452.724/nut_compensation_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-19T222452.724/nut_compensation_path_pack.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/RadiusDishCalculator.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/RadiusDishCncSetup.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/RadiusDishDesign.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/RadiusDishDesigner.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/__init__.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/back_brace.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/bracing_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/bracing_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/mnt/user-data/outputs/for-repo/services/api/app/calculators/bracing_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/radius-dish.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/radius_dish_router.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/files - 2026-03-20T023112.442/x_brace.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/headstock_break_angle_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/kerf_bending_derivation.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/kerfing_calc (1).py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/saddle_compensation_calc.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/files - 2026-03-20T023112.442 (2)/tap_tone_pi_system_doc.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/gpt-rosette-svg-prompt.md.pdf` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/amsterdam_spiro_engine.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/geo_band_generator.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/inlay_designer.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/inlay_pattern_generator.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/marquetry_engine.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/patch_04_real_photo_fixes.py` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/patch_07_calibration_and_quality.py` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/patch_17_contour_merger.py` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/rope_rosette_engine.html` — UNKNOWN
+- `docs/archive/rosette_designer_history/prototypes/premium/vine_girih_generator.html` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3bea8ac)
+- Fixes: ['8 workflow test failures ("workflow_sessions table not found")'] (a3bea8ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da949c8f)
+- Fixes: ['8 workflow test failures ("workflow_sessions table not found")'] (da949c8f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3215ef9b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (68223c71)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (73a2703d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fd70a8db)
+- PR #104 (22ca8304)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (22ca8304)
+- PR #104 (d8e51429)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d8e51429)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6c47cd12)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e80308cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0219871e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e9fcb385)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (292e63b0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4a72f1de)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (27408a0b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f3e3716f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a2165db2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (abc17721)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8dd17cd3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (928535cb)
+
+### S108 — 2026-03-21T10:25:24-05:00 → 2026-03-21T17:29:14-05:00 (36 commits, 7.06h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `a16b0c52` feat(nav): add AppSidebar.vue 5-module collapsible navigation (B-3)
+- `ad260d80` feat(nav): add AppSidebar.vue 5-module collapsible navigation (B-3)
+- `334284e9` docs: add production shop overhaul plan
+- `eddbcc11` docs: add production shop overhaul plan
+- `2744db6b` docs: add overhaul plan to repo
+- `4db20a6e` docs: add overhaul plan to repo
+- `6f23a186` feat(ai): D-1 assistant router POST /api/ai/assistant/chat + history endpoint
+- `c4b54f7f` feat(ai): D-1 assistant router POST /api/ai/assistant/chat + history endpoint
+- `217aacb7` feat(ai): D-3 lutherie system prompt — 6 encoding principles + tonewood values
+- `fd59aab4` feat(ai): D-3 lutherie system prompt — 6 encoding principles + tonewood values
+- `85ea2129` feat(ai): D-2 context retrieval — wood DB + instrument specs + project data
+- `c36e398c` feat(ai): D-2 context retrieval — wood DB + instrument specs + project data
+- `053c54b7` feat(ai): D-3 lutherie system prompt — grounded in LUTHERIE_MATH.md reference values
+- `917aabcc` feat(ai): D-3 lutherie system prompt — grounded in LUTHERIE_MATH.md reference values
+- `60c91ae7` feat(ai): D-4 wire project_id into AssistantView + connect D-1/D-2/D-3
+- `62044e57` feat(ai): D-4 wire project_id into AssistantView + connect D-1/D-2/D-3
+- `845b40fa` feat(ai): complete Session D-4 — AssistantView with full session management
+- `e0e3c88e` feat(ai): complete Session D-4 — AssistantView with full session management
+- `8c6ea03b` feat(ai): wire D-4 project context + session persistence in AssistantView
+- `e77406d9` feat(ai): wire D-4 project context + session persistence in AssistantView
+- `15547f11` feat(agentic): E-2 register agentic router in system manifest
+- `d74eaa6e` feat(agentic): E-2 register agentic router in system manifest
+- `3607a2f1` feat(ai): E-4 wood grading → visual assessment, route to tap tone analyzer
+- `a2e8e59e` feat(ai): E-4 wood grading → visual assessment, route to tap tone analyzer
+- `67fdef1c` feat(ai): E-3 defect detection — visual observation endpoint, no grading
+- `c53409fc` feat(ai): E-3 defect detection — visual observation endpoint, no grading
+- `17cc9007` feat(ai): D-4 wire project_id + auth — assistant uses ORM project spec with D-2/D-3
+- `1c76ea86` feat(ai): D-4 wire project_id + auth — assistant uses ORM project spec with D-2/D-3
+- `09ef9341` chore: remove temp patch script
+- `3fdf7b0b` chore: remove temp patch script
+- `5b264663` fix(geometry): ACOUSTIC-001 saddle height inverse solver in neck_angle.py
+- `b53d8390` fix(geometry): ACOUSTIC-001 saddle height inverse solver in neck_angle.py
+- `e6b9c2cb` feat(calculators): ACOUSTIC-002 saddle force decomposition
+- `f901f1fe` feat(calculators): ACOUSTIC-002 saddle force decomposition
+- `74bcb2de` feat(calculators): ACOUSTIC-003 top deflection calculator — orthotropic plate under saddle load
+- `83dfa9f0` feat(calculators): ACOUSTIC-003 top deflection calculator — orthotropic plate under saddle load
+Files by surface:
+- docs: 3 paths
+  - A docs/production_shop_overhaul_plan.docx
+  - A docs/LUTHERIE_MATH.md
+  - M docs/BACKLOG.md
+- other: 30 paths
+  - A packages/client/src/components/AppSidebar.vue
+  - A services/api/app/routers/ai/__init__.py
+  - A services/api/app/routers/ai/assistant_router.py
+  - A services/api/app/ai/lutherie_system_prompt.py
+  - A services/api/app/ai/context_retrieval.py
+  - A services/api/app/routers/ai/wood_grading_router.py
+  - A services/api/app/routers/ai/defect_detection_router.py
+  - A scripts/temp_patch_wood.py
+  - A services/api/app/calculators/saddle_force_calc.py
+  - A services/api/app/calculators/top_deflection_calc.py
+  - M .gitignore
+  - M services/api/app/router_registry/manifests/system_manifest.py
+  - M packages/client/src/views/ai/AssistantView.vue
+  - M packages/client/src/views/ai/WoodGradingView.vue
+  - M packages/client/src/views/cam/CamWorkspaceView.vue
+  - M packages/client/src/views/ai/DefectDetectionView.vue
+  - M packages/client/src/components/cam/neck/FretboardPanel.vue
+  - M packages/client/src/components/cam/neck/HeadstockTransitionPanel.vue
+  - M packages/client/src/components/cam/neck/NeckProfilePanel.vue
+  - M packages/client/src/components/cam/neck/NeckTaperPanel.vue
+  - M packages/client/src/components/layout/CadSidebar.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/views/AppDashboardView.vue
+  - M packages/client/src/views/BlueprintLab.vue
+  - M packages/client/src/views/RmosRunViewerView.vue
+  - M packages/client/src/views/art-studio/SoundholeRosetteShell.vue
+  - M packages/client/src/views/cam/NeckView.vue
+  - M services/api/app/instrument_geometry/neck/neck_angle.py
+  - M services/api/app/routers/instrument_router.py
+  - D scripts/temp_patch_wood.py
+- tests: 4 paths
+  - A services/api/tests/test_context_retrieval.py
+  - A services/api/tests/test_saddle_force.py
+  - A services/api/tests/test_top_deflection.py
+  - M services/api/tests/test_neck_angle.py
+Documents produced:
+- `docs/production_shop_overhaul_plan.docx` — UNKNOWN
+- `docs/LUTHERIE_MATH.md` — # Lutherie Mathematics Reference
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a16b0c52)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad260d80)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (217aacb7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fd59aab4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (85ea2129)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c36e398c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60c91ae7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (62044e57)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (845b40fa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e0e3c88e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8c6ea03b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e77406d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (15547f11)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d74eaa6e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3607a2f1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a2e8e59e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (67fdef1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c53409fc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5b264663)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b53d8390)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e6b9c2cb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f901f1fe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (74bcb2de)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (83dfa9f0)
+
+### S109 — 2026-03-21T23:18:09-05:00 → 2026-03-22T01:41:56-05:00 (8 commits, 2.4h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `022e48f8` feat(calculators): ACOUSTIC-004 inverse brace sizing from deflection target
+- `0c639d4b` feat(calculators): ACOUSTIC-004 inverse brace sizing from deflection target
+- `484eedcd` feat(calculators): ACOUSTIC-005 wire acoustic chain into build_sequence
+- `8520f4cc` feat(calculators): ACOUSTIC-005 wire acoustic chain into build_sequence
+- `3c1ba089` feat(session-e): add cantilever_armrest_calc, BACKLOG updates, AI view wiring
+- `c6aef17c` feat(session-e): add cantilever_armrest_calc, BACKLOG updates, AI view wiring
+- `2068015e` feat: integrate physics-based side_bending_calc + instrument_geometry_router
+- `5cd82160` feat: integrate physics-based side_bending_calc + instrument_geometry_router
+Files by surface:
+- docs: 1 paths
+  - M docs/BACKLOG.md
+- other: 13 paths
+  - A services/api/app/calculators/cantilever_armrest_calc.py
+  - A services/api/app/routers/ai/recommendations_router.py
+  - A services/api/app/routers/instrument_geometry_router.py
+  - M services/api/app/calculators/bracing_calc.py
+  - M services/api/app/routers/instrument_router.py
+  - M services/api/app/calculators/build_sequence.py
+  - M packages/client/src/views/ai/RecommendationsView.vue
+  - M packages/client/src/views/ai/WoodGradingView.vue
+  - M services/api/app/router_registry/manifests/system_manifest.py
+  - M services/api/data/art_presets.json
+  - M services/api/app/calculators/neck_block_calc.py
+  - M services/api/app/calculators/side_bending_calc.py
+  - M services/api/app/router_registry/manifests/business_manifest.py
+- tests: 2 paths
+  - A services/api/tests/test_inverse_brace_sizing.py
+  - A services/api/tests/test_build_sequence_acoustic_chain.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (022e48f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0c639d4b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (484eedcd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8520f4cc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3c1ba089)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c6aef17c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2068015e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5cd82160)
+
+### S110 — 2026-03-22T06:09:00-05:00 → 2026-03-23T01:52:12-05:00 (100 commits, 19.72h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `08472b23` test: update side_bending tests for physics-based calculator
+- `6dbb6b18` test: update side_bending tests for physics-based calculator
+- `19b64ab4` fix(tests): update debt-ratchet baselines to current codebase metrics
+- `9723ddb8` fix(tests): update debt-ratchet baselines to current codebase metrics
+- `227501df` test(ai): add smoke tests for 4 AI routers (29 tests)
+- `c4517423` test(ai): add smoke tests for 4 AI routers (29 tests)
+- `249254e3` feat(calculators): add endpoint and tests for cantilever_armrest_calc
+- `29002a94` feat(calculators): add endpoint and tests for cantilever_armrest_calc
+- `56e31ca5` test(instrument): add smoke tests for instrument_router.py (27 tests)
+- `897fb4a4` test(instrument): add smoke tests for instrument_router.py (27 tests)
+- `c57c0aa0` test(cam): smoke tests for cam_workspace_router endpoints
+- `fef0e448` test(cam): smoke tests for cam_workspace_router endpoints
+- `09244e16` test(calculators): add comprehensive cantilever armrest tests (92% coverage)
+- `33a76230` test(calculators): add comprehensive cantilever armrest tests (92% coverage)
+- `042c8055` test(api): add 65 smoke tests for instrument_geometry_router
+- `ae461ac6` test(api): add 65 smoke tests for instrument_geometry_router
+- `1ecce505` test(binding): smoke tests for binding_design_router endpoints
+- `68747fff` test(binding): smoke tests for binding_design_router endpoints
+- `e3a8c223` test(headstock): smoke tests for dxf_export router endpoints
+- `f47c2c97` test(headstock): smoke tests for dxf_export router endpoints
+- `00f51e5a` test: smoke tests for headstock DXF export endpoints
+- `7cca78f7` test: smoke tests for headstock DXF export endpoints
+- `455b3d9d` test: smoke tests for CAM workspace router endpoints
+- `c4e46666` test: smoke tests for CAM workspace router endpoints
+- `0f93ce8a` test: smoke tests for binding design router endpoints
+- `822a03a5` test: smoke tests for binding design router endpoints
+- `94529e40` test(cam): smoke tests for dxf_advanced_validation + ezdxf 1.4.3 API fix
+- `c42a29d3` test(cam): smoke tests for dxf_advanced_validation + ezdxf 1.4.3 API fix
+- `cbdbd5ce` feat(export): BACKEND-001 curve-to-DXF endpoint
+- `cde28da9` feat(export): BACKEND-001 curve-to-DXF endpoint
+- `021f269f` docs(sprint): update session log for 2026-03-21 completion
+- `ab0e4439` docs(sprint): update session log for 2026-03-21 completion
+- `cb725235` feat(export): BACKEND-002 rosette PDF export
+- `fba3afcd` feat(export): BACKEND-002 rosette PDF export
+- `499b1d85` docs: mark BACKEND-001/002 resolved
+- `64f20214` docs: mark BACKEND-001/002 resolved
+- `0edd4863` refactor(routers): decompose instrument_geometry_router into 5 domain routers (DECOMP-001)
+- `7d366fa0` refactor(routers): decompose instrument_geometry_router into 5 domain routers (DECOMP-001)
+- `25a307d3` refactor(calculators): extract soundhole_physics.py (DECOMP-002 Phase 1)
+- `6e8213d8` refactor(calculators): extract soundhole_physics.py (DECOMP-002 Phase 1)
+- `412959b8` test: smoke tests for acoustic body generator (GEN-6)
+- `ae6c7c1a` test: smoke tests for acoustic body generator (GEN-6)
+- `a3579a7e` refactor(calculators): DECOMP-002 Phase 2 — extract soundhole_resonator.py
+- `b89ea051` refactor(calculators): DECOMP-002 Phase 2 — extract soundhole_resonator.py
+- `0810acb7` refactor(calculators): DECOMP-002 Phase 3 — extract soundhole_ports.py
+- `3f17668e` refactor(calculators): DECOMP-002 Phase 3 — extract soundhole_ports.py
+- `2faad73d` docs(backlog): update DECOMP-001/002 status — Phases 1-3 complete
+- `9ca269ed` docs(backlog): update DECOMP-001/002 status — Phases 1-3 complete
+- `669a43b4` refactor(calculators): DECOMP-002 Phase 4 — extract soundhole_stiffness.py
+- `6f7ca906` refactor(calculators): DECOMP-002 Phase 4 — extract soundhole_stiffness.py
+- `adcf63bd` fix(tests): resolve 15 test failures — debt ratchet, PDF router, manufacturing candidates
+- `b5b0b154` fix(tests): resolve 15 test failures — debt ratchet, PDF router, manufacturing candidates
+- `29824983` feat(calculators): extract soundhole_climate.py (DECOMP-002 Phase 4)
+- `b6eb1ea2` feat(calculators): extract soundhole_climate.py (DECOMP-002 Phase 4)
+- `031565f8` refactor(calculators): DECOMP-002 Phase 5 — extract soundhole_climate.py
+- `459a1b3f` refactor(calculators): DECOMP-002 Phase 5 — extract soundhole_climate.py
+- `47946a06` test(calculators): add soundhole_presets.py unit tests (DECOMP-002 Phase 5)
+- `85c0e16d` test(calculators): add soundhole_presets.py unit tests (DECOMP-002 Phase 5)
+- `21a9c0e9` docs: update BACKLOG.md with DECOMP-002 Phase 4 completion
+- `365d1505` docs: update BACKLOG.md with DECOMP-002 Phase 4 completion
+- `7b2cae44` docs(backlog): mark DECOMP-002 Phases 4-5 complete
+- `faa50ccf` docs(backlog): mark DECOMP-002 Phases 4-5 complete
+- `4eb6e5dd` refactor(calculators): DECOMP-002 Phase 5 — extract soundhole_climate.py
+- `8e1bc3e5` refactor(calculators): DECOMP-002 Phase 5 — extract soundhole_climate.py
+- `21dbcc75` docs: mark DECOMP-002 as complete (6 modules extracted, 139 tests pass)
+- `fc53f698` docs: mark DECOMP-002 as complete (6 modules extracted, 139 tests pass)
+- `47d2fa66` refactor(calculators): DECOMP-002 Phase 6
+- `8f327140` refactor(calculators): DECOMP-002 Phase 6
+- `13fe6645` docs: mark all backlog items resolved 2026-03-22
+- `d3cae651` docs: mark all backlog items resolved 2026-03-22
+- `29fee7e3` docs: mark all backlog items resolved 2026-03-22
+- `6a403417` docs: mark all backlog items resolved 2026-03-22
+- `11ef78bf` docs: mark all backlog items resolved 2026-03-22
+- `65b88df0` docs: mark all backlog items resolved 2026-03-22
+- `2f49da7b` fix(photo-vectorizer): normalize body orientation H>W, fix Unicode in test report
+- `dd6118e6` fix(photo-vectorizer): normalize body orientation H>W, fix Unicode in test report
+- `3fc19f54` fix(safety): audit 64 except Exception blocks — narrow 6 safety-critical, document 58
+- `fea682f9` fix(safety): audit 64 except Exception blocks — narrow 6 safety-critical, document 58
+- `2d77ce3f` feat(photo-vectorizer): v3 AI extraction path
+- `d62584a7` feat(photo-vectorizer): v3 AI extraction path
+- `1328b76e` refactor: fold tooling/retract shims into package __init__.py
+- `1bf122ae` refactor: fold tooling/retract shims into package __init__.py
+- `58e981b5` fix(photo-vectorizer): resolve AI path runtime errors
+- `cb3bdadd` fix(photo-vectorizer): resolve AI path runtime errors
+- `07b6598f` refactor: move adaptive_schemas.py to app/schemas/
+- `36222b8f` refactor: move adaptive_schemas.py to app/schemas/
+- `0e154fa6` refactor: relocate sim_validate.py to app/util/
+- `71bd5e08` refactor: relocate sim_validate.py to app/util/
+- `494a9849` feat(photo-vectorizer): PHOTO-001 sync AI specs to body_dimension_reference.json
+- `4ddeffeb` feat(photo-vectorizer): PHOTO-001 sync AI specs to body_dimension_reference.json
+- `5fdd2e43` chore: archive orphaned pipeline_*.py helpers (610 lines dead code)
+- `9bc0ca95` chore: archive orphaned pipeline_*.py helpers (610 lines dead code)
+- `dfd45a72` chore: delete orphan cam_cutting_evaluator_fixed.py
+- `f0119160` chore: delete orphan cam_cutting_evaluator_fixed.py
+- `863b04df` fix(safety): repair corrupted G-code files + add @safety_critical decorators
+- `e4205a1b` fix(safety): repair corrupted G-code files + add @safety_critical decorators
+- `0b3625de` fix(safety): restore original G-code implementations from git history
+- `75f70a7f` fix(safety): restore original G-code implementations from git history
+- `9fb9a118` fix(cam): arc direction cross-product detection + QA tests
+- `f4c34639` fix(cam): arc direction cross-product detection + QA tests
+Files by surface:
+- api_routing: 1 paths
+  - M services/api/app/routers/photo_vectorizer_router.py
+- docs: 3 paths
+  - A services/api/docs/EXCEPTION_AUDIT_2026_03_22.md
+  - M docs/BACKLOG.md
+  - M docs/SPRINT_BOARD.md
+- other: 83 paths
+  - A services/api/app/routers/export/__init__.py
+  - A services/api/app/routers/export/curve_export_router.py
+  - A services/api/app/routers/export/rosette_pdf_router.py
+  - A services/api/app/routers/instrument/__init__.py
+  - A services/api/app/routers/instrument/build_workflow_router.py
+  - A services/api/app/routers/instrument/electronics_router.py
+  - A services/api/app/routers/instrument/fretwork_router.py
+  - A services/api/app/routers/instrument/materials_physics_router.py
+  - A services/api/app/routers/instrument/soundhole_router.py
+  - A services/api/app/calculators/soundhole_physics.py
+  - A services/api/app/calculators/soundhole_resonator.py
+  - A services/api/app/calculators/soundhole_ports.py
+  - A services/api/app/calculators/soundhole_stiffness.py
+  - A services/api/app/calculators/soundhole_climate.py
+  - A services/api/app/calculators/soundhole_presets.py
+  - A services/api/app/calculators/soundhole_extended.py
+  - A services/api/app/calculators/soundhole_facade.py
+  - A pv2_sandbox.py
+  - A services/api/app/schemas/__init__.py
+  - A services/api/app/core/rmos_cam_materials.py
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/routers/ai/recommendations_router.py
+  - M services/api/app/routers/ai/wood_grading_router.py
+  - M services/api/app/routers/instrument_geometry_router.py
+  - M services/api/app/calculators/build_sequence.py
+  - M services/api/app/routers/instrument_geometry/build_sequence_router.py
+  - M services/api/app/routers/headstock/dxf_export.py
+  - M services/api/app/cam/dxf_advanced_validation.py
+  - M packages/client/src/api/curvelab.ts
+  - M packages/client/src/components/curvelab/composables/useCurveHistory.ts
+  - M services/api/app/router_registry/manifests/cam_manifest.py
+  - M packages/client/src/components/toolbox/RosetteDesigner.vue
+  - M packages/client/src/components/toolbox/composables/useRosetteDesignerExport.ts
+  - M services/api/app/calculators/soundhole_calc.py
+  - M services/api/app/agentic/router.py
+  - M services/api/app/agentic/spine/replay.py
+  - M services/api/app/ai/context_retrieval.py
+  - M services/api/app/blueprint/project_writer.py
+  - M services/api/app/calculators/plate_design/inverse_solver.py
+  - M services/api/app/calculators/setup_cascade.py
+  - … 43 more (see sessions.json / files.jsonl)
+- photo_vectorizer: 2 paths
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+  - M services/photo-vectorizer/test_real_image_comparison.py
+- tests: 24 paths
+  - A services/api/tests/test_ai_routers_smoke.py
+  - A services/api/tests/test_cantilever_armrest.py
+  - A services/api/tests/test_instrument_router_smoke.py
+  - A services/api/tests/test_cam_workspace_smoke.py
+  - A services/api/tests/test_instrument_geometry_router_smoke.py
+  - A services/api/tests/test_binding_design_smoke.py
+  - A services/api/tests/test_headstock_dxf_export_smoke.py
+  - A services/api/tests/test_dxf_export_smoke.py
+  - A services/api/tests/test_cam_workspace_router_smoke.py
+  - A services/api/tests/test_binding_design_router_smoke.py
+  - A services/api/tests/test_dxf_advanced_validation_smoke.py
+  - A services/api/tests/test_curve_export_router.py
+  - A services/api/tests/test_rosette_pdf_router.py
+  - A services/api/tests/test_soundhole_physics.py
+  - A services/api/tests/test_acoustic_body_generator_smoke.py
+  - A services/api/tests/test_soundhole_resonator.py
+  - A services/api/tests/test_soundhole_ports.py
+  - A services/api/tests/test_soundhole_stiffness.py
+  - A services/api/tests/test_soundhole_climate.py
+  - A services/api/tests/test_soundhole_presets.py
+  - A services/api/tests/test_soundhole_facade.py
+  - A services/api/tests/test_gcode_qa_fixes.py
+  - M services/api/tests/test_side_bending_calc.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `services/api/docs/EXCEPTION_AUDIT_2026_03_22.md` — # Exception Handler Audit — 2026-03-22
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08472b23)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6dbb6b18)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (19b64ab4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9723ddb8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (227501df)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c4517423)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (249254e3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29002a94)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (56e31ca5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (897fb4a4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c57c0aa0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fef0e448)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09244e16)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (33a76230)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (042c8055)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae461ac6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e3a8c223)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f47c2c97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (94529e40)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c42a29d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0edd4863)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d366fa0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25a307d3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e8213d8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a3579a7e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b89ea051)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0810acb7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f17668e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (669a43b4)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f7ca906)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (adcf63bd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b5b0b154)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (29824983)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b6eb1ea2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (031565f8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (459a1b3f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47946a06)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (85c0e16d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b2cae44)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (faa50ccf)
+- … 26 more
+
+### S111 — 2026-03-23T11:23:45-05:00 → 2026-03-24T03:31:47-05:00 (62 commits, 16.13h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `1a4ce27a` fix(cam): G83/G73 infinite loop + arc direction
+- `d01679cf` fix(cam): G83/G73 infinite loop + arc direction
+- `636c45f5` fix(exceptions): add logging to silent exception handlers
+- `c738e456` fix(exceptions): add logging to silent exception handlers
+- `6fde0727` fix(exceptions): narrow cam_workspace_router import catch
+- `f38ed7ea` fix(exceptions): narrow cam_workspace_router import catch
+- `a7631eb1` feat(smart-guitar): electric bridge catalog, Floyd Rose routing spec, setup spec v2.0
+- `a7d8a692` feat(smart-guitar): electric bridge catalog, Floyd Rose routing spec, setup spec v2.0
+- `02dd6aca` feat(photo-vectorizer): cognitive extraction engine — fix O(n²) EdgeFlow, R2010 DXF, wire GridClassifierWrapper
+- `3e3337b6` feat(photo-vectorizer): cognitive extraction engine — fix O(n²) EdgeFlow, R2010 DXF, wire GridClassifierWrapper
+- `77baa7e0` feat(smart-guitar): add setup spec v2
+- `93f757ed` feat(smart-guitar): add setup spec v2
+- `3f4f141a` feat(bridge): electric catalog + Floyd Rose spec + Smart Guitar setup spec v2
+- `b2351fff` feat(bridge): electric catalog + Floyd Rose spec + Smart Guitar setup spec v2
+- `09e2cced` feat(vectorizer): mount photo_vectorizer_router as standalone /api/vectorizer endpoint
+- `da6929f5` feat(vectorizer): mount photo_vectorizer_router as standalone /api/vectorizer endpoint
+- `1fc94780` feat(photo-vectorizer): add cognitive extraction engine with document improvements
+- `c3a8cecb` feat(photo-vectorizer): add cognitive extraction engine with document improvements
+- `ae435a74` feat(dxf): add Smart Guitar cavity DXF layer generator
+- `f5284f65` feat(dxf): add Smart Guitar cavity DXF layer generator
+- `0ef1a8d7` fix(pv2_sandbox): fix cognitive fallback trigger and engine call
+- `7dc49ca8` fix(pv2_sandbox): fix cognitive fallback trigger and engine call
+- `09a8cb5d` feat(smart-guitar): complete routing DXF v2
+- `47a0387f` feat(smart-guitar): complete routing DXF v2
+- `0abf5987` fix(cam): cam_cutting_evaluator.py verified healthy (267 lines)
+- `2cb4cafc` fix(cam): cam_cutting_evaluator.py verified healthy (267 lines)
+- `30ab85e5` fix(smart-guitar): reconcile signal chain to canonical v2.0
+- `7364621a` fix(smart-guitar): reconcile signal chain to canonical v2.0
+- `63e8d1e8` fix(smart-guitar): correct body outline in DXF
+- `7cf88144` fix(smart-guitar): correct body outline in DXF
+- `47e0d6d6` fix(smart-guitar): correct body outline in DXF
+- `88fc17d2` fix(smart-guitar): correct body outline in DXF
+- `1bf10501` feat(smart-guitar): neck angle analysis vs Explorer baseline
+- `3a3220c0` feat(smart-guitar): neck angle analysis vs Explorer baseline
+- `58e21498` fix(smart-guitar): correct neck angle assumption — headless needs steeper angle than LP/Explorer
+- `c312b73f` fix(smart-guitar): correct neck angle assumption — headless needs steeper angle than LP/Explorer
+- `5c675498` fix(smart-guitar): neck pocket OP20 unblocked
+- `c907d12b` fix(smart-guitar): neck pocket OP20 unblocked
+- `2b9b71ea` feat(smart-guitar): DXF v3 + generator script
+- `bbaf25d9` feat(smart-guitar): DXF v3 + generator script
+- `bf35b81e` chore: remove dev script (canonical version in scripts/)
+- `d70cf3f2` chore: remove dev script (canonical version in scripts/)
+- `45c0563a` docs: add Smart Guitar pre-cut verification checklist
+- `f1b9b58b` docs: add Smart Guitar pre-cut verification checklist
+- `511f8150` fix(tests): resolve 6 test failures (technical debt + CAM workspace + registry)
+- `a97236b0` fix(tests): resolve 6 test failures (technical debt + CAM workspace + registry)
+- `844f0a8e` feat(smart-guitar): DXF v4 body outline fixed (Explorer-Klein hybrid)
+- `f6f513e9` feat(smart-guitar): DXF v4 body outline fixed (Explorer-Klein hybrid)
+- `1dd56af4` feat(photo-vectorizer): multi-view shape reconstructor
+- `3d8cfa0d` feat(photo-vectorizer): multi-view shape reconstructor
+- `c843a175` feat(photo-vectorizer): add two-pass extraction with internal feature classification
+- `d549df9d` feat(photo-vectorizer): add two-pass extraction with internal feature classification
+- `257217d6` feat(smart-guitar): GET /api/instruments/smart-guitar/dxf
+- `a7c1ef0e` feat(smart-guitar): GET /api/instruments/smart-guitar/dxf
+- `8f504b56` feat(photo-vectorizer): add ai_render_extractor for AI-generated renders
+- `b6b17739` feat(photo-vectorizer): add ai_render_extractor for AI-generated renders
+- `43dfa985` fix(smart-guitar): align generator cavity keys with spec (14 entities restored)
+- `7ac7ca24` fix(smart-guitar): align generator cavity keys with spec (14 entities restored)
+- `4b63a147` docs(smart-guitar): add cavity key name reference comment
+- `64e67b82` docs(smart-guitar): add cavity key name reference comment
+- `1dff587a` docs(backlog): add PHOTO-003 AI render extractor
+- `72ae4420` docs(backlog): add PHOTO-003 AI render extractor
+Files by surface:
+- archive: 2 paths
+  - A docs/archive/instrument_references/Guitar_String_Tension_Experiment.pdf
+  - A docs/archive/instrument_references/daquisto/DAquisto-Measurements-2.jpg
+- docs: 3 paths
+  - A docs/guitar-assembly-tools-inventory.md
+  - A docs/SMART_GUITAR_PRE_CUT_CHECKLIST.md
+  - M docs/BACKLOG.md
+- other: 28 paths
+  - A services/api/app/instrument_geometry/body/specs/smart_guitar_setup_spec.json
+  - A services/api/app/instrument_geometry/bridge/electric_bridges.py
+  - A services/api/app/instrument_geometry/bridge/floyd_rose_tremolo.py
+  - A services/api/app/instrument_geometry/body/smart_guitar_dxf.py
+  - A services/api/data/smart_guitar_v2_complete.dxf
+  - A services/api/app/calculators/d0_calibrator.py
+  - A scripts/generate_smart_guitar_v3_dxf.py
+  - A services/api/data/smart_guitar_v3_from_spec.dxf
+  - A services/api/gen_smart_guitar_v3.py
+  - A services/api/data/smart_guitar_v4_body_fixed.dxf
+  - A services/api/scripts/generate_smart_guitar_v3_dxf.py
+  - A services/api/app/routers/instruments/guitar/smart_guitar_dxf_router.py
+  - M services/api/app/agentic/spine/replay.py
+  - M services/api/app/ai/context_retrieval.py
+  - M services/api/app/calculators/setup_cascade.py
+  - M services/api/app/dxf/preflight_service.py
+  - M services/api/app/routers/cam/cam_workspace_router.py
+  - M services/api/app/instrument_geometry/bridge/__init__.py
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+  - M services/api/app/routers/bridge_presets_router.py
+  - M services/api/app/router_registry/manifests/business_manifest.py
+  - M pv2_sandbox.py
+  - M services/api/app/instrument_geometry/instrument_model_registry.json
+  - M services/api/app/routers/cam/guitar/registry_cam_router.py
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/routers/instruments/guitar/__init__.py
+  - D services/api/gen_smart_guitar_v3.py
+  - D services/api/data/smart_guitar_v4_body_fixed.dxf
+- photo_vectorizer: 7 paths
+  - A services/photo-vectorizer/cognitive_extractor.py
+  - A services/photo-vectorizer/cognitive_extraction_engine.py
+  - A services/photo-vectorizer/multi_view_reconstructor.py
+  - A services/photo-vectorizer/test_multi_view_reconstructor.py
+  - A services/photo-vectorizer/ai_render_extractor.py
+  - A services/photo-vectorizer/test_ai_render_extractor.py
+  - M services/photo-vectorizer/photo_vectorizer_v2.py
+- tests: 5 paths
+  - A services/api/tests/test_cam_gcode_fixes.py
+  - A services/api/tests/test_smart_guitar_dxf_endpoint.py
+  - M services/api/tests/test_cam_workspace_endpoint_smoke.py
+  - M services/api/tests/test_cam_workspace_router_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `docs/archive/instrument_references/Guitar_String_Tension_Experiment.pdf` — UNKNOWN
+- `docs/archive/instrument_references/daquisto/DAquisto-Measurements-2.jpg` — UNKNOWN
+- `docs/guitar-assembly-tools-inventory.md` — UNKNOWN
+- `docs/SMART_GUITAR_PRE_CUT_CHECKLIST.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1a4ce27a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d01679cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (636c45f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c738e456)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fde0727)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f38ed7ea)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7631eb1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a7d8a692)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (02dd6aca)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3e3337b6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3f4f141a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b2351fff)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09e2cced)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (da6929f5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1fc94780)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c3a8cecb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae435a74)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f5284f65)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0ef1a8d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7dc49ca8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09a8cb5d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47a0387f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0abf5987)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2cb4cafc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (30ab85e5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7364621a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (63e8d1e8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7cf88144)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (47e0d6d6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (88fc17d2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1bf10501)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3a3220c0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (58e21498)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c312b73f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5c675498)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c907d12b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2b9b71ea)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bbaf25d9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (45c0563a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1b9b58b)
+- … 16 more
+
+### S112 — 2026-03-24T18:44:41-05:00 → 2026-03-24T23:22:59-05:00 (16 commits, 4.64h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `09e5d3c7` feat(safety): @safety_critical decorator remediation — CAM modules
+- `8e28ba4b` feat(safety): @safety_critical decorator remediation — CAM modules
+- `35324ef3` feat(art): add rosette presets to art_presets.json
+- `3706a1a4` feat(art): add rosette presets to art_presets.json
+- `05be8133` chore: gitignore sandbox and download artifacts at root
+- `5e5ceea6` chore: gitignore sandbox and download artifacts at root
+- `c8f8725c` fix(docs): patch Smart Guitar CNC handoff — signal chain v2.0
+- `d0de74ca` fix(docs): patch Smart Guitar CNC handoff — signal chain v2.0
+- `9a2b6cf1` fix(docs): correct body style to Les Paul-Explorer hybrid
+- `d6ac7bf4` fix(docs): correct body style to Les Paul-Explorer hybrid
+- `4b26a1fe` chore: archive __RECOVERED__ and root clutter
+- `f6cb55dc` chore: archive __RECOVERED__ and root clutter
+- `264598b9` feat(smart-guitar): add neck length fields to spec
+- `9edfa674` feat(smart-guitar): add neck length fields to spec
+- `08b47763` chore: flatten photo_vectorizer_patches archive
+- `bc196138` chore: flatten photo_vectorizer_patches archive
+Files by surface:
+- api_routing: 1 paths
+  - M docs/archive/photo_vectorizer_patches/photo_vectorizer_router.py
+- archive: 313 paths
+  - A docs/archive/recovered/README.md
+  - A docs/archive/photo_vectorizer_patches/.codequalityrc.json
+  - A docs/archive/photo_vectorizer_patches/ComponentGallery.vue
+  - A docs/archive/photo_vectorizer_patches/LayoutProto.vue
+  - A docs/archive/photo_vectorizer_patches/NavProto.vue
+  - A docs/archive/photo_vectorizer_patches/SandboxView.vue
+  - A docs/archive/photo_vectorizer_patches/TokenExplorer.vue
+  - A docs/archive/photo_vectorizer_patches/TypographyScale.vue
+  - A docs/archive/photo_vectorizer_patches/__main__.py
+  - A docs/archive/photo_vectorizer_patches/amsterdam_spiro_engine.html
+  - A docs/archive/photo_vectorizer_patches/analyzer.py
+  - A docs/archive/photo_vectorizer_patches/base.py
+  - A docs/archive/photo_vectorizer_patches/config.py
+  - A docs/archive/photo_vectorizer_patches/css_checker.py
+  - A docs/archive/photo_vectorizer_patches/duplicate_checker.py
+  - A docs/archive/photo_vectorizer_patches/geo_band_generator.html
+  - A docs/archive/photo_vectorizer_patches/inlay_designer.html
+  - A docs/archive/photo_vectorizer_patches/magic_number.py
+  - A docs/archive/photo_vectorizer_patches/marquetry_engine.html
+  - A docs/archive/photo_vectorizer_patches/output.py
+  - A docs/archive/photo_vectorizer_patches/python_checks.py
+  - A docs/archive/photo_vectorizer_patches/router-index.ts
+  - A docs/archive/photo_vectorizer_patches/test_analyzer.py
+  - A docs/archive/photo_vectorizer_patches/vine_girih_generator.html
+  - A docs/archive/photo_vectorizer_patches/vue_checker.py
+  - M docs/archive/recovered/__RECOVERED__/A_cam_core/advanced_offset.py
+  - M docs/archive/recovered/__RECOVERED__/A_cam_core/cam_post_v155_router.py
+  - M docs/archive/recovered/__RECOVERED__/A_cam_core/modal_cycles.py
+  - M docs/archive/recovered/__RECOVERED__/A_cam_core/saw_gcode_generator.py
+  - M docs/archive/recovered/__RECOVERED__/B_instrument_data/martin_d28_1937.py
+  - M docs/archive/recovered/__RECOVERED__/B_instrument_data/selmer_maccaferri_dhole.py
+  - M docs/archive/recovered/__RECOVERED__/C_archtop_pipeline/ARCHTOP_LEGACY_DISCOVERY_SUMMARY.md
+  - M docs/archive/recovered/__RECOVERED__/C_archtop_pipeline/archtop_cam_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/cam_pipeline_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/learn_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/om_cam_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/posts_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/registry_cam_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/smart_cam_router.py
+  - M docs/archive/recovered/__RECOVERED__/D_guitar_cam_routers/stratocaster_cam_router.py
+  - … 273 more (see sessions.json / files.jsonl)
+- docs: 1 paths
+  - M docs/handoffs/SMART_GUITAR_V1_CNC_HANDOFF.md
+- other: 25 paths
+  - M services/api/app/calculators/cantilever_armrest_calc.py
+  - M services/api/app/cam/_om_purf_08_additions.py
+  - M services/api/app/cam/adaptive_core.py
+  - M services/api/app/cam/adaptive_core_l1.py
+  - M services/api/app/cam/carving/orchestrator.py
+  - M services/api/app/cam/carving/surface_carving.py
+  - M services/api/app/cam/fhole/toolpath.py
+  - M services/api/app/cam/flying_v/depth_validator.py
+  - M services/api/app/cam/flying_v/pocket_generator.py
+  - M services/api/app/cam/helical_core.py
+  - M services/api/app/cam/neck/fret_slots.py
+  - M services/api/app/cam/neck/orchestrator.py
+  - M services/api/app/cam/neck/profile_carving.py
+  - M services/api/app/cam/neck/truss_rod_channel.py
+  - M services/api/app/cam/post_processor.py
+  - M services/api/app/cam/probe_patterns.py
+  - M services/api/app/cam/retract_patterns.py
+  - M services/api/app/cam_core/saw_lab/operations.py
+  - M services/api/app/cam_core/saw_lab/saw_blade_validator.py
+  - M services/api/app/routers/cam/guitar/acoustic_cam_router.py
+  - M services/api/app/routers/cam/guitar/body_gcode_router.py
+  - M services/api/app/routers/cam/guitar/flying_v_cam_router.py
+  - M services/api/data/art_presets.json
+  - M .gitignore
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+Documents produced:
+- `docs/archive/recovered/README.md` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/.codequalityrc.json` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/ComponentGallery.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/LayoutProto.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/NavProto.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/SandboxView.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/TokenExplorer.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/TypographyScale.vue` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/__main__.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/amsterdam_spiro_engine.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/analyzer.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/base.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/config.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/css_checker.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/duplicate_checker.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/geo_band_generator.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/inlay_designer.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/magic_number.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/marquetry_engine.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/output.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/python_checks.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/router-index.ts` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/test_analyzer.py` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/vine_girih_generator.html` — UNKNOWN
+- `docs/archive/photo_vectorizer_patches/vue_checker.py` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4b26a1fe)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f6cb55dc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (264598b9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9edfa674)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (08b47763)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc196138)
+
+### S113 — 2026-03-25T13:45:20-05:00 → 2026-03-25T14:43:58-05:00 (4 commits, 0.98h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `38a27a3b` feat(smart-guitar): integrate 60-point traced body outline into DXF generator
+- `93c5b286` feat(smart-guitar): integrate 60-point traced body outline into DXF generator
+- `59800f9e` fix(smart-guitar): change CENTERLINE linetype to CONTINUOUS to prevent viewer hang
+- `8353fe23` fix(smart-guitar): change CENTERLINE linetype to CONTINUOUS to prevent viewer hang
+Files by surface:
+- other: 4 paths
+  - A services/api/app/instrument_geometry/body/traced_outlines/__init__.py
+  - A services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_outline.json
+  - A services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_traced_outline.py
+  - M services/api/app/instrument_geometry/body/smart_guitar_dxf.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38a27a3b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93c5b286)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (59800f9e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8353fe23)
+
+### S114 — 2026-03-25T19:27:11-05:00 → 2026-03-25T22:45:25-05:00 (10 commits, 3.3h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `c859edcb` feat(instruments): add completeness audit + fix Smart Guitar CAM DXF
+- `c9b9c26a` feat(instruments): add completeness audit + fix Smart Guitar CAM DXF
+- `443e39d1` feat(smart-guitar): Teensy 4.1 cavity + String Master software stack integration
+- `ae52a368` feat(smart-guitar): Teensy 4.1 cavity + String Master software stack integration
+- `84d9a7c6` feat(smart-guitar): add control_cavity spec + CNC operations (OP-CC)
+- `e763130f` feat(smart-guitar): add control_cavity spec + CNC operations (OP-CC)
+- `4da0a10f` fix(smart-guitar): fix antenna_recess key access in generator
+- `9305d5d7` fix(smart-guitar): fix antenna_recess key access in generator
+- `289d1408` fix(smart-guitar): relocate control cavity + fix wiring topology
+- `511c108f` fix(smart-guitar): relocate control cavity + fix wiring topology
+Files by surface:
+- docs: 2 paths
+  - A docs/INSTRUMENT_COMPLETENESS_AUDIT.md
+  - M docs/handoffs/SMART_GUITAR_V1_CNC_HANDOFF.md
+- other: 7 paths
+  - A scripts/generate_smart_guitar_cam_dxf.py
+  - A services/api/app/instrument_geometry/body/dxf/electric/Smart-Guitar-v1_CAM.dxf
+  - A services/api/app/routers/string_master_router.py
+  - M scripts/generate_smart_guitar_full_build.py
+  - M scripts/generate_smart_guitar_v3_dxf.py
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+  - M services/api/app/router_registry/manifests/system_manifest.py
+Documents produced:
+- `docs/INSTRUMENT_COMPLETENESS_AUDIT.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c859edcb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c9b9c26a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (443e39d1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ae52a368)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (84d9a7c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e763130f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4da0a10f)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9305d5d7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (289d1408)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (511c108f)
+
+### S115 — 2026-03-26T03:09:49-05:00 → 2026-03-26T03:09:49-05:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `0d01fc9c` feat(smart-guitar): add traced outline v1 (78 pts, 7 voids)
+- `6e90d788` feat(smart-guitar): add traced outline v1 (78 pts, 7 voids)
+Files by surface:
+- other: 5 paths
+  - A services/api/app/instrument_geometry/body/dxf/electric/smart_guitar_back_v1.dxf
+  - A services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_back_v1.json
+  - A services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_back_v1_metadata.json
+  - M scripts/generate_smart_guitar_full_build.py
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0d01fc9c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6e90d788)
+
+### S116 — 2026-03-26T12:22:07-05:00 → 2026-03-26T12:22:07-05:00 (2 commits, 0.0h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `96f24cc8` docs: add Les Paul vs Explorer spec completeness comparison
+- `ab6570ba` docs: add Les Paul vs Explorer spec completeness comparison
+Files by surface:
+- docs: 1 paths
+  - A docs/LESPAUL_VS_EXPLORER_COMPARISON.md
+Documents produced:
+- `docs/LESPAUL_VS_EXPLORER_COMPARISON.md` — # Les Paul vs Explorer — Design Spec Completeness Comparison
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96f24cc8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ab6570ba)
+
+### S117 — 2026-03-26T23:38:09-05:00 → 2026-03-27T03:12:28-05:00 (4 commits, 3.57h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `266aba32` chore: add smart_guitar_traced.dxf body outline
+- `f1eeece8` chore: add smart_guitar_traced.dxf body outline
+- `7e167b94` fix(geometry): correct scale on smart_guitar_traced_outline.py
+- `95a1ed79` fix(geometry): correct scale on smart_guitar_traced_outline.py
+Files by surface:
+- other: 3 paths
+  - A services/api/app/instrument_geometry/body/dxf/electric/smart_guitar_traced.dxf
+  - M services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_traced_outline.py
+  - M services/api/app/instrument_geometry/body/traced_outlines/smart_guitar_traced_outline_raw.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (266aba32)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f1eeece8)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7e167b94)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (95a1ed79)
+
+### S118 — 2026-03-27T10:08:02-05:00 → 2026-03-27T10:08:02-05:00 (2 commits, 0.0h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `0e282f11` fix(geometry): correct cavity origin offset in smart_guitar_dxf.py
+- `6d9d9e64` fix(geometry): correct cavity origin offset in smart_guitar_dxf.py
+Files by surface:
+- other: 1 paths
+  - M services/api/app/instrument_geometry/body/smart_guitar_dxf.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0e282f11)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6d9d9e64)
+
+### S119 — 2026-03-28T04:31:07-05:00 → 2026-03-28T07:16:57-05:00 (28 commits, 2.76h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `060f64de` docs: update remediation status March 2026
+- `262572c9` docs: update remediation status March 2026
+- `5ae1d0a2` refactor(ui): decompose RosetteWheelView.vue (1,240 → 667 LOC)
+- `cb62518f` refactor(ui): decompose RosetteWheelView.vue (1,240 → 667 LOC)
+- `1cf06030` fix(tests): update technical debt gate baselines
+- `338c63ed` fix(tests): update technical debt gate baselines
+- `289cf3c9` refactor(cam): decompose herringbone_embedded_quads.py
+- `82d83c69` refactor(cam): decompose herringbone_embedded_quads.py
+- `6a0d1bf3` refactor(ui): decompose MachineManagerView + update remediation status
+- `ec27abcc` refactor(ui): decompose MachineManagerView + update remediation status
+- `1884f04d` test(debt): update ratchet thresholds post-decomposition
+- `2fc9e0c3` test(debt): update ratchet thresholds post-decomposition
+- `16c77d16` docs: add remediation final audit verification report
+- `39aa85a1` docs: add remediation final audit verification report
+- `425513b3` docs: update remediation status with audit-verified metrics
+- `dc979835` docs: update remediation status with audit-verified metrics
+- `92f7ee1c` refactor(calculators): merge nut_comp_calc.py into nut_compensation_calc.py
+- `c559c9a6` refactor(calculators): merge nut_comp_calc.py into nut_compensation_calc.py
+- `375ffd85` docs: add 2026-03-28 repository health evaluation report
+- `ad2efdd7` docs: add 2026-03-28 repository health evaluation report
+- `25c46e71` feat(generators): add unified BodyGenerator dispatcher (GEN-1)
+- `d64eebc7` feat(generators): add unified BodyGenerator dispatcher (GEN-1)
+- `7e34e3f3` refactor(calculators): merge headstock_break_angle.py into headstock_break_angle_calc.py
+- `d0229d0b` refactor(calculators): merge headstock_break_angle.py into headstock_break_angle_calc.py
+- `0b909f5a` refactor(calculators): rename saw/ to saw_adapters/
+- `86cdbdba` refactor(calculators): rename saw/ to saw_adapters/
+- `a79830ac` fix(tests): update debt gate thresholds post-decomposition sprint
+- `dcf8b266` fix(tests): update debt gate thresholds post-decomposition sprint
+Files by surface:
+- docs: 3 paths
+  - A docs/REMEDIATION_FINAL_AUDIT_2026_03_28.md
+  - A docs/2026-03-28_REPOSITORY_HEALTH_EVALUATION.md
+  - M docs/REMEDIATION_STATUS_MARCH_2026.md
+- other: 29 paths
+  - A packages/client/src/views/art-studio/rosette-wheel/RosetteWheelCanvas.vue
+  - A packages/client/src/views/art-studio/rosette-wheel/RosetteWheelControls.vue
+  - A packages/client/src/views/art-studio/rosette-wheel/RosetteWheelPresets.vue
+  - A packages/client/src/views/art-studio/rosette-wheel/index.ts
+  - A packages/client/src/views/lab/machine-manager/MachineConnectionPanel.vue
+  - A packages/client/src/views/lab/machine-manager/MachineListPanel.vue
+  - A packages/client/src/views/lab/machine-manager/MachineProfileEditor.vue
+  - A scripts/generate_smart_guitar_back_dxf.py
+  - A services/api/app/generators/body_generator.py
+  - M packages/client/src/views/art-studio/RosetteWheelView.vue
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/cam/rosette/prototypes/herringbone_embedded_quads.py
+  - M services/api/app/cam/rosette/prototypes/herringbone_quads_data.py
+  - M packages/client/src/views/lab/MachineManagerView.vue
+  - M packages/client/src/views/lab/machine-manager/MachineProfilePanel.vue
+  - M packages/client/src/views/lab/machine-manager/machineManagerTypes.ts
+  - M services/api/data/art_presets.json
+  - M services/api/app/calculators/nut_comp_calc.py
+  - M services/api/app/calculators/nut_compensation_calc.py
+  - M services/api/app/generators/__init__.py
+  - M services/api/app/calculators/headstock_break_angle.py
+  - M services/api/app/calculators/headstock_break_angle_calc.py
+  - M services/api/app/calculators/saw_adapters/__init__.py
+  - M services/api/app/calculators/saw_adapters/bite_per_tooth_adapter.py
+  - M services/api/app/calculators/saw_adapters/deflection_adapter.py
+  - M services/api/app/calculators/saw_adapters/heat_adapter.py
+  - M services/api/app/calculators/saw_adapters/kickback_adapter.py
+  - M services/api/app/calculators/saw_adapters/rim_speed_adapter.py
+  - M services/api/pytest.ini
+- tests: 1 paths
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- `docs/REMEDIATION_FINAL_AUDIT_2026_03_28.md` — # Remediation Final Audit — 2026-03-28
+- `docs/2026-03-28_REPOSITORY_HEALTH_EVALUATION.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1cf06030)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (338c63ed)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (289cf3c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (82d83c69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6a0d1bf3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ec27abcc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1884f04d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2fc9e0c3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (16c77d16)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (39aa85a1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (425513b3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dc979835)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (92f7ee1c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c559c9a6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (375ffd85)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad2efdd7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (25c46e71)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d64eebc7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7e34e3f3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d0229d0b)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0b909f5a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (86cdbdba)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a79830ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dcf8b266)
+
+### S120 — 2026-03-28T14:31:15-05:00 → 2026-03-28T16:27:24-05:00 (12 commits, 1.94h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `06f6351a` fix(tests): use function-scoped TestClient fixtures to prevent test pollution
+- `1194616d` fix(tests): use function-scoped TestClient fixtures to prevent test pollution
+- `b3910cde` fix(tests): scope TestClient fixture in test_ai_routers_smoke.py
+- `df8195aa` fix(tests): scope TestClient fixture in test_ai_routers_smoke.py
+- `4d27a461` fix(tests): prevent test pollution by clearing dependency_overrides
+- `f69e3b92` fix(tests): prevent test pollution by clearing dependency_overrides
+- `055789ac` fix(safety): log island subtraction gap in adaptive_core_l1
+- `e19176c5` fix(safety): log island subtraction gap in adaptive_core_l1
+- `3d7580af` fix(tests): prevent AUTH_MODE pollution in manufacturing candidate tests
+- `8ee1083e` fix(tests): prevent AUTH_MODE pollution in manufacturing candidate tests
+- `83dcfa97` fix(safety): flag project_assets_router stubs with warnings and gap entry
+- `f21f6b4d` fix(safety): flag project_assets_router stubs with warnings and gap entry
+Files by surface:
+- docs: 1 paths
+  - M docs/GAP_ANALYSIS_MASTER.md
+- other: 2 paths
+  - M services/api/app/cam/adaptive_core_l1.py
+  - M services/api/app/routers/project_assets_router.py
+- tests: 3 paths
+  - M services/api/tests/test_ai_routers_smoke.py
+  - M services/api/tests/test_manufacturing_candidates.py
+  - M services/api/tests/conftest.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (06f6351a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1194616d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b3910cde)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (df8195aa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4d27a461)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f69e3b92)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (055789ac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e19176c5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3d7580af)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8ee1083e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (83dcfa97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f21f6b4d)
+
+### S121 — 2026-03-29T01:05:45-05:00 → 2026-03-29T01:58:20-05:00 (28 commits, 0.88h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `88b22fcc` docs(reference): add Gibson Explorer blueprint as verified spec source
+- `a8e4f5a9` docs(reference): add Gibson Explorer blueprint as verified spec source
+- `04e823e0` docs(db): record SQLite schema audit pre-PostgreSQL migration
+- `249027ae` docs(db): record SQLite schema audit pre-PostgreSQL migration
+- `4a2079f6` feat(woodworking): board feet, wood weight, seasonal movement API
+- `523b058b` feat(woodworking): board feet, wood weight, seasonal movement API
+- `755166c1` feat(spec): update Smart Guitar neck profile from Explorer verified specs
+- `915d5cf1` feat(spec): update Smart Guitar neck profile from Explorer verified specs
+- `2ad37e91` feat(spec): add Smart Guitar Pro headstock variant to series definition
+- `fa3b8aaa` feat(spec): add Smart Guitar Pro headstock variant to series definition
+- `6858adfa` feat(woodworking): archtop floating bridge (Benedetto-style) + DXF
+- `c2c1f60a` feat(woodworking): archtop floating bridge (Benedetto-style) + DXF
+- `4c133979` fix(manifests): remove duplicate router registrations
+- `8cd2f374` fix(manifests): remove duplicate router registrations
+- `352ba5e2` fix(main): remove duplicate governance_router registration
+- `57abf666` fix(main): remove duplicate governance_router registration
+- `382e103e` feat(saw_lab): bandsaw package — physics, blade JSON, API endpoints
+- `c554b40a` feat(saw_lab): bandsaw package — physics, blade JSON, API endpoints
+- `aa35178e` feat(saw_adapters): MachineClass enum (rim speed + curve support flags)
+- `c3a8bb2a` feat(saw_adapters): MachineClass enum (rim speed + curve support flags)
+- `b7ec12ec` feat(woodworking): add joinery, panels, and floating bridge modules
+- `c36f836d` feat(woodworking): add joinery, panels, and floating bridge modules
+- `d3c03373` fix(router): unregister monolithic instrument_geometry_router
+- `f458b1b5` fix(router): unregister monolithic instrument_geometry_router
+- `794b6552` feat(woodworking): add archtop bridge + board feet endpoints
+- `7d3760ff` feat(woodworking): add archtop bridge + board feet endpoints
+- `bd524edf` docs: record instrument router overlap for next session
+- `c53829b4` docs: record instrument router overlap for next session
+Files by surface:
+- archive: 5 paths
+  - A docs/archive/instrument_references/gibson_explorer/README.md
+  - A docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_lonelystar.pdf
+  - A docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page1_top_side_views.png
+  - A docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.png
+  - A docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page3_neck_frets.png
+- docs: 1 paths
+  - A docs/INSTRUMENT_ROUTER_OVERLAP.md
+- other: 23 paths
+  - A services/api/docs/SQLITE_SCHEMA_AUDIT_2026_03_28.json
+  - A services/api/app/routers/woodworking_router.py
+  - A services/api/app/woodworking/__init__.py
+  - A services/api/app/woodworking/board_feet.py
+  - A services/api/app/woodworking/archtop_floating_bridge.py
+  - A services/api/app/cam_core/saw_lab/bandsaw/__init__.py
+  - A services/api/app/cam_core/saw_lab/bandsaw/blade_spec.py
+  - A services/api/app/cam_core/saw_lab/bandsaw/data/bandsaw_blades.json
+  - A services/api/app/cam_core/saw_lab/bandsaw/machine.py
+  - A services/api/app/cam_core/saw_lab/bandsaw/physics.py
+  - A services/api/app/calculators/saw_adapters/machine_class.py
+  - A services/api/app/woodworking/floating_bridge.py
+  - A services/api/app/woodworking/joinery.py
+  - A services/api/app/woodworking/panels.py
+  - A services/api/app/woodworking/archtop_bridge.py
+  - M services/api/app/instrument_geometry/specs/gibson_explorer.json
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+  - M services/api/app/router_registry/manifests/cam_manifest.py
+  - M services/api/app/router_registry/manifests/system_manifest.py
+  - M services/api/app/main.py
+  - M services/api/app/cam_core/saw_lab/__init__.py
+  - M services/api/app/calculators/saw_adapters/__init__.py
+  - M services/api/app/router_registry/manifests/business_manifest.py
+- tests: 5 paths
+  - A services/api/app/tests/test_board_feet.py
+  - A services/api/app/tests/test_archtop_floating_bridge.py
+  - A services/api/app/tests/test_bandsaw_physics.py
+  - A services/api/app/tests/test_woodworking_and_bandsaw.py
+  - A services/api/app/tests/test_machine_class.py
+Documents produced:
+- `docs/archive/instrument_references/gibson_explorer/README.md` — # Gibson Explorer Blueprint — Reference Source
+- `docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_lonelystar.pdf` — %PDF-1.7
+- `docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page1_top_side_views.png` — �PNG
+- `docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.png` — �PNG
+- `docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page3_neck_frets.png` — �PNG
+- `docs/INSTRUMENT_ROUTER_OVERLAP.md` — Instrument geometry duplicates:
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (88b22fcc)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a8e4f5a9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (04e823e0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (249027ae)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (755166c1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (915d5cf1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (2ad37e91)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa3b8aaa)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c133979)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8cd2f374)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (352ba5e2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (57abf666)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b7ec12ec)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c36f836d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3c03373)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f458b1b5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (794b6552)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d3760ff)
+
+### S122 — 2026-03-29T06:45:50-05:00 → 2026-03-29T08:16:51-05:00 (4 commits, 1.52h)
+Branches: refs/tags/v2.4.0-alpha.1, refs/pull/10/head
+Commits:
+- `1fc6cfb9` test: skip obsolete tests for unregistered monolith router
+- `6fe72cf7` test: skip obsolete tests for unregistered monolith router
+- `203c1b36` test(debt): update endpoint ratchet to 945
+- `f8939cd8` test(debt): update endpoint ratchet to 945
+Files by surface:
+- other: 1 paths
+  - M services/api/metrics/debt_history.json
+- tests: 4 paths
+  - M services/api/tests/test_cam_machines_endpoint_smoke.py
+  - M services/api/tests/test_cantilever_armrest.py
+  - M services/api/tests/test_instrument_geometry_router_smoke.py
+  - M services/api/tests/test_technical_debt_gates.py
+Documents produced:
+- (none with status A and document kind)
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1fc6cfb9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6fe72cf7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (203c1b36)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8939cd8)
+
+### S123 — 2026-03-29T13:40:18-05:00 → 2026-03-30T00:51:42-05:00 (52 commits, 11.19h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1
+Commits:
+- `a9e28d97` feat(spec): add Gibson ES-335 verified spec file
+- `de09ec51` feat(spec): add Gibson ES-335 verified spec file
+- `6ae68384` feat(spec): add Gibson Melody Maker spec file + blueprint reference
+- `91004763` feat(spec): add Gibson Melody Maker spec file + blueprint reference
+- `675211cf` feat(spec): add Gibson SG spec file + full reference set (8 PDFs, 1 DXF, 4 DWGs)
+- `7f0ca110` feat(spec): add Gibson SG spec file + full reference set (8 PDFs, 1 DXF, 4 DWGs)
+- `93b5ef04` feat(spec): add Fender Telecaster spec file + reference set (8 PDFs, 2 PSDs)
+- `96823be3` feat(spec): add Fender Telecaster spec file + reference set (8 PDFs, 2 PSDs)
+- `77f21c7d` docs: document nut-compensation and soundhole as intentional parallel implementations
+- `f2eae76e` docs: document nut-compensation and soundhole as intentional parallel implementations
+- `486569de` docs: document polygon_offset as intentional parallel implementation
+- `4c251b4d` docs: document polygon_offset as intentional parallel implementation
+- `9448925d` docs: generate instrument_router migration map for Phase A consolidation
+- `c538293f` docs: generate instrument_router migration map for Phase A consolidation
+- `962d5a84` feat(routers): migrate geometry calculators to split routers (5 endpoints)
+- `e48db130` feat(routers): migrate geometry calculators to split routers (5 endpoints)
+- `ceeb4cc0` feat(routers): migrate tuning machine to split router (4 endpoints)
+- `f723662c` feat(routers): migrate tuning machine to split router (4 endpoints)
+- `6f33a931` feat(routers): migrate construction calculators to split router (4 endpoints)
+- `b2e2466c` feat(routers): migrate construction calculators to split router (4 endpoints)
+- `70b6c450` feat(routers): migrate string/tension to split router (3 endpoints)
+- `af585201` feat(routers): migrate string/tension to split router (3 endpoints)
+- `4c9e4aa1` feat(routers): migrate nut/soundhole helpers to split routers (3 endpoints)
+- `d3a35db0` feat(routers): migrate nut/soundhole helpers to split routers (3 endpoints)
+- `bbd54e88` feat(routers): migrate string tension endpoints to split routers (3 endpoints)
+- `dee6bc72` feat(routers): migrate string tension endpoints to split routers (3 endpoints)
+- `291c7d54` feat(db): add Alembic migration framework
+- `4b07c568` feat(db): add Alembic migration framework
+- `6ffb0bf9` feat(manifests): register 3 new instrument geometry split routers
+- `ad0185eb` feat(manifests): register 3 new instrument geometry split routers
+- `b8dbe1fd` feat(db): add DualWriteStore for PostgreSQL migration
+- `df99bed8` feat(db): add DualWriteStore for PostgreSQL migration
+- `794e6869` feat(db): add PostgreSQL connection pool with SQLite fallback
+- `8a46bce3` feat(db): add PostgreSQL connection pool with SQLite fallback
+- `9b16d5cf` refactor(routers): remove 19 migrated endpoints from instrument_router.py
+- `ff0869f7` refactor(routers): remove 19 migrated endpoints from instrument_router.py
+- `f8762e1d` docs: mark instrument_router migration COMPLETE
+- `fa2fedf5` docs: mark instrument_router migration COMPLETE
+- `0703c039` test(debt): update endpoint ratchet to 945 post-migration
+- `6f7f82b2` test(debt): update endpoint ratchet to 945 post-migration
+- `3fa787a6` chore(metrics): update debt_history.json snapshot
+- `7315b232` chore(metrics): update debt_history.json snapshot
+- `023e8018` test(debt): update endpoint ratchet comment post-migration
+- `60abcc08` test(debt): update endpoint ratchet comment post-migration
+- `55fd51fa` chore(metrics): update debt history snapshot post Sprint 3 migration
+- `96bf5d6d` chore(metrics): update debt history snapshot post Sprint 3 migration
+- `7b896ced` feat(spec): add Fender Stratocaster spec + blueprint references
+- `eb983208` feat(spec): add Fender Stratocaster spec + blueprint references
+- `1c9af859` fix(woodworking): consolidate archtop bridge to single canonical path
+- `cd41d88d` fix(woodworking): consolidate archtop bridge to single canonical path
+- `e8714d19` docs(spec): clarify Smart Guitar body as original ergonomic design
+- `ef32ab63` docs(spec): clarify Smart Guitar body as original ergonomic design
+Files by surface:
+- archive: 54 paths
+  - A docs/archive/instrument_references/gibson_melody_maker/README.md
+  - A docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf
+  - A docs/archive/instrument_references/gibson_eds_1275/README.md
+  - A docs/archive/instrument_references/gibson_eds_1275/gibson_eds_1275_blueprint.pdf
+  - A docs/archive/instrument_references/gibson_sg/DWG-00-Gibson-SG.dwg
+  - A docs/archive/instrument_references/gibson_sg/DWG-01-Gibson-SG-body-head.dwg
+  - A docs/archive/instrument_references/gibson_sg/DWG-02-Gibson-SG100-Plan.dwg
+  - A docs/archive/instrument_references/gibson_sg/DWG-03-Gibson-SG.dwg
+  - A docs/archive/instrument_references/gibson_sg/DXF-00-Gibson-SG.dxf
+  - A docs/archive/instrument_references/gibson_sg/README.md
+  - A docs/archive/instrument_references/gibson_sg/sg_body_headstock.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_complete_template.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_custom.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_full_assembled.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_junior_1963.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_pickguard.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_pickguard_alt.pdf
+  - A docs/archive/instrument_references/gibson_sg/sg_plans.pdf
+  - A docs/archive/instrument_references/fender_telecaster/README.md
+  - A docs/archive/instrument_references/fender_telecaster/fender_headstocks.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_72_deluxe_bodies.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_body_pickguard.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_main.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_neck.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_neck_nut_width.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_pickguards.pdf
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_template_body_only.psd
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_template_full.psd
+  - A docs/archive/instrument_references/fender_telecaster/telecaster_thinline_bodies.pdf
+  - A docs/archive/instrument_references/gibson_les_paul/README.md
+  - A docs/archive/instrument_references/fender_stratocaster/Photoshop-Stratocaster-Body-Only.psd
+  - A docs/archive/instrument_references/fender_stratocaster/Photoshop-Stratocaster-Full.psd
+  - A docs/archive/instrument_references/fender_stratocaster/README.md
+  - A docs/archive/instrument_references/fender_stratocaster/Strat-Body-Back.pdf
+  - A docs/archive/instrument_references/fender_stratocaster/Strat-Body-Front.pdf
+  - A docs/archive/instrument_references/fender_stratocaster/Strat-Neck.pdf
+  - A docs/archive/instrument_references/fender_stratocaster/Stratocaster-Guitar-Plan-01.pdf
+  - A docs/archive/instrument_references/fender_stratocaster/stratocaster_1960s.pdf
+  - A docs/archive/instrument_references/fender_stratocaster/stratocaster_62.pdf
+  - A docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-1950s.pdf
+  - … 14 more (see sessions.json / files.jsonl)
+- docs: 3 paths
+  - A docs/INSTRUMENT_ROUTER_MIGRATION_MAP.md
+  - A services/api/docs/INSTRUMENT_ROUTER_OVERLAP.md
+  - M docs/INSTRUMENT_ROUTER_OVERLAP.md
+- other: 32 paths
+  - A services/api/app/instrument_geometry/specs/gibson_es_335.json
+  - A services/api/app/instrument_geometry/specs/gibson_melody_maker.json
+  - A services/api/app/instrument_geometry/specs/gibson_sg.json
+  - A services/api/app/instrument_geometry/specs/fender_telecaster.json
+  - A services/api/app/routers/instrument_geometry/geometry_calculator_router.py
+  - A services/api/app/routers/instrument_geometry/tuning_machine_router.py
+  - A services/api/app/routers/instrument_geometry/construction_router.py
+  - A services/api/app/routers/instrument_geometry/string_tension_router.py
+  - A services/api/app/db/alembic_models.py
+  - A services/api/app/db/migrations/versions/42a488dcbc25_initial_schema_from_sqlite.py
+  - A services/api/app/db/dual_write.py
+  - A services/api/app/db/pg_pool.py
+  - A services/api/app/instrument_geometry/specs/fender_stratocaster.json
+  - M services/api/app/instrument_geometry/guitars/es_335.py
+  - M services/api/data/art_presets.json
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/instrument_geometry/guitars/sg.py
+  - M services/api/app/instrument_geometry/guitars/tele.py
+  - M services/api/app/routers/instrument_geometry/__init__.py
+  - M services/api/app/routers/instrument_geometry/nut_fret_router.py
+  - M services/api/app/routers/instrument_geometry/soundhole_router.py
+  - M services/api/alembic.ini
+  - M services/api/app/db/__init__.py
+  - M services/api/app/db/migrations/env.py
+  - M services/api/app/routers/instrument_router.py
+  - M services/api/app/instrument_geometry/guitars/les_paul.py
+  - M services/api/app/instrument_geometry/specs/gibson_les_paul.json
+  - M services/api/app/instrument_geometry/guitars/strat.py
+  - M services/api/app/routers/woodworking_router.py
+  - M services/api/app/woodworking/archtop_floating_bridge.py
+  - M services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json
+  - D services/api/app/woodworking/archtop_bridge.py
+- tests: 4 paths
+  - A services/api/tests/test_dual_write.py
+  - A services/api/tests/test_pg_pool.py
+  - M services/api/tests/test_technical_debt_gates.py
+  - M services/api/app/tests/test_woodworking_and_bandsaw.py
+Documents produced:
+- `docs/archive/instrument_references/gibson_melody_maker/README.md` — # Gibson Melody Maker Blueprint — Reference Source
+- `docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf` — %PDF-1.3
+- `docs/archive/instrument_references/gibson_eds_1275/README.md` — UNKNOWN
+- `docs/archive/instrument_references/gibson_eds_1275/gibson_eds_1275_blueprint.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/DWG-00-Gibson-SG.dwg` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/DWG-01-Gibson-SG-body-head.dwg` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/DWG-02-Gibson-SG100-Plan.dwg` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/DWG-03-Gibson-SG.dwg` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/DXF-00-Gibson-SG.dxf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/README.md` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_body_headstock.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_complete_template.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_custom.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_full_assembled.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_junior_1963.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_pickguard.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_pickguard_alt.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_sg/sg_plans.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/README.md` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/fender_headstocks.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_72_deluxe_bodies.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_body_pickguard.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_main.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_neck.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_neck_nut_width.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_pickguards.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_template_body_only.psd` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_template_full.psd` — UNKNOWN
+- `docs/archive/instrument_references/fender_telecaster/telecaster_thinline_bodies.pdf` — UNKNOWN
+- `docs/INSTRUMENT_ROUTER_MIGRATION_MAP.md` — # Instrument Router Migration Map
+- `services/api/docs/INSTRUMENT_ROUTER_OVERLAP.md` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/README.md` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Photoshop-Stratocaster-Body-Only.psd` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Photoshop-Stratocaster-Full.psd` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/README.md` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Strat-Body-Back.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Strat-Body-Front.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Strat-Neck.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/Stratocaster-Guitar-Plan-01.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/stratocaster_1960s.pdf` — UNKNOWN
+- `docs/archive/instrument_references/fender_stratocaster/stratocaster_62.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-1950s.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-59-Complete.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-59-Front-Body-Headstock.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-Custom.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-Isolines.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-Junior-Double-Cut.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Gibson-Les-Paul-Junior-Single-Cut.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Body-Neck-Iso.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Front-Front-Side-Profile-Carved-Top.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Heel-Profile-Template.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Heel-Shape-59.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Neck-Angle-Cut-4degrees.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Neck-Radius.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Les-Paul-Neck-Tenon-Routing-Template.pdf` — UNKNOWN
+- `docs/archive/instrument_references/gibson_les_paul/Photoshop-Gibson-Les-Paul-Full.psd` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (a9e28d97)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (de09ec51)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ae68384)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (91004763)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (675211cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7f0ca110)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (93b5ef04)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (96823be3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (962d5a84)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e48db130)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ceeb4cc0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f723662c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f33a931)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b2e2466c)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (70b6c450)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (af585201)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c9e4aa1)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (d3a35db0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bbd54e88)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (dee6bc72)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6ffb0bf9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ad0185eb)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (794e6869)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (8a46bce3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b16d5cf)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ff0869f7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (f8762e1d)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (fa2fedf5)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (0703c039)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6f7f82b2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3fa787a6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7315b232)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (023e8018)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (60abcc08)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7b896ced)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (eb983208)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (e8714d19)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (ef32ab63)
+
+### S124 — 2026-03-30T17:37:11-05:00 → 2026-03-31T01:23:12-05:00 (22 commits, 7.77h)
+Branches: refs/pull/10/head, refs/tags/v2.4.0-alpha.1, refs/tags/restored-baseline-anchor
+Commits:
+- `7d4918f2` fix(api): mount tuning_machine_router in instrument_router
+- `c1cb5106` fix(api): mount tuning_machine_router in instrument_router
+- `6529fc0e` feat: Sprint P4-B — viewer_pack_bridge and brace_prescription
+- `b590989e` feat: Sprint P4-B — viewer_pack_bridge and brace_prescription
+- `3b273f69` fix(specs): align Stratocaster JSON variants with code contract
+- `52a1372a` fix(specs): align Stratocaster JSON variants with code contract
+- `904872a0` feat(acoustics): add Soundhole Helmholtz + P:A calculator
+- `ed1f312c` feat(acoustics): add Soundhole Helmholtz + P:A calculator
+- `381a6679` feat(calculators): add Soundhole Calculator (Helmholtz + P:A)
+- `78cb04c6` feat(calculators): add Soundhole Calculator (Helmholtz + P:A)
+- `345b4397` docs(acoustics): add soundhole calculator user guide (markdown)
+- `555d89a3` docs(acoustics): add soundhole calculator user guide (markdown)
+- `c28aad8a` fix(acoustics): fix Vue template compilation, Chart.js registration, P:A unit mismatch
+- `f0108683` fix(acoustics): fix Vue template compilation, Chart.js registration, P:A unit mismatch
+- `38ab0781` fix(acoustics): promote shape selector, fix P:A unit label, default to Hole tab
+- `5fa520cd` fix(acoustics): promote shape selector, fix P:A unit label, default to Hole tab
+- `4c80b259` feat(woodworking): add logarithmic concha spiral soundhole generator
+- `c7347167` feat(woodworking): add logarithmic concha spiral soundhole generator
+- `985e2ad7` feat(acoustics): integrate spiral soundhole into soundhole type system
+- `bc30fdac` feat(acoustics): integrate spiral soundhole into soundhole type system
+- `09f6414e` feat(acoustics): implement SoundholeType enum and spiral geometry
+- `75155b0d` feat(acoustics): implement SoundholeType enum and spiral geometry
+Files by surface:
+- docs: 1 paths
+  - A docs/calculators/acoustics/soundhole_calculator_user_guide.md
+- other: 17 paths
+  - A services/api/app/analyzer/viewer_pack_bridge.py
+  - A services/api/app/calculators/plate_design/brace_prescription.py
+  - A packages/client/src/components/toolbox/acoustics/SoundholeCalculator.vue
+  - A packages/client/src/views/calculators/acoustics/SoundholeCalculator.vue
+  - A services/api/app/woodworking/soundhole_spiral.py
+  - M services/api/app/routers/instrument_router.py
+  - M services/api/app/instrument_geometry/specs/fender_stratocaster.json
+  - M packages/client/src/components/toolbox/CalculatorHub.vue
+  - M packages/client/src/router/index.ts
+  - M packages/client/src/components/AppNav.vue
+  - M services/api/app/routers/woodworking_router.py
+  - M services/api/metrics/debt_history.json
+  - M services/api/app/calculators/soundhole_presets.py
+  - M services/api/app/calculators/soundhole_calc.py
+  - M services/api/app/calculators/soundhole_facade.py
+  - M services/api/app/routers/instrument_geometry/soundhole_router.py
+  - D packages/client/src/components/toolbox/acoustics/SoundholeCalculator.vue
+- tests: 4 paths
+  - A services/api/tests/test_viewer_pack_bridge.py
+  - A services/api/tests/test_soundhole_spiral.py
+  - A services/api/tests/test_soundhole_spiral_endpoint.py
+  - M services/api/tests/test_soundhole_presets.py
+Documents produced:
+- `docs/calculators/acoustics/soundhole_calculator_user_guide.md` — UNKNOWN
+Annotations:
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (7d4918f2)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c1cb5106)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (6529fc0e)
+- tag v2.4.0-alpha.1 (6529fc0e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b590989e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (3b273f69)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (52a1372a)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (381a6679)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (78cb04c6)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (345b4397)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (555d89a3)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (38ab0781)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (5fa520cd)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (4c80b259)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (c7347167)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (985e2ad7)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (bc30fdac)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (09f6414e)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (75155b0d)
+
+### S125 — 2026-03-31T10:30:36-05:00 → 2026-03-31T18:44:05-05:00 (18 commits, 8.22h)
+Branches: refs/pull/10/head, refs/tags/restored-baseline-anchor
+Commits:
+- `1a0a0d26` fix(smart-guitar): correct body outline scale in front DXF
+- `2b126427` fix(smart-guitar): correct body outline scale in front DXF
+- `a7129afe` refactor(acoustics): relocate spiral soundhole to instrument_geometry
+- `c10eeb50` refactor(acoustics): relocate spiral soundhole to instrument_geometry
+- `2331681b` refactor(woodworking): rename floating_bridge.py to wooden_floating_bridge.py
+- `2cba4316` refactor(woodworking): rename floating_bridge.py to wooden_floating_bridge.py
+- `76b95882` fix(bridge): restore ArchtopBridgeSpec from deleted archtop_bridge.py
+- `9f5afaef` fix(bridge): restore ArchtopBridgeSpec from deleted archtop_bridge.py
+- `1e99d1f0` feat(acoustics): add spiral soundhole designer route and hub card
+- `9b964504` feat(acoustics): add spiral soundhole designer route and hub card
+- `97262328` docs: add blocking DXF infrastructure requirement to CLAUDE.md
+- `a24848e8` docs: add blocking DXF infrastructure requirement to CLAUDE.md
+- `24a988f8` docs: archive Smart Guitar v5 front and back DXFs
+- `317b1355` docs: archive Smart Guitar v5 front and back DXFs
+- `b70dd2a5` fix(dxf): replace wrong-scale Smart Guitar DXFs with validated v5
+- `d8a344ad` fix(dxf): replace wrong-scale Smart Guitar DXFs with validated v5
+- `776166c9` feat(dxf): replace coarse 24-point Explorer with vectorized outline
+- `b0eb50d2` feat(dxf): replace coarse 24-point Explorer with vectorized outline
+Files by surface:
+- archive: 7 paths
+  - A docs/archive/instrument_references/smart_guitar/smart_guitar_front_v3.dxf
+  - A docs/archive/instrument_references/smart_guitar/smart_guitar_back_v5.dxf
+  - A docs/archive/instrument_references/smart_guitar/smart_guitar_front_v5.dxf
+  - M docs/archive/instrument_references/smart_guitar/‹token›/Smart-Guitar-v1_CAM.dxf
+  - M docs/archive/instrument_references/smart_guitar/‹token›/Smart-Guitar-v1_preliminary.dxf
+  - M docs/archive/instrument_references/smart_guitar/‹token›/smart_guitar_back_v1.dxf
+  - M docs/archive/instrument_references/smart_guitar/‹token›/smart_guitar_traced.dxf
+- docs: 4 paths
+  - A CLAUDE.md
+  - A CLAUDE (1).md
+  - A soundhole_calculator_user_guide.md
+  - A sprint_P4B_production_shop/sprint_p4b_bundle/INSTALL.md
+- other: 24 paths
+  - A services/api/app/instrument_geometry/soundhole/__init__.py
+  - A services/api/app/instrument_geometry/soundhole/spiral_geometry.py
+  - A services/api/app/instrument_geometry/bridge/archtop_bridge_spec.py
+  - A packages/client/src/components/toolbox/acoustics/SpiralSoundholeDesigner.vue
+  - A services/api/app/db/migrations/__pycache__/env.cpython-313.pyc
+  - A services/api/app/db/migrations/versions/__pycache__/0001_supabase_auth_tables.cpython-313.pyc
+  - A services/api/app/db/migrations/versions/__pycache__/42a488dcbc25_initial_schema_from_sqlite.cpython-313.pyc
+  - A sprint_P4B_production_shop/sprint_p4b_bundle/app/analyzer/viewer_pack_bridge.py
+  - A sprint_P4B_production_shop/sprint_p4b_bundle/app/calculators/plate_design/brace_prescription.py
+  - M services/api/app/routers/instrument_geometry/soundhole_router.py
+  - M services/api/app/routers/woodworking_router.py
+  - M services/api/app/woodworking/__init__.py
+  - M services/api/app/woodworking/wooden_floating_bridge.py
+  - M services/api/app/instrument_geometry/bridge/__init__.py
+  - M packages/client/src/components/toolbox/CalculatorHub.vue
+  - M packages/client/src/router/index.ts
+  - M services/api/app/instrument_geometry/bridge/archtop_floating_bridge.py
+  - M .claude/settings.local.json
+  - M services/api/app/instrument_geometry/body/dxf/electric/Smart-Guitar-v1_back.dxf
+  - M services/api/app/instrument_geometry/body/dxf/electric/Smart-Guitar-v1_front.dxf
+  - M services/api/data/art_presets.json
+  - M services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_body.dxf
+  - D services/api/app/woodworking/soundhole_spiral.py
+  - D services/api/app/instrument_geometry/bridge/archtop_bridge_spec.py
+- tests: 4 paths
+  - A sprint_P4B_production_shop/sprint_p4b_bundle/tests/test_viewer_pack_bridge.py
+  - M services/api/tests/test_soundhole_spiral.py
+  - M services/api/app/tests/test_woodworking_and_bandsaw.py
+  - M services/api/app/tests/test_archtop_floating_bridge.py
+Documents produced:
+- `docs/archive/instrument_references/smart_guitar/smart_guitar_front_v3.dxf` — UNKNOWN
+- `CLAUDE.md` — UNKNOWN
+- `docs/archive/instrument_references/smart_guitar/smart_guitar_back_v5.dxf` — 0
+- `docs/archive/instrument_references/smart_guitar/smart_guitar_front_v5.dxf` — 0
+- `CLAUDE (1).md` — # CLAUDE.md — Production Shop / luthiers-toolbox
+- `soundhole_calculator_user_guide.md` — PK
+- `sprint_P4B_production_shop/sprint_p4b_bundle/INSTALL.md` — # Sprint P4-B — Production Shop Inverse Engine Wiring
+Annotations:
+- Co-authored-by: ['Claude Opus 4.6 (1M context) <noreply@anthropic.com>'] (a7129afe)
+- Co-authored-by: ['Claude Opus 4.6 (1M context) <noreply@anthropic.com>'] (c10eeb50)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (1e99d1f0)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (9b964504)
+- Co-authored-by: ['Claude Opus 4.6 (1M context) <noreply@anthropic.com>'] (24a988f8)
+- Co-authored-by: ['Claude Opus 4.6 (1M context) <noreply@anthropic.com>'] (317b1355)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (776166c9)
+- Co-authored-by: ['Claude Opus 4.5 <noreply@anthropic.com>'] (b0eb50d2)
+
+## Anchor: 2026-03-06
+
+Source: `raw/anchor_march6.txt` (`git log --all --since=2026-03-04 --until=2026-03-09`).
+Unique SHAs in that raw capture: 334.
+
+### Commits 2026-03-04 → 2026-03-09 (from raw capture, unique SHA, author-date order)
+
+- `829033187a4eee87ac665fbd9973894629d65586` 2026-03-04T00:25:56-06:00 feat(marketing): rebuild features.html with 7 tabs
+- `02534b02cc4651eac6ce6e0ec5b72bb5eb365c75` 2026-03-04T00:25:56-06:00 feat(marketing): rebuild features.html with 7 tabs
+- `a8ac508a0c5e233baf1df56b8c3871cf7fcde9ee` 2026-03-04T00:28:06-06:00 fix(marketing): add real Calculator Hub to Calculators tab
+- `4d4ddee485113dbec4d1cda732740b9300545182` 2026-03-04T00:28:06-06:00 fix(marketing): add real Calculator Hub to Calculators tab
+- `73c420455be0f6b4c91118bb172edc919d9183dc` 2026-03-04T00:31:06-06:00 fix(marketing): add Basic, Unit Converter, and Woodwork calculators
+- `d13ecc9695d7a2ea449fa8bd78c01364911e8169` 2026-03-04T00:31:06-06:00 fix(marketing): add Basic, Unit Converter, and Woodwork calculators
+- `86e2bc0de19b9c97f27e53ebb9806bd45f2fc4f7` 2026-03-04T00:38:35-06:00 fix(marketing): reorganize features - move design tools, add Blueprint Lab
+- `dccda2a7e65bad58c189d5fd759afa2cf2818350` 2026-03-04T00:38:35-06:00 fix(marketing): reorganize features - move design tools, add Blueprint Lab
+- `1bf2c4d04306ca8a47ba7691ebf10553b82a65bb` 2026-03-04T00:47:16-06:00 fix(marketing): move Blueprint Reader to Design, remove Blueprint Lab card
+- `1758b191adc244d9714bf7470418484eb02514a1` 2026-03-04T00:47:16-06:00 fix(marketing): move Blueprint Reader to Design, remove Blueprint Lab card
+- `a77e5d6a5c5e88dcadb9e0ff00970abc2b9283a0` 2026-03-04T00:54:56-06:00 fix(marketing): move Design Tools to top of Design tab
+- `6e4fb23d9d063009ff63df0b5744d754e832404d` 2026-03-04T00:54:56-06:00 fix(marketing): move Design Tools to top of Design tab
+- `3f8f65a6e45c282cdaaa906579a6c7c9b90cbd65` 2026-03-04T01:27:57-06:00 feat: rename Visual Analyzer to AI Design Studio
+- `a65591b3bc68b4e1d3cc0731213735d5892275bc` 2026-03-04T01:27:57-06:00 feat: rename Visual Analyzer to AI Design Studio
+- `5f4b4de0c9833f8fc7dc5eeff37120dcc89bbc47` 2026-03-04T01:32:14-06:00 fix(marketing): move AI Design Studio to top of Design Tools
+- `4e1da08392b0dd9ad24a475b9f23e8c671a099dc` 2026-03-04T01:32:14-06:00 fix(marketing): move AI Design Studio to top of Design Tools
+- `2d63176d4afb75669fe0afce553f477b18e22367` 2026-03-04T01:46:26-06:00 fix(marketing): update instrument list to match codebase
+- `f1e8418882bd6313a15e14e52fb259784112578a` 2026-03-04T01:46:26-06:00 fix(marketing): update instrument list to match codebase
+- `30680bcc2adf9b3a3f5927b28ea2d8acebe0f46a` 2026-03-04T02:05:20-06:00 feat: add Jaguar, Jazzmaster, Mustang body outlines via AI extraction
+- `3cbbfe7a825ad359895746c6f3dc767f668fe981` 2026-03-04T02:05:20-06:00 feat: add Jaguar, Jazzmaster, Mustang body outlines via AI extraction
+- `1cf95546c35c0fc09eba3d09e8e3b55563d382f2` 2026-03-04T02:32:47-06:00 feat: add mandolin body outline with OTHER_INSTRUMENT_PROMPT
+- `de13f4254564230449dc97d0c7c5157ad8b6cc81` 2026-03-04T02:32:47-06:00 feat: add mandolin body outline with OTHER_INSTRUMENT_PROMPT
+- `ccca6efc1e158e724d3ce2f7fd3cf56264b01d70` 2026-03-04T02:39:26-06:00 feat(marketing): add F-Style Mandolin to instrument list
+- `2d8131daf455f10e47f88d38ab010c4480842108` 2026-03-04T02:39:26-06:00 feat(marketing): add F-Style Mandolin to instrument list
+- `f17f6c1c839ba0b75465722336082601752b6f82` 2026-03-04T02:46:23-06:00 feat(marketing): add missing acoustic guitars to instrument list
+- `ddcb36fdadae8affa70c3f66a124c06db38f39bf` 2026-03-04T02:46:23-06:00 feat(marketing): add missing acoustic guitars to instrument list
+- `df358703054a0f791aede40b1cc833a865228449` 2026-03-04T07:48:54-06:00 fix(marketing): update total instrument count to 32
+- `1b95835b9a58070b7edd649d70dc9a9314776787` 2026-03-04T07:48:54-06:00 fix(marketing): update total instrument count to 32
+- `c6606b48131d4b66c0aad1cc8c9bd6a7d9b0936f` 2026-03-04T07:50:33-06:00 fix(marketing): replace Parlor with Gibson J-200
+- `28aa92fa9d088b5fe4a34b3b9b2e16e2b8c614ea` 2026-03-04T07:50:33-06:00 fix(marketing): replace Parlor with Gibson J-200
+- `39d9ff61dd25d8301185b31ff98adb70a69265df` 2026-03-04T08:38:19-06:00 feat: expand AI Design Studio to all instruments + add Instruments tab
+- `213830f53ef29da566e780d4d8150234c86b356e` 2026-03-04T08:38:19-06:00 feat: expand AI Design Studio to all instruments + add Instruments tab
+- `5d578dc11edeec28a0ca9373ba64bc1207578d00` 2026-03-04T08:45:59-06:00 feat: add Carlos Jumbo acoustic guitar body
+- `303e2fab0cfd9d5800a71205e56f11fff536e9b2` 2026-03-04T08:45:59-06:00 feat: add Carlos Jumbo acoustic guitar body
+- `b0dd110f71eccdc23c21c45ab5dab3cb4fbb1d6d` 2026-03-04T09:29:29-06:00 fix: re-extract Jazzmaster DXF using ezdxf R12 LINE format
+- `15500ca80282b07b631bd75b9d428221d85ff22f` 2026-03-04T09:29:29-06:00 fix: re-extract Jazzmaster DXF using ezdxf R12 LINE format
+- `abeb5767f30e053bf428bbc9bb068824a0ac3ed2` 2026-03-04T12:12:01-06:00 feat(vectorizer): add guitar feature extraction with gap closing
+- `26f16a6758364b6893c4f16a38403f7e605b650d` 2026-03-04T12:12:01-06:00 feat(vectorizer): add guitar feature extraction with gap closing
+- `d66e2ed6e100da5698600bd143bffc69de308378` 2026-03-04T12:26:24-06:00 feat(vectorizer): add acoustic features and non-strict classification mode
+- `bb0b245464db6749d2da6b16a983f61b1e3578ec` 2026-03-04T12:26:24-06:00 feat(vectorizer): add acoustic features and non-strict classification mode
+- `e231fe35c021eb95369945f2b6b14f3eb2cb4198` 2026-03-04T12:59:49-06:00 Add auto-threshold detection to vectorizer
+- `e220b36d26bc1f8d0973c733ab6a8c39adec7266` 2026-03-04T12:59:49-06:00 Add auto-threshold detection to vectorizer
+- `09b0e009694478dbaa2923f44691782b4176f83d` 2026-03-04T13:18:29-06:00 Add auto-threshold test scripts
+- `4421eb4865346ef9ca4eee5ffb47d6a54d72bba9` 2026-03-04T13:18:29-06:00 Add auto-threshold test scripts
+- `65b3af05ada33dc8c3a0d690be3067874d2a39e0` 2026-03-04T14:21:02-06:00 Add blueprint dimension extraction with EasyOCR
+- `0f6e56e2a2e610d28140fb8e9a7499c176b3a471` 2026-03-04T14:21:02-06:00 Add blueprint dimension extraction with EasyOCR
+- `99d38ae2d2fa6924f83a6938e0ab63a8f72a6580` 2026-03-04T14:39:37-06:00 Filter false positives from dimension extraction
+- `af5b851fb8a6bcbebb61d59fc4efa79dc385323d` 2026-03-04T14:39:37-06:00 Filter false positives from dimension extraction
+- `370c04c587ebd3f6ef12c653ebef5eb5edc3abc4` 2026-03-04T22:03:30-06:00 feat(instruments): add Gibson Melody Maker and Cuatro to database
+- `145c9a6a7822545488cb216c132a7198f7a465d0` 2026-03-04T22:03:30-06:00 feat(instruments): add Gibson Melody Maker and Cuatro to database
+- `6ff61806bae5378b74a0506eca0c457712171649` 2026-03-04T22:25:37-06:00 feat(instruments): add detailed specs for Melody Maker and Cuatro
+- `fb20a214b769fd1488ac8b5937190b5ff61ee209` 2026-03-04T22:25:37-06:00 feat(instruments): add detailed specs for Melody Maker and Cuatro
+- `1ce272949f2fdb11eb79c8a02edefc2a7521ddbb` 2026-03-04T23:38:18-06:00 feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer
+- `66894d4924ab944b42c66497beae8dc0e29661d0` 2026-03-04T23:38:18-06:00 feat(blueprint): add OCR dimension extraction to Phase 3.5 vectorizer
+- `0cbd3079faa981efd1c176bba008bf2815b4f97e` 2026-03-04T23:47:30-06:00 chore: bump vectorizer version to 3.6.0
+- `6cb7610d1e7a8c8a9d21876e80d97f02da60e2a1` 2026-03-04T23:47:30-06:00 chore: bump vectorizer version to 3.6.0
+- `7445c30ceadd1c955e0dac449dab0832ed001457` 2026-03-05T00:47:41-06:00 feat(blueprint): add Phase 4.0 scaffold for leader line association
+- `08c20162423459520c41c698d804eb6412361939` 2026-03-05T00:47:41-06:00 feat(blueprint): add Phase 4.0 scaffold for leader line association
+- `1dc68d8d677b2e09a9c5444ef6c5e02849c026d0` 2026-03-05T01:12:02-06:00 docs(blueprint): add Vectorizer Upgrade Plan with rating history
+- `ff4b245bf624ba8170a19e651c6bdbbd99c4ad59` 2026-03-05T01:12:02-06:00 docs(blueprint): add Vectorizer Upgrade Plan with rating history
+- `fe917d37070fbdb58a60136afa317e174951078e` 2026-03-05T01:43:53-06:00 feat(blueprint): add Phase 4.0 Annotation Layer Architecture
+- `41896ed0fb744a77d3123f00f01064fda26ab3a7` 2026-03-05T01:43:53-06:00 feat(blueprint): add Phase 4.0 Annotation Layer Architecture
+- `0fa25019ce39b0f8929661e202965ef72dc5d5a8` 2026-03-05T01:58:59-06:00 docs(blueprint): update vectorizer rating to 7.5 after annotation architecture
+- `0f09c71963ce1bc41aa276ac87845f0a82732ef9` 2026-03-05T01:58:59-06:00 docs(blueprint): update vectorizer rating to 7.5 after annotation architecture
+- `5e3f2e4b4aa24939b4c4edcba8f800efdbb78b2d` 2026-03-05T02:11:48-06:00 feat(blueprint): implement ArrowDetector with full detection logic
+- `cfa27090f940323511606a798994f7793d63cfb9` 2026-03-05T02:11:48-06:00 feat(blueprint): implement ArrowDetector with full detection logic
+- `d052de8d0c7f47055131525774882ce66c83d559` 2026-03-05T02:19:25-06:00 feat(blueprint): implement LeaderLineAssociator ranking algorithm
+- `bbd8882dd8815c85f1125c70834da9466ed30b2c` 2026-03-05T02:19:25-06:00 feat(blueprint): implement LeaderLineAssociator ranking algorithm
+- `5a0518556497885e28afc891faf02a4407ff83b5` 2026-03-05T02:46:09-06:00 feat(blueprint): complete Phase 4.0 dimension linking pipeline
+- `cfa95a474f4adee19d21805e4c26573857bdf1b9` 2026-03-05T02:46:09-06:00 feat(blueprint): complete Phase 4.0 dimension linking pipeline
+- `69799e00e7695d9c06e7c3d620ee11946fe6aa53` 2026-03-05T02:47:45-06:00 docs(blueprint): update to 8.0 rating - Phase 4.0 complete
+- `717176a4913af7555bcad32ded516966949447c0` 2026-03-05T02:47:45-06:00 docs(blueprint): update to 8.0 rating - Phase 4.0 complete
+- `fc88ca6cdba6303216250d16db0ac3069da9c9e9` 2026-03-05T08:26:49-06:00 chore(blueprint): ignore generated ML model files
+- `ae94845f2003c6d01001b41c322fbff180c0b430` 2026-03-05T08:26:49-06:00 chore(blueprint): ignore generated ML model files
+- `0445bc4d6f710bc9263759bfa18161eed25a45b8` 2026-03-05T22:14:29-06:00 feat(calculators): add acoustic guitar body volume calculator
+- `4fdb56609d8eb51969de8ee178bc4a07f1f0ba85` 2026-03-05T22:14:29-06:00 feat(calculators): add acoustic guitar body volume calculator
+- `994c3453ad83eb62a5d34a28ae865457e3adecfc` 2026-03-06T01:45:47-06:00 feat(blueprint): add pixel calibration module + grid zone classifier
+- `811aee361ce22a3c9e66d99c9bad828c0eb484c9` 2026-03-06T01:45:47-06:00 feat(blueprint): add pixel calibration module + grid zone classifier
+- `b107ad3d493a4f8ab789754f9399b4757204a250` 2026-03-06T01:46:26-06:00 chore(blueprint): ignore test result JSON files
+- `ab3dff70ddb526ed1234a62566501d3a95413291` 2026-03-06T01:46:26-06:00 chore(blueprint): ignore test result JSON files
+- `f973d684d36c216693cede299805283e9163be5f` 2026-03-06T01:59:13-06:00 feat(smart-guitar): add v1 spec and preliminary DXF from mockup analysis
+- `8defa79b71562d22a003f00ed280b0ae456da00e` 2026-03-06T01:59:13-06:00 feat(smart-guitar): add v1 spec and preliminary DXF from mockup analysis
+- `a9074c95fd5a0a01c2106c3b12008f040e1101e9` 2026-03-06T02:13:39-06:00 docs: add origin story + rebrand to Production Shop
+- `a2e527bdaea7d06371881ce46f395ac7941f2b00` 2026-03-06T02:13:39-06:00 docs: add origin story + rebrand to Production Shop
+- `b229d09ebbcc35be72150e095569b5b124b3f4ec` 2026-03-06T02:32:38-06:00 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+- `55034f6bce5f6f158404919368240214ec10f90f` 2026-03-06T02:32:38-06:00 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer
+- `0b8bb4e17e8eb1a90ab6c6879eeab78378adf744` 2026-03-06T02:45:21-06:00 feat(blueprint): add CalibrationPanel for PPI-aware geometry vectorization
+- `9297014aba7f7e1ed8f94ddf373d67936a603c74` 2026-03-06T02:45:21-06:00 feat(blueprint): add CalibrationPanel for PPI-aware geometry vectorization
+- `7409c02041b8f0d206966fc57266653081c1f96b` 2026-03-06T03:11:02-06:00 fix(blueprint): resolve null vs undefined type mismatch in calibration handler
+- `0eac2723789b0014f260da0303d2d4b98bebd578` 2026-03-06T03:11:02-06:00 fix(blueprint): resolve null vs undefined type mismatch in calibration handler
+- `a9bd0a1eb23795e9c59fa6b3d57ae9c234eee715` 2026-03-06T03:19:01-06:00 fix(blueprint): sync VectorizationControls with backend parameters
+- `834c44be14eb60beb6698e9f13ec2ece9055f01c` 2026-03-06T03:19:01-06:00 fix(blueprint): sync VectorizationControls with backend parameters
+- `b41b3abd03fa5c84cc049063ec87e10908fcd599` 2026-03-06T09:04:55-06:00 fix(blueprint): handle large PDFs exceeding Claude 5MB image limit
+- `bc1f8c2af520ded8ff8c53116b9617805ea12765` 2026-03-06T09:04:55-06:00 fix(blueprint): handle large PDFs exceeding Claude 5MB image limit
+- `977e81a19e736cab50fccbac8b7217f9c97877f7` 2026-03-06T09:15:57-06:00 docs(blueprint): add March 6 session log to vectorizer plan
+- `bed5d0ecf3abba3a71859b265b17a7eb40e2b8bb` 2026-03-06T09:15:57-06:00 docs(blueprint): add March 6 session log to vectorizer plan
+- `775fa271244b5a0c9f84f4ace394ee5e5429b6f5` 2026-03-06T13:10:50-06:00 fix(rmos): fix double /rmos path + show actual server error message
+- `c7aff701ceeeb3fd8cb52c3ec8ed96a3e25fbc5c` 2026-03-06T13:10:50-06:00 fix(rmos): fix double /rmos path + show actual server error message
+- `a12f9a298aef46b169649b23d7b23814aa7c7e17` 2026-03-06T13:24:28-06:00 fix(rmos): fix double /rmos path in all RMOS components
+- `611d988303cc56d9fd8a856e5c347c9e0a7af0a9` 2026-03-06T13:24:28-06:00 fix(rmos): fix double /rmos path in all RMOS components
+- `dc623d69f7cf04112e4790a2e24323ea90040580` 2026-03-06T13:34:54-06:00 feat(rmos): streamlined QuickActionsPanel replaces multi-step workflow
+- `4eca5d9ad17ec6502164e93ede1a2560eeb5e602` 2026-03-06T13:34:54-06:00 feat(rmos): streamlined QuickActionsPanel replaces multi-step workflow
+- `20cd61b5668645b657768a6e334dd553e3a4856f` 2026-03-06T13:40:55-06:00 feat(rmos): simplify Manufacturing Candidates UI
+- `99852d28999e305d7eef96e3566d2df1693cc45e` 2026-03-06T13:40:55-06:00 feat(rmos): simplify Manufacturing Candidates UI
+- `b4b8859a192370eea6f5ef33ee6da2932698cbed` 2026-03-06T13:52:30-06:00 feat(rmos): ultra-simple Manufacturing Candidates UI
+- `f4e19aa21004b24b7eaf4c1373ca79b551f4083d` 2026-03-06T13:52:30-06:00 feat(rmos): ultra-simple Manufacturing Candidates UI
+- `25290aaa72a53010dd6b1189a13f9159324cb157` 2026-03-06T13:57:22-06:00 fix: correct component name ManufacturingCandidatesSimple in template
+- `2f744b9565752da843e2e7cfa7658bfacab8c977` 2026-03-06T13:57:22-06:00 fix: correct component name ManufacturingCandidatesSimple in template
+- `f52f089be1c9c76dc7835954f96a98a144147d62` 2026-03-06T14:15:48-06:00 fix(ui): add auth headers to ManufacturingCandidatesSimple SDK calls
+- `08fb5d07decd51a8dae2d21ef571c6fd989358d6` 2026-03-06T14:15:48-06:00 fix(ui): add auth headers to ManufacturingCandidatesSimple SDK calls
+- `8597821ee4ca67e327799c52eb968e7b7d451280` 2026-03-06T15:30:28-06:00 fix(ui): correct Authorization header syntax
+- `4e300f5ec22de9944d3b3505b175a422f4c71412` 2026-03-06T15:30:28-06:00 fix(ui): correct Authorization header syntax
+- `192083b5b06e00b73dd4ed9c7fd74d0ac5cc6e2f` 2026-03-06T15:42:04-06:00 fix(ui): disable metadata fetch to prevent 404 console noise
+- `f329eed36560505de7d3055780195745644e1ef1` 2026-03-06T15:42:04-06:00 fix(ui): disable metadata fetch to prevent 404 console noise
+- `b87b2bc05c9fc5a2d9ee76847b536407c7cf13c2` 2026-03-06T16:01:50-06:00 fix(ui): disable Promote/Reject when already done
+- `1acd73df926f311caee11f5ff4e77c07cb4f4e06` 2026-03-06T16:01:50-06:00 fix(ui): disable Promote/Reject when already done
+- `c5453e8a04eec1f8dfd716e46081430217fbc586` 2026-03-06T16:09:26-06:00 feat: AI Images, Blueprint Lab, and DXF parser enhancements
+- `d01b24a91c6fbc15f0418fb51151c44295c8d591` 2026-03-06T16:09:26-06:00 feat: AI Images, Blueprint Lab, and DXF parser enhancements
+- `9d75d69289b6ae8616abd91fea7b70829ba02f94` 2026-03-06T16:52:48-06:00 chore: exclude Cuatro DXF output directories from git
+- `b47fef7bd32dcccbd4326ff1fcdee2f762db2941` 2026-03-06T16:52:48-06:00 chore: exclude Cuatro DXF output directories from git
+- `5b5a3a389de97a5eb84fe8adfda85136350ce636` 2026-03-06T17:01:54-06:00 feat(vectorizer): add SIMPLE extraction mode for non-guitar instruments
+- `234afbd7774784c8fb98c469835f931970fe7386` 2026-03-06T17:01:54-06:00 feat(vectorizer): add SIMPLE extraction mode for non-guitar instruments
+- `4b44369326549a6fab08a351fc9b652aa0243b3d` 2026-03-06T18:25:39-06:00 feat(blueprint-lab): add extraction mode toggle (Smart/Simple)
+- `5f8a47d7d8d003907de83bf65a9fb15ed8c53d1d` 2026-03-06T18:25:39-06:00 feat(blueprint-lab): add extraction mode toggle (Smart/Simple)
+- `2fa4ce2605095fb2e760abc1fcfd79ffb2846955` 2026-03-06T19:36:19-06:00 feat(router): add /guitar-dimensions route for Blueprint Lab handoff
+- `b9411957ab095441468aa90465668d67d734b6d6` 2026-03-06T19:36:19-06:00 feat(router): add /guitar-dimensions route for Blueprint Lab handoff
+- `e5c491da63b6074b100d6f2b6dd2600a12db86e9` 2026-03-06T20:41:47-06:00 docs: add Phase 2/3 implementation plan for 3-tier SaaS
+- `289e1380aeebe644cb9d821aab23b1918df69136` 2026-03-06T20:41:47-06:00 docs: add Phase 2/3 implementation plan for 3-tier SaaS
+- `7a8ec55f60d9027e3839914d0901dec1b5db3688` 2026-03-06T21:25:53-06:00 feat(client): add 20 missing route views for feature parity
+- `192ca9ef5f14e535c7eed25540ad3fc242d4853e` 2026-03-06T21:25:53-06:00 feat(client): add 20 missing route views for feature parity
+- `67805a5d8bfebb75f87af5ddc5c6fe3c35c2d30d` 2026-03-06T21:38:55-06:00 feat(ui): add navigation links for all new routes in dashboard
+- `63996b01c3756b9c0003ea5845a676b1d14b2e55` 2026-03-06T21:38:55-06:00 feat(ui): add navigation links for all new routes in dashboard
+- `e5499c8c5334e21ece4f46bf79d182c8a0dc16b2` 2026-03-06T21:54:38-06:00 fix(ui): update dashboard stats to reflect actual counts
+- `b0be1ba9923bb2c7746de730b8384dca67021122` 2026-03-06T21:54:38-06:00 fix(ui): update dashboard stats to reflect actual counts
+- `6f9c4b7e52372d75e60d00d633c4ac824d210290` 2026-03-06T22:02:22-06:00 feat(ui): add Quick Access cards for new features
+- `db909cce3409f5d149b8111f13b2c88be3e3d978` 2026-03-06T22:02:22-06:00 feat(ui): add Quick Access cards for new features
+- `e08468c681a935381d4f4fbc5a2714c404cf351a` 2026-03-06T22:09:41-06:00 docs: add Toolpath Simulator developer handoff
+- `6eb38096d4c8b292ec04741dcd2e5cec3e172cc0` 2026-03-06T22:09:41-06:00 docs: add Toolpath Simulator developer handoff
+- `099023ab4ae8cfa0fbdb47cf29a230822bee2260` 2026-03-06T22:10:04-06:00 docs: add detailed Toolpath Animated Visualizer handoff
+- `29707b34890d28ea371bb4e81c49d67a67379573` 2026-03-06T22:10:04-06:00 docs: add detailed Toolpath Animated Visualizer handoff
+- `393c6825682bab16ff1195bd76234e98de84c096` 2026-03-06T22:29:40-06:00 fix(client): resolve TypeScript errors + add HelpTooltip component
+- `88272383cc7da93459f2433f4f679924a4d71732` 2026-03-06T22:29:40-06:00 fix(client): resolve TypeScript errors + add HelpTooltip component
+- `a4cce187f7e26e65f5413a24985da53fc32c97df` 2026-03-06T22:50:29-06:00 feat(rmos): implement real analytics endpoints (stub debt reduction)
+- `6408461d2dcf3030bb5c3c6ab39db31eddda9a81` 2026-03-06T22:50:29-06:00 feat(rmos): implement real analytics endpoints (stub debt reduction)
+- `a40c8f9676ca60ef8686ffb69d731275c8e69169` 2026-03-06T23:15:03-06:00 feat(cam): add feeds-speeds calculation endpoint
+- `09ee066e19f679528672ae0c9fa7aa9a47f35995` 2026-03-06T23:15:03-06:00 feat(cam): add feeds-speeds calculation endpoint
+- `c05deb599b1ed2ce463b042fb944ab271c48d9ba` 2026-03-06T23:30:32-06:00 feat(cam): register drilling router with G81/G83 modal cycles
+- `25c3f86fa59d6fefd0f6046c5fdfb0aa47bcf6e3` 2026-03-06T23:30:32-06:00 feat(cam): register drilling router with G81/G83 modal cycles
+- `983207d27cbdd44523f568184acda600c7f480be` 2026-03-06T23:55:41-06:00 feat(cam): remove what_if stub - real implementation exists
+- `eb0696ec73ddbe005499b30075da9cc4c0b466e6` 2026-03-06T23:55:41-06:00 feat(cam): remove what_if stub - real implementation exists
+- `26b0a51ff90b7b9645ac39fd74b958a2d80af4da` 2026-03-07T01:17:36-06:00 feat(cam): wire adaptive2 stubs to real benchmark_router
+- `36e3812759079257fcc032063e9f4d006ad80d7a` 2026-03-07T01:17:36-06:00 feat(cam): wire adaptive2 stubs to real benchmark_router
+- `dd5b560a68ab6eba5eabda47afdbc06022311c48` 2026-03-07T01:30:25-06:00 feat(cam): wire probe setup sheet stub to real setup_router
+- `5d557a38c90d34971d12f73d5b7f2f076074ed1d` 2026-03-07T01:30:25-06:00 feat(cam): wire probe setup sheet stub to real setup_router
+- `9dc90bed557f8b90e1a10f13b3637186c40cad9a` 2026-03-07T01:49:55-06:00 feat(cam): wire /cam/posts stub to real posts_consolidated_router
+- `ae9635dd23700e9b271824687f10e90d6eb3387e` 2026-03-07T01:49:55-06:00 feat(cam): wire /cam/posts stub to real posts_consolidated_router
+- `2d92e1ff3a359d43a0c0489d67a128bdb271ca32` 2026-03-07T02:17:40-06:00 feat(cam): wire /cam/logs/write stub to real logs_router
+- `740238b23b4b4bbaf268d1bcba1b74699695844d` 2026-03-07T02:17:40-06:00 feat(cam): wire /cam/logs/write stub to real logs_router
+- `92e33ebc394202ef6b9f43d30ab6f29b8395e55b` 2026-03-07T08:41:01-06:00 feat(cam): wire job-int stubs to real job_int_log service
+- `d044f5f77bccb8aee0be6eeff99a319acd7390bf` 2026-03-07T08:41:01-06:00 feat(cam): wire job-int stubs to real job_int_log service
+- `b6ffc32ad26e4949e0b5f47be97a9471301d92e1` 2026-03-07T09:10:54-06:00 feat(cam): wire /fret_slots/preview stub to real calculator (7 tests)
+- `a309939ca57eb26182b32576879cd86a266b9471` 2026-03-07T09:10:54-06:00 feat(cam): wire /fret_slots/preview stub to real calculator (7 tests)
+- `96ebce6896ac880d24d77ae9d4e9e5ee9c7cf993` 2026-03-07T09:45:34-06:00 docs: add Progress Log to Phase 2/3 plan + mark completed items
+- `3acd24526117d52a7d06dae2e6005156e891324a` 2026-03-07T09:45:34-06:00 docs: add Progress Log to Phase 2/3 plan + mark completed items
+- `2eb1438f573ef800949d4c505d110a0ebccdfd12` 2026-03-07T10:05:46-06:00 feat(cam): wire /risk/reports_index stub to cam_risk_router (5 tests)
+- `a7f73118f47d6dc7d0b5979cb62bda9526a2103a` 2026-03-07T10:05:46-06:00 feat(cam): wire /risk/reports_index stub to cam_risk_router (5 tests)
+- `567f65facf3bd60f0ce8501d2a3d8d1246ddab57` 2026-03-07T10:10:38-06:00 refactor(rmos): remove redundant analytics stubs (real impl exists)
+- `8eaea53f62ab7067af4ab80d460a2ada8cbcb961` 2026-03-07T10:10:38-06:00 refactor(rmos): remove redundant analytics stubs (real impl exists)
+- `c6aa5ed50d7018fac72de4a400d5bb172b9b60aa` 2026-03-07T10:27:16-06:00 feat(rmos): wire /rosette/cnc-history and /rosette/cnc-job stubs to art_jobs_store (5 tests)
+- `da61935fc9bf26844c275137d7df628166a71ff5` 2026-03-07T10:27:16-06:00 feat(rmos): wire /rosette/cnc-history and /rosette/cnc-job stubs to art_jobs_store (5 tests)
+- `5eb8d7c2270c70f9ddd7e8ef4449cf3ebca4f6d4` 2026-03-07T10:31:05-06:00 feat(rmos): wire /rosette/segment-ring, /generate-slices, /preview stubs to real engines (10 tests)
+- `ad2e81263c8cf64f0779e3d6258cdbcca50a8428` 2026-03-07T10:31:05-06:00 feat(rmos): wire /rosette/segment-ring, /generate-slices, /preview stubs to real engines (10 tests)
+- `51100285b07927fd4f503eec9106859218155474` 2026-03-07T10:57:44-06:00 refactor(stubs): remove redundant blueprint stubs (real impl in app.routers.blueprint)
+- `99ed3cb7aadf4f80f6eee97164820b98bef5a459` 2026-03-07T10:57:44-06:00 refactor(stubs): remove redundant blueprint stubs (real impl in app.routers.blueprint)
+- `da6b23aa73cba8fea73f3caef0ee0629cfc542e3` 2026-03-07T11:11:51-06:00 feat(rmos): wire /safety/evaluate and /safety/mode stubs to real RMOS engine (9 tests)
+- `20365b85883c8773167c0cff1ee654d59528fc63` 2026-03-07T11:11:51-06:00 feat(rmos): wire /safety/evaluate and /safety/mode stubs to real RMOS engine (9 tests)
+- `2a3b09f69fcf950cb8f21a6d92c68e5cba878c3c` 2026-03-07T11:19:20-06:00 feat(stubs): wire /ai/advisories/request to rmos.ai_advisory service
+- `7f9de088efb66691081cbf22db8bd50e99ebbeef` 2026-03-07T11:19:20-06:00 feat(stubs): wire /ai/advisories/request to rmos.ai_advisory service
+- `fae9e11463ffb5088e719441939c27d072a98193` 2026-03-07T11:22:51-06:00 refactor(stubs): remove vestigial rosette compare snapshot GET stub
+- `ad7dff9a7e3f511226cd09bc401d3bcaa9fbea01` 2026-03-07T11:22:51-06:00 refactor(stubs): remove vestigial rosette compare snapshot GET stub
+- `146e260fa2a66afea4fba1ec2c68c7afcc01eae7` 2026-03-07T11:27:27-06:00 feat(rmos): implement functional override token generator
+- `7ecb18dff28705f82ee3956abfb75558e43954a3` 2026-03-07T11:27:27-06:00 feat(rmos): implement functional override token generator
+- `19095e04fba40ed6b407667e8a66c93a09372990` 2026-03-07T11:56:35-06:00 feat(stubs): wire acoustics /import-zip and /rebuild_attachment_meta to real implementations
+- `a90b75024fa1db60738b770c5df702259caaf673` 2026-03-07T11:56:35-06:00 feat(stubs): wire acoustics /import-zip and /rebuild_attachment_meta to real implementations
+- `d8258881d66aee704b56f94ea7121ab3356b3710` 2026-03-07T12:36:44-06:00 feat(stubs): wire /rosette/export-cnc to real CNC wiring (N16.3)
+- `ff39868e7fc4623a6fca54e33e8505b2af6918e0` 2026-03-07T12:36:44-06:00 feat(stubs): wire /rosette/export-cnc to real CNC wiring (N16.3)
+- `8d269bcb9b3e75490ada04aeace73776b50fa08c` 2026-03-07T14:46:13-06:00 feat(cam): wire /bridge/export_dxf stub to real DXF generator
+- `86dbab2e417a27db231518f4ae9fc2895178f0fe` 2026-03-07T14:46:13-06:00 feat(cam): wire /bridge/export_dxf stub to real DXF generator
+- `4cc640e47255650858c03f8d81df70a87980b11f` 2026-03-07T15:39:34-06:00 feat(rmos): wire /wrap/mvp/dxf-to-grbl to real DXF->G-code pipeline
+- `4e5ff710ba0b60643d2e1da5cd26b2f7a357664c` 2026-03-07T15:39:34-06:00 feat(rmos): wire /wrap/mvp/dxf-to-grbl to real DXF->G-code pipeline
+- `45ab08df4b37314893caedc80ee49fbb585ca886` 2026-03-07T16:02:11-06:00 feat(cam): wire /job_log/insights/* to real job_int_log analysis
+- `8875bc94d30fe78234b32190556d379a1e647437` 2026-03-07T16:02:11-06:00 feat(cam): wire /job_log/insights/* to real job_int_log analysis
+- `73645d05085001218352fcc061debeb7704beabc` 2026-03-07T16:17:22-06:00 feat(rmos): wire /live-monitor/{job_id}/drilldown to runs_v2 store
+- `40dbc3837d9e82802b5cca265d68acacacb5c2f9` 2026-03-07T16:17:22-06:00 feat(rmos): wire /live-monitor/{job_id}/drilldown to runs_v2 store
+- `ab112f0d144cc2efe062fceb19cd167f8424ccdb` 2026-03-07T16:50:02-06:00 feat(cam): wire risk reports to persistent JSONL storage
+- `1344d64faaac59cfaa8285a0ee10733e50db1957` 2026-03-07T16:50:02-06:00 feat(cam): wire risk reports to persistent JSONL storage
+- `f888d22d75e673daa7efb178f89080348b8de693` 2026-03-07T17:25:42-06:00 feat(cam): wire machines_router.py to machine_profiles.json
+- `509f23ca8cd0e78565bfb87407c23ff4cde7a0d3` 2026-03-07T17:25:42-06:00 feat(cam): wire machines_router.py to machine_profiles.json
+- `a852bd63eb1e41c81891cd54cb89bfefb31b9eb2` 2026-03-07T18:14:51-06:00 fix(art): wire art_presets_router.py to persistent art_presets_store.py
+- `7103e34ad945760ef60538f4bd2dcca346043c07` 2026-03-07T18:14:51-06:00 fix(art): wire art_presets_router.py to persistent art_presets_store.py
+- `f20ef825b48605d5be6dd1b83428b2f8800ed20e` 2026-03-07T18:42:17-06:00 test(tooling): add 31 smoke tests for tooling endpoints
+- `12efcb65489305eba7f1c56e53a4430289026237` 2026-03-07T18:42:17-06:00 test(tooling): add 31 smoke tests for tooling endpoints
+- `cd3cbf47cb839566e730966217ba3205e98075cb` 2026-03-07T19:09:18-06:00 feat(api): register music/temperament router + add 39 smoke tests
+- `b8464af47ceeb6f1790310797731a2b76e243780` 2026-03-07T19:09:18-06:00 feat(api): register music/temperament router + add 39 smoke tests
+- `c6c6c9af42fdabb089aa60da0402bf7c05b490d3` 2026-03-07T19:17:34-06:00 feat(api): register material_router + add 20 smoke tests
+- `cfee511adbe971d218ed181bc8e0303ca8bde900` 2026-03-07T19:17:34-06:00 feat(api): register material_router + add 20 smoke tests
+- `1d749aff96129b4c64e1a1871b2b89a149bde17e` 2026-03-07T19:40:23-06:00 test(art-studio): add 35 smoke tests for bracing endpoints
+- `7598afb06b663caacede0687478d3f089c478083` 2026-03-07T19:40:23-06:00 test(art-studio): add 35 smoke tests for bracing endpoints
+- `17f5b2450117842e6637ae7e157af6cd2201416d` 2026-03-07T19:44:18-06:00 test(art-studio): add 39 smoke tests for inlay endpoints
+- `cd84f2433321f3dd98ac5c6daa333eb79dccd794` 2026-03-07T19:44:18-06:00 test(art-studio): add 39 smoke tests for inlay endpoints
+- `5202c2bbc1e1a7564f88ffc421a40c4c5db5353d` 2026-03-07T19:50:15-06:00 test(art-studio): add 22 smoke tests for relief/vcarve preview endpoints
+- `e7b42d32e2be8edd151befb783c53c1d9464628e` 2026-03-07T19:50:15-06:00 test(art-studio): add 22 smoke tests for relief/vcarve preview endpoints
+- `548b6f3e32771025f6ef0d97c2ad047425d57794` 2026-03-07T20:32:10-06:00 test(instrument): add 38 smoke tests for geometry + bridge presets
+- `500876672fac17694e6b8582a9caab71c779c209` 2026-03-07T20:32:10-06:00 test(instrument): add 38 smoke tests for geometry + bridge presets
+- `4933168dce46a016ca6f2fbc6a49193331c6155c` 2026-03-07T20:36:57-06:00 test(neck): add neck generator endpoint smoke tests
+- `0e0bbce52055c95474dcad530086509cebc5f2a6` 2026-03-07T20:36:57-06:00 test(neck): add neck generator endpoint smoke tests
+- `1d30f47ebe2996c20382aa4dafcb853916ccad15` 2026-03-07T20:50:22-06:00 test(registry): add data registry endpoint smoke tests
+- `8199abb9a6e757a9f960bc8c1f8aee38536c1f75` 2026-03-07T20:50:22-06:00 test(registry): add data registry endpoint smoke tests
+- `7202a4746d5bb665c897d668c3d459105c6a805a` 2026-03-07T21:11:02-06:00 test(api): add CAM polygon offset endpoint smoke tests (36 tests)
+- `b24a7e79fe15e23e52a71ac63edfd09a6fa37ea5` 2026-03-07T21:11:02-06:00 test(api): add CAM polygon offset endpoint smoke tests (36 tests)
+- `92023020844fe44f0944ae15a420ea16e52bd65a` 2026-03-07T22:04:24-06:00 test(api): add DXF preflight endpoint smoke tests (45 tests)
+- `b26195281aba887e3f5c1208ab427db306fddff8` 2026-03-07T22:04:24-06:00 test(api): add DXF preflight endpoint smoke tests (45 tests)
+- `598012b29b02e1816543726a8a6510e17a617446` 2026-03-07T22:26:14-06:00 chore: recover 88 files (18,927 lines) from decomposition cleanup
+- `e7854fad7f30bc8835ca6f05affba75aa7076307` 2026-03-07T22:26:14-06:00 chore: recover 88 files (18,927 lines) from decomposition cleanup
+- `189f8d7929fe0d5820aebb942f84a0a1a212c8f4` 2026-03-07T22:48:21-06:00 test(cam): add G-code backplot endpoint smoke tests (36 tests)
+- `a19dd75a456183a60e4031c870df6c7226c97053` 2026-03-07T22:48:21-06:00 test(cam): add G-code backplot endpoint smoke tests (36 tests)
+- `812580dbb4f0dc4de4359f04c681020fe7ec1508` 2026-03-07T23:07:08-06:00 test(cam): add adaptive preview endpoint smoke tests (35 tests)
+- `4cb8a3a05e36117dcce3b9665c8abbc4d40a6a17` 2026-03-07T23:07:08-06:00 test(cam): add adaptive preview endpoint smoke tests (35 tests)
+- `f6e17108a7db12d46d10ff367558f1863c04a8df` 2026-03-07T23:09:38-06:00 test(cam): add bridge presets endpoint smoke tests (37 tests)
+- `d750c6dfece5c60dd138877cd1d574cbf3e42375` 2026-03-07T23:09:38-06:00 test(cam): add bridge presets endpoint smoke tests (37 tests)
+- `bbf8cf17caf85e2fddd89eced5434a3c752116c5` 2026-03-07T23:18:06-06:00 test(api): add 41 posts endpoint smoke tests
+- `6850eb6303124a8e545466c0795b97c7006218e1` 2026-03-07T23:18:06-06:00 test(api): add 41 posts endpoint smoke tests
+- `7f25ee39572d1b204ddcb2ff628895119ff0a06e` 2026-03-07T23:36:22-06:00 test(api): add 79 retract endpoint smoke tests + fix download bug
+- `1f0f1671cff1bc446242ea2352b896ebbdd615db` 2026-03-07T23:36:22-06:00 test(api): add 79 retract endpoint smoke tests + fix download bug
+- `c16a13a3421756875e8d38b1f601c8884e9e2508` 2026-03-07T23:53:36-06:00 test(api): add 17 strip family endpoint smoke tests
+- `7835e4c07070c18ab8c535ca24e68caf58fe6a68` 2026-03-07T23:53:36-06:00 test(api): add 17 strip family endpoint smoke tests
+- `1de68064f0ccfd108d87c42bde95acc716f63433` 2026-03-07T23:59:12-06:00 test(api): add CAM learn endpoint smoke tests (18 tests)
+- `f7ce3c80c7ea0ca8b3d594d997ad995c859a10eb` 2026-03-07T23:59:12-06:00 test(api): add CAM learn endpoint smoke tests (18 tests)
+- `5e304cabe6f63b18ec21a78818cec3d43fd71acd` 2026-03-08T00:08:59-06:00 test(api): add advanced analytics endpoint smoke tests (24 tests)
+- `dea2f2fb65201a983214563a829e96cda008a94c` 2026-03-08T00:08:59-06:00 test(api): add advanced analytics endpoint smoke tests (24 tests)
+- `9a154b57cb9584fa3a9ec9f03933f161dc4e5031` 2026-03-08T00:10:37-06:00 test(api): add analytics endpoint smoke tests (50 tests)
+- `641dab56fb61f0db4c019a997b13be56cb70e30d` 2026-03-08T00:10:37-06:00 test(api): add analytics endpoint smoke tests (50 tests)
+- `5933c1277f904df4940d1432ebeb7d41c4021381` 2026-03-08T00:18:21-06:00 test(api): add instrument geometry endpoint smoke tests (36 tests)
+- `d8643c3af1219788f380806008af0ba2dc2fb1ae` 2026-03-08T00:18:21-06:00 test(api): add instrument geometry endpoint smoke tests (36 tests)
+- `c6da1ced5f3b87eaee68a3fc4e5167be33e2e233` 2026-03-08T00:37:01-06:00 test(api): add DXF plan endpoint smoke tests (24 tests)
+- `2bea963c9a32796afefce4331a5b066e57296fc8` 2026-03-08T00:37:01-06:00 test(api): add DXF plan endpoint smoke tests (24 tests)
+- `435e000f69ee785f32b7868d17815cf3275b4461` 2026-03-08T00:46:46-06:00 test(api): add blueprint endpoint smoke tests (34 tests)
+- `62a6c280535e3e4dde56d5d474ac33edec7ff138` 2026-03-08T00:46:46-06:00 test(api): add blueprint endpoint smoke tests (34 tests)
+- `2d0b574b0668fefacc08da8c51be0410d2fdcfa6` 2026-03-08T01:37:02-06:00 test(api): add simulation consolidated router smoke tests (36 tests)
+- `f5b40807bc9e548d046f0a6d1e8e84289c1d3555` 2026-03-08T01:37:02-06:00 test(api): add simulation consolidated router smoke tests (36 tests)
+- `890bcfbd635ee51ed1ca86d61fc0e5192ee15c7c` 2026-03-08T01:43:02-06:00 test(api): add business router smoke tests (58 tests)
+- `a2d08a6a7395e84647813bd4441a22ccd5e75161` 2026-03-08T01:43:02-06:00 test(api): add business router smoke tests (58 tests)
+- `a6d380c1e77bd22cd37e50255c4be57ba919a1f7` 2026-03-08T06:59:11-05:00 test(api): add workflow sessions endpoint smoke tests (42 tests)
+- `18ef8a6e63512b60983e417b87a99fd01995e2c2` 2026-03-08T06:59:11-05:00 test(api): add workflow sessions endpoint smoke tests (42 tests)
+- `6698bad509b130d7cdf7b42cb43020aefa52ac00` 2026-03-08T08:12:14-05:00 test(saw-lab): add comprehensive smoke tests for all saw_lab routers (82 tests)
+- `9946de1b51cdda6305a8f868866d678c1a29d14c` 2026-03-08T08:12:14-05:00 test(saw-lab): add comprehensive smoke tests for all saw_lab routers (82 tests)
+- `73a7415cc2c1beb667eb7cff22fd9109cebb0103` 2026-03-08T11:29:17-05:00 test(rmos): add smoke tests for RMOS endpoints (78 tests)
+- `70110851bd53a41426fd2b2ee73bd75b3545959c` 2026-03-08T11:29:17-05:00 test(rmos): add smoke tests for RMOS endpoints (78 tests)
+- `c5092470b61801c4ae62fbd7304c44fce71b35fb` 2026-03-08T12:05:35-05:00 test(art-studio): add 61 endpoint smoke tests
+- `dc939a41d83611cfe602b93c32c76f452f5e82cd` 2026-03-08T12:05:35-05:00 test(art-studio): add 61 endpoint smoke tests
+- `d4a298e87f7d0eb95c5d60e6c8055ad938bbaea6` 2026-03-08T12:34:22-05:00 feat(specs): add instrument spec JSONs for 10 models + update registry to 24 models
+- `5514718039d2371d38772a1ebdf3fa4593979004` 2026-03-08T12:34:22-05:00 feat(specs): add instrument spec JSONs for 10 models + update registry to 24 models
+- `8102d7efc7fc02720623c254adaa4271df263dd8` 2026-03-08T12:34:45-05:00 feat(dxf): add body outline DXFs for 16 instruments
+- `b249668b092e9e58f9b5e54ec650a20020d3f669` 2026-03-08T12:34:45-05:00 feat(dxf): add body outline DXFs for 16 instruments
+- `100c958a127b9ec7690e8502c1bec136d15d041a` 2026-03-08T12:36:06-05:00 fix(vectorizer): add 5 INSTRUMENT_SPECS, fix ContourInfo comparison bug
+- `1e12c33c4f31dfe1fee543321b71518dce4a88d0` 2026-03-08T12:36:06-05:00 fix(vectorizer): add 5 INSTRUMENT_SPECS, fix ContourInfo comparison bug
+- `53a4ea386f2d474dffe61924da9af205a84392a4` 2026-03-08T12:36:28-05:00 feat(scripts): add CNC build generators and J-45 extraction scripts
+- `61e6c0757d19dda4dcb76ffce8e9fe58dd4d5cd5` 2026-03-08T12:36:28-05:00 feat(scripts): add CNC build generators and J-45 extraction scripts
+- `2d0980c7b4d491038988a35fef6a38871038f3a7` 2026-03-08T12:41:14-05:00 docs(handoffs): add 11 CNC build handoff documents
+- `5c25ba345a4ecbd996c3cd1722a95262ade0d7c2` 2026-03-08T12:41:14-05:00 docs(handoffs): add 11 CNC build handoff documents
+- `dd96cad514ca78193549f42dd40eedcadbed7102` 2026-03-08T12:42:25-05:00 feat(services): add CAM modules, governance, services, and utilities
+- `b9945ea26072f74a9cd1fd6e3467516154da8b1c` 2026-03-08T12:42:25-05:00 feat(services): add CAM modules, governance, services, and utilities
+- `e8aaa9725aac871134832827ce6a7b03b0e1c783` 2026-03-08T12:43:16-05:00 chore: update 19 modified files across services, routers, and geometry
+- `19b906e089c07f46ece8a4c81957afc1f7ee9838` 2026-03-08T12:43:16-05:00 chore: update 19 modified files across services, routers, and geometry
+- `699fb4849575c4dd69443587482392cb9252cb3f` 2026-03-08T12:44:24-05:00 chore: update workspace config, architecture scan, toolpath visualizer plan
+- `3c74c84c99ac3be3e02c98a918c5059d90ef93a7` 2026-03-08T12:44:24-05:00 chore: update workspace config, architecture scan, toolpath visualizer plan
+- `05edea23a699eace61af128cdd65b28d175cff17` 2026-03-08T12:51:10-05:00 test(cam): add 58 endpoint smoke tests for CAM routers
+- `17e469878bde09dd4c02ae175b46f1453b7609c0` 2026-03-08T12:51:10-05:00 test(cam): add 58 endpoint smoke tests for CAM routers
+- `01492897c7528f5e8d312ac26ee8c9ab3ffdd434` 2026-03-08T12:55:57-05:00 feat(specs): add Jumbo Archtop — Carlos body scale + Benedetto construction
+- `bc990bf6e60c818ff08500e79fa13e62164da422` 2026-03-08T12:55:57-05:00 feat(specs): add Jumbo Archtop — Carlos body scale + Benedetto construction
+- `9f430bf4bef98175c67a8135995ac67ce4153608` 2026-03-08T13:15:05-05:00 test: add remaining routers smoke tests (75 tests)
+- `48289540fa2bd500c6b6eac0772d62f1dd0d21c2` 2026-03-08T13:15:05-05:00 test: add remaining routers smoke tests (75 tests)
+- `1a1f17689ae1c0597da39dcc0fb44d2c0d33c08d` 2026-03-08T13:45:45-05:00 fix(services): restore missing risk_reports_store compatibility functions
+- `2730377418e35e1759d815f686cdc9a8c0ca1f58` 2026-03-08T13:45:45-05:00 fix(services): restore missing risk_reports_store compatibility functions
+- `f1380d24b8c439ca840a1d0906af8551816f52ec` 2026-03-08T14:21:31-05:00 fix(tests): align fan fret tests with FretSlotsPreviewRequest schema
+- `882dc5fb37dc4a31f38870cf6116e5b52d3318c2` 2026-03-08T14:21:31-05:00 fix(tests): align fan fret tests with FretSlotsPreviewRequest schema
+- `f8c64b0246713de750df08a5025e9bbb02972f5a` 2026-03-08T15:02:52-05:00 fix(ci): resolve 4 CI workflow failures
+- `a85a75f3a3036d5f27dc6109f9ae69f1547def92` 2026-03-08T15:02:52-05:00 fix(ci): resolve 4 CI workflow failures
+- `363c09c83f38b0e3c6d1a48ea1ff3f1631646a47` 2026-03-08T15:20:40-05:00 fix(docker): create runs subdirectory + set RMOS_RUNS_DIR in CI
+- `9edaf1002cbc13e38ada4b4ca37f9084a82e67d9` 2026-03-08T15:20:40-05:00 fix(docker): create runs subdirectory + set RMOS_RUNS_DIR in CI
+- `7fad56008352c8a1a6264046a1ca07c0ff087626` 2026-03-08T15:24:24-05:00 fix(ci): regenerate complexity baseline (140 → 146 violations)
+- `9c32fade3f0508ef5fbbeccbc94b94fcd81a7eb4` 2026-03-08T15:24:24-05:00 fix(ci): regenerate complexity baseline (140 → 146 violations)
+- `d3f94a158942bccf9869fb0044457cbfef0ca7a7` 2026-03-08T15:28:28-05:00 fix(ci): correct fence baseline line numbers (98→97, 125→124)
+- `53956dcacee5905b92af8b02d6b637a08a069bc6` 2026-03-08T15:28:28-05:00 fix(ci): correct fence baseline line numbers (98→97, 125→124)
+- `4a1ffa39f073e4d3e795ba49ece755efefdbf7a1` 2026-03-08T15:32:12-05:00 fix(ci): regenerate file sizes baseline (23 violations)
+- `ed290e25ce2bee3e5b858149aec6932952c6003e` 2026-03-08T15:32:12-05:00 fix(ci): regenerate file sizes baseline (23 violations)
+- `d5fe43dab590450dcdfa196793b11a9cfd13f2a9` 2026-03-08T15:41:19-05:00 fix(store): handle missing rosette_compare_risk table gracefully
+- `89d5728abfbe8ee3a6ff6e79f81114901a3861f2` 2026-03-08T15:41:19-05:00 fix(store): handle missing rosette_compare_risk table gracefully
+- `322faf2171c6a81dc9afa89251a64c2d72a3b20e` 2026-03-08T15:47:10-05:00 ci: update file size baseline with 9 new/updated entries
+- `056e97fcff2877e61bc886073ca8bf39a8e04f9c` 2026-03-08T15:47:10-05:00 ci: update file size baseline with 9 new/updated entries
+- `c4435532d5b789a7ecb007b44c20bd1f7d9d8615` 2026-03-08T15:49:33-05:00 fix(ci): fix container smoke tests
+- `5e5c32db52523e9773c9b667d6ca7b197d682d7f` 2026-03-08T15:49:33-05:00 fix(ci): fix container smoke tests
+- `ca99bb632e18075639176765fca7064f52c787be` 2026-03-08T16:29:23-05:00 feat(restore): Wave 27.2 decomposition recovery - 12 files restored
+- `3ec0b1cb7285c1d3370e1dd019a0a6c384c8f534` 2026-03-08T16:29:23-05:00 feat(restore): Wave 27.2 decomposition recovery - 12 files restored
+- `e6cb3606cf2a8071a47336fcb4ed76e248882e7c` 2026-03-08T16:32:55-05:00 ci: update file size baseline for Wave 27.2 restoration
+- `7eeee901d27f4c566712acaf5e7de35fde1c3728` 2026-03-08T16:32:55-05:00 ci: update file size baseline for Wave 27.2 restoration
+- `d0183c2640b67ae9875370d883eedb675c303a7b` 2026-03-08T16:35:10-05:00 ci: update complexity baseline for Wave 27.2 restored files
+- `a8e618f269cac9a0a80c9776f6f83e7a3a4a09bf` 2026-03-08T16:35:10-05:00 ci: update complexity baseline for Wave 27.2 restored files
+- `fa98eec906adc92a241279792c829a11fb4b6093` 2026-03-08T16:36:52-05:00 ci: update file sizes baseline in Technical Debt Gates
+- `1f75b84a3cce8cf60aee141c703e07496cb6e591` 2026-03-08T16:36:52-05:00 ci: update file sizes baseline in Technical Debt Gates
+- `53096f89309c69ef3e739cb8a8783a970eb833e5` 2026-03-08T16:45:09-05:00 ci: update endpoint baseline for Wave 27.2 restoration
+- `623af5a513cff963b8ddbda39d54400667581673` 2026-03-08T16:45:09-05:00 ci: update endpoint baseline for Wave 27.2 restoration
+- `0fd3ca1b376ae2cd440e84cbb814b7e25aa4a867` 2026-03-08T17:29:59-05:00 feat(ui): wire ArchtopCalculator to /api/cam/guitar/archtop/fit endpoint
+- `b573a138b59ddd8f82d2e4fad827b40ddbe6e46d` 2026-03-08T17:29:59-05:00 feat(ui): wire ArchtopCalculator to /api/cam/guitar/archtop/fit endpoint
+- `ca219aaf929a233b45abecba2da8f8ace7e28336` 2026-03-08T20:40:39-05:00 wood-db: add Honey Mesquite + luthier tonewood reference + vectorizer pickguard-sheet detection
+- `faeead9c67dd8d6b4c32db5f97cc01723df84311` 2026-03-08T20:40:39-05:00 wood-db: add Honey Mesquite + luthier tonewood reference + vectorizer pickguard-sheet detection
+- `d4c9ae781ccd3e723c0f10f019acec3c24965339` 2026-03-08T21:32:05-05:00 fix(client): update Vite proxy to use port 8010
+- `7e6e6b3b681f3ef4dbba1bb16ada89ac2e457bec` 2026-03-08T21:32:05-05:00 fix(client): update Vite proxy to use port 8010
+- `583a703400995437e781444c3b6e33e0fb35105c` 2026-03-08T21:44:20-05:00 feat(vectorizer): add sheet type detection + ukulele specs
+- `6f02b4b2bc8c117494076bd7b900b96fa3edc7ae` 2026-03-08T21:44:20-05:00 feat(vectorizer): add sheet type detection + ukulele specs
+- `dd1e8bef2edb4710f572c910ef32f9090c6339a3` 2026-03-08T22:24:07-05:00 feat(calculators): add bridge break angle calculator
+- `fc45b2df4185aa52c83bb3150e51f46ae7e95c5e` 2026-03-08T22:24:07-05:00 feat(calculators): add bridge break angle calculator
+- `7a0efa2a5e28b2d9f40d10c5df2fd46022e74577` 2026-03-08T22:29:46-05:00 fix(contracts): add 18 missing API endpoints to contract
+- `dc1006cabfbfa150b7cf18d337648fe8b0b36ddf` 2026-03-08T22:29:46-05:00 fix(contracts): add 18 missing API endpoints to contract
+- `6a20261a32d7c0f68096d44f6c4f29cbf68f7d39` 2026-03-08T22:31:50-05:00 fix(ci): add fastapi httpx to SG export gate deps
+- `aec040c046a0431ddec02f7bb69a27d5f8a1e96f` 2026-03-08T22:31:50-05:00 fix(ci): add fastapi httpx to SG export gate deps
+- `37974138c69ecbed27dd31f8826a1cb84e3f775a` 2026-03-08T22:33:31-05:00 fix(ci): add pytest-cov to SG export gate deps
+- `282450975a5595143a6d5081d7997ff73cbe2696` 2026-03-08T22:33:31-05:00 fix(ci): add pytest-cov to SG export gate deps
+- `2cc2e9d4af737179d989ba630d09c0ed1ad3957f` 2026-03-08T22:35:17-05:00 test(sg-export): add stub test for Smart Guitar Export Gate
+- `5beb14517feaa2180f850d1e8518a43e27359733` 2026-03-08T22:35:17-05:00 test(sg-export): add stub test for Smart Guitar Export Gate
+- `e4e54790b75d5a11ffeef524e8baf07dca271366` 2026-03-09T00:06:51-05:00 feat(calculators): add headstock/nut break angle calculator
+- `ff240c6e993fd6da35105f36a8d542b12c2c02c9` 2026-03-09T00:06:51-05:00 feat(calculators): add headstock/nut break angle calculator
+- `2b8bbd45e706ca3cf8ca53bdf1e065c1da290516` 2026-03-09T00:16:19-05:00 ci: update file size baseline for neck_router.py (655→683)
+- `b6f988a4d3741d8dc1daaebcb2a97ac3d47f646c` 2026-03-09T00:16:19-05:00 ci: update file size baseline for neck_router.py (655→683)
+
+### Artifacts that name March 6 / march6 / march_pipeline (any date)
+
+From `raw/anchor_mentions.txt` and `raw/anchor_paths.txt` (deduped lines):
+- 12347ac9307483ee6c3ff2329f550a73ac6f5e26	2026-04-21T15:22:35-05:00	docs(adr): add 2026-04-20 vectorizer ceiling reversal entry
+- 230fd7ccfca924758c61429e5641264b52605948	2026-04-21T15:22:35-05:00	docs(adr): add 2026-04-20 vectorizer ceiling reversal entry
+- e9cdf13c4a4f94b1e8e078a2702f17083ba63ee1	2026-04-20T16:06:44-05:00	fix(vectorizer): restore morphological gap closing in enhanced mode
+- 3db07c626b68648182faf4fbf2fb8aa709676d34	2026-04-20T16:06:44-05:00	fix(vectorizer): restore morphological gap closing in enhanced mode
+- 6475c2bde8b31c530bc4af2addfd64c0566544b7	2026-04-13T16:55:42-05:00	feat(vectorizer): implement SIMPLE extraction for Pass A (Phase 2)
+- 34acdbfe8b7c1deb906ac4259e3f9bda67f4bc32	2026-04-13T16:55:42-05:00	feat(vectorizer): implement SIMPLE extraction for Pass A (Phase 2)
+- 014e720f8c756fc40c25d5d2a51f37171c2564be	2026-04-13T16:28:24-05:00	feat(vectorizer): add reusable extraction helpers for dual-pass
+- 4f1c74c33106e11e8788cd028c9864a549520aa9	2026-04-13T16:28:24-05:00	feat(vectorizer): add reusable extraction helpers for dual-pass
+- 977e81a19e736cab50fccbac8b7217f9c97877f7	2026-03-06T09:15:57-06:00	docs(blueprint): add March 6 session log to vectorizer plan
+- bed5d0ecf3abba3a71859b265b17a7eb40e2b8bb	2026-03-06T09:15:57-06:00	docs(blueprint): add March 6 session log to vectorizer plan261436ae099e740a0c894e4a33536097d637a193	2026-05-20T21:18:31-05:00	chore: remove migrated sandbox folders + add migration handoffs
+- a50a347cb1bbba526d6833660363929e99538889	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updates
+- 766deee69662ef8b54e6fd867219b07e84006b52	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updatese4338b49d96dd3c13aa58f7e88438973d44666f4	2026-08-28T09:52:28-05:00	docs(audit): supervisory capability map — seven joints, no learning joint, arbitration unadopted
+- c843ed7e3fb160445a2b2f1898fd438ae82cb781	2026-08-28T09:18:36-05:00	docs(audit): pixel platform Loop 1 forensic audit — checkpoint, loops 2/3 not evaluated
+- 58521c07ad770f1d3009a711afa3a4b9052f23f4	2026-08-23T11:55:14-05:00	docs(audit): commit the frozen formula census and recovery queue baseline
+- ab3ead0346613733ad6b54024f6ca0bd9ce9abbc	2026-07-26T22:08:03-05:00	chore(cbsp21): re-declare manifest for the widened typecheck fix
+- eb2e0766fdeb8cde20267581547ff73f311aa2c6	2026-07-26T20:04:23-05:00	chore(cbsp21): add patch manifest for the mypy __init__.py removal
+- 8fad48d93138132fed459ab0aefc96ca3a0cd70d	2026-05-30T19:48:15-05:00	docs: remove three-loop/AGE "approved design" conflation from runtime instructions
+- a73494d5dcb4053f90ffdd5d0f7df5eb1879c68c	2026-05-21T14:54:09-05:00	feat(governance): complete Runtime Boundary Phase 1C/1D
+- 139375251b6caf1d50703d4d048e26f35c483d74	2026-05-20T19:34:32-05:00	feat(vectorizer): safe remediation PR-1/2/3 and local dev layout (#28)
+- 9eba933a20a7163be8aa48d63141f39bf8171274	2026-05-20T19:29:38-05:00	feat(vectorizer): safe remediation PR-1/2/3 and local dev layout
+- ef95474734aef2b1d10adda715eccf91c6983e4d	2026-05-20T12:38:48-05:00	docs(governance): vectorizer technical debt archaeology audit
+- ab6215647909e727d1c924ce077aba4cace1d6fd	2026-05-20T03:18:34-05:00	untracked files on governance-inventory-scanner: 78535e8d feat(governance): add governance document inventory
+- 5f5ccf138c8542f3767acc26145848eac591ad4b	2026-04-29T11:46:30-05:00	docs(audit): track 35-file DXF policy compliance gap from 2026-04-29 grep
+- 766deee69662ef8b54e6fd867219b07e84006b52	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updates
+- 3e75a7cb16a60d209a01ce144d1fa841ddf015e6	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules
+- 944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules
+- cbfee5eae75be1eceb399af1e1f0f3974f717cbb	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
+- 207858a18189101e9414c5bde4189acd87185645	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
+- 6fb853ddcb9d6b408b533b45c3ecd83ca8d3ed93	2026-05-02T15:18:09-05:00	data(wood_species): audit khaya — rename mahogany_african, add CITES II
+- 9fc3fe4c1cb4f6d4acefe14288c8f1b58d156c6f	2026-04-19T05:18:13-05:00	docs: add handoffs, audits, and research documents
+- b49bf18dde586665e6d011825eaa51c9d159c449	2026-04-19T05:18:13-05:00	docs: add handoffs, audits, and research documents
+
+## Seed anchor verification
+
+| # | Claim | Verdict | Settling SHA / search |
+| - | ----- | ------- | --------------------- |
+| A1 | March 6 baseline of 10 DXFs AC1009 CONTOURS 21k–129k | NOT_FOUND | UNKNOWN — no path *march6_archive_metrics* in parent; no in-window file matching that name. Settling search: git log --all -- '*march6_archive*' (empty). Phrase mentions exist (977e81a1 2026-03-06 session log) without the metrics JSON. |
+| A2 | measure_march6_archive.py exists | NOT_FOUND | UNKNOWN — git log --all -- '*measure_march6*' empty. |
+| A3 | services/photo-vectorizer/march_pipeline_restore.py (~758 LOC) | CONFIRMED | 3e75a7cb16a60d209a01ce144d1fa841ddf015e6 (author 2026-04-19, outside primary window). Path present in that commit. Duplicate SHA 944aefc6 same author-date. |
+| A4 | BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md dated 2026-03-07 records VEC-GAP-08 | CONTRADICTED | b229d09ebbcc35be72150e095569b5b124b3f4ec (and 55034f6b) author 2026-03-06T02:32:38-06:00 adds docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md with Created: 2026-03-06. File at that SHA has no VEC-GAP-08 string. VEC-GAP-08 first pickaxe hits include 2d0980c7 2026-03-08 and af0136cc 2026-03-10 in other docs. |
+| A5 | vectorizer_phase3.py Wave 2 authored at b05b4c6 2026-03-31 | NOT_FOUND | git rev-parse b05b4c6^{commit} — unknown revision in this luthiers-toolbox mirror. |
+| A6 | DEVELOPER_HANDOFF.md at 854497f 2026-03-31 | NOT_FOUND | git rev-parse 854497f^{commit} — unknown revision. A DEVELOPER_HANDOFF.md add exists at 4cd1b2bb / 94e40951 2026-03-09 (photo-vectorizer handoff) and 25646735 2026-01-13; those are different SHAs. |
+| A7 | over-simplification fix at 50c60bc | NOT_FOUND | git rev-parse 50c60bc^{commit} — unknown revision. git log --all -i --grep=over-simplification empty. |
+| A8 | edge_to_dxf.py classified CANONICAL_RECOVERY; recipe edge_to_dxf_refined | NOT_FOUND | Parent records file birth: 55c3062265e783f9bf0ef442b63eea595170bc86 (and 9417fd9b) 2026-04-01T01:08:52-05:00 feat(photo-vectorizer): add edge_to_dxf high-fidelity exporter. String CANONICAL_RECOVERY / path *edge_to_dxf_refined* not found in parent. Birth SHA is in-window (author 2026-04-01 01:08, window end exclusive 2026-04-01 00:00 UTC = 2026-03-31 19:00-05:00 — AUTHOR vs exclusive-end: 01:08-05:00 is 2026-04-01T06:08Z, AFTER exclusive end 2026-04-01T00:00Z). Recorded here as parent fact; window-membership of that SHA is committer-included via --until=2026-04-01 local git filter (see method). |
+| A9 | Calibration modules authored 2026-03-04 → 03-09 spanning March 6 | CONFIRMED | 0f6e56e2 / 65b3af05 2026-03-04T14:21:02-06:00 Add blueprint dimension extraction with EasyOCR. 811aee36 / 994c3453 2026-03-06T01:45:47-06:00 feat(blueprint): add pixel calibration module + grid zone classifier. b229d09e / 55034f6b 2026-03-06T02:32:38-06:00 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer. 4cd1b2bb 2026-03-09T11:16:25-05:00 docs: add photo-vectorizer developer handoff. |
+| A10 | Photo path 41–68% height error; suspended 2026-04-16 under ADR-2026-04-21-01 | NOT_FOUND | Outside primary window as ordered. git log --all --grep=ADR-2026-04-21-01 empty. Related later record 12347ac9 2026-04-21 docs(adr): add 2026-04-20 vectorizer ceiling reversal entry. Stage 1b (to 2026-05-01) listed below. |
+
+Prefixes that **do not resolve** in this luthiers-toolbox mirror: `b05b4c6`, `854497f`, `50c60bc`. No sandbox follow-up is owed.
+
+## Stage 1b (listed, not run)
+
+A10 cites 2026-04-16 and ADR-2026-04-21-01, which sit after `2026-04-01T00:00:00Z`. A separate Stage 1b inventory window to `2026-05-01` would cover those records. This Stage 1 window stays as ordered.
+
+## Open questions for Stage 2
+
+Questions only. No answers, no dispositions.
+
+1. Where does the March 6 ten-DXF AC1009 / CONTOURS metrics table live, if not in this parent tree?
+2. How do the duplicate-SHA pairs (same author-date + subject, different SHA + ref) relate — cherry-pick, worktree, or pull-ref copy?
+3. What is the sequence of calibration commits on 2026-03-04 through 2026-03-09 relative to the March 6 session log (`977e81a1`)?
+4. When does `VEC-GAP-08` enter which document, given it is absent from the 2026-03-06 integration handoff?
+5. What records in 2026-04 exist for `march_pipeline_restore.py` (`3e75a7cb`) relative to the in-window pipeline files?
+6. What is the parent-repo path, if any, for recipe `edge_to_dxf_refined` / label CANONICAL_RECOVERY?
+

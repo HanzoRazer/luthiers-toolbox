@@ -1,0 +1,46 @@
+governance-remediation-baseline	2026-05-12T02:55:41-05:00	GOV-3: add governance authority section to CLAUDE.md
+restored-baseline-anchor	2026-04-13T16:11:51-05:00	fix(vectorizer): restore historical baseline recovery path
+salvage/aperture-c817e9cb	2026-05-20T00:55:01-05:00	On governance-execution-alignment: WIP: unrelated changes before PR4 branch
+salvage/cired-3f5cb833-jumbo-ci-preflight	2026-05-27T18:01:13-05:00	On fix/jumbo-family-geometry-bug: ci-api-verify-preflight
+salvage/cired-6e485c05-jumbo-dim-consistency	2026-05-27T18:53:20-05:00	On fix/ci-red-001-preflight-same-step: jumbo-dimension-consistency-wip
+salvage/cired-aab69089-015a-masksum-superseded	2026-05-28T11:38:13-05:00	fix(ci): resolve text-masking mask.sum _NoValueType on CI (CI-RED-015-A tail)
+salvage/confenv-4a20b1a2-mrp6d-integration-audit	2026-05-25T15:53:05-05:00	WIP on feat/confidence-envelope-interoperability: 905c19f0 docs(handoff): add MRP-6D runtime capability integration audit
+salvage/dxfibg-577bd114-3a-before-do75	2026-05-25T17:03:38-05:00	On feat/dxf-lifecycle-phase-3a: unrelated-wip-before-do75
+salvage/govinv-43b07017-doc-inventory	2026-05-20T03:15:58-05:00	feat(governance): add governance document inventory
+salvage/govinv-45a472a6-guard-status-phase2b-dup	2026-05-21T20:06:38-05:00	@ feat(governance): add guard_status tracking to lifecycle matrix (Phase 2B)
+salvage/govinv-ac9f70ee-ontology-output	2026-05-20T09:43:25-05:00	@ feat(governance): normalize ontology script output format
+salvage/govinv-c35c4ff9-inventory-determinism	2026-05-20T09:30:42-05:00	@ fix(governance): ensure deterministic output from inventory scanner
+salvage/govinv-cb9bcde6-c0c1-constitutional	2026-05-18T20:43:42-05:00	WIP on fix/wood-shrinkage-data-integrity: c597c8a7 governance: add C0 C1 constitutional foundation baseline
+salvage/govinv-d1677e98-unified-gate-blocking	2026-05-20T03:35:46-05:00	feat(governance): promote unified governance gate to blocking mode
+salvage/govinv-f89e77a1-guard-status-phase2b	2026-05-21T20:06:24-05:00	@ feat(governance): add guard_status tracking to lifecycle matrix (Phase 2B)
+salvage/mrp5x-01f01368-rb2b-guard-rollout	2026-05-21T20:18:38-05:00	On runtime-boundary-phase-2b-guard-rollout-readiness: WIP: unrelated changes
+salvage/mrp5x-124ad198-capability-guard	2026-05-23T21:14:36-05:00	WIP on mrp-5x-runtime-capability-regression-guard: 0f386975 test(runtime): add capability regression guard (MRP-5X)
+salvage/mrp5x-dde5480b-regression-guard	2026-05-23T20:19:50-05:00	On runtime-boundary-phase-2g-dxf-writer-assessment: MRP-5X regression guard
+salvage/other-4310d56a-wood-shrinkage-wip	2026-05-14T11:27:59-05:00	On fix/wood-shrinkage-data-integrity: WIP: fix/wood-shrinkage-data-integrity changes
+salvage/other-71cee0a1-fret-completion-verify	2026-05-27T12:27:51-05:00	docs(audit): FRET-A and FRET-CONSOLIDATION-1 completion verification
+salvage/other-763907d8-cam-6h	2026-05-11T17:43:27-05:00	@ feat(cam): add operation capability registry (6H)
+salvage/other-8fa1244c-cam-safety-decorators	2026-05-20T11:39:26-05:00	WIP on refactor/cam-complexity-reduction: 32d91800 fix(safety): add @safety_critical decorators to CAM G-code functions
+salvage/other-94f80142-exp-modules	2026-05-04T20:32:38-05:00	@ docs(handoffs): Phase 1 module classification — all 7 experimental modules detached
+salvage/other-d682a13b-tech-debt-audit	2026-05-20T11:43:08-05:00	WIP on main: 0a4412bd docs(audit): add technical debt audit report with remediation status
+salvage/other-f8928299-acoustic-jumbo-audit-sources	2026-05-27T23:59:39-05:00	WIP on feat/acoustic-jumbo-business-layer: 6767dcc4 docs: add audit sources and dimension inventory
+salvage/topology-1790f6bb	2026-05-21T05:00:52-05:00	WIP on research/wave-1c-semantic-artifact-quality: 84d6e003 docs(research): establish semantic artifact quality layer
+salvage/unassignable-564b4559-orphan-merge	2026-05-27T21:21:44-05:00	Merge branch 'main' of https://github.com/HanzoRazer/luthiers-toolbox
+salvage/vectorizer-dcabee7c-tier-a-relocation	2026-05-20T18:49:20-05:00	WIP on feat/tier-a-relocation-removal: 4cbe56ed chore(vectorizer): remove Tier A modules relocated to vectorizer-sandbox
+salvage/vectorizer-efb60349-semantic-artifact-quality	2026-05-21T05:00:56-05:00	docs(research): establish semantic artifact quality layer
+toolbox-mesh-pipeline-v0.1.0	2026-01-21T09:32:35-06:00	Mesh pipeline preview release v0.1.0
+toolbox-v0.32.0	2026-01-20T23:45:18-06:00	Art Studio Promotion Contracts & CAM Bridge
+toolbox-v0.33.0-wave22.1	2026-01-21T09:05:02-06:00	feat(acoustics): add ingest audit log with browse/detail endpoints
+toolbox-v0.34.0	2026-01-27T09:37:48-06:00	Release v0.34.0 — Physics, Feasibility, Legacy Cleanup, Test Stability
+toolbox-v0.34.1	2026-01-27T10:09:16-06:00	v0.34.1 — Physics audit documentation
+toolbox-v0.35.0	2026-02-07T08:04:28-06:00	M1 Agentic Policy Release
+toolbox-v0.36.0	2026-02-09T09:57:00-06:00	Remediation Complete + WP-3 God-Object Decomposition
+toolbox-v0.36.1	2026-02-09T13:15:30-06:00	Cross-repo cleanup: sg-spec coach removal + bookmark update
+toolbox-v0.37.0	2026-02-09T14:44:03-06:00	Remediation Release v0.37.0
+toolbox-v0.38.0	2026-02-09T16:20:02-06:00	Phase 9 God-Object Decomposition Complete
+toolbox-v0.39.0	2026-02-27T22:59:46-06:00	Release v0.39.0 - Wave 27.1 Dead Code Recovery + Design Review
+toolbox-v0.39.1	2026-02-28T01:22:40-06:00	Documentation Fixes (Patch Release)
+v0.6.0-governance-foundation	2026-05-18T20:38:30-05:00	Constitutional governance foundation and IBG intake hardening
+v1.0-rmos-ai-migration	2025-12-22T15:08:45-06:00	RMOS AI domain migration complete - line-in-sand moment
+v2.4.0-alpha.1	2026-03-30T20:19:28-05:00	feat: Sprint P4-B — viewer_pack_bridge and brace_prescription
+v2.5.0	2026-04-30T01:37:14-05:00	Sprint FRET-A complete - fretboard ecosphere through Phase 8
+v2.5.0-alpha.1-phase7	2026-04-29T23:00:31-05:00	Sprint FRET-A Phase 7: Nine-layer DXF projection with R2000 LWPOLYLINE CAM verification
