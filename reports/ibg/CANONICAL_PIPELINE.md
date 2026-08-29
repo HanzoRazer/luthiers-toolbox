@@ -8,6 +8,17 @@ IBG is **Instrument Body Generator**: a parametric body completor. It consumes D
 
 Do not copy-paste these files. Use the zip (see `HOW_TO_DOWNLOAD.md`).
 
+> **Source of truth.** This document and the zip beside it are a **snapshot**, verified at
+> the commit named above. The canonical source is the repository at that commit — not this
+> file, and not the zip. The source files keep changing; when they do, this snapshot goes
+> stale and nothing here will announce it. **If a path below disagrees with the repository,
+> the repository is right.**
+>
+> Every path listed here is a real repository path, so any entry can be checked directly
+> against `main`. Governance for this pipeline lives in
+> `docs/governance/IBG_ROLE_DEFINITION.md`, which is authoritative over this list on any
+> question of what IBG is permitted to do.
+
 ---
 
 ## Path A — Body Solver HTTP (production intake)
