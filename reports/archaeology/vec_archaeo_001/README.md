@@ -6,8 +6,8 @@ Delivery copy of the Stage 1 build-history scan.
 - Stage 2 inputs: `commits.jsonl`, `files.jsonl`, `sessions.json`
 - Evidence: `raw/`
 
-Produced from an isolated `luthiers-toolbox` mirror. Intended landing place was `vectorizer-sandbox` `reports/archaeology/vec_archaeo_001/`; that repo was not reachable from the scan environment, so this copy is on `luthiers-toolbox` for download.
+Produced from an isolated `luthiers-toolbox` mirror. Scope is that parent repo only. `vectorizer-sandbox` is not part of this inventory.
 
 This is **not** the IBG/AGE forensic report (PR #332).
 
-Download `TIMELINE.md` from this PR, or browse `reports/archaeology/vec_archaeo_001/`. Linux paths `/tmp/vectorizer-sandbox-staging/` and `/opt/cursor/artifacts/vec_archaeo_001/` are VM-local only and are not `C:\Users\thepr\Downloads`.
+Download `TIMELINE.md` from this PR, or browse `reports/archaeology/vec_archaeo_001/`.

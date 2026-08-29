@@ -7,7 +7,7 @@
 - Scan timestamp (UTC): see `raw/SCAN_META.txt`.
 - git version: `git version 2.43.0`.
 - Parent working checkout was not written, fetched, or gc'd. Mirror cloned from GitHub.
-- Executing-repo `vectorizer-sandbox` was not reachable (`repository not found`). Artifacts staged at this path for copy into the sandbox.
+- Scope: `luthiers-toolbox` parent mirror only. `vectorizer-sandbox` is out of scope for this inventory (not scanned, not required).
 - Refs included: `git log --all --source` (all refs in the mirror, including `refs/pull/*` and tags).
 - Excluded: nothing from `--all`. Path filters were not applied to the primary log.
 - Window for `commits.jsonl`: `git rev-list --all --since=2026-01-01 --until=2026-04-01` (git default = **committer** date). Count **4254**, unique SHAs **4254**, 1:1 with `commits.jsonl`.
@@ -13670,14 +13670,14 @@ From `raw/anchor_mentions.txt` and `raw/anchor_paths.txt` (deduped lines):
 | A2 | measure_march6_archive.py exists | NOT_FOUND | UNKNOWN — git log --all -- '*measure_march6*' empty. |
 | A3 | services/photo-vectorizer/march_pipeline_restore.py (~758 LOC) | CONFIRMED | 3e75a7cb16a60d209a01ce144d1fa841ddf015e6 (author 2026-04-19, outside primary window). Path present in that commit. Duplicate SHA 944aefc6 same author-date. |
 | A4 | BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md dated 2026-03-07 records VEC-GAP-08 | CONTRADICTED | b229d09ebbcc35be72150e095569b5b124b3f4ec (and 55034f6b) author 2026-03-06T02:32:38-06:00 adds docs/handoffs/BLUEPRINT_VECTORIZER_INTEGRATION_HANDOFF.md with Created: 2026-03-06. File at that SHA has no VEC-GAP-08 string. VEC-GAP-08 first pickaxe hits include 2d0980c7 2026-03-08 and af0136cc 2026-03-10 in other docs. |
-| A5 | vectorizer_phase3.py Wave 2 authored at b05b4c6 2026-03-31 | NOT_FOUND | git rev-parse b05b4c6^{commit} — unknown revision. Stop-condition SHA (sandbox-cited, does not resolve in this mirror). |
+| A5 | vectorizer_phase3.py Wave 2 authored at b05b4c6 2026-03-31 | NOT_FOUND | git rev-parse b05b4c6^{commit} — unknown revision in this luthiers-toolbox mirror. |
 | A6 | DEVELOPER_HANDOFF.md at 854497f 2026-03-31 | NOT_FOUND | git rev-parse 854497f^{commit} — unknown revision. A DEVELOPER_HANDOFF.md add exists at 4cd1b2bb / 94e40951 2026-03-09 (photo-vectorizer handoff) and 25646735 2026-01-13; those are different SHAs. |
 | A7 | over-simplification fix at 50c60bc | NOT_FOUND | git rev-parse 50c60bc^{commit} — unknown revision. git log --all -i --grep=over-simplification empty. |
 | A8 | edge_to_dxf.py classified CANONICAL_RECOVERY; recipe edge_to_dxf_refined | NOT_FOUND | Parent records file birth: 55c3062265e783f9bf0ef442b63eea595170bc86 (and 9417fd9b) 2026-04-01T01:08:52-05:00 feat(photo-vectorizer): add edge_to_dxf high-fidelity exporter. String CANONICAL_RECOVERY / path *edge_to_dxf_refined* not found in parent. Birth SHA is in-window (author 2026-04-01 01:08, window end exclusive 2026-04-01 00:00 UTC = 2026-03-31 19:00-05:00 — AUTHOR vs exclusive-end: 01:08-05:00 is 2026-04-01T06:08Z, AFTER exclusive end 2026-04-01T00:00Z). Recorded here as parent fact; window-membership of that SHA is committer-included via --until=2026-04-01 local git filter (see method). |
 | A9 | Calibration modules authored 2026-03-04 → 03-09 spanning March 6 | CONFIRMED | 0f6e56e2 / 65b3af05 2026-03-04T14:21:02-06:00 Add blueprint dimension extraction with EasyOCR. 811aee36 / 994c3453 2026-03-06T01:45:47-06:00 feat(blueprint): add pixel calibration module + grid zone classifier. b229d09e / 55034f6b 2026-03-06T02:32:38-06:00 feat(blueprint): wire calibration module + upgrade Phase 2 vectorizer. 4cd1b2bb 2026-03-09T11:16:25-05:00 docs: add photo-vectorizer developer handoff. |
 | A10 | Photo path 41–68% height error; suspended 2026-04-16 under ADR-2026-04-21-01 | NOT_FOUND | Outside primary window as ordered. git log --all --grep=ADR-2026-04-21-01 empty. Related later record 12347ac9 2026-04-21 docs(adr): add 2026-04-20 vectorizer ceiling reversal entry. Stage 1b (to 2026-05-01) listed below. |
 
-Sandbox-cited SHAs that **do not resolve** in this mirror (stop-condition report): `b05b4c6`, `854497f`, `50c60bc`.
+Prefixes that **do not resolve** in this luthiers-toolbox mirror: `b05b4c6`, `854497f`, `50c60bc`. No sandbox follow-up is owed.
 
 ## Stage 1b (listed, not run)
 
@@ -13687,12 +13687,10 @@ A10 cites 2026-04-16 and ADR-2026-04-21-01, which sit after `2026-04-01T00:00:00
 
 Questions only. No answers, no dispositions.
 
-1. What parent-repo objects (if any) correspond to sandbox SHAs `b05b4c6`, `854497f`, `50c60bc`?
-2. Where does the March 6 ten-DXF AC1009 / CONTOURS metrics table live, if not in this parent tree?
-3. How do the duplicate-SHA pairs (same author-date + subject, different SHA + ref) relate — cherry-pick, worktree, or pull-ref copy?
-4. What is the sequence of calibration commits on 2026-03-04 through 2026-03-09 relative to the March 6 session log (`977e81a1`)?
-5. When does `VEC-GAP-08` enter which document, given it is absent from the 2026-03-06 integration handoff?
-6. What records in 2026-04 exist for `march_pipeline_restore.py` (`3e75a7cb`) relative to the in-window pipeline files?
-7. What is the parent-repo path, if any, for recipe `edge_to_dxf_refined` / label CANONICAL_RECOVERY?
-8. What ADR identifier, if any, matches the sandbox string ADR-2026-04-21-01?
+1. Where does the March 6 ten-DXF AC1009 / CONTOURS metrics table live, if not in this parent tree?
+2. How do the duplicate-SHA pairs (same author-date + subject, different SHA + ref) relate — cherry-pick, worktree, or pull-ref copy?
+3. What is the sequence of calibration commits on 2026-03-04 through 2026-03-09 relative to the March 6 session log (`977e81a1`)?
+4. When does `VEC-GAP-08` enter which document, given it is absent from the 2026-03-06 integration handoff?
+5. What records in 2026-04 exist for `march_pipeline_restore.py` (`3e75a7cb`) relative to the in-window pipeline files?
+6. What is the parent-repo path, if any, for recipe `edge_to_dxf_refined` / label CANONICAL_RECOVERY?
 
