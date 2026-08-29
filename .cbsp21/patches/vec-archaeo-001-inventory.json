@@ -1,0 +1,218 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VEC_ARCHAEO_001_INVENTORY",
+  "title": "docs(archaeology): VEC-ARCHAEO-001 Stage 1 inventory",
+  "intent": "Publish the Stage 1 build-history inventory for VEC-ARCHAEO-001 (commits, files, sessions, timeline, raw captures, and a download zip) so Stage 2 can consume a frozen scan. Adds SCHEMA.md and a PR #332 cross-reference after review. Adds this per-PR CBSP21 manifest so the patch-input and coverage gates can map the change set.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "reports/archaeology/",
+      ".cbsp21/patches/vec-archaeo-001-inventory.json"
+    ],
+    "files_expected_to_change": [
+      "reports/archaeology/HOW_TO_DOWNLOAD.md",
+      "reports/archaeology/vec_archaeo_001.zip",
+      "reports/archaeology/vec_archaeo_001/README.md",
+      "reports/archaeology/vec_archaeo_001/SCHEMA.md",
+      "reports/archaeology/vec_archaeo_001/TIMELINE.md",
+      "reports/archaeology/vec_archaeo_001/commits.jsonl",
+      "reports/archaeology/vec_archaeo_001/files.jsonl",
+      "reports/archaeology/vec_archaeo_001/sessions.json",
+      "reports/archaeology/vec_archaeo_001/raw/SCAN_META.txt",
+      "reports/archaeology/vec_archaeo_001/raw/all_commits_author_dates.txt",
+      "reports/archaeology/vec_archaeo_001/raw/anchor_march6.txt",
+      "reports/archaeology/vec_archaeo_001/raw/anchor_mentions.txt",
+      "reports/archaeology/vec_archaeo_001/raw/anchor_paths.txt",
+      "reports/archaeology/vec_archaeo_001/raw/commits_window.txt",
+      "reports/archaeology/vec_archaeo_001/raw/documents.txt",
+      "reports/archaeology/vec_archaeo_001/raw/files_added.txt",
+      "reports/archaeology/vec_archaeo_001/raw/files_deleted.txt",
+      "reports/archaeology/vec_archaeo_001/raw/merges.txt",
+      "reports/archaeology/vec_archaeo_001/raw/notes.txt",
+      "reports/archaeology/vec_archaeo_001/raw/refs.txt",
+      "reports/archaeology/vec_archaeo_001/raw/seed_anchor_searches.txt",
+      "reports/archaeology/vec_archaeo_001/raw/tags.txt",
+      "reports/archaeology/vec_archaeo_001/raw/trailers.err",
+      "reports/archaeology/vec_archaeo_001/raw/trailers.txt",
+      ".cbsp21/patches/vec-archaeo-001-inventory.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds reports/archaeology/vec_archaeo_001/ (timeline, JSONL inventories, sessions, raw git captures, SCHEMA.md) plus a download zip and HOW_TO_DOWNLOAD.md. Review follow-up: README context for what Stage 1 is, SCHEMA.md for Stage 2 field types, GitHub link to PR #332, durable main download URL, and this CBSP21 manifest (the missing manifest is what failed the gate).",
+    "why_not_redundant": "The inventory did not exist in the repository. The CBSP21 manifest is required so the gate can map this PR's changed files to an applicable declared patch; without it both CBSP21 gates fail with 'No applicable patch manifest found'."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <files from git diff origin/main...HEAD>"
+    ]
+  },
+  "files": [
+    {
+      "path": "reports/archaeology/HOW_TO_DOWNLOAD.md",
+      "intent": "Download instructions with durable main link and PR #332 cross-reference.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001.zip",
+      "intent": "One-click zip of the Stage 1 inventory (includes SCHEMA.md).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/README.md",
+      "intent": "Index: archaeology context, contents, and download links.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/SCHEMA.md",
+      "intent": "Field names and types for commits.jsonl, files.jsonl, and sessions.json.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/TIMELINE.md",
+      "intent": "Human-readable Stage 1 timeline (no disposition labels).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/commits.jsonl",
+      "intent": "One JSON object per in-window commit (4254).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/files.jsonl",
+      "intent": "One JSON object per distinct path touched (6061).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/sessions.json",
+      "intent": "Author-date sessions at a 4h gap, plus 2h/8h sensitivity.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/SCAN_META.txt",
+      "intent": "Scan provenance: mirror HEAD, git version, timestamp.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/all_commits_author_dates.txt",
+      "intent": "Raw author-date listing used to cut sessions.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/anchor_march6.txt",
+      "intent": "Raw capture for the March 6 seed-anchor search.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/anchor_mentions.txt",
+      "intent": "Raw capture of seed-anchor mention hits.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/anchor_paths.txt",
+      "intent": "Raw capture of seed-anchor path hits.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/commits_window.txt",
+      "intent": "Raw rev-list for the committer-date window.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/documents.txt",
+      "intent": "Raw listing of document-kind paths.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/files_added.txt",
+      "intent": "Raw listing of paths added in-window.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/files_deleted.txt",
+      "intent": "Raw listing of paths deleted in-window.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/merges.txt",
+      "intent": "Raw listing of merge commits in-window.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/notes.txt",
+      "intent": "Scanner notes / leftovers.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/refs.txt",
+      "intent": "Raw refs from git log --all --source.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/seed_anchor_searches.txt",
+      "intent": "Raw seed-anchor search transcript.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/tags.txt",
+      "intent": "Raw tag listing (direct peel only).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/trailers.err",
+      "intent": "Trailer-parse stderr capture.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "reports/archaeology/vec_archaeo_001/raw/trailers.txt",
+      "intent": "Raw git trailer dump.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/vec-archaeo-001-inventory.json",
+      "intent": "Per-PR CBSP21 manifest for this docs-only inventory patch.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-29-VEC-ARCHAEO-001-INVENTORY",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and inert scan artifacts only. The one low item is the committed ~3 MB zip, a convenience snapshot that will not update itself; README and HOW_TO_DOWNLOAD state that the extracted files in-repo are the working copy and the zip is for download."
+  }
+}
