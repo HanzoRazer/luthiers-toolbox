@@ -10,4 +10,9 @@ Produced from an isolated `luthiers-toolbox` mirror. Scope is that parent repo o
 
 This is **not** the IBG/AGE forensic report (PR #332).
 
-Download `TIMELINE.md` from this PR, or browse `reports/archaeology/vec_archaeo_001/`.
+Do not copy-paste from the PR. The files are too large.
+
+**Download zip (goes to your Downloads folder):**
+https://github.com/HanzoRazer/luthiers-toolbox/raw/cursor/vec-archaeo-001-inventory-5bd1/reports/archaeology/vec_archaeo_001.zip
+
+Then right-click → Extract All. See `../HOW_TO_DOWNLOAD.md`.
