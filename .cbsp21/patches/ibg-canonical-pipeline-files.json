@@ -1,0 +1,93 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "IBG_CANONICAL_PIPELINE_FILES",
+  "title": "Expose the canonical Instrument Body Generator file list and a download bundle",
+  "intent": "Make the IBG pipeline readable without copy-pasting dozens of files out of the GitHub UI, and draw two boundaries that are routinely confused: IBG is the Instrument Body Generator, a parametric body completor that consumes DXF and landmarks and does not process images; and services/api/app/ibg_repository/ is a repository-proposal package sharing the initials, not this pipeline. Sibling of PR #334, which does the same for the vectorizer.",
+  "change_type": "docs",
+  "behavior_change": "None. Four documentation artifacts plus one index under reports/ibg/. No production code, no configuration, no route, no schema. The zip contains copies of existing source files and is not imported, executed, or referenced by any runtime path.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ibg-canonical-pipeline-files.json",
+      "reports/ibg/CANONICAL_PIPELINE.md",
+      "reports/ibg/HOW_TO_DOWNLOAD.md",
+      "reports/ibg/PATHS.txt",
+      "reports/ibg/README.md",
+      "reports/ibg/canonical_ibg_pipeline.zip"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ibg-canonical-pipeline-files.json",
+      "reports/ibg/CANONICAL_PIPELINE.md",
+      "reports/ibg/HOW_TO_DOWNLOAD.md",
+      "reports/ibg/PATHS.txt",
+      "reports/ibg/README.md",
+      "reports/ibg/canonical_ibg_pipeline.zip"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Original commit added CANONICAL_PIPELINE.md (the file list, verified at 2646992f), PATHS.txt, HOW_TO_DOWNLOAD.md, and a zip of 71 entries preserving repo paths. Review follow-up, matching the pattern established in PR #334: (1) HOW_TO_DOWNLOAD.md opens with an explicit point-in-time / drift warning for readers extracting weeks later. (2) The download URL now leads with a main-tracking link and demotes the feature-branch link to a clearly-labelled pre-merge link; the original pointed only at cursor/ibg-canonical-pipeline-files-5bd1 and would have 404'd for every reader once that branch was deleted on merge. (3) New README.md as the single top-level index for reports/ibg/. (4) A source-of-truth note added to CANONICAL_PIPELINE.md itself, so the statement travels inside the zip as well as sitting in the repo folder.",
+    "why_not_redundant": "The freshness warning is load-bearing for a governed pipeline specifically. IBG's role definition is active governance and has been amended more than once, so a stale snapshot of IBG source is the artifact most likely to be quoted after it stopped being true -- and a source bundle gives no signal when it goes stale, since it keeps opening and keeps looking complete. The link fix is a guaranteed break rather than a preference: a download URL on the PR's own feature branch 404s silently on merge, with nothing telling the reader a working link exists. Both notes name the repository, and for questions of permitted behaviour name docs/governance/IBG_ROLE_DEFINITION.md, as outranking this folder."
+  },
+  "verification": {
+    "commands_run": [
+      "gate diagnosis: both CBSP21 Patch Manifest Gate and cbsp21-patch-input failed for one cause -- 'No manifest under .cbsp21/patches/ declares any changed file'. The PR had no per-PR manifest. This file is the fix. Same root cause as PR #334.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <6 files> -> PASSED",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base <merge-base> --head HEAD -> PASS",
+      "zip integrity: zipfile.ZipFile lists 71 entries; top level PATHS.txt / HOW_TO_DOWNLOAD.md / CANONICAL_PIPELINE.md, no top-level README. Binary not modified by this review pass.",
+      "link audit: original doc contained two URLs, both on cursor/ibg-canonical-pipeline-files-5bd1; both would 404 after branch deletion",
+      "namespace check: the doc correctly states Instrument Body Generator. The code agrees -- instrument_body_generator.py, class InstrumentBodyGenerator. 'Image Body Generator' appears only in later governance prose (first at ccb30161, 2026-05-11)."
+    ]
+  },
+  "files": [
+    {
+      "path": "reports/ibg/CANONICAL_PIPELINE.md",
+      "intent": "The index: which files constitute the IBG pipeline, verified at a named commit, with the two boundary statements. Review pass added a source-of-truth and staleness note so it travels inside the zip.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/ibg/HOW_TO_DOWNLOAD.md",
+      "intent": "Download instructions. Review pass added the drift warning, replaced the branch-only link with a main-tracking durable link, and scoped the branch link to pre-merge review.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/ibg/README.md",
+      "intent": "Single top-level index for the folder, stating that the repository is canonical and that IBG_ROLE_DEFINITION.md outranks this folder on questions of permitted behaviour.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/ibg/PATHS.txt",
+      "intent": "Plain-text file list for scripting.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "reports/ibg/canonical_ibg_pipeline.zip",
+      "intent": "Snapshot of the listed source files with repo paths preserved, so a path in the index is also a path in the repository.",
+      "risk": "low",
+      "behavior_change": "none (inert artifact; not imported or executed)"
+    },
+    {
+      "path": ".cbsp21/patches/ibg-canonical-pipeline-files.json",
+      "intent": "Per-PR CBSP21 patch manifest. Its absence is what failed both CBSP21 gates.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only; no architectural surface. The one low item is the committed binary: a zip duplicating source files already in the repository, which will drift from those sources with no mechanism to detect it. Accepted deliberately and mitigated by stating in three places -- README, HOW_TO_DOWNLOAD and inside CANONICAL_PIPELINE.md which travels in the zip -- that the repository at the named commit is authoritative, and that IBG_ROLE_DEFINITION.md governs what IBG may do."
+  }
+}
