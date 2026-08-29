@@ -1,0 +1,5 @@
+6fb853ddcb9d6b408b533b45c3ecd83ca8d3ed93	2026-05-02T15:18:09-05:00	data(wood_species): audit khaya — rename mahogany_african, add CITES II
+9fc3fe4c1cb4f6d4acefe14288c8f1b58d156c6f	2026-04-19T05:18:13-05:00	docs: add handoffs, audits, and research documents
+b49bf18dde586665e6d011825eaa51c9d159c449	2026-04-19T05:18:13-05:00	docs: add handoffs, audits, and research documents
+3e75a7cb16a60d209a01ce144d1fa841ddf015e6	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules
+944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules

@@ -1,0 +1,29 @@
+12347ac9307483ee6c3ff2329f550a73ac6f5e26	2026-04-21T15:22:35-05:00	docs(adr): add 2026-04-20 vectorizer ceiling reversal entry
+230fd7ccfca924758c61429e5641264b52605948	2026-04-21T15:22:35-05:00	docs(adr): add 2026-04-20 vectorizer ceiling reversal entry
+e9cdf13c4a4f94b1e8e078a2702f17083ba63ee1	2026-04-20T16:06:44-05:00	fix(vectorizer): restore morphological gap closing in enhanced mode
+3db07c626b68648182faf4fbf2fb8aa709676d34	2026-04-20T16:06:44-05:00	fix(vectorizer): restore morphological gap closing in enhanced mode
+6475c2bde8b31c530bc4af2addfd64c0566544b7	2026-04-13T16:55:42-05:00	feat(vectorizer): implement SIMPLE extraction for Pass A (Phase 2)
+34acdbfe8b7c1deb906ac4259e3f9bda67f4bc32	2026-04-13T16:55:42-05:00	feat(vectorizer): implement SIMPLE extraction for Pass A (Phase 2)
+014e720f8c756fc40c25d5d2a51f37171c2564be	2026-04-13T16:28:24-05:00	feat(vectorizer): add reusable extraction helpers for dual-pass
+4f1c74c33106e11e8788cd028c9864a549520aa9	2026-04-13T16:28:24-05:00	feat(vectorizer): add reusable extraction helpers for dual-pass
+977e81a19e736cab50fccbac8b7217f9c97877f7	2026-03-06T09:15:57-06:00	docs(blueprint): add March 6 session log to vectorizer plan
+bed5d0ecf3abba3a71859b265b17a7eb40e2b8bb	2026-03-06T09:15:57-06:00	docs(blueprint): add March 6 session log to vectorizer plan261436ae099e740a0c894e4a33536097d637a193	2026-05-20T21:18:31-05:00	chore: remove migrated sandbox folders + add migration handoffs
+a50a347cb1bbba526d6833660363929e99538889	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updates
+766deee69662ef8b54e6fd867219b07e84006b52	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updatese4338b49d96dd3c13aa58f7e88438973d44666f4	2026-08-28T09:52:28-05:00	docs(audit): supervisory capability map — seven joints, no learning joint, arbitration unadopted
+c843ed7e3fb160445a2b2f1898fd438ae82cb781	2026-08-28T09:18:36-05:00	docs(audit): pixel platform Loop 1 forensic audit — checkpoint, loops 2/3 not evaluated
+58521c07ad770f1d3009a711afa3a4b9052f23f4	2026-08-23T11:55:14-05:00	docs(audit): commit the frozen formula census and recovery queue baseline
+ab3ead0346613733ad6b54024f6ca0bd9ce9abbc	2026-07-26T22:08:03-05:00	chore(cbsp21): re-declare manifest for the widened typecheck fix
+eb2e0766fdeb8cde20267581547ff73f311aa2c6	2026-07-26T20:04:23-05:00	chore(cbsp21): add patch manifest for the mypy __init__.py removal
+8fad48d93138132fed459ab0aefc96ca3a0cd70d	2026-05-30T19:48:15-05:00	docs: remove three-loop/AGE "approved design" conflation from runtime instructions
+a73494d5dcb4053f90ffdd5d0f7df5eb1879c68c	2026-05-21T14:54:09-05:00	feat(governance): complete Runtime Boundary Phase 1C/1D
+139375251b6caf1d50703d4d048e26f35c483d74	2026-05-20T19:34:32-05:00	feat(vectorizer): safe remediation PR-1/2/3 and local dev layout (#28)
+9eba933a20a7163be8aa48d63141f39bf8171274	2026-05-20T19:29:38-05:00	feat(vectorizer): safe remediation PR-1/2/3 and local dev layout
+ef95474734aef2b1d10adda715eccf91c6983e4d	2026-05-20T12:38:48-05:00	docs(governance): vectorizer technical debt archaeology audit
+ab6215647909e727d1c924ce077aba4cace1d6fd	2026-05-20T03:18:34-05:00	untracked files on governance-inventory-scanner: 78535e8d feat(governance): add governance document inventory
+5f5ccf138c8542f3767acc26145848eac591ad4b	2026-04-29T11:46:30-05:00	docs(audit): track 35-file DXF policy compliance gap from 2026-04-29 grep
+a50a347cb1bbba526d6833660363929e99538889	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updates
+766deee69662ef8b54e6fd867219b07e84006b52	2026-04-21T23:06:47-05:00	@ docs: add vectorizer v3.6 audit + body outline editor v3.1.0 updates
+3e75a7cb16a60d209a01ce144d1fa841ddf015e6	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules
+944aefc6f64e67820c6ec0c722bdf3c5c6e65c6b	2026-04-19T05:17:58-05:00	feat(api): add instrument geometry, curvature, and vectorizer modules
+cbfee5eae75be1eceb399af1e1f0f3974f717cbb	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
+207858a18189101e9414c5bde4189acd87185645	2026-04-18T15:11:04-05:00	feat(vectorizer): Sprint 5 — grid reclassification on blueprint path
