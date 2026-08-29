@@ -4,3 +4,4 @@ mirror=/tmp/vec-archaeo-001.git
 mirror_HEAD=2646992fc294a904438042d529b939ec6db80662
 rev_list_all=6493
 rev_list_window_committer=4254
+scope=luthiers-toolbox parent mirror only; vectorizer-sandbox out of scope
