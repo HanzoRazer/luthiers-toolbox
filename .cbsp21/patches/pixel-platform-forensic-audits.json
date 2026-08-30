@@ -1,0 +1,96 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PIXEL_PLATFORM_FORENSIC_AUDITS",
+  "title": "Pixel platform forensic audits: Loop 1, supervisory capability map, sufficiency verdict, cross-repo reconciliation",
+  "intent": "Four read-only forensic audits of the legacy pixel platform (services/photo-vectorizer + services/blueprint-import) and its cross-repo relationship with vectorizer-sandbox, delivered as owner-gated checkpoints. Each answers a question that was previously being answered from terminology rather than from traced calls and measured evidence.",
+  "change_type": "docs",
+  "behavior_change": "None. Five documentation artifacts under docs/audit/. No production code, no configuration, no route, no schema, no test. Nothing in this PR is imported or executed by any runtime path.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/pixel-platform-forensic-audits.json",
+      "docs/audit/PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md",
+      "docs/audit/PIXEL_PLATFORM_SUPERVISORY_CAPABILITY_MAP.md",
+      "docs/audit/PIXEL_TECHNOLOGY_SUFFICIENCY_AUDIT.md",
+      "docs/audit/census_pixel.json",
+      "docs/audit/vectorizer_cross_repo_reconciliation_001.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/pixel-platform-forensic-audits.json",
+      "docs/audit/PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md",
+      "docs/audit/PIXEL_PLATFORM_SUPERVISORY_CAPABILITY_MAP.md",
+      "docs/audit/PIXEL_TECHNOLOGY_SUFFICIENCY_AUDIT.md",
+      "docs/audit/census_pixel.json",
+      "docs/audit/vectorizer_cross_repo_reconciliation_001.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Checkpoint 1 (PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md): 157-path census, static call graph and a runtime witness on a real input. Establishes that GeometryCoachV2 shipped 2026-03-15, eighteen days BEFORE the three-loop document that names it, so the 'Loop 1' label is retrospective; and that the coach is not a pixel mechanism -- zero cv2 call sites, deciding on six dimensionless scores and millimetre-space instrument-family priors while only actuating pixel stages. Checkpoint 2 (PIXEL_PLATFORM_SUPERVISORY_CAPABILITY_MAP.md): seven natural joints named for what they do, with typed exchange states; no learning joint exists; arbitration was extracted into contour_election.py and then never adopted, production still using the inline elect_body_contour_v2. Checkpoint 3 (PIXEL_TECHNOLOGY_SUFFICIENCY_AUDIT.md): the development and testing record, and the written verdict -- lifecycle state EXPORT_SAFE, 'not sufficient for commercial viability', against a ten-item readiness gate of which only G1 was met. Reconciliation (vectorizer_cross_repo_reconciliation_001.md): cross-repo, Toolbox-custody, sandbox read-only; re-derived five inherited claims and refuted two. census_pixel.json is the machine-readable 157-path appendix.",
+    "why_not_redundant": "These replace terminology with traced evidence, and in four places they correct the existing record rather than restating it. The three-loop governance document lists Loop 3 as 'ORPHANED, not wired' when the wiring exists in both repositories behind a default-False flag; it describes Loop 1 as 'scale validation only' when a four-rule bounded retry system with a monotonic improvement gate runs by default in production. The inherited cross-repo framing would have misclassified POS-007/008 as solving a deliberately constrained problem, and recorded a capability as stalled inside a graduation process it had never entered. Each correction is anchored to a commit or an executed witness rather than to a reading."
+  },
+  "verification": {
+    "commands_run": [
+      "census: 157 paths ever created under the two services -- 107 LIVE, 37 BOTH, 8 MIGRATED_TO_SANDBOX, 4 RELOCATED, 1 DELETED. State assigned by positive evidence, never by grep-absence.",
+      "runtime witness on Guitar Plans/El Cuatro/El Cuatro 1.pdf: ownership_score 0.501 < 0.600 -> coach_action rerun_body_isolation, retry_count 1; elect_body_contour_v2 logged x3; Export blocked, no SVG/DXF/JSON emitted",
+      "*_AVAILABLE snapshot measured, not assumed: ANALYZER/CALIBRATION/PHASE3/PHASE4 true; PHASE2 false (hardcoded, documented); VECTORIZER false (silent except ImportError: pass against a module deleted 2026-03-15 in d9cd4d7d)",
+      "domain proof: geometry_coach_v2.py and geometry_authority.py contain 0 cv2 call sites; agentic_supervisor.py (VS) contains 17",
+      "ancestry proof: git merge-base --is-ancestor c958ccfa 50123379 -> TRUE (v1 -> v2 is sequence, not parallel introduction)",
+      "reconciliation re-derivation: 5 inherited claims checked, 3 CONFIRMED (14,436 LOC production IBG; mounted /api/body/solve-* routes; zero graduations), 2 REFUTED (POS-006 prior-prohibition; svgwrite as the Step-0 cause)",
+      "vectorizer-sandbox read-only throughout and unmodified -- its untracked files timestamp to 2026-06-16 and 2026-07-23, weeks before this session",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <6 files> -> PASSED",
+      "branch rebased onto origin/main 8d0e1ecf after discovering a stale origin/main ref made the diff appear to contain 50 files of other sessions' work"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md",
+      "intent": "Checkpoint 1. Census, call graph, runtime witness. Establishes the retrospective nature of the Loop 1 label and that Loop 1's controller is spec-domain, not pixel-domain.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/PIXEL_PLATFORM_SUPERVISORY_CAPABILITY_MAP.md",
+      "intent": "Checkpoint 2. Seven joints by responsibility and exchange, typed isolation states, loop vocabulary applied only at the end and only as a mapping question.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/PIXEL_TECHNOLOGY_SUFFICIENCY_AUDIT.md",
+      "intent": "Checkpoint 3. Development and testing record, and the written sufficiency verdict with its measured causes.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/vectorizer_cross_repo_reconciliation_001.md",
+      "intent": "Cross-repo reconciliation, Toolbox custody, sandbox read-only. Frozen as VECTOR-CROSS-REPO-RECONCILIATION-001 by owner ruling.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/audit/census_pixel.json",
+      "intent": "Machine-readable 157-path census appendix: path, first-seen date and commit, state, sandbox paths, relocation targets.",
+      "risk": "low",
+      "behavior_change": "none (data)"
+    },
+    {
+      "path": ".cbsp21/patches/pixel-platform-forensic-audits.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only; no architectural surface, no production code touched. The audits identify defects in existing systems -- a permanently-false VECTORIZER_AVAILABLE flag, an unadopted arbitration module, an undeclared PyMuPDF dependency in the sandbox -- but deliberately repair none of them. Each is recorded with a candidate repair and an explicit 'not applied' so that remediation remains a separate, owner-authorized decision."
+  }
+}
