@@ -147,7 +147,49 @@ templates/
 # But allow Smart Guitar DXF templates
 !services/api/app/sandboxes/smart_guitar/templates/
 !services/api/app/sandboxes/smart_guitar/templates/**
-/tools/
+# --- TOOLS-GITIGNORE-001 -------------------------------------------------
+# `/tools/` contents are ignored by default, but the repository's own tooling
+# lives here and IS tracked. The blanket rule is INHERITED, not chosen:
+# 8261fc87 (2025-12-14) narrowed a broader `tools/` pattern to `/tools/` while
+# fixing "136+ files in services/api/app/ being incorrectly ignored". No commit
+# in history states an intent to ignore repository tooling.
+#
+# Why this matters more than tidiness: under a blanket ignore, a NEW file added
+# to a tracked package is silently dropped. Tests still pass (the file is on
+# disk), `git status` still looks clean, and the PR ships incomplete. Already-
+# tracked files are unaffected, which is exactly what makes it hard to notice.
+#
+# So: ignore the directory's contents, then re-admit each deliberately tracked
+# family. Adding a new tool family means adding it here.
+# Regression witness: tests/test_tools_gitignore_intent.py
+/tools/*
+
+# Tracked tool packages
+!/tools/codegen/
+!/tools/codegen/**
+!/tools/grounding_agent/
+!/tools/grounding_agent/**
+!/tools/agent_program/
+!/tools/agent_program/**
+
+# Tracked loose tools
+!/tools/archtop-graduation-studio.html
+!/tools/backRadiusCalculator.js
+!/tools/blueprint-reader.html
+!/tools/body-outline-editor.html
+!/tools/package_sessions.sh
+!/tools/production-shop-hub.html
+!/tools/run_helical_smoke.py
+!/tools/smoke_helix_posts.ps1
+!/tools/verify_policy.py
+
+# Re-ignore generated content inside the re-admitted packages. The `!...**`
+# rules above are LATER than the global `__pycache__/` rule (line 20), and in
+# gitignore the last matching pattern wins -- so without this, un-ignoring a
+# package also un-ignores its bytecode. Caught by
+# test_generated_content_under_tools_stays_ignored.
+/tools/**/__pycache__/
+# --- end TOOLS-GITIGNORE-001 --------------------------------------------
 assets_staging/
 blueprint-reader/
 guitar_tap/
