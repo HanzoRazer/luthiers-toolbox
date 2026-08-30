@@ -200,7 +200,19 @@ def _has_durable_evidence(incident: Mapping[str, Any]) -> bool:
 
 
 def recurrence_eligible(incident: Mapping[str, Any]) -> bool:
-    """An incident counts toward recurrence only if independently evidenced."""
+    """An incident counts toward recurrence only if independently evidenced.
+
+    **This is a deliberately high bar, and it drives the terminal conclusion.**
+    All three must hold: ``independent_incident is True``, at least one entry in
+    ``evidence_refs``, and a non-empty ``underlying_incident_id``.
+
+    A real failure that was observed but never durably evidenced therefore counts
+    **zero** toward recurrence. That is intended — recurrence is the input to a
+    test that can authorize building an agent, so an unevidenced recollection must
+    not be able to raise a family to the two-incident threshold. The cost is that
+    the ledger under-reports lived experience, and a reader comparing this output
+    against memory should expect it to look sparse.
+    """
     return bool(
         incident.get("independent_incident") is True
         and _has_durable_evidence(incident)
@@ -233,8 +245,18 @@ def count_recurrence(incidents: Sequence[Mapping[str, Any]]) -> Dict[str, int]:
 
 
 def _all_established_yes(incidents: Iterable[Mapping[str, Any]], field: str) -> bool:
-    values = [str(incident.get(field)) for incident in incidents]
-    return bool(values) and all(is_established_yes(value) for value in values)
+    """True when every incident carries an explicit YES for ``field``.
+
+    Compares the raw value rather than ``str()``-coercing it: a missing field
+    would otherwise become the string ``"None"``, which is not a domain value
+    and would silently read as "present but not YES". ``validate_incident_schema``
+    already requires these fields, so a missing one is a ledger defect that
+    should not be quietly absorbed here.
+    """
+    members = list(incidents)
+    return bool(members) and all(
+        is_established_yes(incident.get(field)) for incident in members
+    )
 
 
 def uncovered_recurring_families(
@@ -242,10 +264,33 @@ def uncovered_recurring_families(
 ) -> List[str]:
     """Families that could feed the Agent-002 necessity test.
 
-    A family is excluded when every recurrence-eligible member is already
-    detectable by Grounding, or every member has a sufficient deterministic
-    check. UNKNOWN does not become NO, so mixed/unknown coverage keeps the
-    family from being treated as fully covered.
+    **Coverage rule (per-axis unanimity).** A recurring family is treated as
+    covered only when *one whole control* covers *every* recurrence-eligible
+    member: either all members are YES for ``grounding_would_detect``, or all
+    members are YES for ``deterministic_check_sufficient``. UNKNOWN and PARTIAL
+    are never promoted to YES, so mixed or unknown coverage leaves the family
+    uncovered.
+
+    **The rejected alternative, and why.** A per-member rule -- "covered when
+    every member is covered by *at least one* control, possibly a different one
+    each" -- would call this family covered:
+
+        member A: grounding=YES, deterministic=NO
+        member B: grounding=NO,  deterministic=YES
+
+    This function deliberately calls it **uncovered**. Neither control handles
+    the family on its own, and a family that only stays covered because two
+    different controls each catch half of it is exactly the case a human should
+    look at rather than have silently excluded. Per-axis unanimity is therefore
+    strictly the more conservative of the two rules: everything it excludes, the
+    per-member rule would also exclude.
+
+    That conservatism runs *toward* finding Agent 002 necessary, which is the
+    safe direction for a test whose output can authorize building an agent: it
+    cannot manufacture a NOT_JUSTIFIED conclusion by hiding a family.
+
+    Pinned by ``test_mixed_axis_coverage_is_not_treated_as_covered`` so the
+    choice cannot drift silently.
     """
     counts = count_recurrence(incidents)
     grouped = group_by_failure_family(incidents)
@@ -264,10 +309,13 @@ def uncovered_recurring_families(
 
 def agent_002_necessity_inputs(incidents: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     """Structured inputs for the human necessity test. Not a decision."""
+    # Computed once. The value is returned and also drives necessity_test_can_pass;
+    # calling it twice would let the two disagree if this ever stops being pure.
+    uncovered = uncovered_recurring_families(incidents)
     return {
         "recurrence_counts": count_recurrence(incidents),
-        "uncovered_recurring_families": uncovered_recurring_families(incidents),
-        "necessity_test_can_pass": bool(uncovered_recurring_families(incidents)),
+        "uncovered_recurring_families": uncovered,
+        "necessity_test_can_pass": bool(uncovered),
     }
 
 
@@ -281,6 +329,18 @@ def recommendation_requires_authority_contract(decision: str) -> bool:
 def summarize_control_coverage(
     incidents: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Dict[str, int]]:
+    """Raw value tallies per control field. **Diagnostic only — not a decision input.**
+
+    Returns unnormalised counts, e.g. ``{"grounding_would_detect":
+    {"YES": 2, "PARTIAL": 1, "NO": 1}}``. It applies none of the semantics the
+    necessity path depends on: it does not group by family, does not filter to
+    recurrence-eligible incidents, and does not distinguish UNKNOWN from PARTIAL.
+
+    A tally showing mostly YES therefore says nothing about whether any family is
+    covered under ``uncovered_recurring_families``. Deliberately not called by
+    ``render_summary`` or ``agent_002_necessity_inputs`` — use those for anything
+    that informs a decision, and this only for eyeballing ledger shape.
+    """
     fields = (
         "grounding_would_detect",
         "existing_ci_would_detect",

@@ -259,3 +259,83 @@ def test_stale_family_in_live_ledger_is_recurrent_but_covered() -> None:
     assert "stale_repository_reference" not in uncovered_recurring_families(
         data["incidents"]
     )
+
+
+# ---------------------------------------------------------------------------
+# Coverage-policy pins (review follow-up, PR #340)
+#
+# uncovered_recurring_families() encodes a policy choice, not just data
+# handling. These pin the choice so it cannot drift silently into the more
+# permissive per-member rule during a later refactor.
+# ---------------------------------------------------------------------------
+
+
+def _member(index: int, grounding: str, deterministic: str) -> dict:
+    """A minimal recurrence-eligible incident in a single shared family."""
+    return {
+        "incident_id": f"PIN-{index}",
+        "failure_family": "pinned_family",
+        "independent_incident": True,
+        "evidence_refs": [f"ref-{index}"],
+        "underlying_incident_id": f"underlying-{index}",
+        "grounding_would_detect": grounding,
+        "deterministic_check_sufficient": deterministic,
+    }
+
+
+def test_mixed_axis_coverage_is_not_treated_as_covered() -> None:
+    """Two members covered by *different* controls is UNCOVERED, by policy.
+
+    The per-member alternative -- "covered when each member is covered by at
+    least one control" -- would exclude this family. Per-axis unanimity keeps
+    it, because neither control handles the family on its own.
+    """
+    members = [_member(1, "YES", "NO"), _member(2, "NO", "YES")]
+    assert uncovered_recurring_families(members) == ["pinned_family"]
+
+
+def test_per_axis_unanimity_covers_the_family() -> None:
+    """One control covering every member does exclude the family."""
+    assert uncovered_recurring_families(
+        [_member(1, "YES", "NO"), _member(2, "YES", "NO")]
+    ) == []
+    assert uncovered_recurring_families(
+        [_member(1, "NO", "YES"), _member(2, "NO", "YES")]
+    ) == []
+
+
+@pytest.mark.parametrize("soft_value", ["UNKNOWN", "PARTIAL"])
+def test_soft_values_never_count_as_coverage(soft_value: str) -> None:
+    """UNKNOWN and PARTIAL are not YES, so they cannot cover a family."""
+    members = [_member(1, "YES", "NO"), _member(2, soft_value, "NO")]
+    assert uncovered_recurring_families(members) == ["pinned_family"]
+
+
+def test_necessity_inputs_are_internally_consistent() -> None:
+    """necessity_test_can_pass must agree with the list it is derived from.
+
+    Regression guard for the review finding that the two were computed by
+    separate calls and could disagree if the function ever stopped being pure.
+    """
+    for members in (
+        [_member(1, "NO", "NO"), _member(2, "NO", "NO")],
+        [_member(1, "YES", "NO"), _member(2, "YES", "NO")],
+    ):
+        result = agent_002_necessity_inputs(members)
+        assert result["necessity_test_can_pass"] is bool(
+            result["uncovered_recurring_families"]
+        )
+
+
+def test_missing_control_field_does_not_read_as_coverage() -> None:
+    """An absent field must not be coerced into a value that reads as non-YES-but-present.
+
+    _all_established_yes previously str()-coerced, turning a missing field into
+    the string "None". Behaviourally safe, but it absorbed a ledger defect that
+    validate_incident_schema exists to surface.
+    """
+    broken = _member(1, "YES", "NO")
+    del broken["grounding_would_detect"]
+    assert uncovered_recurring_families([broken, _member(2, "YES", "NO")]) == [
+        "pinned_family"
+    ]

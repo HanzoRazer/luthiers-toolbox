@@ -6,6 +6,49 @@ This is an evidence-to-design increment. It does not implement Agent 002.
 terminal_decision: INSUFFICIENT_EVIDENCE
 ```
 
+## Decision criteria — why this and not the other two
+
+Three terminal decisions were available. The rule separating them:
+
+| Decision | Requires |
+|---|---|
+| `AGENT_002_JUSTIFIED` | at least one failure family that **recurs** on independently evidenced incidents **and** is not covered by Grounding or by a deterministic check |
+| `NO_AGENT_002` | positive evidence that existing controls **do** cover every recurring family — a demonstrated negative |
+| `INSUFFICIENT_EVIDENCE` | neither has been established from durably evidenced incidents |
+
+**`INSUFFICIENT_EVIDENCE` was chosen because neither of the others is
+established — not because the answer is "no".**
+
+One family does recur: `stale_repository_reference`, at three independently
+evidenced incidents. So the failure is not a shortage of recurrence. It is that
+the one recurring family is **already covered** — Grounding detects it when
+invoked — so no family is simultaneously recurring *and* uncovered, and the
+necessity test cannot pass (§10). The other family, epistemic drift, is singular
+rather than recurring.
+
+`AGENT_002_JUSTIFIED` therefore fails on coverage, and separately on the last two
+rows of §10: no coherent bounded authority distinct from Agent 001 has been
+established, and every candidate examined either overlaps Grounding's question or
+becomes an extension of it.
+
+`NO_AGENT_002` fails for a different reason. It would require positive evidence
+that existing controls cover every recurring family — a demonstrated negative.
+With four incidents and one recurring family, that claim is unproven, and
+asserting it would convert *absence of evidence* into *evidence of absence*. It
+would also close the question permanently on a four-incident base.
+
+The distinction is load-bearing for what happens next: `NO_AGENT_002` would close
+the question, whereas `INSUFFICIENT_EVIDENCE` leaves it open and identifies what
+would settle it — a recurring family that existing controls demonstrably do *not*
+cover, gathered by continuing to record incidents rather than by reasoning further
+about the four already held.
+
+> Note on the bar's direction. `recurrence_eligible()` is deliberately strict and
+> `uncovered_recurring_families()` is deliberately conservative, both biasing
+> *toward* finding Agent 002 necessary. The conclusion is therefore not an
+> artifact of a stacked test: the analysis leaned toward justification and still
+> did not reach it.
+
 ---
 
 ## 1. Scope
