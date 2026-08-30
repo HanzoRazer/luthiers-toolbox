@@ -341,7 +341,48 @@ with **no production alternative at all**.
 
 ---
 
-## 10. State
+## 10. Frozen state — `VECTOR-CROSS-REPO-RECONCILIATION-001`
+
+**Frozen by owner ruling, 2026-08-29, against this artifact at commit `4fda5c70`.**
+
+```text
+PRODUCTION IBG SCALE          CONFIRMED — 35 files / 14,436 LOC, mounted, substantial
+SANDBOX -> TOOLBOX GRADUATION ZERO VERIFIED
+GRADUATION BRIDGE             defined; Gate 1 NOT REACHED; pre-bridge importability RED
+PRE-BRIDGE DEFECTS            undeclared fitz/PyMuPDF dependency
+                              dxf_compat package/import boundary
+ASPECT-RATIO / POS CLAIM      prior-prohibition interpretation      REFUTED
+                              POS-007A representation problem+repair VERIFIED
+                              production-vs-sandbox equivalence      UNRESOLVED
+MAY 11 -> AGE CAUSATION       TEMPORAL_COINCIDENCE_STRONG / CAUSAL_LINK_UNPROVEN
+AGE                           DISPLACED, NOT DISPROVEN
+                              no current implementation located
+                              no production alternative identified by this reconciliation
+RENDER-LANE PORTFOLIO         NOT VERIFIED BY THIS INCREMENT — NOT ASSERTED
+DET-001                       SEPARATE LANE — UNTOUCHED
+VECTOR-SANDBOX                READ-ONLY — UNMODIFIED
+```
+
+**No further Vectorizer task is commissioned from this result.** The reconciliation did its
+job without becoming a gate. DET-001 continues producing the product measurements this
+historical and architectural record deliberately did not invent.
+
+### Why this increment was worth running
+
+**Two of five load-bearing inherited claims failed re-verification.** Had they been adopted
+rather than re-derived, both would have become durable governance premises — one
+misclassifying POS-007/008 as solving a deliberately constrained problem when the evidence
+shows a representation defect that POS-007A recognised and repaired, the other recording a
+capability as stalled inside a graduation process it had never entered.
+
+The transferable rule:
+
+> **A cross-session handoff preserves claims. It does not preserve their epistemic status.**
+> A claimed fact can arrive intact while its evidence still needs to be reacquired.
+
+---
+
+## 11. Working state at time of freeze
 
 ```text
 Custody separation                 SUCCESS
