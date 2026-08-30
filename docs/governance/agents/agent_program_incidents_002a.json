@@ -1,0 +1,186 @@
+{
+  "schema_version": "agent_program_incidents_002a_v1",
+  "review_order": "AGENT-PROGRAM-002A",
+  "reviewed_at": "2026-08-30",
+  "grounding_run": {
+    "id": "GA-TRIAL-0006",
+    "status": "MATCH",
+    "decision": "PROCEED",
+    "checked": 14,
+    "matched": 14,
+    "head_sha": "a40d9030c8c0fa4c774e900860de021e865e7c15"
+  },
+  "terminal_decision": "INSUFFICIENT_EVIDENCE",
+  "incidents": [
+    {
+      "incident_id": "INC-002A-F1-001",
+      "date": "2026-08-30",
+      "program": "Pixel platform forensic audits / PR #339",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "description": "While preparing PR #339, a stale local origin/main ref made the branch diff appear to contain 50 files of other sessions' work. The authors fetched/rebased onto origin/main at 8d0e1ecf and the merged PR contains 6 files.",
+      "failure_family": "stale_repository_reference",
+      "active_lane_known": "YES",
+      "live_repo_state_known": "NO",
+      "claim_source_known": "YES",
+      "claim_evidence_reacquired": "YES",
+      "grounding_would_detect": "PARTIAL",
+      "existing_ci_would_detect": "NO",
+      "deterministic_check_sufficient": "YES",
+      "escaped_existing_controls": "NO",
+      "consequence": "MEDIUM",
+      "recurrence_group": "stale_origin_main_before_diff",
+      "independent_incident": true,
+      "underlying_incident_id": "pr-339-stale-origin-main-50-files",
+      "discovered_during_review": false,
+      "epistemic_status": "OBSERVED",
+      "classification_confidence": "HIGH",
+      "notes": "The handoff's '36 commits behind' figure was not independently recovered and is not used. Grounding would detect this only if a repo_head/file_exists claim used an independently sourced expected SHA; claims authored from the same stale checkout would MATCH. Existing control: git fetch before computing origin/main diffs. Classified as existing control not invoked early enough, not escaped Grounding authority.",
+      "evidence_refs": [
+        {
+          "kind": "committed_manifest",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": ".cbsp21/patches/pixel-platform-forensic-audits.json:43",
+          "note": "verification.commands_run records rebase onto origin/main 8d0e1ecf after a stale origin/main ref made the diff appear to contain 50 files of other sessions' work"
+        },
+        {
+          "kind": "github_pr",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "https://github.com/HanzoRazer/luthiers-toolbox/pull/339",
+          "note": "merged 2026-08-30T01:45:08Z; GitHub reports 6 changed files"
+        }
+      ]
+    },
+    {
+      "incident_id": "INC-002A-F1-002",
+      "date": "2026-08-30",
+      "program": "AGENT-PROGRAM-002A",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "description": "Incident discovered during this review. After git fetch, local main HEAD was 8d0e1ecf (Merge #333) while origin/main was a40d9030 (Merge #339): 9 commits behind, 0 ahead. The VECTOR-CROSS-REPO-RECONCILIATION-001 artifact was absent at the stale checkout and present after fast-forward. Worktree was clean. Fast-forward to a40d9030 succeeded.",
+      "failure_family": "stale_repository_reference",
+      "active_lane_known": "YES",
+      "live_repo_state_known": "NO",
+      "claim_source_known": "YES",
+      "claim_evidence_reacquired": "YES",
+      "grounding_would_detect": "YES",
+      "existing_ci_would_detect": "NO",
+      "deterministic_check_sufficient": "YES",
+      "escaped_existing_controls": "NO",
+      "consequence": "MEDIUM",
+      "recurrence_group": "stale_origin_main_before_diff",
+      "independent_incident": true,
+      "underlying_incident_id": "002a-live-stale-checkout-9-behind",
+      "discovered_during_review": true,
+      "epistemic_status": "OBSERVED",
+      "classification_confidence": "HIGH",
+      "notes": "Proves the family exists; does not by itself prove recurrence. Grounding v0.1 would have stopped a file_exists claim for docs/audit/vectorizer_cross_repo_reconciliation_001.md at HEAD on the stale checkout (later confirmed MATCH exists=false at 8d0e1ecf and exists=true at a40d9030). Fetch-sensitive work began before that Grounding run. Classified as existing control not invoked early enough, not circular justification for Agent 002.",
+      "evidence_refs": [
+        {
+          "kind": "git_ref",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "8d0e1ecf8ed8f90ed53b2460e83cfb232734f40d",
+          "note": "local HEAD before fast-forward; Merge pull request #333"
+        },
+        {
+          "kind": "git_ref",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "a40d9030c8c0fa4c774e900860de021e865e7c15",
+          "note": "origin/main after fetch; Merge pull request #339"
+        },
+        {
+          "kind": "git_rev_list",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "HEAD...origin/main before ff = 0 ahead / 9 behind",
+          "note": "recorded during 002A entry before fast-forward --ff-only"
+        },
+        {
+          "kind": "grounding_report",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "GA-TRIAL-0006 C-009/C-011",
+          "note": "file_exists reconciliation doc: exists=false at 8d0e1ecf, exists=true at HEAD a40d9030"
+        }
+      ]
+    },
+    {
+      "incident_id": "INC-002A-F1-003",
+      "date": "2026-08-27",
+      "program": "GROUNDING-AGENT-TRIAL-001",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "description": "Handoff instructed creation of the Grounding trial ledger. PR #326 had already merged that ledger to main minutes earlier. Grounding returned STALE/STOP (GA-TRIAL-0001) and prevented a redundant create.",
+      "failure_family": "stale_repository_reference",
+      "active_lane_known": "YES",
+      "live_repo_state_known": "YES",
+      "claim_source_known": "YES",
+      "claim_evidence_reacquired": "YES",
+      "grounding_would_detect": "YES",
+      "existing_ci_would_detect": "NO",
+      "deterministic_check_sufficient": "YES",
+      "escaped_existing_controls": "NO",
+      "consequence": "MEDIUM",
+      "recurrence_group": "stale_handoff_file_premise",
+      "independent_incident": true,
+      "underlying_incident_id": "ga-trial-0001-ledger-already-present",
+      "discovered_during_review": false,
+      "epistemic_status": "OBSERVED",
+      "classification_confidence": "HIGH",
+      "notes": "Existing Grounding authority caught this. Cannot be used by itself to justify Agent 002.",
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+          "note": "GA-TRIAL-0001 row and incident note: STALE/STOP, stale caught=yes"
+        },
+        {
+          "kind": "github_pr",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "https://github.com/HanzoRazer/luthiers-toolbox/pull/326",
+          "note": "ledger-creating PR already merged when the next order still said create the ledger"
+        }
+      ]
+    },
+    {
+      "incident_id": "INC-002A-F3-001",
+      "date": "2026-08-29",
+      "program": "VECTOR-CROSS-REPO-RECONCILIATION-001",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "description": "A later session inherited five load-bearing claims from a prior session. The claims were re-derived rather than adopted. Two of five did not survive (POS-006 as a prior-prohibition; svgwrite as the Graduation Step 0 cause). The committed reconciliation states the transferable rule: a handoff preserves claims, not their epistemic status.",
+      "failure_family": "inherited_claim_epistemic_drift",
+      "active_lane_known": "YES",
+      "live_repo_state_known": "YES",
+      "claim_source_known": "YES",
+      "claim_evidence_reacquired": "YES",
+      "grounding_would_detect": "NO",
+      "existing_ci_would_detect": "NO",
+      "deterministic_check_sufficient": "UNKNOWN",
+      "escaped_existing_controls": "YES",
+      "consequence": "HIGH",
+      "recurrence_group": "inherited_claim_without_rederivation",
+      "independent_incident": true,
+      "underlying_incident_id": "vector-cross-repo-reconciliation-001",
+      "discovered_during_review": false,
+      "epistemic_status": "OBSERVED",
+      "classification_confidence": "HIGH",
+      "notes": "Sandbox was not mounted in the 002A environment. Sandbox-side details are taken only from the committed Toolbox reconciliation record and are not independently re-measured here. Grounding v0.1 has no content-claim type, so it could not have checked these claims. A written re-derivation rule already exists in the reconciliation; whether that rule or a later Grounding claim type is sufficient is not established by a second independent incident.",
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/audit/vectorizer_cross_repo_reconciliation_001.md",
+          "note": "§1 two of five inherited claims refuted; §10 freeze; transferable rule at close of §10"
+        },
+        {
+          "kind": "github_commit",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "689e74c6",
+          "note": "docs(audit): cross-repo vectorizer/IBG reconciliation — 2 of 5 inherited claims refuted"
+        },
+        {
+          "kind": "github_commit",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "6abe6786",
+          "note": "docs(audit): freeze VECTOR-CROSS-REPO-RECONCILIATION-001 by owner ruling"
+        }
+      ]
+    }
+  ]
+}
