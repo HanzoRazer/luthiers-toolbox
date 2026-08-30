@@ -1,0 +1,156 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENT_PROGRAM_002A_POST_TRIAL_REVIEW",
+  "title": "AGENT-PROGRAM-002A: post-trial failure census; no Agent 002",
+  "intent": "Evidence-to-design increment only. Record independently verified post-trial incidents, classify existing-control coverage, and freeze the terminal decision INSUFFICIENT_EVIDENCE. Does not implement Agent 002, does not create an authority contract, and does not change Grounding Agent v0.1 behavior.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/agent-program-002a-post-trial-review.json",
+      "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_incidents_002a.json",
+      "tests/agent_program/__init__.py",
+      "tests/agent_program/test_incident_analysis.py",
+      "tools/agent_program/README.md",
+      "tools/agent_program/__init__.py",
+      "tools/agent_program/analyze_incidents.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/agent-program-002a-post-trial-review.json",
+      "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_incidents_002a.json",
+      "tests/agent_program/__init__.py",
+      "tests/agent_program/test_incident_analysis.py",
+      "tools/agent_program/README.md",
+      "tools/agent_program/__init__.py",
+      "tools/agent_program/analyze_incidents.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the 002A post-trial review, a read-only incident ledger, a stdlib summary utility plus tests, and trial row GA-TRIAL-0006 (MATCH/PROCEED). Terminal decision is INSUFFICIENT_EVIDENCE. No Agent 002 contract file is added.",
+    "why_not_redundant": "The Grounding trial ledger measures Grounding KEEP/REVISE/RETIRE. It does not classify whether a second agent is warranted. This increment is that missing evidence review."
+  },
+  "verification": {
+    "commands_run": [
+      "git fetch origin main && git merge --ff-only origin/main -> HEAD a40d9030, 0/0 ahead/behind, clean worktree",
+      "python3 -m tools.grounding_agent.cli --request /tmp/agent_program_002a_grounding_request.json --output /tmp/agent_program_002a_grounding_report.json --pretty -> MATCH/PROCEED exit 0; 14/14 MATCH (GA-TRIAL-0006)",
+      "python3 -m pytest tests/agent_program tests/grounding_agent -q",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <diff>",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "review response 2026-08-30 (PR #340 risk assessment). CI re-checked: 28 pass / 0 fail / 2 pending; mergeable_state UNSTABLE is the two in-flight API Tests, not a failure.",
+      "Issue 1 CONFIRMED: agent_002_necessity_inputs called uncovered_recurring_families twice. Now computed once. render_summary already cached correctly, so the defect was isolated.",
+      "Issue 2 PREMISE INVERTED, verified by execution. Members [grounding=YES,det=NO] + [grounding=NO,det=YES] -> ['F'] under the current rule; the proposed per-member alternative returns []. Per-axis unanimity is strictly MORE conservative, never more permissive. Policy left unchanged, made explicit in the docstring, and pinned by test_mixed_axis_coverage_is_not_treated_as_covered.",
+      "Issue 3 CONFIRMED: summarize_control_coverage has zero callers and had no docstring. Documented as diagnostic-only; not wired into render_summary.",
+      "_all_established_yes no longer str()-coerces, so a missing field cannot read as the domain value 'None'.",
+      "recurrence_eligible's strict bar documented as driving the terminal conclusion.",
+      "README CLI corrected during writing: first draft documented a positional ledger arg and a --validate-only flag; the real interface is --ledger with a default and no validate-only mode. Verified by running the documented command.",
+      "Decision-criteria section corrected during writing: first draft asserted no family reached the recurrence bar. The ledger shows stale_repository_reference at 3. The actual failure is coverage, not recurrence -- corrected to match §10.",
+      "py -3.11 -m pytest tests/agent_program/ -q --no-cov -> 19 passed, 1 skipped (was 14 passed; +5 policy pins)",
+      "py -3.11 -m tools.agent_program.analyze_incidents -> renders; necessity_test_can_pass false, uncovered_recurring_families (none)"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md",
+      "intent": "Principal 002A report: grounding entry, census, necessity test, INSUFFICIENT_EVIDENCE.",
+      "scan_targets": [
+        "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/governance/agents/agent_program_incidents_002a.json",
+      "intent": "Verified incident ledger only. Not a runtime registry.",
+      "scan_targets": [
+        "docs/governance/agents/agent_program_incidents_002a.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (data)"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record real operational use GA-TRIAL-0006 MATCH/PROCEED.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "tools/agent_program/__init__.py",
+      "intent": "Package marker. No agent, no dispatch.",
+      "scan_targets": [
+        "tools/agent_program/__init__.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "tools/agent_program/analyze_incidents.py",
+      "intent": "Read-only ledger load/validate/group/count/summarize. Stdlib only.",
+      "scan_targets": [
+        "tools/agent_program/analyze_incidents.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (read-only utility)"
+    },
+    {
+      "path": "tests/agent_program/__init__.py",
+      "intent": "Test package marker.",
+      "scan_targets": [
+        "tests/agent_program/__init__.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "tests/agent_program/test_incident_analysis.py",
+      "intent": "Deterministic T01–T12 classification/counting tests.",
+      "scan_targets": [
+        "tests/agent_program/test_incident_analysis.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".cbsp21/patches/agent-program-002a-post-trial-review.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/agent-program-002a-post-trial-review.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "tools/agent_program/README.md",
+      "intent": "Usage and the two policy rules a reader must know before interpreting output; marks summarize_control_coverage as diagnostic-only.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-30-AGENT-PROGRAM-002A",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and a read-only census utility. No Grounding Agent code change, no Agent 002, no production capability change, no orchestration."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

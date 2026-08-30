@@ -29,6 +29,7 @@ Spec: [`GROUNDING_AGENT_v0.1.md`](GROUNDING_AGENT_v0.1.md)
 | GA-TRIAL-0003 | 2026-08-27 | RMOS-PROFILING-CONVERGE-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #328 MERGED, frozen registry, profiling LIVE_UNGOVERNED_OUTPUT / RUNTIME_REACHABLE, #324 binding, mounted /gcode, canonical compute_profile_feasibility, and the trial ledger before mutation. C-009 (wrong SHA, material:false) was INSUFFICIENT and did not stop. |
 | GA-TRIAL-0004 | 2026-08-27 | RMOS-VCARVE-CONVERGE-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #328 and #329 MERGED, origin/main `c987bfce`, frozen V-carve POST_MERGE_AUTHORITY_EXPOSURE files present, Profiling GOVERNED (independent JSON read), trial ledger present. Grounding v0.1 has no content-claim type for dispositions. No Grounding Agent code was changed. |
 | GA-TRIAL-0005 | 2026-08-28 | RMOS-DRILLING-CONTRACT-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #330 MERGED, origin/main `795bc189`, V-carve HOLD / POST_MERGE_AUTHORITY_EXPOSURE, Profiling GOVERNED, drilling AUTHORITY_CONTRACT_MISMATCH / RUNTIME_REACHABLE / ungated YES (independent JSON read). No Grounding Agent code was changed. |
+| GA-TRIAL-0006 | 2026-08-30 | AGENT-PROGRAM-002A | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | After fetch+ff, origin/main and HEAD were `a40d9030` (#339 MERGED). 14/14 claims MATCH. No Agent 002 artifact present. Reconciliation file absent at prior `8d0e1ecf`, present at `a40d9030`. vectorizer-sandbox not present in this environment. No Grounding Agent code was changed. |
 
 ## Incident notes
 
@@ -39,6 +40,7 @@ Use only where a table row cannot adequately explain an important event.
 - **GA-TRIAL-0003** — Third real operational use. RMOS-PROFILING-CONVERGE-001 required Grounding before mutating the live Profiling G-code path. All material claims MATCH; decision PROCEED. Grounding v0.1 has no content-claim type, so the frozen Profiling classification (`LIVE_UNGOVERNED_OUTPUT` / `RUNTIME_REACHABLE`) was re-read from the committed registry independently. No Grounding Agent code was changed.
 - **GA-TRIAL-0004** — Fourth real operational use. RMOS-VCARVE-CONVERGE-001 required Grounding before acting on the live V-carve production G-code path. All 15 claims MATCH (including GitHub `pr_state` that #328 and #329 are merged); decision PROCEED. Frozen V-carve `POST_MERGE_AUTHORITY_EXPOSURE` and Profiling `GOVERNED` were re-read from the committed registry independently. Subsequent evaluator search found no substantive V-carve feasibility engine, so the order completed as HOLD rather than GOVERNED. No Grounding Agent code was changed.
 - **GA-TRIAL-0005** — Fifth real operational use. RMOS-DRILLING-CONTRACT-001 required Grounding before mutating the drilling contract boundary. All material claims MATCH (including GitHub `pr_state` that #330 is merged); decision PROCEED. Frozen drilling `AUTHORITY_CONTRACT_MISMATCH`, Profiling `GOVERNED`, and V-carve `POST_MERGE_AUTHORITY_EXPOSURE` were re-read from the committed registry independently. No Grounding Agent code was changed.
+- **GA-TRIAL-0006** — Sixth real operational use. AGENT-PROGRAM-002A required Grounding before writing the post-trial census. Local `main` was nine commits behind `origin/main` until a clean `--ff-only` to `a40d9030`. All 14 typed claims MATCH, including GitHub `pr_state` that #339 is merged and `file_exists` that the Agent 002 contract is absent. The stale-checkout observation is recorded as incident INC-002A-F1-002 in the 002A ledger, not as a Grounding false negative: Grounding was run after the fetch/ff, and a pre-fetch `file_exists` claim would have been the correct invocation. No Grounding Agent code was changed.
 
 ## Summary
 
@@ -47,8 +49,8 @@ TRIAL PERIOD:
 START: 2026-08-26
 END:
 
-TOTAL HANDOFFS CHECKED: 5
-  MATCH / PROCEED:                4
+TOTAL HANDOFFS CHECKED: 6
+  MATCH / PROCEED:                5
   STALE / STOP:                   1
   BLOCKED / STOP:                 0
   INSUFFICIENT_EVIDENCE / STOP:   0
