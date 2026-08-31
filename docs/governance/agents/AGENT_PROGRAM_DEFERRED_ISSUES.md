@@ -146,15 +146,99 @@ EXISTING_CONTROL → DETERMINISTIC_RULE → DETERMINISTIC_UTILITY
 
 ## 6. Current queue
 
-*(populated in the next commit)*
+Machine-readable: [`agent_program_deferred_issues.json`](agent_program_deferred_issues.json).
+
+Ten items. Two carry findings recovered after 002A and therefore cannot reach readiness
+(§2.2). One is ready for owner review. None is authorized.
+
+| ID | Title | State | Census | Solution class | Agent? |
+| --- | --- | --- | --- | --- | --- |
+| AP-DI-001 | Stale repository / reference state | `READY_FOR_DECISION` | IN_CENSUS | `DETERMINISTIC_RULE` | NO |
+| AP-DI-002 | Inherited claim epistemic drift | `INVESTIGATED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-003 | False-absence findings | `EVIDENCED` | PENDING | `DETERMINISTIC_RULE` | UNPROVEN |
+| AP-DI-004 | Cross-repo custody and lane confusion | `DISCOVERED` | IN_CENSUS | `EXISTING_CONTROL` | NO |
+| AP-DI-005 | Session / active-lane bleed | `DISCOVERED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-006 | Surviving architecture misread as intent | `DISCOVERED` | IN_CENSUS | `PROCESS_ONLY` | NO |
+| AP-DI-007 | Handoff evidence loss | `DISCOVERED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-008 | Cross-repo reconciliation need | `DISCOVERED` | IN_CENSUS | `PROCESS_ONLY` | NO |
+| AP-DI-009 | `/tools/` ignore boundary | `BLOCKED` | IN_CENSUS | `DETERMINISTIC_RULE` | NO |
+| AP-DI-010 | Grounding GitHub evidence blocked on gh-only auth | `EVIDENCED` | PENDING | `PROCESS_ONLY` | NO |
+
+### The three that carry weight
+
+**AP-DI-001 — the only item ready for a decision.** Three independent census incidents;
+the family recurs. It is *not* uncovered — `git fetch` plus an invoked Grounding catches
+it — but one gap is precisely stated: Grounding resolves `repo_head` local-first, so a
+stale local `origin/main` that still resolves is trusted, and a claim whose expected SHA
+was copied out of the stale checkout will MATCH. What is ready is the decision on a small
+freshness check, not a decision to build an agent.
+
+> This order supplied its own instance. The pre-grounding pass ran from a checkout 272
+> commits behind `origin/main` and concluded `docs/governance/agents/` did not exist. It
+> exists. The stale view produced a false absence — which is why AP-DI-001 and AP-DI-003
+> are linked.
+
+**AP-DI-003 — 002A's F4 exclusion is now falsified.** 002A excluded false-absence for want
+of a documented case. This pass recovered two, both durable and independently inspectable:
+BR-024, where grep-absence of the literal `ezdxf.new("R2000")` call form was read as R2000
+removal though R2000 remains supported across ~29 `app/` files; and the refuted inherited
+claim that Step 0 was RED because `svgwrite` was absent, when it is declared and installed.
+A control exists — *no state is assigned from grep-absence alone* — but it is stated in one
+audit's method section, is unenforced, and postdates both instances.
+
+**AP-DI-010 — found by running the tool rather than reading it.** This order produced the
+program's first `BLOCKED / STOP`. Both `pr_state` claims blocked on
+`no GITHUB_TOKEN/GH_TOKEN available`; a re-run with the token exported returned
+`MATCH / PROCEED` 15/15, isolating credentials as the sole cause. The adapter behaved
+correctly — it failed closed rather than proceeding without GitHub evidence. The gap is
+operability: an operator authenticated only through the `gh` keyring meets a STOP that
+looks like a divergence. A `gh` fallback is not the fix; the adapter's read-only guarantee
+rests on having no subprocess path.
+
+### Items retained without a recovered incident
+
+AP-DI-004 through AP-DI-008 each had one deliberate recovery pass that returned
+`NOT_FOUND`. They are retained because the order names them, and because a recorded
+`ATTEMPTED / NOT_FOUND` is itself useful — it dates the search so the next reviewer
+extends it rather than repeating it. For AP-DI-004 and AP-DI-006 the pass recovered
+*controls and analytical rules*, not escaped incidents; that is why their solution classes
+are `EXISTING_CONTROL` and `PROCESS_ONLY` rather than `UNRESOLVED`.
+
+AP-DI-007 is the weakest retained item and is flagged in its own `open_questions` as a
+probable duplicate facet of AP-DI-002. It is kept separate only because the order lists it
+as a distinct candidate family; merging it is an owner decision.
 
 ## 7. Closed / superseded findings
 
-*(populated in the next commit)*
+None. No item in this queue has been closed or superseded.
+
+`AP-DI-009` is the nearest candidate and is deliberately **not** marked
+`SUPERSEDED_BY_CONTROL`. TOOLS-GITIGNORE-001 exists as PR #341, observed open, draft, and
+unmerged — confirmed independently by this order's Grounding claim C-003. `/tools/` is
+still ignored at `.gitignore:150` on `main`, so the control is proposed, not deployed.
+Marking it superseded would assert a repair that is not in effect.
+
+```text
+TOOLS-GITIGNORE-001
+PR #341     = OPEN / DRAFT
+main control = NOT DEPLOYED
+
+therefore: BLOCKED, not SUPERSEDED
+```
+
+It may transition only after #341 merges **and** a later re-ground confirms the rule is
+live on `main`.
 
 ## 8. Unresolved evidence needs
 
-*(populated in the next commit)*
+| Need | Serves | Why it is open |
+| --- | --- | --- |
+| Owner-authorized incident-census amendment | AP-DI-003, AP-DI-010 | Both rest on durable evidence recovered after 002A closed. Neither can reach readiness until ratified into the census (§2.2). |
+| A second epistemic-drift incident outside the PR #339 cluster | AP-DI-002 | 002A falsifier 2. One incident cannot establish recurrence. |
+| Any durable record of the SGAQ/001A bleed | AP-DI-005 | 002A falsifier 1. Two independent passes have now failed to recover one. |
+| A custody error not expressed as a declared claim | AP-DI-004 | `active_lane` covers declared mutation targets; whether anything escapes it is untested. |
+| Independence of BR-024 and the `svgwrite` refutation | AP-DI-003 | Different subsystems and dates, but the `svgwrite` refutation shares a discovery event with INC-002A-F3-001. Recurrence must not be counted before this is settled. |
+| Whether AP-DI-007 is separable from AP-DI-002 | AP-DI-007 | No incident yet distinguishes the two mechanisms. |
 
 ## 9. How a future Dev Order consumes an item
 
