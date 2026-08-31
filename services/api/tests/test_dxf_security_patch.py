@@ -39,6 +39,62 @@ from app.cam.graph_algorithms import (
 )
 
 
+# A complexity-regression guard -- NOT a performance guarantee.
+#
+# It answers exactly one question: "is deduplication still roughly constant work
+# per insert?" It says nothing about throughput, latency or wall-clock time and
+# must not be read as an SLA or a benchmark. Measuring throughput is what the two
+# assertions this replaced attempted, and why they were replaced: they graded the
+# CI runner rather than the algorithm.
+#
+# Two fixtures share this bound and they are NOT equally sensitive, because
+# sensitivity follows point density, not point count:
+#
+#   1,417 random points over 400x300mm (sparse)   10,000 grid points over 50x50mm
+#     cell_size  per insert  verdict                cell_size  per insert  verdict
+#         0.1mm        0.00  pass  <- production        0.1mm        0.00  pass
+#         1.0mm        0.06  pass                       1.0mm       17.02  FAIL
+#        10.0mm        5.03  pass                      10.0mm    1,351.50  FAIL
+#       100.0mm      348.21  FAIL                     100.0mm    4,999.50  FAIL
+#
+# So the dense grid is the tighter guard: it objects once cell_size reaches
+# ~1mm, while the sparse case tolerates 10mm. Note this bound is a
+# constant-factor bound, not a strict complexity bound -- at 1mm the grid case
+# is still O(1) per insert, just with a constant of 17. Failing there is
+# deliberate: production has no reason to move off 0.1mm, so a jump that large
+# is a configuration change that should be looked at, not waved through.
+#
+# cell_size is not a live tuning knob: production constructs SpatialHash in one
+# place, app/cam/graph_algorithms.py, always with SPATIAL_HASH_CELL_SIZE_MM
+# (0.1mm, from app/cam/dxf_limits.py, chosen for a typical 0.01mm CNC
+# tolerance). Nothing overrides it.
+MAX_COMPARISONS_PER_INSERT = 10
+
+def _counting_point_class(counter):
+    """A PointLike whose is_close() increments ``counter``.
+
+    Counting comparisons is what makes this suite's performance claim
+    checkable without timing anything: ``find_existing()`` calls
+    ``is_close()`` exactly once per candidate in the 3x3 cell
+    neighbourhood, so the call count *is* the work the spatial hash does.
+    """
+
+    class CountingPoint:
+        __slots__ = ("x", "y")
+
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+        def is_close(self, other, tolerance=0.001):
+            counter["comparisons"] += 1
+            return (
+                abs(self.x - other.x) < tolerance
+                and abs(self.y - other.y) < tolerance
+            )
+
+    return CountingPoint
+
 # =============================================================================
 # Test 1: File Size Limits
 # =============================================================================
@@ -203,27 +259,41 @@ class TestSpatialHashPerformance:
         assert idx1 == idx2  # 3x3 neighborhood search found it
     
     def test_performance_scaling(self):
-        """Should handle 10K points efficiently (O(n) not O(n²))."""
-        import time
-        
+        """10K points stay O(1) per insert, not O(n^2).
+
+        This asserted ``elapsed < 1.0`` until 2026-08-31. It is the same defect
+        as the 0.1s assertion that used to sit in
+        TestSecurityPatchIntegration: a wall-clock bound grades the runner, not
+        the algorithm. It had simply not tripped yet -- the loop takes ~0.036s
+        locally, but the sibling assertion was observed running 110x slower on
+        a contended CI runner, which would have put this one around 4s against
+        its 1s bound. Converted before it failed rather than after.
+
+        See MAX_COMPARISONS_PER_INSERT for the bound and its headroom.
+        """
+        counter = {"comparisons": 0}
+        point_cls = _counting_point_class(counter)
+
         hasher = SpatialHash(cell_size=0.1)
-        
-        # Generate 10,000 points in 100x100mm area
+
+        # 10,000 points on a 0.5mm grid, i.e. a 50x50mm area
         points = [
-            self.MockPoint(x * 0.5, y * 0.5) 
-            for x in range(100) 
+            point_cls(x * 0.5, y * 0.5)
+            for x in range(100)
             for y in range(100)
         ]
-        
-        start = time.time()
+
         for p in points:
             hasher.get_or_add(p)
-        elapsed = time.time() - start
-        
-        # Should complete in <1 second (O(n) performance)
-        # O(n²) would take 10-30 seconds for 10K points
-        assert elapsed < 1.0, f"Too slow: {elapsed:.2f}s (expected <1s)"
-        assert len(hasher.points) == 10000  # All unique
+
+        n = len(points)
+        assert len(hasher.points) == n, "grid points are distinct; none may be merged"
+        assert counter["comparisons"] < MAX_COMPARISONS_PER_INSERT * n, (
+            f"{counter['comparisons']} comparisons for {n} inserts "
+            f"({counter['comparisons'] / n:.1f} per insert) exceeds the "
+            f"{MAX_COMPARISONS_PER_INSERT}/insert complexity-regression bound; "
+            f"a linear scan would be ~{n * (n - 1) // 2:,}"
+        )
 
 
 # =============================================================================
@@ -333,31 +403,6 @@ class TestSecurityPatchIntegration:
         
         assert exc.value.status_code == 413
     
-    @staticmethod
-    def _counting_point_class(counter):
-        """A PointLike whose is_close() increments ``counter``.
-
-        Counting comparisons is what makes this suite's performance claim
-        checkable without timing anything: ``find_existing()`` calls
-        ``is_close()`` exactly once per candidate in the 3x3 cell
-        neighbourhood, so the call count *is* the work the spatial hash does.
-        """
-
-        class CountingPoint:
-            __slots__ = ("x", "y")
-
-            def __init__(self, x, y):
-                self.x = x
-                self.y = y
-
-            def is_close(self, other, tolerance=0.001):
-                counter["comparisons"] += 1
-                return (
-                    abs(self.x - other.x) < tolerance
-                    and abs(self.y - other.y) < tolerance
-                )
-
-        return CountingPoint
 
     def test_spatial_hash_does_not_degenerate_to_linear_scan(self):
         """Realistic guitar-body point count stays O(1) per insert.
@@ -369,14 +414,15 @@ class TestSecurityPatchIntegration:
         unrelated pull request. The property actually worth protecting is that
         deduplication does not regress to the O(n^2) linear scan this module
         was written to replace, and comparison count measures that directly
-        and deterministically.
+        and deterministically. See MAX_COMPARISONS_PER_INSERT for the bound's
+        headroom and for why this is a complexity guard, not a speed guarantee.
         """
         import random
 
         from app.cam.spatial_hash import SpatialHash
 
         counter = {"comparisons": 0}
-        point_cls = self._counting_point_class(counter)
+        point_cls = _counting_point_class(counter)
 
         # Simulate Stratocaster body (1,417 points from user's test data)
         random.seed(42)
@@ -394,14 +440,14 @@ class TestSecurityPatchIntegration:
 
         assert len(hasher) == n, "distinct points must not be deduplicated away"
 
-        # A linear scan would average n/2 comparisons per insert. Allow a
-        # generous constant instead: the bound is about catching a change in
-        # complexity class, not about pinning the current figure.
-        assert counter["comparisons"] < 10 * n, (
+        # A linear scan would average n/2 comparisons per insert. See
+        # MAX_COMPARISONS_PER_INSERT for the bound's headroom and rationale.
+        assert counter["comparisons"] < MAX_COMPARISONS_PER_INSERT * n, (
             f"Spatial hash made {counter['comparisons']} comparisons for {n} points "
-            f"({counter['comparisons'] / n:.1f} per insert). That is not O(1) per "
-            f"insert; a linear scan would be ~{n // 2}. Check cell_size against the "
-            "coordinate range."
+            f"({counter['comparisons'] / n:.1f} per insert), above the "
+            f"{MAX_COMPARISONS_PER_INSERT}/insert complexity-regression bound. "
+            f"That is not O(1) per insert; a linear scan would be ~{n // 2}. This is "
+            "not a speed regression -- check cell_size against the coordinate range."
         )
         assert counter["comparisons"] < naive_comparisons // 100
 
@@ -417,7 +463,7 @@ class TestSecurityPatchIntegration:
         from app.cam.spatial_hash import SpatialHash
 
         counter = {"comparisons": 0}
-        point_cls = self._counting_point_class(counter)
+        point_cls = _counting_point_class(counter)
 
         random.seed(42)
         distinct = [
@@ -440,7 +486,7 @@ class TestSecurityPatchIntegration:
             f"expected {len(distinct)} unique points, got {len(hasher)}"
         )
         assert len(set(indices)) == len(distinct)
-        assert counter["comparisons"] < 10 * len(points), (
+        assert counter["comparisons"] < MAX_COMPARISONS_PER_INSERT * len(points), (
             f"{counter['comparisons']} comparisons for {len(points)} inserts is not "
             "O(1) per insert even with duplicates present"
         )
