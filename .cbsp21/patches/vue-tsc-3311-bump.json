@@ -1,0 +1,84 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_TSC_3311_BUMP",
+  "title": "Bump vue-tsc from 3.3.10 to 3.3.11",
+  "intent": "Dependabot dev-dependency patch bump. vue-tsc is the client type checker and does not ship: it runs in the lint-build job only. No application code, no runtime dependency, and no engine-floor change.",
+  "change_type": "dependency",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-tsc-3311-bump.json",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-tsc-3311-bump.json",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "devDependency vue-tsc ^3.3.10 -> ^3.3.11, its lockstep @vue/language-core 3.3.10 -> 3.3.11, and a floated transitive picomatch 4.0.5 -> 4.0.7. Package count is unchanged at 431 on both sides; no package is added or removed.",
+    "why_not_redundant": "This manifest exists because the gate had been borrowing an unrelated one. Auto-discovery selected .cbsp21/patches/dep-sec-pr281-types-node.json — the manifest for PR #281's @types/node bump — which happens to declare both files this PR touches and therefore scored 100%. The gate was green on coincidence rather than on a declaration about this change. A per-PR manifest replaces that."
+  },
+  "verification": {
+    "commands_run": [
+      "Type-check ratchet is unmoved: the lint-build run for this PR reports 'vue-tsc errors: 150 | baseline ceiling: 150'. 3.3.11 produces exactly the same diagnostics as 3.3.10, so the bump neither fixes nor introduces a type error. Worth stating plainly because the ratchet sits AT its ceiling with zero headroom — a single new error would fail it.",
+      "Engine floor unaffected: reproduced nodeEngineFloor.spec.ts's dependenciesAboveTheFloor() logic over the PR lockfile — every non-optional package's engines.node is covered by a lane of the declared floor '^20.19.0 || >=22.12.0'. Zero offenders, identical to main. This PR needs no floor change (unlike #347).",
+      "Blast radius: vue-tsc is a devDependency and is invoked only by the lint-build type-check step. It is not bundled and does not reach the Railway image.",
+      "Lockfile reviewed line by line (11 +/-): only the three version/resolved/integrity triples named above. No transitive package added, removed, or re-parented.",
+      "CI observed running Node 22.23.2, which satisfies the declared floor.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <the 3 files> -> 100.0% coverage, PASSED"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Bump the vue-tsc devDependency range to ^3.3.11.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (dev dependency metadata)"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lockfile resolution for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (lockfile)"
+    },
+    {
+      "path": ".cbsp21/patches/vue-tsc-3311-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/vue-tsc-3311-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-VUE-TSC-3311-BUMP",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-only patch bump of the type checker. No application code, no API, no schema, no runtime dependency, no engine-floor change, and no movement in the type-check ratchet."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
