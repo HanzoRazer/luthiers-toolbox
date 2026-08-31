@@ -1,0 +1,16 @@
+{
+  "schema_version": "agent_program_deferred_issues_v1",
+  "order": "AGENT-PROGRAM-003",
+  "reviewed_at": "2026-08-31",
+  "census_authority": "docs/governance/agents/agent_program_incidents_002a.json",
+  "implementation_authority": "NONE",
+  "grounding_run": {
+    "id": "GA-TRIAL-0007",
+    "status": "MATCH",
+    "decision": "PROCEED",
+    "checked": 15,
+    "matched": 15,
+    "head_sha": "b53f9963c92a83ed26d3297adbe58cbb5942f0ad"
+  },
+  "items": []
+}
