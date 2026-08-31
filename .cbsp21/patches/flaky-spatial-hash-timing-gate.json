@@ -3,7 +3,7 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "FLAKY_SPATIAL_HASH_TIMING_GATE",
-  "title": "Replace the spatial-hash wall-clock gate with a deterministic complexity assertion",
+  "title": "Replace the spatial-hash wall-clock gates with deterministic complexity assertions, split the module, and remove its dead twin",
   "intent": "Test-only fix. This file held BOTH of the services/api suite's wall-clock assertions: `elapsed < 0.1` in test_spatial_hash_with_real_data, which failed PR #345 at 0.604s on a contended runner, and `elapsed < 1.0` in test_performance_scaling, which had not tripped yet. Both measured how fast the runner was rather than how the algorithm scales. Both are replaced with comparison-count assertions against a shared, documented complexity-regression bound, and a new test covers the deduplication path the sparse fixture never reached. No production code changes.",
   "change_type": "test",
   "behavior_change": "none",
@@ -11,15 +11,25 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
-      "services/api/tests/test_dxf_security_patch.py"
+      "services/api/app/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_operation_timeouts.py",
+      "services/api/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_upload_guard.py",
+      "services/api/tests/test_graph_algorithms_dfs.py",
+      "services/api/tests/test_spatial_hash.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
-      "services/api/tests/test_dxf_security_patch.py"
+      "services/api/app/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_operation_timeouts.py",
+      "services/api/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_upload_guard.py",
+      "services/api/tests/test_graph_algorithms_dfs.py",
+      "services/api/tests/test_spatial_hash.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "test_spatial_hash_with_real_data is renamed to test_spatial_hash_does_not_degenerate_to_linear_scan and test_performance_scaling is converted; both now count is_close() calls instead of timing a loop. find_existing() calls is_close() exactly once per candidate in the 3x3 cell neighbourhood, so the call count is the work the structure does and is identical on every machine. MAX_COMPARISONS_PER_INSERT and the counting-point helper are module-level so both classes share one documented bound. test_spatial_hash_deduplicates_coincident_points is added to exercise the matching path.",
+    "what_changed": "Both wall-clock assertions in test_dxf_security_patch.py are replaced by comparison-count assertions against a shared, documented MAX_COMPARISONS_PER_INSERT, and a test is added for the deduplication path the sparse fixture never reached. The module is then split by concern into test_dxf_upload_guard.py, test_spatial_hash.py, test_graph_algorithms_dfs.py and test_dxf_operation_timeouts.py, and the original is removed. The never-collected duplicate at app/tests/test_dxf_security_patch.py is deleted. All 24 tests are preserved.",
     "why_not_redundant": "This is the only wall-clock assertion in the entire services/api test suite, so nothing else covers the performance claim and nothing else shares this failure mode. The replacement is strictly stronger: the old assertion could pass while the structure silently degraded on a fast runner, and could fail while it was perfectly healthy on a slow one."
   },
   "verification": {
@@ -43,18 +53,65 @@
       "GATE CAUGHT ME, correctly: debt-gates 'File size check (ratchet mode)' failed at 528 lines against a 500-line threshold. The file was 397 lines on main and is NOT in app/ci/file_sizes_baseline.json (which holds only 3 pre-existing violators), so my documentation created a NEW violation rather than growing an existing one.",
       "Resolved by trimming, not by baselining. Adding the file to the baseline would ratchet debt upward for a file I had just oversized, which is the exact move the gate exists to stop. Compressed the constant's comment and the three test docstrings -- the full measured tables and history live here in the manifest, in the commit message and in the PR body, so nothing was lost, only de-duplicated out of the source file. 528 -> 498 lines, gate 'OK'.",
       "Residual risk recorded: at 498 lines the file has ~2 lines of margin under the threshold. It covers six unrelated concerns (file size, entity count, spatial hash, iterative DFS, timeouts, rollback criteria) and the durable fix is to split it, which is out of scope here.",
-      "py -3.11 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> 'OK: No files exceed 500 lines'"
+      "py -3.11 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> 'OK: No files exceed 500 lines'",
+      "DEFERRED ITEM 1 CLEARED - dead twin deleted. Re-verified before removing rather than trusting the earlier note, and the earlier note was imprecise: I had said it 'would error if it ran'. It does not. It carries a module-level `pytestmark = pytest.mark.skip(reason=\"Test API mismatch: tests do not match actual implementation\")`, so all 22 of its tests SKIP and never reach the bad SpatialHash(tolerance=...) call. The TypeError is real but unreachable.",
+      "Positive-trace evidence for the deletion, three independent strands: (1) default collection yields 0 tests from app/tests/ because testpaths is 'tests' in pytest.ini and [\"tests\"] in pyproject.toml; (2) the module disables itself with the skip mark above; (3) a live twin covers the same subject under services/api/tests/. No live reference anywhere -- the only hits are historical logs under reports/archaeology/, which record the original 'test: skip test_dxf_security_patch.py (API mismatch...)' commit.",
+      "DEFERRED ITEM 2 CLEARED - module split by concern. 498 lines covering six concerns became four files: test_dxf_upload_guard.py (133), test_spatial_hash.py (237), test_graph_algorithms_dfs.py (57), test_dxf_operation_timeouts.py (93). Largest is 237 against the 500-line ceiling, so headroom went from ~2 lines to ~263.",
+      "The split was performed programmatically by slicing class boundaries rather than by hand, so no test could be silently dropped in transcription. Test count verified identical: 24 before, 24 after. One import (validate_file_size, UploadFile, io) was missing in the timeouts module on the first run and was caught by the suite immediately.",
+      "app/cam/spatial_hash.py remains untouched throughout. No production code is modified by any part of this PR.",
+      "py -3.11 -m pytest tests/test_dxf_upload_guard.py tests/test_spatial_hash.py tests/test_graph_algorithms_dfs.py tests/test_dxf_operation_timeouts.py -q --no-cov -> 24 passed"
     ]
   },
   "files": [
     {
-      "path": "services/api/tests/test_dxf_security_patch.py",
-      "intent": "Replace a machine-speed assertion with a deterministic complexity assertion, and cover the deduplication path.",
+      "path": "services/api/tests/test_spatial_hash.py",
+      "intent": "Spatial hash deduplication plus the two comparison-count complexity guards that replace the wall-clock assertions.",
       "scan_targets": [
-        "services/api/tests/test_dxf_security_patch.py"
+        "services/api/tests/test_spatial_hash.py"
       ],
       "risk": "low",
       "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_upload_guard.py",
+      "intent": "File-size and entity-count limits, plus the early-rejection integration test.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_upload_guard.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_graph_algorithms_dfs.py",
+      "intent": "Iterative DFS stack-overflow guards.",
+      "scan_targets": [
+        "services/api/tests/test_graph_algorithms_dfs.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_operation_timeouts.py",
+      "intent": "Async operation timeouts and rollback criteria.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_operation_timeouts.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_security_patch.py",
+      "intent": "Removed; its contents are distributed across the four modules above.",
+      "scan_targets": [],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/app/tests/test_dxf_security_patch.py",
+      "intent": "Removed; never-collected, self-skipping duplicate superseded by the live suite.",
+      "scan_targets": [],
+      "risk": "low",
+      "behavior_change": "none (dead tests)"
     },
     {
       "path": ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
@@ -67,31 +124,16 @@
     }
   ],
   "architecture_scan": {
-    "scan_id": "AS-2026-08-31-FLAKY-SPATIAL-HASH-GATE-R2",
+    "scan_id": "AS-2026-08-31-FLAKY-SPATIAL-HASH-GATE-R3",
     "risk_summary": {
       "critical": 0,
       "high": 0,
       "medium": 0,
-      "low": 2
+      "low": 0
     },
-    "findings": [
-      {
-        "id": "AS-SPATIAL-L1",
-        "severity": "low",
-        "summary": "services/api/app/tests/test_dxf_security_patch.py is a stale duplicate that is never collected and would error if it were.",
-        "detail": "Both pytest.ini (testpaths = tests) and pyproject.toml (testpaths = [\"tests\"]) exclude app/tests/, so the file never runs. It calls SpatialHash(tolerance=0.01) six times, and that constructor takes cell_size, not tolerance -- verified to raise TypeError against the current API. It does not contain either wall-clock assertion, so it is an older variant rather than a copy. Positive-trace evidence of deadness: excluded by config, broken against the live API, and superseded by a live twin at services/api/tests/.",
-        "disposition": "DEFERRED - out of scope for this fix. Deleting test files is its own change and needs its own review; recorded so it is not rediscovered."
-      },
-      {
-        "id": "AS-SPATIAL-L2",
-        "severity": "low",
-        "summary": "services/api/tests/test_dxf_security_patch.py sits ~2 lines under the 500-line debt threshold.",
-        "detail": "The file covers six unrelated concerns in one module (file size limits, entity count limits, spatial hash, iterative DFS, async timeouts, rollback criteria). At 498 lines any further addition trips the file-size ratchet, so the next person to add a test here will be forced into the same trim-or-baseline decision.",
-        "disposition": "DEFERRED - splitting the module by concern is the durable fix and is its own change. Recorded so the next author knows why the file is tight."
-      }
-    ],
+    "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "Test-only change. No production code, no API, no schema, no dependency change. app/cam/spatial_hash.py is untouched -- the implementation was never the defect. One low finding recorded and deferred."
+    "acknowledgement_notes": "Test-only change: two flaky gates replaced with deterministic ones, one module split by concern, one never-collected duplicate deleted. No production code, no API, no schema, no dependency change. Both previously deferred low findings are now closed rather than carried."
   },
   "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
   "owner_approval": {
