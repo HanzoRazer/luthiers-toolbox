@@ -1,0 +1,114 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GROUNDING_AGENT_002_V0_2",
+  "title": "GROUNDING-AGENT-002: Grounding v0.2 active-lane & handoff provenance guard",
+  "intent": "Additively extend the existing Grounding Agent v0.1 with handoff/session-lane provenance checking, without rebuilding the active-lane machinery v0.1 already has. Adds a handoff_provenance claim type (program/work-order/repository match against the active lane), an optional top-level evidence_lanes list (foreign EVIDENCE_ONLY read-only evidence), a controlled HANDOFF_LANE_CONFLICT reason on ClaimResult, and INSUFFICIENT_EVIDENCE when required provenance is absent. Deterministic only — no NLP, no keyword classifier, no orchestration, no second agent, no production behavior change. Existing ActiveLane model, active_lane claim, CrossRepoPolicy, GA-HIST-05 behavior, and all v0.1 serialization/CLI remain unchanged. Records GA-TRIAL-0007 (the real MATCH/PROCEED grounding of this handoff).",
+  "change_type": "feature",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/grounding-agent-v0.2.json",
+      "tools/grounding_agent/models.py",
+      "tools/grounding_agent/evidence.py",
+      "tools/grounding_agent/engine.py",
+      "tests/grounding_agent/test_models.py",
+      "tests/grounding_agent/test_engine.py",
+      "tests/grounding_agent/test_historical_fixtures.py",
+      "tests/grounding_agent/test_anti_mutation.py",
+      "tests/grounding_agent/fixtures/",
+      "docs/governance/agents/GROUNDING_AGENT_v0.2.md",
+      "docs/governance/agents/grounding_request.v0.2.example.json",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ],
+    "files_expected_to_change": [
+      "tools/grounding_agent/models.py",
+      "tools/grounding_agent/evidence.py",
+      "tools/grounding_agent/engine.py",
+      "tests/grounding_agent/test_models.py",
+      "tests/grounding_agent/test_engine.py",
+      "tests/grounding_agent/test_historical_fixtures.py",
+      "tests/grounding_agent/test_anti_mutation.py",
+      "tests/grounding_agent/fixtures/GA-LANE-01-same-repo.json",
+      "tests/grounding_agent/fixtures/GA-LANE-02-cross-repo-evidence-only.json",
+      "tests/grounding_agent/fixtures/GA-LANE-03-wrong-program.json",
+      "tests/grounding_agent/fixtures/GA-LANE-04-wrong-work-order.json",
+      "tests/grounding_agent/fixtures/GA-LANE-05-missing-provenance.json",
+      "tests/grounding_agent/fixtures/GA-LANE-06-session-bleed-style.json",
+      "docs/governance/agents/GROUNDING_AGENT_v0.2.md",
+      "docs/governance/agents/grounding_request.v0.2.example.json",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "models.py: add handoff_provenance ClaimType, EvidenceMode, EvidenceLane, ClaimReason, optional request.evidence_lanes (omitted when empty), optional ClaimResult.reason (omitted when None). evidence.py: pure lane helpers (normalize_repo_identifier, compare_repository_identity, lane_label_matches, evidence_lane_is_permitted). engine.py: _check_handoff_provenance handler + dispatch entry + _result reason passthrough; active_lane handler unchanged. Tests: model/engine cases (GA2-001..012), six synthetic GA-LANE fixtures + loader reason assertion, GA2-011 no-NLP guard. Docs: GROUNDING_AGENT_v0.2.md + v0.2 example. Ledger: GA-TRIAL-0007 row + incident note + aggregate update.",
+    "why_not_redundant": "v0.1 detects cross-repo mutation but has no way to detect that a same-repository handoff belongs to the wrong program/work-order, and no explicit foreign-evidence declaration. This adds exactly that missing provenance dimension as a new claim type, deterministically, while reusing (not duplicating) the existing active-lane contract."
+  },
+  "verification": {
+    "commands_run": [
+      "python -m pytest tests/grounding_agent/ -> 102 passed (v0.1 + v0.2)",
+      "python -m tools.grounding_agent.cli --request docs/governance/agents/grounding_request.example.json --repo-root . -> exit 0 (v0.1 unchanged)",
+      "python -m tools.grounding_agent.cli --request docs/governance/agents/grounding_request.v0.2.example.json --repo-root . -> MATCH/PROCEED exit 0",
+      "python -m tools.grounding_agent.cli --request <ga002 handoff> -> MATCH/PROCEED (recorded as GA-TRIAL-0007)",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <diff> -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "tools/grounding_agent/models.py",
+      "intent": "Additive v0.2 contract: handoff_provenance type, EvidenceMode/EvidenceLane, ClaimReason, evidence_lanes, optional ClaimResult.reason.",
+      "scan_targets": [
+        "tools/grounding_agent/models.py",
+        "tools/grounding_agent/evidence.py",
+        "tools/grounding_agent/engine.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none — additive; v0.1 serialization/behavior byte-identical (enforced by tests)."
+    },
+    {
+      "path": "tests/grounding_agent/test_engine.py",
+      "intent": "GA2-001..012 provenance engine cases; v0.1 active_lane behavior asserted unchanged.",
+      "scan_targets": [
+        "tests/grounding_agent/test_models.py",
+        "tests/grounding_agent/test_engine.py",
+        "tests/grounding_agent/test_historical_fixtures.py",
+        "tests/grounding_agent/test_anti_mutation.py",
+        "tests/grounding_agent/fixtures/GA-LANE-01-same-repo.json",
+        "tests/grounding_agent/fixtures/GA-LANE-02-cross-repo-evidence-only.json",
+        "tests/grounding_agent/fixtures/GA-LANE-03-wrong-program.json",
+        "tests/grounding_agent/fixtures/GA-LANE-04-wrong-work-order.json",
+        "tests/grounding_agent/fixtures/GA-LANE-05-missing-provenance.json",
+        "tests/grounding_agent/fixtures/GA-LANE-06-session-bleed-style.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none — test-only additions."
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.2.md",
+      "intent": "v0.2 additive contract + boundary statement + runnable example; GA-TRIAL-0007 ledger row.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.2.md",
+        "docs/governance/agents/grounding_request.v0.2.example.json",
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none — documentation + trial-ledger entry under a protected docs path (GOVERNANCE_APPROVED_CHANGE)."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-GROUNDING-V0-2",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive read-only developer tool extension under tools/grounding_agent/. No production/runtime, no _experimental/ paths, no second agent, no orchestration; anti-mutation + no-NLP guards enforced by tests."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, or build change. Additions extend the read-only Grounding Agent tool, its tests/fixtures, v0.2 docs, the trial ledger, and this CBSP21 manifest.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
