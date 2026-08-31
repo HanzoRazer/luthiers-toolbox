@@ -20,11 +20,12 @@ from tools.agent_program.validate_deferred_issues import (
     SOLUTION_CLASSES,
     STATES,
     DeferredQueueError,
+    derive_evidence_status,
     has_durable_evidence,
     is_lead_only,
     list_blocked,
     list_lead_only,
-    list_pending_census,
+    list_post_census,
     list_ready_for_decision,
     load_queue,
     readiness_gates_satisfied,
@@ -167,6 +168,7 @@ def test_di005_lead_only_evidence_does_not_satisfy_the_requirement() -> None:
 
 def test_di005_discovered_may_stand_without_durable_evidence() -> None:
     item = copy.deepcopy(_first("DISCOVERED"))
+    item["evidence_status"] = "LEAD_ONLY"
     item["evidence_refs"] = [
         {
             "kind": "lead",
@@ -241,10 +243,16 @@ def test_di011_lead_only_item_cannot_become_ready() -> None:
     assert readiness_gates_satisfied(item) is False
 
 
-def test_readiness_requires_census_ratified_evidence() -> None:
-    """A finding recovered after the census closed cannot reach readiness."""
+def test_readiness_requires_census_membership_not_merely_durable_evidence() -> None:
+    """Durable evidence alone does not confer readiness.
+
+    The item keeps DURABLE evidence throughout; only census membership
+    changes. Readiness must follow census membership, not evidence quality.
+    """
     item = copy.deepcopy(_first("READY_FOR_DECISION"))
-    item["census_status"] = "PENDING_CENSUS_AMENDMENT"
+    assert readiness_gates_satisfied(item) is True
+    item["census_status"] = "POST_CENSUS"
+    assert derive_evidence_status(item) == "DURABLE"
     assert readiness_gates_satisfied(item) is False
 
 
@@ -254,9 +262,55 @@ def test_readiness_requires_a_stated_control_gap() -> None:
     assert readiness_gates_satisfied(item) is False
 
 
-def test_live_pending_census_items_are_not_ready() -> None:
+def test_live_post_census_items_are_not_ready() -> None:
     data = _queue()
-    assert set(list_pending_census(data)).isdisjoint(list_ready_for_decision(data))
+    assert set(list_post_census(data)).isdisjoint(list_ready_for_decision(data))
+
+
+def test_post_census_evidence_stays_truthfully_classified() -> None:
+    """The ruling: durable post-census evidence is not relabelled LEAD_ONLY."""
+    data = _queue()
+    post = [i for i in data["items"] if i["census_status"] == "POST_CENSUS"]
+    assert post, "expected post-census items"
+    for item in post:
+        assert item["evidence_status"] == "DURABLE", item["id"]
+        assert not is_lead_only(item), item["id"]
+        assert any(
+            ref["evidence_class"] != "LEAD_ONLY" for ref in item["evidence_refs"]
+        ), item["id"]
+
+
+def test_post_census_items_cannot_establish_recurrence() -> None:
+    """Durability does not admit evidence into the canonical recurrence count."""
+    item = copy.deepcopy(_first("READY_FOR_DECISION"))
+    assert recurrence_is_established(item) is True
+    item["census_status"] = "POST_CENSUS"
+    assert recurrence_is_established(item) is False
+
+
+def test_declared_evidence_status_must_match_the_refs() -> None:
+    item = copy.deepcopy(_first("READY_FOR_DECISION"))
+    item["evidence_status"] = "LEAD_ONLY"
+    assert any("contradicts its" in e for e in validate_issue(item))
+
+
+def test_evidence_status_vocabulary_is_bounded() -> None:
+    item = copy.deepcopy(_first("DISCOVERED"))
+    item["evidence_status"] = "PRETTY_GOOD"
+    assert any("evidence_status=" in e for e in validate_issue(item))
+
+
+def test_the_four_concepts_are_independent_fields() -> None:
+    """evidence / census / readiness / authorization never collapse into one."""
+    for item in _queue()["items"]:
+        assert item["evidence_status"] in {"DURABLE", "LEAD_ONLY", "NONE"}
+        assert item["census_status"] in {"IN_CENSUS", "POST_CENSUS"}
+        assert item["state"] in ASSIGNABLE_STATES
+        assert item["implementation_authorized"] is False
+    # and they genuinely differ across the live queue
+    items = _queue()["items"]
+    assert len({i["evidence_status"] for i in items}) > 1
+    assert len({i["census_status"] for i in items}) > 1
 
 
 # --------------------------------------------------------------------------

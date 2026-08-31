@@ -38,26 +38,59 @@ class, deployment gates, blockers, relationships, and open questions.
 separate Dev Order        = implementation authorization
 ```
 
-### 2.2 Findings not yet in the census
+### 2.2 Four concepts, four fields
+
+**Owner ruling, 2026-08-31.** These are separate questions and are never collapsed
+into one another:
+
+```text
+evidence_status            How well is this incident supported?
+census_status              Was its incident basis part of the canonical 002A census?
+state                      Is the issue mature enough for an owner decision?
+implementation_authorized  Has the owner authorized implementation?
+```
+
+`LEAD_ONLY` is the answer to the *first* question only, and only for a finding that
+could not be independently recovered. It is not a mechanism for withholding
+readiness. Once an investigation recovers durable, independently inspectable
+evidence, continuing to label that finding `LEAD_ONLY` would misstate its epistemic
+status — so it does not happen here.
 
 The 002A census is a **completed review artifact**. It carries `review_order`,
-`reviewed_at`, and a `terminal_decision`, and it declares no extensibility contract.
+`reviewed_at`, and a `terminal_decision`, and declares no extensibility contract.
 Adding incidents to it now would rewrite the evidence base of a closed review, which
-D10 forbids.
+D10 forbids. A finding recovered after it therefore carries
+`census_status: POST_CENSUS`:
 
-So a finding recovered *after* 002A cannot become a census incident here. It is
-recorded with `census_status: PENDING_CENSUS_AMENDMENT` and an external evidence
-reference, and **it cannot pass the readiness gate**. Only a future owner-authorized
-incident-ledger amendment can promote it.
+| | AP-DI-003 | AP-DI-010 | AP-DI-009 |
+| --- | --- | --- | --- |
+| durable evidence | YES | YES | YES |
+| 002A census member | NO | NO | NO |
+| `census_status` | `POST_CENSUS` | `POST_CENSUS` | `POST_CENSUS` |
+| readiness | NOT READY | NOT READY | NOT READY (`BLOCKED`) |
+| implementation | NOT AUTHORIZED | NOT AUTHORIZED | NOT AUTHORIZED |
 
-> **Flagged interpretation — owner may override.** The order's instruction was to
-> record such findings as `LEAD_ONLY`. Two of them (AP-DI-003, AP-DI-010) rest on
-> durable, independently inspectable, in-repo evidence, so labelling their evidence
-> `LEAD_ONLY` would assert something untrue about its recoverability. This queue
-> instead enforces the *intent* of that instruction — such items cannot reach
-> `READY_FOR_DECISION` — through the explicit `census_status` field, while recording
-> the evidence class accurately. If the owner prefers the literal `LEAD_ONLY`
-> labelling, that is a one-field change plus a validator rule.
+AP-DI-009 is `POST_CENSUS` for the same reason — its evidence (`.gitignore:150`,
+PR #341, a runtime witness) postdates the census — and is separately `BLOCKED` on an
+undeployed control.
+
+The gating rule, enforced by the validator:
+
+> **Post-census evidence does not enter the canonical 002A recurrence or readiness
+> calculation merely because it is durable.** It first requires an explicit
+> census-admission or reconciliation step. Its evidence remains accurately
+> classified throughout.
+
+`census_status` values are `IN_CENSUS` — the item's incident basis is exactly what
+the census recorded, including a recorded *absence* of any incident — and
+`POST_CENSUS`.
+
+### 2.2.1 A later evidentiary state is not a prior error
+
+Where this queue supersedes a 002A conclusion, it records **new evidence superseding
+an earlier evidentiary state**, never a claim that 002A decided wrongly. 002A's
+exclusions were correct on the evidence available to it. See AP-DI-003, which carries
+an explicit `supersedes_evidentiary_state` note for this reason.
 
 ### 2.3 What this queue may never do
 
@@ -121,13 +154,26 @@ LEAD_ONLY                reported but not independently recoverable
 Classes are never silently promoted. `LEAD_ONLY` alone never satisfies an evidence
 requirement.
 
+Each item also carries a derived, declared `evidence_status`, validated against its
+refs so the two cannot drift apart:
+
+| `evidence_status` | Meaning |
+| --- | --- |
+| `DURABLE` | at least one reference is not `LEAD_ONLY` |
+| `LEAD_ONLY` | every reference is `LEAD_ONLY` |
+| `NONE` | no references at all |
+
+This answers *how well supported*, and nothing else. It is independent of census
+membership, of readiness, and of authorization.
+
 ## 5. Deployment-readiness rules
 
 A complete description does **not** make an item ready. `READY_FOR_DECISION` requires
 all of:
 
-1. at least one durable evidence reference that is not `LEAD_ONLY`;
-2. `census_status: IN_CENSUS` — the evidence is ratified in the 002A census;
+1. `evidence_status: DURABLE` — at least one reference that is not `LEAD_ONLY`,
+   judged only from the evidence and independently of everything below;
+2. `census_status: IN_CENSUS` — durable post-census evidence does **not** substitute;
 3. current controls recorded (possibly the empty list, stated deliberately);
 4. a stated `control_gap`, or an explicit statement that no gap remains;
 5. a bounded `solution_class`;
@@ -148,21 +194,22 @@ EXISTING_CONTROL → DETERMINISTIC_RULE → DETERMINISTIC_UTILITY
 
 Machine-readable: [`agent_program_deferred_issues.json`](agent_program_deferred_issues.json).
 
-Ten items. Two carry findings recovered after 002A and therefore cannot reach readiness
-(§2.2). One is ready for owner review. None is authorized.
+Ten items. Three rest on evidence recovered after the 002A census closed and therefore
+cannot reach readiness (§2.2) — their evidence is nonetheless durable and is classified
+as such. One is ready for owner review. None is authorized.
 
-| ID | Title | State | Census | Solution class | Agent? |
-| --- | --- | --- | --- | --- | --- |
-| AP-DI-001 | Stale repository / reference state | `READY_FOR_DECISION` | IN_CENSUS | `DETERMINISTIC_RULE` | NO |
-| AP-DI-002 | Inherited claim epistemic drift | `INVESTIGATED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
-| AP-DI-003 | False-absence findings | `EVIDENCED` | PENDING | `DETERMINISTIC_RULE` | UNPROVEN |
-| AP-DI-004 | Cross-repo custody and lane confusion | `DISCOVERED` | IN_CENSUS | `EXISTING_CONTROL` | NO |
-| AP-DI-005 | Session / active-lane bleed | `DISCOVERED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
-| AP-DI-006 | Surviving architecture misread as intent | `DISCOVERED` | IN_CENSUS | `PROCESS_ONLY` | NO |
-| AP-DI-007 | Handoff evidence loss | `DISCOVERED` | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
-| AP-DI-008 | Cross-repo reconciliation need | `DISCOVERED` | IN_CENSUS | `PROCESS_ONLY` | NO |
-| AP-DI-009 | `/tools/` ignore boundary | `BLOCKED` | IN_CENSUS | `DETERMINISTIC_RULE` | NO |
-| AP-DI-010 | Grounding GitHub evidence blocked on gh-only auth | `EVIDENCED` | PENDING | `PROCESS_ONLY` | NO |
+| ID | Title | State | Evidence | Census | Solution class | Agent? |
+| --- | --- | --- | --- | --- | --- | --- |
+| AP-DI-001 | Stale repository / reference state | `READY_FOR_DECISION` | DURABLE | IN_CENSUS | `DETERMINISTIC_RULE` | NO |
+| AP-DI-002 | Inherited claim epistemic drift | `INVESTIGATED` | DURABLE | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-003 | False-absence findings | `EVIDENCED` | DURABLE | POST_CENSUS | `DETERMINISTIC_RULE` | UNPROVEN |
+| AP-DI-004 | Cross-repo custody and lane confusion | `DISCOVERED` | DURABLE | IN_CENSUS | `EXISTING_CONTROL` | NO |
+| AP-DI-005 | Session / active-lane bleed | `DISCOVERED` | LEAD_ONLY | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-006 | Surviving architecture misread as intent | `DISCOVERED` | DURABLE | IN_CENSUS | `PROCESS_ONLY` | NO |
+| AP-DI-007 | Handoff evidence loss | `DISCOVERED` | DURABLE | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-008 | Cross-repo reconciliation need | `DISCOVERED` | DURABLE | IN_CENSUS | `PROCESS_ONLY` | NO |
+| AP-DI-009 | `/tools/` ignore boundary | `BLOCKED` | DURABLE | POST_CENSUS | `DETERMINISTIC_RULE` | NO |
+| AP-DI-010 | Grounding GitHub evidence blocked on gh-only auth | `EVIDENCED` | DURABLE | POST_CENSUS | `PROCESS_ONLY` | NO |
 
 ### The three that carry weight
 
@@ -178,13 +225,17 @@ freshness check, not a decision to build an agent.
 > exists. The stale view produced a false absence — which is why AP-DI-001 and AP-DI-003
 > are linked.
 
-**AP-DI-003 — 002A's F4 exclusion is now falsified.** 002A excluded false-absence for want
-of a documented case. This pass recovered two, both durable and independently inspectable:
+**AP-DI-003 — a later evidentiary state, not a 002A error.** 002A excluded false-absence
+for want of an independently documented case, and that exclusion was correct on the
+evidence 002A held. This pass recovered two durable, independently inspectable instances
+that supersede that evidentiary state:
 BR-024, where grep-absence of the literal `ezdxf.new("R2000")` call form was read as R2000
 removal though R2000 remains supported across ~29 `app/` files; and the refuted inherited
 claim that Step 0 was RED because `svgwrite` was absent, when it is declared and installed.
 A control exists — *no state is assigned from grep-absence alone* — but it is stated in one
-audit's method section, is unenforced, and postdates both instances.
+audit's method section, is unenforced, and postdates both instances. Because both were
+recovered after the census closed, the item is `POST_CENSUS`: durable, and not yet
+countable toward recurrence.
 
 **AP-DI-010 — found by running the tool rather than reading it.** This order produced the
 program's first `BLOCKED / STOP`. Both `pr_state` claims blocked on
@@ -233,7 +284,7 @@ live on `main`.
 
 | Need | Serves | Why it is open |
 | --- | --- | --- |
-| Owner-authorized incident-census amendment | AP-DI-003, AP-DI-010 | Both rest on durable evidence recovered after 002A closed. Neither can reach readiness until ratified into the census (§2.2). |
+| Census admission / reconciliation step | AP-DI-003, AP-DI-010 | Both rest on **durable** evidence recovered after 002A closed. Durability is not the missing piece — census membership is. Neither can reach readiness or contribute recurrence until admitted (§2.2). |
 | A second epistemic-drift incident outside the PR #339 cluster | AP-DI-002 | 002A falsifier 2. One incident cannot establish recurrence. |
 | Any durable record of the SGAQ/001A bleed | AP-DI-005 | 002A falsifier 1. Two independent passes have now failed to recover one. |
 | A custody error not expressed as a declared claim | AP-DI-004 | `active_lane` covers declared mutation targets; whether anything escapes it is untested. |

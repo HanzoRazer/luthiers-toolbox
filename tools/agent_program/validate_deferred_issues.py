@@ -8,6 +8,16 @@ checks the properties that are easy to get subtly wrong by hand:
 * an item marked superseded by a control that is not deployed;
 * an item that quietly carries implementation authorization.
 
+Four concepts are kept separate and are never collapsed into one another::
+
+    evidence_status          how well supported is this item?
+    census_status            was its incident basis part of the 002A census?
+    state                    is it mature enough for an owner decision?
+    implementation_authorized  has the owner authorized implementation?
+
+Durable evidence recovered after the census closed stays classified as durable.
+What it lacks is census membership, and that is what gates readiness.
+
 It is read-only. It has no network, no Git invocation, and no write path, and
 it never sets authorization. Enforced by ``tests/agent_program/``.
 """
@@ -33,6 +43,7 @@ REQUIRED_ITEM_FIELDS = (
     "title",
     "state",
     "failure_family",
+    "evidence_status",
     "census_status",
     "source_incidents",
     "independent_incident_count",
@@ -106,7 +117,12 @@ SOLUTION_CLASSES = frozenset(
 
 AGENT_REQUIRED = frozenset({"YES", "NO", "UNPROVEN"})
 
-CENSUS_STATUS = frozenset({"IN_CENSUS", "PENDING_CENSUS_AMENDMENT"})
+EVIDENCE_STATUS = frozenset({"DURABLE", "LEAD_ONLY", "NONE"})
+
+#: Was the item's incident basis part of the canonical 002A census?
+#: IN_CENSUS   - the basis is exactly what the census recorded (including "no incident")
+#: POST_CENSUS - the item rests on incident evidence recovered after the census closed
+CENSUS_STATUS = frozenset({"IN_CENSUS", "POST_CENSUS"})
 
 RECOVERY = frozenset({"ATTEMPTED", "NOT_ATTEMPTED"})
 RECOVERY_RESULT = frozenset({"FOUND", "NOT_FOUND"})
@@ -163,6 +179,18 @@ def has_durable_evidence(item: Mapping[str, Any]) -> bool:
     return bool(_durable_refs(item))
 
 
+def derive_evidence_status(item: Mapping[str, Any]) -> str:
+    """How well supported is this item, judged only from its evidence refs.
+
+    Independent of census membership and of readiness. Durable evidence stays
+    durable whether or not the census has admitted it.
+    """
+    refs = item.get("evidence_refs")
+    if not isinstance(refs, list) or not refs:
+        return "NONE"
+    return "DURABLE" if _durable_refs(item) else "LEAD_ONLY"
+
+
 def is_lead_only(item: Mapping[str, Any]) -> bool:
     """True when every evidence reference is ``LEAD_ONLY``."""
     refs = item.get("evidence_refs")
@@ -178,6 +206,8 @@ def recurrence_is_established(item: Mapping[str, Any]) -> bool:
     underlying event count once. Findings not yet ratified into the census
     cannot establish recurrence at all.
     """
+    # Durable post-census evidence does not enter the canonical recurrence
+    # calculation merely by being durable; it needs census admission first.
     if item.get("census_status") != "IN_CENSUS":
         return False
     incidents = item.get("source_incidents")
@@ -211,7 +241,10 @@ def readiness_gates_satisfied(item: Mapping[str, Any]) -> bool:
     """
     if item.get("implementation_authorized") is not False:
         return False
-    if not has_durable_evidence(item):
+    # Evidence quality and census membership are separate gates. An item can
+    # hold durable evidence and still not be ready, because readiness is
+    # computed against the canonical census.
+    if derive_evidence_status(item) != "DURABLE":
         return False
     if item.get("census_status") != "IN_CENSUS":
         return False
@@ -246,6 +279,15 @@ def _item_errors(item: Mapping[str, Any], index: int) -> List[str]:
         "CLOSED",
     }:
         errors.append(f"{label}: state={state!r} may not be assigned")
+
+    declared_evidence = item.get("evidence_status")
+    if declared_evidence not in EVIDENCE_STATUS:
+        errors.append(f"{label}: evidence_status={declared_evidence!r} invalid")
+    elif declared_evidence != derive_evidence_status(item):
+        errors.append(
+            f"{label}: evidence_status={declared_evidence!r} contradicts its "
+            f"evidence_refs (derived {derive_evidence_status(item)!r})"
+        )
 
     if item.get("census_status") not in CENSUS_STATUS:
         errors.append(f"{label}: census_status={item.get('census_status')!r} invalid")
@@ -441,13 +483,17 @@ def list_blocked(data: Mapping[str, Any]) -> List[str]:
     return _select(data.get("items") or [], "BLOCKED")
 
 
-def list_pending_census(data: Mapping[str, Any]) -> List[str]:
-    """Items resting on evidence not yet ratified into the incident census."""
+def list_post_census(data: Mapping[str, Any]) -> List[str]:
+    """Items resting on incident evidence recovered after the census closed.
+
+    Their evidence may be perfectly durable. What they lack is census
+    membership, which is what readiness is computed against.
+    """
     return [
         str(item.get("id"))
         for item in data.get("items") or []
         if isinstance(item, Mapping)
-        and item.get("census_status") == "PENDING_CENSUS_AMENDMENT"
+        and item.get("census_status") == "POST_CENSUS"
     ]
 
 
@@ -479,7 +525,9 @@ def summarize_queue(data: Mapping[str, Any]) -> str:
         f"ready_for_decision     : {list_ready_for_decision(data) or 'none'}",
         f"blocked                : {list_blocked(data) or 'none'}",
         f"lead_only              : {list_lead_only(data) or 'none'}",
-        f"pending_census         : {list_pending_census(data) or 'none'}",
+        f"durable_evidence       : "
+        + str([i.get("id") for i in items if derive_evidence_status(i) == "DURABLE"]),
+        f"post_census            : {list_post_census(data) or 'none'}",
         f"authorized_items       : {[i.get('id') for i in items if i.get('implementation_authorized')] or 'none'}",
     ]
     return "\n".join(lines)

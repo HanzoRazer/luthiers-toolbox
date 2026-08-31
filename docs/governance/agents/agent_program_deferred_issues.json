@@ -18,13 +18,23 @@
       "title": "Stale repository / reference state",
       "state": "READY_FOR_DECISION",
       "failure_family": "stale_repository_reference",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
-      "source_incidents": ["INC-002A-F1-001", "INC-002A-F1-002", "INC-002A-F1-003"],
+      "source_incidents": [
+        "INC-002A-F1-001",
+        "INC-002A-F1-002",
+        "INC-002A-F1-003"
+      ],
       "independent_incident_count": 3,
       "summary": "A local checkout or local origin/main ref lags the remote, and conclusions are drawn from the stale view: a diff appears to contain other sessions' work, or a present file is read as absent.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
-      "evidence_classes": ["GIT_STATE", "GITHUB_STATE", "COMMITTED_DOC", "COMMITTED_TEST"],
+      "evidence_classes": [
+        "GIT_STATE",
+        "GITHUB_STATE",
+        "COMMITTED_DOC",
+        "COMMITTED_TEST"
+      ],
       "evidence_refs": [
         {
           "kind": "census_incident",
@@ -68,7 +78,9 @@
         "Confirm the check cannot itself be authored from the stale view"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-003"],
+      "related_items": [
+        "AP-DI-003"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -77,13 +89,18 @@
       "title": "Inherited claim epistemic drift",
       "state": "INVESTIGATED",
       "failure_family": "inherited_claim_epistemic_drift",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
-      "source_incidents": ["INC-002A-F3-001"],
+      "source_incidents": [
+        "INC-002A-F3-001"
+      ],
       "independent_incident_count": 1,
       "summary": "A cross-session handoff carries claims forward while the evidence behind them is left behind. The claims are then adopted as premises without re-derivation.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
-      "evidence_classes": ["COMMITTED_DOC"],
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
       "evidence_refs": [
         {
           "kind": "census_incident",
@@ -124,7 +141,10 @@
         "Evidence that the written re-derivation rule alone does not prevent recurrence"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-007", "AP-DI-008"],
+      "related_items": [
+        "AP-DI-007",
+        "AP-DI-008"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -133,13 +153,17 @@
       "title": "False-absence findings",
       "state": "EVIDENCED",
       "failure_family": "false_absence",
-      "census_status": "PENDING_CENSUS_AMENDMENT",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
-      "summary": "A search that returns nothing is treated as proof of absence. Two durable instances were recovered in this pass; 002A had excluded this family for want of a documented case.",
+      "summary": "A search that returns nothing is treated as proof of absence. 002A excluded this family because no documented case was available to it; that exclusion was correct on the evidence 002A held. This pass recovered two durable instances, which supersede that evidentiary state.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
-      "evidence_classes": ["COMMITTED_DOC", "COMMITTED_TEST"],
+      "evidence_classes": [
+        "COMMITTED_DOC",
+        "COMMITTED_TEST"
+      ],
       "evidence_refs": [
         {
           "kind": "committed_doc",
@@ -176,27 +200,37 @@
         "Should the grep-absence rule be promoted from one audit's method section to repository-wide governance?"
       ],
       "deployment_gates": [
-        "Owner-authorized amendment ratifying these instances into the incident census",
-        "Recurrence established from at least two independent census incidents after ratification",
+        "Census admission: an owner-authorized reconciliation admitting these instances into the incident census",
+        "Recurrence established from at least two independent census incidents after admission",
         "Show the stated grep-absence rule does not already cover the family"
       ],
-      "blocked_by": ["census amendment not authorized by this order"],
-      "related_items": ["AP-DI-001", "AP-DI-002"],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
+      "related_items": [
+        "AP-DI-001",
+        "AP-DI-002"
+      ],
       "last_reviewed": "2026-08-31",
-      "implementation_authorized": false
+      "implementation_authorized": false,
+      "supersedes_evidentiary_state": "002A section 5.2 excluded F4 for want of an independently documented case. This is a later evidentiary state, not a defect in the 002A decision."
     },
     {
       "id": "AP-DI-004",
       "title": "Cross-repo custody and lane confusion",
       "state": "DISCOVERED",
       "failure_family": "cross_repo_custody",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Work intended for one repository is performed against another, or a foreign repository on the working-directory list is treated as in scope.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "NOT_FOUND",
-      "evidence_classes": ["COMMITTED_TEST", "COMMITTED_DOC"],
+      "evidence_classes": [
+        "COMMITTED_TEST",
+        "COMMITTED_DOC"
+      ],
       "evidence_refs": [
         {
           "kind": "committed_test",
@@ -228,7 +262,9 @@
         "A durably evidenced incident that escaped the active_lane control"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-008"],
+      "related_items": [
+        "AP-DI-008"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -237,13 +273,16 @@
       "title": "Session / active-lane bleed",
       "state": "DISCOVERED",
       "failure_family": "session_lane_bleed",
+      "evidence_status": "LEAD_ONLY",
       "census_status": "IN_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Context from one session or lane is carried into another, so work proceeds on premises belonging to a different active order. Reported as the SGAQ/001A bleed; not independently recovered.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "NOT_FOUND",
-      "evidence_classes": ["LEAD_ONLY"],
+      "evidence_classes": [
+        "LEAD_ONLY"
+      ],
       "evidence_refs": [
         {
           "kind": "lead",
@@ -269,7 +308,10 @@
         "Show it is not active-lane, handoff, or human-workflow error already covered"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-004", "AP-DI-007"],
+      "related_items": [
+        "AP-DI-004",
+        "AP-DI-007"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -278,13 +320,16 @@
       "title": "Surviving architecture misread as original intent",
       "state": "DISCOVERED",
       "failure_family": "surviving_architecture_as_intent",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "What survived in the codebase is read as what was intended, so present structure is treated as a decision record.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "NOT_FOUND",
-      "evidence_classes": ["COMMITTED_DOC"],
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
       "evidence_refs": [
         {
           "kind": "committed_doc",
@@ -316,7 +361,9 @@
         "A durably evidenced case where surviving structure was adopted as intent and caused a wrong decision"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-002"],
+      "related_items": [
+        "AP-DI-002"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -325,13 +372,16 @@
       "title": "Handoff evidence loss",
       "state": "DISCOVERED",
       "failure_family": "handoff_evidence_loss",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "A handoff records conclusions but not the evidence that produced them, so the next session cannot re-verify without redoing the work.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "NOT_FOUND",
-      "evidence_classes": ["COMMITTED_DOC"],
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
       "evidence_refs": [
         {
           "kind": "committed_doc",
@@ -357,7 +407,10 @@
         "Owner decision on whether to merge this item into AP-DI-002"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-002", "AP-DI-005"],
+      "related_items": [
+        "AP-DI-002",
+        "AP-DI-005"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -366,13 +419,16 @@
       "title": "Cross-repo reconciliation need",
       "state": "DISCOVERED",
       "failure_family": "cross_repo_reconciliation",
+      "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Claims about a second repository need periodic re-derivation against that repository's actual state.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "NOT_FOUND",
-      "evidence_classes": ["COMMITTED_DOC"],
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
       "evidence_refs": [
         {
           "kind": "committed_doc",
@@ -404,7 +460,10 @@
         "A second cross-repo reconciliation need arising independently of the vectorizer-sandbox cluster"
       ],
       "blocked_by": [],
-      "related_items": ["AP-DI-002", "AP-DI-004"],
+      "related_items": [
+        "AP-DI-002",
+        "AP-DI-004"
+      ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
     },
@@ -413,13 +472,18 @@
       "title": "Repository tooling is not normally trackable (/tools/ ignore boundary)",
       "state": "BLOCKED",
       "failure_family": "repository_control_gap",
-      "census_status": "IN_CENSUS",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "/tools/ is git-ignored repository-wide, so new repository tooling is silently untracked unless force-added. A bounded repair exists but is not deployed.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
-      "evidence_classes": ["GIT_STATE", "GITHUB_STATE", "RUNTIME_WITNESS"],
+      "evidence_classes": [
+        "GIT_STATE",
+        "GITHUB_STATE",
+        "RUNTIME_WITNESS"
+      ],
       "evidence_refs": [
         {
           "kind": "git_state",
@@ -455,7 +519,9 @@
         "PR #341 merges to main",
         "A later re-ground confirms the rule is live on main before this item may become SUPERSEDED_BY_CONTROL"
       ],
-      "blocked_by": ["PR #341 open, draft, unmerged"],
+      "blocked_by": [
+        "PR #341 open, draft, unmerged"
+      ],
       "candidate_control": "TOOLS-GITIGNORE-001",
       "control_deployed": "NO",
       "related_items": [],
@@ -467,13 +533,17 @@
       "title": "Grounding GitHub evidence blocked when only the gh CLI is authenticated",
       "state": "EVIDENCED",
       "failure_family": "evidence_source_availability",
-      "census_status": "PENDING_CENSUS_AMENDMENT",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Grounding's GitHub adapter reads GITHUB_TOKEN/GH_TOKEN from the environment only. An operator authenticated solely through the gh CLI keyring gets BLOCKED on every pr_state claim, and a BLOCKED run is a STOP decision.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
-      "evidence_classes": ["RUNTIME_WITNESS", "STATIC_CODE_INSPECTION"],
+      "evidence_classes": [
+        "RUNTIME_WITNESS",
+        "STATIC_CODE_INSPECTION"
+      ],
       "evidence_refs": [
         {
           "kind": "runtime_witness",
@@ -502,10 +572,12 @@
         "Should the trial ledger distinguish 'blocked on operator environment' from 'blocked on an unavailable evidence source'?"
       ],
       "deployment_gates": [
-        "Owner-authorized amendment ratifying this into the incident census",
-        "Confirm no fix is attempted that introduces a subprocess path into the adapter"
+        "Census admission: an owner-authorized reconciliation admitting this into the incident census",
+        "Confirm no fix is attempted that introduces a shell-out path into the adapter"
       ],
-      "blocked_by": ["census amendment not authorized by this order"],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
       "related_items": [],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
