@@ -45,6 +45,7 @@ REQUIRED_ITEM_FIELDS = (
     "failure_family",
     "evidence_status",
     "census_status",
+    "gates_require_recurrence",
     "source_incidents",
     "independent_incident_count",
     "summary",
@@ -139,8 +140,11 @@ FORBIDDEN_FIELDS = frozenset(
     }
 )
 
-#: Words that make a deployment gate an assertion about recurrence.
-_RECURRENCE_MARKERS = ("recurrence", "independent incident", "independent census")
+#: Whether an item's gates assert recurrence is declared explicitly, not inferred
+#: from gate prose. A substring scan would fire on a gate that merely mentions the
+#: word (including one saying recurrence is *not* required), which is the wrong way
+#: to gate a governance artifact.
+REQUIRES_RECURRENCE_FIELD = "gates_require_recurrence"
 
 DEFAULT_QUEUE = (
     Path(__file__).resolve().parents[2]
@@ -222,41 +226,84 @@ def recurrence_is_established(item: Mapping[str, Any]) -> bool:
     return True
 
 
-def _gate_claims_recurrence(item: Mapping[str, Any]) -> bool:
-    gates = item.get("deployment_gates")
-    if not isinstance(gates, list):
-        return False
-    for gate in gates:
-        text = str(gate).lower()
-        if any(marker in text for marker in _RECURRENCE_MARKERS):
-            return True
-    return False
+def gates_require_recurrence(item: Mapping[str, Any]) -> bool:
+    """Whether this item's deployment gates assert recurrence.
 
-
-def readiness_gates_satisfied(item: Mapping[str, Any]) -> bool:
-    """Whether an item may hold ``READY_FOR_DECISION``.
-
-    Readiness means *sufficiently investigated for owner review*. It never
-    means authorized to implement.
+    Read from the explicit ``gates_require_recurrence`` field. Absent means
+    False: an item must opt *in* to the stricter bar, so a missing field can
+    never silently relax a gate that was meant to apply.
     """
+    return item.get(REQUIRES_RECURRENCE_FIELD) is True
+
+
+def readiness_failures(item: Mapping[str, Any]) -> List[str]:
+    """Every readiness gate this item fails, named individually.
+
+    Returns an empty list when the item may hold ``READY_FOR_DECISION``.
+    Readiness means *sufficiently investigated for owner review*; it never
+    means authorized to implement.
+
+    This reports *all* failing gates rather than the first, so a maintainer
+    editing the queue by hand sees the whole picture in one run.
+    """
+    failures: List[str] = []
+
     if item.get("implementation_authorized") is not False:
-        return False
+        failures.append(
+            "implementation_authorized is not false (readiness never implies authorization)"
+        )
+
     # Evidence quality and census membership are separate gates. An item can
     # hold durable evidence and still not be ready, because readiness is
     # computed against the canonical census.
-    if derive_evidence_status(item) != "DURABLE":
-        return False
-    if item.get("census_status") != "IN_CENSUS":
-        return False
+    evidence = derive_evidence_status(item)
+    if evidence != "DURABLE":
+        failures.append(
+            f"evidence_status is {evidence}, not DURABLE "
+            "(needs at least one evidence_ref that is not LEAD_ONLY)"
+        )
+
+    census = item.get("census_status")
+    if census != "IN_CENSUS":
+        failures.append(
+            f"census_status is {census}, not IN_CENSUS "
+            "(durable post-census evidence does not substitute for census membership)"
+        )
+
     if not isinstance(item.get("current_controls"), list):
-        return False
+        failures.append("current_controls must be a list (an empty list is a valid answer)")
+
     if not str(item.get("control_gap") or "").strip():
-        return False
+        failures.append("control_gap is empty (state the gap, or state that none remains)")
+
     if item.get("solution_class") not in SOLUTION_CLASSES:
-        return False
-    if _gate_claims_recurrence(item) and not recurrence_is_established(item):
-        return False
-    return True
+        failures.append(
+            f"solution_class {item.get('solution_class')!r} is not in the bounded vocabulary"
+        )
+
+    if gates_require_recurrence(item) and not recurrence_is_established(item):
+        unique = len({str(e) for e in (item.get("source_incidents") or []) if e})
+        if census != "IN_CENSUS":
+            why = (
+                f"its incidents are not census-admitted (census_status {census}), "
+                "so none of them can count toward canonical recurrence"
+            )
+        elif unique < 2:
+            why = f"only {unique} unique census incident(s) are cited; recurrence needs >= 2"
+        else:
+            why = (
+                f"independent_incident_count "
+                f"({item.get('independent_incident_count')!r}) does not cover the "
+                f"{unique} unique census incident(s) cited"
+            )
+        failures.append(f"gates_require_recurrence is true but {why}")
+
+    return failures
+
+
+def readiness_gates_satisfied(item: Mapping[str, Any]) -> bool:
+    """Whether an item may hold ``READY_FOR_DECISION``."""
+    return not readiness_failures(item)
 
 
 def _item_errors(item: Mapping[str, Any], index: int) -> List[str]:
@@ -291,6 +338,11 @@ def _item_errors(item: Mapping[str, Any], index: int) -> List[str]:
 
     if item.get("census_status") not in CENSUS_STATUS:
         errors.append(f"{label}: census_status={item.get('census_status')!r} invalid")
+
+    if not isinstance(item.get(REQUIRES_RECURRENCE_FIELD), bool):
+        errors.append(
+            f"{label}: {REQUIRES_RECURRENCE_FIELD} must be declared explicitly as a boolean"
+        )
 
     if item.get("solution_class") not in SOLUTION_CLASSES:
         errors.append(f"{label}: solution_class={item.get('solution_class')!r} invalid")
@@ -360,10 +412,9 @@ def _item_errors(item: Mapping[str, Any], index: int) -> List[str]:
         )
 
     # DI-007 / DI-011: readiness is a gated conclusion, not a description.
-    if state == "READY_FOR_DECISION" and not readiness_gates_satisfied(item):
-        errors.append(
-            f"{label}: READY_FOR_DECISION but the readiness gates are not satisfied"
-        )
+    if state == "READY_FOR_DECISION":
+        for failure in readiness_failures(item):
+            errors.append(f"{label}: READY_FOR_DECISION but {failure}")
 
     # A control that is not deployed cannot supersede anything.
     if state == "SUPERSEDED_BY_CONTROL" and item.get("control_deployed") != "YES":

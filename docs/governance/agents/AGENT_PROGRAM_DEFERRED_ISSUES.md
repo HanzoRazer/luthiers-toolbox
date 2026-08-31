@@ -62,17 +62,16 @@ Adding incidents to it now would rewrite the evidence base of a closed review, w
 D10 forbids. A finding recovered after it therefore carries
 `census_status: POST_CENSUS`:
 
-| | AP-DI-003 | AP-DI-010 | AP-DI-009 |
-| --- | --- | --- | --- |
-| durable evidence | YES | YES | YES |
-| 002A census member | NO | NO | NO |
-| `census_status` | `POST_CENSUS` | `POST_CENSUS` | `POST_CENSUS` |
-| readiness | NOT READY | NOT READY | NOT READY (`BLOCKED`) |
-| implementation | NOT AUTHORIZED | NOT AUTHORIZED | NOT AUTHORIZED |
+| | AP-DI-003 | AP-DI-005 | AP-DI-010 | AP-DI-009 |
+| --- | --- | --- | --- | --- |
+| durable evidence | YES | YES | YES | YES |
+| 002A census member | NO | NO | NO | NO |
+| `census_status` | `POST_CENSUS` | `POST_CENSUS` | `POST_CENSUS` | `POST_CENSUS` |
+| readiness | NOT READY | NOT READY | NOT READY | RETIRED |
+| implementation | NOT AUTHORIZED | NOT AUTHORIZED | NOT AUTHORIZED | NOT AUTHORIZED |
 
-AP-DI-009 is `POST_CENSUS` for the same reason — its evidence (`.gitignore:150`,
-PR #341, a runtime witness) postdates the census — and is separately `BLOCKED` on an
-undeployed control.
+All four rest on evidence recovered after the census closed. AP-DI-009 is the one that
+has since been **retired** rather than promoted: its control shipped (§7).
 
 The gating rule, enforced by the validator:
 
@@ -128,11 +127,16 @@ auto-promoted to owner attestation.
 | `SUPERSEDED_BY_CONTROL` | A deployed control demonstrably covers it. Requires the control to be **live on `main`**. |
 | `CLOSED` | Retired for a recorded reason. Retained, never deleted. |
 
-Allowed progression for **this** increment:
+Allowed **promotion** ladder for this increment:
 
 ```text
 DISCOVERED → EVIDENCED → INVESTIGATED → READY_FOR_DECISION
 ```
+
+`SUPERSEDED_BY_CONTROL` and `CLOSED` are **retirement**, not promotion — they move an
+item away from implementation, not toward it — so they are reachable here, but only on
+witnessed conditions: `SUPERSEDED_BY_CONTROL` requires `control_deployed: YES`, enforced
+by the validator. AP-DI-009 is the worked example (§7).
 
 `OWNER_AUTHORIZED` is not a state this artifact can set.
 
@@ -177,10 +181,21 @@ all of:
 3. current controls recorded (possibly the empty list, stated deliberately);
 4. a stated `control_gap`, or an explicit statement that no gap remains;
 5. a bounded `solution_class`;
-6. every `deployment_gate` that asserts recurrence backed by **≥2 independent** census incidents;
+6. if `gates_require_recurrence: true`, **≥2 independent** census incidents;
 7. `implementation_authorized: false`.
 
 Counting rule: two references to one underlying event are **one** incident.
+
+Whether the recurrence bar applies is declared explicitly in
+`gates_require_recurrence`, never inferred from gate prose. Scanning prose for the word
+would fire on a gate that says recurrence is *not* required, and would silently lift a
+bar whose gate happens to use different wording — neither is an acceptable way to gate a
+governance artifact. An absent field reads as `false`, so an item must opt *in* to the
+stricter bar.
+
+When readiness fails, the validator names **every** failing gate and the actual cause —
+census membership, incident count, or a declared count that undercounts the citations —
+rather than reporting a single generic failure.
 
 `agent_required` is `YES` only with documented deterministic-control analysis showing
 a lower-authority mechanism is insufficient. Solution classes are tested cheapest-first:
@@ -194,9 +209,10 @@ EXISTING_CONTROL → DETERMINISTIC_RULE → DETERMINISTIC_UTILITY
 
 Machine-readable: [`agent_program_deferred_issues.json`](agent_program_deferred_issues.json).
 
-Ten items. Three rest on evidence recovered after the 002A census closed and therefore
+Ten items. Four rest on evidence recovered after the 002A census closed and therefore
 cannot reach readiness (§2.2) — their evidence is nonetheless durable and is classified
-as such. One is ready for owner review. None is authorized.
+as such. One is ready for owner review, one has been retired by a shipped control, and
+none is authorized.
 
 | ID | Title | State | Evidence | Census | Solution class | Agent? |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -204,11 +220,11 @@ as such. One is ready for owner review. None is authorized.
 | AP-DI-002 | Inherited claim epistemic drift | `INVESTIGATED` | DURABLE | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
 | AP-DI-003 | False-absence findings | `EVIDENCED` | DURABLE | POST_CENSUS | `DETERMINISTIC_RULE` | UNPROVEN |
 | AP-DI-004 | Cross-repo custody and lane confusion | `DISCOVERED` | DURABLE | IN_CENSUS | `EXISTING_CONTROL` | NO |
-| AP-DI-005 | Session / active-lane bleed | `DISCOVERED` | LEAD_ONLY | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
+| AP-DI-005 | Session / active-lane bleed | `EVIDENCED` | DURABLE | POST_CENSUS | `UNRESOLVED` | UNPROVEN |
 | AP-DI-006 | Surviving architecture misread as intent | `DISCOVERED` | DURABLE | IN_CENSUS | `PROCESS_ONLY` | NO |
 | AP-DI-007 | Handoff evidence loss | `DISCOVERED` | DURABLE | IN_CENSUS | `UNRESOLVED` | UNPROVEN |
 | AP-DI-008 | Cross-repo reconciliation need | `DISCOVERED` | DURABLE | IN_CENSUS | `PROCESS_ONLY` | NO |
-| AP-DI-009 | `/tools/` ignore boundary | `BLOCKED` | DURABLE | POST_CENSUS | `DETERMINISTIC_RULE` | NO |
+| AP-DI-009 | `/tools/` ignore boundary | `SUPERSEDED_BY_CONTROL` | DURABLE | POST_CENSUS | `DETERMINISTIC_RULE` | NO |
 | AP-DI-010 | Grounding GitHub evidence blocked on gh-only auth | `EVIDENCED` | DURABLE | POST_CENSUS | `PROCESS_ONLY` | NO |
 
 ### The three that carry weight
@@ -246,10 +262,20 @@ operability: an operator authenticated only through the `gh` keyring meets a STO
 looks like a divergence. A `gh` fallback is not the fix; the adapter's read-only guarantee
 rests on having no subprocess path.
 
+**AP-DI-005 — the queue caught up with reality.** It was `LEAD_ONLY` / `NOT_FOUND`: 002A
+could not recover the reported SGAQ/001A bleed, and neither could this pass. Then PR #342
+merged carrying a committed incident note describing a *different* instance — a wrong-lane
+handoff during the v0.2 build, in which an AGENT-PROGRAM-003 ruling belonging to another
+session arrived there and was stopped by a human flag. That is a durable, independently
+inspectable record of the family, so the item is now `EVIDENCED` / `DURABLE` /
+`POST_CENSUS`. Two things must not be overclaimed: fixture `GA-LANE-06` is explicitly
+**synthetic** and is not cited as incident evidence, and the tool did not catch the
+instance — a person did. Conversation provenance is outside Grounding's scope by design.
+
 ### Items retained without a recovered incident
 
-AP-DI-004 through AP-DI-008 each had one deliberate recovery pass that returned
-`NOT_FOUND`. They are retained because the order names them, and because a recorded
+AP-DI-004, AP-DI-006, AP-DI-007 and AP-DI-008 each had one deliberate recovery pass that
+returned `NOT_FOUND`. They are retained because the order names them, and because a recorded
 `ATTEMPTED / NOT_FOUND` is itself useful — it dates the search so the next reviewer
 extends it rather than repeating it. For AP-DI-004 and AP-DI-006 the pass recovered
 *controls and analytical rules*, not escaped incidents; that is why their solution classes
@@ -259,37 +285,47 @@ AP-DI-007 is the weakest retained item and is flagged in its own `open_questions
 probable duplicate facet of AP-DI-002. It is kept separate only because the order lists it
 as a distinct candidate family; merging it is an owner decision.
 
+AP-DI-002's control list now also carries Grounding v0.2's `handoff_provenance` claim. That
+narrows the family but does not close it: v0.2 checks *declared lane provenance*, not claim
+*content*, so there is still no evidence-reattachment claim type and an inherited claim can
+still survive a `PROCEED`.
+
 ## 7. Closed / superseded findings
 
-None. No item in this queue has been closed or superseded.
+### AP-DI-009 — `SUPERSEDED_BY_CONTROL` (2026-08-31)
 
-`AP-DI-009` is the nearest candidate and is deliberately **not** marked
-`SUPERSEDED_BY_CONTROL`. TOOLS-GITIGNORE-001 exists as PR #341, observed open, draft, and
-unmerged — confirmed independently by this order's Grounding claim C-003. `/tools/` is
-still ignored at `.gitignore:150` on `main`, so the control is proposed, not deployed.
-Marking it superseded would assert a repair that is not in effect.
+Retired on exactly the two conditions this queue recorded **in advance**, both now
+witnessed:
 
-```text
-TOOLS-GITIGNORE-001
-PR #341     = OPEN / DRAFT
-main control = NOT DEPLOYED
+| Condition recorded before the fact | Outcome |
+| --- | --- |
+| PR #341 merges to `main` | Merged 2026-08-31 (`af62ad13`) |
+| A later re-ground confirms the rule is live | GA-TRIAL-0008: PR #341 observed merged (C-003), `tools/README.md` present (C-017), and `git check-ignore tools/agent_program/validate_deferred_issues.py` returns no match at `592ca203` |
 
-therefore: BLOCKED, not SUPERSEDED
-```
+`.gitignore` now ignores `/tools/*` while allowlisting `/tools/README.md`,
+`/tools/grounding_agent/`, `/tools/agent_program/` and `/tools/codegen/`, so
+repository-owned tooling is normally trackable and `git add -f` is no longer needed.
+`control_deployed` is `YES`, which the validator requires before this state is permitted.
 
-It may transition only after #341 merges **and** a later re-ground confirms the rule is
-live on `main`.
+The distinction the earlier revision of this document insisted on still holds and is worth
+keeping visible: **merged is not deployed.** When AP-DI-009 was written, #341 existed and
+was tested, so it was tempting to record the item as already superseded. It was recorded
+`BLOCKED` instead, because the rule was not in effect on `main`. Retirement waited for a
+run that observed the repair actually working, not for the PR to exist.
+
+The item is retained in full, not deleted (D9, D10).
 
 ## 8. Unresolved evidence needs
 
 | Need | Serves | Why it is open |
 | --- | --- | --- |
-| Census admission / reconciliation step | AP-DI-003, AP-DI-010 | Both rest on **durable** evidence recovered after 002A closed. Durability is not the missing piece — census membership is. Neither can reach readiness or contribute recurrence until admitted (§2.2). |
+| Census admission / reconciliation step | AP-DI-003, AP-DI-005, AP-DI-010 | All rest on **durable** evidence recovered after 002A closed. Durability is not the missing piece — census membership is. None can reach readiness or contribute recurrence until admitted (§2.2). |
 | A second epistemic-drift incident outside the PR #339 cluster | AP-DI-002 | 002A falsifier 2. One incident cannot establish recurrence. |
-| Any durable record of the SGAQ/001A bleed | AP-DI-005 | 002A falsifier 1. Two independent passes have now failed to recover one. |
+| A durable record of the *originally reported* SGAQ/001A bleed | AP-DI-005 | 002A falsifier 1. Two passes failed to recover it. A different instance did land with PR #342, so the family is now evidenced — but not that instance. |
 | A custody error not expressed as a declared claim | AP-DI-004 | `active_lane` covers declared mutation targets; whether anything escapes it is untested. |
 | Independence of BR-024 and the `svgwrite` refutation | AP-DI-003 | Different subsystems and dates, but the `svgwrite` refutation shares a discovery event with INC-002A-F3-001. Recurrence must not be counted before this is settled. |
 | Whether AP-DI-007 is separable from AP-DI-002 | AP-DI-007 | No incident yet distinguishes the two mechanisms. |
+| Whether an unstructured wrong-lane handoff is addressable at all | AP-DI-005 | v0.2 compares declared lane fields; the recovered instance never became a structured claim. By D9 no control reads conversation provenance, so this may be irreducibly a human-review responsibility. |
 
 ## 9. How a future Dev Order consumes an item
 

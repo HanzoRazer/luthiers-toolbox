@@ -5,12 +5,13 @@
   "census_authority": "docs/governance/agents/agent_program_incidents_002a.json",
   "implementation_authority": "NONE",
   "grounding_run": {
-    "id": "GA-TRIAL-0007",
+    "id": "GA-TRIAL-0008",
     "status": "MATCH",
     "decision": "PROCEED",
-    "checked": 15,
-    "matched": 15,
-    "head_sha": "b53f9963c92a83ed26d3297adbe58cbb5942f0ad"
+    "checked": 18,
+    "matched": 18,
+    "head_sha": "592ca20357a3b27c9aac6a40ada1a6637f5ff7e2",
+    "note": "Re-grounded after PR #341 and PR #342 merged. GA-TRIAL-0007 was taken by GROUNDING-AGENT-002; this order renumbered to GA-TRIAL-0008 per the ledger rule that order follows what lands on main."
   },
   "items": [
     {
@@ -20,6 +21,7 @@
       "failure_family": "stale_repository_reference",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": true,
       "source_incidents": [
         "INC-002A-F1-001",
         "INC-002A-F1-002",
@@ -79,7 +81,8 @@
       ],
       "blocked_by": [],
       "related_items": [
-        "AP-DI-003"
+        "AP-DI-003",
+        "AP-DI-009"
       ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
@@ -91,6 +94,7 @@
       "failure_family": "inherited_claim_epistemic_drift",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": true,
       "source_incidents": [
         "INC-002A-F3-001"
       ],
@@ -126,14 +130,15 @@
       ],
       "current_controls": [
         "The written re-derivation rule in the reconciliation artifact",
-        "Dev Order practice of re-deriving load-bearing inherited claims"
+        "Dev Order practice of re-deriving load-bearing inherited claims",
+        "Grounding v0.2 handoff_provenance claim (checks declared lane provenance, not claim content)"
       ],
-      "control_gap": "Grounding v0.1 verifies repository state, not claim content. It has no semantic or evidence-reattachment claim type, so an inherited claim can survive a PROCEED. Whether the written rule is operationally sufficient as a standing control is not demonstrated.",
+      "control_gap": "Grounding verifies repository state and, since v0.2, declared lane provenance. Neither checks claim *content*: there is still no evidence-reattachment claim type, so an inherited claim can survive a PROCEED. Whether the written re-derivation rule is operationally sufficient as a standing control is not demonstrated.",
       "solution_class": "UNRESOLVED",
       "agent_required": "UNPROVEN",
       "agent_required_basis": "Singular incident. 002A section 11 records that a Reconciliation or Evidence agent would re-open Grounding's question or become an extension of it.",
       "open_questions": [
-        "Is a content/evidence-reattachment claim type inside Grounding v0.2 the right shape, or does it exceed a grounding agent's authority?",
+        "v0.2 added handoff_provenance but deliberately not a content claim. Is a content/evidence-reattachment claim type the right shape for v0.3, or does it exceed a grounding agent's authority?",
         "Can 'this claim's evidence was re-acquired' be checked deterministically at all?"
       ],
       "deployment_gates": [
@@ -155,6 +160,7 @@
       "failure_family": "false_absence",
       "evidence_status": "DURABLE",
       "census_status": "POST_CENSUS",
+      "gates_require_recurrence": true,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "A search that returns nothing is treated as proof of absence. 002A excluded this family because no documented case was available to it; that exclusion was correct on the evidence 002A held. This pass recovered two durable instances, which supersede that evidentiary state.",
@@ -222,6 +228,7 @@
       "failure_family": "cross_repo_custody",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Work intended for one repository is performed against another, or a foreign repository on the working-directory list is treated as in scope.",
@@ -271,16 +278,18 @@
     {
       "id": "AP-DI-005",
       "title": "Session / active-lane bleed",
-      "state": "DISCOVERED",
+      "state": "EVIDENCED",
       "failure_family": "session_lane_bleed",
-      "evidence_status": "LEAD_ONLY",
-      "census_status": "IN_CENSUS",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
+      "gates_require_recurrence": true,
       "source_incidents": [],
       "independent_incident_count": 0,
-      "summary": "Context from one session or lane is carried into another, so work proceeds on premises belonging to a different active order. Reported as the SGAQ/001A bleed; not independently recovered.",
+      "summary": "Context from one session or lane is carried into another, so work proceeds on premises belonging to a different active order. The originally reported SGAQ/001A instance is still unrecovered; a different, independently committed instance landed with PR #342.",
       "evidence_recovery": "ATTEMPTED",
-      "evidence_recovery_result": "NOT_FOUND",
+      "evidence_recovery_result": "FOUND",
       "evidence_classes": [
+        "COMMITTED_DOC",
         "LEAD_ONLY"
       ],
       "evidence_refs": [
@@ -290,27 +299,41 @@
           "repository": "HanzoRazer/luthiers-toolbox",
           "locator": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md:216",
           "note": "002A section 5.2 excludes the F2 SGAQ/001A bleed: no committed doc, PR, or retrievable transcript located"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md:46",
+          "note": "GA-TRIAL-0007 incident note records a real wrong-lane handoff during the v0.2 build: an AGENT-PROGRAM-003 ruling belonging to a different session arrived there and was halted by a human flag. Grounding did not detect it; conversation provenance is out of scope by design (D9). NOTE: fixture GA-LANE-06 is explicitly SYNTHETIC and is NOT cited as incident evidence."
         }
       ],
       "current_controls": [
         "Grounding active_lane claim",
-        "One order, one branch, one PR working discipline"
+        "Grounding v0.2 handoff_provenance claim + HANDOFF_LANE_CONFLICT (structured lane claims only)",
+        "One order, one branch, one PR working discipline",
+        "Human review — which is what actually caught the PR #342 instance"
       ],
-      "control_gap": "Cannot be stated. No durable incident exists to characterise what, if anything, escapes.",
+      "control_gap": "v0.2 compares structured, declared lane fields. The recovered instance was not a structured claim at all: a ruling arrived in conversation. No control reads conversation provenance, and by D9 none is intended to. The human caught it.",
       "solution_class": "UNRESOLVED",
       "agent_required": "UNPROVEN",
       "agent_required_basis": "No durable incident. 002A section 11 records that a Session Agent was not adopted because F2 is unverified and the stale-ref family is fetch discipline.",
       "open_questions": [
-        "Does any durable record of the SGAQ/001A bleed exist outside this repository?"
+        "Does any durable record of the originally reported SGAQ/001A bleed exist outside this repository?",
+        "Is a wrong-lane handoff that never becomes a structured claim in scope for any deterministic control, or is it irreducibly a human-review responsibility?"
       ],
       "deployment_gates": [
-        "A retrievable transcript or committed record independently evidencing the bleed (002A falsifier 1)",
-        "Show it is not active-lane, handoff, or human-workflow error already covered"
+        "Census admission: an owner-authorized reconciliation admitting the PR #342 instance into the incident census",
+        "A second independent instance, since one incident cannot establish recurrence",
+        "Show the v0.2 provenance claim does not already cover the structured form of this failure"
       ],
-      "blocked_by": [],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
       "related_items": [
         "AP-DI-004",
-        "AP-DI-007"
+        "AP-DI-007",
+        "AP-DI-002"
       ],
       "last_reviewed": "2026-08-31",
       "implementation_authorized": false
@@ -322,6 +345,7 @@
       "failure_family": "surviving_architecture_as_intent",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "What survived in the codebase is read as what was intended, so present structure is treated as a decision record.",
@@ -374,6 +398,7 @@
       "failure_family": "handoff_evidence_loss",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "A handoff records conclusions but not the evidence that produced them, so the next session cannot re-verify without redoing the work.",
@@ -421,6 +446,7 @@
       "failure_family": "cross_repo_reconciliation",
       "evidence_status": "DURABLE",
       "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Claims about a second repository need periodic re-derivation against that repository's actual state.",
@@ -470,13 +496,14 @@
     {
       "id": "AP-DI-009",
       "title": "Repository tooling is not normally trackable (/tools/ ignore boundary)",
-      "state": "BLOCKED",
+      "state": "SUPERSEDED_BY_CONTROL",
       "failure_family": "repository_control_gap",
       "evidence_status": "DURABLE",
       "census_status": "POST_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
-      "summary": "/tools/ is git-ignored repository-wide, so new repository tooling is silently untracked unless force-added. A bounded repair exists but is not deployed.",
+      "summary": "/tools/ was git-ignored repository-wide, so new repository tooling was silently untracked unless force-added. TOOLS-GITIGNORE-001 repaired the boundary and is now live on main.",
       "evidence_recovery": "ATTEMPTED",
       "evidence_recovery_result": "FOUND",
       "evidence_classes": [
@@ -505,28 +532,35 @@
           "repository": "HanzoRazer/luthiers-toolbox",
           "locator": "AGENT-PROGRAM-003 commit 3",
           "note": "this order's own validator required git add -f to be tracked"
+        },
+        {
+          "kind": "runtime_witness",
+          "evidence_class": "RUNTIME_WITNESS",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "GA-TRIAL-0008 re-ground, 2026-08-31",
+          "note": "PR #341 observed merged (C-003), tools/README.md present (C-017), and `git check-ignore tools/agent_program/validate_deferred_issues.py` returns no match at 592ca203 — the repair is live, not merely merged."
         }
       ],
-      "current_controls": [],
-      "control_gap": "The repair is proposed and tested on a branch but is not live on main, so nothing prevents a new tools/ file from being silently untracked today. Force-add is a per-author workaround, not a control.",
+      "current_controls": [
+        "TOOLS-GITIGNORE-001 (.gitignore /tools/* with allowlisted repository-owned namespaces)",
+        "tests/governance/test_tools_gitignore_boundary.py pins the boundary in both directions"
+      ],
+      "control_gap": "None remaining. .gitignore now ignores /tools/* while allowlisting /tools/README.md, /tools/grounding_agent/, /tools/agent_program/ and /tools/codegen/, so repository-owned tooling is normally trackable.",
       "solution_class": "DETERMINISTIC_RULE",
       "agent_required": "NO",
       "agent_required_basis": "A .gitignore boundary repair is a deterministic repository rule; no authority boundary is involved.",
-      "open_questions": [
-        "Does any other tools/ file already exist untracked on a contributor machine because of this?"
-      ],
+      "open_questions": [],
       "deployment_gates": [
-        "PR #341 merges to main",
-        "A later re-ground confirms the rule is live on main before this item may become SUPERSEDED_BY_CONTROL"
+        "PR #341 merges to main (SATISFIED, merged 2026-08-31)",
+        "A later re-ground confirms the rule is live on main (SATISFIED, GA-TRIAL-0008 C-003/C-017)"
       ],
-      "blocked_by": [
-        "PR #341 open, draft, unmerged"
-      ],
+      "blocked_by": [],
       "candidate_control": "TOOLS-GITIGNORE-001",
-      "control_deployed": "NO",
+      "control_deployed": "YES",
       "related_items": [],
       "last_reviewed": "2026-08-31",
-      "implementation_authorized": false
+      "implementation_authorized": false,
+      "transition_note": "BLOCKED -> SUPERSEDED_BY_CONTROL on 2026-08-31, on exactly the two conditions this queue recorded in advance. Retained rather than deleted, per D9/D10."
     },
     {
       "id": "AP-DI-010",
@@ -535,6 +569,7 @@
       "failure_family": "evidence_source_availability",
       "evidence_status": "DURABLE",
       "census_status": "POST_CENSUS",
+      "gates_require_recurrence": false,
       "source_incidents": [],
       "independent_incident_count": 0,
       "summary": "Grounding's GitHub adapter reads GITHUB_TOKEN/GH_TOKEN from the environment only. An operator authenticated solely through the gh CLI keyring gets BLOCKED on every pr_state claim, and a BLOCKED run is a STOP decision.",
