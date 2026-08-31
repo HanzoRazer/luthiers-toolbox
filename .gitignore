@@ -147,7 +147,16 @@ templates/
 # But allow Smart Guitar DXF templates
 !services/api/app/sandboxes/smart_guitar/templates/
 !services/api/app/sandboxes/smart_guitar/templates/**
-/tools/
+# TOOLS-GITIGNORE-001: ignore loose/ad-hoc content directly under tools/ by
+# default, but keep established repository-owned tooling namespaces (and the
+# tools/ custody README) normally trackable — no `git add -f` required. See
+# tools/README.md. Generated Python artifacts stay ignored via the global
+# __pycache__/ and *.pyc rules above.
+/tools/*
+!/tools/README.md
+!/tools/grounding_agent/
+!/tools/agent_program/
+!/tools/codegen/
 assets_staging/
 blueprint-reader/
 guitar_tap/
