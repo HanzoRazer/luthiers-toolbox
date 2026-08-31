@@ -1,0 +1,105 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_TEST_UTILS_250_NODE_FLOOR",
+  "title": "Bump @vue/test-utils to 2.5.0 and raise the Node 22 lane of the client engine floor",
+  "intent": "Dependabot dev-dependency bump plus the engine-floor change it forces. @vue/test-utils 2.5.0 pulls js-beautify -> nopt@10 -> abbrev@5, which declare engines.node ^22.22.2 || ^24.15.0 || >=26.0.0. The declared client floor's Node 22 lane was >=22.12.0, which no longer covers them, so nodeEngineFloor.spec.ts failed. The Node 22 lane is raised to >=22.22.2 and the packages/client/Dockerfile runtime guard is updated to match. The Node 20 lane is unchanged, so Railway is unaffected. No application code changes.",
+  "change_type": "dependency",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-test-utils-250-node-floor.json",
+      "packages/client/Dockerfile",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-test-utils-250-node-floor.json",
+      "packages/client/Dockerfile",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "devDependency @vue/test-utils ^2.4.6 -> ^2.5.0 (lockfile 2.4.11 -> 2.5.0). engines.node ^20.19.0 || >=22.12.0 -> ^20.19.0 || >=22.22.2. The inline node -e guard in packages/client/Dockerfile is updated to enforce the new floor, including a patch-level comparison it did not previously need.",
+    "why_not_redundant": "This manifest exists because the gate had been silently borrowing an unrelated one. With only package.json and package-lock.json changed, .cbsp21/patches/tailwind-v4-migration.json happened to cover both files and scored 100%, so the gate passed on coincidence. Adding packages/client/Dockerfile dropped that borrowed coverage to 66.7% and failed the gate. The correct fix is a per-PR manifest that declares this PR's own files, not a broader edit to the Tailwind manifest."
+  },
+  "verification": {
+    "commands_run": [
+      "Root cause of the CBSP21 failure: gate log shows 'Manifest: .cbsp21/patches/tailwind-v4-migration.json, Declared files: 15, Changed files: 3, Coverage: 66.7%, Uncovered: packages/client/Dockerfile'. Auto-discovery picked the best-covering EXISTING manifest, which was unrelated to this PR. This manifest replaces that coincidence with an explicit declaration.",
+      "Why the floor had to move: package-lock at 13c5a5c7 shows node_modules/abbrev@5.0.0 and node_modules/nopt@10.0.1 with engines.node '^22.22.2 || ^24.15.0 || >=26.0.0', both dev:true, reached via js-beautify -> nopt -> abbrev. Neither is optional, and nodeEngineFloor.spec.ts skips only optional entries.",
+      "Guard correctness verified against the declared floor over 15 versions (18.20.8, 20.9.0, 20.18.3, 20.19.0, 20.20.1, 21.7.3, 22.11.0, 22.12.0, 22.19.0, 22.22.1, 22.22.2, 22.23.0, 23.0.0, 24.11.0, 26.0.0): 0 mismatches, including the boundary pair 22.22.1 -> reject and 22.22.2 -> accept.",
+      "Breaking-change check (@vue/test-utils 2.5.0 drops class-component support): the client uses none. grep across packages/client for vue-class-component, vue-property-decorator, @Component, @Options and 'extends Vue' returns no matches; 7 files import @vue/test-utils, all Composition API. The documented breaking change does not apply here.",
+      "Narrowing-impact check: raising the Node 22 lane from 22.12.0 to 22.22.2 declares 22.12.x-22.22.1 unsupported. Nothing in the repository pins a version in that window. .nvmrc is '22', the nine NODE_VERSION defaults are '20' (x2) and '22' (x9), and CI uses node-version: 22 -- all bare majors that float to the newest 22.x. packages/client/Dockerfile keeps ARG NODE_VERSION=20, so the Railway path stays on the untouched Node 20 lane.",
+      "Sibling guards need no edit: docker/client/Dockerfile, Dockerfile.production, Dockerfile.railway and .github/workflows/client_lint_build.yml all assert via scripts/check-node-engine.mjs, which reads engines.node from package.json, so they pick up the new floor automatically.",
+      "nodeEngineFloor.spec.ts semantics confirmed before trusting the fix: dependenciesAboveTheFloor() requires only that AT LEAST ONE lane cover a dependency (documented, so the Railway Node 20 lane stays legal), and bare majors are probed as <major>.9999.9999 because 'whether the resolved runtime clears the floor is the Dockerfile guard's job'. The guard update is therefore the load-bearing half of this change, not incidental.",
+      "CI on 13c5a5c7: lint-build passes with the new floor; CBSP21 Patch Manifest Gate was the only remaining red check."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Bump @vue/test-utils to ^2.5.0 and raise the Node 22 lane of engines.node to >=22.22.2.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (dependency metadata; declares an already-satisfied floor)"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lockfile resolution for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (lockfile)"
+    },
+    {
+      "path": "packages/client/Dockerfile",
+      "intent": "Update the inline runtime engine-floor guard to match the raised floor, including a patch-level comparison.",
+      "scan_targets": [
+        "packages/client/Dockerfile"
+      ],
+      "risk": "low",
+      "behavior_change": "none (build-time assertion; ARG NODE_VERSION stays 20)"
+    },
+    {
+      "path": ".cbsp21/patches/vue-test-utils-250-node-floor.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/vue-test-utils-250-node-floor.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-VUE-TEST-UTILS-250-NODE-FLOOR",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "AS-VTU250-L1",
+        "severity": "low",
+        "summary": "packages/client/Dockerfile restates the engine floor inline instead of calling scripts/check-node-engine.mjs like its four siblings, so a floor change requires a hand edit here and can drift from package.json.",
+        "detail": "The guard runs before WORKDIR and the COPY steps, so the script is not yet in the image, which is why it was written inline. Its four siblings copy the script first and execute it, and their comment states the intent: the floor lives in one place and 'this Dockerfile cannot drift from the manifest or from its three siblings'. Aligning this Dockerfile would have made the hand edit in this PR unnecessary.",
+        "disposition": "DEFERRED - out of scope for a dependency bump. Recorded so it is not rediscovered; it is build infrastructure and belongs in its own change, not coupled to a dependabot PR."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-dependency bump plus the engine-floor declaration it forces. No application code, no API, no schema, no production runtime change. The Node 20 lane and ARG NODE_VERSION=20 are untouched, so the Railway client path is unaffected. One low finding recorded and deferred."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build-graph change. The only build-file edit is an assertion that fails earlier and more clearly on a wrong base image.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
