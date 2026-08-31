@@ -1,0 +1,123 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENT_PROGRAM_003_DEFERRED_ISSUES",
+  "title": "AGENT-PROGRAM-003: deferred issue evidence and readiness queue",
+  "intent": "Evidence and readiness increment only. Record deferred Agent Program findings as a disposition layer over the 002A incident census, with explicit deployment gates. Implements none of the queued capabilities, creates no Agent 002, adds no orchestration, and changes no production behavior. implementation_authorized is false for every item.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_deferred_issues.json",
+      "tests/agent_program/test_deferred_issues.py",
+      "tools/agent_program/validate_deferred_issues.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_deferred_issues.json",
+      "tests/agent_program/test_deferred_issues.py",
+      "tools/agent_program/validate_deferred_issues.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the deferred-issue contract document, a ten-item machine-readable queue, a read-only queue validator plus tests, and trial row GA-TRIAL-0007. One item is READY_FOR_DECISION, one is BLOCKED on PR #341, two are PENDING_CENSUS_AMENDMENT, five record an ATTEMPTED/NOT_FOUND evidence-recovery pass. No queued capability is implemented.",
+    "why_not_redundant": "The 002A incident census is the canonical incident evidence and is a closed review artifact carrying a terminal decision. It does not track what would have to become true before a deferred finding may be implemented. This increment is that missing readiness layer, and it references census incident ids rather than restating them so there is only one census authority."
+  },
+  "verification": {
+    "commands_run": [
+      "git fetch origin main -> origin/main b53f9963c92a83ed26d3297adbe58cbb5942f0ad (PR #340 merged); local branch was 272 behind, so work was done in a fresh worktree created from b53f9963",
+      "gh api repos/HanzoRazer/luthiers-toolbox/commits/main --jq .sha -> b53f9963c92a83ed26d3297adbe58cbb5942f0ad; expected values for repo_head and both pr_state claims were sourced from the GitHub API rather than from the checkout, per the INC-002A-F1-001 lesson",
+      "py -3.11 -m tools.grounding_agent.cli --request ap003_grounding_request.json (run 1) -> BLOCKED / STOP; 15 checked, 13 MATCH, 2 BLOCKED, both pr_state, 'no GITHUB_TOKEN/GH_TOKEN available for GitHub read'",
+      "py -3.11 -m tools.grounding_agent.cli --request ap003_grounding_request.json (run 2, GITHUB_TOKEN exported) -> MATCH / PROCEED exit 0; 15/15 MATCH (GA-TRIAL-0007). Both runs recorded; the block was resolved by supplying the evidence source, not overridden.",
+      "Grounding C-003 independently confirmed PR #341 open, draft, merged=false -> AP-DI-009 recorded as BLOCKED, not SUPERSEDED_BY_CONTROL",
+      "Grounding C-008/C-009/C-010 confirmed all three new artifacts absent at HEAD before creation",
+      "git check-ignore -v tools/agent_program/validate_deferred_issues.py -> .gitignore:150 /tools/; the file never appeared in git status and required git add -f. Staged set verified explicitly with git diff --cached --name-status.",
+      "py -3.11 -m tools.agent_program.validate_deferred_issues -> renders; 10 items, ready_for_decision ['AP-DI-001'], blocked ['AP-DI-009'], lead_only ['AP-DI-005'], pending_census ['AP-DI-003','AP-DI-010'], authorized_items none",
+      "py -3.11 -m pytest tests/agent_program -q -> 69 passed, 1 skipped (DI-017; the skip is pre-existing T11, which applies only when an Agent 002 draft exists, and none does)",
+      "py -3.11 -m pytest tests/grounding_agent -q -> 77 passed (DI-016)",
+      "Evidence-recovery pass: BR-024 (BACKLOG_ADJUDICATION_LEDGER.md:76) and the refuted svgwrite-absent claim (vectorizer_cross_repo_reconciliation_001.md:180) falsify 002A's F4 exclusion; recorded as AP-DI-003 and marked PENDING_CENSUS_AMENDMENT because the 002A census is closed",
+      "Interpretation flagged in AGENT_PROGRAM_DEFERRED_ISSUES.md 2.2: the order asked for LEAD_ONLY on post-census findings; the evidence is durable, so census_status enforces the intent (cannot reach readiness) while the evidence class stays accurate. Owner may override."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "intent": "Canonical human-readable queue: purpose, authority boundary, state and evidence vocabularies, readiness rules, the ten items, and how a future Dev Order consumes one.",
+      "scan_targets": [
+        "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/governance/agents/agent_program_deferred_issues.json",
+      "intent": "Machine-readable readiness queue. References 002A incident ids; not a second incident registry and not a runtime registry.",
+      "scan_targets": [
+        "docs/governance/agents/agent_program_deferred_issues.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (data)"
+    },
+    {
+      "path": "tools/agent_program/validate_deferred_issues.py",
+      "intent": "Read-only queue contract validation and summary. Stdlib only, no network, no Git invocation, no write path, cannot set authorization.",
+      "scan_targets": [
+        "tools/agent_program/validate_deferred_issues.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (read-only utility)"
+    },
+    {
+      "path": "tests/agent_program/test_deferred_issues.py",
+      "intent": "Deterministic DI-001..DI-015 queue-integrity and readiness tests, plus queue-level invariants.",
+      "scan_targets": [
+        "tests/agent_program/test_deferred_issues.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record real operational use GA-TRIAL-0007, the program's first blocked run, with both executions preserved. No historical row rewritten.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/agent-program-003-deferred-issues.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-AGENT-PROGRAM-003",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation, a governance data artifact, and a read-only validator. No Grounding Agent code change, no Agent 002, no orchestration or dispatch, no production capability change, no cross-repo mutation. Every queue item carries implementation_authorized false, pinned by test."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
