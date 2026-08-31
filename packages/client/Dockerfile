@@ -7,10 +7,10 @@ ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-alpine AS builder
 
 # --- Node engine floor (do not remove) ---------------------------------------
-# packages/client/package.json declares: "node": "^20.19.0 || >=22.12.0".
+# packages/client/package.json declares: "node": "^20.19.0 || >=22.22.2".
 # NODE_VERSION=20 satisfies the Node 20 lane. Do not bump this ARG to 22 on
 # Railway until node:22-* bases build successfully on this service.
-RUN node -e "const v=process.versions.node,[a,b]=v.split('.').map(Number);if(!((a===20&&b>=19)||(a===22&&b>=12)||a>22)){console.error('FATAL: Node '+v+' is below the client engine floor ^20.19.0 || >=22.12.0');process.exit(1)}console.log('Node '+v+' satisfies the client engine floor')"
+RUN node -e "const v=process.versions.node,[a,b,c]=v.split('.').map(Number);if(!((a===20&&b>=19)||(a===22&&(b>22||(b===22&&c>=2)))||a>22)){console.error('FATAL: Node '+v+' is below the client engine floor ^20.19.0 || >=22.22.2');process.exit(1)}console.log('Node '+v+' satisfies the client engine floor')"
 
 # Force rebuild - DO NOT CACHE
 ARG CACHEBUST=1
