@@ -1,0 +1,125 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SPATIAL_HASH_MODULE_SPLIT",
+  "title": "Split test_dxf_security_patch.py by concern and delete its never-collected twin",
+  "intent": "Test-only. Clears the two findings PR #349 recorded as deferred: the live module sat ~2 lines under the 500-line debt ceiling while covering six unrelated concerns, and a never-collected duplicate of it lived under app/tests/. Splits the module into four and deletes the duplicate. All 24 tests are preserved. No production code changes.",
+  "change_type": "test",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/spatial-hash-module-split.json",
+      "services/api/app/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_operation_timeouts.py",
+      "services/api/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_upload_guard.py",
+      "services/api/tests/test_graph_algorithms_dfs.py",
+      "services/api/tests/test_spatial_hash.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/spatial-hash-module-split.json",
+      "services/api/app/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_operation_timeouts.py",
+      "services/api/tests/test_dxf_security_patch.py",
+      "services/api/tests/test_dxf_upload_guard.py",
+      "services/api/tests/test_graph_algorithms_dfs.py",
+      "services/api/tests/test_spatial_hash.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "services/api/tests/test_dxf_security_patch.py (498 lines, six concerns) is split into test_dxf_upload_guard.py (133), test_spatial_hash.py (237), test_graph_algorithms_dfs.py (57) and test_dxf_operation_timeouts.py (93), and removed. services/api/app/tests/test_dxf_security_patch.py, a never-collected self-skipping duplicate, is deleted.",
+    "why_not_redundant": "PR #349 recorded both of these as deferred low findings rather than fixing them, to keep that PR a single increment. This is the follow-up increment they were deferred into. It carries its own manifest rather than amending #349's, which is already merged and describes what actually landed there."
+  },
+  "verification": {
+    "commands_run": [
+      "DEFERRED ITEM 1 - dead twin. Re-verified before deleting rather than trusting the note from #349, and that note was imprecise: it said the file 'would error if it ran'. It does not. The module carries `pytestmark = pytest.mark.skip(reason=\"Test API mismatch: tests do not match actual implementation\")`, so all 22 of its tests skip and never reach the bad SpatialHash(tolerance=...) call. The TypeError is real but unreachable, and the skip mark shows the divergence was already known.",
+      "Positive-trace evidence for deletion, three independent strands: (1) `pytest --collect-only` over the default paths yields 0 tests from app/tests/, because testpaths is 'tests' in pytest.ini and [\"tests\"] in pyproject.toml; (2) the module disables itself with the skip mark above; (3) a live twin covers the same subject under services/api/tests/. Explicitly targeting the file collects 22 tests and all 22 skip.",
+      "No live reference anywhere: the only hits for the path are historical logs under reports/archaeology/, which record the original 'test: skip test_dxf_security_patch.py (API mismatch with actual implementation)' commit.",
+      "DEFERRED ITEM 2 - module split. Largest resulting file is 237 lines against the 500-line ceiling, so headroom goes from ~2 lines to ~263 and the next author is not forced into a trim-or-baseline decision.",
+      "The split was performed programmatically by slicing class boundaries, not by hand, so no test could be silently dropped in transcription. Test count verified identical: 24 before, 24 after. One missing import (validate_file_size, UploadFile, io) in the timeouts module was caught immediately by the suite and fixed.",
+      "py -3.11 -m pytest tests/test_dxf_upload_guard.py tests/test_spatial_hash.py tests/test_graph_algorithms_dfs.py tests/test_dxf_operation_timeouts.py -q --no-cov -> 24 passed",
+      "py -3.11 -m pytest tests/ --collect-only -q --no-cov -> 8869 tests collected; the single collection error is tests/test_pg_pool.py 'No module named aiosqlite', pre-existing local environment drift that CI does not have. No new collection error introduced.",
+      "py -3.11 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> 'OK: No files exceed 500 lines'",
+      "app/cam/spatial_hash.py and every other production module are untouched."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_spatial_hash.py",
+      "intent": "Spatial hash deduplication plus the comparison-count complexity guards.",
+      "scan_targets": ["services/api/tests/test_spatial_hash.py"],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_upload_guard.py",
+      "intent": "File-size and entity-count limits, plus the early-rejection integration test.",
+      "scan_targets": ["services/api/tests/test_dxf_upload_guard.py"],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_graph_algorithms_dfs.py",
+      "intent": "Iterative DFS stack-overflow guards.",
+      "scan_targets": ["services/api/tests/test_graph_algorithms_dfs.py"],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_operation_timeouts.py",
+      "intent": "Async operation timeouts and rollback criteria.",
+      "scan_targets": ["services/api/tests/test_dxf_operation_timeouts.py"],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/test_dxf_security_patch.py",
+      "intent": "Removed; contents distributed across the four modules above.",
+      "scan_targets": [],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/app/tests/test_dxf_security_patch.py",
+      "intent": "Removed; never-collected, self-skipping duplicate superseded by the live suite.",
+      "scan_targets": [],
+      "risk": "low",
+      "behavior_change": "none (dead tests)"
+    },
+    {
+      "path": ".cbsp21/patches/spatial-hash-module-split.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [".cbsp21/patches/spatial-hash-module-split.json"],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-SPATIAL-HASH-MODULE-SPLIT",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "AS-SPLIT-L1",
+        "severity": "low",
+        "summary": "services/api/app/tests/ is a wholly uncollected parallel test tree; this change removes one file from it, not the tree.",
+        "detail": "testpaths excludes app/tests/ in both pytest.ini and pyproject.toml, so none of its 22 entries run -- including whole subdirectories (rmos, calculators, instrument_geometry, integration, ai_graphics). Only the duplicate in this PR's scope was assessed and deleted; the rest is untouched and unassessed here.",
+        "disposition": "DEFERRED - auditing an entire dead test tree is its own change and needs its own evidence per file. Recorded so the scope of this deletion is not mistaken for a tree-wide cleanup."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test-only reorganisation and one dead-file deletion. No production code, no API, no schema, no dependency change. All 24 live tests preserved and passing."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
