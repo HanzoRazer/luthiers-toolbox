@@ -1,0 +1,14 @@
+{
+  "name": "GA-LANE-02 — foreign repository declared EVIDENCE_ONLY",
+  "kind": "synthetic",
+  "description": "Handoff cites a foreign repo declared as an EVIDENCE_ONLY evidence lane. Permitted cross-repo evidence, not a conflict.",
+  "request": {
+    "active_lane": {"project": "Luthiers-Toolbox-Consolidation-Lab", "active_repository": "HanzoRazer/luthiers-toolbox", "active_program": "Agent Program", "active_order": "GROUNDING-AGENT-002", "active_state": "IMPLEMENTATION", "cross_repo_policy": "EVIDENCE_ONLY"},
+    "evidence_lanes": [{"repository": "HanzoRazer/vectorizer-sandbox", "mode": "EVIDENCE_ONLY"}],
+    "claims": [
+      {"claim_id": "P", "type": "handoff_provenance", "expected": {"repository": "HanzoRazer/vectorizer-sandbox", "required": ["repository"]}, "material": true}
+    ]
+  },
+  "recorded": {},
+  "expected": {"status": "MATCH", "decision": "PROCEED", "material_divergences": [], "claim_verdicts": {"P": "MATCH"}, "evidence_classes": {"P": "INPUT_CONTRACT"}}
+}

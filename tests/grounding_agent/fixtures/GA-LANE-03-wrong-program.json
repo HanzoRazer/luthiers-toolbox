@@ -1,0 +1,13 @@
+{
+  "name": "GA-LANE-03 — same repository, wrong program",
+  "kind": "synthetic",
+  "description": "Handoff for the active repository declares a different program. Material lane conflict.",
+  "request": {
+    "active_lane": {"project": "Luthiers-Toolbox-Consolidation-Lab", "active_repository": "HanzoRazer/luthiers-toolbox", "active_program": "Agent Program", "active_order": "GROUNDING-AGENT-002", "active_state": "IMPLEMENTATION", "cross_repo_policy": "EVIDENCE_ONLY"},
+    "claims": [
+      {"claim_id": "P", "type": "handoff_provenance", "expected": {"repository": "HanzoRazer/luthiers-toolbox", "program": "SGAQ"}, "material": true}
+    ]
+  },
+  "recorded": {},
+  "expected": {"status": "STALE", "decision": "STOP", "material_divergences": ["P"], "claim_verdicts": {"P": "MISMATCH"}, "evidence_classes": {"P": "INPUT_CONTRACT"}, "reasons": {"P": "HANDOFF_LANE_CONFLICT"}}
+}

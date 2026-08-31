@@ -145,6 +145,27 @@ def test_no_forbidden_result_fields_in_dict_literals():
                         )
 
 
+def test_no_hardcoded_program_name_classifier():
+    """GA2-011 — the lane/provenance logic is structural, not a keyword classifier.
+
+    Prove no known program/workstream name is hardcoded as a string literal in
+    the evaluator modules (which would be an NLP-style ``if "SGAQ" in ...``
+    classifier, forbidden by D9). Lane comparison must be structural.
+    """
+    denylisted_program_names = {
+        "SGAQ", "RMOS", "Vectorizer", "vectorizer-sandbox", "Dependabot",
+        "Reconciliation", "Agent Program", "Queue Agent", "Supervisor",
+    }
+    for path in _package_py_files():
+        tree = _parse(path)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                assert node.value not in denylisted_program_names, (
+                    f"hardcoded program-name literal {node.value!r} in {path} "
+                    "(lane checks must be structural, not keyword-based)"
+                )
+
+
 def test_subprocess_only_imported_in_git_adapter():
     importers = []
     for path in _package_py_files():

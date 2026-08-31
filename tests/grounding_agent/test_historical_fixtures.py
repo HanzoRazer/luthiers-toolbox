@@ -99,6 +99,11 @@ def test_historical_fixture(fixture_path):
         assert by_id[claim_id].scope == scope
     for claim_id, needle in expected.get("message_contains", {}).items():
         assert needle in by_id[claim_id].message
+    for claim_id, reason in expected.get("reasons", {}).items():
+        got = by_id[claim_id].reason
+        assert (got.value if got is not None else None) == reason, (
+            f"{fixture_path.stem}:{claim_id} reason"
+        )
 
 
 def test_all_five_historical_fixtures_present():
