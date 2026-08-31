@@ -39,7 +39,11 @@
       "CORRECTION made during this pass: a comment stating the guard 'will object past ~10mm' was measured to be wrong for the dense fixture, which objects at ~1mm. The comment now carries both fixtures' measured tables and states plainly that sensitivity follows point density, and that the bound is a constant-factor bound rather than a strict complexity bound.",
       "Sweep re-run correctly: `grep -rn 'elapsed <|elapsed<|duration <' services/api/tests/` now returns only docstring references to the removed assertions -- no live wall-clock assertion remains anywhere in the suite.",
       "Rebased onto current origin/main so CI verifies against a live base rather than one 11 commits stale.",
-      "py -3.11 -m pytest tests/test_dxf_security_patch.py -q --no-cov -> 24 passed"
+      "py -3.11 -m pytest tests/test_dxf_security_patch.py -q --no-cov -> 24 passed",
+      "GATE CAUGHT ME, correctly: debt-gates 'File size check (ratchet mode)' failed at 528 lines against a 500-line threshold. The file was 397 lines on main and is NOT in app/ci/file_sizes_baseline.json (which holds only 3 pre-existing violators), so my documentation created a NEW violation rather than growing an existing one.",
+      "Resolved by trimming, not by baselining. Adding the file to the baseline would ratchet debt upward for a file I had just oversized, which is the exact move the gate exists to stop. Compressed the constant's comment and the three test docstrings -- the full measured tables and history live here in the manifest, in the commit message and in the PR body, so nothing was lost, only de-duplicated out of the source file. 528 -> 498 lines, gate 'OK'.",
+      "Residual risk recorded: at 498 lines the file has ~2 lines of margin under the threshold. It covers six unrelated concerns (file size, entity count, spatial hash, iterative DFS, timeouts, rollback criteria) and the durable fix is to split it, which is out of scope here.",
+      "py -3.11 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> 'OK: No files exceed 500 lines'"
     ]
   },
   "files": [
@@ -68,7 +72,7 @@
       "critical": 0,
       "high": 0,
       "medium": 0,
-      "low": 1
+      "low": 2
     },
     "findings": [
       {
@@ -77,6 +81,13 @@
         "summary": "services/api/app/tests/test_dxf_security_patch.py is a stale duplicate that is never collected and would error if it were.",
         "detail": "Both pytest.ini (testpaths = tests) and pyproject.toml (testpaths = [\"tests\"]) exclude app/tests/, so the file never runs. It calls SpatialHash(tolerance=0.01) six times, and that constructor takes cell_size, not tolerance -- verified to raise TypeError against the current API. It does not contain either wall-clock assertion, so it is an older variant rather than a copy. Positive-trace evidence of deadness: excluded by config, broken against the live API, and superseded by a live twin at services/api/tests/.",
         "disposition": "DEFERRED - out of scope for this fix. Deleting test files is its own change and needs its own review; recorded so it is not rediscovered."
+      },
+      {
+        "id": "AS-SPATIAL-L2",
+        "severity": "low",
+        "summary": "services/api/tests/test_dxf_security_patch.py sits ~2 lines under the 500-line debt threshold.",
+        "detail": "The file covers six unrelated concerns in one module (file size limits, entity count limits, spatial hash, iterative DFS, async timeouts, rollback criteria). At 498 lines any further addition trips the file-size ratchet, so the next person to add a test here will be forced into the same trim-or-baseline decision.",
+        "disposition": "DEFERRED - splitting the module by concern is the durable fix and is its own change. Recorded so the next author knows why the file is tight."
       }
     ],
     "acknowledged": true,

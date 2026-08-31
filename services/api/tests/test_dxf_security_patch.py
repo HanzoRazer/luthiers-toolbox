@@ -39,59 +39,41 @@ from app.cam.graph_algorithms import (
 )
 
 
-# A complexity-regression guard -- NOT a performance guarantee.
+# A complexity-regression guard -- NOT a performance guarantee. It answers only
+# "is dedup still roughly constant work per insert?", not how fast it runs,
+# which is what the two wall-clock assertions it replaced tried to do and why
+# they went: they graded the CI runner, not the algorithm.
 #
-# It answers exactly one question: "is deduplication still roughly constant work
-# per insert?" It says nothing about throughput, latency or wall-clock time and
-# must not be read as an SLA or a benchmark. Measuring throughput is what the two
-# assertions this replaced attempted, and why they were replaced: they graded the
-# CI runner rather than the algorithm.
-#
-# Two fixtures share this bound and they are NOT equally sensitive, because
-# sensitivity follows point density, not point count:
-#
-#   1,417 random points over 400x300mm (sparse)   10,000 grid points over 50x50mm
-#     cell_size  per insert  verdict                cell_size  per insert  verdict
-#         0.1mm        0.00  pass  <- production        0.1mm        0.00  pass
-#         1.0mm        0.06  pass                       1.0mm       17.02  FAIL
-#        10.0mm        5.03  pass                      10.0mm    1,351.50  FAIL
-#       100.0mm      348.21  FAIL                     100.0mm    4,999.50  FAIL
-#
-# So the dense grid is the tighter guard: it objects once cell_size reaches
-# ~1mm, while the sparse case tolerates 10mm. Note this bound is a
-# constant-factor bound, not a strict complexity bound -- at 1mm the grid case
-# is still O(1) per insert, just with a constant of 17. Failing there is
-# deliberate: production has no reason to move off 0.1mm, so a jump that large
-# is a configuration change that should be looked at, not waved through.
-#
-# cell_size is not a live tuning knob: production constructs SpatialHash in one
-# place, app/cam/graph_algorithms.py, always with SPATIAL_HASH_CELL_SIZE_MM
-# (0.1mm, from app/cam/dxf_limits.py, chosen for a typical 0.01mm CNC
-# tolerance). Nothing overrides it.
+# Sensitivity follows point DENSITY, not count. Per-insert comparisons as
+# cell_size degrades (FAIL = this bound catches it):
+#   1,417 random / 400x300mm:  0.1mm 0.00 | 1mm 0.06 | 10mm 5.03 | 100mm 348 FAIL
+#   10,000 grid / 50x50mm:     0.1mm 0.00 | 1mm 17.0 FAIL | 10mm 1351 FAIL
+# So the dense grid is the tighter guard. This is a constant-factor bound, not a
+# strict complexity bound -- at 1mm the grid case is still O(1) per insert, with
+# a constant of 17. Failing there is deliberate: cell_size is not a live knob.
+# SpatialHash is built in one place, app/cam/graph_algorithms.py, always with
+# SPATIAL_HASH_CELL_SIZE_MM (0.1mm, app/cam/dxf_limits.py, for 0.01mm CNC tol).
 MAX_COMPARISONS_PER_INSERT = 10
+
 
 def _counting_point_class(counter):
     """A PointLike whose is_close() increments ``counter``.
 
-    Counting comparisons is what makes this suite's performance claim
-    checkable without timing anything: ``find_existing()`` calls
-    ``is_close()`` exactly once per candidate in the 3x3 cell
-    neighbourhood, so the call count *is* the work the spatial hash does.
+    find_existing() calls is_close() exactly once per candidate in the 3x3 cell
+    neighbourhood, so the call count *is* the work the spatial hash does --
+    which is what makes the claim checkable without timing anything.
     """
 
     class CountingPoint:
         __slots__ = ("x", "y")
 
         def __init__(self, x, y):
-            self.x = x
-            self.y = y
+            self.x, self.y = x, y
 
         def is_close(self, other, tolerance=0.001):
             counter["comparisons"] += 1
-            return (
-                abs(self.x - other.x) < tolerance
-                and abs(self.y - other.y) < tolerance
-            )
+            return (abs(self.x - other.x) < tolerance
+                    and abs(self.y - other.y) < tolerance)
 
     return CountingPoint
 
@@ -261,15 +243,9 @@ class TestSpatialHashPerformance:
     def test_performance_scaling(self):
         """10K points stay O(1) per insert, not O(n^2).
 
-        This asserted ``elapsed < 1.0`` until 2026-08-31. It is the same defect
-        as the 0.1s assertion that used to sit in
-        TestSecurityPatchIntegration: a wall-clock bound grades the runner, not
-        the algorithm. It had simply not tripped yet -- the loop takes ~0.036s
-        locally, but the sibling assertion was observed running 110x slower on
-        a contended CI runner, which would have put this one around 4s against
-        its 1s bound. Converted before it failed rather than after.
-
-        See MAX_COMPARISONS_PER_INSERT for the bound and its headroom.
+        Asserted ``elapsed < 1.0`` until 2026-08-31 -- a runner-speed bound that
+        had not tripped yet (~0.036s locally, but ~4s at the 110x CI contention
+        its sibling hit). See MAX_COMPARISONS_PER_INSERT.
         """
         counter = {"comparisons": 0}
         point_cls = _counting_point_class(counter)
@@ -291,8 +267,8 @@ class TestSpatialHashPerformance:
         assert counter["comparisons"] < MAX_COMPARISONS_PER_INSERT * n, (
             f"{counter['comparisons']} comparisons for {n} inserts "
             f"({counter['comparisons'] / n:.1f} per insert) exceeds the "
-            f"{MAX_COMPARISONS_PER_INSERT}/insert complexity-regression bound; "
-            f"a linear scan would be ~{n * (n - 1) // 2:,}"
+            f"{MAX_COMPARISONS_PER_INSERT}/insert bound; a linear scan would be "
+            f"~{n * (n - 1) // 2:,}"
         )
 
 
@@ -407,15 +383,10 @@ class TestSecurityPatchIntegration:
     def test_spatial_hash_does_not_degenerate_to_linear_scan(self):
         """Realistic guitar-body point count stays O(1) per insert.
 
-        This replaces an earlier wall-clock assertion (``elapsed < 0.1``).
-        That assertion tested how fast the *runner* was, not how the algorithm
-        scales: the same code measures ~0.005s on a developer machine and was
-        observed at 0.604s on a contended CI runner, tripping a gate on an
-        unrelated pull request. The property actually worth protecting is that
-        deduplication does not regress to the O(n^2) linear scan this module
-        was written to replace, and comparison count measures that directly
-        and deterministically. See MAX_COMPARISONS_PER_INSERT for the bound's
-        headroom and for why this is a complexity guard, not a speed guarantee.
+        Replaces ``elapsed < 0.1``, which measured the runner (~0.005s locally,
+        0.604s on a contended CI box, failing an unrelated PR). What matters is
+        that dedup has not regressed to the O(n^2) scan this module replaced,
+        and comparison count measures that directly.
         """
         import random
 
@@ -454,9 +425,8 @@ class TestSecurityPatchIntegration:
     def test_spatial_hash_deduplicates_coincident_points(self):
         """Exercise the collision path the sparse-random case never reaches.
 
-        With 0.1mm cells over a 400x300mm area, random points almost never
-        share a cell, so the previous test can pass without the deduplication
-        logic ever matching. This one forces matches.
+        With 0.1mm cells over 400x300mm, 1,417 random points produce a single
+        is_close() call, so the matching logic was untested. This forces it.
         """
         import random
 
