@@ -1,0 +1,13 @@
+{
+  "name": "GA-LANE-05 — required provenance not established",
+  "kind": "synthetic",
+  "description": "Program is declared required but the handoff does not establish it. Absence of proof is not proof of bleed (D6): INSUFFICIENT_EVIDENCE, not a guessed mismatch.",
+  "request": {
+    "active_lane": {"project": "Luthiers-Toolbox-Consolidation-Lab", "active_repository": "HanzoRazer/luthiers-toolbox", "active_program": "Agent Program", "active_order": "GROUNDING-AGENT-002", "active_state": "IMPLEMENTATION", "cross_repo_policy": "EVIDENCE_ONLY"},
+    "claims": [
+      {"claim_id": "P", "type": "handoff_provenance", "expected": {"repository": "HanzoRazer/luthiers-toolbox", "required": ["repository", "program"]}, "material": true}
+    ]
+  },
+  "recorded": {},
+  "expected": {"status": "INSUFFICIENT_EVIDENCE", "decision": "STOP", "material_divergences": [], "claim_verdicts": {"P": "INSUFFICIENT_EVIDENCE"}, "evidence_classes": {"P": "INSUFFICIENT_EVIDENCE"}}
+}

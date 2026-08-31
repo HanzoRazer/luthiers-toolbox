@@ -74,7 +74,13 @@ class ExecutionDecision(str, Enum):
 
 
 class ClaimType(str, Enum):
-    """The seven bounded v0.1 claim types."""
+    """Bounded claim types.
+
+    The first seven are v0.1. ``handoff_provenance`` is the v0.2 addition
+    (GROUNDING-AGENT-002): it checks whether a handoff's declared
+    program/work-order/repository match the active lane. It does NOT replace the
+    existing ``active_lane`` repository/cross-repo authority boundary.
+    """
 
     REPO_HEAD = "repo_head"
     PR_STATE = "pr_state"
@@ -83,6 +89,8 @@ class ClaimType(str, Enum):
     COMMIT_ANCESTOR = "commit_ancestor"
     WORKTREE_CLEAN = "worktree_clean"
     ACTIVE_LANE = "active_lane"
+    # v0.2 (GROUNDING-AGENT-002) — handoff/session lane provenance.
+    HANDOFF_PROVENANCE = "handoff_provenance"
 
 
 class CrossRepoPolicy(str, Enum):
@@ -94,6 +102,26 @@ class CrossRepoPolicy(str, Enum):
     """
 
     EVIDENCE_ONLY = "EVIDENCE_ONLY"
+
+
+class EvidenceMode(str, Enum):
+    """Mode of a declared foreign evidence lane (v0.2).
+
+    A foreign repository may be referenced as read-only evidence. Only
+    ``EVIDENCE_ONLY`` is defined; any other value is rejected (fail-closed).
+    """
+
+    EVIDENCE_ONLY = "EVIDENCE_ONLY"
+
+
+class ClaimReason(str, Enum):
+    """Controlled reason a claim verdict occurred (v0.2, D5).
+
+    ``reason`` is distinct from the observed evidence payload: it explains *why*
+    the verdict is what it is. Only one value is defined in v0.2.
+    """
+
+    HANDOFF_LANE_CONFLICT = "HANDOFF_LANE_CONFLICT"
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +210,35 @@ class ActiveLane:
             "active_state": self.active_state,
             "cross_repo_policy": self.cross_repo_policy.value,
         }
+
+
+@dataclass(frozen=True)
+class EvidenceLane:
+    """A declared foreign repository referenced as read-only evidence (v0.2).
+
+    Presence here lets a handoff legitimately cite another repository's state
+    without that reference being treated as a lane conflict. It never grants
+    mutation authority.
+    """
+
+    repository: str
+    mode: EvidenceMode
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EvidenceLane":
+        _require(isinstance(data, dict), "each evidence_lane must be an object")
+        _require(
+            "repository" in data and data["repository"] not in (None, ""),
+            "evidence_lane.repository is required",
+        )
+        _require("mode" in data, "evidence_lane.mode is required")
+        return cls(
+            repository=str(data["repository"]),
+            mode=_enum_from_value(EvidenceMode, data["mode"], "evidence_lane.mode"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"repository": self.repository, "mode": self.mode.value}
 
 
 @dataclass
@@ -274,10 +331,15 @@ class GroundingClaim:
 
 @dataclass
 class GroundingRequest:
-    """Top-level request: active lane + typed claims."""
+    """Top-level request: active lane + typed claims.
+
+    v0.2 adds an optional ``evidence_lanes`` list. It is omitted from
+    serialization when empty so existing v0.1 requests round-trip identically.
+    """
 
     active_lane: ActiveLane
     claims: List[GroundingClaim]
+    evidence_lanes: List[EvidenceLane] = field(default_factory=list)
     schema_version: str = "grounding_request_v0.1"
 
     @classmethod
@@ -291,6 +353,13 @@ class GroundingRequest:
         active_lane = ActiveLane.from_dict(data["active_lane"])
         claims = [GroundingClaim.from_dict(c) for c in data["claims"]]
 
+        evidence_lanes_raw = data.get("evidence_lanes", [])
+        _require(
+            isinstance(evidence_lanes_raw, list),
+            "request.evidence_lanes must be an array",
+        )
+        evidence_lanes = [EvidenceLane.from_dict(e) for e in evidence_lanes_raw]
+
         seen = set()
         for claim in claims:
             _require(claim.claim_id not in seen, f"duplicate claim_id: {claim.claim_id}")
@@ -299,15 +368,19 @@ class GroundingRequest:
         return cls(
             active_lane=active_lane,
             claims=claims,
+            evidence_lanes=evidence_lanes,
             schema_version=str(data.get("schema_version", "grounding_request_v0.1")),
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        out: Dict[str, Any] = {
             "schema_version": self.schema_version,
             "active_lane": self.active_lane.to_dict(),
             "claims": [c.to_dict() for c in self.claims],
         }
+        if self.evidence_lanes:
+            out["evidence_lanes"] = [e.to_dict() for e in self.evidence_lanes]
+        return out
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +408,10 @@ class ClaimResult:
     source: Optional[str] = None
     scope: Optional[str] = None
     message: str = ""
+    # v0.2: controlled reason a verdict occurred (e.g. HANDOFF_LANE_CONFLICT).
+    # Distinct from the observed evidence payload. Omitted when None so existing
+    # v0.1 results serialize exactly as before.
+    reason: Optional[ClaimReason] = None
 
     def to_dict(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {
@@ -352,6 +429,8 @@ class ClaimResult:
             out["source"] = self.source
         if self.scope is not None:
             out["scope"] = self.scope
+        if self.reason is not None:
+            out["reason"] = self.reason.value
         return out
 
 

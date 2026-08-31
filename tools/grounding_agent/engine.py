@@ -19,6 +19,7 @@ from .adapters.github_api import (
     GitHubUnavailable,
 )
 from .models import (
+    ClaimReason,
     ClaimResult,
     ClaimType,
     ClaimVerdict,
@@ -47,6 +48,7 @@ def ground(
         ClaimType.COMMIT_ANCESTOR: _check_commit_ancestor,
         ClaimType.WORKTREE_CLEAN: _check_worktree_clean,
         ClaimType.ACTIVE_LANE: _check_active_lane,
+        ClaimType.HANDOFF_PROVENANCE: _check_handoff_provenance,
     }
 
     results = []
@@ -85,6 +87,7 @@ def _result(
     source: str | None = None,
     scope: str | None = None,
     message: str = "",
+    reason: ClaimReason | None = None,
 ) -> ClaimResult:
     return ClaimResult(
         claim_id=claim.claim_id,
@@ -98,6 +101,7 @@ def _result(
         source=source,
         scope=scope,
         message=message,
+        reason=reason,
     )
 
 
@@ -464,6 +468,130 @@ def _check_active_lane(claim, *, request, git, github, fs) -> ClaimResult:
         claim, ClaimVerdict.MATCH, EvidenceClass.INPUT_CONTRACT, Confidence.HIGH,
         expected=expected_block, observed=observed, source="active-lane contract",
         message=f"Cross-repo evidence reference to {target_repo} permitted.",
+    )
+
+
+def _check_handoff_provenance(claim, *, request, git, github, fs) -> ClaimResult:
+    """Provenance check (v0.2, GROUNDING-AGENT-002): does this handoff's declared
+    program/work-order/repository match the active lane?
+
+    This is a policy check over the input contract (evidence class
+    INPUT_CONTRACT). It is deterministic — no NLP, no keyword classification.
+
+    The claim's ``expected`` declares the handoff's own lane identity, e.g.::
+
+        {"repository": "...", "program": "...", "work_order": "...",
+         "required": ["program", "work_order"]}
+
+    ``required`` lists the material provenance dimensions. If omitted, the
+    dimensions actually declared are treated as required. Semantics:
+
+    * a required dimension declared but disagreeing with the active lane
+      (and, for repository, not permitted as an EVIDENCE_ONLY evidence lane)
+      -> MISMATCH / HANDOFF_LANE_CONFLICT;
+    * a required dimension not established by the handoff -> INSUFFICIENT_EVIDENCE
+      (absence of proof is not proof of bleed, D6);
+    * otherwise -> MATCH.
+
+    It does not consult repository/GitHub/filesystem evidence and never grants
+    mutation authority. It does not replace the ``active_lane`` claim.
+    """
+    lane = request.active_lane
+    declared = dict(claim.expected or {})
+    decl_repo = declared.get("repository")
+    decl_program = declared.get("program")
+    decl_order = declared.get("work_order")
+
+    # Which dimensions are material. Default: those actually declared.
+    default_required = [
+        dim
+        for dim in ("repository", "program", "work_order")
+        if declared.get(dim) not in (None, "")
+    ]
+    required = declared.get("required")
+    if not isinstance(required, list):
+        required = default_required
+
+    expected_block = {
+        "active_repository": lane.active_repository,
+        "active_program": lane.active_program,
+        "active_order": lane.active_order,
+        "declared_repository": decl_repo,
+        "declared_program": decl_program,
+        "declared_work_order": decl_order,
+        "required": required,
+    }
+
+    if not required:
+        return _result(
+            claim, ClaimVerdict.INSUFFICIENT_EVIDENCE,
+            EvidenceClass.INSUFFICIENT_EVIDENCE, Confidence.LOW,
+            expected=expected_block, source="handoff-provenance contract",
+            message="No provenance anchors declared; cannot establish the handoff's lane.",
+        )
+
+    conflicts = []
+    missing = []
+    classification = None
+
+    if "repository" in required:
+        if not decl_repo:
+            missing.append("repository")
+        elif evidence.compare_repository_identity(decl_repo, lane.active_repository):
+            pass  # declared repository is the active lane
+        elif evidence.evidence_lane_is_permitted(decl_repo, request.evidence_lanes):
+            classification = "CROSS_REPO_EVIDENCE"  # permitted read-only evidence
+        else:
+            conflicts.append(
+                f"repository: declared {decl_repo} is neither the active repository "
+                f"{lane.active_repository} nor a declared EVIDENCE_ONLY evidence lane"
+            )
+            classification = "OUT_OF_LANE"
+
+    if "program" in required:
+        if not decl_program:
+            missing.append("program")
+        elif not evidence.lane_label_matches(decl_program, lane.active_program):
+            conflicts.append(
+                f"program: declared {decl_program} != active {lane.active_program}"
+            )
+
+    if "work_order" in required:
+        if not decl_order:
+            missing.append("work_order")
+        elif not evidence.lane_label_matches(decl_order, lane.active_order):
+            conflicts.append(
+                f"work_order: declared {decl_order} != active {lane.active_order}"
+            )
+
+    observed = dict(expected_block)
+    if classification:
+        observed["classification"] = classification
+
+    # A definite conflict dominates a merely-missing dimension.
+    if conflicts:
+        observed["conflicts"] = conflicts
+        return _result(
+            claim, ClaimVerdict.MISMATCH, EvidenceClass.INPUT_CONTRACT, Confidence.HIGH,
+            expected=expected_block, observed=observed,
+            source="handoff-provenance contract",
+            message="; ".join(conflicts) + ".",
+            reason=ClaimReason.HANDOFF_LANE_CONFLICT,
+        )
+    if missing:
+        observed["missing"] = missing
+        return _result(
+            claim, ClaimVerdict.INSUFFICIENT_EVIDENCE,
+            EvidenceClass.INSUFFICIENT_EVIDENCE, Confidence.LOW,
+            expected=expected_block, observed=observed,
+            source="handoff-provenance contract",
+            message=f"Required provenance not established: {', '.join(missing)}.",
+        )
+    return _result(
+        claim, ClaimVerdict.MATCH, EvidenceClass.INPUT_CONTRACT, Confidence.HIGH,
+        expected=expected_block, observed=observed,
+        source="handoff-provenance contract",
+        message="Handoff provenance matches the active lane.",
     )
 
 
