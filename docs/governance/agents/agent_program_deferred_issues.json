@@ -1,0 +1,621 @@
+{
+  "schema_version": "agent_program_deferred_issues_v1",
+  "order": "AGENT-PROGRAM-003",
+  "reviewed_at": "2026-08-31",
+  "census_authority": "docs/governance/agents/agent_program_incidents_002a.json",
+  "implementation_authority": "NONE",
+  "grounding_run": {
+    "id": "GA-TRIAL-0008",
+    "status": "MATCH",
+    "decision": "PROCEED",
+    "checked": 18,
+    "matched": 18,
+    "head_sha": "592ca20357a3b27c9aac6a40ada1a6637f5ff7e2",
+    "note": "Re-grounded after PR #341 and PR #342 merged. GA-TRIAL-0007 was taken by GROUNDING-AGENT-002; this order renumbered to GA-TRIAL-0008 per the ledger rule that order follows what lands on main."
+  },
+  "items": [
+    {
+      "id": "AP-DI-001",
+      "title": "Stale repository / reference state",
+      "state": "READY_FOR_DECISION",
+      "failure_family": "stale_repository_reference",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": true,
+      "source_incidents": [
+        "INC-002A-F1-001",
+        "INC-002A-F1-002",
+        "INC-002A-F1-003"
+      ],
+      "independent_incident_count": 3,
+      "summary": "A local checkout or local origin/main ref lags the remote, and conclusions are drawn from the stale view: a diff appears to contain other sessions' work, or a present file is read as absent.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "GIT_STATE",
+        "GITHUB_STATE",
+        "COMMITTED_DOC",
+        "COMMITTED_TEST"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "census_incident",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/agent_program_incidents_002a.json",
+          "note": "INC-002A-F1-001/002/003; three independently evidenced incidents"
+        },
+        {
+          "kind": "committed_test",
+          "evidence_class": "COMMITTED_TEST",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "tests/grounding_agent/fixtures/stale_base_sha.json",
+          "note": "GA-HIST-04 witnesses a stale base SHA and broken ancestry as a recorded failure class"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md:243",
+          "note": "002A section 6 records this family as recurrent at 3 eligible incidents"
+        }
+      ],
+      "current_controls": [
+        "git fetch origin <branch> before any origin/main diff or file-absence conclusion",
+        "git rev-list --left-right --count HEAD...origin/main",
+        "Grounding repo_head / file_exists claims whose expected values are sourced outside the stale checkout",
+        "Grounding fixtures GA-HIST-01, GA-HIST-03, GA-HIST-04"
+      ],
+      "control_gap": "Grounding resolves repo_head local-first, so a stale local origin/main that still resolves is trusted. Detection requires an expected SHA or path sourced from outside that stale view; a claim authored from the stale checkout MATCHes. No control compares local origin/main to GitHub main when the local ref resolves.",
+      "solution_class": "DETERMINISTIC_RULE",
+      "agent_required": "NO",
+      "agent_required_basis": "002A section 10 records the family as covered by procedure and by Grounding when invoked; a freshness comparison is a small deterministic check, not an authority boundary.",
+      "open_questions": [
+        "Should the local-vs-remote freshness comparison live in Grounding as a claim type, or as a standalone pre-flight utility?",
+        "Would it be advisory, or would a divergence be a STOP?"
+      ],
+      "deployment_gates": [
+        "Recurrence established: at least two independent census incidents (satisfied, 3)",
+        "Owner decides between a Grounding claim type and a standalone check",
+        "Confirm the check cannot itself be authored from the stale view"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-003",
+        "AP-DI-009"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-002",
+      "title": "Inherited claim epistemic drift",
+      "state": "INVESTIGATED",
+      "failure_family": "inherited_claim_epistemic_drift",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": true,
+      "source_incidents": [
+        "INC-002A-F3-001"
+      ],
+      "independent_incident_count": 1,
+      "summary": "A cross-session handoff carries claims forward while the evidence behind them is left behind. The claims are then adopted as premises without re-derivation.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "census_incident",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/agent_program_incidents_002a.json",
+          "note": "INC-002A-F3-001, the only escaped incident in the 002A census"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/audit/vectorizer_cross_repo_reconciliation_001.md:380",
+          "note": "the transferable rule: a cross-session handoff preserves claims, not their epistemic status"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/audit/vectorizer_cross_repo_reconciliation_001.md:30-36",
+          "note": "5 inherited claims re-derived, 2 refuted"
+        }
+      ],
+      "current_controls": [
+        "The written re-derivation rule in the reconciliation artifact",
+        "Dev Order practice of re-deriving load-bearing inherited claims",
+        "Grounding v0.2 handoff_provenance claim (checks declared lane provenance, not claim content)"
+      ],
+      "control_gap": "Grounding verifies repository state and, since v0.2, declared lane provenance. Neither checks claim *content*: there is still no evidence-reattachment claim type, so an inherited claim can survive a PROCEED. Whether the written re-derivation rule is operationally sufficient as a standing control is not demonstrated.",
+      "solution_class": "UNRESOLVED",
+      "agent_required": "UNPROVEN",
+      "agent_required_basis": "Singular incident. 002A section 11 records that a Reconciliation or Evidence agent would re-open Grounding's question or become an extension of it.",
+      "open_questions": [
+        "v0.2 added handoff_provenance but deliberately not a content claim. Is a content/evidence-reattachment claim type the right shape for v0.3, or does it exceed a grounding agent's authority?",
+        "Can 'this claim's evidence was re-acquired' be checked deterministically at all?"
+      ],
+      "deployment_gates": [
+        "A second independent epistemic-drift incident, not from the PR #339 audit cluster (002A falsifier 2)",
+        "Evidence that the written re-derivation rule alone does not prevent recurrence"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-007",
+        "AP-DI-008"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-003",
+      "title": "False-absence findings",
+      "state": "EVIDENCED",
+      "failure_family": "false_absence",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
+      "gates_require_recurrence": true,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "A search that returns nothing is treated as proof of absence. 002A excluded this family because no documented case was available to it; that exclusion was correct on the evidence 002A held. This pass recovered two durable instances, which supersede that evidentiary state.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC",
+        "COMMITTED_TEST"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/remediation/BACKLOG_ADJUDICATION_LEDGER.md:76",
+          "note": "BR-024 adjudicated SUPERSEDED: grep-absence of the literal ezdxf.new(R2000) call form was read as R2000 removal; R2000 remains supported across ~29 app/ files"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/audit/vectorizer_cross_repo_reconciliation_001.md:180",
+          "note": "inherited claim 'Step 0 is RED because svgwrite is absent' REFUTED; svgwrite is declared and installed by sandbox CI"
+        },
+        {
+          "kind": "committed_test",
+          "evidence_class": "COMMITTED_TEST",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "tests/grounding_agent/fixtures/cursor_artifact_missing.json",
+          "note": "GA-HIST-02 reports a missing path as environment-scoped absence, not 'never existed'"
+        }
+      ],
+      "current_controls": [
+        "docs/audit/PIXEL_PLATFORM_LOOP1_FORENSIC_AUDIT.md:438 — no state is assigned from grep-absence alone",
+        "Grounding reports environment-scoped absence rather than non-existence (GA-HIST-02)"
+      ],
+      "control_gap": "The grep-absence rule is stated in one audit's method section, not in repository-wide governance, and nothing enforces it. Both recovered instances predate it. Its reach beyond that audit is unestablished.",
+      "solution_class": "DETERMINISTIC_RULE",
+      "agent_required": "UNPROVEN",
+      "agent_required_basis": "Not analysed for agent necessity: the item cannot reach readiness until its evidence is ratified into the census.",
+      "open_questions": [
+        "Are BR-024 and the svgwrite refutation independent underlying incidents? They arose in different subsystems at different times, but the svgwrite refutation shares a discovery event with INC-002A-F3-001.",
+        "Should the grep-absence rule be promoted from one audit's method section to repository-wide governance?"
+      ],
+      "deployment_gates": [
+        "Census admission: an owner-authorized reconciliation admitting these instances into the incident census",
+        "Recurrence established from at least two independent census incidents after admission",
+        "Show the stated grep-absence rule does not already cover the family"
+      ],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
+      "related_items": [
+        "AP-DI-001",
+        "AP-DI-002"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false,
+      "supersedes_evidentiary_state": "002A section 5.2 excluded F4 for want of an independently documented case. This is a later evidentiary state, not a defect in the 002A decision."
+    },
+    {
+      "id": "AP-DI-004",
+      "title": "Cross-repo custody and lane confusion",
+      "state": "DISCOVERED",
+      "failure_family": "cross_repo_custody",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "Work intended for one repository is performed against another, or a foreign repository on the working-directory list is treated as in scope.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "NOT_FOUND",
+      "evidence_classes": [
+        "COMMITTED_TEST",
+        "COMMITTED_DOC"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "committed_test",
+          "evidence_class": "COMMITTED_TEST",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "tests/grounding_agent/fixtures/cross_repo_lane_conflict.json",
+          "note": "GA-HIST-05: a mutation target outside the active lane under EVIDENCE_ONLY is reported as a lane conflict"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/GROUNDING_AGENT_v0.1.md:93",
+          "note": "cross-repo mutation under EVIDENCE_ONLY is a lane conflict by contract"
+        }
+      ],
+      "current_controls": [
+        "Grounding active_lane claim with cross_repo_policy EVIDENCE_ONLY",
+        "Grounding fixture GA-HIST-05"
+      ],
+      "control_gap": "None established. The recovered material is a designed control and its witness, not an escaped incident. 002A found no verified escaped case and this pass recovered none.",
+      "solution_class": "EXISTING_CONTROL",
+      "agent_required": "NO",
+      "agent_required_basis": "The active_lane claim type already covers the declared-mutation-target case, and no incident has escaped it.",
+      "open_questions": [
+        "Does active_lane cover custody errors that are never expressed as a declared claim, such as a shell command run in the wrong working directory?"
+      ],
+      "deployment_gates": [
+        "A durably evidenced incident that escaped the active_lane control"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-008"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-005",
+      "title": "Session / active-lane bleed",
+      "state": "EVIDENCED",
+      "failure_family": "session_lane_bleed",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
+      "gates_require_recurrence": true,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "Context from one session or lane is carried into another, so work proceeds on premises belonging to a different active order. The originally reported SGAQ/001A instance is still unrecovered; a different, independently committed instance landed with PR #342.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC",
+        "LEAD_ONLY"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "lead",
+          "evidence_class": "LEAD_ONLY",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md:216",
+          "note": "002A section 5.2 excludes the F2 SGAQ/001A bleed: no committed doc, PR, or retrievable transcript located"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md:46",
+          "note": "GA-TRIAL-0007 incident note records a real wrong-lane handoff during the v0.2 build: an AGENT-PROGRAM-003 ruling belonging to a different session arrived there and was halted by a human flag. Grounding did not detect it; conversation provenance is out of scope by design (D9). NOTE: fixture GA-LANE-06 is explicitly SYNTHETIC and is NOT cited as incident evidence."
+        }
+      ],
+      "current_controls": [
+        "Grounding active_lane claim",
+        "Grounding v0.2 handoff_provenance claim + HANDOFF_LANE_CONFLICT (structured lane claims only)",
+        "One order, one branch, one PR working discipline",
+        "Human review — which is what actually caught the PR #342 instance"
+      ],
+      "control_gap": "v0.2 compares structured, declared lane fields. The recovered instance was not a structured claim at all: a ruling arrived in conversation. No control reads conversation provenance, and by D9 none is intended to. The human caught it.",
+      "solution_class": "UNRESOLVED",
+      "agent_required": "UNPROVEN",
+      "agent_required_basis": "No durable incident. 002A section 11 records that a Session Agent was not adopted because F2 is unverified and the stale-ref family is fetch discipline.",
+      "open_questions": [
+        "Does any durable record of the originally reported SGAQ/001A bleed exist outside this repository?",
+        "Is a wrong-lane handoff that never becomes a structured claim in scope for any deterministic control, or is it irreducibly a human-review responsibility?"
+      ],
+      "deployment_gates": [
+        "Census admission: an owner-authorized reconciliation admitting the PR #342 instance into the incident census",
+        "A second independent instance, since one incident cannot establish recurrence",
+        "Show the v0.2 provenance claim does not already cover the structured form of this failure"
+      ],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
+      "related_items": [
+        "AP-DI-004",
+        "AP-DI-007",
+        "AP-DI-002"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-006",
+      "title": "Surviving architecture misread as original intent",
+      "state": "DISCOVERED",
+      "failure_family": "surviving_architecture_as_intent",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "What survived in the codebase is read as what was intended, so present structure is treated as a decision record.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "NOT_FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md:216",
+          "note": "002A section 5.2 excludes F6: one analytical rule applied during audits, not a second independent failure"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/forensics/IBG_SPRINT_1_2_RULING.md:124",
+          "note": "H5 reasons explicitly about what absence of commits is and is not compatible with, rather than inferring intent from surviving structure"
+        }
+      ],
+      "current_controls": [
+        "The analytical rule applied in the reconciliation and Loop 1 audits",
+        "Dated conflation corrections in CLAUDE.md that separate what was approved from what survived"
+      ],
+      "control_gap": "None established as a failure. This is an analytical discipline that has been applied, not an incident class that has escaped.",
+      "solution_class": "PROCESS_ONLY",
+      "agent_required": "NO",
+      "agent_required_basis": "No failure instance exists to require any control, let alone an agent.",
+      "open_questions": [
+        "Should this remain in the queue at all, or be closed as an analytical rule rather than a failure family?"
+      ],
+      "deployment_gates": [
+        "A durably evidenced case where surviving structure was adopted as intent and caused a wrong decision"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-002"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-007",
+      "title": "Handoff evidence loss",
+      "state": "DISCOVERED",
+      "failure_family": "handoff_evidence_loss",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "A handoff records conclusions but not the evidence that produced them, so the next session cannot re-verify without redoing the work.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "NOT_FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/MULTI_REPO_GOVERNANCE_CONVERGENCE_REPORT.md:9",
+          "note": "items marked PENDING / external verification were not confirmed on disk — a handoff carrying unconfirmed claims, but no recorded wrong decision resulting from it"
+        }
+      ],
+      "current_controls": [
+        "CBSP21 per-PR manifests recording verification commands",
+        "The written re-derivation rule (see AP-DI-002)"
+      ],
+      "control_gap": "Not separable from AP-DI-002 on current evidence. No incident distinguishes 'evidence was lost' from 'claims outlived their evidence'.",
+      "solution_class": "UNRESOLVED",
+      "agent_required": "UNPROVEN",
+      "agent_required_basis": "No independent incident; likely the same failure mechanism as AP-DI-002.",
+      "open_questions": [
+        "Should this be merged into AP-DI-002 rather than tracked separately? It is retained only because the order names it as a distinct candidate family."
+      ],
+      "deployment_gates": [
+        "A durably evidenced incident separable from AP-DI-002",
+        "Owner decision on whether to merge this item into AP-DI-002"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-002",
+        "AP-DI-005"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-008",
+      "title": "Cross-repo reconciliation need",
+      "state": "DISCOVERED",
+      "failure_family": "cross_repo_reconciliation",
+      "evidence_status": "DURABLE",
+      "census_status": "IN_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "Claims about a second repository need periodic re-derivation against that repository's actual state.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "NOT_FOUND",
+      "evidence_classes": [
+        "COMMITTED_DOC"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/audit/vectorizer_cross_repo_reconciliation_001.md:346",
+          "note": "VECTOR-CROSS-REPO-RECONCILIATION-001 frozen by owner ruling 2026-08-29; the need was met once, as a bounded audit"
+        },
+        {
+          "kind": "committed_doc",
+          "evidence_class": "COMMITTED_DOC",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "docs/governance/agents/AGENT_PROGRAM_POST_TRIAL_REVIEW_002A.md:315",
+          "note": "002A section 11: a Reconciliation Agent was not adopted"
+        }
+      ],
+      "current_controls": [
+        "One-off bounded reconciliation audits, owner-frozen on completion",
+        "cross_repo_policy EVIDENCE_ONLY restricting cross-repo work to evidence"
+      ],
+      "control_gap": "None established. The need arose once and was met by a bounded audit. No evidence of a recurring reconciliation demand that a standing capability would serve better.",
+      "solution_class": "PROCESS_ONLY",
+      "agent_required": "NO",
+      "agent_required_basis": "002A section 11 records the Reconciliation Agent as not frozen: F3 is one incident and the written rule or a Grounding extension is the closer next design.",
+      "open_questions": [
+        "Does the sandbox being unmountable in most environments make periodic reconciliation impractical regardless of who performs it?"
+      ],
+      "deployment_gates": [
+        "A second cross-repo reconciliation need arising independently of the vectorizer-sandbox cluster"
+      ],
+      "blocked_by": [],
+      "related_items": [
+        "AP-DI-002",
+        "AP-DI-004"
+      ],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    },
+    {
+      "id": "AP-DI-009",
+      "title": "Repository tooling is not normally trackable (/tools/ ignore boundary)",
+      "state": "SUPERSEDED_BY_CONTROL",
+      "failure_family": "repository_control_gap",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "/tools/ was git-ignored repository-wide, so new repository tooling was silently untracked unless force-added. TOOLS-GITIGNORE-001 repaired the boundary and is now live on main.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "GIT_STATE",
+        "GITHUB_STATE",
+        "RUNTIME_WITNESS"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "git_state",
+          "evidence_class": "GIT_STATE",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": ".gitignore:150",
+          "note": "/tools/ ignored; git check-ignore confirms tools/agent_program/validate_deferred_issues.py is ignored at b53f9963"
+        },
+        {
+          "kind": "github_pr",
+          "evidence_class": "GITHUB_STATE",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "https://github.com/HanzoRazer/luthiers-toolbox/pull/341",
+          "note": "TOOLS-GITIGNORE-001; observed open, draft, merged=false — confirmed by this order's Grounding claim C-003"
+        },
+        {
+          "kind": "runtime_witness",
+          "evidence_class": "RUNTIME_WITNESS",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "AGENT-PROGRAM-003 commit 3",
+          "note": "this order's own validator required git add -f to be tracked"
+        },
+        {
+          "kind": "runtime_witness",
+          "evidence_class": "RUNTIME_WITNESS",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "GA-TRIAL-0008 re-ground, 2026-08-31",
+          "note": "PR #341 observed merged (C-003), tools/README.md present (C-017), and `git check-ignore tools/agent_program/validate_deferred_issues.py` returns no match at 592ca203 — the repair is live, not merely merged."
+        }
+      ],
+      "current_controls": [
+        "TOOLS-GITIGNORE-001 (.gitignore /tools/* with allowlisted repository-owned namespaces)",
+        "tests/governance/test_tools_gitignore_boundary.py pins the boundary in both directions"
+      ],
+      "control_gap": "None remaining. .gitignore now ignores /tools/* while allowlisting /tools/README.md, /tools/grounding_agent/, /tools/agent_program/ and /tools/codegen/, so repository-owned tooling is normally trackable.",
+      "solution_class": "DETERMINISTIC_RULE",
+      "agent_required": "NO",
+      "agent_required_basis": "A .gitignore boundary repair is a deterministic repository rule; no authority boundary is involved.",
+      "open_questions": [],
+      "deployment_gates": [
+        "PR #341 merges to main (SATISFIED, merged 2026-08-31)",
+        "A later re-ground confirms the rule is live on main (SATISFIED, GA-TRIAL-0008 C-003/C-017)"
+      ],
+      "blocked_by": [],
+      "candidate_control": "TOOLS-GITIGNORE-001",
+      "control_deployed": "YES",
+      "related_items": [],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false,
+      "transition_note": "BLOCKED -> SUPERSEDED_BY_CONTROL on 2026-08-31, on exactly the two conditions this queue recorded in advance. Retained rather than deleted, per D9/D10."
+    },
+    {
+      "id": "AP-DI-010",
+      "title": "Grounding GitHub evidence blocked when only the gh CLI is authenticated",
+      "state": "EVIDENCED",
+      "failure_family": "evidence_source_availability",
+      "evidence_status": "DURABLE",
+      "census_status": "POST_CENSUS",
+      "gates_require_recurrence": false,
+      "source_incidents": [],
+      "independent_incident_count": 0,
+      "summary": "Grounding's GitHub adapter reads GITHUB_TOKEN/GH_TOKEN from the environment only. An operator authenticated solely through the gh CLI keyring gets BLOCKED on every pr_state claim, and a BLOCKED run is a STOP decision.",
+      "evidence_recovery": "ATTEMPTED",
+      "evidence_recovery_result": "FOUND",
+      "evidence_classes": [
+        "RUNTIME_WITNESS",
+        "STATIC_CODE_INSPECTION"
+      ],
+      "evidence_refs": [
+        {
+          "kind": "runtime_witness",
+          "evidence_class": "RUNTIME_WITNESS",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "GA-TRIAL-0007 first run, 2026-08-31",
+          "note": "BLOCKED / STOP at b53f9963: 15 checked, 13 matched, 2 blocked — both pr_state claims, message 'no GITHUB_TOKEN/GH_TOKEN available for GitHub read'. Re-run with the token exported returned MATCH / PROCEED 15/15, isolating credentials as the sole cause."
+        },
+        {
+          "kind": "static_code_inspection",
+          "evidence_class": "STATIC_CODE_INSPECTION",
+          "repository": "HanzoRazer/luthiers-toolbox",
+          "locator": "tools/grounding_agent/adapters/github_api.py",
+          "note": "token read from os.environ only; no gh CLI path, by the adapter's no-subprocess design"
+        }
+      ],
+      "current_controls": [
+        "The adapter fails closed: it returns BLOCKED rather than silently proceeding without GitHub evidence"
+      ],
+      "control_gap": "Operability, not correctness. The prerequisite is not stated where an operator would see it before a run, so a correct fail-closed STOP is indistinguishable at first sight from a real divergence.",
+      "solution_class": "PROCESS_ONLY",
+      "agent_required": "NO",
+      "agent_required_basis": "A gh CLI fallback is constitutionally forbidden — the adapter's read-only guarantee rests on having no subprocess path. The remaining fix is documenting the environment prerequisite.",
+      "open_questions": [
+        "Should the CLI name the missing environment variable as a setup prerequisite in its BLOCKED message?",
+        "Should the trial ledger distinguish 'blocked on operator environment' from 'blocked on an unavailable evidence source'?"
+      ],
+      "deployment_gates": [
+        "Census admission: an owner-authorized reconciliation admitting this into the incident census",
+        "Confirm no fix is attempted that introduces a shell-out path into the adapter"
+      ],
+      "blocked_by": [
+        "census admission not authorized by this order"
+      ],
+      "related_items": [],
+      "last_reviewed": "2026-08-31",
+      "implementation_authorized": false
+    }
+  ]
+}

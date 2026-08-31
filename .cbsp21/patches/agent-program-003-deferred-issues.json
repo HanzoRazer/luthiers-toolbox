@@ -1,0 +1,146 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENT_PROGRAM_003_DEFERRED_ISSUES",
+  "title": "AGENT-PROGRAM-003: deferred issue evidence and readiness queue",
+  "intent": "Evidence and readiness increment only. Record deferred Agent Program findings as a disposition layer over the 002A incident census, with explicit deployment gates. Keeps four concepts separately gated per owner ruling 2026-08-31: evidence_status (how well supported), census_status (canonical census membership), state (maturity for an owner decision), and implementation_authorized. Implements none of the queued capabilities, creates no Agent 002, adds no orchestration, and changes no production behavior. implementation_authorized is false for every item.",
+  "change_type": "documentation",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_deferred_issues.json",
+      "tests/agent_program/test_deferred_issues.py",
+      "tools/agent_program/validate_deferred_issues.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "docs/governance/agents/agent_program_deferred_issues.json",
+      "tests/agent_program/test_deferred_issues.py",
+      "tools/agent_program/validate_deferred_issues.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the deferred-issue contract document, a ten-item machine-readable queue, a read-only queue validator plus contract tests, and trial row GA-TRIAL-0008. One item is READY_FOR_DECISION, one is SUPERSEDED_BY_CONTROL (retired on pre-recorded, witnessed conditions), four are POST_CENSUS, four record an ATTEMPTED/NOT_FOUND recovery pass. No queued capability is implemented.",
+    "why_not_redundant": "The 002A incident census is the canonical incident evidence and is a closed review artifact carrying a terminal decision. It does not track what would have to become true before a deferred finding may be implemented. This increment is that missing readiness layer, and it references census incident ids rather than restating them so there is only one census authority."
+  },
+  "verification": {
+    "commands_run": [
+      "git fetch origin main -> origin/main b53f9963c92a83ed26d3297adbe58cbb5942f0ad (PR #340 merged); local branch was 272 behind, so work was done in a fresh worktree created from b53f9963",
+      "gh api repos/HanzoRazer/luthiers-toolbox/commits/main --jq .sha -> b53f9963c92a83ed26d3297adbe58cbb5942f0ad; expected values for repo_head and both pr_state claims were sourced from the GitHub API rather than from the checkout, per the INC-002A-F1-001 lesson",
+      "py -3.11 -m tools.grounding_agent.cli --request ap003_grounding_request.json (run 1) -> BLOCKED / STOP; 15 checked, 13 MATCH, 2 BLOCKED, both pr_state, 'no GITHUB_TOKEN/GH_TOKEN available for GitHub read'",
+      "py -3.11 -m tools.grounding_agent.cli --request ap003_grounding_request.json (run 2, GITHUB_TOKEN exported) -> MATCH / PROCEED exit 0; 15/15 MATCH (GA-TRIAL-0007). Both runs recorded; the block was resolved by supplying the evidence source, not overridden.",
+      "Grounding C-003 independently confirmed PR #341 open, draft, merged=false -> AP-DI-009 recorded as BLOCKED, not SUPERSEDED_BY_CONTROL",
+      "Grounding C-008/C-009/C-010 confirmed all three new artifacts absent at HEAD before creation",
+      "git check-ignore -v tools/agent_program/validate_deferred_issues.py -> .gitignore:150 /tools/; the file never appeared in git status and required git add -f. Staged set verified explicitly with git diff --cached --name-status.",
+      "py -3.11 -m tools.agent_program.validate_deferred_issues -> renders; 10 items, ready_for_decision ['AP-DI-001'], blocked ['AP-DI-009'], lead_only ['AP-DI-005'], post-census items then recorded as PENDING_CENSUS_AMENDMENT, later renamed POST_CENSUS, authorized_items none (pre-ruling run; superseded by the post-ruling run below)",
+      "py -3.11 -m pytest tests/agent_program -q -> 69 passed, 1 skipped (DI-017; the skip is pre-existing T11, which applies only when an Agent 002 draft exists, and none does)",
+      "py -3.11 -m pytest tests/grounding_agent -q -> 77 passed (DI-016)",
+      "Evidence-recovery pass: BR-024 (BACKLOG_ADJUDICATION_LEDGER.md:76) and the refuted svgwrite-absent claim (vectorizer_cross_repo_reconciliation_001.md:180) supersede the evidentiary state behind 002A's F4 exclusion, which was correct on the evidence 002A held. Recorded as AP-DI-003 with census_status POST_CENSUS because the census is closed.",
+      "OWNER RULING 2026-08-31 (APPROVED): retain census_status; do not revert AP-DI-003/AP-DI-010 to literal LEAD_ONLY. Durable post-census evidence remains truthful evidence while census membership and readiness stay separately gated.",
+      "Applied the ruling: added an explicit evidence_status field (DURABLE|LEAD_ONLY|NONE) validated against evidence_refs so declared and derived cannot drift; renamed PENDING_CENSUS_AMENDMENT -> POST_CENSUS; AP-DI-009 reclassified POST_CENSUS (its .gitignore:150 / PR #341 / runtime-witness evidence also postdates the census).",
+      "Validator rule preserved exactly as ruled: recurrence_is_established() and readiness_gates_satisfied() both require census_status IN_CENSUS, so durable post-census evidence cannot enter the canonical recurrence/readiness calculation merely by being durable. Pinned by test_post_census_items_cannot_establish_recurrence and test_readiness_requires_census_membership_not_merely_durable_evidence.",
+      "AP-DI-003 reframed per ruling: recorded as new evidence superseding an earlier evidentiary state, not as a 002A decision error. 002A's F4 exclusion was correct on the evidence it held. Carries an explicit supersedes_evidentiary_state note; doc section 2.2.1 states the general rule. The earlier 'falsified' framing in the commit-2 message is superseded by the document.",
+      "AP-DI-010 history preserved: both the first BLOCKED / STOP run and the successful rerun after the missing evidence source was supplied remain recorded in the trial ledger and the queue. Not rewritten into a single successful run, and not recorded as an override.",
+      "py -3.11 -m pytest tests/agent_program tests/grounding_agent -q -> 151 passed, 1 skipped (post-ruling; agent_program rose 69 -> 74 with the separation tests)",
+      "py -3.11 -m tools.agent_program.validate_deferred_issues -> post_census ['AP-DI-003','AP-DI-009','AP-DI-010']; durable_evidence 9 of 10; lead_only ['AP-DI-005']; ready_for_decision ['AP-DI-001']; authorized_items none",
+      "REBASE onto 592ca203 after PR #341 and PR #342 merged. Ledger conflict resolved by the rule #342 itself documented: order follows what lands on main, so GROUNDING-AGENT-002 keeps GA-TRIAL-0007 and this order renumbers to GA-TRIAL-0008.",
+      "CAUGHT DURING RESOLUTION: git auto-merged the ledger Summary block cleanly but WRONGLY -- it kept main's post-#342 counts (TOTAL 7 / MATCH 6) while retaining this order's BLOCKED RUNS note referencing 0007. Corrected by hand to TOTAL 8 / MATCH 7 with the note referencing 0008. A clean auto-merge is not a correct one.",
+      "RE-GROUND after rebase (GA-TRIAL-0008): first run STALE/STOP with 3 MISMATCH -- claims C-008/009/010 still asserted the artifacts were absent, true before creation and false now. Claims corrected to current truth; re-run MATCH/PROCEED 18/18 at 592ca203.",
+      "AP-DI-009 BLOCKED -> SUPERSEDED_BY_CONTROL on the two conditions recorded in advance: #341 merged (C-003) and the rule witnessed live (C-017 plus `git check-ignore` returning no match). control_deployed=YES, which the validator requires for that state.",
+      "AP-DI-005 LEAD_ONLY/NOT_FOUND -> DURABLE/FOUND/POST_CENSUS: PR #342 committed a ledger incident note (TRIAL_LEDGER.md:46) recording a real wrong-lane handoff. Fixture GA-LANE-06 is SYNTHETIC and is deliberately NOT cited as incident evidence; the human caught the instance, not the tool.",
+      "AP-DI-002 control list extended with v0.2 handoff_provenance; gap narrowed, not closed -- v0.2 checks declared lane provenance, not claim content.",
+      "REVIEW FIX: readiness now reports every failing gate by name via readiness_failures(), replacing the single opaque 'readiness gates are not satisfied' message. Recurrence failures distinguish census non-admission from too-few incidents from an undercounting declaration.",
+      "REVIEW FIX: test docstring corrected -- it claimed DI-001..DI-018 while only DI-001..DI-015 are unit-testable here; DI-016/017 are the regression suites and DI-018 is the governance gate.",
+      "REVIEW FIX: contract tests no longer seed from live queue data. They mutate a synthetic valid_item() fixture, guarded by a test asserting the fixture is itself valid. Live-queue tests are separated and assert only shape-independent invariants -- no test now assumes the queue holds an item in a given state or any spread of states.",
+      "ADDITIONAL FIX (found in review): the recurrence bar was inferred by substring-scanning gate prose, which would fire on a gate saying recurrence is NOT required and miss one worded differently. Replaced with an explicit required boolean gates_require_recurrence; absent reads as false so an item must opt in to the stricter bar.",
+      "py -3.11 -m pytest tests/agent_program -q -> 82 passed, 1 skipped",
+      "PROTECTED PATH DISCLOSURE: docs/governance/ is MORPHOLOGY_GOVERNANCE_DOCS at protection level STABILIZED with requires_explicit_approval=true. check_protected_paths.py inspects `git diff --cached`, so it fires only while files are staged -- which is why it is green in PR CI and why the earlier commits in this PR never tripped it locally.",
+      "Assessed against the manifest rather than waved through: this increment performs the listed allowed_action `add_new_governance_docs` and performs NONE of the forbidden_actions (delete_governance_documents, weaken_protection_levels, remove_protected_systems, bypass_approval_requirements). regression_required is false for this system; regressions were run anyway (198 passed, 1 skipped).",
+      "GOVERNANCE_APPROVED_CHANGE=1 was therefore set for this commit via the manifest's documented approval_mechanism, with the AGENT-PROGRAM-003 Dev Order as the owner authorization, matching the pattern of PR #340 and PR #342 which added to the same directory. Recorded here rather than used silently.",
+      "GOVERNANCE_APPROVED_CHANGE=1 py -3.11 scripts/governance/check_all.py --tier ci -> [OK] 9/14 passed, 0 blocking failures, 5 warnings (all pre-existing, none naming this increment)",
+      "py -3.11 -m pytest tests/agent_program tests/grounding_agent tests/governance/test_tools_gitignore_boundary.py -q -> 198 passed, 1 skipped",
+      "No git add -f needed this time: #341's repair is live, so tools/agent_program/ stages normally."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md",
+      "intent": "Canonical human-readable queue: purpose, authority boundary, state and evidence vocabularies, readiness rules, the ten items, and how a future Dev Order consumes one.",
+      "scan_targets": [
+        "docs/governance/agents/AGENT_PROGRAM_DEFERRED_ISSUES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "docs/governance/agents/agent_program_deferred_issues.json",
+      "intent": "Machine-readable readiness queue. References 002A incident ids; not a second incident registry and not a runtime registry.",
+      "scan_targets": [
+        "docs/governance/agents/agent_program_deferred_issues.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (data)"
+    },
+    {
+      "path": "tools/agent_program/validate_deferred_issues.py",
+      "intent": "Read-only queue contract validation and summary. Stdlib only, no network, no Git invocation, no write path, cannot set authorization.",
+      "scan_targets": [
+        "tools/agent_program/validate_deferred_issues.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (read-only utility)"
+    },
+    {
+      "path": "tests/agent_program/test_deferred_issues.py",
+      "intent": "Deterministic DI-001..DI-015 queue-integrity and readiness tests, plus queue-level invariants.",
+      "scan_targets": [
+        "tests/agent_program/test_deferred_issues.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md",
+      "intent": "Record real operational use GA-TRIAL-0007, the program's first blocked run, with both executions preserved. No historical row rewritten.",
+      "scan_targets": [
+        "docs/governance/agents/GROUNDING_AGENT_v0.1_TRIAL_LEDGER.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/agent-program-003-deferred-issues.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/agent-program-003-deferred-issues.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-AGENT-PROGRAM-003-R2",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation, a governance data artifact, and a read-only validator. No Grounding Agent code change, no Agent 002, no orchestration or dispatch, no production capability change, no cross-repo mutation. Every queue item carries implementation_authorized false, pinned by test. Owner ruling 2026-08-31 approved the census_status separation; evidence classification stays truthful while census membership and readiness remain separately gated."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}

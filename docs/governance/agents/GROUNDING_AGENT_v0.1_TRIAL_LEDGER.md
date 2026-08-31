@@ -31,6 +31,7 @@ Spec: [`GROUNDING_AGENT_v0.1.md`](GROUNDING_AGENT_v0.1.md)
 | GA-TRIAL-0005 | 2026-08-28 | RMOS-DRILLING-CONTRACT-001 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Verified #330 MERGED, origin/main `795bc189`, V-carve HOLD / POST_MERGE_AUTHORITY_EXPOSURE, Profiling GOVERNED, drilling AUTHORITY_CONTRACT_MISMATCH / RUNTIME_REACHABLE / ungated YES (independent JSON read). No Grounding Agent code was changed. |
 | GA-TRIAL-0006 | 2026-08-30 | AGENT-PROGRAM-002A | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | After fetch+ff, origin/main and HEAD were `a40d9030` (#339 MERGED). 14/14 claims MATCH. No Agent 002 artifact present. Reconciliation file absent at prior `8d0e1ecf`, present at `a40d9030`. vectorizer-sandbox not present in this environment. No Grounding Agent code was changed. |
 | GA-TRIAL-0007 | 2026-08-31 | GROUNDING-AGENT-002 | MATCH / PROCEED | no | no | no | no | no | small positive / neutral | Grounded the v0.2 handoff before mutation: 8/8 material claims MATCH (v0.1 source + ledger present, v0.2 doc absent, `active_lane` same-repo). Finding: v0.1 already carried substantial active-lane & cross-repo authority logic, so the Dev Order was narrowed to the genuine provenance delta rather than duplicated. ID may collide with a concurrent AGENT-PROGRAM-003 session also claiming 0007 — see PR note. |
+| GA-TRIAL-0008 | 2026-08-31 | AGENT-PROGRAM-003 | BLOCKED / STOP, then MATCH / PROCEED on re-run | no | no | no | yes | no | neutral to small negative (~10 min diagnosing the block) | First run at `b53f9963`: 15 checked, 13 MATCH, 2 BLOCKED — both `pr_state` claims, `no GITHUB_TOKEN/GH_TOKEN available for GitHub read`. The operator was authenticated only through the `gh` CLI keyring, which the adapter cannot read. Re-run with the token exported: 15/15 MATCH, PROCEED. Recorded as deferred item AP-DI-010. No Grounding Agent code was changed. |
 
 ## Incident notes
 
@@ -43,6 +44,7 @@ Use only where a table row cannot adequately explain an important event.
 - **GA-TRIAL-0005** — Fifth real operational use. RMOS-DRILLING-CONTRACT-001 required Grounding before mutating the drilling contract boundary. All material claims MATCH (including GitHub `pr_state` that #330 is merged); decision PROCEED. Frozen drilling `AUTHORITY_CONTRACT_MISMATCH`, Profiling `GOVERNED`, and V-carve `POST_MERGE_AUTHORITY_EXPOSURE` were re-read from the committed registry independently. No Grounding Agent code was changed.
 - **GA-TRIAL-0006** — Sixth real operational use. AGENT-PROGRAM-002A required Grounding before writing the post-trial census. Local `main` was nine commits behind `origin/main` until a clean `--ff-only` to `a40d9030`. All 14 typed claims MATCH, including GitHub `pr_state` that #339 is merged and `file_exists` that the Agent 002 contract is absent. The stale-checkout observation is recorded as incident INC-002A-F1-002 in the 002A ledger, not as a Grounding false negative: Grounding was run after the fetch/ff, and a pre-fetch `file_exists` claim would have been the correct invocation. No Grounding Agent code was changed.
 - **GA-TRIAL-0007** — Seventh real operational use. GROUNDING-AGENT-002 (Grounding v0.2, additive) required Grounding before mutation; result MATCH/PROCEED. Re-grounding the current implementation showed v0.1 already contained the `ActiveLane` model, the `active_lane` claim, `CrossRepoPolicy.EVIDENCE_ONLY`, `INPUT_CONTRACT`, and cross-repo evidence/mutation detection — so the increment was narrowed to the genuine delta (`handoff_provenance` claim, `evidence_lanes`, `HANDOFF_LANE_CONFLICT` reason, INSUFFICIENT_EVIDENCE for missing provenance) rather than rebuilding existing behavior. Separately, during implementation a wrong-lane handoff (an AGENT-PROGRAM-003 ruling belonging to a *different* session) arrived in this session and was halted by human flag ("session bleed"). Grounding did not auto-detect it — session/conversation provenance is out of the tool's scope by design (D9) — but the pattern is captured as synthetic fixture GA-LANE-06. No Grounding Agent v0.1 behavior was changed.
+- **GA-TRIAL-0008** — Eighth real operational use, and the **first blocked run in the program's history**. AGENT-PROGRAM-003 required Grounding before writing the deferred-issue queue. The first execution returned `BLOCKED / STOP`: 2 of 15 claims blocked, both `pr_state`, with `no GITHUB_TOKEN/GH_TOKEN available for GitHub read`. The adapter reads the token from the environment only and has no `gh` CLI path — that absence is deliberate, since its read-only guarantee rests on having no shell-out. **This was not a human override.** The STOP was not acted through; the missing evidence source was supplied and the run repeated, returning `MATCH / PROCEED` with 15/15 claims MATCH and authorizing mutation. Isolating credentials as the sole cause is what makes the finding durable, and it is queued as AP-DI-010. Expected values for `repo_head` and both `pr_state` claims were sourced from the GitHub API rather than from the checkout, per the INC-002A-F1-001 lesson. Claim C-003 independently confirmed PR #341 open/draft/unmerged, which is the basis for AP-DI-009 being `BLOCKED` rather than `SUPERSEDED_BY_CONTROL`. No Grounding Agent code was changed.
 
 ## Summary
 
@@ -51,8 +53,8 @@ TRIAL PERIOD:
 START: 2026-08-26
 END:
 
-TOTAL HANDOFFS CHECKED: 7
-  MATCH / PROCEED:                6
+TOTAL HANDOFFS CHECKED: 8
+  MATCH / PROCEED:                7
   STALE / STOP:                   1
   BLOCKED / STOP:                 0
   INSUFFICIENT_EVIDENCE / STOP:   0
@@ -60,7 +62,9 @@ TOTAL HANDOFFS CHECKED: 7
 STALE HANDOFFS CAUGHT: 1
 FALSE POSITIVES:       0
 FALSE NEGATIVES:       0
-BLOCKED RUNS:          0
+BLOCKED RUNS:          1   (GA-TRIAL-0008 first execution; the handoff's
+                            terminal outcome was MATCH after the evidence
+                            source was supplied and the run repeated)
 HUMAN OVERRIDES:       0
 ESTIMATED NET TIME EFFECT: small positive / neutral
 
