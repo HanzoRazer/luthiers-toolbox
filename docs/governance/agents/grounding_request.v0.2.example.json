@@ -1,0 +1,36 @@
+{
+  "schema_version": "grounding_request_v0.1",
+  "active_lane": {
+    "project": "Luthiers-Toolbox-Consolidation-Lab",
+    "active_repository": "HanzoRazer/luthiers-toolbox",
+    "active_program": "Agent Program",
+    "active_order": "GROUNDING-AGENT-002",
+    "active_state": "IMPLEMENTATION",
+    "cross_repo_policy": "EVIDENCE_ONLY"
+  },
+  "evidence_lanes": [
+    { "repository": "HanzoRazer/vectorizer-sandbox", "mode": "EVIDENCE_ONLY" }
+  ],
+  "claims": [
+    {
+      "claim_id": "C-PROV",
+      "type": "handoff_provenance",
+      "expected": {
+        "repository": "HanzoRazer/luthiers-toolbox",
+        "program": "Agent Program",
+        "work_order": "GROUNDING-AGENT-002",
+        "required": ["repository", "program", "work_order"]
+      },
+      "material": true
+    },
+    {
+      "claim_id": "C-FILE",
+      "type": "file_exists",
+      "repository": "HanzoRazer/luthiers-toolbox",
+      "ref": "HEAD",
+      "path": "tools/grounding_agent/engine.py",
+      "expected": true,
+      "material": true
+    }
+  ]
+}
