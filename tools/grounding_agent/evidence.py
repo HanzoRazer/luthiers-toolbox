@@ -10,11 +10,12 @@ This module performs no repository access. It only:
 from __future__ import annotations
 
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .models import (
     ClaimResult,
     ClaimVerdict,
+    EvidenceMode,
     ExecutionDecision,
     GroundingStatus,
 )
@@ -66,6 +67,80 @@ def compare_sha(expected: str, observed: str) -> str:
         return ShaComparison.MATCH if obs.startswith(exp) else ShaComparison.MISMATCH
     # expected longer than observed -> observed cannot fully confirm it.
     return ShaComparison.MISMATCH
+
+
+# ---------------------------------------------------------------------------
+# v0.2 lane/provenance helpers (GROUNDING-AGENT-002)
+#
+# Pure, deterministic comparisons over the input contract. No repository
+# access, no NLP, no keyword classification, no fuzzy topic matching.
+# ---------------------------------------------------------------------------
+
+# Conservative repository-identifier prefixes to strip. Deliberately narrow —
+# we do not attempt general URL parsing (GA2-019).
+_REPO_PREFIXES = (
+    "https://github.com/",
+    "http://github.com/",
+    "ssh://git@github.com/",
+    "git@github.com:",
+    "github.com/",
+)
+
+
+def normalize_repo_identifier(repo: Optional[str]) -> str:
+    """Normalize a repository identifier for comparison.
+
+    Strips a small set of common host prefixes, a trailing ``/`` and ``.git``,
+    and casefolds. Intentionally conservative; not a general URL parser.
+    """
+    if not repo:
+        return ""
+    r = repo.strip()
+    lowered = r.lower()
+    for prefix in _REPO_PREFIXES:
+        if lowered.startswith(prefix):
+            r = r[len(prefix):]
+            break
+    if r.endswith("/"):
+        r = r[:-1]
+    if r.endswith(".git"):
+        r = r[:-4]
+    return r.strip().casefold()
+
+
+def _normalize_label(value: Optional[str]) -> str:
+    """Normalize a freeform lane label (program/work-order) for comparison."""
+    return (value or "").strip().casefold()
+
+
+def compare_repository_identity(a: Optional[str], b: Optional[str]) -> bool:
+    """True if two repository identifiers normalize equal (and are non-empty)."""
+    na = normalize_repo_identifier(a)
+    return na != "" and na == normalize_repo_identifier(b)
+
+
+def lane_label_matches(a: Optional[str], b: Optional[str]) -> bool:
+    """True if two lane labels normalize equal (and are non-empty)."""
+    na = _normalize_label(a)
+    return na != "" and na == _normalize_label(b)
+
+
+def evidence_lane_is_permitted(repo: Optional[str], evidence_lanes) -> bool:
+    """True if ``repo`` is declared as an EVIDENCE_ONLY foreign evidence lane.
+
+    Evidence lanes permit read-only cross-repo *evidence*; they never grant
+    mutation authority.
+    """
+    target = normalize_repo_identifier(repo)
+    if not target:
+        return False
+    for lane in evidence_lanes or []:
+        if (
+            getattr(lane, "mode", None) is EvidenceMode.EVIDENCE_ONLY
+            and normalize_repo_identifier(getattr(lane, "repository", None)) == target
+        ):
+            return True
+    return False
 
 
 def summarize(results: List[ClaimResult]) -> dict:

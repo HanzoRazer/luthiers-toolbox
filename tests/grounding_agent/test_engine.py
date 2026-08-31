@@ -11,6 +11,7 @@ from tools.grounding_agent.adapters.github_api import (
 from tools.grounding_agent.engine import ground
 from tools.grounding_agent.models import (
     ActiveLane,
+    ClaimReason,
     ClaimVerdict,
     Confidence,
     EvidenceClass,
@@ -404,3 +405,164 @@ def test_precedence_material_mismatch_over_blocked(make_git, make_github, make_f
     # Material mismatch takes precedence over blocked (spec section 7 ordering).
     assert report.status is GroundingStatus.STALE
     assert report.blocked_checks == ["B"]
+
+
+# =========================================================================
+# v0.2 (GROUNDING-AGENT-002) — handoff_provenance / lane conflict cases.
+# active_lane's existing repo/cross-repo behavior is unchanged and covered
+# above (GA-014/015/016); these exercise the NEW provenance dimension.
+# =========================================================================
+
+FOREIGN = "HanzoRazer/vectorizer-sandbox"
+
+
+def _preq(claims, *, lane=LANE, evidence_lanes=None):
+    payload = {"active_lane": lane, "claims": claims}
+    if evidence_lanes is not None:
+        payload["evidence_lanes"] = evidence_lanes
+    return GroundingRequest.from_dict(payload)
+
+
+def _prov(claim_id, expected, material=True):
+    return {"claim_id": claim_id, "type": "handoff_provenance",
+            "expected": expected, "material": material}
+
+
+def test_ga2_001_exact_lane_match(make_git, make_github, make_fs):
+    report = ground(
+        _preq([_prov("P", {"repository": "HanzoRazer/luthiers-toolbox",
+                           "program": "RMOS-CONVERGE", "work_order": "RMOS-CONVERGE-001B-B2"})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    assert report.status is GroundingStatus.MATCH
+    assert report.decision is ExecutionDecision.PROCEED
+    assert _by_id(report, "P").verdict is ClaimVerdict.MATCH
+
+
+def test_ga2_002_same_repo_wrong_program(make_git, make_github, make_fs):
+    report = ground(
+        _preq([_prov("P", {"repository": "HanzoRazer/luthiers-toolbox",
+                           "program": "SGAQ"})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    r = _by_id(report, "P")
+    assert r.verdict is ClaimVerdict.MISMATCH
+    assert r.reason is ClaimReason.HANDOFF_LANE_CONFLICT
+    assert r.evidence_class is EvidenceClass.INPUT_CONTRACT
+    assert report.status is GroundingStatus.STALE
+    assert report.decision is ExecutionDecision.STOP
+
+
+def test_ga2_003_same_program_wrong_work_order(make_git, make_github, make_fs):
+    report = ground(
+        _preq([_prov("P", {"program": "RMOS-CONVERGE", "work_order": "SOME-OTHER-ORDER",
+                           "required": ["work_order"]})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    r = _by_id(report, "P")
+    assert r.verdict is ClaimVerdict.MISMATCH
+    assert r.reason is ClaimReason.HANDOFF_LANE_CONFLICT
+    assert report.status is GroundingStatus.STALE
+
+
+def test_ga2_004_foreign_repo_evidence_only_permitted(make_git, make_github, make_fs):
+    report = ground(
+        _preq(
+            [_prov("P", {"repository": FOREIGN, "required": ["repository"]})],
+            evidence_lanes=[{"repository": FOREIGN, "mode": "EVIDENCE_ONLY"}],
+        ),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    r = _by_id(report, "P")
+    assert r.verdict is ClaimVerdict.MATCH
+    assert r.observed.get("classification") == "CROSS_REPO_EVIDENCE"
+    assert report.status is GroundingStatus.MATCH
+
+
+def test_ga2_005_foreign_repo_without_evidence_declaration_conflicts(make_git, make_github, make_fs):
+    report = ground(
+        _preq([_prov("P", {"repository": FOREIGN, "required": ["repository"]})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    r = _by_id(report, "P")
+    assert r.verdict is ClaimVerdict.MISMATCH
+    assert r.reason is ClaimReason.HANDOFF_LANE_CONFLICT
+    assert report.status is GroundingStatus.STALE
+
+
+def test_ga2_006_missing_required_provenance_is_insufficient(make_git, make_github, make_fs):
+    # program required but not declared -> INSUFFICIENT_EVIDENCE, not a guessed mismatch.
+    report = ground(
+        _preq([_prov("P", {"repository": "HanzoRazer/luthiers-toolbox",
+                           "required": ["repository", "program"]})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    r = _by_id(report, "P")
+    assert r.verdict is ClaimVerdict.INSUFFICIENT_EVIDENCE
+    assert r.reason is None
+    assert report.status is GroundingStatus.INSUFFICIENT_EVIDENCE
+    assert report.decision is ExecutionDecision.STOP
+
+
+def test_ga2_007_provenance_uses_input_contract_class(make_git, make_github, make_fs):
+    report = ground(
+        _preq([_prov("P", {"repository": "HanzoRazer/luthiers-toolbox"})]),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    assert _by_id(report, "P").evidence_class is EvidenceClass.INPUT_CONTRACT
+
+
+def test_ga2_008_lane_match_cannot_override_stale_sha(make_git, make_github, make_fs):
+    git = make_git(refs={"main": FULL_SHA})
+    report = ground(
+        _preq([
+            _prov("P", {"repository": "HanzoRazer/luthiers-toolbox", "program": "RMOS-CONVERGE"}),
+            {"claim_id": "S", "type": "repo_head", "repository": "HanzoRazer/luthiers-toolbox",
+             "ref": "main", "expected_sha": "0000000000000000000000000000000000000000", "material": True},
+        ]),
+        git=git, github=make_github(), fs=make_fs(),
+    )
+    assert _by_id(report, "P").verdict is ClaimVerdict.MATCH
+    assert _by_id(report, "S").verdict is ClaimVerdict.MISMATCH
+    assert report.status is GroundingStatus.STALE
+
+
+def test_ga2_009_lane_mismatch_dominates_clean_repo(make_git, make_github, make_fs):
+    git = make_git(files={("main", "README.md"): True})
+    report = ground(
+        _preq([
+            _prov("P", {"program": "SGAQ", "required": ["program"]}),
+            {"claim_id": "F", "type": "file_exists", "ref": "main", "path": "README.md",
+             "expected": True, "material": True},
+        ]),
+        git=git, github=make_github(), fs=make_fs(),
+    )
+    assert _by_id(report, "F").verdict is ClaimVerdict.MATCH
+    assert _by_id(report, "P").verdict is ClaimVerdict.MISMATCH
+    assert report.status is GroundingStatus.STALE
+
+
+def test_ga2_010_evidence_only_does_not_authorize_mutation(make_git, make_github, make_fs):
+    # A foreign repo declared as evidence must NOT let an active_lane mutation
+    # claim against it pass. active_lane ignores evidence_lanes by design.
+    report = ground(
+        _preq(
+            [{"claim_id": "M", "type": "active_lane", "target_repository": FOREIGN,
+              "action": "mutation", "material": True}],
+            evidence_lanes=[{"repository": FOREIGN, "mode": "EVIDENCE_ONLY"}],
+        ),
+        git=make_git(), github=make_github(), fs=make_fs(),
+    )
+    assert _by_id(report, "M").verdict is ClaimVerdict.MISMATCH
+    assert report.status is GroundingStatus.STALE
+
+
+def test_ga2_012_v01_active_lane_behavior_unchanged(make_git, make_github, make_fs):
+    # Same-repo mutation still MATCH; cross-repo mutation still MISMATCH — the
+    # existing active_lane claim is untouched by v0.2.
+    ok = ground(_preq([{"claim_id": "A", "type": "active_lane",
+                        "target_repository": "HanzoRazer/luthiers-toolbox",
+                        "action": "mutation", "material": True}]),
+                git=make_git(), github=make_github(), fs=make_fs())
+    assert _by_id(ok, "A").verdict is ClaimVerdict.MATCH
+    assert "classification" not in _by_id(ok, "A").expected  # shape unchanged
