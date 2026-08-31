@@ -333,32 +333,117 @@ class TestSecurityPatchIntegration:
         
         assert exc.value.status_code == 413
     
-    def test_spatial_hash_with_real_data(self):
-        """Test spatial hash with realistic guitar body point count."""
-        from app.cam.spatial_hash import SpatialHash
-        
-        class Point:
+    @staticmethod
+    def _counting_point_class(counter):
+        """A PointLike whose is_close() increments ``counter``.
+
+        Counting comparisons is what makes this suite's performance claim
+        checkable without timing anything: ``find_existing()`` calls
+        ``is_close()`` exactly once per candidate in the 3x3 cell
+        neighbourhood, so the call count *is* the work the spatial hash does.
+        """
+
+        class CountingPoint:
+            __slots__ = ("x", "y")
+
             def __init__(self, x, y):
                 self.x = x
                 self.y = y
+
             def is_close(self, other, tolerance=0.001):
-                return abs(self.x - other.x) < tolerance and abs(self.y - other.y) < tolerance
-        
-        hasher = SpatialHash()
-        
-        # Simulate Stratocaster body (1,417 points from user's test data)
+                counter["comparisons"] += 1
+                return (
+                    abs(self.x - other.x) < tolerance
+                    and abs(self.y - other.y) < tolerance
+                )
+
+        return CountingPoint
+
+    def test_spatial_hash_does_not_degenerate_to_linear_scan(self):
+        """Realistic guitar-body point count stays O(1) per insert.
+
+        This replaces an earlier wall-clock assertion (``elapsed < 0.1``).
+        That assertion tested how fast the *runner* was, not how the algorithm
+        scales: the same code measures ~0.005s on a developer machine and was
+        observed at 0.604s on a contended CI runner, tripping a gate on an
+        unrelated pull request. The property actually worth protecting is that
+        deduplication does not regress to the O(n^2) linear scan this module
+        was written to replace, and comparison count measures that directly
+        and deterministically.
+        """
         import random
+
+        from app.cam.spatial_hash import SpatialHash
+
+        counter = {"comparisons": 0}
+        point_cls = self._counting_point_class(counter)
+
+        # Simulate Stratocaster body (1,417 points from user's test data)
         random.seed(42)
-        points = [Point(random.uniform(0, 400), random.uniform(0, 300)) for _ in range(1417)]
-        
-        import time
-        start = time.time()
+        points = [
+            point_cls(random.uniform(0, 400), random.uniform(0, 300))
+            for _ in range(1417)
+        ]
+
+        hasher = SpatialHash()
         for p in points:
             hasher.get_or_add(p)
-        elapsed = time.time() - start
-        
-        # Should be <100ms (user reported 2-3s for full Strat body extraction)
-        assert elapsed < 0.1, f"Spatial hash too slow: {elapsed:.3f}s"
+
+        n = len(points)
+        naive_comparisons = n * (n - 1) // 2
+
+        assert len(hasher) == n, "distinct points must not be deduplicated away"
+
+        # A linear scan would average n/2 comparisons per insert. Allow a
+        # generous constant instead: the bound is about catching a change in
+        # complexity class, not about pinning the current figure.
+        assert counter["comparisons"] < 10 * n, (
+            f"Spatial hash made {counter['comparisons']} comparisons for {n} points "
+            f"({counter['comparisons'] / n:.1f} per insert). That is not O(1) per "
+            f"insert; a linear scan would be ~{n // 2}. Check cell_size against the "
+            "coordinate range."
+        )
+        assert counter["comparisons"] < naive_comparisons // 100
+
+    def test_spatial_hash_deduplicates_coincident_points(self):
+        """Exercise the collision path the sparse-random case never reaches.
+
+        With 0.1mm cells over a 400x300mm area, random points almost never
+        share a cell, so the previous test can pass without the deduplication
+        logic ever matching. This one forces matches.
+        """
+        import random
+
+        from app.cam.spatial_hash import SpatialHash
+
+        counter = {"comparisons": 0}
+        point_cls = self._counting_point_class(counter)
+
+        random.seed(42)
+        distinct = [
+            point_cls(random.uniform(0, 400), random.uniform(0, 300))
+            for _ in range(500)
+        ]
+        # Each distinct point repeated four times, well inside the 0.001mm
+        # tolerance, interleaved so matches are found across the whole run.
+        points = []
+        for p in distinct:
+            points.append(p)
+            for _ in range(3):
+                points.append(point_cls(p.x + 1e-6, p.y - 1e-6))
+        random.shuffle(points)
+
+        hasher = SpatialHash()
+        indices = [hasher.get_or_add(p) for p in points]
+
+        assert len(hasher) == len(distinct), (
+            f"expected {len(distinct)} unique points, got {len(hasher)}"
+        )
+        assert len(set(indices)) == len(distinct)
+        assert counter["comparisons"] < 10 * len(points), (
+            f"{counter['comparisons']} comparisons for {len(points)} inserts is not "
+            "O(1) per insert even with duplicates present"
+        )
 
 
 # =============================================================================
