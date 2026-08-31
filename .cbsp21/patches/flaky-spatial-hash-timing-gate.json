@@ -1,0 +1,102 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "FLAKY_SPATIAL_HASH_TIMING_GATE",
+  "title": "Replace the spatial-hash wall-clock gate with a deterministic complexity assertion",
+  "intent": "Test-only fix. This file held BOTH of the services/api suite's wall-clock assertions: `elapsed < 0.1` in test_spatial_hash_with_real_data, which failed PR #345 at 0.604s on a contended runner, and `elapsed < 1.0` in test_performance_scaling, which had not tripped yet. Both measured how fast the runner was rather than how the algorithm scales. Both are replaced with comparison-count assertions against a shared, documented complexity-regression bound, and a new test covers the deduplication path the sparse fixture never reached. No production code changes.",
+  "change_type": "test",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
+      "services/api/tests/test_dxf_security_patch.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
+      "services/api/tests/test_dxf_security_patch.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "test_spatial_hash_with_real_data is renamed to test_spatial_hash_does_not_degenerate_to_linear_scan and test_performance_scaling is converted; both now count is_close() calls instead of timing a loop. find_existing() calls is_close() exactly once per candidate in the 3x3 cell neighbourhood, so the call count is the work the structure does and is identical on every machine. MAX_COMPARISONS_PER_INSERT and the counting-point helper are module-level so both classes share one documented bound. test_spatial_hash_deduplicates_coincident_points is added to exercise the matching path.",
+    "why_not_redundant": "This is the only wall-clock assertion in the entire services/api test suite, so nothing else covers the performance claim and nothing else shares this failure mode. The replacement is strictly stronger: the old assertion could pass while the structure silently degraded on a fast runner, and could fail while it was perfectly healthy on a slow one."
+  },
+  "verification": {
+    "commands_run": [
+      "Root cause: PR #345 CI showed `FAILED tests/test_dxf_security_patch.py::TestSecurityPatchIntegration::test_spatial_hash_with_real_data - AssertionError: Spatial hash too slow: 0.604s / assert 0.604 < 0.1`, with `1 failed, 8785 passed`. The second red gate, Core CI Summary, is only the aggregator step `Fail if any core job failed` — two gates, one cause.",
+      "Attribution: PR #345 changes only packages/client/package.json and package-lock.json (@supabase/supabase-js 2.112.3 -> 2.112.4). There is no causal path from a client npm package to app/cam/spatial_hash.py. Sibling dependabot PRs #344, #346 and #348 pass API Tests on the same base.",
+      "Measured locally, 7 runs at n=1417: median 0.0055s, min 0.0050s, max 0.0218s against a 0.1s threshold — 18x of headroom. The 0.604s CI observation is ~110x the local median, which is runner contention, not an algorithmic change.",
+      "Measured the real work: at the default cell_size=0.1 over a 400x300mm area the structure makes 1 is_close() comparison for 1417 points, so wall-clock here is dominated by allocation and dict operations, not by the algorithm under test.",
+      "Confirmed the new gate is not vacuous by degrading cell_size and watching it trip: 0.1 -> 1 comparison (0.00/insert, PASS); 1.0 -> 79 (0.06, PASS); 10.0 -> 7127 (5.03, PASS); 100.0 -> 493411 (348.21, FAIL); 1000.0 -> 1003236 (708.00, FAIL, exactly the naive n(n-1)/2 linear scan). The 10*n bound sits with margin between healthy and degenerate.",
+      "grep -rln 'elapsed <|duration <|time.time() - start' services/api/tests/ -> only test_dxf_security_patch.py. This was the suite's sole timing-based gate.",
+      "py -3.11 -m pytest tests/test_dxf_security_patch.py -q --no-cov -> 24 passed (23 before; one test added)",
+      "REVIEW ITEM 1 (confirm CI green on the branch head): API Tests on 4baba2f5 -> '8787 passed, 62 skipped, 41 xfailed' with both new tests named and PASSED. PR state CLEAN, 42 checks pass, 0 failures. The 'unstable' the reviewer saw was pending checks, now complete. The suite also ran 868s vs 1371s on the failing #345 run.",
+      "REVIEW ITEM 2 (document the bound as a complexity guard, not a performance guarantee): the literal 10*n is replaced by a named MAX_COMPARISONS_PER_INSERT carrying that statement explicitly, plus a measured headroom table. Assertion messages now say 'complexity-regression bound' and 'This is not a speed regression'.",
+      "REVIEW ITEM 3 (document cell_size's intended range): recorded that cell_size is NOT a live tuning knob -- production constructs SpatialHash in exactly one place, app/cam/graph_algorithms.py:70, always with SPATIAL_HASH_CELL_SIZE_MM = 0.1mm from app/cam/dxf_limits.py. Nothing overrides it.",
+      "ADDITIONAL DEFECT FOUND, and it was my own miss: this file contained a SECOND wall-clock assertion, `assert elapsed < 1.0` in TestSpatialHashPerformance.test_performance_scaling. The earlier sweep used `grep -rln` (filenames only), correctly identified this file, and I wrongly assumed a single occurrence. Same defect class, longer fuse: it runs ~0.036s locally, but the sibling assertion was observed 110x slower on CI, which would put this near 4s against its 1s bound. Converted before it failed rather than after.",
+      "Non-vacuity proven for the second gate too, by degrading cell_size over the 10,000-point grid: 0.1mm -> 0 comparisons (pass, production default); 1.0mm -> 170,232 (17.02/insert, FAIL); 10.0mm -> 13,515,000 (1,351.50, FAIL); 100.0mm -> 49,995,000 (4,999.50, FAIL).",
+      "CORRECTION made during this pass: a comment stating the guard 'will object past ~10mm' was measured to be wrong for the dense fixture, which objects at ~1mm. The comment now carries both fixtures' measured tables and states plainly that sensitivity follows point density, and that the bound is a constant-factor bound rather than a strict complexity bound.",
+      "Sweep re-run correctly: `grep -rn 'elapsed <|elapsed<|duration <' services/api/tests/` now returns only docstring references to the removed assertions -- no live wall-clock assertion remains anywhere in the suite.",
+      "Rebased onto current origin/main so CI verifies against a live base rather than one 11 commits stale.",
+      "py -3.11 -m pytest tests/test_dxf_security_patch.py -q --no-cov -> 24 passed",
+      "GATE CAUGHT ME, correctly: debt-gates 'File size check (ratchet mode)' failed at 528 lines against a 500-line threshold. The file was 397 lines on main and is NOT in app/ci/file_sizes_baseline.json (which holds only 3 pre-existing violators), so my documentation created a NEW violation rather than growing an existing one.",
+      "Resolved by trimming, not by baselining. Adding the file to the baseline would ratchet debt upward for a file I had just oversized, which is the exact move the gate exists to stop. Compressed the constant's comment and the three test docstrings -- the full measured tables and history live here in the manifest, in the commit message and in the PR body, so nothing was lost, only de-duplicated out of the source file. 528 -> 498 lines, gate 'OK'.",
+      "Residual risk recorded: at 498 lines the file has ~2 lines of margin under the threshold. It covers six unrelated concerns (file size, entity count, spatial hash, iterative DFS, timeouts, rollback criteria) and the durable fix is to split it, which is out of scope here.",
+      "py -3.11 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> 'OK: No files exceed 500 lines'"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_dxf_security_patch.py",
+      "intent": "Replace a machine-speed assertion with a deterministic complexity assertion, and cover the deduplication path.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_security_patch.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".cbsp21/patches/flaky-spatial-hash-timing-gate.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/flaky-spatial-hash-timing-gate.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-FLAKY-SPATIAL-HASH-GATE-R2",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      {
+        "id": "AS-SPATIAL-L1",
+        "severity": "low",
+        "summary": "services/api/app/tests/test_dxf_security_patch.py is a stale duplicate that is never collected and would error if it were.",
+        "detail": "Both pytest.ini (testpaths = tests) and pyproject.toml (testpaths = [\"tests\"]) exclude app/tests/, so the file never runs. It calls SpatialHash(tolerance=0.01) six times, and that constructor takes cell_size, not tolerance -- verified to raise TypeError against the current API. It does not contain either wall-clock assertion, so it is an older variant rather than a copy. Positive-trace evidence of deadness: excluded by config, broken against the live API, and superseded by a live twin at services/api/tests/.",
+        "disposition": "DEFERRED - out of scope for this fix. Deleting test files is its own change and needs its own review; recorded so it is not rediscovered."
+      },
+      {
+        "id": "AS-SPATIAL-L2",
+        "severity": "low",
+        "summary": "services/api/tests/test_dxf_security_patch.py sits ~2 lines under the 500-line debt threshold.",
+        "detail": "The file covers six unrelated concerns in one module (file size limits, entity count limits, spatial hash, iterative DFS, async timeouts, rollback criteria). At 498 lines any further addition trips the file-size ratchet, so the next person to add a test here will be forced into the same trim-or-baseline decision.",
+        "disposition": "DEFERRED - splitting the module by concern is the durable fix and is its own change. Recorded so the next author knows why the file is tight."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test-only change. No production code, no API, no schema, no dependency change. app/cam/spatial_hash.py is untouched -- the implementation was never the defect. One low finding recorded and deferred."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
