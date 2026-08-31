@@ -1,0 +1,85 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "KONVA_1032_BUMP",
+  "title": "Bump konva from 10.3.1 to 10.3.2",
+  "intent": "Dependabot runtime-dependency patch bump. konva is the 2D canvas library behind the CAM and lutherie drawing surfaces, so unlike the dev-tooling bumps in this batch it does ship to users. No application code changes and no engine-floor change.",
+  "change_type": "dependency",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/konva-1032-bump.json",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/konva-1032-bump.json",
+      "packages/client/package-lock.json",
+      "packages/client/package.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "dependency konva ^10.3.1 -> ^10.3.2. The lockfile change is the single version/resolved/integrity triple for konva itself; no transitive package is added, removed, re-parented, or re-versioned, and the package count is unchanged at 431.",
+    "why_not_redundant": "This manifest exists because the gate had been borrowing an unrelated one. Auto-discovery selected .cbsp21/patches/dep-sec-pr281-types-node.json — the manifest for PR #281's @types/node bump — which happens to declare both files this PR touches and therefore scored 100%. The gate was green on coincidence rather than on a declaration about this change. A per-PR manifest replaces that."
+  },
+  "verification": {
+    "commands_run": [
+      "Blast radius stated rather than glossed: konva is in dependencies (not devDependencies) and is imported by 9 client source files — useExportDxf.ts, useKonvaCanvas.ts, useWoodGrain.ts, drawCamOverlay.ts, NeckView.vue, and four views under views/cam/headstock/. This ships to users, so it carries more risk than the dev-tooling bumps in the same batch, though it is a patch release.",
+      "Four of those nine importers are in views/cam/headstock/, which is a known-orphaned directory carrying part of the standing vue-tsc error set. Those files are the least-exercised consumers; the load-bearing ones are the composables and NeckView.",
+      "Type-check ratchet is unmoved: the lint-build run for this PR reports 'vue-tsc errors: 150 | baseline ceiling: 150', so the new konva typings introduce no diagnostic change across those 9 importers. The ratchet sits AT its ceiling with zero headroom, so this is a meaningful signal rather than a formality.",
+      "Engine floor unaffected: reproduced nodeEngineFloor.spec.ts's dependenciesAboveTheFloor() logic over the PR lockfile — every non-optional package's engines.node is covered by a lane of the declared floor '^20.19.0 || >=22.12.0'. Zero offenders, identical to main. Unlike #347, this bump forces no floor change.",
+      "Lockfile reviewed in full (4 +/-): konva's version, resolved URL and integrity hash only.",
+      "CI observed running Node 22.23.2, which satisfies the declared floor.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <the 3 files> -> 100.0% coverage, PASSED"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Bump the konva dependency range to ^10.3.2.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (dependency metadata; patch release)"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Lockfile resolution for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none (lockfile)"
+    },
+    {
+      "path": ".cbsp21/patches/konva-1032-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/konva-1032-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-08-31-KONVA-1032-BUMP",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Runtime dependency patch bump with no transitive movement, no API or schema change, no engine-floor change, and no movement in the type-check ratchet. Recorded as shipping code rather than tooling so a reviewer weighs it accordingly."
+  },
+  "no_backend_no_schema": "No backend API, route, schema, persistence, workflow, or build change. The change is confined to the client's canvas rendering dependency.",
+  "owner_approval": {
+    "reviewed_by": "",
+    "approved_by": "",
+    "approved_at": ""
+  }
+}
