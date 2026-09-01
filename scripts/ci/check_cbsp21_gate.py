@@ -30,6 +30,7 @@ from typing import List, Set, Tuple, Optional
 from cbsp21_manifest_discovery import (
     AmbiguousManifestSelection,
     load_candidates,
+    owned_candidates,
     select_manifest,
 )
 
@@ -99,6 +100,26 @@ def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> T
         print("Add one under .cbsp21/patches/<patch-id>.json (preferred) or "
               ".cbsp21/patch_input.json (legacy).")
         sys.exit(1)
+
+    # CBSP21-NOBORROW-001: a manifest satisfies a PR only if the PR brought it.
+    owned = owned_candidates(candidates, changed_files)
+    if not owned:
+        print("❌ CBSP21 FAIL: this PR declares no CBSP21 manifest of its own.")
+        print()
+        print("Changed files:")
+        for f in changed_files:
+            if f.strip():
+                print(f"  - {f}")
+        print()
+        print("Manifests exist that would cover these files, but they were")
+        print("authored for other changes. A manifest is only valid for the PR")
+        print("that adds or modifies it -- otherwise the gate vouches for work")
+        print("nobody declared.")
+        print()
+        print("Add .cbsp21/patches/<patch-id>.json to THIS PR, declaring its files.")
+        print("For a dependency bump, copy .cbsp21/TEMPLATE-dependency-bump.json")
+        sys.exit(1)
+    candidates = owned
 
     try:
         selected = select_manifest(candidates, changed_files)

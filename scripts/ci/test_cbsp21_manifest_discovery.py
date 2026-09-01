@@ -23,6 +23,7 @@ from cbsp21_manifest_discovery import (  # noqa: E402
     discover_manifest_paths,
     is_cbsp21_internal,
     load_candidates,
+    owned_candidates,
     select_manifest,
 )
 
@@ -286,3 +287,67 @@ def test_prefix_manifest_still_wins_when_it_alone_covers_the_diff(tmp_path: Path
         candidates, ["services/api/app/ibg_repository/x.py",
                      "services/api/app/ibg_repository/y.py"])
     assert manifest["patch_id"] == "PREFIX"
+
+
+# ---------------------------------------------------------------------------
+# CBSP21-NOBORROW-001 — ownership predicate
+#
+# The defect: a PR touching only package.json + package-lock.json scored a
+# GENUINE 100% against dep-sec-pr281-types-node.json, a manifest authored for a
+# different PR that legitimately declares those two files. Coverage was never
+# coincidental, so no file-set rule can catch it. Ownership is about authorship.
+# ---------------------------------------------------------------------------
+
+
+def _cand(path: str, files: list) -> tuple:
+    return (Path(path), {"files": [{"path": f} for f in files]})
+
+
+def test_noborrow_diff_without_own_manifest_owns_nothing():
+    """The #344 reproduction. Must yield zero owned candidates.
+
+    The foreign manifest declares BOTH changed files -- full coverage -- and is
+    still not owned, which is the entire point of the predicate.
+    """
+    foreign = _cand(
+        ".cbsp21/patches/dep-sec-pr281-types-node.json",
+        ["packages/client/package.json", "packages/client/package-lock.json"],
+    )
+    changed = ["packages/client/package.json", "packages/client/package-lock.json"]
+    assert owned_candidates([foreign], changed) == []
+
+
+def test_noborrow_diff_that_brought_its_manifest_owns_it():
+    mine = _cand(".cbsp21/patches/axios-1200-bump.json", ["packages/client/package.json"])
+    changed = ["packages/client/package.json", ".cbsp21/patches/axios-1200-bump.json"]
+    assert len(owned_candidates([mine], changed)) == 1
+
+
+def test_noborrow_selects_only_the_brought_manifest_among_many():
+    """A foreign manifest with BETTER coverage must still lose to ownership."""
+    foreign = _cand(
+        ".cbsp21/patches/other.json",
+        ["packages/client/package.json", "packages/client/package-lock.json"],
+    )
+    mine = _cand(".cbsp21/patches/mine.json", ["packages/client/package.json"])
+    changed = [
+        "packages/client/package.json",
+        "packages/client/package-lock.json",
+        ".cbsp21/patches/mine.json",
+    ]
+    owned = owned_candidates([foreign, mine], changed)
+    # Normalise: Path stringifies with backslashes on Windows.
+    assert [str(p).replace("\\", "/") for p, _ in owned] == [
+        ".cbsp21/patches/mine.json"
+    ]
+
+
+def test_noborrow_path_separators_normalise():
+    """Windows git output uses backslashes; ownership must not depend on that."""
+    mine = _cand(".cbsp21/patches/mine.json", ["a.py"])
+    assert len(owned_candidates([mine], ["a.py", ".cbsp21\patches\mine.json"])) == 1
+
+
+def test_noborrow_ignores_blank_entries_in_the_diff():
+    mine = _cand(".cbsp21/patches/mine.json", ["a.py"])
+    assert owned_candidates([mine], ["", "   ", "a.py"]) == []
