@@ -158,12 +158,17 @@ def main() -> int:
     except AmbiguousManifestSelection as e:
         return _fail(str(e))
     if selected is None:
-        # Shared discovery: changed files with zero overlap (CBSP21-DIAG-001 /
-        # BR-046). Distinct from "no candidate files on disk" above.
+        # Diagnostic split (CBSP21-NOBORROW-001), mirroring the coverage gate.
+        # Ownership already passed, so a manifest WAS found and it DOES belong
+        # to this PR -- it just declares none of the changed files. Reporting
+        # "no applicable manifest" here would send the author looking for a
+        # file they are already looking at.
         return _fail(
-            "No applicable CBSP21 patch manifest found for this diff. "
-            "No manifest under .cbsp21/patches/ declares any changed file. "
-            "Create or update .cbsp21/patches/<patch-id>.json "
+            "Your manifest declares none of the changed files. This is a "
+            "COVERAGE failure, not an ownership failure: "
+            f"{', '.join(str(p) for p, _ in owned)} belongs to this PR but does "
+            "not declare this work. Add the changed files to its files[] and "
+            "scope.*. "
             "(or legacy .cbsp21/patch_input.json)."
         )
     manifest_path, manifest = selected

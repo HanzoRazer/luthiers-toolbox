@@ -27,7 +27,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "New owned_candidates() in cbsp21_manifest_discovery.py filters candidates to those whose path appears in the diff. Both gates apply it BEFORE select_manifest and fail with a refuse-to-borrow message when nothing is owned. Kept deliberately OUT of select_manifest: that function ranks, this one filters, and the eighteen existing selection tests exercise ranking with changed-file sets that never include a manifest path -- folding ownership into ranking would have broken all eighteen and buried a policy change inside a scoring function. Added .cbsp21/TEMPLATE-dependency-bump.json for the humans who must now author a manifest per bump; it lives OUTSIDE patches/ because discovery globs patches/*.json with no template exclusion, so a template kept there would itself be a live candidate. Five new tests.",
+    "what_changed": "New owned_candidates() in cbsp21_manifest_discovery.py filters candidates to those whose path appears in the diff. Both gates apply it BEFORE select_manifest and fail with a refuse-to-borrow message when nothing is owned. Kept deliberately OUT of select_manifest: that function ranks, this one filters, and the eighteen existing selection tests exercise ranking with changed-file sets that never include a manifest path -- folding ownership into ranking would have broken all eighteen and buried a policy change inside a scoring function. Added .cbsp21/TEMPLATE-dependency-bump.json for the humans who must now author a manifest per bump; it lives OUTSIDE patches/ because discovery globs patches/*.json with no template exclusion, so a template kept there would itself be a live candidate. Five new tests. Second increment: diagnostic split across both gates, plus five regressions including the non-dependency rmos borrow that proves the defect is repository-wide rather than Dependabot-specific.",
     "why_not_redundant": "Coverage cannot detect this and the first proposed fix proved it. An ownership rule defined as 'declares every changed file outside .cbsp21/' passes #344 perfectly, because dep-sec-pr281-types-node.json genuinely declares packages/client/package.json and package-lock.json for its own PR. Two dependency bumps really do touch the same two files, so the coverage was never coincidental and no file-set rule is capable of separating owned from borrowed. Had that rule been built, its blast-radius measurement would have read 0 newly-failing PRs and looked like evidence of a safe tighten, when it was evidence the predicate did nothing. The distinguishing fact is authorship, and authorship is visible in the diff the gate already computes."
   },
   "verification": {
@@ -42,7 +42,15 @@
       "ACCEPTANCE 4 (hard non-scope): git status on dep-sec-pr281-types-node.json is empty -- untouched",
       "ACCEPTANCE 5 (both gates agree): owned_candidates returns 0 for the #344 shape and 1 when the manifest is brought, and both gates call it before selection",
       "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 23 passed (18 pre-existing unchanged + 5 new)",
-      "one test bug of my own, caught and fixed: Path stringifies with backslashes on Windows, so an ownership assertion compared against a forward-slash literal and failed. The predicate was correct; the assertion was not."
+      "one test bug of my own, caught and fixed: Path stringifies with backslashes on Windows, so an ownership assertion compared against a forward-slash literal and failed. The predicate was correct; the assertion was not.",
+      "SECOND INCREMENT (post-review). Review of the branch found a defect in the fix itself: a PR that OWNS its manifest but under-covers reported 'No applicable patch manifest found' -- false and misleading, since a manifest was found and did belong to the PR. Ownership filtering had made that branch reachable for a new reason without updating its message.",
+      "diagnostic split applied to BOTH gates: ownership failure ('declares no CBSP21 manifest of its own') is now distinct from coverage failure ('your manifest declares none of the changed files ... This is a COVERAGE failure, not an ownership failure').",
+      "invariant stated mechanically: a manifest already present on the base branch is ineligible unless the current PR modifies it. Because a diff lists a manifest only when the PR adds OR modifies it, 'appears in the diff' expresses that exactly, with no added-vs-modified edge case.",
+      "five regressions added: base-branch-ineligibility invariant; the NON-DEPENDENCY rmos borrow (reproduced on main: a diff touching only manufacturing_authority_registry.json borrowed rmos-vcarve-converge-001.json at 100%); five historical manifests covering the same files all losing to one brought manifest; a historical manifest still owned when replaying its ORIGINAL PR's diff; an ordinary non-dependency PR with its own manifest unaffected.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 28 passed (18 pre-existing + 5 from increment 1 + 5 new)",
+      "acceptance re-run after the second increment: #344 reproduction RED, #350 diff PASSED, dep-sec-pr281-types-node.json untouched, self-test PASSED against the full origin/main..HEAD diff",
+      "harness error caught during self-test: `git diff --cached --name-only` lists only the second increment's staged files, omitting the manifest committed in increment 1, so the gate correctly reported an ownership failure. The rule was right; the file list was not.",
+      "RULED and deliberately NOT built: dependency identity (change_kind/dependency/from/to). Authorship is the broader discriminator -- it closes the non-dependency borrow too -- and dependency/from/to would be self-asserted unless independently verified against the lockfile diff, which is a separate control (dependency diff verification), not this one."
     ]
   },
   "files": [
@@ -85,7 +93,12 @@
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-07-04-002",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 1, "low": 0 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 0
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "The medium item is the accepted friction: every dependency PR must now carry a human-authored manifest, and Dependabot cannot write one. That is the intended outcome rather than a side effect -- the defect was precisely that dependency PRs passed without declaring themselves, and PR #296 (a supabase bump that also silently reverted zod 4 to 3) is the evidence that the undeclared content matters. Auto-generating a manifest was rejected: it would have to invent intent, behavior_change and risk_level, which are the fields a human reads, so the gate would fabricate the very judgement it exists to record."

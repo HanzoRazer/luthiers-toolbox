@@ -127,19 +127,27 @@ def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> T
         print(f"❌ CBSP21 FAIL: {e}")
         sys.exit(1)
     if selected is None:
-        # Auto-discovery only: zero overlap with every candidate (BR-046 /
-        # CBSP21-DIAG-001). Do not attribute the failure to a stale manifest.
-        print("❌ CBSP21 FAIL: No applicable patch manifest found.")
+        # Diagnostic split (CBSP21-NOBORROW-001). Reaching here now means
+        # something different from what it used to mean: ownership already
+        # passed, so a manifest WAS found and it DOES belong to this PR -- it
+        # simply declares none of the changed files. Saying "no applicable
+        # manifest found" would send the author looking for a missing file they
+        # are already looking at.
+        owned_paths = [str(path) for path, _ in owned]
+        print("❌ CBSP21 FAIL: your manifest declares none of the changed files.")
+        print()
+        print("Manifest brought by this PR:")
+        for op in owned_paths:
+            print(f"  - {op}")
         print()
         print("Changed files:")
         for f in changed_files:
             if f.strip():
                 print(f"  - {f}")
         print()
-        print("No manifest under .cbsp21/patches/ declares any changed file.")
-        print("Create or update a patch manifest for this change:")
-        print("  .cbsp21/patches/<patch-id>.json")
-        print("(legacy .cbsp21/patch_input.json is also accepted.)")
+        print("This is a COVERAGE failure, not an ownership failure. The manifest")
+        print("belongs to this PR; it just does not declare this work. Add the")
+        print("changed files to its files[] and scope.*.")
         sys.exit(1)
     path, manifest = selected
     if manifest.get("schema") != "cbsp21_patch_input_v1":
