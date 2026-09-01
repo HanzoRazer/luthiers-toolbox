@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass
+from math import isfinite
 from typing import Dict, Sequence, Tuple
 
 import ezdxf
+from ezdxf import bbox
 from ezdxf.document import Drawing
 from ezdxf.layouts import Modelspace
 
@@ -63,8 +65,12 @@ class DxfWriter:
         except (KeyError, ezdxf.DXFValueError):
             pass
 
-        # Note: Do NOT set EXTMIN/EXTMAX — let ezdxf compute from actual geometry.
-        # Previous sentinel values (1e+20/-1e+20) broke CAD viewer zoom-to-fit.
+        # EXTMIN/EXTMAX are finalized at serialization time by _finalize_extents().
+        # ezdxf does NOT maintain them: Drawing.update_extents() copies the
+        # modelspace LAYOUT attrs (msp.dxf.extmin/extmax) over the header on
+        # every write, and their unset default is the inverted sentinel
+        # (1e+20 / -1e+20) that breaks CAD viewer zoom-to-fit. Setting the
+        # header alone is therefore a no-op - the layout attrs are the knob.
 
         if layers:
             for ldef in layers:
@@ -151,12 +157,49 @@ class DxfWriter:
     def modelspace(self) -> Modelspace:
         return self._msp
 
+    def _finalize_extents(self) -> None:
+        """Set modelspace extents from actual geometry, immediately before write.
+
+        Must never raise: DXF serialization for every generator in the repo
+        routes through to_bytes()/saveas(). ``bbox.extents`` has returned
+        different sentinels for an empty modelspace across ezdxf releases
+        (Vec3(inf,...) on 1.4.2, a _NoValueType on 1.4.4), and requirements.txt
+        pins only ``ezdxf>=1.1.0``, so the empty case is gated on ``has_data``
+        and the whole call is defensive. When there is no geometry the layout
+        attrs are left untouched.
+        """
+        try:
+            box = bbox.extents(self._msp)
+            if not box.has_data:
+                return
+            lo, hi = box.extmin, box.extmax
+            if not all(isfinite(float(v)) for v in (lo.x, lo.y, hi.x, hi.y)):
+                return
+            r = COORDINATE_PRECISION
+            lo_t = (round(lo.x, r), round(lo.y, r), 0.0)
+            hi_t = (round(hi.x, r), round(hi.y, r), 0.0)
+            # Both knobs are required, and neither alone is sufficient:
+            #   * Drawing.write() -> update_all() -> update_extents() copies the
+            #     LAYOUT attrs over the header, so setting only the header loses.
+            #   * update_extents() is guarded by `if bool(extmin) and bool(extmax)`
+            #     and Vec3(0, 0, 0) is FALSY, so geometry whose lower bound is
+            #     exactly the origin (the common case) skips that copy entirely
+            #     and setting only the layout attrs loses.
+            self._msp.dxf.extmin = lo_t
+            self._msp.dxf.extmax = hi_t
+            self._doc.header["$EXTMIN"] = lo_t
+            self._doc.header["$EXTMAX"] = hi_t
+        except Exception:  # pragma: no cover - never block serialization
+            return
+
     def to_bytes(self) -> bytes:
+        self._finalize_extents()
         stream = io.StringIO()
         self._doc.write(stream)
         return stream.getvalue().encode("utf-8")
 
     def saveas(self, path: str) -> None:
+        self._finalize_extents()
         self._doc.saveas(path)
 
 

@@ -27,27 +27,66 @@ def _make_writer_with_square(*, closed: bool = True) -> DxfWriter:
 
 
 # =============================================================================
-# test_sentinel_extents_preserved
+# test_extents_derived_from_geometry
 # =============================================================================
 
-def test_sentinel_extents_preserved():
-    """EXTMIN/EXTMAX must remain at sentinel values — never recomputed.
+def _header_extents(raw: bytes):
+    doc = ezdxf.read(io.StringIO(raw.decode("utf-8")))
+    return doc.header.get("$EXTMIN"), doc.header.get("$EXTMAX")
 
-    Fusion 360 chokes when EXTMIN/EXTMAX are set to non-sentinel values
-    on AC1015 files.
+
+def test_extents_derived_from_geometry():
+    """$EXTMIN/$EXTMAX must equal the real geometry bounds, not the sentinel.
+
+    Replaces test_sentinel_extents_preserved (added 8f342189, 2026-04-01),
+    which asserted the opposite on the unsourced premise that "Fusion 360
+    chokes when EXTMIN/EXTMAX are set to non-sentinel values on AC1015".
+    CLAUDE.md corrected that rule as a conflation in 49577046 (2026-06-09);
+    the inverted sentinel is what breaks CAD viewer zoom-to-fit (blank canvas,
+    2aaff13f). ezdxf never recomputes extents on its own - the layout attrs
+    must be set, which is what _finalize_extents() does.
     """
     w = _make_writer_with_square()
-    doc = w.doc
+    extmin, extmax = _header_extents(w.to_bytes())
 
-    extmin = doc.header.get("$EXTMIN", None)
-    extmax = doc.header.get("$EXTMAX", None)
+    assert extmin is not None and extmax is not None
+    assert abs(extmin[0]) < 1e19 and abs(extmax[0]) < 1e19, (
+        "inverted 1e+20 sentinel written - breaks zoom-to-fit"
+    )
+    assert (round(extmin[0], 3), round(extmin[1], 3)) == (0.0, 0.0)
+    assert (round(extmax[0], 3), round(extmax[1], 3)) == (100.0, 100.0)
+    assert extmax[0] > extmin[0] and extmax[1] > extmin[1]
 
-    # ezdxf AC1015 default sentinel is (1e20, 1e20, 1e20) / (-1e20, …)
-    # We just verify the writer hasn't overwritten them with real bounds.
+
+def test_extents_finalized_for_saveas(tmp_path):
+    """saveas() must finalize extents too, not just to_bytes()."""
+    w = _make_writer_with_square()
+    out = tmp_path / "square.dxf"
+    w.saveas(str(out))
+
+    doc = ezdxf.readfile(str(out))
+    extmin, extmax = doc.header.get("$EXTMIN"), doc.header.get("$EXTMAX")
+    assert abs(extmax[0]) < 1e19
+    assert (round(extmax[0], 3), round(extmax[1], 3)) == (100.0, 100.0)
+
+
+def test_empty_document_serializes_without_error():
+    """An empty modelspace must still serialize.
+
+    Regression witness for #146 (reverted by #148): its _finalize_extents()
+    raised TypeError on the CI ezdxf because bbox.extents() returns a
+    different empty-sentinel across releases, and because it threw inside
+    to_bytes() it broke DXF serialization repo-wide. requirements.txt pins
+    only ezdxf>=1.1.0, so this must hold on any release.
+    """
+    w = DxfWriter(layers=[LayerDef("EMPTY", 7)])
+    raw = w.to_bytes()  # must not raise
+    assert b"SECTION" in raw
+
+    extmin, extmax = _header_extents(raw)
     if extmin is not None:
-        # Should NOT match actual geometry bounds (0, 0) — (100, 100)
-        assert extmin[0] != 0.0 or extmin[1] != 0.0, (
-            "EXTMIN was recomputed from geometry — must stay sentinel"
+        assert all(abs(v) != float("inf") for v in extmin[:2]), (
+            "empty document must not write inf extents"
         )
 
 

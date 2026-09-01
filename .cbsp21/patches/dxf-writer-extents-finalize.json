@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DXF_WRITER_EXTENTS_FINALIZE",
+  "title": "DxfWriter: derive $EXTMIN/$EXTMAX from geometry instead of shipping the inverted sentinel",
+  "intent": "Owner-authorized fix to a PROTECTED_PRODUCTION_BASELINE. Every DXF this repo emits ships $EXTMIN=(1e+20,1e+20) / $EXTMAX=(-1e+20,-1e+20) - the inverted sentinel CLAUDE.md forbids - so CAD viewers open the file with all entities present but zoom-to-fit finds nothing (the blank-canvas bug 2aaff13f was meant to cure). The 2026-04-25 fix removed the explicit sentinel WRITE, but the sentinel is also ezdxf's default for unset extents, so the output never changed. DxfWriter now finalizes extents from actual geometry immediately before serialization.",
+  "change_type": "fix",
+  "behavior_change": "DXF header output only. $EXTMIN/$EXTMAX now carry real geometry bounds instead of the inverted sentinel. No entity, layer, coordinate-precision or version behavior changes; all 20 DXF test modules (315 tests) pass unchanged.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dxf-writer-extents-finalize.json",
+      "services/api/app/cam/dxf_writer.py",
+      "services/api/tests/test_dxf_writer.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/cam/dxf_writer.py",
+      "services/api/tests/test_dxf_writer.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) dxf_writer.py: added DxfWriter._finalize_extents(), called at the top of BOTH to_bytes() and saveas(). It computes ezdxf.bbox.extents(msp) and writes the bounds to the modelspace LAYOUT attrs (msp.dxf.extmin/extmax) AND the header ($EXTMIN/$EXTMAX). Both are required and neither alone suffices: Drawing.write() calls update_all() -> update_extents(), which copies the layout attrs over the header (so header-only loses), but that copy is guarded by `if bool(extmin) and bool(extmax)` and Vec3(0,0,0) is FALSY, so any drawing whose lower bound is exactly the origin skips the copy (so layout-only loses). The stale comment claiming 'let ezdxf compute from actual geometry' is replaced with the mechanism, because ezdxf never computes them. (2) test_dxf_writer.py: test_sentinel_extents_preserved is replaced by test_extents_derived_from_geometry and test_extents_finalized_for_saveas (both fail on unfixed main, pass with the fix), plus test_empty_document_serializes_without_error as a regression witness for #146.",
+    "why_not_redundant": "This is the third pass at this defect and the first that is both correct and safe. #146 (c70f0382) attempted it and was reverted the same day by #148 (e0c88170) for three reasons, each addressed here: (a) its _finalize_extents() raised TypeError on CI's ezdxf because bbox.extents() returns a different empty-modelspace sentinel across releases, and because it threw inside to_bytes() it broke DXF serialization repo-wide - this version gates on box.has_data, verifies isfinite, and wraps the whole body in try/except so serialization can never be blocked, with a dedicated empty-document test; requirements.txt pins only ezdxf>=1.1.0 so version-agnosticism is mandatory. (b) it changed a protected baseline without approval - this change is owner-authorized and runs check_protected_paths.py with GOVERNANCE_APPROVED_CHANGE=1. (c) the policy was contested - see open_question."
+  },
+  "open_question": {
+    "summary": "UNRESOLVED SINCE 2026-06-22 - requires an empirical check before merge.",
+    "detail": "The replaced test (added 8f342189, 2026-04-01) asserted the opposite policy on the premise 'Fusion 360 chokes when EXTMIN/EXTMAX are set to non-sentinel values on AC1015 files'. CLAUDE.md corrected that rule as a conflation in 49577046 (2026-06-09) but the test was never updated, so the repo has carried two contradictory policies for three months. PR #148 stated 'Neither is grounded in observed tool behavior' and asked for an empirical Fusion 360 open of two candidate DXFs; those files were never produced and CI-RED-025 has no remaining record in the repo. They now exist, identical geometry (82 entities) differing only in extents: exports/dxf_extents_check/dxf_extents_{GEOMETRY,SENTINEL}_R2000.dxf. If GEOMETRY opens cleanly in Fusion 360, the premise is refuted and this patch is correct. If it does not, this patch must be reverted and #148 was right.",
+    "blocks_merge": true
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/test_dxf_writer.py -q -> 7 passed with the fix",
+      "git checkout -- app/cam/dxf_writer.py && py -3.11 -m pytest tests/test_dxf_writer.py -q -> 2 failed (test_extents_derived_from_geometry, test_extents_finalized_for_saveas) - proves the new tests witness the bug rather than merely describing it",
+      "py -3.11 -m pytest tests/*dxf*.py -q -> 315 passed, 0 failed, 20 modules, 4m15s",
+      "grep for other sentinel/EXTMIN assertions across services/api -> none; the replaced test was the only encoding of the old policy",
+      "GOVERNANCE_APPROVED_CHANGE=1 py -3.11 scripts/check_protected_paths.py -> (recorded at commit)"
+    ],
+    "notes": "Empty-modelspace hazard reproduced directly: ezdxf 1.4.2 returns Vec3(inf,inf,inf) with has_data False; CI's 1.4.4 returned a _NoValueType that broke float(). has_data is the version-stable guard. End-to-end confirmation: the fretboard ecosphere path (write_ecosphere_dxf -> DxfWriter) now emits EXTMIN=(-0.5,-32.84) EXTMAX=(647.7,28.0) for fender_strat_25.5 where it previously emitted the sentinel."
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/dxf_writer.py",
+      "intent": "Add _finalize_extents() and call it from to_bytes() and saveas(); set both the modelspace layout attrs and the header, because ezdxf's update_extents() skips the copy when the lower bound is the falsy Vec3(0,0,0). Defensive by construction so DXF serialization can never be blocked.",
+      "risk": "medium",
+      "behavior_change": "DXF header extents only; no entity or geometry change"
+    },
+    {
+      "path": "services/api/tests/test_dxf_writer.py",
+      "intent": "Replace test_sentinel_extents_preserved with two witnesses that fail without the fix, plus an empty-document serialization guard against the #146 regression.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
