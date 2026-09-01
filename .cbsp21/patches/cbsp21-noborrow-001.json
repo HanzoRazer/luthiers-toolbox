@@ -15,7 +15,8 @@
       "scripts/ci/cbsp21_manifest_discovery.py",
       "scripts/ci/check_cbsp21_gate.py",
       "scripts/ci/check_cbsp21_patch_input.py",
-      "scripts/ci/test_cbsp21_manifest_discovery.py"
+      "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_noborrow_checker.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/TEMPLATE-dependency-bump.json",
@@ -23,7 +24,8 @@
       "scripts/ci/cbsp21_manifest_discovery.py",
       "scripts/ci/check_cbsp21_gate.py",
       "scripts/ci/check_cbsp21_patch_input.py",
-      "scripts/ci/test_cbsp21_manifest_discovery.py"
+      "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_noborrow_checker.py"
     ]
   },
   "diff_articulation": {
@@ -50,7 +52,10 @@
       "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 28 passed (18 pre-existing + 5 from increment 1 + 5 new)",
       "acceptance re-run after the second increment: #344 reproduction RED, #350 diff PASSED, dep-sec-pr281-types-node.json untouched, self-test PASSED against the full origin/main..HEAD diff",
       "harness error caught during self-test: `git diff --cached --name-only` lists only the second increment's staged files, omitting the manifest committed in increment 1, so the gate correctly reported an ownership failure. The rule was right; the file list was not.",
-      "RULED and deliberately NOT built: dependency identity (change_kind/dependency/from/to). Authorship is the broader discriminator -- it closes the non-dependency borrow too -- and dependency/from/to would be self-asserted unless independently verified against the lockfile diff, which is a separate control (dependency diff verification), not this one."
+      "RULED and deliberately NOT built: dependency identity (change_kind/dependency/from/to). Authorship is the broader discriminator -- it closes the non-dependency borrow too -- and dependency/from/to would be self-asserted unless independently verified against the lockfile diff, which is a separate control (dependency diff verification), not this one.",
+      "R1 CLOSURE (CBSP21-NOBORROW-001-R1, test-only): added scripts/ci/test_cbsp21_noborrow_checker.py driving the REAL gate scripts against a synthetic Git base->head. NB-014 (no owned manifest -> provenance diagnostic), NB-015 (owned but under-covers -> coverage diagnostic), NB-020 (own in-diff manifest selected over a fully-covering historical one), plus a coverage-gate lockstep case. 4 passed. No checker code changed.",
+      "R1 before/after witness reproduced against MAIN's checker vs this branch's, both directions: dependency (package.json+lockfile) and non-dependency (manufacturing_authority_registry.json). MAIN rc=0 (BORROW / false green) in both cases; this branch rc=1 (FAIL-CLOSED) in both. Confirms the fix is general, not Dependabot-specific.",
+      "R1 note (flagged, not fixed here): no CI workflow currently executes scripts/ci/test_cbsp21_* (core_ci runs only test_check_contracts_governance.py; cbsp21_gate.yml runs the gate, not pytest). These tests are durable regression pins; wiring them into CI is a separate CBSP21-invocation increment."
     ]
   },
   "files": [
@@ -75,6 +80,12 @@
     {
       "path": "scripts/ci/test_cbsp21_manifest_discovery.py",
       "intent": "Five ownership tests, including the #344 reproduction asserting that a FULLY-COVERING foreign manifest is still not owned.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_noborrow_checker.py",
+      "intent": "CBSP21-NOBORROW-001-R1 residual closure: checker-level end-to-end tests (NB-014 provenance-failure diagnostic, NB-015 coverage-failure diagnostic, NB-020 own in-diff manifest selected over a covering historical one) that invoke the real gate scripts against a synthetic Git base->head, pinning user-visible gate behavior rather than only the owned_candidates predicate.",
       "risk": "low",
       "behavior_change": "none (tests)"
     },
