@@ -65,7 +65,11 @@
       "changed-file format equivalence: CI computes `git diff --name-only <merge-base> <head>` (forward slashes, space-joined); _norm handles separators; proven empirically by #352's green CBSP21 gate on the Linux runner.",
       "FOLLOW-UP RECORDED, deliberately not built -- CBSP21-NOBORROW-followup: pin the diff-format equivalence directly. Today it is proven by a passing PR rather than a pinned assertion, so it would break silently if either CI's diff format or the normaliser changed. Belt-and-braces on an already-witnessed property; a clean follow-up, not a hold.",
       "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 31 passed (18 pre-existing + 13 added across three increments)",
-      "INTEGRATION with 1de9e9f8: that commit independently found the same unwired-tests gap and flagged it as a separate increment; this one performs the wiring. The core_ci step therefore globs scripts/ci/test_cbsp21_*.py rather than naming one file, so BOTH test_cbsp21_manifest_discovery.py and the parallel session's test_cbsp21_noborrow_checker.py execute. Naming a single file would have left the other unrun -- the exact defect being closed."
+      "INTEGRATION with 1de9e9f8: that commit independently found the same unwired-tests gap and flagged it as a separate increment; this one performs the wiring. The core_ci step therefore globs scripts/ci/test_cbsp21_*.py rather than naming one file, so BOTH test_cbsp21_manifest_discovery.py and the parallel session's test_cbsp21_noborrow_checker.py execute. Naming a single file would have left the other unrun -- the exact defect being closed.",
+      "PARALLEL-SESSION INTEGRATION. A Cursor Agent session pushed 1de9e9f8 to this same branch while this increment was in flight. Rebased onto it, never force-pushed. The manifest conflict was resolved as a UNION of both verification blocks rather than by picking a side.",
+      "CI step globs scripts/ci/test_cbsp21_*.py instead of naming one file. Naming test_cbsp21_manifest_discovery.py alone would have left the parallel session's test_cbsp21_noborrow_checker.py unrun -- reintroducing the exact defect this PR closes, inside the fix for it.",
+      "Running both files together immediately surfaced an integration failure the glob exists to catch: test_nb014_coverage_gate_lockstep errored with UnicodeDecodeError (cp1252) because its subprocess calls did not pin an encoding and the gates print emoji. Verified PRE-EXISTING by checking out 1de9e9f8 alone -- it fails there too, without any changes from this increment. Would pass on the Linux runner and fail for any Windows developer. Fixed with encoding='utf-8', errors='replace' on both calls.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_*.py -q --no-cov -> 35 passed (31 + the parallel session's 4)"
     ]
   },
   "files": [
@@ -116,6 +120,12 @@
       "intent": "Run scripts/ci/test_cbsp21_manifest_discovery.py in CI. Nothing else collects scripts/ci/ -- the adjacent step names one file, there is no root testpaths and no repo-root bare pytest -- so without this the ownership regressions exist and never execute.",
       "risk": "low",
       "behavior_change": "CI now fails if the manifest-ownership rule regresses. No production path affected."
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_noborrow_checker.py",
+      "intent": "Authored by the parallel session (1de9e9f8). Touched here only to pin subprocess encoding=utf-8, so the suite passes on Windows as well as on the Linux runner.",
+      "risk": "low",
+      "behavior_change": "none (tests); removes a Windows-only false red"
     }
   ],
   "architecture_scan": {

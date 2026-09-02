@@ -35,6 +35,9 @@ def _git(repo: Path, *args: str) -> str:
     proc = subprocess.run(
         ["git", "-C", str(repo), *args],
         capture_output=True, text=True, check=True,
+        # Explicit: the gates print emoji, and on Windows text=True decodes
+        # with cp1252, which raises UnicodeDecodeError and leaves stdout None.
+        encoding="utf-8", errors="replace",
     )
     return proc.stdout.strip()
 
@@ -88,6 +91,7 @@ def _run(script: Path, repo: Path, *args: str):
     proc = subprocess.run(
         [sys.executable, str(script), *args],
         cwd=str(repo), capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
     )
     return proc.returncode, proc.stdout + proc.stderr
 
