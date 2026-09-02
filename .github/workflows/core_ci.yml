@@ -48,6 +48,19 @@ jobs:
       - name: Governance Unit Tests (stem_mentioned)
         run: |
           python -m pytest scripts/ci/test_check_contracts_governance.py -v
+      # CBSP21-NOBORROW-001. These pin the manifest-ownership rule, including the
+      # reproduction of the borrow that PRs #344-#346 merged through. Nothing else
+      # collects scripts/ci/ -- the step above names one file, there is no root
+      # testpaths and no repo-root bare pytest -- so without this line the
+      # regression tests exist and never run. A borrow-fix whose own regression
+      # test is never executed is the hollow guarantee the fix exists to remove.
+      # Globbed, not named. A parallel session added
+      # test_cbsp21_noborrow_checker.py to this same branch; naming one file
+      # would have left the other unrun -- which is the defect being closed,
+      # reintroduced by the fix for it.
+      - name: CBSP21 Manifest Ownership Tests (CBSP21-NOBORROW-001)
+        run: |
+          python -m pytest scripts/ci/test_cbsp21_*.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api

@@ -30,6 +30,7 @@ from typing import List, Set, Tuple, Optional
 from cbsp21_manifest_discovery import (
     AmbiguousManifestSelection,
     load_candidates,
+    near_miss_candidates,
     owned_candidates,
     select_manifest,
 )
@@ -111,10 +112,18 @@ def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> T
             if f.strip():
                 print(f"  - {f}")
         print()
-        print("Manifests exist that would cover these files, but they were")
-        print("authored for other changes. A manifest is only valid for the PR")
-        print("that adds or modifies it -- otherwise the gate vouches for work")
-        print("nobody declared.")
+        near = near_miss_candidates(candidates, changed_files)
+        if near:
+            print("These existing manifests WOULD have covered this diff, but")
+            print("belong to other changes -- this is what the gate used to")
+            print("borrow, and what it now refuses:")
+            for path, covered in near[:5]:
+                print(f"  - {path}  (covers {covered} of your files)")
+            if len(near) > 5:
+                print(f"  ... and {len(near) - 5} more")
+            print()
+        print("A manifest is only valid for the PR that adds or modifies it --")
+        print("otherwise the gate vouches for work nobody declared.")
         print()
         print("Add .cbsp21/patches/<patch-id>.json to THIS PR, declaring its files.")
         print("For a dependency bump, copy .cbsp21/TEMPLATE-dependency-bump.json")

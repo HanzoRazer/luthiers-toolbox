@@ -261,6 +261,40 @@ def owned_candidates(
             if _norm(str(path)) in changed]
 
 
+def near_miss_candidates(
+    candidates: List[Candidate],
+    changed_files: List[str],
+    declared_matcher: Optional[DeclaredMatcher] = None,
+) -> List[Tuple[Path, int]]:
+    """Manifests that WOULD have covered this diff but were not brought by it.
+
+    The actionable subset when ownership fails. Listing all candidates (119 on
+    main) is noise; listing the ones that would have been borrowed answers the
+    only question the author has -- "what was the gate about to accept for me,
+    and why is it refusing now?"
+
+    It also teaches the fix by showing the near-miss: these manifests cover your
+    files, they belong to other changes, and that overlap is precisely why the
+    old selector passed you. Author your own instead.
+
+    Returns (path, covered_count) sorted by coverage descending, then path, so
+    the most tempting borrow appears first. ``.cbsp21/`` internals are excluded
+    from the count for the same reason selection excludes them: a manifest must
+    not appear to cover a diff merely by declaring itself.
+    """
+    matcher_factory = declared_matcher or default_declared_matcher
+    signal = [f for f in changed_files if f and not is_cbsp21_internal(f)]
+    if not signal:
+        return []
+    scored: List[Tuple[Path, int]] = []
+    for path, manifest in candidates:
+        matcher = matcher_factory(manifest)
+        covered = sum(1 for f in signal if matcher(f))
+        if covered:
+            scored.append((path, covered))
+    return sorted(scored, key=lambda t: (-t[1], _norm(str(t[0]))))
+
+
 def select_manifest(
     candidates: List[Candidate],
     changed_files: List[str],

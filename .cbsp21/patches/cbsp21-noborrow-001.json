@@ -12,6 +12,7 @@
     "paths_in_scope": [
       ".cbsp21/TEMPLATE-dependency-bump.json",
       ".cbsp21/patches/cbsp21-noborrow-001.json",
+      ".github/workflows/core_ci.yml",
       "scripts/ci/cbsp21_manifest_discovery.py",
       "scripts/ci/check_cbsp21_gate.py",
       "scripts/ci/check_cbsp21_patch_input.py",
@@ -21,6 +22,7 @@
     "files_expected_to_change": [
       ".cbsp21/TEMPLATE-dependency-bump.json",
       ".cbsp21/patches/cbsp21-noborrow-001.json",
+      ".github/workflows/core_ci.yml",
       "scripts/ci/cbsp21_manifest_discovery.py",
       "scripts/ci/check_cbsp21_gate.py",
       "scripts/ci/check_cbsp21_patch_input.py",
@@ -55,7 +57,15 @@
       "RULED and deliberately NOT built: dependency identity (change_kind/dependency/from/to). Authorship is the broader discriminator -- it closes the non-dependency borrow too -- and dependency/from/to would be self-asserted unless independently verified against the lockfile diff, which is a separate control (dependency diff verification), not this one.",
       "R1 CLOSURE (CBSP21-NOBORROW-001-R1, test-only): added scripts/ci/test_cbsp21_noborrow_checker.py driving the REAL gate scripts against a synthetic Git base->head. NB-014 (no owned manifest -> provenance diagnostic), NB-015 (owned but under-covers -> coverage diagnostic), NB-020 (own in-diff manifest selected over a fully-covering historical one), plus a coverage-gate lockstep case. 4 passed. No checker code changed.",
       "R1 before/after witness reproduced against MAIN's checker vs this branch's, both directions: dependency (package.json+lockfile) and non-dependency (manufacturing_authority_registry.json). MAIN rc=0 (BORROW / false green) in both cases; this branch rc=1 (FAIL-CLOSED) in both. Confirms the fix is general, not Dependabot-specific.",
-      "R1 note (flagged, not fixed here): no CI workflow currently executes scripts/ci/test_cbsp21_* (core_ci runs only test_check_contracts_governance.py; cbsp21_gate.yml runs the gate, not pytest). These tests are durable regression pins; wiring them into CI is a separate CBSP21-invocation increment."
+      "R1 note (flagged, not fixed here): no CI workflow currently executes scripts/ci/test_cbsp21_* (core_ci runs only test_check_contracts_governance.py; cbsp21_gate.yml runs the gate, not pytest). These tests are durable regression pins; wiring them into CI is a separate CBSP21-invocation increment.",
+      "THIRD INCREMENT (post-review #2). All three assessment items were real. I initially recorded the third as a fictional filename because scripts/ci/test_cbsp21_noborrow_checker.py did not exist when I searched -- it was being authored concurrently by a parallel Cursor Agent session on this same branch (1de9e9f8) and had not yet been pushed. CORRECTED: not fiction, work in flight. Absence from my checkout was evidence about my checkout, not about the repository.",
+      "CI status re-checked rather than assumed unknown: PR #352 is 36 pass / 0 fail / 1 skipping. The ownership check already ran in CI against CI's own changed-file computation and this PR's own gates went green -- the self-test executing in the real environment.",
+      "CONFIRMED HOLLOW GUARANTEE: scripts/ci/test_cbsp21_manifest_discovery.py was run by NO workflow. core_ci.yml:50 names exactly one scripts/ci/ file; there is no root testpaths and no repo-root bare pytest. All 31 tests, including the #344 borrow reproduction, existed without executing. A borrow-fix whose own regression test never runs is the defect this PR exists to remove, recursively. Wired into core_ci.yml as a sibling step.",
+      "near-miss diagnostics added: on ownership failure the gate now names the manifests that WOULD have covered the diff but were not brought, ranked by coverage, capped at five. On the #344 shape this prints NINE candidates -- the borrow was a population, not a single coincidence with dep-sec-pr281-types-node.json.",
+      "changed-file format equivalence: CI computes `git diff --name-only <merge-base> <head>` (forward slashes, space-joined); _norm handles separators; proven empirically by #352's green CBSP21 gate on the Linux runner.",
+      "FOLLOW-UP RECORDED, deliberately not built -- CBSP21-NOBORROW-followup: pin the diff-format equivalence directly. Today it is proven by a passing PR rather than a pinned assertion, so it would break silently if either CI's diff format or the normaliser changed. Belt-and-braces on an already-witnessed property; a clean follow-up, not a hold.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 31 passed (18 pre-existing + 13 added across three increments)",
+      "INTEGRATION with 1de9e9f8: that commit independently found the same unwired-tests gap and flagged it as a separate increment; this one performs the wiring. The core_ci step therefore globs scripts/ci/test_cbsp21_*.py rather than naming one file, so BOTH test_cbsp21_manifest_discovery.py and the parallel session's test_cbsp21_noborrow_checker.py execute. Naming a single file would have left the other unrun -- the exact defect being closed."
     ]
   },
   "files": [
@@ -100,6 +110,12 @@
       "intent": "This PR's own manifest. Under the new rule it is mandatory, which is the intended demonstration.",
       "risk": "low",
       "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run scripts/ci/test_cbsp21_manifest_discovery.py in CI. Nothing else collects scripts/ci/ -- the adjacent step names one file, there is no root testpaths and no repo-root bare pytest -- so without this the ownership regressions exist and never execute.",
+      "risk": "low",
+      "behavior_change": "CI now fails if the manifest-ownership rule regresses. No production path affected."
     }
   ],
   "architecture_scan": {

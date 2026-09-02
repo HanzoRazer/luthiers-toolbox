@@ -23,6 +23,7 @@ from cbsp21_manifest_discovery import (  # noqa: E402
     discover_manifest_paths,
     is_cbsp21_internal,
     load_candidates,
+    near_miss_candidates,
     owned_candidates,
     select_manifest,
 )
@@ -447,3 +448,32 @@ def test_non_dependency_pr_with_its_own_manifest_is_unaffected():
         ".cbsp21/patches/some-feature.json",
     ]
     assert len(owned_candidates([mine], changed)) == 1
+
+
+def test_near_miss_lists_what_would_have_been_borrowed():
+    """The actionable subset when ownership fails, ranked by temptation."""
+    shared = ["packages/client/package.json", "packages/client/package-lock.json"]
+    a = _cand(".cbsp21/patches/covers-both.json", shared)
+    b = _cand(".cbsp21/patches/covers-one.json", [shared[0]])
+    c = _cand(".cbsp21/patches/covers-none.json", ["unrelated/x.py"])
+
+    near = near_miss_candidates([c, b, a], shared)
+    assert [(str(p).replace("\\", "/"), n) for p, n in near] == [
+        (".cbsp21/patches/covers-both.json", 2),
+        (".cbsp21/patches/covers-one.json", 1),
+    ]
+
+
+def test_near_miss_excludes_cbsp21_internals_from_the_count():
+    """A manifest must not look like a near miss by declaring itself.
+
+    Same exclusion selection uses -- otherwise every manifest would appear to
+    cover any diff that contains a manifest.
+    """
+    m = _cand(".cbsp21/patches/self.json", [".cbsp21/patches/self.json"])
+    assert near_miss_candidates([m], [".cbsp21/patches/self.json"]) == []
+
+
+def test_near_miss_is_empty_when_diff_is_all_internal():
+    m = _cand(".cbsp21/patches/x.json", ["src/a.py"])
+    assert near_miss_candidates([m], [".cbsp21/patches/x.json"]) == []
