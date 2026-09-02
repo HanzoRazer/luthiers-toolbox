@@ -318,11 +318,21 @@ class FretboardEcosphere(BaseModel):
         half_nut = params.nut_width_mm / 2.0
         half_heel = heel_width / 2.0
 
+        # Outline must carry the same rake as the frets: a square nut edge on a
+        # multiscale board contradicts the fret layout (the NUT layer is drawn
+        # from corners 0 and 3, so a square outline draws a square nut).
+        nut_bass_x, nut_treble_x = cls._nut_rake_x(fret_lines)
+        if fret_lines and fret_lines[-1].points:
+            heel_bass_x = fret_lines[-1].points[0].x_mm + params.extension_mm
+            heel_treble_x = fret_lines[-1].points[-1].x_mm + params.extension_mm
+        else:
+            heel_bass_x = heel_treble_x = total_length
+
         outline = [
-            (0.0, -half_nut),           # Nut bass
-            (total_length, -half_heel), # Heel bass
-            (total_length, half_heel),  # Heel treble
-            (0.0, half_nut),            # Nut treble
+            (nut_bass_x, -half_nut),      # Nut bass
+            (heel_bass_x, -half_heel),    # Heel bass
+            (heel_treble_x, half_heel),   # Heel treble
+            (nut_treble_x, half_nut),     # Nut treble
         ]
 
         # Compute max fret angle
@@ -524,6 +534,19 @@ class FretboardEcosphere(BaseModel):
 
         return fret_lines
 
+    @staticmethod
+    def _nut_rake_x(fret_lines: List[FretLine]) -> Tuple[float, float]:
+        """Return (bass_x, treble_x) of the nut, read off fret 0.
+
+        Fret 0 is the nut line, so its bass/treble endpoints already carry the
+        per-string offset that makes the perpendicular fret square. Returns
+        (0.0, 0.0) when fret 0 is absent or has no points.
+        """
+        for fl in fret_lines:
+            if fl.fret_number == 0 and fl.points:
+                return (fl.points[0].x_mm, fl.points[-1].x_mm)
+        return (0.0, 0.0)
+
     @classmethod
     def _compute_string_paths(
         cls,
@@ -536,6 +559,13 @@ class FretboardEcosphere(BaseModel):
 
         half_nut = params.nut_width_mm / 2.0
         half_heel = heel_width_mm / 2.0
+
+        # Nut rake. On a multiscale board the perpendicular fret is only square
+        # if each string's nut sits at X_p - d(p, S_i); _compute_fret_lines()
+        # already encodes that as bass_offset/treble_offset, and fret 0 IS the
+        # nut line, so read the rake off it rather than re-deriving it here.
+        # Standard (single-scale) boards give 0.0 on both ends, so nothing moves.
+        nut_bass_x, nut_treble_x = cls._nut_rake_x(fret_lines)
 
         for string_idx in range(params.string_count):
             if params.string_count > 1:
@@ -568,11 +598,15 @@ class FretboardEcosphere(BaseModel):
                     pt = fl.points[string_idx]
                     intersections.append((pt.x_mm, pt.y_mm))
 
+            # Interpolate the rake across the board with the same parameter the
+            # fret builder uses for x, so strings stay consistent with frets.
+            nut_x = nut_bass_x + (nut_treble_x - nut_bass_x) * s
+
             string_paths.append(StringPath(
                 string_index=string_idx,
                 scale_length_mm=scale,
-                nut_position=(0.0, y_nut),
-                bridge_position=(scale + offset, y_bridge),
+                nut_position=(nut_x, y_nut),
+                bridge_position=(nut_x + scale + offset, y_bridge),
                 fret_intersections=intersections,
                 intonation_offset_mm=offset,
             ))

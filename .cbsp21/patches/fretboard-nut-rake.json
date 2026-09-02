@@ -1,0 +1,49 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "FRETBOARD_NUT_RAKE",
+  "title": "Multiscale: nut, strings, bridge and outline must carry the frets' rake",
+  "intent": "On a multiscale fretboard the perpendicular fret is only square if each string's nut sits at X_p - d(p, S_i) -- i.e. the nut is ANGLED. _compute_fret_lines() encodes exactly that as bass_offset/treble_offset, but _compute_string_paths() hardcoded nut_position=(0.0, y_nut) and the outline hardcoded x=0.0 at the nut, so the FRETS layer described an angled-nut instrument while the NUT, STRINGS, BRIDGE and FRETBOARD_OUTLINE layers described a square-nut one. A builder working from that DXF places the nut ~9.5mm out on each edge (19mm of missing rake on a 686/648 board) and the instrument plays sharp on the bass side and flat on the treble.",
+  "change_type": "fix",
+  "behavior_change": "Multiscale geometry only. String nut/bridge positions and the outline's four corners now carry the same rake as the frets. Standard (single-scale) boards are provably unchanged: the rake reads 0.0 on both ends, so nut_position stays (0.0, y) and the outline stays square - asserted by test_standard_scale_is_unaffected.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/fretboard-nut-rake.json",
+      "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "services/api/tests/test_fretboard_ecosphere.py"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "services/api/tests/test_fretboard_ecosphere.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Added FretboardEcosphere._nut_rake_x(fret_lines) -> (bass_x, treble_x), which reads the rake off fret 0. Fret 0 IS the nut line, so its endpoints already carry the offset that makes the perpendicular fret square; sourcing from it avoids duplicating the offset math and stays correct for any temperament and any perpendicular_fret. Returns (0.0, 0.0) when fret 0 is missing or empty. (2) _compute_string_paths(): nut_position is now (nut_x, y_nut) and bridge_position (nut_x + scale + offset, y_bridge), where nut_x interpolates the rake across the board using the same parameter s the fret builder uses for x. This one change fixes three DXF layers at once, because the STRINGS layer reads sp.nut_position/bridge_position, the NUT string-slot circles read sp.nut_position, and the BRIDGE line reads string_paths[0]/[-1].bridge_position. (3) The outline's four corners now use the raked nut x at each edge and the last fret's per-side x plus extension_mm at the heel; this fixes FRETBOARD_OUTLINE and, because the NUT line is drawn from outline corners 0 and 3, the nut line itself. total_length_mm is left centre-based so the scalar summary field keeps its meaning.",
+    "why_not_redundant": "The frets were already correct - this is not a fret-math change. The defect was that four other layers did not inherit the rake the frets encode, making the document internally inconsistent: measured against a square nut, every fret on the bass string was 9.50mm short and every fret on the treble string 9.50mm long, at every fret, which is the signature of a missing constant translation rather than a math error. Verified after the fix: for all 6 strings at frets 1/12/24, (fret_x - nut_x) equals S_i*(1-2^(-n/12)) to +0.000mm."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/test_fretboard_ecosphere.py::TestMultiscaleNutRake -q -> 3 failed, 1 passed BEFORE the fix (the 3 witness the bug; the 4th is the standard-scale regression guard, which correctly passes both before and after)",
+      "py -3.11 -m pytest tests/test_fretboard_ecosphere.py -q -> 31 passed after the fix (27 pre-existing + 4 new)",
+      "py -3.11 -m pytest tests/*fret*.py app/tests/test_fan_fret_perpendicular.py app/tests/integration/test_fretboard_ecosphere_roundtrip.py app/tests/test_cam_fret_slots_export.py -q -> (recorded at commit)",
+      "direct geometry probe: nut x per string = [-9.5, -5.7, -1.9, 1.9, 5.7, 9.5]; bridge x = [676.5 ... 657.5]; 676.5-(-9.5)=686.0 bass and 657.5-9.5=648.0 treble; outline nut edge (-9.5,-21) -> (9.5,21)"
+    ],
+    "notes": "Found while validating a fan-fret DXF the owner had opened in CAD. The file's FRETS layer was correct; NUT/STRINGS/BRIDGE/FRETBOARD_OUTLINE were not. This module carries no governance header and is not a protected baseline (contrast app/cam/dxf_writer.py). Separate and independent from the DxfWriter extents defect on branch fix/dxf-writer-extents; the two touch different files and do not conflict."
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "intent": "Add _nut_rake_x() and apply the frets' rake to string nut/bridge positions and to the outline's four corners, so every layer describes the same instrument.",
+      "risk": "medium",
+      "behavior_change": "multiscale only; standard scale provably unchanged"
+    },
+    {
+      "path": "services/api/tests/test_fretboard_ecosphere.py",
+      "intent": "TestMultiscaleNutRake: fret distance measured from each string's OWN nut equals that string's scale formula; the nut is raked 19mm at p=12; outline nut corners match fret 0; and a standard board is untouched.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}

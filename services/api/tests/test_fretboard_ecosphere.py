@@ -410,3 +410,75 @@ class TestKernelDelegation:
         pos_12 = eco_12.fret_lines[7].center_x_mm
         # The deviation should be measurable (Pythagorean 5th is ~2 cents sharper)
         assert abs(pos_pyth - pos_12) > 0.1
+
+
+class TestMultiscaleNutRake:
+    """The nut, strings, bridge and outline must share the frets' rake.
+
+    A multiscale board with a perpendicular fret requires an ANGLED nut: for
+    fret p to be square, string i's nut must sit at X_p - d(p, S_i). The fret
+    builder applies that offset (bass_offset/treble_offset); _compute_string_paths
+    and the outline previously hardcoded x=0 at the nut, so the frets described
+    an angled-nut instrument while every other layer described a square-nut one.
+    A DXF built from that puts the nut ~9.5mm out of place on each edge and the
+    instrument plays sharp on the bass side and flat on the treble.
+    """
+
+    @staticmethod
+    def _fan() -> FretboardEcosphere:
+        return FretboardEcosphere.compute(FretboardInput(
+            scale_type=ScaleType.MULTISCALE,
+            scale_length_mm=648.0,
+            bass_scale_length_mm=686.0,
+            fret_count=24,
+            string_count=6,
+            perpendicular_fret=12,
+            temperament=TemperamentType.EQUAL_12,
+        ))
+
+    def test_fret_distance_from_own_nut_matches_own_scale(self):
+        """Physical invariant: fret n sits at S*(1-2^(-n/12)) from ITS OWN nut."""
+        eco = self._fan()
+        for sp in eco.string_paths:
+            i = sp.string_index
+            nut_x = sp.nut_position[0]
+            for n in (1, 7, 12, 24):
+                fret_x = eco.get_fret_line(n).points[i].x_mm
+                expected = sp.scale_length_mm * (1 - 2 ** (-n / 12.0))
+                assert abs((fret_x - nut_x) - expected) < 0.01, (
+                    f"string {i} fret {n}: {fret_x - nut_x:.2f}mm from nut, "
+                    f"expected {expected:.2f}mm for scale {sp.scale_length_mm}mm"
+                )
+
+    def test_nut_is_raked_not_square(self):
+        """Bass and treble nut x must differ by d(p,Sb) - d(p,St) = 19mm at p=12."""
+        eco = self._fan()
+        bass_nut = eco.string_paths[0].nut_position[0]
+        treble_nut = eco.string_paths[-1].nut_position[0]
+        assert abs((treble_nut - bass_nut) - 19.0) < 0.01, (
+            f"nut rake is {treble_nut - bass_nut:.2f}mm, expected 19.00mm"
+        )
+
+    def test_outline_nut_corners_share_the_rake(self):
+        """FRETBOARD_OUTLINE and the NUT line derive from outline corners 0 and 3."""
+        eco = self._fan()
+        nut_bass_x = eco.outline_points[0][0]
+        nut_treble_x = eco.outline_points[3][0]
+        assert abs(nut_bass_x - nut_treble_x) > 1.0, (
+            "outline nut edge is square; it must be raked on a multiscale board"
+        )
+        fret0 = eco.get_fret_line(0)
+        assert abs(nut_bass_x - fret0.points[0].x_mm) < 0.01
+        assert abs(nut_treble_x - fret0.points[-1].x_mm) < 0.01
+
+    def test_standard_scale_is_unaffected(self):
+        """Single scale => zero rake; this fix must not move a standard board."""
+        eco = FretboardEcosphere.compute(FretboardInput(
+            scale_type=ScaleType.STANDARD, scale_length_mm=648.0,
+            fret_count=24, string_count=6,
+        ))
+        for sp in eco.string_paths:
+            assert abs(sp.nut_position[0]) < 1e-9
+            assert abs(sp.bridge_position[0] - 648.0) < 1e-9
+        assert abs(eco.outline_points[0][0]) < 1e-9
+        assert abs(eco.outline_points[3][0]) < 1e-9
