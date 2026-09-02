@@ -1,0 +1,61 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CORRECT_TEST_COLLECTION_CLAIM",
+  "title": "Correct a merged audit claim: services/api/tests/ IS collected, by Core CI",
+  "intent": "docs/audit/rmos_manufacturing_authority_map_001.md (merged via PR #328) asserts that services/api/tests/ is 'not collected by CI' and that its witnesses were 'green locally and unenforced remotely'. That is wrong. Correct it in place, as a visible correction rather than a silent edit, because the claim is merged and may already have been cited.",
+  "change_type": "docs",
+  "behavior_change": "None. One documentation section corrected. No workflow, code, test or gate changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/correct-test-collection-claim.json",
+      "docs/audit/rmos_manufacturing_authority_map_001.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/correct-test-collection-claim.json",
+      "docs/audit/rmos_manufacturing_authority_map_001.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "The section 'These tests were not run by any gate' becomes 'These tests are collected -- by Core CI, not by API Tests', carrying an explicit CORRECTION banner naming the original wrong claim, the mechanism of the error, what it changes, what it does not change, and the generalisable failure. The coverage table gains a column naming the collecting workflow for each tree.",
+    "why_not_redundant": "The original error was a stopped search, not a typo. api_tests.yml:64 runs `cd services/api && python -m pytest -q app/tests/`, and every other services/api runner names individual files -- so each workflow inspected pointed the same way. core_ci.yml:80-82 was not inspected: it does `cd services/api` then a BARE `python -m pytest -q`, which with testpaths=tests collects the whole tree. Grepping for path arguments finds every runner that names a path and silently misses the one that does not, which is precisely the runner with the widest scope. Recording the mechanism is the point of the correction; recording only the corrected fact would leave the next negative-coverage claim exposed to the same method error."
+  },
+  "verification": {
+    "commands_run": [
+      "core_ci.yml:79-82 read directly: 'Run pytest' -> `cd services/api` then `python -m pytest -q` with no path argument",
+      "services/api/pytest.ini:10 -> testpaths = tests",
+      "EXECUTED, not inferred: cd services/api && py -3.11 -m pytest --collect-only -q -> 8869 tests collected (plus 1 pre-existing collection error in tests/test_pg_pool.py, unrelated and local-env). That figure matches the ~8,384 in the original table, confirming the same tree.",
+      "no other workflow collects services/api/tests broadly: api_dxf_tests, rmos_ci, mvp_golden_gate, publish-images, verify-policy and mesh-pipeline-ci all name individual files",
+      "scope check: the wrong claim appears only in rmos_manufacturing_authority_map_001.md. The PIXEL_* audits merged in PR #339 do not repeat it.",
+      "rmos_prod_audit_001.md's observation about an uncollected app/tests/rmos/ suite is a DIFFERENT path and is unaffected"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+      "intent": "Correct the collection claim in place, preserving the original wrong statement inside the correction banner so a reader who saw the old text can recognise what changed.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/correct-test-collection-claim.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation correction only. The rmos_ci.yml step added by PR #328 is deliberately left in place: its justification changes from 'nothing else runs these' to 'a named targeted gate that fails loudly on a missing witness', which is still worth having over a broad collector, since it is not wrapped in `if [ -f ... ]` like the adjacent steps."
+  }
+}

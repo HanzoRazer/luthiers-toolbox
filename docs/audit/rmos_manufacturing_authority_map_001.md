@@ -275,26 +275,45 @@ individually, and an inertness witness asserting that **no** module under
 overlay. The registry's entire warranty is that it is a record and not a policy
 source; nothing previously enforced that.
 
-### These tests were not run by any gate
+### These tests are collected — by Core CI, not by "API Tests"
 
-`services/api/tests/` is **not collected by CI**. The "API Tests" workflow runs
-`cd services/api && python -m pytest -q app/tests/` — a different tree. The gap
-is repo-scale, not specific to this audit:
+> **CORRECTION (2026-08-31).** This section previously asserted that
+> `services/api/tests/` is **"not collected by CI"** and that every witness in
+> this PR was *"green locally and unenforced remotely."* **That was wrong**, and
+> it is corrected below rather than edited away, because the claim was merged and
+> may already have been cited.
+>
+> The error was a stopped search. `api_tests.yml:64` runs
+> `cd services/api && python -m pytest -q app/tests/`, and the other
+> `services/api` runners name individual files — so every workflow inspected
+> pointed one way. **`core_ci.yml:80-82` was not inspected**, and it does
+> `cd services/api` followed by a bare `python -m pytest -q`. With
+> `testpaths = tests` in `services/api/pytest.ini`, that collects the whole
+> `services/api/tests/` tree. One line, in a workflow whose name does not suggest
+> API tests, inverted the finding.
 
-| Tree | Test files | Collected by CI |
-| --- | ---: | --- |
-| `services/api/app/tests/` | 34 | yes |
-| `services/api/tests/` | 447 (~8,384 test functions) | **no** |
+| Tree | Test files | Collected by | |
+| --- | ---: | --- | --- |
+| `services/api/app/tests/` | 34 | `api_tests.yml:64` (`app/tests/`) | yes |
+| `services/api/tests/` | 447 (~8,384 test functions) | **`core_ci.yml:82`** (bare `pytest -q`, `testpaths = tests`) | **yes** |
 
-So every witness in this PR was green locally and unenforced remotely, and
-`rmos-ci` passing said nothing about any of it. A **bounded** fix is applied
-here: `rmos_ci.yml` now runs these three files explicitly, and unlike the
-adjacent steps it is not wrapped in `if [ -f ... ]` — a missing witness fails
-the gate rather than skipping quietly.
+**What this changes.** The witnesses in this PR were enforced remotely after all.
+The `rmos_ci.yml` step added here still stands, but its justification changes from
+*"nothing else runs these"* to *"a named, targeted gate that fails loudly on a
+missing witness"* — belt-and-braces over a broad collector, not the only thing
+running them. It is not wrapped in `if [ -f ... ]` like the adjacent steps, so a
+missing witness fails rather than skips, and that remains worth having.
 
-The wider gap is left open deliberately. Collecting 447 files at once is an
-unbounded availability change and belongs to its own order, not to a frozen
-audit snapshot.
+**What this does not change.** No finding in §§1–7 depended on the collection
+claim; they rest on the registry, the route table and runtime witnesses. The
+supplementary observation in `rmos_prod_audit_001.md` about an uncollected
+`app/tests/rmos/` suite is a *different* path and is unaffected.
+
+**Generalisable failure.** A negative claim about CI coverage requires
+enumerating *every* invocation, including bare ones whose collection scope comes
+from config rather than from the command line. Grepping for path arguments finds
+the runners that name a path and silently misses the one that does not — which is
+precisely the runner with the widest scope.
 
 `--emit-skeleton` still prints Stage-1 UNKNOWN. `--emit-stage2` prints the
 overlay to stdout and does not write the registry.
