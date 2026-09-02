@@ -217,6 +217,84 @@ def _declared_size(manifest: Manifest) -> int:
     return sum(_PREFIX_TOKEN_WEIGHT if _is_prefix_token(t) else 1 for t in tokens)
 
 
+class NoOwnedManifest(Exception):
+    """Raised when a diff brings no manifest of its own. See owned_candidates."""
+
+
+def owned_candidates(
+    candidates: List[Candidate],
+    changed_files: List[str],
+) -> List[Candidate]:
+    """CBSP21-NOBORROW-001 — restrict candidates to manifests this diff brought.
+
+    A manifest satisfies a PR only if the PR **adds or modifies it**. "Own"
+    means "brought it", not "happens to cover the same files".
+
+    Why coverage cannot be the test. Before this predicate existed, a PR touching
+    only ``packages/client/package.json`` and its lockfile scored a genuine 100%
+    against ``dep-sec-pr281-types-node.json`` -- a manifest authored for an
+    entirely different PR, which legitimately declares those two files for its
+    own change. Nothing was coincidental about the coverage: two dependency bumps
+    really do touch the same two files, so a file-set rule is structurally blind
+    to the thing that matters. PRs #344, #345 and #346 merged that way, and #296
+    (a supabase bump that silently reverted zod 4 to 3) passed the same route --
+    the undeclared change a manifest exists to surface went undeclared because no
+    manifest had to be written.
+
+    The distinguishing fact is **authorship, not content**. Two manifests may
+    declare identical files; the one belonging to this PR is the one this PR
+    brought. That is visible in the diff the gate already computes, so it needs
+    no schema field, no backfill, and no bot cooperation.
+
+    Deliberately kept out of ``select_manifest``: that function ranks, this one
+    filters, and the eighteen existing selection tests exercise ranking with
+    changed-file sets that never include a manifest path. Folding ownership into
+    ranking would have broken all of them and buried a policy change inside a
+    scoring function.
+
+    Returns the subset of ``candidates`` whose path appears in ``changed_files``.
+    An empty result means the diff brought no manifest -- the caller should fail
+    with the refuse-to-borrow message rather than fall back to ranking.
+    """
+    changed = {_norm(f) for f in changed_files if f and f.strip()}
+    return [(path, manifest) for path, manifest in candidates
+            if _norm(str(path)) in changed]
+
+
+def near_miss_candidates(
+    candidates: List[Candidate],
+    changed_files: List[str],
+    declared_matcher: Optional[DeclaredMatcher] = None,
+) -> List[Tuple[Path, int]]:
+    """Manifests that WOULD have covered this diff but were not brought by it.
+
+    The actionable subset when ownership fails. Listing all candidates (119 on
+    main) is noise; listing the ones that would have been borrowed answers the
+    only question the author has -- "what was the gate about to accept for me,
+    and why is it refusing now?"
+
+    It also teaches the fix by showing the near-miss: these manifests cover your
+    files, they belong to other changes, and that overlap is precisely why the
+    old selector passed you. Author your own instead.
+
+    Returns (path, covered_count) sorted by coverage descending, then path, so
+    the most tempting borrow appears first. ``.cbsp21/`` internals are excluded
+    from the count for the same reason selection excludes them: a manifest must
+    not appear to cover a diff merely by declaring itself.
+    """
+    matcher_factory = declared_matcher or default_declared_matcher
+    signal = [f for f in changed_files if f and not is_cbsp21_internal(f)]
+    if not signal:
+        return []
+    scored: List[Tuple[Path, int]] = []
+    for path, manifest in candidates:
+        matcher = matcher_factory(manifest)
+        covered = sum(1 for f in signal if matcher(f))
+        if covered:
+            scored.append((path, covered))
+    return sorted(scored, key=lambda t: (-t[1], _norm(str(t[0]))))
+
+
 def select_manifest(
     candidates: List[Candidate],
     changed_files: List[str],

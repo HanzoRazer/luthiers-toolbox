@@ -23,6 +23,8 @@ from cbsp21_manifest_discovery import (  # noqa: E402
     discover_manifest_paths,
     is_cbsp21_internal,
     load_candidates,
+    near_miss_candidates,
+    owned_candidates,
     select_manifest,
 )
 
@@ -286,3 +288,192 @@ def test_prefix_manifest_still_wins_when_it_alone_covers_the_diff(tmp_path: Path
         candidates, ["services/api/app/ibg_repository/x.py",
                      "services/api/app/ibg_repository/y.py"])
     assert manifest["patch_id"] == "PREFIX"
+
+
+# ---------------------------------------------------------------------------
+# CBSP21-NOBORROW-001 — ownership predicate
+#
+# The defect: a PR touching only package.json + package-lock.json scored a
+# GENUINE 100% against dep-sec-pr281-types-node.json, a manifest authored for a
+# different PR that legitimately declares those two files. Coverage was never
+# coincidental, so no file-set rule can catch it. Ownership is about authorship.
+# ---------------------------------------------------------------------------
+
+
+def _cand(path: str, files: list) -> tuple:
+    return (Path(path), {"files": [{"path": f} for f in files]})
+
+
+def test_noborrow_diff_without_own_manifest_owns_nothing():
+    """The #344 reproduction. Must yield zero owned candidates.
+
+    The foreign manifest declares BOTH changed files -- full coverage -- and is
+    still not owned, which is the entire point of the predicate.
+    """
+    foreign = _cand(
+        ".cbsp21/patches/dep-sec-pr281-types-node.json",
+        ["packages/client/package.json", "packages/client/package-lock.json"],
+    )
+    changed = ["packages/client/package.json", "packages/client/package-lock.json"]
+    assert owned_candidates([foreign], changed) == []
+
+
+def test_noborrow_diff_that_brought_its_manifest_owns_it():
+    mine = _cand(".cbsp21/patches/axios-1200-bump.json", ["packages/client/package.json"])
+    changed = ["packages/client/package.json", ".cbsp21/patches/axios-1200-bump.json"]
+    assert len(owned_candidates([mine], changed)) == 1
+
+
+def test_noborrow_selects_only_the_brought_manifest_among_many():
+    """A foreign manifest with BETTER coverage must still lose to ownership."""
+    foreign = _cand(
+        ".cbsp21/patches/other.json",
+        ["packages/client/package.json", "packages/client/package-lock.json"],
+    )
+    mine = _cand(".cbsp21/patches/mine.json", ["packages/client/package.json"])
+    changed = [
+        "packages/client/package.json",
+        "packages/client/package-lock.json",
+        ".cbsp21/patches/mine.json",
+    ]
+    owned = owned_candidates([foreign, mine], changed)
+    # Normalise: Path stringifies with backslashes on Windows.
+    assert [str(p).replace("\\", "/") for p, _ in owned] == [
+        ".cbsp21/patches/mine.json"
+    ]
+
+
+def test_noborrow_path_separators_normalise():
+    """Windows git output uses backslashes; ownership must not depend on that."""
+    mine = _cand(".cbsp21/patches/mine.json", ["a.py"])
+    assert len(owned_candidates([mine], ["a.py", ".cbsp21\patches\mine.json"])) == 1
+
+
+def test_noborrow_ignores_blank_entries_in_the_diff():
+    mine = _cand(".cbsp21/patches/mine.json", ["a.py"])
+    assert owned_candidates([mine], ["", "   ", "a.py"]) == []
+
+
+# ---------------------------------------------------------------------------
+# CBSP21-NOBORROW-001, second increment.
+#
+# Invariant, stated mechanically to remove any "added vs modified" edge case:
+#
+#   A manifest already present on the base branch is ineligible to satisfy the
+#   current PR unless the current PR modifies that manifest.
+#
+# Since the diff lists a manifest only when the PR adds OR modifies it, "appears
+# in the diff" expresses that invariant exactly, with no need to distinguish the
+# two cases.
+# ---------------------------------------------------------------------------
+
+
+def test_base_branch_manifest_is_ineligible_unless_this_pr_modifies_it():
+    """The invariant, stated directly.
+
+    `historical` is on the base branch and fully covers the diff. It is
+    ineligible because this PR did not touch it. The moment the PR modifies it,
+    it becomes eligible -- same manifest, same coverage, different provenance.
+    """
+    historical = _cand(".cbsp21/patches/older-pr.json", ["src/thing.py"])
+    diff_without = ["src/thing.py"]
+    diff_with = ["src/thing.py", ".cbsp21/patches/older-pr.json"]
+
+    assert owned_candidates([historical], diff_without) == []
+    assert len(owned_candidates([historical], diff_with)) == 1
+
+
+def test_non_dependency_borrow_is_closed_too():
+    """The defect is repository-wide, not Dependabot-specific.
+
+    Reproduced on main before this fix: a diff touching only
+    services/api/app/rmos/manufacturing_authority_registry.json borrowed
+    .cbsp21/patches/rmos-vcarve-converge-001.json and scored 100%. Dependency
+    PRs were where it was observed, not the boundary of where it works.
+    """
+    rmos_historical = _cand(
+        ".cbsp21/patches/rmos-vcarve-converge-001.json",
+        ["services/api/app/rmos/manufacturing_authority_registry.json"],
+    )
+    changed = ["services/api/app/rmos/manufacturing_authority_registry.json"]
+    assert owned_candidates([rmos_historical], changed) == []
+
+
+def test_many_historical_manifests_covering_the_same_files_all_lose():
+    """Only the brought manifest qualifies, however many others cover the diff.
+
+    Guards the ranking-shaped intuition that a "best" historical manifest might
+    still win. Ownership is not a tie-break applied after ranking; it filters
+    before ranking runs.
+    """
+    shared = ["packages/client/package.json", "packages/client/package-lock.json"]
+    historicals = [
+        _cand(f".cbsp21/patches/historical-{i}.json", shared) for i in range(5)
+    ]
+    assert owned_candidates(historicals, shared) == []
+
+    mine = _cand(".cbsp21/patches/mine.json", shared)
+    owned = owned_candidates(historicals + [mine], shared + [".cbsp21/patches/mine.json"])
+    assert [str(p).replace("\\", "/") for p, _ in owned] == [".cbsp21/patches/mine.json"]
+
+
+def test_historical_manifest_still_valid_for_its_own_original_pr():
+    """Tightening the selector must not retroactively invalidate old evidence.
+
+    Replays the diff of the PR that authored the manifest -- which included the
+    manifest itself -- and confirms it is still owned. Historical manifests
+    remain valid for the change they describe.
+    """
+    original = _cand(
+        ".cbsp21/patches/dep-sec-pr281-types-node.json",
+        ["packages/client/package.json", "packages/client/package-lock.json"],
+    )
+    original_diff = [
+        "packages/client/package.json",
+        "packages/client/package-lock.json",
+        ".cbsp21/patches/dep-sec-pr281-types-node.json",
+    ]
+    assert len(owned_candidates([original], original_diff)) == 1
+
+
+def test_non_dependency_pr_with_its_own_manifest_is_unaffected():
+    """Ordinary governed work keeps passing; the rule is change-based, not author- or type-based."""
+    mine = _cand(
+        ".cbsp21/patches/some-feature.json",
+        ["services/api/app/feature.py", "services/api/tests/test_feature.py"],
+    )
+    changed = [
+        "services/api/app/feature.py",
+        "services/api/tests/test_feature.py",
+        ".cbsp21/patches/some-feature.json",
+    ]
+    assert len(owned_candidates([mine], changed)) == 1
+
+
+def test_near_miss_lists_what_would_have_been_borrowed():
+    """The actionable subset when ownership fails, ranked by temptation."""
+    shared = ["packages/client/package.json", "packages/client/package-lock.json"]
+    a = _cand(".cbsp21/patches/covers-both.json", shared)
+    b = _cand(".cbsp21/patches/covers-one.json", [shared[0]])
+    c = _cand(".cbsp21/patches/covers-none.json", ["unrelated/x.py"])
+
+    near = near_miss_candidates([c, b, a], shared)
+    assert [(str(p).replace("\\", "/"), n) for p, n in near] == [
+        (".cbsp21/patches/covers-both.json", 2),
+        (".cbsp21/patches/covers-one.json", 1),
+    ]
+
+
+def test_near_miss_excludes_cbsp21_internals_from_the_count():
+    """A manifest must not look like a near miss by declaring itself.
+
+    Same exclusion selection uses -- otherwise every manifest would appear to
+    cover any diff that contains a manifest.
+    """
+    m = _cand(".cbsp21/patches/self.json", [".cbsp21/patches/self.json"])
+    assert near_miss_candidates([m], [".cbsp21/patches/self.json"]) == []
+
+
+def test_near_miss_is_empty_when_diff_is_all_internal():
+    m = _cand(".cbsp21/patches/x.json", ["src/a.py"])
+    assert near_miss_candidates([m], [".cbsp21/patches/x.json"]) == []

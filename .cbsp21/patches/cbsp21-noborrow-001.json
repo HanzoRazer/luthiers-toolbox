@@ -1,0 +1,143 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CBSP21_NOBORROW_001",
+  "title": "CBSP21-NOBORROW-001: a manifest satisfies a PR only if the PR brought it",
+  "intent": "CBSP21 auto-discovery selected the best-covering manifest with no check on authorship, so a PR could be satisfied by a manifest written for an entirely different change. Close it: ownership means the PR's diff adds or modifies the manifest.",
+  "change_type": "fix",
+  "behavior_change": "A PR that brings no manifest of its own now FAILS both CBSP21 gates instead of borrowing one. Measured blast radius over the 60 most recent merged PRs: 12 would newly fail (20%), all Dependabot two-file dependency bumps, ZERO human-authored PRs. Legitimate PRs that author their own manifest are unaffected. No change to coverage computation, thresholds, or what CBSP21 checks -- only to which manifest may satisfy a PR.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/TEMPLATE-dependency-bump.json",
+      ".cbsp21/patches/cbsp21-noborrow-001.json",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/check_cbsp21_gate.py",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_noborrow_checker.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/TEMPLATE-dependency-bump.json",
+      ".cbsp21/patches/cbsp21-noborrow-001.json",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/cbsp21_manifest_discovery.py",
+      "scripts/ci/check_cbsp21_gate.py",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "scripts/ci/test_cbsp21_noborrow_checker.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New owned_candidates() in cbsp21_manifest_discovery.py filters candidates to those whose path appears in the diff. Both gates apply it BEFORE select_manifest and fail with a refuse-to-borrow message when nothing is owned. Kept deliberately OUT of select_manifest: that function ranks, this one filters, and the eighteen existing selection tests exercise ranking with changed-file sets that never include a manifest path -- folding ownership into ranking would have broken all eighteen and buried a policy change inside a scoring function. Added .cbsp21/TEMPLATE-dependency-bump.json for the humans who must now author a manifest per bump; it lives OUTSIDE patches/ because discovery globs patches/*.json with no template exclusion, so a template kept there would itself be a live candidate. Five new tests. Second increment: diagnostic split across both gates, plus five regressions including the non-dependency rmos borrow that proves the defect is repository-wide rather than Dependabot-specific.",
+    "why_not_redundant": "Coverage cannot detect this and the first proposed fix proved it. An ownership rule defined as 'declares every changed file outside .cbsp21/' passes #344 perfectly, because dep-sec-pr281-types-node.json genuinely declares packages/client/package.json and package-lock.json for its own PR. Two dependency bumps really do touch the same two files, so the coverage was never coincidental and no file-set rule is capable of separating owned from borrowed. Had that rule been built, its blast-radius measurement would have read 0 newly-failing PRs and looked like evidence of a safe tighten, when it was evidence the predicate did nothing. The distinguishing fact is authorship, and authorship is visible in the diff the gate already computes."
+  },
+  "verification": {
+    "commands_run": [
+      "GROUNDED against origin/main e0e2124c; 119 candidate manifests, 0 malformed",
+      "DEFECT REPRODUCED FIRST on unmodified main: changed-files [packages/client/package.json, package-lock.json] -> borrows dep-sec-pr281-types-node.json -> GATE PASSED",
+      "stale-tree trap avoided: the same reproduction run from the primary checkout (on branch smart-guitar-cavity-geometry-1, only 8 manifests visible) returned RED and would have reported the live defect as already fixed",
+      "BLAST RADIUS measured BEFORE the change: 60 most recent merged PRs, 12 would newly fail (20%), all build(deps*) two-file bumps, 0 human-authored. Spot-checked #296/#298/#319 -> cbsp21 pass=2 fail=0, so they are newly-failing not already-failing.",
+      "ACCEPTANCE 1 (#344 reproduction MUST be RED): fails with the refuse-to-borrow message -- PASS",
+      "ACCEPTANCE 2 (same diff WITH its own manifest): PASSED",
+      "ACCEPTANCE 3 (no regression, real PR #350 diff): PASSED",
+      "ACCEPTANCE 4 (hard non-scope): git status on dep-sec-pr281-types-node.json is empty -- untouched",
+      "ACCEPTANCE 5 (both gates agree): owned_candidates returns 0 for the #344 shape and 1 when the manifest is brought, and both gates call it before selection",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 23 passed (18 pre-existing unchanged + 5 new)",
+      "one test bug of my own, caught and fixed: Path stringifies with backslashes on Windows, so an ownership assertion compared against a forward-slash literal and failed. The predicate was correct; the assertion was not.",
+      "SECOND INCREMENT (post-review). Review of the branch found a defect in the fix itself: a PR that OWNS its manifest but under-covers reported 'No applicable patch manifest found' -- false and misleading, since a manifest was found and did belong to the PR. Ownership filtering had made that branch reachable for a new reason without updating its message.",
+      "diagnostic split applied to BOTH gates: ownership failure ('declares no CBSP21 manifest of its own') is now distinct from coverage failure ('your manifest declares none of the changed files ... This is a COVERAGE failure, not an ownership failure').",
+      "invariant stated mechanically: a manifest already present on the base branch is ineligible unless the current PR modifies it. Because a diff lists a manifest only when the PR adds OR modifies it, 'appears in the diff' expresses that exactly, with no added-vs-modified edge case.",
+      "five regressions added: base-branch-ineligibility invariant; the NON-DEPENDENCY rmos borrow (reproduced on main: a diff touching only manufacturing_authority_registry.json borrowed rmos-vcarve-converge-001.json at 100%); five historical manifests covering the same files all losing to one brought manifest; a historical manifest still owned when replaying its ORIGINAL PR's diff; an ordinary non-dependency PR with its own manifest unaffected.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 28 passed (18 pre-existing + 5 from increment 1 + 5 new)",
+      "acceptance re-run after the second increment: #344 reproduction RED, #350 diff PASSED, dep-sec-pr281-types-node.json untouched, self-test PASSED against the full origin/main..HEAD diff",
+      "harness error caught during self-test: `git diff --cached --name-only` lists only the second increment's staged files, omitting the manifest committed in increment 1, so the gate correctly reported an ownership failure. The rule was right; the file list was not.",
+      "RULED and deliberately NOT built: dependency identity (change_kind/dependency/from/to). Authorship is the broader discriminator -- it closes the non-dependency borrow too -- and dependency/from/to would be self-asserted unless independently verified against the lockfile diff, which is a separate control (dependency diff verification), not this one.",
+      "R1 CLOSURE (CBSP21-NOBORROW-001-R1, test-only): added scripts/ci/test_cbsp21_noborrow_checker.py driving the REAL gate scripts against a synthetic Git base->head. NB-014 (no owned manifest -> provenance diagnostic), NB-015 (owned but under-covers -> coverage diagnostic), NB-020 (own in-diff manifest selected over a fully-covering historical one), plus a coverage-gate lockstep case. 4 passed. No checker code changed.",
+      "R1 before/after witness reproduced against MAIN's checker vs this branch's, both directions: dependency (package.json+lockfile) and non-dependency (manufacturing_authority_registry.json). MAIN rc=0 (BORROW / false green) in both cases; this branch rc=1 (FAIL-CLOSED) in both. Confirms the fix is general, not Dependabot-specific.",
+      "R1 note (flagged, not fixed here): no CI workflow currently executes scripts/ci/test_cbsp21_* (core_ci runs only test_check_contracts_governance.py; cbsp21_gate.yml runs the gate, not pytest). These tests are durable regression pins; wiring them into CI is a separate CBSP21-invocation increment.",
+      "THIRD INCREMENT (post-review #2). All three assessment items were real. I initially recorded the third as a fictional filename because scripts/ci/test_cbsp21_noborrow_checker.py did not exist when I searched -- it was being authored concurrently by a parallel Cursor Agent session on this same branch (1de9e9f8) and had not yet been pushed. CORRECTED: not fiction, work in flight. Absence from my checkout was evidence about my checkout, not about the repository.",
+      "CI status re-checked rather than assumed unknown: PR #352 is 36 pass / 0 fail / 1 skipping. The ownership check already ran in CI against CI's own changed-file computation and this PR's own gates went green -- the self-test executing in the real environment.",
+      "CONFIRMED HOLLOW GUARANTEE: scripts/ci/test_cbsp21_manifest_discovery.py was run by NO workflow. core_ci.yml:50 names exactly one scripts/ci/ file; there is no root testpaths and no repo-root bare pytest. All 31 tests, including the #344 borrow reproduction, existed without executing. A borrow-fix whose own regression test never runs is the defect this PR exists to remove, recursively. Wired into core_ci.yml as a sibling step.",
+      "near-miss diagnostics added: on ownership failure the gate now names the manifests that WOULD have covered the diff but were not brought, ranked by coverage, capped at five. On the #344 shape this prints NINE candidates -- the borrow was a population, not a single coincidence with dep-sec-pr281-types-node.json.",
+      "changed-file format equivalence: CI computes `git diff --name-only <merge-base> <head>` (forward slashes, space-joined); _norm handles separators; proven empirically by #352's green CBSP21 gate on the Linux runner.",
+      "FOLLOW-UP RECORDED, deliberately not built -- CBSP21-NOBORROW-followup: pin the diff-format equivalence directly. Today it is proven by a passing PR rather than a pinned assertion, so it would break silently if either CI's diff format or the normaliser changed. Belt-and-braces on an already-witnessed property; a clean follow-up, not a hold.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_manifest_discovery.py -q --no-cov -> 31 passed (18 pre-existing + 13 added across three increments)",
+      "INTEGRATION with 1de9e9f8: that commit independently found the same unwired-tests gap and flagged it as a separate increment; this one performs the wiring. The core_ci step therefore globs scripts/ci/test_cbsp21_*.py rather than naming one file, so BOTH test_cbsp21_manifest_discovery.py and the parallel session's test_cbsp21_noborrow_checker.py execute. Naming a single file would have left the other unrun -- the exact defect being closed.",
+      "PARALLEL-SESSION INTEGRATION. A Cursor Agent session pushed 1de9e9f8 to this same branch while this increment was in flight. Rebased onto it, never force-pushed. The manifest conflict was resolved as a UNION of both verification blocks rather than by picking a side.",
+      "CI step globs scripts/ci/test_cbsp21_*.py instead of naming one file. Naming test_cbsp21_manifest_discovery.py alone would have left the parallel session's test_cbsp21_noborrow_checker.py unrun -- reintroducing the exact defect this PR closes, inside the fix for it.",
+      "Running both files together immediately surfaced an integration failure the glob exists to catch: test_nb014_coverage_gate_lockstep errored with UnicodeDecodeError (cp1252) because its subprocess calls did not pin an encoding and the gates print emoji. Verified PRE-EXISTING by checking out 1de9e9f8 alone -- it fails there too, without any changes from this increment. Would pass on the Linux runner and fail for any Windows developer. Fixed with encoding='utf-8', errors='replace' on both calls.",
+      "py -3.11 -m pytest scripts/ci/test_cbsp21_*.py -q --no-cov -> 35 passed (31 + the parallel session's 4)"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/cbsp21_manifest_discovery.py",
+      "intent": "Add owned_candidates() and NoOwnedManifest. Ranking behaviour untouched.",
+      "risk": "medium",
+      "behavior_change": "new predicate; select_manifest unchanged"
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_gate.py",
+      "intent": "Apply ownership before selection; fail with the refuse-to-borrow message.",
+      "risk": "medium",
+      "behavior_change": "a PR with no manifest of its own now fails instead of borrowing"
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_patch_input.py",
+      "intent": "Same predicate, same point in the flow, so the two gates cannot disagree about which manifest is valid.",
+      "risk": "medium",
+      "behavior_change": "same"
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_manifest_discovery.py",
+      "intent": "Five ownership tests, including the #344 reproduction asserting that a FULLY-COVERING foreign manifest is still not owned.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_noborrow_checker.py",
+      "intent": "CBSP21-NOBORROW-001-R1 residual closure: checker-level end-to-end tests (NB-014 provenance-failure diagnostic, NB-015 coverage-failure diagnostic, NB-020 own in-diff manifest selected over a covering historical one) that invoke the real gate scripts against a synthetic Git base->head, pinning user-visible gate behavior rather than only the owned_candidates predicate.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".cbsp21/TEMPLATE-dependency-bump.json",
+      "intent": "Template for the per-bump manifest a human must now author. Its behavior_change field instructs the author to read the lockfile diff and name every package that moved, not only the titled one.",
+      "risk": "low",
+      "behavior_change": "none (not a candidate manifest; lives outside patches/)"
+    },
+    {
+      "path": ".cbsp21/patches/cbsp21-noborrow-001.json",
+      "intent": "This PR's own manifest. Under the new rule it is mandatory, which is the intended demonstration.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run scripts/ci/test_cbsp21_manifest_discovery.py in CI. Nothing else collects scripts/ci/ -- the adjacent step names one file, there is no root testpaths and no repo-root bare pytest -- so without this the ownership regressions exist and never execute.",
+      "risk": "low",
+      "behavior_change": "CI now fails if the manifest-ownership rule regresses. No production path affected."
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_noborrow_checker.py",
+      "intent": "Authored by the parallel session (1de9e9f8). Touched here only to pin subprocess encoding=utf-8, so the suite passes on Windows as well as on the Linux runner.",
+      "risk": "low",
+      "behavior_change": "none (tests); removes a Windows-only false red"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "The medium item is the accepted friction: every dependency PR must now carry a human-authored manifest, and Dependabot cannot write one. That is the intended outcome rather than a side effect -- the defect was precisely that dependency PRs passed without declaring themselves, and PR #296 (a supabase bump that also silently reverted zod 4 to 3) is the evidence that the undeclared content matters. Auto-generating a manifest was rejected: it would have to invent intent, behavior_change and risk_level, which are the fields a human reads, so the gate would fabricate the very judgement it exists to record."
+  }
+}

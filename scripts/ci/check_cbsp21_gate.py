@@ -30,6 +30,8 @@ from typing import List, Set, Tuple, Optional
 from cbsp21_manifest_discovery import (
     AmbiguousManifestSelection,
     load_candidates,
+    near_miss_candidates,
+    owned_candidates,
     select_manifest,
 )
 
@@ -100,25 +102,61 @@ def resolve_manifest(manifest_arg: Optional[str], changed_files: List[str]) -> T
               ".cbsp21/patch_input.json (legacy).")
         sys.exit(1)
 
-    try:
-        selected = select_manifest(candidates, changed_files)
-    except AmbiguousManifestSelection as e:
-        print(f"❌ CBSP21 FAIL: {e}")
-        sys.exit(1)
-    if selected is None:
-        # Auto-discovery only: zero overlap with every candidate (BR-046 /
-        # CBSP21-DIAG-001). Do not attribute the failure to a stale manifest.
-        print("❌ CBSP21 FAIL: No applicable patch manifest found.")
+    # CBSP21-NOBORROW-001: a manifest satisfies a PR only if the PR brought it.
+    owned = owned_candidates(candidates, changed_files)
+    if not owned:
+        print("❌ CBSP21 FAIL: this PR declares no CBSP21 manifest of its own.")
         print()
         print("Changed files:")
         for f in changed_files:
             if f.strip():
                 print(f"  - {f}")
         print()
-        print("No manifest under .cbsp21/patches/ declares any changed file.")
-        print("Create or update a patch manifest for this change:")
-        print("  .cbsp21/patches/<patch-id>.json")
-        print("(legacy .cbsp21/patch_input.json is also accepted.)")
+        near = near_miss_candidates(candidates, changed_files)
+        if near:
+            print("These existing manifests WOULD have covered this diff, but")
+            print("belong to other changes -- this is what the gate used to")
+            print("borrow, and what it now refuses:")
+            for path, covered in near[:5]:
+                print(f"  - {path}  (covers {covered} of your files)")
+            if len(near) > 5:
+                print(f"  ... and {len(near) - 5} more")
+            print()
+        print("A manifest is only valid for the PR that adds or modifies it --")
+        print("otherwise the gate vouches for work nobody declared.")
+        print()
+        print("Add .cbsp21/patches/<patch-id>.json to THIS PR, declaring its files.")
+        print("For a dependency bump, copy .cbsp21/TEMPLATE-dependency-bump.json")
+        sys.exit(1)
+    candidates = owned
+
+    try:
+        selected = select_manifest(candidates, changed_files)
+    except AmbiguousManifestSelection as e:
+        print(f"❌ CBSP21 FAIL: {e}")
+        sys.exit(1)
+    if selected is None:
+        # Diagnostic split (CBSP21-NOBORROW-001). Reaching here now means
+        # something different from what it used to mean: ownership already
+        # passed, so a manifest WAS found and it DOES belong to this PR -- it
+        # simply declares none of the changed files. Saying "no applicable
+        # manifest found" would send the author looking for a missing file they
+        # are already looking at.
+        owned_paths = [str(path) for path, _ in owned]
+        print("❌ CBSP21 FAIL: your manifest declares none of the changed files.")
+        print()
+        print("Manifest brought by this PR:")
+        for op in owned_paths:
+            print(f"  - {op}")
+        print()
+        print("Changed files:")
+        for f in changed_files:
+            if f.strip():
+                print(f"  - {f}")
+        print()
+        print("This is a COVERAGE failure, not an ownership failure. The manifest")
+        print("belongs to this PR; it just does not declare this work. Add the")
+        print("changed files to its files[] and scope.*.")
         sys.exit(1)
     path, manifest = selected
     if manifest.get("schema") != "cbsp21_patch_input_v1":

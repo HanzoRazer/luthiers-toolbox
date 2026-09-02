@@ -1,0 +1,62 @@
+{
+  "_TEMPLATE": "Copy to .cbsp21/patches/<dep>-<version>-bump.json and fill every <ANGLE> field. It lives OUTSIDE .cbsp21/patches/ on purpose: discovery globs patches/*.json with no template exclusion, so a template kept there would be a live candidate. Copy it INTO patches/ under a real name. Delete this _TEMPLATE key in your copy.",
+  "_WHY_THIS_EXISTS": "Dependabot cannot author a manifest, so a human authors one per bump. That is the intended friction: before CBSP21-NOBORROW-001, dependency PRs passed by borrowing a manifest written for a different change, and PR #296 -- a supabase bump that also silently reverted zod 4 to 3 -- passed that way. The undeclared change is exactly what behavior_change exists to surface. Filling this in takes a minute and is the whole point.",
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "<DEP>_<VERSION>_BUMP",
+  "title": "build(deps): bump <dependency> from <old> to <new>",
+  "intent": "<Why this bump. A security advisory, a required peer range, a transitive fix, or routine currency. If it is routine, say so -- 'routine currency, no advisory' is a real answer and better than an invented rationale.>",
+  "change_type": "chore",
+  "behavior_change": "<READ THE LOCKFILE DIFF BEFORE WRITING THIS. State every package whose version changed, not only the one in the title. A bump that also moves or reverts an unrelated dependency is the defect this field exists to catch, and it will not announce itself -- diff against the merge base, not the PR view.>",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/<this-file>.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/<this-file>.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "<The direct bump, plus every incidental version movement in the lockfile.>",
+    "why_not_redundant": "<Why now. If it is Dependabot currency, that is sufficient -- say it plainly.>"
+  },
+  "verification": {
+    "commands_run": [
+      "<lockfile audit: list every package whose version changed, e.g. `git diff <merge-base> -- packages/client/package-lock.json | grep '\"version\"'`>",
+      "<build/test evidence, or an explicit statement that CI is the only verification>"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency version bump.",
+      "risk": "low",
+      "behavior_change": "<none, or name it>"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "<none, or name every incidental movement>"
+    },
+    {
+      "path": ".cbsp21/patches/<this-file>.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "<Dependency bump; no architectural surface. If the lockfile moved anything beyond the titled package, say so here as well as in behavior_change.>"
+  }
+}
