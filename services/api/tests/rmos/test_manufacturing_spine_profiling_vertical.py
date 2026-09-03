@@ -22,11 +22,46 @@ Scope discipline (owner ruling, MANUFACTURING-SPINE-001 G4):
 Placement: this lives beside ``test_profiling_authority_convergence.py``
 (RMOS-PROFILING-CONVERGE-001) because it asserts the same authority boundary
 end to end. No new test directory was created for it.
+
+Assertion classification
+------------------------
+This module is a long-lived witness, so every test carries one of two statuses.
+Read this before "fixing" a failure here -- which status it is decides whether a
+red is a regression or a success.
+
+    STABLE TRUTH -- must stay green. A failure is a real regression in the
+    governed path, and the production change that caused it is the defect.
+
+        test_ms_b01_governed_profiling_route_is_mounted
+        test_ms_b02_b05_specimen_traverses_governed_path
+        test_ms_b03_authority_precedes_generation
+        test_ms_b03_blocking_authority_releases_no_gcode
+        test_ms_b07_released_output_is_traceable_to_its_run
+
+    EXPECTED TO CHANGE ON REMEDIATION -- frozen defects. These assert what is
+    broken or absent TODAY. When the matching remediation order lands they break
+    on purpose, and that break is the signal the work landed. Do NOT repair
+    production to satisfy them; update the assertion and record which order
+    closed it.
+
+        test_ms_f01_ungoverned_bypass_route_is_frozen_as_present   -> MS-F01
+        test_ms_f03_f04_absent_capabilities_are_documented_not_required
+                                                                   -> MS-F03/F04
+
+Private-API dependencies
+------------------------
+Two private names are relied on deliberately, because no public surface exposes
+the persisted artifact: ``app.rmos.runs_v2.store._get_default_store`` (itself a
+re-export of ``store_api``'s, so the fixture's ``store_api._default_store``
+reset does reach it) and that ``_default_store`` singleton. Both are guarded so
+a rename fails with that fact, not with an AttributeError from inside an
+assertion.
 """
 
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 
@@ -48,7 +83,20 @@ BYPASS_PATH = "/api/v1/cam/profile"
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
-    """Isolated TestClient — all persistent state redirected to tmp_path."""
+    """Isolated TestClient — all persistent state redirected to tmp_path.
+
+    NOTE, deliberately unchanged: ``TestClient(app)`` is returned directly rather
+    than entered as a context manager, so app startup handlers do NOT run --
+    ``app.main`` registers four ``@app.on_event("startup")`` hooks (safety
+    validation, DB migrations, and two more). Every assertion in this module
+    passes without them, which is itself part of the frozen truth: the governed
+    profiling path does not depend on startup having run.
+
+    Switching to ``with TestClient(app) as c: yield c`` would exercise a more
+    production-like app, but it also runs migrations and startup validation
+    inside a test fixture -- a scope and risk change this witness is not
+    authorized to make. Recorded here so the gap is visible rather than implied.
+    """
     runs = tmp_path / "rmos_runs"
     runs.mkdir(parents=True, exist_ok=True)
     (runs / "_index.json").write_text("{}", encoding="utf-8")
@@ -77,8 +125,106 @@ def _specimen(**overrides):
     return body
 
 
+# A G-code line starts with an optional line number, then a G or M word.
+_GCODE_LINE = re.compile(r"^\s*(?:N\d+\s+)?[GM]\d+\b", re.MULTILINE)
+
+
 def _looks_like_gcode(text: str) -> bool:
-    return "G21" in text or "G0" in text or "G1" in text
+    """True when ``text`` contains a line that STARTS with a G or M word.
+
+    The previous form (``"G0" in text or ...``) was a bare substring test, too
+    loose to carry the NEGATIVE assertion in the blocked-release test: it trips
+    on any incidental "G0"/"G1" inside a JSON error body. That body cannot hold
+    one today only because run ids are ``run_<uuid4().hex>`` and hex has no "G"
+    -- so the old assertion held for a reason the test never stated. Anchoring
+    to line starts makes it true by construction rather than by luck.
+    """
+    return bool(_GCODE_LINE.search(text))
+
+
+def _find_key_path(obj, key, _path=""):
+    """Dotted path to the first occurrence of ``key`` in a nested structure."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            here = f"{_path}.{k}" if _path else str(k)
+            if k == key:
+                return here
+            found = _find_key_path(v, key, here)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            found = _find_key_path(v, key, f"{_path}[{i}]")
+            if found:
+                return found
+    return None
+
+
+def _find_value_path(obj, needle, _path=""):
+    """Dotted path to the first leaf whose string form contains ``needle``."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            found = _find_value_path(v, needle, f"{_path}.{k}" if _path else str(k))
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            found = _find_value_path(v, needle, f"{_path}[{i}]")
+            if found:
+                return found
+    elif needle in str(obj):
+        return _path or "<root>"
+    return None
+
+
+def _load_run_artifact(run_id: str):
+    """Return the persisted RunArtifact for ``run_id`` as ``(payload, blob)``.
+
+    Every failure mode names WHICH part of the contract broke, so a storage
+    format change is distinguishable from a genuinely missing artifact. See the
+    module docstring for the two private names this depends on.
+    """
+    try:
+        from app.rmos.runs_v2.store import _get_default_store
+    except ImportError as exc:  # pragma: no cover - guard, not a path under test
+        pytest.fail(
+            "app.rmos.runs_v2.store._get_default_store is no longer importable; "
+            "this witness reads the run store through that private name and must "
+            f"be re-pointed. ({exc})"
+        )
+
+    artifact = _get_default_store().get(run_id)
+    assert artifact is not None, (
+        f"no persisted RunArtifact for run {run_id}. Durable provenance (MS-B07) "
+        "is the claim under test. If the store moved, check the client fixture's "
+        "RMOS_RUNS_DIR redirect and its store_api._default_store reset first."
+    )
+
+    if isinstance(artifact, dict):
+        payload = artifact
+    elif hasattr(artifact, "model_dump"):
+        payload = artifact.model_dump()
+    else:
+        pytest.fail(
+            f"persisted RunArtifact for {run_id} is a {type(artifact).__name__}, "
+            "which is neither a mapping nor a pydantic model. The stored artifact "
+            "shape changed; this witness reads it structurally and must be updated."
+        )
+
+    if not isinstance(payload, dict):
+        pytest.fail(
+            f"RunArtifact for {run_id} deserialized to {type(payload).__name__}, "
+            "expected a mapping. The stored artifact shape changed."
+        )
+    return payload, json.dumps(payload, default=str)
+
+
+def _describe(payload, blob, limit=600):
+    """Shape summary included in artifact assertion failures."""
+    return (
+        f"    artifact keys: {sorted(payload)}\n"
+        f"    artifact[:{limit}]: {blob[:limit]}"
+    )
 
 
 # ---------------------------------------------------------------- MS-B01
@@ -184,15 +330,34 @@ def test_ms_b07_released_output_is_traceable_to_its_run(client):
     # The declared hash describes the bytes actually released.
     assert hashlib.sha256(r.text.encode("utf-8")).hexdigest() == declared
 
-    from app.rmos.runs_v2.store import _get_default_store
+    payload, blob = _load_run_artifact(run_id)
 
-    artifact = _get_default_store().get(run_id)
-    assert artifact is not None, f"no persisted RunArtifact for run {run_id}"
+    # The declared hash is recorded in the artifact, so a release can be tied
+    # back to the authority decision that allowed it. On failure, report the
+    # artifact's shape rather than a bare "not recorded".
+    hash_at = _find_value_path(payload, declared)
+    assert hash_at, (
+        "released G-code hash is not recorded anywhere in the persisted "
+        "RunArtifact -- MS-B07 custody is broken.\n"
+        f"    run id: {run_id}\n"
+        f"    declared hash: {declared}\n" + _describe(payload, blob)
+    )
 
-    payload = artifact if isinstance(artifact, dict) else artifact.model_dump()
-    blob = json.dumps(payload, default=str)
-    assert declared in blob, "released G-code hash is not recorded in the run artifact"
-    assert "feasibility" in payload or "feasibility" in blob
+    # Authority evidence must be present as a STRUCTURAL key, not merely as a
+    # word somewhere in the serialized blob.
+    #
+    # The previous assertion was:
+    #     assert "feasibility" in payload or "feasibility" in blob
+    # whose first operand is subsumed by the second -- ``blob`` is
+    # ``json.dumps(payload)``, so any top-level key is necessarily in the blob.
+    # The ``or`` was dead and the check collapsed to a substring search that an
+    # incidental occurrence inside any VALUE would satisfy.
+    feasibility_at = _find_key_path(payload, "feasibility")
+    assert feasibility_at, (
+        "no 'feasibility' key anywhere in the persisted RunArtifact -- the "
+        "authority decision was not recorded with the run.\n"
+        f"    run id: {run_id}\n" + _describe(payload, blob)
+    )
 
 
 # ---------------------------------------------------------------- MS-F01
@@ -241,14 +406,31 @@ def test_ms_f03_f04_absent_capabilities_are_documented_not_required(client):
     r = client.post(GOVERNED_PATH, json=_specimen())
     assert r.status_code == 200, r.text
 
-    header_blob = " ".join(f"{k}:{v}" for k, v in r.headers.items()).lower()
+    # Scoped to header NAMES, deliberately. The earlier form searched names and
+    # VALUES together, so an unrelated header whose VALUE happened to contain
+    # "machine" (a proxy banner, a filename) would fail this test for the wrong
+    # reason. A header name is how machine/post identity would actually travel.
+    names = sorted(k.lower() for k in r.headers.keys())
+    shown = ", ".join(names)
 
     # MS-F03 -- no machine or postprocessor identity travels with the release.
-    assert "machine" not in header_blob
-    assert "post-id" not in header_blob and "postprocessor" not in header_blob
+    for token in ("machine", "post-id", "postprocessor"):
+        offenders = [n for n in names if token in n]
+        assert not offenders, (
+            f"MS-F03 is classified ABSENT but header(s) {offenders} carry "
+            f"'{token}'. If machine binding was implemented, this test is now "
+            "expected to change -- update it and name the order that closed "
+            f"MS-F03.\n    headers: {shown}"
+        )
 
     # MS-F04 -- the only validation in the path is audit-record completeness
-    # (validate_and_persist), which never raises and cannot block release.
-    # There is no verdict header describing the emitted G-code itself.
-    assert "x-gcode-validation" not in header_blob
-    assert "x-validation" not in header_blob
+    # (validate_and_persist), which never raises and cannot block release. There
+    # is no verdict header describing the emitted G-code itself.
+    for token in ("x-gcode-validation", "x-validation"):
+        offenders = [n for n in names if token in n]
+        assert not offenders, (
+            f"MS-F04 is classified ABSENT but header(s) {offenders} report a "
+            "G-code validation verdict. If post-generation validation was "
+            "implemented, update this test and name the order that closed "
+            f"MS-F04.\n    headers: {shown}"
+        )
