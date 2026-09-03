@@ -1,0 +1,76 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MANUFACTURING_SPINE_001_PROFILING_WITNESS",
+  "title": "MANUFACTURING-SPINE-001: add Profiling vertical-spine integration witness (test-only)",
+  "intent": "Add one integration test that freezes the CURRENT runtime truth of the Profiling manufacturing path, so the distinction between a governed path and a controlled production surface is asserted in CI rather than held in a document. It proves the governed route /api/cam/profiling/gcode is reachable, that RMOS authority runs before ProfileToolpath.generate() (observed by recording the actual call order with the real implementations still running), that a blocking safety decision releases no G-code and no G-code hash, and that released bytes hash to the declared X-GCode-SHA256 which is recorded in the persisted RunArtifact. It additionally FREEZES two known gaps as facts rather than failing on them: MS-F01, the mounted ungoverned /api/v1/cam/profile route that returns a hardcoded G-code-shaped string with no RMOS, SafetyPolicy, generator, run id or persistence; and MS-F03/MS-F04, the absence of machine/post identity and of any post-generation validation of the emitted G-code. No production module is modified and no remediation is performed or implied. Evidence custody for this work lives in the Consolidation Lab as Investigation 030; this repository holds only the executable witness.",
+  "change_type": "test",
+  "behavior_change": "none - test-only addition. No production module, route, schema, authority model, machine profile or postprocessor is touched. The new test adds no requirement that would force production change: absent capabilities are asserted as absent, and the known bypass is asserted as present.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/tests/rmos/",
+      ".cbsp21/patches/"
+    ],
+    "files_expected_to_change": [
+      "services/api/tests/rmos/test_manufacturing_spine_profiling_vertical.py",
+      ".cbsp21/patches/manufacturing-spine-001-profiling-witness.json"
+    ]
+  },
+  "diff_articulation": {
+    "summary": "One new test module beside test_profiling_authority_convergence.py, which asserts the same authority boundary. No new test directory was created. Seven tests: route reachability, specimen traversal with authority metadata, authority-before-generation ordering, blocking-releases-nothing, released-output traceability to the persisted run, MS-F01 bypass frozen as present, MS-F03/F04 absences documented. REVIEW HARDENING (post-review, same two files, no new files, no production change): (a) the persisted-artifact assertions now go through _load_run_artifact(), which reports which part of the contract broke -- store private name gone, artifact absent, or artifact no longer a mapping/pydantic model -- instead of raising AttributeError from inside an assertion; failures print the artifact's top-level keys and a truncated blob. (b) the hash and authority checks became structural: _find_value_path/_find_key_path walk the artifact and report the dotted path, replacing a bare substring search. This also removed a dead operand -- 'feasibility' in payload or 'feasibility' in blob had its first operand subsumed by the second (blob is json.dumps(payload)), so the check silently collapsed to a substring match that any occurrence inside a VALUE would satisfy. (c) _looks_like_gcode is now line-anchored (^\\s*(?:N\\d+\\s+)?[GM]\\d+\b) rather than a substring test; the negative assertion in the blocked-release test previously held only because run ids are run_<uuid4 hex> and hex contains no 'G' -- a reason the test never stated. (d) the MS-F03/F04 absence checks are scoped to header NAMES; searching names and VALUES together meant any unrelated header value containing 'machine' would fail the test for the wrong reason. Each now names the offending header and says the test is expected to change if the capability landed. (e) a module-level classification block marks each test STABLE TRUTH vs EXPECTED TO CHANGE ON REMEDIATION, and the fixture records that four @app.on_event('startup') hooks do not run under a non-context-managed TestClient.",
+    "why_here": "tests/rmos/ already hosts RMOS-PROFILING-CONVERGE-001 (test_profiling_authority_convergence.py), which asserts the same pre-generation authority boundary this witness extends end to end."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/rmos/test_manufacturing_spine_profiling_vertical.py -q -> 7 passed",
+      "py -3.11 -m pytest tests/rmos/test_profiling_authority_convergence.py -q -> 16 passed (unchanged control)",
+      "py -3.11 -m pytest tests/rmos/test_profiling_authority_convergence.py tests/cam/test_profile_intent_migration.py tests/cam/test_profile_design_schema.py tests/rmos/test_manufacturing_spine_profiling_vertical.py -q -> 65 passed",
+      "scripts/ci/check_cbsp21_gate.py --changed-files <this diff> -> manifest required; this manifest added to satisfy it",
+      "py -3.11 -m pytest tests/rmos/test_manufacturing_spine_profiling_vertical.py -q -> 7 passed after hardening (unchanged count)",
+      "py -3.11 -m pytest tests/rmos/test_profiling_authority_convergence.py tests/rmos/test_manufacturing_spine_profiling_vertical.py -q -> control + witness (recorded at commit)",
+      "helper probe: _looks_like_gcode False on a JSON body containing 'G1' (old substring form returned True), True on real G-code; _find_key_path returns None when 'feasibility' appears only in a VALUE, proving the check is structural rather than a substring match"
+    ],
+    "environment_note": "pyproject declares requires-python >=3.11,<3.14. Verified under an isolated Python 3.11 venv built from services/api/requirements.txt. Under 3.14 (outside the declared range) tests/conftest.py cannot load at all because the global numpy raises 'cannot load module more than once per process'."
+  },
+  "files": [
+    {
+      "path": "services/api/tests/rmos/test_manufacturing_spine_profiling_vertical.py",
+      "intent": "Integration witness freezing the current Profiling spine: governed route reachable; RMOS authority ordered before generation; blocking releases no machine output; released G-code traceable to its persisted RunArtifact; MS-F01 bypass frozen as present; MS-F03/F04 absences documented rather than demanded.",
+      "scan_targets": [
+        "services/api/tests/rmos/test_manufacturing_spine_profiling_vertical.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test-only"
+    },
+    {
+      "path": ".cbsp21/patches/manufacturing-spine-001-profiling-witness.json",
+      "intent": "Declare this PR's own CBSP21 manifest, as the gate requires. No CBSP21 policy, schema, threshold or unrelated manifest is modified.",
+      "scan_targets": [
+        ".cbsp21/patches/manufacturing-spine-001-profiling-witness.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-03-MANUFACTURING-SPINE-001-PROFILING-WITNESS",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": "",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "machine_profiles_changed": false,
+    "postprocessors_changed": false,
+    "schemas_changed": false,
+    "production_routes_changed": false,
+    "notes": "Read-and-test only. The witness observes the existing authority boundary; it does not relocate, weaken, or extend it. Known findings MS-F01 through MS-F04 are recorded, not repaired -- remediation requires a separate capability-bounded order."
+  }
+}
