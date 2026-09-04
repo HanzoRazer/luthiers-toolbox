@@ -1,0 +1,157 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "GFR_001A_GENERATOR_CATALOG_CONTRACTS",
+  "title": "GFR-001A — Central Generator Catalog Foundation: value contracts",
+  "intent": "Establish the value contracts a generator catalog can later be built against: four vocabularies, one immutable record type, one error hierarchy, and semantic validation. This is a catalog and discovery authority, not an execution registry -- it describes where generator implementations live and what they claim to do, and never calls, wraps or replaces any of them. The Art Studio rosette registry keeps its Callable[[float, float, Dict], RosetteParamSpec] contract and is untouched.",
+  "change_type": "feat",
+  "behavior_change": "None to any existing runtime path. A new leaf package app.generators.framework is added; nothing imports it yet, no route is registered, no schema changes, and no existing generator module is modified. The only edit outside the new package is one appended row in the sprint namespace registry.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/gfr-001a-generator-catalog-contracts.json",
+      "docs/governance/SPRINT_NAMESPACE_STANDARD.md",
+      "services/api/app/generators/framework/__init__.py",
+      "services/api/app/generators/framework/capabilities.py",
+      "services/api/app/generators/framework/categories.py",
+      "services/api/app/generators/framework/errors.py",
+      "services/api/app/generators/framework/generator_record.py",
+      "services/api/app/generators/framework/states.py",
+      "services/api/app/generators/framework/validation.py",
+      "services/api/tests/generators/__init__.py",
+      "services/api/tests/generators/framework/__init__.py",
+      "services/api/tests/generators/framework/test_generator_record.py",
+      "services/api/tests/generators/framework/test_validation.py",
+      "services/api/tests/generators/framework/test_vocabulary.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/gfr-001a-generator-catalog-contracts.json",
+      "docs/governance/SPRINT_NAMESPACE_STANDARD.md",
+      "services/api/app/generators/framework/__init__.py",
+      "services/api/app/generators/framework/capabilities.py",
+      "services/api/app/generators/framework/categories.py",
+      "services/api/app/generators/framework/errors.py",
+      "services/api/app/generators/framework/generator_record.py",
+      "services/api/app/generators/framework/states.py",
+      "services/api/app/generators/framework/validation.py",
+      "services/api/tests/generators/__init__.py",
+      "services/api/tests/generators/framework/__init__.py",
+      "services/api/tests/generators/framework/test_generator_record.py",
+      "services/api/tests/generators/framework/test_validation.py",
+      "services/api/tests/generators/framework/test_vocabulary.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds services/api/app/generators/framework/ containing four (str, Enum) vocabularies -- GeneratorCategory (8 members), GeneratorCapability (8), GeneratorLifecycle (4), GeneratorAuthority (4) -- a single error hierarchy rooted at GeneratorFrameworkError, the frozen dataclass GeneratorRecordV1, and validate_generator_record(). Responsibility is split deliberately: __post_init__ enforces STRUCTURE (every field holds the right Python type, every tuple field really is a tuple, rejected never coerced), while validate_generator_record() enforces SEMANTICS (identifier syntax, blank strings, per-field duplicates, self-dependency, supported record version, dotted implementation-path syntax, contradictory lifecycle/authority pairings). Adds 88 focused tests. Appends one row to the sprint namespace registry: | `GFR` | Generator Framework Registry | Governance |.",
+    "why_not_redundant": "GeneratorDescriptor already exists at services/api/app/art_studio/schemas/generator_requests.py, but it is an Art Studio request schema, not a framework catalog entry, and a live subsystem depends on its shape -- so this ships GeneratorRecordV1 as a separate type rather than overloading it. Equally, the Art Studio rosette registry is an execution registry whose contract would change if generalized; the framework is deliberately the other half of that split. The catalog records WHERE an implementation lives; execution subsystems import and invoke it. implementation_path is a descriptive string precisely so the catalog can hold it without importing it, which is why a record naming a nonexistent module validates successfully and is asserted to do so."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/generators/framework -o addopts='' --cov=app.generators.framework --cov-branch --cov-report=term-missing --cov-fail-under=100 -> 88 passed, TOTAL 188 stmts / 34 branches / 0 missed / 100.00%",
+      "coverage is LINE and BRANCH at 100% across all seven framework modules, matching pytest.ini semantics (--cov-branch) rather than defining a weaker alternate meaning of 100%",
+      "global pytest.ini NOT modified; the targeted run overrides addopts on the command line with -o addopts='' so the repo-wide --cov targets and --cov-fail-under=20 do not contaminate the measurement",
+      "grounded before building: origin/main = cab91eda; no gfr-001 branch on remote; services/api/app/generators/framework and services/api/tests/generators both absent; namespace table header confirmed as | Prefix | Domain | Owner | with backticked prefixes",
+      "grounding correction: the ruling cited app/schemas/generator_requests.py for the GeneratorDescriptor name collision; that path does not exist. The class is at app/art_studio/schemas/generator_requests.py:14. Collision is real, cited path was stale, conclusion (use GeneratorRecordV1) unchanged. GeneratorRecordV1 confirmed unused anywhere on main.",
+      "grounding correction: nested test packages carry __init__.py at every level (tests/mesh/materials/__init__.py), so services/api/tests/generators/__init__.py is included alongside the framework test package -- the file list moves from 13 to 14"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/generators/framework/categories.py",
+      "intent": "GeneratorCategory: what a generator produces. Eight members, each with a documented system use and an explicit scope statement distinguishing it from every other. The three geometry categories overlap in subject but not scope: INSTRUMENT_GEOMETRY cross-component, BODY_GEOMETRY body-only, NECK_HEADSTOCK neck-side.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module, nothing imports it yet)"
+    },
+    {
+      "path": "services/api/app/generators/framework/capabilities.py",
+      "intent": "GeneratorCapability: what a caller can ask of a generator. Orthogonal to category. Descriptive only -- declaring DXF_EXPORT gives the catalog no way to produce a DXF.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module)"
+    },
+    {
+      "path": "services/api/app/generators/framework/states.py",
+      "intent": "GeneratorLifecycle (how far along) and GeneratorAuthority (how much weight), kept as independent axes because real combinations exist for nearly every pairing. Neither says anything about reachability.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module)"
+    },
+    {
+      "path": "services/api/app/generators/framework/errors.py",
+      "intent": "Single error hierarchy rooted at GeneratorFrameworkError so one except catches everything the framework raises. GeneratorValidationError also inherits ValueError to preserve ordinary except-ValueError handling. The three catalog errors are declared here with the root even though GFR-001B is what raises them -- declaring the whole hierarchy once is the point of having one root.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module)"
+    },
+    {
+      "path": "services/api/app/generators/framework/generator_record.py",
+      "intent": "GeneratorRecordV1, a frozen dataclass, plus SUPPORTED_RECORD_VERSIONS. __post_init__ structurally type-checks scalars, enum fields and tuple members, rejecting rather than coercing so an immutable record can never exist holding a mutable collection. record_version is constructor-settable, not init=False, so an unsupported version can be built and rejected.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module)"
+    },
+    {
+      "path": "services/api/app/generators/framework/validation.py",
+      "intent": "validate_generator_record(): pure, total semantic validation. Imports GeneratorValidationError from errors.py rather than owning it. Never imports an implementation -- a record naming a nonexistent module validates, by design.",
+      "risk": "low",
+      "behavior_change": "none (new leaf module)"
+    },
+    {
+      "path": "services/api/app/generators/framework/__init__.py",
+      "intent": "Public surface of the framework, and the statement that this is a catalog authority rather than an execution registry. Deliberately contains no registry.py, discovery.py or inventory.py -- the catalog must be written against a contract that already exists and is already tested.",
+      "risk": "low",
+      "behavior_change": "none (new package)"
+    },
+    {
+      "path": "services/api/tests/generators/framework/test_generator_record.py",
+      "intent": "Structural enforcement: scalar types, enum types (including bare strings, which compare equal to (str, Enum) members and are therefore easy to store by accident), non-tuple collections, and tuple member types with the offending index reported. Both rejection and fall-through paths.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/generators/framework/test_validation.py",
+      "intent": "Semantic validation, every guard on both sides. Includes the deliberately-legal cases: the same identifier in inputs and outputs, ACTIVE + SUPERSEDED, DEPRECATED + CANONICAL, and a nonexistent implementation_path.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/generators/framework/test_vocabulary.py",
+      "intent": "Pins every vocabulary .value, because records serialize through them and a rename silently invalidates stored records. Also asserts no duplicate values within a vocabulary -- the mechanical form of the no-overlapping-meanings constraint.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/generators/__init__.py",
+      "intent": "Test package marker. Present because the grounded sibling convention carries __init__.py at every nesting level.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "services/api/tests/generators/framework/__init__.py",
+      "intent": "Test package marker for the framework tests.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": "docs/governance/SPRINT_NAMESPACE_STANDARD.md",
+      "intent": "Registers the GFR prefix. Owner column is custodial authority, not code location: Governance, because GFR executes nothing -- Production would imply runtime execution ownership. One appended row; no other row reformatted.",
+      "risk": "low",
+      "behavior_change": "none (governance registry)"
+    },
+    {
+      "path": ".cbsp21/patches/gfr-001a-generator-catalog-contracts.json",
+      "intent": "Per-PR CBSP21 patch manifest, shipped in the same commit as the code it declares so the pushed SHA is already PR-ready rather than transferring an avoidable red to whoever opens the PR.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-04-GFR-001A",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "New leaf package with no inbound edges: nothing in the repository imports app.generators.framework yet, which is the expected state for GFR-001A and the reason the catalog is deferred to GFR-001B. The one low item is that a catalog vocabulary invites drift from the implementations it describes -- a category or capability can be added without any generator claiming it. Accepted deliberately: zero registered records is the ruled initial state, discovery is opt-in only, and the vocabularies carry per-member documented system uses so an unused member is visible rather than silent."
+  }
+}

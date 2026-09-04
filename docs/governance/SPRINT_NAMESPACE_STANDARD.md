@@ -23,6 +23,7 @@ Standardize sprint ticket and audit naming to prevent namespace collisions and e
 | `RMOS` | Router Machine OS | Production |
 | `SPIRAL` | Spiral soundhole system | Production |
 | `MRP` | Morphology Reconstruction Platform | Governance |
+| `GFR` | Generator Framework Registry | Governance |
 
 ---
 
