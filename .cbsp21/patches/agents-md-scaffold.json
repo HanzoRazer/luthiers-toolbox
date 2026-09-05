@@ -1,0 +1,66 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENTS_MD_SCAFFOLD",
+  "title": "AGENTS.md for coding agents, plus the scaffolder that generated it",
+  "intent": "Coding agents (Cursor, Codex, and others) read AGENTS.md but this repository had none, so nothing told them to branch from current main. Four stale-base incidents in a single session are recorded as the reason the rule exists, alongside the real verification gates copied from the workflow files.",
+  "change_type": "docs",
+  "behavior_change": "None. One new document, one new script. No production code, no configuration, no route, no schema, no CI change. The existing PR template was deliberately left untouched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/agents-md-scaffold.json",
+      "AGENTS.md",
+      "scripts/scaffold_agents_md.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/agents-md-scaffold.json",
+      "AGENTS.md",
+      "scripts/scaffold_agents_md.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "AGENTS.md carries the universal rules verbatim from the scaffolder (branch from current main, merge rather than rebase, check for overlapping open PRs, one dev order per branch, and a self-check asserting the merge base IS main's tip rather than merely an ancestor), plus two blocks the scaffolder deliberately refuses to write: this repository's own stale-base incidents, and its real gate commands. scripts/scaffold_agents_md.py is the generator, placed in scripts/ rather than tools/ because /tools/ is gitignored and new files there are silently dropped from commits.",
+    "why_not_redundant": "CLAUDE.md carries architecture and project context but says nothing about branching, and no gate enforces the base rule. The two filled blocks are the point: a scaffolder cannot know either, and the rule reads as style advice without the story. The incidents are witnessed events from one session, not illustrations."
+  },
+  "verification": {
+    "commands_run": [
+      "THREE DEFECTS FOUND IN THE SCAFFOLDER BY RUNNING IT AGAINST THIS REPO, BEFORE TRUSTING IT.",
+      "(1) --force called input() unguarded. In a non-interactive session it raised EOFError -- and did so AFTER writing AGENTS.md, leaving a half-completed overwrite. Demonstrated live: the first --force run wrote AGENTS.md then crashed on the second target. Fixed with a --yes flag, an isatty pre-check, and _confirm_overwrite() catching EOFError so an unreadable stdin becomes a clean skip.",
+      "(2) The isatty pre-check alone was INSUFFICIENT: sys.stdin.isatty() returned True in this terminal while stdin still had nothing to read, so input() raised anyway. Belt-and-braces was necessary, not defensive padding -- verified by re-running --force headlessly and getting a clean skip with exit 0.",
+      "(3) The PR-template check tested one exact lowercase path. Test-Path had reported BOTH pull_request_template.md and PULL_REQUEST_TEMPLATE.md as present, which a case-insensitive filesystem produces by matching the same file twice. The case-folded glob found the truth: exactly one file, .github/PULL_REQUEST_TEMPLATE.md. On Linux the original check would have written a SECOND template beside it. Now globs repo root, .github/ and docs/ case-insensitively and reports what it finds.",
+      "(4) repo.name wrote the WORKTREE directory name into the heading -- 'ltb-sprints' instead of 'luthiers-toolbox'. Fixed by deriving the name from the origin remote URL, falling back to the directory only when no remote exists.",
+      "(5) A defect in the DOCUMENT, caught by running what it prescribed: `python -m pytest scripts/ci/test_cbsp21_*.py -v` is copied from core_ci.yml, where a bash step expands the glob. PowerShell does not, so pytest receives the literal pattern and errors. Replaced with `python -m pytest scripts/ci/ -k cbsp21 -v`, verified as 35 passed / 47 deselected.",
+      "gates verified as documented: CBSP21 gate run from repo root; ownership tests 35 passed; working directories confirmed against core_ci.yml, api_tests.yml (app/tests/) and technical_debt.yml (defaults.run.working-directory: services/api).",
+      "the existing PR template was NOT overwritten -- the scaffolder skipped it, which is the intended behaviour for a repo that already has one."
+    ]
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "intent": "Instructions for coding agents: branch from current main, with this repository's four witnessed stale-base incidents and its real gate commands including per-gate working directories.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": "scripts/scaffold_agents_md.py",
+      "intent": "Generator for the universal portion. Refuses to invent the incident story or the gate commands, and never overwrites an existing AGENTS.md or PR template.",
+      "risk": "low",
+      "behavior_change": "none (not wired into CI; run by hand)"
+    },
+    {
+      "path": ".cbsp21/patches/agents-md-scaffold.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "The one low item is that both filled blocks in AGENTS.md are marked DRAFTED, PENDING OWNER REVIEW. The incidents are witnessed and dated and the gates are copied verbatim from the workflow files, but neither has been confirmed by the owner. They are flagged in the document itself rather than presented as settled, so a reader knows which parts carry authorship and which carry authority."
+  }
+}
