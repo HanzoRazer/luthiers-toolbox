@@ -2961,3 +2961,105 @@ Commits: 04735bd4, 72bfffc9, 059cf5b0
 | 2026-04-30 | FRET-CONSOLIDATION: canonical ecosphere is single source of truth | Three parallel fret pipelines (api_v1/fret_math, cam/fret_slots, FRET-A ecosphere) converge to ecosphere. CAM consumes ecosphere geometry; legacy endpoints deprecated after frontend migration. Prevents "which pipeline did this guitar use" debugging at scale. |
 | 2026-05-02 | Standalone repos as moat strategy superseded by single-property marketing | All previously planned standalone repos except ltb-woodworking-studio (different domain) and blueprint-reader (deployment-driven separation) collapse back to luthiers-toolbox. Production Shop website presents tools as named features regardless of repo organization. SEO and brand authority concentrate on single property. ltb-woodworking-studio retains separate status due to conceptual domain boundary (woodworking ≠ lutherie). |
 | 2026-05-03 | Woodworking-studio operates completely independently from luthiers-toolbox | No HTTP cross-repo dependencies at runtime. Each repo has its own wood data (wood_species.json), its own schema (lutherie needs acoustic properties; woodworking needs machining/joinery properties), its own data integrity work. Furniture makers shouldn't need a luthier's platform running to calculate panel movement. Operational independence matches eventual deployment reality — two products, two failure modes. Sprint M5 CIRAD API is luthiers-toolbox internal only; not designed for cross-repo consumption. Initial woodworking-studio data population: 30-40 species with woodworking-specific schema, ~12-20h work. |
+
+---
+
+## RECOVERED — Lutherie-Math backlog (restored 2026-09-04)
+
+> **Provenance.** These 86 lines were authored against a July snapshot of `SPRINTS.md` on branch
+> `smart-guitar-cavity-geometry-1` (318 commits behind `main`) and were nearly lost. They are
+> restored here onto current `main` as content, not as a file: committing the branch copy would have
+> carried a 2,543-line `SPRINTS.md` over `main`'s 2,963 and silently dropped 420 lines.
+>
+> **ID collision, resolved provisionally.** The recovered entry claimed `MAINT-DEFER-004`. That ID is
+> already taken on `main` by *Dependency Security / DEP-SEC-001* — a different finding that merely
+> reuses the number. Renumbered here to `MAINT-DEFER-015` (first free; 1-14 in use). **This renumber is
+> mechanical, not adjudicated** — if the acoustics entry should hold a different ID, change it here; no
+> other document references `MAINT-DEFER-015` yet.
+
+| MAINT-DEFER-015 | `acoustic_body_volume.py` Helmholtz `L_eff` formula incorrect — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-08-21 |
+### MAINT-DEFER-015 — `acoustic_body_volume.py` Helmholtz `L_eff` formula incorrect
+
+**Status:** QUEUED  
+**last_verified:** 2026-08-21 (formula present at `services/api/app/calculators/acoustic_body_volume.py:220`)  
+**Category:** API / calculators (acoustics)  
+**Source:** `docs/LUTHERIE_MATH.md` §4 — "Existing implementation discrepancy" ("**Do not use the `acoustic_body_volume.py` formula for new code**").
+
+**Why deferred:** `acoustic_body_volume.py:220` computes the Helmholtz effective neck length as
+`L_eff = 1.7 * top_thickness + 0.85 * soundhole_diameter_mm` — flagged by the lutherie-math reference as incorrect: it multiplies the *plate thickness* by the flanged end-correction coefficient (should be `t + k₀·r_eq`, i.e. thickness added un-scaled) and returns `L_eff` in the wrong unit scale for the SI Helmholtz formula. It diverges from the canonical, instrument-calibrated implementation in `calculators/soundhole_calc.py → compute_port_neck_length()` (`L_eff = t + k₀·r_eq`, γ perimeter-corrected). Left in place because `soundhole_calc.py` is the path wired into the shipped soundhole tools; the `acoustic_body_volume` copy is a legacy second implementation, so the wrong formula is latent rather than user-facing.
+
+**Restore trigger:** `acoustic_body_volume.py` either delegates to / matches `soundhole_calc.py`'s `compute_port_neck_length()` (SI units, `t + k₀·r_eq`), **or** its Helmholtz path (`calculate_helmholtz_frequency()`) is confirmed unused and removed; the two implementations agree on a shared calibration case (Martin OM → ~108 Hz per §7).
+
+**First step:** grep consumers of `calculate_helmholtz_frequency()` to decide fix-vs-delete before touching the formula.
+
+---
+
+## BACKLOG — Lutherie-Math Calculators (unbuilt — 2026-08-21 audit)
+
+**Source:** `docs/LUTHERIE_MATH.md` (formulas derived/sourced there). The rows below are the calculators that reference marks "not yet built" **and that are confirmed still absent under `services/api/app/` as of 2026-08-21**. The `GEOMETRY-*`/`CONSTRUCTION-*` IDs are the doc's own citations; their defining `BACKLOG.md` was **archived** (`docs/archive/2026/plans/BACKLOG.md`, banner "all resolved 2026-03-22"), so these items are effectively **untracked in any active ledger** until re-homed here.
+
+| Doc § | Calculator | Target file | Doc ID | Status |
+|-------|-----------|-------------|--------|--------|
+| §3 | Saddle slant angle | `instrument_geometry/bridge/geometry.py → compute_saddle_slant_angle()` | GEOMETRY-004 | UNBUILT — fn absent (`bridge/geometry.py` exists) |
+| §16 | C-bout radius (sagitta) | `calculators/body_geometry_calc.py` | — (needs ID) | UNBUILT — file absent |
+| §25 | Neck angle | `calculators/neck_angle_calc.py` | GEOMETRY-001 | UNBUILT — file absent |
+| §37 | Body outline → air volume | planning (closes the geometry↔acoustics loop) | §37 reserved | UNBUILT — no impl |
+| §38 | Depth profile from body style | planning | §38 reserved | UNBUILT — no impl |
+| §39 | Modal area coefficient A_n | `tap_tone_pi/analysis/modal_area.py` | — (needs ID) | UNBUILT — needs Chladni hardware (Research Track) |
+| §40 | Brace pattern stiffness field D(x,y) | `calculators/plate_design/stiffness_field.py` | — (needs ID) | UNBUILT — file absent |
+| §41 | Radiation power P_rad | `calculators/plate_design/radiation_power.py` | — (needs ID) | UNBUILT — file absent; needs §39 |
+| §42 | Brace pattern optimization | `calculators/plate_design/brace_optimizer.py` | — (needs ID) | UNBUILT — file absent; needs §39–41 |
+
+**Priority:** LOW — none on the MVP cut-path. §16/§37/§38 unlock the "body outline → volume → port" coupling (Appendix A — the stated speaker-cabinet-designer product promise); §39–42 are the design-synthesis / research track and depend on Chladni measurement hardware.
+
+**Note — the doc's build-status text is STALE (do not trust the per-§ "not yet built" lines):** several calculators the reference lists as unbuilt have since shipped and are deliberately excluded above — §17 nut slot (`calculators/nut_slot_calc.py`), §19 string tension (`calculators/string_tension.py`), §21 kerfing (`calculators/kerfing_calc.py`); §18 setup cascade is partially built (`instrument_geometry/neck/setup_workflow.py`). The status reconciliation and a genuine §17 formula divergence are logged as drift findings (see DATA INTEGRITY → DOC-DRIFT-001).
+
+**Namespace note:** §16 and §39–42 carry no backlog ID; assigning one needs the `SPRINT_NAMESPACE_STANDARD` — deferred to an owner call rather than invented here.
+
+---
+
+### Sprint M7 — LUTHERIE_MATH.md doc-vs-code drift audit (DOC-DRIFT-001)
+
+**Status:** QUEUED (findings recorded 2026-08-21; reconciliation pending)
+**Scope:** Verify the constants and implementation-status claims in `docs/LUTHERIE_MATH.md` against current source under `services/api/app/`.
+
+**In sync — verified 2026-08-21 (no action):**
+- §7 `PLATE_MASS_FACTOR = 0.92`, §5 `K0 = 1.7` / `GAMMA = 0.02`, §4 `C_AIR = 343.0` (and `plate_design/calibration.py AIR_SPEED_OF_SOUND_M_S = 343.0` agrees), §9 `RING_WIDTH_RADIUS_FRACTION = 0.15` / `RING_WIDTH_ABSOLUTE_MIN_MM = 6.0`, §10 placement `0.20 / 0.70 / 0.333`, §8 volume `CALIBRATION_FACTOR = 1.83`, §12 orthotropic-plate formula + `eta` default 1.0. All match the doc.
+
+**Drift findings:**
+
+- **DOC-DRIFT-001a — CODE, actionable (nut-slot formula divergence, §17).** Shipped `calculators/nut_slot_calc.py → compute_nut_slot_depth()` uses `slot_depth = string_diameter/2 + fret_crown_height/2 + clearance` with `clearance` default **0.13 mm** and a "string center sits at fret-crown height" model. The doc §17 gives `slot_depth = string_diameter/2 + action_clearance − fret_crown_height` with `action_clearance` **0.5–0.8 mm** and a "string rides on the slot side walls (depth may be negative)" model. These are **materially different formulas and physical models** — the built value is systematically deeper. Which is correct is a **domain decision** (Ross/luthier call), not a mechanical fix. **Done-condition:** the two agree, or the doc §17 is corrected to describe the shipped model with rationale.
+
+- **DOC-DRIFT-001b — DOC stale (build-status).** The doc marks several calculators "not yet built" that **have since shipped**: §17 nut slot (`nut_slot_calc.py`), §19 string tension (`string_tension.py`), §21 kerfing (`kerfing_calc.py`); §18 setup cascade is **partially** built (`instrument_geometry/neck/setup_workflow.py → evaluate_relief`). **Done-condition:** the per-§ "Implementation / not yet built" lines updated to current reality. (The genuinely-still-unbuilt set is tracked in `## BACKLOG — Lutherie-Math Calculators`.)
+
+- **DOC-DRIFT-001c — DOC path (§8).** The doc cites `calculators/soundhole_calc.py → volume_from_dimensions()`; the function actually lives in `calculators/soundhole_extended.py`. **Done-condition:** correct the §8 implementation path.
+
+**Related (already queued):** §4 `acoustic_body_volume.py:220` `L_eff` formula is logged separately as **MAINT-DEFER-015** (dimensionally-incorrect Helmholtz neck length; reconcile with `soundhole_calc.py`).
+
+**Priority:** LOW — DOC-DRIFT-001a is the only correctness item; the rest are documentation-accuracy. None block MVP.
+
+---
+
+### Sprint M8 — Formula Catalog triage: CNC/CAM (CAM-AUDIT-001)
+
+**Status:** QUEUED (findings recorded 2026-08-21; re-verified against current code, not the catalog's stale line numbers)
+**Source:** `docs/audit/math_formula_catalog_2026-04-30.md`, CNC_CAM domain (highest real-world blast radius — a wrong feeds/speeds formula breaks tools and ruins stock). First slice of a wider catalog triage; other domains (structural, lutherie_geometry, acoustic, optimization) still to do.
+
+**Staleness note:** the catalog is a 2026-04-30 snapshot; its file:line refs are claims, not facts. Its Executive-Summary Priority-1 files are **gone** — `scripts/bulk_import_wood_species.py` (the "15+ uncited CNC hardness coefficients" item) and `calculators/tool_deflection.py` no longer exist. But all 7 CNC deep-dive files DO still resolve, so the deep-dive findings below are live.
+
+**Tier A — verified live defects (actionable):**
+
+- **CAM-AUDIT-001a — rim-speed units mismatch (HIGH, `@safety_critical`).** `calculators/cam_cutting_evaluator.py:148` computes `rim_speed = pi * D_mm * rpm / 1000` = **m/min**, then compares to `max_rim_speed = 80.0` and prints "m/min" — but 80 is only physically sane as **m/s** (80 m/min = 1.3 m/s is a near-stopped blade; a 10" blade at 3450 rpm computes ~2750 m/min and flags EXCEEDS). So this safety gate **trips on essentially every real blade** (cries wolf → gets ignored). The catalog recorded the formula as `/60000` (m/s); it has since drifted to `/1000` (m/min) without fixing the 80 limit. **Fix:** reconcile units — compute m/s (`/60000`) against an 80 m/s cap (standard), or restate the limit in m/min. **Recommend this jumps toward the front with the §17 nut-slot fix — it's a live, safety-decorated gate that is currently non-functional.**
+- **CAM-AUDIT-001b — tool-deflection hardcoded modulus (HIGH).** `cam_core/feeds_speeds/deflection_model.py:13` `E = 90_000  # MPa, carbide approximation`, no material selection. 90 GPa is far below real tungsten carbide (~550-650 GPa) and HSS (~200 GPa), so the value is suspect (likely a large deflection over/under-estimate) or an undocumented effective/de-rated modulus. Deflection is **duplicated** (`deflection_model.py` and `cam_cutting_evaluator.py`) — verify they agree on E and formula. **Fix:** material-selectable E + derivation note, and collapse the duplicate.
+- **CAM-AUDIT-001c — chipload duplicated (MEDIUM).** Identical `feed/(rpm*flutes)` in `cam/vcarve/chipload.py::calculate_chipload` and `cam_core/feeds_speeds/chipload_calc.py::calc_chipload_mm`; the vcarve copy **returns 0.0 on invalid input** (a silent-fallback nonsense value that can flow downstream) while the cam_core copy raises. **Fix:** consolidate to one; make invalid input raise, not return 0.
+
+**Tier B — real but cited / lower urgency (document or verify against source):** bandsaw blade tension, drift angle, and gullet-capacity feed rate (`cam_core/saw_lab/bandsaw/physics.py`, cited Duginske; constants 0.55 gullet-depth / 0.35 fill-efficiency / 0.012 drift present and match); specific cutting energy heat-partition 65/25/10 (`cam/energy_model.py`, uncited); V-bit depth-for-width (`cam/vcarve/geometry.py`, geometric).
+
+**Tier C — catalog stale (cannot triage at cited path):** CNC hardness-scaling coefficients in `scripts/bulk_import_wood_species.py` (Exec-Summary P1 #1) — **file gone**; needs a fresh trace or is obsolete. `tool_deflection.py` — gone; deflection moved to `deflection_model.py` (+ the `cam_cutting_evaluator.py` duplicate).
+
+**Related:** distinct from DOC-DRIFT-001 (LUTHERIE_MATH) and MAINT-DEFER-015 (acoustic body volume). The catalog's P3 calibrated constants (PLATE_MASS_FACTOR/GAMMA/VOLUME_FACTOR) were already checked in M7/DOC-DRIFT-001 (values match; derivation still undocumented).
+
+**Priority:** CAM-AUDIT-001a is HIGH/safety and user-facing (feeds/speeds surface) — recommend expediting; 001b/001c medium; Tier B/C low.
+
+---
+

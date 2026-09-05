@@ -1,0 +1,62 @@
+{
+  "files": [
+    {
+      "behavior_change": "none (documentation)",
+      "path": "SPRINTS.md",
+      "intent": "Append the recovered lutherie-math content with provenance and the renumbered ID.",
+      "risk": "low"
+    },
+    {
+      "behavior_change": "none",
+      "path": ".cbsp21/patches/recover-sprints-lutherie-math.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low"
+    }
+  ],
+  "coverage_min": 0.95,
+  "patch_id": "RECOVER_SPRINTS_LUTHERIE_MATH",
+  "change_type": "docs",
+  "title": "Recover the lutherie-math SPRINTS.md content lost on a stale branch",
+  "diff_articulation": {
+    "why_not_redundant": "Committing the branch copy of the file would have carried 2,543 lines over main's 2,963 and silently dropped 420 lines of everything landed since July. The damage risk was never in the recovered content; it was in the stale base underneath it. Recovering content rather than the file is what preserves both.",
+    "what_changed": "Appends the 86 recovered lines to main's SPRINTS.md under a RECOVERED heading carrying provenance: MAINT-DEFER-015 (the acoustic_body_volume Helmholtz L_eff finding), the BACKLOG - Lutherie-Math Calculators section from the 2026-08-21 audit, and Sprint M7 (DOC-DRIFT-001) and Sprint M8 (CAM-AUDIT-001)."
+  },
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/recover-sprints-lutherie-math.json",
+      "SPRINTS.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/recover-sprints-lutherie-math.json",
+      "SPRINTS.md"
+    ]
+  },
+  "schema_version": "cbsp21_patch_input_v1",
+  "schema": "cbsp21_patch_input_v1",
+  "risk_level": "low",
+  "intent": "86 lines of sprint content were authored against a July snapshot of SPRINTS.md on a branch 318 commits behind main and were nearly lost. Restore the CONTENT onto current main, rather than the file, and surface an ID collision instead of merging it silently.",
+  "verification": {
+    "commands_run": [
+      "recovery located: working tree of smart-guitar-cavity-geometry-1 was M SPRINTS.md at 2543 lines / 151,992 bytes; HEAD 2457; origin/main 2963. Diff was 86 insertions, 0 deletions -- new sprint content, not restored deletions.",
+      "earlier search failed and the reason is recorded: it covered git-visible locations only (git status, worktrees, repo root). A recursive disk search found 16 SPRINTS.md files including a dozen unzipped luthiers-toolbox-main copies. 'Not in git' is not 'not on disk'.",
+      "ID COLLISION FOUND: the recovered entry claimed MAINT-DEFER-004, which on main is Dependency Security / DEP-SEC-001 -- a different finding reusing the number, not a second write-up of one finding. IDs 1-14 in use; renumbered to 015 and flagged as mechanical, not adjudicated.",
+      "collision-free check: Sprint M7, Sprint M8, DOC-DRIFT-001, CAM-AUDIT-001 and the BACKLOG section all return 0 occurrences on main -- appended without renaming.",
+      "NON-DESTRUCTION WITNESS: the first 2963 lines of the result are byte-identical to origin/main:SPRINTS.md. Recovery is strictly appended.",
+      "MAINT-DEFER-004 occurrences after the change = 5: main's own four (lines 953, 1045, 1182, 1295) plus one inside the provenance note that names the collision. No duplicate ID exists.",
+      "recovery preserved outside the working tree before any edit: sprints_recovery.patch and SPRINTS_recovered_worktree.md in scratch."
+    ]
+  },
+  "architecture_scan": {
+    "acknowledged": true,
+    "findings": [],
+    "risk_summary": {
+      "high": 0,
+      "low": 1,
+      "critical": 0,
+      "medium": 0
+    },
+    "acknowledgement_notes": "The one low item is the provisional renumber. MAINT-DEFER-015 was assigned mechanically as the first free ID; whether the acoustics finding should hold that number is an owner decision. Nothing else references 015 yet, so changing it is a single-file edit.",
+    "scan_id": "AS-2026-07-04-002"
+  },
+  "behavior_change": "None. SPRINTS.md only. No code, config, route or schema."
+}
