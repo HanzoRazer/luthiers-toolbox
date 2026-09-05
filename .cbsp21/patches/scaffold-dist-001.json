@@ -1,0 +1,95 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SCAFFOLD_DIST_001",
+  "title": "SCAFFOLD-DIST-001: close the silent default-branch fallback and pin a self-test",
+  "intent": "The scaffolder was proven on one repository. Its four defects were all environment-coupling bugs invisible to reading, so environment variety across other repos is likely to expose more. Two gaps blocked wider distribution: a silent 'main' fallback that would write a confidently-wrong canonical instruction into any repo whose real default differs, and the absence of any test reproducing the conditions that produced the known defects.",
+  "change_type": "fix",
+  "behavior_change": "A repository whose default branch cannot be detected no longer receives an AGENTS.md silently naming 'main'. It warns; headless it refuses with exit 3 unless --default-branch is supplied; interactively it asks. Repositories with a resolvable origin/HEAD or a local main/master behave exactly as before -- no new prompt, no new flag required. Separately, --force without --yes now resolves consent once BEFORE any write and refuses the whole run if it cannot, instead of skipping one file and writing another.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/agents-md-scaffold.json",
+      ".cbsp21/patches/scaffold-dist-001.json",
+      ".github/workflows/core_ci.yml",
+      "AGENTS.md",
+      "scripts/ci/test_scaffold_agents_md.py",
+      "scripts/scaffold_agents_md.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/agents-md-scaffold.json",
+      ".cbsp21/patches/scaffold-dist-001.json",
+      ".github/workflows/core_ci.yml",
+      "AGENTS.md",
+      "scripts/ci/test_scaffold_agents_md.py",
+      "scripts/scaffold_agents_md.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Flag 1: detect_default_branch returns (name, detected) instead of a bare string; main() adds --default-branch, warns on an undetected guess, refuses headlessly with exit 3, and prompts interactively. The 'preferred' shape was implemented rather than the 'minimum', because the preferred warning text names --default-branch and therefore requires the flag anyway -- warn-only would leave the poison pill in place, since nobody reads stderr mid-run in an agent session. Flag 3: scripts/ci/test_scaffold_agents_md.py, fourteen tests driving the real CLI as a subprocess against real temp git repos, plus a named step in core_ci.yml that pins it.",
+    "why_not_redundant": "The dev order specified tests/test_scaffold_agents_md.py. Grounding showed repo-root tests/ is collected by NO workflow -- every reference names an individual file or one subdirectory (tests/grounding_agent/), and the tests/ paths in core_ci and rmos_ci run after `cd services/api`, a different tree entirely. Placing the self-test there would have created it in precisely the uncollected location that produces the unpinned-test hazard. It lives in scripts/ci/ beside the already-pinned tests instead."
+  },
+  "verification": {
+    "commands_run": [
+      "A THIRD IMPLEMENTATION DEFECT WAS FOUND BY THE NEW TEST, not by reading. --force without --yes returned 0 and wrote a file. Cause: on Windows, stdin redirected to NUL is a character device, so sys.stdin.isatty() returns TRUE and the headless guard never fired. Deferring the prompt into the write loop then produced a partial run -- the existing-file overwrite was correctly skipped while a different, non-conflicting file was written anyway, leaving the repo half-scaffolded under a --force that was never granted. Consent is now resolved ONCE before the loop and refusal aborts the whole run.",
+      "TEETH PROVEN (mandatory, Flag 1): reverting `return \"main\", False` to `return \"main\", True` turns test_undetectable_default_branch_refuses_headlessly RED at the assertion, then restored -> 14 passed.",
+      "TEETH PROVEN (regression, cheap): reverting detect_repo_name to repo.name turns test_heading_uses_remote_name_not_directory_name RED, then restored.",
+      "py -3.11 -m pytest scripts/ci/test_scaffold_agents_md.py -q --no-cov -> 14 passed",
+      "common case unchanged: dry-run against luthiers-toolbox still resolves main via origin/HEAD, still skips the existing PR template, no new prompt.",
+      "REQUIRED DoD STEP -- unlike-repo dry-run against Master-All-Strings (root pyproject.toml, src/ layout, its own remote): clean. It exercised the pyproject path luthiers-toolbox CANNOT, since this repo has no root pyproject, and correctly reported 'Detected requires-python = >=3.11'. No defect #5 surfaced. This step is required precisely because the fixtures encode only the four environments already known, and are by construction blind to the variety that is the actual distribution risk.",
+      "CI collection stated: scripts/ci/ is not collected wholesale; the new file is pinned by a named step in core_ci.yml alongside the CBSP21 ownership tests.",
+      "MANIFEST SCOPE: this branch carries two commits the owner ruled are ONE order -- the scaffolder and its distribution-hardening are the same deliverable. CBSP21 evaluates the PR diff rather than each commit, so two half-covering manifests scored 75%. This manifest therefore declares the whole branch diff; agents-md-scaffold.json is retained as the first increment's record rather than deleted."
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/scaffold_agents_md.py",
+      "intent": "Flag 1: (name, detected) return, --default-branch override, warn plus headless refusal. Plus the --force consent restructure the new test exposed.",
+      "risk": "medium",
+      "behavior_change": "undetectable default now refuses rather than guessing; --force without --yes aborts the whole run"
+    },
+    {
+      "path": "scripts/ci/test_scaffold_agents_md.py",
+      "intent": "Fourteen tests against real temp git repos covering the four known environment defects plus Flag 1, asserting on output rather than internal calls.",
+      "risk": "low",
+      "behavior_change": "none (tests)"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Pin the self-test. Nothing collects scripts/ci/ wholesale, so an unpinned distribution-correctness test would never execute.",
+      "risk": "low",
+      "behavior_change": "CI now fails if the scaffolder regresses"
+    },
+    {
+      "path": ".cbsp21/patches/scaffold-dist-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "AGENTS.md",
+      "intent": "From the first commit on this branch. Universal rules plus this repository's witnessed incidents and real gate commands, both marked DRAFTED PENDING OWNER REVIEW.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    },
+    {
+      "path": ".cbsp21/patches/agents-md-scaffold.json",
+      "intent": "The first commit's manifest. Retained as that increment's record; this manifest covers the branch as a whole.",
+      "risk": "low",
+      "behavior_change": "none (documentation)"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Flag 2 (_run collapsing every failure to None, so 'git not installed', 'not a repo' and 'no remote configured' are indistinguishable) is recorded here as a named follow-up and deliberately not built. It is a diagnostics-granularity issue, not a wrong-output risk, and the dev order placed it out of scope."
+  }
+}

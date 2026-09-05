@@ -169,16 +169,29 @@ def _run(cmd: List[str], cwd: Path) -> Optional[str]:
         return None
 
 
-def detect_default_branch(repo: Path) -> str:
-    # origin/HEAD symbolic ref is the truth; fall back to main, but say so.
+def detect_default_branch(repo: Path) -> "tuple[str, bool]":
+    """Return (branch_name, detected).
+
+    ``detected`` is False only for the last-resort guess. That distinction is the
+    whole point: a silently-returned "main" is a poison pill at scale. This tool
+    writes a canonical instruction telling agents which branch to cut from, and a
+    repo whose real default is ``develop`` would receive an AGENTS.md confidently
+    naming a branch that is not its default -- replicated across every repo the
+    scaffolder touches, and wrong in each one.
+
+    The caller must not write a file on an undetected guess without either an
+    explicit ``--default-branch`` or an interactive confirmation.
+    """
+    # origin/HEAD symbolic ref is the truth.
     ref = _run(["git", "symbolic-ref", "refs/remotes/origin/HEAD"], repo)
     if ref and "/" in ref:
-        return ref.rsplit("/", 1)[-1]
-    # local guess
+        return ref.rsplit("/", 1)[-1], True
+    # A local branch of the conventional name is weaker evidence, but it is
+    # evidence: the branch demonstrably exists in this repo.
     for cand in ("main", "master"):
         if _run(["git", "rev-parse", "--verify", cand], repo):
-            return cand
-    return "main"  # last resort; the human should confirm
+            return cand, True
+    return "main", False  # guess -- caller must warn and confirm or refuse
 
 
 def detect_python_hint(repo: Path) -> str:
@@ -263,6 +276,12 @@ def main() -> int:
         help="Confirm --force without prompting. Required with --force when "
              "stdin is not a TTY.",
     )
+    ap.add_argument(
+        "--default-branch",
+        metavar="NAME",
+        help="Name of this repo's default branch. Required when it cannot be "
+             "detected and stdin is not a TTY; otherwise overrides detection.",
+    )
     args = ap.parse_args()
 
     repo = args.repo.resolve()
@@ -270,19 +289,65 @@ def main() -> int:
         print(f"ERROR: {repo} is not a git repo (no .git). Refusing.", file=sys.stderr)
         return 2
 
-    # Refuse --force headlessly BEFORE writing anything. Calling input() in a
-    # non-interactive session raises EOFError, and it would do so only after
-    # the first file had already been written -- a half-completed overwrite is
-    # worse than a clean refusal.
-    if args.force and not args.yes and not sys.stdin.isatty():
-        print(
-            "ERROR: --force needs --yes when stdin is not a TTY.\n"
-            "       Refusing now rather than failing part-way through.",
-            file=sys.stderr,
-        )
-        return 2
+    # Resolve --force consent BEFORE writing anything, and refuse the WHOLE run
+    # if it cannot be obtained.
+    #
+    # isatty() is not a usable signal for this. On Windows, stdin redirected to
+    # NUL is a character device, so isatty() returns True while reads still fail
+    # -- the guard silently never fires. Worse, deferring the prompt into the
+    # write loop produced a partial run: the overwrite of an existing file was
+    # correctly skipped, and a different, non-conflicting file was written
+    # anyway, leaving the repo half-scaffolded under a --force that was never
+    # granted. --force is a single intent; if it cannot be confirmed, nothing
+    # should be written.
+    if args.force and not args.yes:
+        try:
+            granted = input("--force: overwrite existing files? [y/N] ").strip().lower() == "y"
+        except (EOFError, KeyboardInterrupt):
+            print(
+                "\nERROR: --force needs --yes when stdin cannot be read.\n"
+                "       Refusing the whole run rather than writing part of it.",
+                file=sys.stderr,
+            )
+            return 2
+        if not granted:
+            print("Aborted.", file=sys.stderr)
+            return 2
+        args.yes = True  # consent obtained once; do not re-prompt per file
 
-    default_branch = detect_default_branch(repo)
+    detected_branch, detected = detect_default_branch(repo)
+    if args.default_branch:
+        default_branch, detected = args.default_branch, True
+    else:
+        default_branch = detected_branch
+        if not detected:
+            # Never write a canonical "branch from X" on a guess. Warning alone
+            # is not enough headlessly -- nobody reads stderr mid-run in an agent
+            # session, so an unread warning is silent in effect, which is the
+            # failure this guard exists to prevent.
+            print(
+                f"WARNING: could not detect the default branch; assuming "
+                f"'{default_branch}'. Pass --default-branch <name> to set it, "
+                f"or confirm this is correct.",
+                file=sys.stderr,
+            )
+            if not sys.stdin.isatty():
+                print(
+                    "ERROR: refusing to write a possibly-wrong default branch "
+                    "into a canonical file with no TTY to confirm on. "
+                    "Re-run with --default-branch <name>.",
+                    file=sys.stderr,
+                )
+                return 3
+            try:
+                ok = input(f"Use '{default_branch}' as the default branch? [y/N] ")
+            except (EOFError, KeyboardInterrupt):
+                print("\nno readable stdin — refusing.", file=sys.stderr)
+                return 3
+            if ok.strip().lower() != "y":
+                print("Aborted. Re-run with --default-branch <name>.", file=sys.stderr)
+                return 3
+
     python_hint = detect_python_hint(repo)
     claude_note = "" if has_claude_md(repo) else " (not present in this repo yet)"
     repo_name = detect_repo_name(repo)
