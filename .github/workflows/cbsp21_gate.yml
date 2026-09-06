@@ -36,11 +36,15 @@ jobs:
               echo "Failed to determine merge-base for $BASE and $HEAD. Ensure both refs exist and share history; this usually means the branch needs rebasing or the histories are unrelated." >&2
               exit 1
             fi
-            CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD" | tr '\n' ' ')
+            CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD")
           else
-            CHANGED=$(git diff --name-only "$BASE" "$HEAD" | tr '\n' ' ')
+            CHANGED=$(git diff --name-only "$BASE" "$HEAD")
           fi
-          echo "files=$CHANGED" >> $GITHUB_OUTPUT
+          {
+            echo "files<<CBSP21_CHANGED_FILES"
+            printf '%s\n' "$CHANGED"
+            echo "CBSP21_CHANGED_FILES"
+          } >> "$GITHUB_OUTPUT"
           echo "Changed files: $CHANGED"
 
       - name: Run CBSP21 Gate Check
@@ -49,8 +53,9 @@ jobs:
         run: |
           # No --manifest: the gate auto-discovers .cbsp21/patches/*.json (+ the
           # legacy .cbsp21/patch_input.json) and selects the best-covering one.
+          mapfile -t changed_files <<< "$CHANGED_FILES"
           python scripts/ci/check_cbsp21_gate.py \
-            --changed-files $CHANGED_FILES
+            --changed-files "${changed_files[@]}"
 
       - name: CBSP21 Gate Summary
         if: always()
