@@ -177,3 +177,18 @@ def test_nb020_own_manifest_selected_over_historical(tmp_path):
     # Selected because it is in the diff — not the historical candidate.
     assert "owned.json" in out
     assert "historical.json" not in out
+
+
+def test_patch_input_accepts_unicode_and_spaces_in_paths(tmp_path):
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    path = "docs/Smart Guitar v1.1 — Full Specifications.md"
+    _write(repo, path, "scale: 24.75\n")
+    base = _commit(repo, "base: smart guitar docs")
+    _write(repo, path, "scale: 25.5\n")
+    _write(repo, ".cbsp21/patches/sg-scale.json", _valid_manifest("SG_SCALE", [path]))
+    head = _commit(repo, "head: update unicode path with owned manifest")
+
+    rc, out = _run_patch_input(repo, base, head)
+    assert rc == 0, out
+    assert "PASS" in out
