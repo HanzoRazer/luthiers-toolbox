@@ -1,0 +1,64 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SG_SCALE_25_5IN",
+  "title": "spec(smart-guitar): revise scale length to 25.5 in / 647.7 mm",
+  "intent": "Owner-directed revision of the Smart Guitar scale length from 628.65 mm / 24.75 in to 647.7 mm / 25.5 in, mirroring CNC-Production-Shop PR #16 which carries the full rationale. The 628.65 was Gibson heritage inherited from the Explorer and Les Paul parents recorded in instrument.design_heritage; both CNC product-line baselines already declare 25.5 in, so on this figure the Smart Guitar was the deviation from its own product line and this returns it to the baseline. Data-only: no Python in services/api reads the constant.",
+  "change_type": "spec-data",
+  "behavior_change": "governed-record-value",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/instrument_geometry/body/specs/",
+      "docs/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "docs/Smart Guitar v1.1 — Full Specifications.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) neck.scale_length_inches 24.75 -> 25.5 and neck.scale_length_mm 628.65 -> 647.7, with a new neck.scale_length_note recording the authority, the date, that 25.5 in is the specified figure and 647.7 mm its exact conversion, and that the design_heritage reference values are deliberately untouched. (2) cavities.bridge_route.body_position_mm.notes reworded from a note tying the position to the superseded scale into an explicit STALE flag: the bridge station is scale-derived and moves 19.05 mm toward the tail, both pickup routes are bridge-referenced and follow it, and the value is NOT recomputed here because every cavity position in this spec is withdrawn pending a trustworthy body outline. y_from_top itself is left at 320.0. (3) The trailing summary note and the docs spec table line updated from 'Gibson 24.75 scale' to the revised figure.",
+    "why_not_redundant": "This is the toolbox half of a two-repo change; the CNC half revises fixtures/products/smart_guitar_v1.json and regenerates docs/geometry/SMART_GUITAR_CAD_DIMENSIONS.md. Neither repo is self-consistent with the other until both merge. Nothing else in this repo carries the constant."
+  },
+  "verification": {
+    "commands_run": [
+      "grep -rln --include=*.py '628\\.65' services/api/app services/api/tests -> no matches; no Python reads the constant, so nothing downstream breaks",
+      "python -c 'import json; json.load(open(spec))' -> parses; scale_length_mm 647.7, 647.7/25.4 == 25.5 exactly",
+      "design_heritage.explorer.reference_scale_mm and .les_paul.reference_scale_mm confirmed still 628.65 after the edit"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "intent": "Revise the product's own scale length; flag the scale-derived bridge position stale rather than recomputing a withdrawn placement.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json"
+      ],
+      "risk": "low",
+      "behavior_change": "A governed value changes. No code path reads it. Cavity positions are unchanged and remain withdrawn."
+    },
+    {
+      "path": "docs/Smart Guitar v1.1 — Full Specifications.md",
+      "intent": "Keep the human-readable spec table consistent with the record.",
+      "scan_targets": [
+        "docs/Smart Guitar v1.1 — Full Specifications.md"
+      ],
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-05-SG-SCALE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 2
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Medium: the sheet and the CNC records now agree at 25.5 in while any fretboard already sourced against 24.75 in is the wrong part - slot spacing is scale-specific, and the CNC neck make-or-buy estimate is flagged stale in the companion PR. Low: design_heritage reference values intentionally left at 628.65 because they are facts about a Gibson Explorer and a Les Paul, not about this instrument; changing them would falsify a citation. Low: the Khaya sibling in CNC still reads 628.65 and whether it follows is an owner decision, not a consequence of this change."
+  }
+}

@@ -326,7 +326,7 @@
       "body_position_mm": {
         "x_center": 0.0,
         "y_from_top": 320.0,
-        "notes": "Scale length 628.65mm (24.75 inches, Gibson standard) measured from locking nut to bridge saddle contact point"
+        "notes": "STALE 2026-09-05: this y_from_top was derived from the superseded 628.65mm (24.75 in) scale. Scale is now 647.7mm (25.5 in), which moves the bridge station 19.05mm toward the tail; both pickup routes are bridge-referenced and move with it. NOT recomputed here because every cavity position in this spec is withdrawn pending a trustworthy body outline - recomputing would assert a placement that does not exist. Original note: scale length measured from locking nut to bridge saddle contact point."
       }
     },
     "rear_electronics_cavity": {
@@ -788,8 +788,9 @@
   },
   "neck": {
     "design": "headless",
-    "scale_length_inches": 24.75,
-    "scale_length_mm": 628.65,
+    "scale_length_inches": 25.5,
+    "scale_length_mm": 647.7,
+    "scale_length_note": "REVISED 2026-09-05, owner-directed: 24.75 in / 628.65 mm -> 25.5 in / 647.7 mm. 25.5 in is the specified figure; the mm value is the exact conversion. The old figure was Gibson heritage inherited from the Explorer and Les Paul parents recorded in instrument.design_heritage, whose reference_scale_mm values are facts about those instruments and are deliberately unchanged. Both CNC-Production-Shop product-line baselines already declare 25.5 in, so the Smart Guitar was the deviation and this returns it to the line.",
     "fret_count": 24,
     "profile": "modern_C",
     "profile_source": "Gibson Explorer reference \u2014 verified spec sheet",
@@ -1022,6 +1023,6 @@
     "Cavity positions mapped to STEM Guitar 24x32 grid for vectorizer integration",
     "Explorer contribution: body shape, dual HB layout, V lower bout",
     "Original ergonomic design: asymmetric voids for arm/ribcage relief, rear-access electronics, no front control cavity, minimal front routing",
-    "Headless design: no headstock, locking nut, tuning at headless bridge. Gibson 24.75 scale with 24 frets."
+    "Headless design: no headstock, locking nut, tuning at headless bridge. 25.5 in / 647.7 mm scale with 24 frets, revised 2026-09-05 from the inherited Gibson 24.75 in."
   ]
 }
