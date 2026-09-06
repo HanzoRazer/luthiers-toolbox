@@ -1,0 +1,222 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LEGACY_WIRING_035_PRODUCTION_REMEDIATION",
+  "title": "Repair the three production defects found by Investigation 035 (S1 dead simulator URL, S3 shadowed polygon-offset engine, S4 legacy DXF 500s)",
+  "intent": "Investigation 035 (evidence packet, Consolidation Lab PR #19) found three live defects by driving production entrypoints. This PR repairs them and adds guards that can actually fail on each one. S1: five frontend call sites posted to /api/cam/simulate_gcode, which is not mounted; they are repointed to the two endpoints that match their two different contracts. S3: the N17 utility handler shadowed the governed polygon-offset engine at POST /api/cam/polygon_offset.nc, applying stepover as millimetres instead of a fraction of tool_dia; the utility route is renamed so the governed draft lane owns its URL. S4: try_build_with_ezdxf raised instead of returning None, severing the ASCII R12 fallback its callers depend on and 500ing both legacy DXF export endpoints.",
+  "change_type": "fix",
+  "behavior_change": "yes",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/exports/dxf_helpers.py",
+      "services/api/app/cam/routers/utility/polygon_router.py",
+      "services/api/tests/test_legacy_wiring_035_regressions.py",
+      "packages/client/src/components/",
+      "packages/client/src/views/bridge_lab/composables/",
+      "packages/client/src/api/__tests__/",
+      ".cbsp21/patches/legacy-wiring-035-production-remediation.json",
+      ".github/workflows/api_dxf_tests.yml",
+      "services/api/app/rmos/manufacturing_authority_registry.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/exports/dxf_helpers.py",
+      "services/api/app/cam/routers/utility/polygon_router.py",
+      "services/api/tests/test_legacy_wiring_035_regressions.py",
+      "packages/client/src/components/GeometryOverlay.vue",
+      "packages/client/src/components/toolbox/SimLab.vue",
+      "packages/client/src/components/toolbox/SimLabWorker.vue",
+      "packages/client/src/views/bridge_lab/composables/useGcodeSimulation.ts",
+      "packages/client/src/api/__tests__/camSimulationWiring.spec.ts",
+      ".cbsp21/patches/legacy-wiring-035-production-remediation.json",
+      ".github/workflows/api_dxf_tests.yml",
+      "services/api/app/rmos/manufacturing_authority_registry.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "S1 (frontend only): four JSON call sites move from /api/cam/simulate_gcode to /api/cam/sim/gcode; one multipart call site moves to /api/cam/sim/upload. No backend route is added or removed for S1. S3: app/cam/routers/utility/polygon_router.py changes its route path from /polygon_offset.nc to /polygon_offset_n17.nc; the handler, its request model and its millimetre stepover semantics are untouched, so nothing is deleted. S4: dxf_helpers.try_build_with_ezdxf calls custom_vars.append('COMMENT', comment) with two positional args instead of a tuple, emits polylines through dxf_compat.add_polyline(version='R12') instead of msp.add_lwpolyline (invalid in R12), and its outer guard catches TypeError and ezdxf.DXFError so the function returns None on failure as its callers require. Plus two regression suites. Two files added after the first CI run: .github/workflows/api_dxf_tests.yml (its referenced test file was deleted in Feb 2026 and the path-triggered job had not run since, so it failed on 'file or directory not found' rather than on anything in this diff) and services/api/app/rmos/manufacturing_authority_registry.json (the renamed N17 route must be declared under MAR-006/MAR-021).",
+    "why_not_redundant": "All three are behaviour changes on live endpoints, and none is covered by an existing gate. The existing test_polygon_offset_endpoint_smoke.py asserted only status 200 and that the body contains 'G' for /api/cam/polygon_offset.nc; it passed throughout the period the wrong engine served that URL because its assertions cannot distinguish two G-code generators. The new backend suite pins the property that was wrong (pass inset equals tool_dia * stepover, the X-ToolBox-Lane owner header, and preview/NC agreement) and 7 of its 11 tests fail against the pre-fix tree. S1 is invisible to pytest because no backend route was ever wrong, so its guard is a vitest that scans client sources; 3 of its 4 assertions fail against the pre-fix frontend. S4 additionally pins the return-None fallback contract that WP-1 exception narrowing (c3147212) severed.",
+    "behavior_change_detail": "POST /api/cam/polygon_offset.nc now returns the governed draft-lane toolpath (X-ToolBox-Lane: draft) instead of N17 output. For the documented consumer contract this is a correction, not a regression: with tool_dia 6.0 and stepover 0.4 the pass inset changes from 0.4 mm to 2.4 mm, which is what both live consumers already implied and what /polygon_offset.preview already returned. Callers who genuinely want the millimetre-stepover N17 engine use POST /api/cam/polygon_offset_n17.nc. Both legacy DXF export endpoints change from HTTP 500 to HTTP 200 returning readable R12 DXF."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest tests/test_legacy_wiring_035_regressions.py -> 11 passed; 7 of 11 FAIL against the pre-fix tree (git stash) confirming they are regression witnesses",
+      "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts -> 4 passed; 3 of 4 FAIL against the pre-fix frontend",
+      "py -3.11 -m pytest tests/test_polygon_offset_endpoint_smoke.py tests/test_simulation_endpoint_smoke.py -> 67 passed, 8 xfailed",
+      "py -3.11 -m pytest tests/ -k 'dxf or export or legacy or cam_utility or utility' -> 785 passed, 19 skipped, 0 failed",
+      "py -3.11 -m pytest tests/test_dxf_*.py tests/test_endpoint_consumer_map_builder.py -> 270 passed",
+      "manual: /api/cam/polygon_offset.nc step measured 2.4mm (was 0.4mm); /api/cam/polygon_offset_n17.nc still 0.4mm; /exports/polyline_dxf and /exports/biarc_dxf both 200 and ezdxf-readable AC1009 with no LWPOLYLINE",
+      "py -3.11 -m pytest tests/rmos/test_manufacturing_authority_discovery.py tests/rmos/test_vcarve_authority_convergence.py -> 30 passed (rmos-ci red was real and is fixed)",
+      "py -3.11 scripts/check_protected_paths.py -> clean"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/routers/utility/polygon_router.py",
+      "intent": "Move the N17 utility route off /polygon_offset.nc to /polygon_offset_n17.nc so it stops shadowing the governed engine. Handler and millimetre stepover semantics unchanged; nothing deleted.",
+      "scan_targets": [
+        "services/api/app/cam/routers/utility/polygon_router.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "yes - POST /api/cam/polygon_offset.nc is now served by the governed draft lane; the N17 engine remains reachable at POST /api/cam/polygon_offset_n17.nc",
+      "verification": [
+        "py -3.11 -m pytest tests/test_legacy_wiring_035_regressions.py -k s3",
+        "py -3.11 -m pytest tests/test_polygon_offset_endpoint_smoke.py"
+      ]
+    },
+    {
+      "path": "services/api/app/exports/dxf_helpers.py",
+      "intent": "Fix the ezdxf CustomVars.append call shape, emit R12-legal entities via dxf_compat.add_polyline, and restore the return-None fallback contract that exception narrowing severed.",
+      "scan_targets": [
+        "services/api/app/exports/dxf_helpers.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "yes - /exports/polyline_dxf and /exports/biarc_dxf change from HTTP 500 to HTTP 200 returning readable R12 DXF",
+      "verification": [
+        "py -3.11 -m pytest tests/test_legacy_wiring_035_regressions.py -k s4",
+        "py -3.11 -m pytest tests/ -k 'dxf or export'"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_legacy_wiring_035_regressions.py",
+      "intent": "Backend guards for S1, S3 and S4 that pin the property that was wrong rather than that a route answers.",
+      "scan_targets": [
+        "services/api/tests/test_legacy_wiring_035_regressions.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only",
+      "verification": [
+        "py -3.11 -m pytest tests/test_legacy_wiring_035_regressions.py -v"
+      ]
+    },
+    {
+      "path": "packages/client/src/components/GeometryOverlay.vue",
+      "intent": "Repoint the JSON simulator call from the unmounted /api/cam/simulate_gcode to /api/cam/sim/gcode.",
+      "scan_targets": [
+        "packages/client/src/components/GeometryOverlay.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "yes - the request now reaches a mounted endpoint instead of returning 404",
+      "verification": [
+        "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/components/toolbox/SimLab.vue",
+      "intent": "Repoint two JSON simulator calls (run and CSV download) to /api/cam/sim/gcode.",
+      "scan_targets": [
+        "packages/client/src/components/toolbox/SimLab.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "yes - the requests now reach a mounted endpoint instead of returning 404",
+      "verification": [
+        "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/components/toolbox/SimLabWorker.vue",
+      "intent": "Repoint the JSON simulator call to /api/cam/sim/gcode.",
+      "scan_targets": [
+        "packages/client/src/components/toolbox/SimLabWorker.vue"
+      ],
+      "risk": "low",
+      "behavior_change": "yes - the request now reaches a mounted endpoint instead of returning 404",
+      "verification": [
+        "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/views/bridge_lab/composables/useGcodeSimulation.ts",
+      "intent": "Repoint the multipart simulator call to /api/cam/sim/upload. This caller posts FormData, so the JSON endpoint used by the other four would have returned 422.",
+      "scan_targets": [
+        "packages/client/src/views/bridge_lab/composables/useGcodeSimulation.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "yes - the upload now reaches the multipart simulation endpoint instead of returning 404",
+      "verification": [
+        "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts"
+      ]
+    },
+    {
+      "path": "packages/client/src/api/__tests__/camSimulationWiring.spec.ts",
+      "intent": "Client guard for S1. The defect is invisible to the backend suite because no backend route was ever wrong, so this scans client sources for the dead URL and pins each caller to the endpoint matching its contract.",
+      "scan_targets": [
+        "packages/client/src/api/__tests__/camSimulationWiring.spec.ts"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only",
+      "verification": [
+        "npx vitest run src/api/__tests__/camSimulationWiring.spec.ts"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/legacy-wiring-035-production-remediation.json",
+      "intent": "This PR's own CBSP21 declaration. No CBSP21 policy, schema, threshold or checker change.",
+      "scan_targets": [
+        ".cbsp21/patches/legacy-wiring-035-production-remediation.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    },
+    {
+      "path": ".github/workflows/api_dxf_tests.yml",
+      "intent": "Repoint the DXF Export Tests job at a suite that exists. It referenced tests/test_legacy_dxf_exports.py, deleted by 2645b0de on 2026-02-06; the job is path-triggered on services/api/app/exports/**, which nothing touched since, so the stale reference went unseen for seven months and failed the moment this PR touched that path.",
+      "scan_targets": [
+        ".github/workflows/api_dxf_tests.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI wiring; the job now runs the -k s4 selection that covers these endpoints",
+      "verification": [
+        "cd services/api && pytest tests/test_legacy_wiring_035_regressions.py -v --tb=short -k s4 -> 4 passed, 7 deselected"
+      ]
+    },
+    {
+      "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+      "intent": "Register POST /api/cam/polygon_offset_n17.nc under the existing polygon-offset capability (MAR-006/MAR-021 requires every machine-artifact route to be declared), add the utility router to generators, and correct client_consumers -- it named packages/client/src/views/PolygonOffsetLab.vue, which does not exist; the real consumers are OffsetLabView.vue and api/n17_n18.ts.",
+      "scan_targets": [
+        "services/api/app/rmos/manufacturing_authority_registry.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - registry declaration; no route behaviour is defined here",
+      "verification": [
+        "cd services/api && py -3.11 -m pytest tests/rmos/test_manufacturing_authority_discovery.py tests/rmos/test_vcarve_authority_convergence.py -> 30 passed"
+      ]
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-06-LEGACY-WIRING-035-REMEDIATION",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "AS-035R-1",
+        "severity": "medium",
+        "area": "CAM route ownership",
+        "note": "POST /api/cam/polygon_offset.nc changes which handler serves it. Mitigation: both live consumers (OffsetLabView.vue, api/n17_n18.ts) already declare the governed fraction convention and already preview against the governed-only /polygon_offset.preview, so neither loses a contract it was relying on. The N17 implementation is renamed, not deleted, and is covered by its own regression test."
+      },
+      {
+        "id": "AS-035R-2",
+        "severity": "medium",
+        "area": "DXF output",
+        "note": "Legacy DXF exports go from 500 to 200. Output is the ASCII R12 writer, which is what these endpoints produced before WP-1 exception narrowing (c3147212) broke the fallback. try_build_with_ezdxf still returns None at runtime due to a separate BytesIO/StringIO fault documented in the PR; that path is left dormant rather than activated, because switching the writer for legacy exports would need CAD-viewer verification per the project DXF standard."
+      },
+      {
+        "id": "AS-035R-3",
+        "severity": "low",
+        "area": "CI wiring",
+        "note": "The DXF Export Tests job pointed at a test file deleted by 2645b0de on 2026-02-06. Because it is path-triggered on services/api/app/exports/**, which nothing modified afterwards, the broken reference never surfaced. Notably the deletion landed one day before c3147212 narrowed the exception handling that broke these endpoints, so the guard was removed immediately before the regression it would have caught."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Both medium findings are inherent to repairing the defects and are covered by tests that fail against the pre-fix tree. RMOS, Manufacturing Spine, CBSP21 checkers, the Vectorizer and dump_and_assert_routes.py are unchanged.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": true,
+    "notes": "Investigation 035 evidence lives in Consolidation Lab PR #19. This PR is the production remediation it unblocked; the two are deliberately in different repositories because Investigation 033 makes Luthier's Toolbox the read-only subject of legacy-wiring evidence."
+  }
+}

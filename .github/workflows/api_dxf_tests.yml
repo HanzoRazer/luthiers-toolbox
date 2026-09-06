@@ -19,14 +19,14 @@ on:
     paths:
       - 'services/api/app/exports/**'
       - 'services/api/app/routers/legacy_dxf_exports_router.py'
-      - 'services/api/tests/test_legacy_dxf_exports.py'
+      - 'services/api/tests/test_legacy_wiring_035_regressions.py'
       - '.github/workflows/api_dxf_tests.yml'
   pull_request:
     branches: [main]
     paths:
       - 'services/api/app/exports/**'
       - 'services/api/app/routers/legacy_dxf_exports_router.py'
-      - 'services/api/tests/test_legacy_dxf_exports.py'
+      - 'services/api/tests/test_legacy_wiring_035_regressions.py'
   workflow_dispatch:
 
 env:
@@ -60,10 +60,21 @@ jobs:
           pip install pytest pytest-cov
           pip install ezdxf
 
+      # tests/test_legacy_dxf_exports.py was deleted by 2645b0de (2026-02-06,
+      # "delete 90 test files for WP-2 disabled routers"). This job is
+      # path-triggered on services/api/app/exports/**, which nothing touched
+      # afterwards, so it never ran again and its stale reference went unseen
+      # for seven months -- a red gate nobody could see. It failed with
+      # "file or directory not found" the first time a PR touched that path.
+      #
+      # Pointed at the suite that actually exercises these endpoints. The
+      # deletion landed one day before c3147212 narrowed the exception handling
+      # that broke /exports/polyline_dxf and /exports/biarc_dxf, so this job
+      # would have caught that regression had it still been able to run.
       - name: Run DXF export tests
         working-directory: ./services/api
         run: |
-          pytest tests/test_legacy_dxf_exports.py -v --tb=short
+          pytest tests/test_legacy_wiring_035_regressions.py -v --tb=short -k s4
 
   dxf-integration:
     name: DXF Integration Test (Docker)
@@ -79,6 +90,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Both paths below must sit OUTSIDE /app/services/api/app/data. The
+      # Dockerfile chowns that directory to the `app` user at build time, but
+      # compose bind-mounts ./services/api/app/data over it at runtime, so the
+      # mount arrives owned by the host UID and the build-time chown is masked.
+      # RMOS_RUNS_DIR defaults into that directory and `runs/` is not tracked in
+      # git, so RunStoreV2 had to mkdir it and could not:
+      #   PermissionError: [Errno 13] '/app/services/api/app/data/runs'
+      # raised at import time, so the container never served a request.
+      # ART_STUDIO_DB_PATH was already redirected here for the same reason;
+      # RMOS_RUNS_DIR was missed.
       - name: Create .env file
         run: |
           cat > .env <<EOF
@@ -87,6 +108,7 @@ jobs:
           CORS_ORIGINS=http://localhost:8080
           COMPOSE_PROJECT_NAME=toolbox-dxf-test
           ART_STUDIO_DB_PATH=/tmp/art_studio.db
+          RMOS_RUNS_DIR=/tmp/rmos_runs
           EOF
 
       - name: Build and start services
@@ -96,20 +118,40 @@ jobs:
           docker compose up -d --build api
           sleep 15
 
+      # This loop used to `break` on success and simply fall through on
+      # timeout, so it could not fail. Combined with the masked curl below it
+      # meant three consecutive steps reported success while the API was never
+      # up, and the first step that could actually fail was the export test --
+      # which then looked like an export defect rather than a dead container.
       - name: Wait for API health
         run: |
           for i in {1..30}; do
             if curl -fsS $API_BASE/health > /dev/null 2>&1; then
               echo "API is healthy"
-              break
+              exit 0
             fi
             echo "Waiting for API... ($i/30)"
             sleep 2
           done
+          echo "::error::API never became healthy on $API_BASE after 60s"
+          exit 1
+
+      # Diagnostics for the step above. Without these the only signal a dead
+      # container produced was "curl: (7) Failed to connect" three steps later.
+      - name: Container diagnostics
+        if: failure()
+        run: |
+          echo "===== docker compose ps ====="
+          docker compose ps --all || true
+          echo "===== docker compose logs api ====="
+          docker compose logs --no-color --tail=300 api || true
 
       - name: Test DXF health endpoint
         run: |
-          curl -fsS $API_BASE/exports/dxf/health | jq .
+          # `curl | jq` returns jq's status, not curl's, so this step reported
+          # "passed" on a connection refusal. Capture first, then parse.
+          curl -fsS $API_BASE/exports/dxf/health -o dxf_health.json
+          jq . dxf_health.json
           echo "DXF health check passed"
 
       - name: Test polyline DXF export

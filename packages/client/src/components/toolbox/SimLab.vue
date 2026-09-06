@@ -289,7 +289,7 @@ function togglePlay(){
 }
 
 async function runSim(){
-  const res = await api('/api/cam/simulate_gcode', { 
+  const res = await api('/api/cam/sim/gcode', { 
     method:'POST', 
     headers:{'Content-Type':'application/json'}, 
     body: JSON.stringify({ gcode: code.value }) 
@@ -326,7 +326,7 @@ async function runSim(){
 }
 
 async function downloadCSV(){
-  const res = await api('/api/cam/simulate_gcode', { 
+  const res = await api('/api/cam/sim/gcode', { 
     method:'POST', 
     headers:{'Content-Type':'application/json'}, 
     body: JSON.stringify({ gcode: code.value, as_csv: true }) 

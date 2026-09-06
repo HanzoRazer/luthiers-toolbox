@@ -256,7 +256,7 @@ async function checkParity(){
   })
   report.value = await res.json()
 
-  const sim = await api('/api/cam/simulate_gcode', {
+  const sim = await api('/api/cam/sim/gcode', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ gcode: gcode.value })
   }).then(r=>r.json())

@@ -138,7 +138,7 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
     try:
         import ezdxf
         from io import BytesIO
-        from app.util.dxf_compat import create_document
+        from app.util.dxf_compat import add_polyline, create_document
     except ImportError:
         return None
 
@@ -151,8 +151,16 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
             comment = entities[0][1].get('comment')
             if comment:
                 try:
-                    doc.header.custom_vars.append(("COMMENT", comment))
-                except (ValueError, AttributeError):  # WP-1: narrowed from except Exception
+                    # ezdxf CustomVars.append(tag, value) takes TWO positional
+                    # args. Passing a single tuple raises TypeError, which the
+                    # guard below did not catch after WP-1 narrowed it from
+                    # `except Exception` (c3147212) — turning a silently-dropped
+                    # header into a hard 500 on every legacy DXF export.
+                    doc.header.custom_vars.append("COMMENT", comment)
+                except (ValueError, AttributeError, TypeError):
+                    # A missing comment header must never fail the export: the
+                    # caller has an ASCII R12 fallback that only runs if this
+                    # function returns None rather than raising.
                     pass
 
         for (etype, params) in entities:
@@ -162,9 +170,12 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
                 doc.layers.add(layer)
 
             if etype == 'polyline':
-                points = params['points']
-                points_3d = [(x, y, 0) for (x, y) in points]
-                msp.add_lwpolyline(points_3d, dxfattribs={'layer': layer})
+                # The document above is R12, where LWPOLYLINE is invalid —
+                # msp.add_lwpolyline() raised DXFVersionError unconditionally.
+                # dxf_compat.add_polyline emits LINE segments for R12 and
+                # LWPOLYLINE for R2000+, which is the project DXF standard
+                # (CLAUDE.md: free tier R12 = LINE entities only).
+                add_polyline(msp, params['points'], layer=layer, version='R12')
 
             elif etype == 'arc':
                 center = params['center']
@@ -201,7 +212,12 @@ def try_build_with_ezdxf(entities: List[Tuple[str, dict]]) -> Optional[bytes]:
         doc.write(bio, fmt='asc')
         return bio.getvalue()
 
-    except (OSError, ValueError) as e:  # WP-1: narrowed from except Exception
+    except (OSError, ValueError, TypeError, ezdxf.DXFError) as e:
+        # Returning None is the CONTRACT: both callers fall back to the ASCII
+        # R12 writer when this returns None, but they cannot fall back if it
+        # raises. WP-1 narrowing to (OSError, ValueError) severed that fallback
+        # — ezdxf's own errors derive from DXFError, not ValueError — so any
+        # ezdxf failure became a 500 instead of a degraded-but-valid export.
         print(f"ezdxf export failed: {e}")
         return None
 

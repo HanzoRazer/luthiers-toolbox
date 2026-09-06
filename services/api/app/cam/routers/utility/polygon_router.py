@@ -1,7 +1,24 @@
-"""Polygon Router — Polygon offset G-code generation.
+"""Polygon Router — Polygon offset G-code generation (N17 utility lane).
 
 Provides:
-- POST /polygon_offset.nc - Generate G-code for polygon offsetting
+- POST /polygon_offset_n17.nc - Generate G-code for polygon offsetting
+
+STEPOVER IS ABSOLUTE MILLIMETRES HERE (default 2.0), which is why this handler
+must not share a URL with the governed engine, whose `stepover` is a FRACTION
+of tool_dia (Field(gt=0, le=1.0), step = tool_dia * stepover).
+
+This route was previously mounted at `/polygon_offset.nc`, colliding with
+app.routers.polygon_offset_router.polygon_offset_nc. The utility router is
+registered first, so it won FastAPI first-match and silently served every
+caller of that URL. Both live consumers -- OffsetLabView.vue and
+api/n17_n18.ts -- send the governed fraction convention (n17_n18.ts documents
+it as "Fraction (0-1), e.g. 0.4 = 40%") and both preview against the
+governed-only /polygon_offset.preview. The result was a UI that previewed one
+toolpath and downloaded another: stepover 0.4 became 0.4 mm passes instead of
+0.4 x 6.0 = 2.4 mm.
+
+Renamed rather than deleted: the implementation is real and stays reachable at
+its own explicit path.
 """
 from __future__ import annotations
 
@@ -38,7 +55,7 @@ class PolyOffsetReq(BaseModel):
     post: Optional[str] = None
 
 
-@router.post("/polygon_offset.nc", response_class=Response)
+@router.post("/polygon_offset_n17.nc", response_class=Response)
 def polygon_offset(req: PolyOffsetReq) -> Response:
     """Generate G-code for polygon offsetting with multiple passes."""
     paths = toolpath_offsets(
