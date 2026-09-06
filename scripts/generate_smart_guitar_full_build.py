@@ -487,9 +487,11 @@ def generate_phase1_front(spec: Dict, outline_mm: List[Tuple[float, float]]) -> 
     # -----------------------------------------------------------------------
     npu = cavs["neck_pickup_route"]
     npu_dims = npu["dimensions_mm"]
-    # Pickup Y position from bridge: y_from_bridge = 152.4mm
-    # Bridge at y_from_top=320, so pickup at y_from_top = 320 - 152.4 = 167.6
-    npu_y_from_top = 320.0 - npu.get("body_position_mm", {}).get("y_from_bridge", 152.4)
+    # Read the cavity station straight from the record, as the live DXF lane does.
+    # Previously this derived it as 320.0 - y_from_bridge, with the bridge hardcoded at the
+    # superseded 628.65 scale - so a record change to the pickup could not reach this lane,
+    # and supplying a y_from_bridge key would have placed the cavity against a stale bridge.
+    npu_y_from_top = npu.get("body_position_mm", {}).get("y_from_top", 167.6)
     npu_cx, npu_cy = spec_to_gcode(0.0, npu_y_from_top, body_w, body_h)
 
     mill_rectangular_pocket(
