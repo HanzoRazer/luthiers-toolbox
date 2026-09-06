@@ -107,20 +107,40 @@ jobs:
           docker compose up -d --build api
           sleep 15
 
+      # This loop used to `break` on success and simply fall through on
+      # timeout, so it could not fail. Combined with the masked curl below it
+      # meant three consecutive steps reported success while the API was never
+      # up, and the first step that could actually fail was the export test --
+      # which then looked like an export defect rather than a dead container.
       - name: Wait for API health
         run: |
           for i in {1..30}; do
             if curl -fsS $API_BASE/health > /dev/null 2>&1; then
               echo "API is healthy"
-              break
+              exit 0
             fi
             echo "Waiting for API... ($i/30)"
             sleep 2
           done
+          echo "::error::API never became healthy on $API_BASE after 60s"
+          exit 1
+
+      # Diagnostics for the step above. Without these the only signal a dead
+      # container produced was "curl: (7) Failed to connect" three steps later.
+      - name: Container diagnostics
+        if: failure()
+        run: |
+          echo "===== docker compose ps ====="
+          docker compose ps --all || true
+          echo "===== docker compose logs api ====="
+          docker compose logs --no-color --tail=300 api || true
 
       - name: Test DXF health endpoint
         run: |
-          curl -fsS $API_BASE/exports/dxf/health | jq .
+          # `curl | jq` returns jq's status, not curl's, so this step reported
+          # "passed" on a connection refusal. Capture first, then parse.
+          curl -fsS $API_BASE/exports/dxf/health -o dxf_health.json
+          jq . dxf_health.json
           echo "DXF health check passed"
 
       - name: Test polyline DXF export
