@@ -90,6 +90,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Both paths below must sit OUTSIDE /app/services/api/app/data. The
+      # Dockerfile chowns that directory to the `app` user at build time, but
+      # compose bind-mounts ./services/api/app/data over it at runtime, so the
+      # mount arrives owned by the host UID and the build-time chown is masked.
+      # RMOS_RUNS_DIR defaults into that directory and `runs/` is not tracked in
+      # git, so RunStoreV2 had to mkdir it and could not:
+      #   PermissionError: [Errno 13] '/app/services/api/app/data/runs'
+      # raised at import time, so the container never served a request.
+      # ART_STUDIO_DB_PATH was already redirected here for the same reason;
+      # RMOS_RUNS_DIR was missed.
       - name: Create .env file
         run: |
           cat > .env <<EOF
@@ -98,6 +108,7 @@ jobs:
           CORS_ORIGINS=http://localhost:8080
           COMPOSE_PROJECT_NAME=toolbox-dxf-test
           ART_STUDIO_DB_PATH=/tmp/art_studio.db
+          RMOS_RUNS_DIR=/tmp/rmos_runs
           EOF
 
       - name: Build and start services
