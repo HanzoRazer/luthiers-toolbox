@@ -1,0 +1,475 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LEGACY_WIRING_035_RUNTIME_VERIFICATION",
+  "title": "Investigation 035 Lab packet: LEGACY-WIRING-001B high-risk runtime verification",
+  "intent": "Add Investigation 035 evidence packet (census refresh, five-specimen runtime witnesses, instrument controls, D-status). Production application source is not modified. This manifest is the per-PR CBSP21 declaration required by the existing gate (CBSP21-NOBORROW-001); it does not change CBSP21 policy, schema, or checkers.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+        "paths_in_scope": [
+            "investigations/035-legacy-wiring-runtime-verification/",
+            ".cbsp21/patches/legacy-wiring-035-runtime-verification.json"
+        ],
+    "files_expected_to_change": [
+      "investigations/035-legacy-wiring-runtime-verification/CLAIM_RECORD.md",
+      "investigations/035-legacy-wiring-runtime-verification/EXPERIMENTS.md",
+      "investigations/035-legacy-wiring-runtime-verification/FACTS/CURRENT_STATE.md",
+      "investigations/035-legacy-wiring-runtime-verification/PATCH_PROPOSAL.md",
+      "investigations/035-legacy-wiring-runtime-verification/PROBLEM.md",
+      "investigations/035-legacy-wiring-runtime-verification/README.md",
+      "investigations/035-legacy-wiring-runtime-verification/RESULTS.md",
+      "investigations/035-legacy-wiring-runtime-verification/SCOPE.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/CANDIDATE_SELECTION.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/FINDINGS.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/RUNTIME_WITNESSES.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/TEST_RUNTIME_COMPARISON.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_CENSUS_SUMMARY.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_COLLISIONS.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_FRONTEND_UNMATCHED_PATHS.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES_DUMP_AS_IS.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_NAME_HINT_MODULES.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/TEST_RUNTIME_COMPARISON.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_BUNDLE.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_IW03.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S1.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S2.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S3.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S4.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S5.json",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/scratch/.gitkeep",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/census_refresh.py",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/runtime_reachability_witness.py",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/test_runtime_compare.py",
+      "investigations/035-legacy-wiring-runtime-verification/tests/conftest.py",
+      "investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py",
+      ".cbsp21/patches/legacy-wiring-035-runtime-verification.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds investigations/035-legacy-wiring-runtime-verification/ (Lab packet, census JSON, witness JSON, investigation-local tools and IW tests) plus this per-PR CBSP21 manifest. No services/, packages/, scripts/ci/, or CBSP21 checker files are in the diff.",
+    "why_not_redundant": "The required CBSP21 Patch Manifest Gate fails closed when a PR brings no owned manifest (CBSP21-NOBORROW-001). This packet is new Lab evidence under investigations/035-*; no existing manifest covers it, and borrowing a historical manifest is forbidden. The declaration maps this PR's files; it does not alter gate logic."
+  },
+  "verification": {
+    "commands_run": [
+      "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools /tmp/ltb-035-venv/bin/python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v -> 5 passed",
+      "runtime_reachability_witness.py iw03 s1 s2 s3 s4 s5 -> frozen under artifacts/census/WITNESS_*.json",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD plus this manifest>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/CLAIM_RECORD.md",
+      "intent": "EQ-A01 claims for baseline, census, IW-03, and S1\u2013S5.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/CLAIM_RECORD.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/EXPERIMENTS.md",
+      "intent": "Accepted/voided experiment log for Investigation 035.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/EXPERIMENTS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/FACTS/CURRENT_STATE.md",
+      "intent": "Raw pre-adjudication observations; no defect labels.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/FACTS/CURRENT_STATE.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/PATCH_PROPOSAL.md",
+      "intent": "NO PRODUCTION PATCH AUTHORIZED; S3 future remediation boundary only.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/PATCH_PROPOSAL.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/PROBLEM.md",
+      "intent": "Failure class: false integration / execution-path divergence.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/PROBLEM.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/README.md",
+      "intent": "Investigation 035 overview, numbering, and read-only production rule.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/RESULTS.md",
+      "intent": "Five-specimen D-status distribution and TARGET_SPECIFIC_FAILURE_CLASS.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/RESULTS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/SCOPE.md",
+      "intent": "Baseline SHA, five-specimen cap, excluded workstreams.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/SCOPE.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/CANDIDATE_SELECTION.md",
+      "intent": "Manual candidate table frozen before runtime work.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/CANDIDATE_SELECTION.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/FINDINGS.md",
+      "intent": "D-status and bounded LW findings after witness freeze.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/FINDINGS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/RUNTIME_WITNESSES.md",
+      "intent": "Per-specimen runtime witness narrative.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/RUNTIME_WITNESSES.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/TEST_RUNTIME_COMPARISON.md",
+      "intent": "Test vs production path relation for S1\u2013S5.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/TEST_RUNTIME_COMPARISON.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_CENSUS_SUMMARY.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_CENSUS_SUMMARY.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_COLLISIONS.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_COLLISIONS.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_FRONTEND_UNMATCHED_PATHS.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_FRONTEND_UNMATCHED_PATHS.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES_DUMP_AS_IS.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_LIVE_ROUTES_DUMP_AS_IS.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_NAME_HINT_MODULES.json",
+      "intent": "Frozen current census artifact for Investigation 035; not PR #17 overwrite.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_NAME_HINT_MODULES.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/TEST_RUNTIME_COMPARISON.json",
+      "intent": "Machine extraction of test vs runtime path relation.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/TEST_RUNTIME_COMPARISON.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_BUNDLE.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_BUNDLE.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_IW03.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_IW03.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S1.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S1.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S2.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S2.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S3.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S3.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S4.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S4.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S5.json",
+      "intent": "Frozen runtime witness JSON; D-status not assigned by the tool.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/census/WITNESS_S5.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/scratch/.gitkeep",
+      "intent": "Scratch directory placeholder for witness filesystem containment.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/scratch/.gitkeep"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/census_refresh.py",
+      "intent": "Investigation-specific current census refresh (Lab-side; does not write production metrics).",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/census_refresh.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/runtime_reachability_witness.py",
+      "intent": "Five-specimen + IW-03 runtime spy harness.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/runtime_reachability_witness.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/test_runtime_compare.py",
+      "intent": "Simple test-path vs runtime-path extraction.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/tools/test_runtime_compare.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/tests/conftest.py",
+      "intent": "Investigation-local pytest path hook for instrument controls.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/tests/conftest.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py",
+      "intent": "IW-01, IW-02, IW-04, IW-05 harness controls.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/legacy-wiring-035-runtime-verification.json",
+      "intent": "This PR's own CBSP21 declaration so the existing gate can map the packet. No CBSP21 policy, schema, threshold, or checker change.",
+      "scan_targets": [
+        ".cbsp21/patches/legacy-wiring-035-runtime-verification.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-06-LEGACY-WIRING-035",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Investigation packet and per-PR CBSP21 declaration only. Production routes, Vectorizer, Manufacturing Spine, RMOS, CBSP21 checkers, and dump_and_assert_routes.py are unchanged.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false,
+    "notes": "S3 severe-stop is recorded in FINDINGS.md. Remediation is not authorized in this increment."
+  }
+}

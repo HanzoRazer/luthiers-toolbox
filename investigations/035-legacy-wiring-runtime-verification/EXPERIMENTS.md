@@ -240,3 +240,19 @@ Wrapping `dependant.call` / `route.app` also showed 0 calls and is not an
 accepted IW-03 result. Those probes informed spy-location design only.
 
 No other voided specimen runs.
+
+## Phase 13 — draft PR / CI declaration (accepted)
+
+Draft PR: https://github.com/HanzoRazer/luthiers-toolbox/pull/356
+
+Required CBSP21 Patch Manifest Gate failed because this PR brought no owned
+manifest (CBSP21-NOBORROW-001). Follow-up (not a CBSP21 policy change): add
+`.cbsp21/patches/legacy-wiring-035-runtime-verification.json` declaring the
+Investigation 035 packet. Checker scripts, schema, and thresholds are
+unmodified.
+
+```text
+ROUTE-TRUTH DEFECT TOUCHED? = NO
+CBSP21 CHECKERS MODIFIED? = NO
+PRODUCTION MODIFIED? = NO
+```
