@@ -1712,7 +1712,7 @@
       "operation_family": "polygon-offset",
       "grouping_rule": "seeded_prefix:/api/cam/polygon_offset",
       "surface_kind": "manufacturing_capability",
-      "intent_contract": "Draft /polygon_offset.nc emits NC with no RMOS. Governed /polygon_offset_governed.nc generates first, then persists RunDecision(risk_level='GREEN') hashing the request, not a feasibility result. GREEN persistence is not GOVERNED.",
+      "intent_contract": "Draft /polygon_offset.nc emits NC with no RMOS. Governed /polygon_offset_governed.nc generates first, then persists RunDecision(risk_level='GREEN') hashing the request, not a feasibility result. GREEN persistence is not GOVERNED. /polygon_offset_n17.nc is the separate N17 utility engine, whose `stepover` is ABSOLUTE MILLIMETRES rather than a fraction of tool_dia; it previously shadowed /polygon_offset.nc by winning FastAPI first-match, which this registry entry did not record -- `generators` listed only the governed router, so the registry described the intended owner while the utility handler actually served the URL.",
       "authority": {
         "status": "NONE",
         "evaluator": null,
@@ -1739,10 +1739,20 @@
           "mount_state": "MOUNTED",
           "route_role": "alias",
           "historical_or_dead": false
+        },
+        {
+          "path": "/api/cam/polygon_offset_n17.nc",
+          "methods": [
+            "POST"
+          ],
+          "mount_state": "MOUNTED",
+          "route_role": "other",
+          "historical_or_dead": false
         }
       ],
       "generators": [
-        "app.routers.polygon_offset_router"
+        "app.routers.polygon_offset_router",
+        "app.cam.routers.utility.polygon_router"
       ],
       "persistence": {
         "status": "FALSE_PROVENANCE",
@@ -1752,7 +1762,8 @@
         "nc"
       ],
       "client_consumers": [
-        "packages/client/src/views/PolygonOffsetLab.vue"
+        "packages/client/src/views/OffsetLabView.vue",
+        "packages/client/src/api/n17_n18.ts"
       ],
       "reachability": "RUNTIME_REACHABLE",
       "runtime_evidence": "POST_COMPUTE_WITNESS",

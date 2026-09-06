@@ -19,14 +19,14 @@ on:
     paths:
       - 'services/api/app/exports/**'
       - 'services/api/app/routers/legacy_dxf_exports_router.py'
-      - 'services/api/tests/test_legacy_dxf_exports.py'
+      - 'services/api/tests/test_legacy_wiring_035_regressions.py'
       - '.github/workflows/api_dxf_tests.yml'
   pull_request:
     branches: [main]
     paths:
       - 'services/api/app/exports/**'
       - 'services/api/app/routers/legacy_dxf_exports_router.py'
-      - 'services/api/tests/test_legacy_dxf_exports.py'
+      - 'services/api/tests/test_legacy_wiring_035_regressions.py'
   workflow_dispatch:
 
 env:
@@ -60,10 +60,21 @@ jobs:
           pip install pytest pytest-cov
           pip install ezdxf
 
+      # tests/test_legacy_dxf_exports.py was deleted by 2645b0de (2026-02-06,
+      # "delete 90 test files for WP-2 disabled routers"). This job is
+      # path-triggered on services/api/app/exports/**, which nothing touched
+      # afterwards, so it never ran again and its stale reference went unseen
+      # for seven months -- a red gate nobody could see. It failed with
+      # "file or directory not found" the first time a PR touched that path.
+      #
+      # Pointed at the suite that actually exercises these endpoints. The
+      # deletion landed one day before c3147212 narrowed the exception handling
+      # that broke /exports/polyline_dxf and /exports/biarc_dxf, so this job
+      # would have caught that regression had it still been able to run.
       - name: Run DXF export tests
         working-directory: ./services/api
         run: |
-          pytest tests/test_legacy_dxf_exports.py -v --tb=short
+          pytest tests/test_legacy_wiring_035_regressions.py -v --tb=short -k s4
 
   dxf-integration:
     name: DXF Integration Test (Docker)
