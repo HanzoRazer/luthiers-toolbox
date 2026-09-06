@@ -15,18 +15,24 @@
     ],
     "files_expected_to_change": [
       "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
-      "docs/Smart Guitar v1.1 — Full Specifications.md"
+      "docs/Smart Guitar v1.1 — Full Specifications.md",
+      ".github/workflows/cbsp21_gate.yml",
+      "scripts/ci/check_cbsp21_patch_input.py",
+      "scripts/ci/test_cbsp21_noborrow_checker.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) neck.scale_length_inches 24.75 -> 25.5 and neck.scale_length_mm 628.65 -> 647.7, with a new neck.scale_length_note recording the authority, the date, that 25.5 in is the specified figure and 647.7 mm its exact conversion, and that the design_heritage reference values are deliberately untouched. (2) cavities.bridge_route.body_position_mm.notes reworded from a note tying the position to the superseded scale into an explicit STALE flag: the bridge station is scale-derived and moves 19.05 mm toward the tail, both pickup routes are bridge-referenced and follow it, and the value is NOT recomputed here because every cavity position in this spec is withdrawn pending a trustworthy body outline. y_from_top itself is left at 320.0. (3) The trailing summary note and the docs spec table line updated from 'Gibson 24.75 scale' to the revised figure.",
+    "what_changed": "(1) neck.scale_length_inches 24.75 -> 25.5 and neck.scale_length_mm 628.65 -> 647.7, with a new neck.scale_length_note recording the authority, the date, that 25.5 in is the specified figure and 647.7 mm its exact conversion, and that the design_heritage reference values are deliberately untouched. (2) cavities.bridge_route.body_position_mm.notes reworded from a note tying the position to the superseded scale into an explicit STALE flag: the bridge station is scale-derived and moves 19.05 mm toward the tail, both pickup routes are bridge-referenced and follow it, and the value is NOT recomputed here because every cavity position in this spec is withdrawn pending a trustworthy body outline. y_from_top itself is left at 320.0. (3) The trailing summary note and the docs spec table line updated from 'Gibson 24.75 scale' to the revised figure. (4) The CBSP21 patch-input gate now reads git diff paths with NUL delimiters and core.quotepath=false so filenames containing spaces and Unicode punctuation match manifest declarations exactly; a checker-level regression covers the Smart Guitar docs filename. The existing CBSP21 workflow quoting fix is declared in this manifest so the PR diff is complete.",
     "why_not_redundant": "This is the toolbox half of a two-repo change; the CNC half revises fixtures/products/smart_guitar_v1.json and regenerates docs/geometry/SMART_GUITAR_CAD_DIMENSIONS.md. Neither repo is self-consistent with the other until both merge. Nothing else in this repo carries the constant."
   },
   "verification": {
     "commands_run": [
       "grep -rln --include=*.py '628\\.65' services/api/app services/api/tests -> no matches; no Python reads the constant, so nothing downstream breaks",
       "python -c 'import json; json.load(open(spec))' -> parses; scale_length_mm 647.7, 647.7/25.4 == 25.5 exactly",
-      "design_heritage.explorer.reference_scale_mm and .les_paul.reference_scale_mm confirmed still 628.65 after the edit"
+      "design_heritage.explorer.reference_scale_mm and .les_paul.reference_scale_mm confirmed still 628.65 after the edit",
+      "pytest scripts/ci/test_cbsp21_noborrow_checker.py -q",
+      "python scripts/ci/check_cbsp21_patch_input.py --base cab91edacaedc66a0492c35275ce2c255935bf8e --head HEAD -> PASS",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json \"docs/Smart Guitar v1.1 — Full Specifications.md\" .github/workflows/cbsp21_gate.yml scripts/ci/check_cbsp21_patch_input.py scripts/ci/test_cbsp21_noborrow_checker.py .cbsp21/patches/sg-scale-25-5in.json -> PASSED"
     ]
   },
   "files": [
@@ -47,6 +53,33 @@
       ],
       "risk": "low",
       "behavior_change": "Documentation only."
+    },
+    {
+      "path": ".github/workflows/cbsp21_gate.yml",
+      "intent": "Preserve multiline changed-file handling in the companion CBSP21 manifest gate workflow.",
+      "scan_targets": [
+        ".github/workflows/cbsp21_gate.yml"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: changed-file output with spaces remains a single path entry."
+    },
+    {
+      "path": "scripts/ci/check_cbsp21_patch_input.py",
+      "intent": "Parse git changed-file paths losslessly for spaces and Unicode punctuation before manifest matching.",
+      "scan_targets": [
+        "scripts/ci/check_cbsp21_patch_input.py"
+      ],
+      "risk": "low",
+      "behavior_change": "CI-only: patch input coverage matching now compares decoded path names rather than git-quoted strings."
+    },
+    {
+      "path": "scripts/ci/test_cbsp21_noborrow_checker.py",
+      "intent": "Pin CBSP21 patch-input behavior for filenames containing spaces and an em dash.",
+      "scan_targets": [
+        "scripts/ci/test_cbsp21_noborrow_checker.py"
+      ],
+      "risk": "low",
+      "behavior_change": "Test-only."
     }
   ],
   "architecture_scan": {

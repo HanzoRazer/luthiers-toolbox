@@ -44,14 +44,22 @@ def _ok(msg: str) -> None:
 
 def _run(cmd: List[str]) -> Tuple[int, str]:
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    return p.returncode, p.stdout.strip()
+    return p.returncode, p.stdout
 
 
 def _git_changed_files(base: str, head: str) -> List[str]:
-    rc, out = _run(["git", "diff", "--name-only", f"{base}...{head}"])
+    rc, out = _run([
+        "git",
+        "-c",
+        "core.quotepath=false",
+        "diff",
+        "--name-only",
+        "-z",
+        f"{base}...{head}",
+    ])
     if rc != 0:
         raise RuntimeError(out)
-    files = [line.strip() for line in out.splitlines() if line.strip()]
+    files = [path for path in out.split("\0") if path]
     # Ignore deletions? keep them — reviewers still need to know.
     return files
 
