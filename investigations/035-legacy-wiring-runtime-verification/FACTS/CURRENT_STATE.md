@@ -66,6 +66,58 @@ Observed in `services/api/metrics/live_routes.json` before Lab census refresh:
 - Blueprint package includes `vectorize_router`.
 - `vectorize_blueprint` reads upload then `_orchestrator.process_file(...)`.
 
-## Census refresh / runtime
+## Census refresh (Phase 2, 2026-09-06T04:19:01Z)
 
-Filled after accepted Phase 2 and Phases 5–9 runs. No labels here.
+- Lab workaround live-route walk: 1157 rows (`CURRENT_LIVE_ROUTES.json`).
+- `dump_and_assert_routes.collect_routes()`: 10 rows
+  (`CURRENT_LIVE_ROUTES_DUMP_AS_IS.json`).
+- Collision rows under Lab walk: 15 (`CURRENT_COLLISIONS.json`).
+- Name-hint modules: 23.
+- Frontend API literals: 276; unmatched vs live table: 137.
+- Test files: 455; TestClient: 185; direct router import: 23.
+- Uniqueness gate exit 1; missing MVP exact paths recorded in summary JSON.
+- Production `services/api/metrics/` was not written.
+- PR #17 census artifacts not present; historical numeric counts not restated.
+
+## Runtime witness observations (Phases 4–9)
+
+Spy method for handler identity: `fastapi.routing.APIRoute.handle` keyed by
+`(endpoint.__module__, endpoint.__name__)`. Module-level patches recorded as
+separate counters; several stayed at 0.
+
+IW-03 control (`POST /api/blueprint/vectorize`): HTTP 200;
+`expected_vectorize_route=1`; extraction error on tiny PNG.
+
+S1 `POST /api/cam/simulate_gcode`: HTTP 404 `Not Found`. All listed sim
+handler counters 0.
+
+S2 `POST /api/instrument/soundhole` spiral: HTTP 200; `diameter_mm` 49.9;
+`gate` GREEN; Williams P:A note 0.143. Counters:
+`alternate_legacy_instrument_router=1`, `legacy_router_bound_facade=1`,
+`expected_geometry_router=0`, `shared_facade_source_namespace=0`.
+
+S3 `POST /api/cam/polygon_offset.nc` with `stepover=0.4`, `tool_dia=6.0`:
+HTTP 200 `text/plain`. Counter `alternate_utility_n17=1`,
+`expected_governed_nc=0`. Response text begins with
+`(N17 Polygon Offset — arcs + feed floors)`. Pass coordinates include
+99.600, 99.200, 98.800, 98.400.
+
+S4 `POST /exports/polyline_dxf`: HTTP 500. Counter
+`actual_legacy_handler=1`, `expected_governed_translate=0`, helper
+source-module counters 0. Process log included ezdxf R12 dictionary
+creation.
+
+S5 `POST /api/cam/fret_slots/preview`: HTTP 200 JSON
+`operation=fret_slot_preview`, `status=preview`, `gate=yellow`. Counter
+`expected_preview_handler=1`, generator source-module counters 0.
+
+S4 and S5 collected in the same command batch as S3.
+
+Instrument unit tests IW-01, IW-02, IW-04, IW-05: 5 passed. First IW-03
+attempt wrapping `route.endpoint` returned HTTP 422 and was not kept as
+accepted IW-03 evidence.
+
+## Test/runtime extraction (Phase 10)
+
+`TEST_RUNTIME_COMPARISON.json` relations: S1 DIFFERENT, S2 PARTIAL,
+S3 DIFFERENT, S4 DIFFERENT, S5 PARTIAL.

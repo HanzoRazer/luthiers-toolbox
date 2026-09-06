@@ -72,6 +72,68 @@ def collect_live_routes(dump_mod):
     return dump_mod.collect_routes()
 
 
+def _join_prefix(prefix: str, path: str) -> str:
+    prefix = prefix or ""
+    path = path or ""
+    if not prefix:
+        return path or "/"
+    if not path:
+        return prefix
+    if prefix.endswith("/") and path.startswith("/"):
+        return prefix.rstrip("/") + path
+    if not prefix.endswith("/") and not path.startswith("/"):
+        return prefix + "/" + path
+    return prefix + path
+
+
+def lab_collect_routes_workaround(app) -> list[dict]:
+    """Lab-side walk of FastAPI 0.137 `_IncludedRouter` nodes.
+
+    Production dump_and_assert_routes.collect_routes() skips objects whose
+    `.path` is None. On FastAPI 0.137 included routers are `_IncludedRouter`
+    wrappers without `.path`, so the production collector returns only the
+    handful of top-level APIRoute/Route objects. This walker is the Lab
+    workaround. It does not modify the production script.
+    """
+    ignored = {"HEAD", "OPTIONS"}
+    out: list[dict] = []
+
+    def walk(routes, prefix: str = "") -> None:
+        for r in routes:
+            name = type(r).__name__
+            if name == "_IncludedRouter":
+                ctx = getattr(r, "include_context", None)
+                child_prefix = getattr(ctx, "prefix", "") or ""
+                original = getattr(r, "original_router", None)
+                child_routes = getattr(original, "routes", None) or []
+                walk(child_routes, _join_prefix(prefix, child_prefix))
+                continue
+            path = getattr(r, "path", None)
+            if path is None:
+                nested = getattr(r, "routes", None)
+                if nested:
+                    walk(nested, prefix)
+                continue
+            methods = sorted(
+                m
+                for m in (getattr(r, "methods", None) or [])
+                if m not in ignored
+            )
+            endpoint = getattr(r, "endpoint", None)
+            out.append(
+                {
+                    "path": _join_prefix(prefix, path),
+                    "methods": methods,
+                    "name": getattr(r, "name", None),
+                    "endpoint": getattr(endpoint, "__module__", None),
+                    "endpoint_qualname": getattr(endpoint, "__qualname__", None),
+                }
+            )
+
+    walk(app.routes)
+    return out
+
+
 def collision_table(routes):
     key_to_entries = defaultdict(list)
     for r in routes:
@@ -224,18 +286,30 @@ def main() -> int:
     }
 
     dump_mod = _load_dump_module()
-    routes = collect_live_routes(dump_mod)
-    collisions = collision_table(routes)
+    dump_as_is_routes = collect_live_routes(dump_mod)
+    from app.main import app as production_app  # noqa: WPS433
+
+    lab_routes = lab_collect_routes_workaround(production_app)
+    collisions = collision_table(lab_routes)
     name_hints = scan_name_hint_modules(SPECIMEN)
     fe_literals = scan_frontend_api_literals(CLIENT_ROOT)
-    live_paths = {r["path"] for r in routes}
+    live_paths = {r["path"] for r in lab_routes}
     fe_unmatched = [p for p in fe_literals if p not in live_paths]
     test_summary = scan_direct_test_imports(API_ROOT)
-    gate = run_dump_gate_as_is(dump_mod, routes)
+    gate = run_dump_gate_as_is(dump_mod, dump_as_is_routes)
+    gate["as_is_route_count"] = len(dump_as_is_routes)
+    gate["lab_workaround_route_count"] = len(lab_routes)
+    gate["divergence"] = (
+        "dump_and_assert_routes.collect_routes() returned "
+        f"{len(dump_as_is_routes)} rows (FastAPI 0.137 _IncludedRouter has no "
+        f".path). Lab workaround walked included routers: {len(lab_routes)} rows. "
+        "Production script was not modified."
+    )
 
     payload = {
         "meta": meta,
-        "route_count": len(routes),
+        "route_count": len(lab_routes),
+        "dump_as_is_route_count": len(dump_as_is_routes),
         "collision_count": len(collisions),
         "name_hint_module_count": len(name_hints),
         "frontend_api_literal_count": len(fe_literals),
@@ -244,17 +318,24 @@ def main() -> int:
         "dump_and_assert_routes_as_is": gate,
         "route_truth_defect_touched": False,
         "note": (
-            "Counts are CURRENT instrumentation (Investigation 035). "
+            "Counts are CURRENT Lab-workaround instrumentation (Investigation 035). "
             "historical count = unavailable in this environment; "
-            "comparison not normalized."
+            "comparison not normalized. dump_as_is_route_count is the unrepaired "
+            "production collector result."
         ),
     }
 
     (CENSUS_DIR / "CURRENT_CENSUS_SUMMARY.json").write_text(
         json.dumps(payload, indent=2) + "\n", encoding="utf-8"
     )
+    (CENSUS_DIR / "CURRENT_LIVE_ROUTES_DUMP_AS_IS.json").write_text(
+        json.dumps({"meta": meta, "source": "dump_and_assert_routes.collect_routes", "routes": dump_as_is_routes}, indent=2)
+        + "\n",
+        encoding="utf-8",
+    )
     (CENSUS_DIR / "CURRENT_LIVE_ROUTES.json").write_text(
-        json.dumps({"meta": meta, "routes": routes}, indent=2) + "\n",
+        json.dumps({"meta": meta, "source": "lab_collect_routes_workaround", "routes": lab_routes}, indent=2)
+        + "\n",
         encoding="utf-8",
     )
     (CENSUS_DIR / "CURRENT_COLLISIONS.json").write_text(

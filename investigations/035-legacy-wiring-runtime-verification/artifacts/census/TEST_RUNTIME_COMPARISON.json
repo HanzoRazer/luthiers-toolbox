@@ -1,0 +1,61 @@
+{
+  "rows": [
+    {
+      "TEST_ENTRYPOINT": "services/api/tests/test_simulation_endpoint_smoke.py \u2192 POST /api/cam/sim/gcode (and related /api/cam/sim/*)",
+      "TEST_IMPLEMENTATION": "app.routers.simulation_consolidated_router.simulate_gcode_json",
+      "PRODUCTION_ENTRYPOINT": "POST /api/cam/simulate_gcode (FE SimLab)",
+      "PRODUCTION_IMPLEMENTATION": [
+        "NO_SPIED_IMPLEMENTATION_CALLED"
+      ],
+      "RELATION": "DIFFERENT",
+      "NOTES": "App-level tests witness /api/cam/sim/*, not the FE URL.",
+      "SPECIMEN": "S1_CAM_SIM_FE_PATH"
+    },
+    {
+      "TEST_ENTRYPOINT": "services/api/tests/test_soundhole_spiral_endpoint.py \u2192 POST /api/instrument/soundhole via TestClient(app)",
+      "TEST_IMPLEMENTATION": "whichever handler FastAPI first-match selects (same as production if same app)",
+      "PRODUCTION_ENTRYPOINT": "POST /api/instrument/soundhole",
+      "PRODUCTION_IMPLEMENTATION": [
+        "alternate_legacy_instrument_router",
+        "legacy_router_bound_facade"
+      ],
+      "RELATION": "PARTIAL",
+      "NOTES": "TestClient on the real app is the same entrypoint as production HTTP. Direct facade unit tests are a second test path.",
+      "SPECIMEN": "S2_SOUNDHOLE_POST_DUAL_MOUNT"
+    },
+    {
+      "TEST_ENTRYPOINT": "services/api/tests/test_polygon_offset_endpoint_smoke.py \u2192 POST /api/cam/polygon_offset.nc",
+      "TEST_IMPLEMENTATION": "whichever colliding handler first-match selects",
+      "PRODUCTION_ENTRYPOINT": "POST /api/cam/polygon_offset.nc (OffsetLabView)",
+      "PRODUCTION_IMPLEMENTATION": [
+        "alternate_utility_n17"
+      ],
+      "RELATION": "DIFFERENT",
+      "NOTES": "Same URL as FE. Relation to governed polygon_offset_nc depends on which handler wins.",
+      "SPECIMEN": "S3_POLYGON_OFFSET_NC_DUAL_MOUNT"
+    },
+    {
+      "TEST_ENTRYPOINT": "governed translate TestClient on POST /api/export/translate/dxf; legacy /exports/polyline_dxf lightly witnessed",
+      "TEST_IMPLEMENTATION": "app.routers.export.dxf_translate_router.translate_to_dxf (heavy tests) vs legacy_dxf_exports_router (FE)",
+      "PRODUCTION_ENTRYPOINT": "POST /exports/polyline_dxf",
+      "PRODUCTION_IMPLEMENTATION": [
+        "actual_legacy_handler"
+      ],
+      "RELATION": "DIFFERENT",
+      "NOTES": "FE consumer is the legacy path; governed translator tests are a different entrypoint.",
+      "SPECIMEN": "S4_DXF_CURVEMATH_LEGACY_EXPORT"
+    },
+    {
+      "TEST_ENTRYPOINT": "services/api/tests/test_cam_fret_slots_preview_smoke.py \u2192 POST /api/cam/fret_slots/preview",
+      "TEST_IMPLEMENTATION": "app.cam.routers.fret_slots_router.preview_fret_slots",
+      "PRODUCTION_ENTRYPOINT": "POST /api/cam/fret_slots/preview",
+      "PRODUCTION_IMPLEMENTATION": [
+        "expected_preview_handler"
+      ],
+      "RELATION": "PARTIAL",
+      "NOTES": "Same URL. Ecosphere /api/v1/fretboard/dxf is a sibling product path, not this request.",
+      "SPECIMEN": "S5_FRET_SLOTS_CAM_PREVIEW"
+    }
+  ],
+  "d_status_by_tool": false
+}

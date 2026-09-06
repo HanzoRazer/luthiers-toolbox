@@ -71,13 +71,19 @@ class CallCounter:
         self.events: list[dict[str, Any]] = []
 
     def wrap(self, label: str, original: Callable) -> Callable:
+        import functools
+        import inspect
+
+        @functools.wraps(original)
         def _wrapped(*args: Any, **kwargs: Any) -> Any:
             self.counts[label] = self.counts.get(label, 0) + 1
             self.events.append({"label": label, "argc": len(args), "kwargs": list(kwargs)})
             return original(*args, **kwargs)
 
-        _wrapped.__name__ = getattr(original, "__name__", label)
-        _wrapped.__qualname__ = getattr(original, "__qualname__", label)
+        try:
+            _wrapped.__signature__ = inspect.signature(original)
+        except (TypeError, ValueError):
+            pass
         return _wrapped
 
 
@@ -104,12 +110,84 @@ def scratch_space(scratch: Optional[Path] = None):
     yield Path(td)
 
 
+def _walk_fastapi_routes(app: Any):
+    """Yield (full_path, route) including FastAPI 0.137 _IncludedRouter nodes."""
+
+    def join(prefix: str, path: str) -> str:
+        prefix = prefix or ""
+        path = path or ""
+        if not prefix:
+            return path or "/"
+        if not path:
+            return prefix
+        if prefix.endswith("/") and path.startswith("/"):
+            return prefix.rstrip("/") + path
+        if not prefix.endswith("/") and not path.startswith("/"):
+            return prefix + "/" + path
+        return prefix + path
+
+    def walk(routes, prefix: str = ""):
+        for r in routes:
+            if type(r).__name__ == "_IncludedRouter":
+                ctx = getattr(r, "include_context", None)
+                child_prefix = getattr(ctx, "prefix", "") or ""
+                original = getattr(r, "original_router", None)
+                child_routes = getattr(original, "routes", None) or []
+                yield from walk(child_routes, join(prefix, child_prefix))
+                continue
+            path = getattr(r, "path", None)
+            if path is None:
+                nested = getattr(r, "routes", None)
+                if nested:
+                    yield from walk(nested, prefix)
+                continue
+            yield join(prefix, path), r
+
+    yield from walk(app.routes)
+
+
+def bind_spies_to_fastapi_routes(app: Any, specs: list[SpySpec], counter: CallCounter) -> list[tuple[Any, str, Any]]:
+    """Patch FastAPI APIRoute.handle — the dispatch FastAPI 0.137 actually uses.
+
+    Module-level patches remain installed as the IW-02 control (they may not fire).
+    """
+    from fastapi.routing import APIRoute
+
+    wanted = {(s.module, s.attr): s.label for s in specs}
+    for spec in specs:
+        counter.counts.setdefault(spec.label, 0)
+    original_handle = APIRoute.handle
+
+    async def hooked(self, scope, receive, send):  # noqa: ANN001
+        endpoint = getattr(self, "endpoint", None)
+        key = (
+            getattr(endpoint, "__module__", None),
+            getattr(endpoint, "__name__", None),
+        )
+        if key in wanted:
+            label = wanted[key]
+            counter.counts[label] = counter.counts.get(label, 0) + 1
+            counter.events.append({"label": label, "via": "APIRoute.handle", "path": getattr(self, "path", None)})
+        return await original_handle(self, scope, receive, send)
+
+    APIRoute.handle = hooked  # type: ignore[method-assign]
+    return [(APIRoute, "handle", original_handle)]
+
+
+def restore_fastapi_endpoints(restored: list[tuple[Any, str, Any]]) -> None:
+    for obj, attr, original in restored:
+        try:
+            setattr(obj, attr, original)
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def install_spies(specs: list[SpySpec], counter: CallCounter) -> list[Any]:
     patches = []
+    import importlib
+
     for spec in specs:
         target = f"{spec.module}.{spec.attr}"
-        import importlib
-
         mod = importlib.import_module(spec.module)
         original = getattr(mod, spec.attr)
         p = patch(target, counter.wrap(spec.label, original))
@@ -171,6 +249,7 @@ def run_http_specimen(
     limitations = list(limitations)
     counter = CallCounter()
     patches: list[Any] = []
+    restored_routes: list[tuple[Any, str, Any]] = []
     http_result: dict[str, Any] = {}
     exception = None
     spy_control_fired = None
@@ -182,6 +261,11 @@ def run_http_specimen(
             from app.main import app
 
             patches = install_spies(spies, counter)
+            restored_routes = bind_spies_to_fastapi_routes(app, spies, counter)
+            for r in app.routes:
+                if type(r).__name__ == "_IncludedRouter":
+                    r._effective_candidates = []
+                    r._effective_candidates_version = None
             if spy_control is not None:
                 spy_control_fired = bool(spy_control(app, counter))
             with TestClient(app, raise_server_exceptions=False) as client:
@@ -201,6 +285,10 @@ def run_http_specimen(
             terminal = f"EXCEPTION {type(exc).__name__}"
             limitations.append("request aborted by exception; see exception field")
         finally:
+            try:
+                restore_fastapi_endpoints(restored_routes)
+            except Exception:
+                pass
             stop_spies(patches)
 
     spy_loc = {s.label: f"{s.module}.{s.attr}" for s in spies}
@@ -330,9 +418,19 @@ def specimen_soundhole_post() -> WitnessResult:
                 "alternate_legacy_instrument_router",
             ),
             SpySpec(
+                "app.routers.instrument_router",
+                "compute_soundhole_spec",
+                "legacy_router_bound_facade",
+            ),
+            SpySpec(
+                "app.routers.instrument_geometry.soundhole_router",
+                "compute_soundhole_spec",
+                "geometry_router_bound_compute",
+            ),
+            SpySpec(
                 "app.calculators.soundhole_facade",
                 "compute_soundhole_spec",
-                "shared_facade_compute",
+                "shared_facade_source_namespace",
             ),
         ],
         json_body={

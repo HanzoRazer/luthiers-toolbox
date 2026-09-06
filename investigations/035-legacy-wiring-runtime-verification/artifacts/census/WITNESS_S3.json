@@ -1,0 +1,71 @@
+{
+  "SPECIMEN": "S3_POLYGON_OFFSET_NC_DUAL_MOUNT",
+  "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+  "ENTRYPOINT": "POST /api/cam/polygon_offset.nc  (OffsetLabView.vue default stepover=0.4)",
+  "EXPECTED_IMPLEMENTATION": "app.routers.polygon_offset_router.polygon_offset_nc (governed; stepover fraction)",
+  "ALTERNATES": [
+    "app.cam.routers.utility.polygon_router.polygon_offset (N17; stepover mm)"
+  ],
+  "SPY_LOCATION": {
+    "expected_governed_nc": "app.routers.polygon_offset_router.polygon_offset_nc",
+    "alternate_utility_n17": "app.cam.routers.utility.polygon_router.polygon_offset"
+  },
+  "REQUEST_OR_INVOCATION": {
+    "method": "POST",
+    "path": "/api/cam/polygon_offset.nc",
+    "json_body": {
+      "polygon": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          100.0,
+          0.0
+        ],
+        [
+          100.0,
+          100.0
+        ],
+        [
+          0.0,
+          100.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "tool_dia": 6.0,
+      "stepover": 0.4,
+      "link_mode": "arc",
+      "units": "mm"
+    },
+    "files": null
+  },
+  "HTTP_CLI_RESULT": {
+    "status_code": 200,
+    "content_type": "text/plain; charset=utf-8",
+    "text_snippet": "(N17 Polygon Offset \u2014 arcs + feed floors)\nG21\nG90\nG17\nG0 Z5.000\nM3\nG0 X99.600 Y99.600\nG1 Z-1.500 F600.0\nG1 X-0.600 Y99.600\nG3 X0.400 Y100.600 I2.000 J-1.000 F600.0\nG1 X0.400 Y-0.600\nG3 X-0.600 Y0.400 I1.000 J2.000 F600.0\nG1 X100.600 Y0.400\nG3 X99.600 Y-0.600 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X99.200 Y99.200\nG1 Z-1.500 F600.0\nG1 X-0.200 Y99.200\nG3 X0.800 Y100.200 I2.000 J-1.000 F600.0\nG1 X0.800 Y-0.200\nG3 X-0.200 Y0.800 I1.000 J2.000 F600.0\nG1 X100.200 Y0.800\nG3 X99.200 Y-0.200 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X98.800 Y98.800\nG1 Z-1.500 F600.0\nG1 X0.200 Y98.800\nG3 X1.200 Y99.800 I2.000 J-1.000 F600.0\nG1 X1.200 Y0.200\nG3 X0.200 Y1.200 I1.000 J2.000 F600.0\nG1 X99.800 Y1.200\nG3 X98.800 Y0.200 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X98.400 Y98.400\nG1 Z-1.500 F600.0\nG1 X0.600 Y98.400\nG3 X1.600 Y9",
+    "headers": {
+      "content-type": "text/plain; charset=utf-8"
+    }
+  },
+  "ACTUAL_CALLS": {
+    "expected_governed_nc": 0,
+    "alternate_utility_n17": 1
+  },
+  "TERMINAL_EFFECT": "HTTP 200; spies=alternate_utility_n17",
+  "CONSUMER": "packages/client/src/views/OffsetLabView.vue getGcode(); n17_n18.ts also posts polygon_offset.nc",
+  "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+  "LIMITATIONS": [
+    "OffsetLab preview uses /polygon_offset.preview (governed-only in live_routes); NC uses /polygon_offset.nc (colliding).",
+    "Utility handler schema uses absolute mm stepover; OffsetLab default 0.4 is the governed fraction convention."
+  ],
+  "SPY_CONTROL_FIRED": null,
+  "EXCEPTION": null,
+  "VOIDED": false,
+  "VOID_REASON": null,
+  "COLLECTED_AT_UTC": "2026-09-06T04:22:51Z",
+  "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+}

@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "investigation": "035",
+    "dataset": "CURRENT",
+    "production_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "historical_comparator_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "specimen_root": "/workspace",
+    "collected_at_utc": "2026-09-06T04:19:01Z",
+    "historical_pr17_artifacts_present": false,
+    "comparison": "current SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; historical SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; PR #17 census artifacts not present in this environment; comparison not normalized"
+  },
+  "route_count": 1157,
+  "dump_as_is_route_count": 10,
+  "collision_count": 15,
+  "name_hint_module_count": 23,
+  "frontend_api_literal_count": 276,
+  "frontend_literals_absent_from_live_routes_count": 137,
+  "test_summary": {
+    "test_files": 455,
+    "with_testclient": 185,
+    "direct_router_import": 23
+  },
+  "dump_and_assert_routes_as_is": {
+    "script": "services/api/scripts/dump_and_assert_routes.py",
+    "mode": "in-process collect_routes + uniqueness gate; METRICS write skipped",
+    "defect_note": "Known limitations left unrepaired: endpoint field is __module__ only; STATUS header still says UNRUN as of 2026-05-30; gate covers only a tiny MVP exact set. Collisions outside that set do not fail the gate.",
+    "gate_exit": 1,
+    "gate_ok_line": "FAIL: MVP-path uniqueness gate",
+    "exception": null,
+    "missing_mvp_exact": [
+      "/api/rmos/wrap/mvp/dxf-to-grbl",
+      "/api/v1/fretboard/dxf"
+    ],
+    "duplicated_mvp_exact": [],
+    "mvp_prefix_counts": {
+      "/api/rmos/runs": 0,
+      "/api/export/": 0
+    },
+    "as_is_route_count": 10,
+    "lab_workaround_route_count": 1157,
+    "divergence": "dump_and_assert_routes.collect_routes() returned 10 rows (FastAPI 0.137 _IncludedRouter has no .path). Lab workaround walked included routers: 1157 rows. Production script was not modified."
+  },
+  "route_truth_defect_touched": false,
+  "note": "Counts are CURRENT Lab-workaround instrumentation (Investigation 035). historical count = unavailable in this environment; comparison not normalized. dump_as_is_route_count is the unrepaired production collector result."
+}

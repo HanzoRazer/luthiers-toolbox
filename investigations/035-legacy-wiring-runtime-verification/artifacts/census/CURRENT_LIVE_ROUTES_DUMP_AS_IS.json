@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "investigation": "035",
+    "dataset": "CURRENT",
+    "production_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "historical_comparator_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "specimen_root": "/workspace",
+    "collected_at_utc": "2026-09-06T04:19:01Z",
+    "historical_pr17_artifacts_present": false,
+    "comparison": "current SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; historical SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; PR #17 census artifacts not present in this environment; comparison not normalized"
+  },
+  "source": "dump_and_assert_routes.collect_routes",
+  "routes": [
+    {
+      "path": "/openapi.json",
+      "methods": [
+        "GET"
+      ],
+      "name": "openapi",
+      "endpoint": "fastapi.applications"
+    },
+    {
+      "path": "/docs",
+      "methods": [
+        "GET"
+      ],
+      "name": "swagger_ui_html",
+      "endpoint": "fastapi.applications"
+    },
+    {
+      "path": "/docs/oauth2-redirect",
+      "methods": [
+        "GET"
+      ],
+      "name": "swagger_ui_redirect",
+      "endpoint": "fastapi.applications"
+    },
+    {
+      "path": "/redoc",
+      "methods": [
+        "GET"
+      ],
+      "name": "redoc_html",
+      "endpoint": "fastapi.applications"
+    },
+    {
+      "path": "/health",
+      "methods": [
+        "GET"
+      ],
+      "name": "health_check",
+      "endpoint": "app.main"
+    },
+    {
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ],
+      "name": "api_health_check",
+      "endpoint": "app.main"
+    },
+    {
+      "path": "/api/_meta/routing-truth",
+      "methods": [
+        "GET"
+      ],
+      "name": "routing_truth",
+      "endpoint": "app.main"
+    },
+    {
+      "path": "/api/saw/batch/spec",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_batch_spec",
+      "endpoint": "app.saw_lab.batch_router"
+    },
+    {
+      "path": "/api/saw/batch/plan",
+      "methods": [
+        "POST"
+      ],
+      "name": "create_batch_plan",
+      "endpoint": "app.saw_lab.batch_router"
+    },
+    {
+      "path": "/api/saw/batch/approve",
+      "methods": [
+        "POST"
+      ],
+      "name": "approve_batch_plan",
+      "endpoint": "app.saw_lab.batch_router"
+    }
+  ]
+}

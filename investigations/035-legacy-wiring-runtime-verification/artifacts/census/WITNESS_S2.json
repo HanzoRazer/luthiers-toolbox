@@ -1,0 +1,77 @@
+{
+  "SPECIMEN": "S2_SOUNDHOLE_POST_DUAL_MOUNT",
+  "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+  "ENTRYPOINT": "POST /api/instrument/soundhole",
+  "EXPECTED_IMPLEMENTATION": "app.routers.instrument_geometry.soundhole_router.calculate_soundhole \u2192 soundhole_facade.compute_soundhole_spec",
+  "ALTERNATES": [
+    "app.routers.instrument_router.get_soundhole_spec",
+    "app.routers.instrument.soundhole_router.calculate_soundhole"
+  ],
+  "SPY_LOCATION": {
+    "expected_geometry_router": "app.routers.instrument_geometry.soundhole_router.calculate_soundhole",
+    "alternate_legacy_instrument_router": "app.routers.instrument_router.get_soundhole_spec",
+    "legacy_router_bound_facade": "app.routers.instrument_router.compute_soundhole_spec",
+    "geometry_router_bound_compute": "app.routers.instrument_geometry.soundhole_router.compute_soundhole_spec",
+    "shared_facade_source_namespace": "app.calculators.soundhole_facade.compute_soundhole_spec"
+  },
+  "REQUEST_OR_INVOCATION": {
+    "method": "POST",
+    "path": "/api/instrument/soundhole",
+    "json_body": {
+      "body_style": "dreadnought",
+      "body_length_mm": 500.0,
+      "soundhole_type": "spiral"
+    },
+    "files": null
+  },
+  "HTTP_CLI_RESULT": {
+    "status_code": 200,
+    "content_type": "application/json",
+    "text_snippet": "{\"diameter_mm\":49.9,\"position_from_neck_block_mm\":250.0,\"body_style\":\"dreadnought\",\"gate\":\"GREEN\",\"notes\":[\"P:A = 0.143 mm\u207b\u00b9 \u2014 above Williams threshold (0.10). Good acoustic efficiency.\"],\"soundhole_type\":\"spiral\",\"spiral_params\":{\"slot_width_mm\":14.0,\"start_radius_mm\":10.0,\"growth_rate_k\":0.18,\"turns\":1.1,\"rotation_deg\":0.0,\"center_x_mm\":0.0,\"center_y_mm\":0.0},\"area_mm2\":1951.75,\"perimeter_mm\":278.82,\"pa_ratio_mm_inv\":0.1429}",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "json": {
+      "diameter_mm": 49.9,
+      "position_from_neck_block_mm": 250.0,
+      "body_style": "dreadnought",
+      "gate": "GREEN",
+      "notes": [
+        "P:A = 0.143 mm\u207b\u00b9 \u2014 above Williams threshold (0.10). Good acoustic efficiency."
+      ],
+      "soundhole_type": "spiral",
+      "spiral_params": {
+        "slot_width_mm": 14.0,
+        "start_radius_mm": 10.0,
+        "growth_rate_k": 0.18,
+        "turns": 1.1,
+        "rotation_deg": 0.0,
+        "center_x_mm": 0.0,
+        "center_y_mm": 0.0
+      },
+      "area_mm2": 1951.75,
+      "perimeter_mm": 278.82,
+      "pa_ratio_mm_inv": 0.1429
+    }
+  },
+  "ACTUAL_CALLS": {
+    "expected_geometry_router": 0,
+    "alternate_legacy_instrument_router": 1,
+    "legacy_router_bound_facade": 1,
+    "geometry_router_bound_compute": 0,
+    "shared_facade_source_namespace": 0
+  },
+  "TERMINAL_EFFECT": "HTTP 200; spies=alternate_legacy_instrument_router,legacy_router_bound_facade",
+  "CONSUMER": "instrument geometry UI / spiral type dropdown via /api/instrument/soundhole",
+  "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+  "LIMITATIONS": [
+    "Both live POST handlers ultimately call soundhole_facade.compute_soundhole_spec; a facade spy firing does not by itself identify which HTTP handler won.",
+    "instrument.soundhole_router (thin calc-only) is not expected to be mounted on this path; absence of that spy is not a defect by itself."
+  ],
+  "SPY_CONTROL_FIRED": null,
+  "EXCEPTION": null,
+  "VOIDED": false,
+  "VOID_REASON": null,
+  "COLLECTED_AT_UTC": "2026-09-06T04:22:47Z",
+  "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+}

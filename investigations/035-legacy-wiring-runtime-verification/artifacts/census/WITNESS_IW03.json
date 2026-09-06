@@ -1,0 +1,84 @@
+{
+  "SPECIMEN": "IW03_VECTORIZER_CONTROL",
+  "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+  "ENTRYPOINT": "POST /api/blueprint/vectorize",
+  "EXPECTED_IMPLEMENTATION": "app.routers.blueprint.vectorize_router.vectorize_blueprint \u2192 BlueprintOrchestrator.process_file",
+  "ALTERNATES": [
+    "photo vectorizer POST /api/vectorizer/extract (not invoked)"
+  ],
+  "SPY_LOCATION": {
+    "expected_vectorize_route": "app.routers.blueprint.vectorize_router.vectorize_blueprint"
+  },
+  "REQUEST_OR_INVOCATION": {
+    "method": "POST",
+    "path": "/api/blueprint/vectorize",
+    "json_body": null,
+    "files": [
+      "file"
+    ]
+  },
+  "HTTP_CLI_RESULT": {
+    "status_code": 200,
+    "content_type": "application/json",
+    "text_snippet": "{\"ok\":false,\"processed\":true,\"stage\":\"edge_extraction\",\"error\":\"Could not load blueprint image for processing.\",\"warnings\":[],\"artifacts\":{\"svg\":{\"present\":false,\"content\":\"\",\"path_count\":0},\"dxf\":{\"present\":false,\"base64\":\"\",\"entity_count\":0,\"closed_contours\":0}},\"dimensions\":{\"width_mm\":0.0,\"height_mm\":0.0},\"selection\":{\"candidate_count\":0,\"selected_index\":null,\"selection_score\":0.0,\"runner_up_score\":0.0,\"winner_margin\":0.0,\"reasons\":[]},\"recommendation\":{\"action\":\"reject\",\"confidence\":0.0,\"reasons\":[]},\"metrics\":{},\"debug\":null,\"deprecation\":null}",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "json": {
+      "ok": false,
+      "processed": true,
+      "stage": "edge_extraction",
+      "error": "Could not load blueprint image for processing.",
+      "warnings": [],
+      "artifacts": {
+        "svg": {
+          "present": false,
+          "content": "",
+          "path_count": 0
+        },
+        "dxf": {
+          "present": false,
+          "base64": "",
+          "entity_count": 0,
+          "closed_contours": 0
+        }
+      },
+      "dimensions": {
+        "width_mm": 0.0,
+        "height_mm": 0.0
+      },
+      "selection": {
+        "candidate_count": 0,
+        "selected_index": null,
+        "selection_score": 0.0,
+        "runner_up_score": 0.0,
+        "winner_margin": 0.0,
+        "reasons": []
+      },
+      "recommendation": {
+        "action": "reject",
+        "confidence": 0.0,
+        "reasons": []
+      },
+      "metrics": {},
+      "debug": null,
+      "deprecation": null
+    }
+  },
+  "ACTUAL_CALLS": {
+    "expected_vectorize_route": 1
+  },
+  "TERMINAL_EFFECT": "HTTP 200; spies=expected_vectorize_route",
+  "CONSUMER": "control only \u2014 not a selected 035 specimen",
+  "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+  "LIMITATIONS": [
+    "Tiny synthetic PNG is not a real blueprint; the control asks whether the production route reaches vectorize_blueprint, not whether extraction quality is good.",
+    "BlueprintOrchestrator.process_file is an instance method on a singleton; patching the bound method on the class is a different namespace. Route-function spy is the dereference FastAPI holds."
+  ],
+  "SPY_CONTROL_FIRED": null,
+  "EXCEPTION": null,
+  "VOIDED": false,
+  "VOID_REASON": null,
+  "COLLECTED_AT_UTC": "2026-09-06T04:22:24Z",
+  "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+}

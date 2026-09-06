@@ -1,0 +1,846 @@
+{
+  "results": [
+    {
+      "SPECIMEN": "IW03_VECTORIZER_CONTROL",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /api/blueprint/vectorize",
+      "EXPECTED_IMPLEMENTATION": "app.routers.blueprint.vectorize_router.vectorize_blueprint \u2192 BlueprintOrchestrator.process_file",
+      "ALTERNATES": [
+        "photo vectorizer POST /api/vectorizer/extract (not invoked)"
+      ],
+      "SPY_LOCATION": {
+        "expected_vectorize_route": "app.routers.blueprint.vectorize_router.vectorize_blueprint"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/api/blueprint/vectorize",
+        "json_body": null,
+        "files": [
+          "file"
+        ]
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "text_snippet": "{\"ok\":false,\"processed\":true,\"stage\":\"edge_extraction\",\"error\":\"Could not load blueprint image for processing.\",\"warnings\":[],\"artifacts\":{\"svg\":{\"present\":false,\"content\":\"\",\"path_count\":0},\"dxf\":{\"present\":false,\"base64\":\"\",\"entity_count\":0,\"closed_contours\":0}},\"dimensions\":{\"width_mm\":0.0,\"height_mm\":0.0},\"selection\":{\"candidate_count\":0,\"selected_index\":null,\"selection_score\":0.0,\"runner_up_score\":0.0,\"winner_margin\":0.0,\"reasons\":[]},\"recommendation\":{\"action\":\"reject\",\"confidence\":0.0,\"reasons\":[]},\"metrics\":{},\"debug\":null,\"deprecation\":null}",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "ok": false,
+          "processed": true,
+          "stage": "edge_extraction",
+          "error": "Could not load blueprint image for processing.",
+          "warnings": [],
+          "artifacts": {
+            "svg": {
+              "present": false,
+              "content": "",
+              "path_count": 0
+            },
+            "dxf": {
+              "present": false,
+              "base64": "",
+              "entity_count": 0,
+              "closed_contours": 0
+            }
+          },
+          "dimensions": {
+            "width_mm": 0.0,
+            "height_mm": 0.0
+          },
+          "selection": {
+            "candidate_count": 0,
+            "selected_index": null,
+            "selection_score": 0.0,
+            "runner_up_score": 0.0,
+            "winner_margin": 0.0,
+            "reasons": []
+          },
+          "recommendation": {
+            "action": "reject",
+            "confidence": 0.0,
+            "reasons": []
+          },
+          "metrics": {},
+          "debug": null,
+          "deprecation": null
+        }
+      },
+      "ACTUAL_CALLS": {
+        "expected_vectorize_route": 1
+      },
+      "TERMINAL_EFFECT": "HTTP 200; spies=expected_vectorize_route",
+      "CONSUMER": "control only \u2014 not a selected 035 specimen",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "Tiny synthetic PNG is not a real blueprint; the control asks whether the production route reaches vectorize_blueprint, not whether extraction quality is good.",
+        "BlueprintOrchestrator.process_file is an instance method on a singleton; patching the bound method on the class is a different namespace. Route-function spy is the dereference FastAPI holds."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:22:24Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    },
+    {
+      "SPECIMEN": "S1_CAM_SIM_FE_PATH",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /api/cam/simulate_gcode  (SimLab.vue / useGcodeSimulation.ts)",
+      "EXPECTED_IMPLEMENTATION": "app.routers.simulation_consolidated_router.simulate_gcode_json",
+      "ALTERNATES": [
+        "app.cam.routers.simulation.simulation_consolidated_router.simulate_gcode",
+        "app.routers.gcode_consolidated_router.simulate_gcode",
+        "app.routers.simulation_consolidated_router.simulate_gcode_legacy"
+      ],
+      "SPY_LOCATION": {
+        "expected_sim_json": "app.routers.simulation_consolidated_router.simulate_gcode_json",
+        "alternate_sim_legacy_under_sim_prefix": "app.routers.simulation_consolidated_router.simulate_gcode_legacy",
+        "alternate_gcode_consolidated_simulate": "app.routers.gcode_consolidated_router.simulate_gcode"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/api/cam/simulate_gcode",
+        "json_body": {
+          "gcode": "G21\nG90\nG0 X0 Y0 Z5\nG1 X10 Y0 F300\nG1 X10 Y10\nM30\n"
+        },
+        "files": null
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 404,
+        "content_type": "application/json",
+        "text_snippet": "{\"detail\":\"Not Found\"}",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "detail": "Not Found"
+        }
+      },
+      "ACTUAL_CALLS": {
+        "expected_sim_json": 0,
+        "alternate_sim_legacy_under_sim_prefix": 0,
+        "alternate_gcode_consolidated_simulate": 0
+      },
+      "TERMINAL_EFFECT": "HTTP 404; spies=NO_SPIED_IMPLEMENTATION_CALLED",
+      "CONSUMER": "packages/client SimLab.vue, SimLabWorker.vue, GeometryOverlay.vue, bridge_lab/useGcodeSimulation.ts",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "Disabled package app.cam.routers.simulation is not imported by aggregator (simulation_router=None); cannot spy a never-imported handler without importing it (which would not be the production path).",
+        "Spy targets are the live simulation_consolidated_router functions as bound on that module; FastAPI stores the function object at include_router time, so these patches match the production dereference if the route is hit."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:22:43Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    },
+    {
+      "SPECIMEN": "S2_SOUNDHOLE_POST_DUAL_MOUNT",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /api/instrument/soundhole",
+      "EXPECTED_IMPLEMENTATION": "app.routers.instrument_geometry.soundhole_router.calculate_soundhole \u2192 soundhole_facade.compute_soundhole_spec",
+      "ALTERNATES": [
+        "app.routers.instrument_router.get_soundhole_spec",
+        "app.routers.instrument.soundhole_router.calculate_soundhole"
+      ],
+      "SPY_LOCATION": {
+        "expected_geometry_router": "app.routers.instrument_geometry.soundhole_router.calculate_soundhole",
+        "alternate_legacy_instrument_router": "app.routers.instrument_router.get_soundhole_spec",
+        "legacy_router_bound_facade": "app.routers.instrument_router.compute_soundhole_spec",
+        "geometry_router_bound_compute": "app.routers.instrument_geometry.soundhole_router.compute_soundhole_spec",
+        "shared_facade_source_namespace": "app.calculators.soundhole_facade.compute_soundhole_spec"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/api/instrument/soundhole",
+        "json_body": {
+          "body_style": "dreadnought",
+          "body_length_mm": 500.0,
+          "soundhole_type": "spiral"
+        },
+        "files": null
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "text_snippet": "{\"diameter_mm\":49.9,\"position_from_neck_block_mm\":250.0,\"body_style\":\"dreadnought\",\"gate\":\"GREEN\",\"notes\":[\"P:A = 0.143 mm\u207b\u00b9 \u2014 above Williams threshold (0.10). Good acoustic efficiency.\"],\"soundhole_type\":\"spiral\",\"spiral_params\":{\"slot_width_mm\":14.0,\"start_radius_mm\":10.0,\"growth_rate_k\":0.18,\"turns\":1.1,\"rotation_deg\":0.0,\"center_x_mm\":0.0,\"center_y_mm\":0.0},\"area_mm2\":1951.75,\"perimeter_mm\":278.82,\"pa_ratio_mm_inv\":0.1429}",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "diameter_mm": 49.9,
+          "position_from_neck_block_mm": 250.0,
+          "body_style": "dreadnought",
+          "gate": "GREEN",
+          "notes": [
+            "P:A = 0.143 mm\u207b\u00b9 \u2014 above Williams threshold (0.10). Good acoustic efficiency."
+          ],
+          "soundhole_type": "spiral",
+          "spiral_params": {
+            "slot_width_mm": 14.0,
+            "start_radius_mm": 10.0,
+            "growth_rate_k": 0.18,
+            "turns": 1.1,
+            "rotation_deg": 0.0,
+            "center_x_mm": 0.0,
+            "center_y_mm": 0.0
+          },
+          "area_mm2": 1951.75,
+          "perimeter_mm": 278.82,
+          "pa_ratio_mm_inv": 0.1429
+        }
+      },
+      "ACTUAL_CALLS": {
+        "expected_geometry_router": 0,
+        "alternate_legacy_instrument_router": 1,
+        "legacy_router_bound_facade": 1,
+        "geometry_router_bound_compute": 0,
+        "shared_facade_source_namespace": 0
+      },
+      "TERMINAL_EFFECT": "HTTP 200; spies=alternate_legacy_instrument_router,legacy_router_bound_facade",
+      "CONSUMER": "instrument geometry UI / spiral type dropdown via /api/instrument/soundhole",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "Both live POST handlers ultimately call soundhole_facade.compute_soundhole_spec; a facade spy firing does not by itself identify which HTTP handler won.",
+        "instrument.soundhole_router (thin calc-only) is not expected to be mounted on this path; absence of that spy is not a defect by itself."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:22:47Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    },
+    {
+      "SPECIMEN": "S3_POLYGON_OFFSET_NC_DUAL_MOUNT",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /api/cam/polygon_offset.nc  (OffsetLabView.vue default stepover=0.4)",
+      "EXPECTED_IMPLEMENTATION": "app.routers.polygon_offset_router.polygon_offset_nc (governed; stepover fraction)",
+      "ALTERNATES": [
+        "app.cam.routers.utility.polygon_router.polygon_offset (N17; stepover mm)"
+      ],
+      "SPY_LOCATION": {
+        "expected_governed_nc": "app.routers.polygon_offset_router.polygon_offset_nc",
+        "alternate_utility_n17": "app.cam.routers.utility.polygon_router.polygon_offset"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/api/cam/polygon_offset.nc",
+        "json_body": {
+          "polygon": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              100.0,
+              0.0
+            ],
+            [
+              100.0,
+              100.0
+            ],
+            [
+              0.0,
+              100.0
+            ],
+            [
+              0.0,
+              0.0
+            ]
+          ],
+          "tool_dia": 6.0,
+          "stepover": 0.4,
+          "link_mode": "arc",
+          "units": "mm"
+        },
+        "files": null
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 200,
+        "content_type": "text/plain; charset=utf-8",
+        "text_snippet": "(N17 Polygon Offset \u2014 arcs + feed floors)\nG21\nG90\nG17\nG0 Z5.000\nM3\nG0 X99.600 Y99.600\nG1 Z-1.500 F600.0\nG1 X-0.600 Y99.600\nG3 X0.400 Y100.600 I2.000 J-1.000 F600.0\nG1 X0.400 Y-0.600\nG3 X-0.600 Y0.400 I1.000 J2.000 F600.0\nG1 X100.600 Y0.400\nG3 X99.600 Y-0.600 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X99.200 Y99.200\nG1 Z-1.500 F600.0\nG1 X-0.200 Y99.200\nG3 X0.800 Y100.200 I2.000 J-1.000 F600.0\nG1 X0.800 Y-0.200\nG3 X-0.200 Y0.800 I1.000 J2.000 F600.0\nG1 X100.200 Y0.800\nG3 X99.200 Y-0.200 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X98.800 Y98.800\nG1 Z-1.500 F600.0\nG1 X0.200 Y98.800\nG3 X1.200 Y99.800 I2.000 J-1.000 F600.0\nG1 X1.200 Y0.200\nG3 X0.200 Y1.200 I1.000 J2.000 F600.0\nG1 X99.800 Y1.200\nG3 X98.800 Y0.200 I-2.000 J1.000 F600.0\nG0 Z5.000\nG0 X98.400 Y98.400\nG1 Z-1.500 F600.0\nG1 X0.600 Y98.400\nG3 X1.600 Y9",
+        "headers": {
+          "content-type": "text/plain; charset=utf-8"
+        }
+      },
+      "ACTUAL_CALLS": {
+        "expected_governed_nc": 0,
+        "alternate_utility_n17": 1
+      },
+      "TERMINAL_EFFECT": "HTTP 200; spies=alternate_utility_n17",
+      "CONSUMER": "packages/client/src/views/OffsetLabView.vue getGcode(); n17_n18.ts also posts polygon_offset.nc",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "OffsetLab preview uses /polygon_offset.preview (governed-only in live_routes); NC uses /polygon_offset.nc (colliding).",
+        "Utility handler schema uses absolute mm stepover; OffsetLab default 0.4 is the governed fraction convention."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:22:51Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    },
+    {
+      "SPECIMEN": "S4_DXF_CURVEMATH_LEGACY_EXPORT",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /exports/polyline_dxf  (packages/client/src/utils/curvemath_dxf.ts)",
+      "EXPECTED_IMPLEMENTATION": "app.routers.export.dxf_translate_router.translate_to_dxf (governed dxf_compat R12/R2000)",
+      "ALTERNATES": [
+        "app.routers.legacy_dxf_exports_router.export_polyline_dxf",
+        "app.exports.dxf_helpers.try_build_with_ezdxf",
+        "app.exports.dxf_helpers.build_ascii_r12"
+      ],
+      "SPY_LOCATION": {
+        "actual_legacy_handler": "app.routers.legacy_dxf_exports_router.export_polyline_dxf",
+        "legacy_ezdxf_helper": "app.exports.dxf_helpers.try_build_with_ezdxf",
+        "legacy_ascii_r12_fallback": "app.exports.dxf_helpers.build_ascii_r12",
+        "expected_governed_translate": "app.routers.export.dxf_translate_router.translate_to_dxf"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/exports/polyline_dxf",
+        "json_body": {
+          "polyline": {
+            "points": [
+              [
+                0,
+                0
+              ],
+              [
+                100,
+                0
+              ],
+              [
+                100,
+                50
+              ],
+              [
+                0,
+                50
+              ]
+            ]
+          }
+        },
+        "files": null
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 500,
+        "content_type": "text/plain; charset=utf-8",
+        "text_snippet": "Internal Server Error",
+        "headers": {
+          "content-type": "text/plain; charset=utf-8"
+        }
+      },
+      "ACTUAL_CALLS": {
+        "actual_legacy_handler": 1,
+        "legacy_ezdxf_helper": 0,
+        "legacy_ascii_r12_fallback": 0,
+        "expected_governed_translate": 0
+      },
+      "TERMINAL_EFFECT": "HTTP 500; spies=actual_legacy_handler",
+      "CONSUMER": "packages/client/src/utils/curvemath_dxf.ts",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "Governed translator expects Export Object JSON, not a raw polyline; FE CurveMath never posts /api/export/translate/dxf in this specimen.",
+        "ASCII R12 fallback in the legacy handler is only a defect if ezdxf helper does not fire and ASCII is not the intended path for this consumer."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:22:56Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    },
+    {
+      "SPECIMEN": "S5_FRET_SLOTS_CAM_PREVIEW",
+      "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+      "ENTRYPOINT": "POST /api/cam/fret_slots/preview  (fretSlotsCamStore.ts / instrumentGeometryStore.ts)",
+      "EXPECTED_IMPLEMENTATION": "app.cam.routers.fret_slots_router.preview_fret_slots \u2192 generate_fret_slot_toolpaths",
+      "ALTERNATES": [
+        "app.calculators.fret_slots_fan_cam.generate_fan_fret_cam",
+        "POST /api/v1/fretboard/dxf (ecosphere; not invoked by this request)"
+      ],
+      "SPY_LOCATION": {
+        "expected_preview_handler": "app.cam.routers.fret_slots_router.preview_fret_slots",
+        "expected_standard_generator": "app.calculators.fret_slots_cam.generate_fret_slot_toolpaths",
+        "alternate_fan_generator": "app.calculators.fret_slots_fan_cam.generate_fan_fret_cam"
+      },
+      "REQUEST_OR_INVOCATION": {
+        "method": "POST",
+        "path": "/api/cam/fret_slots/preview",
+        "json_body": {
+          "model_id": "dreadnought",
+          "fret_count": 20,
+          "mode": "standard"
+        },
+        "files": null
+      },
+      "HTTP_CLI_RESULT": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "text_snippet": "{\"operation\":\"fret_slot_preview\",\"status\":\"preview\",\"gate\":\"yellow\",\"units\":\"mm\",\"coordinate_system\":{\"units\":\"mm\",\"origin\":\"nut_edge\",\"x_axis\":\"scale_length_direction\",\"y_axis\":\"bass_to_treble\",\"z_axis\":\"depth_into_fretboard\",\"z_zero\":\"top_of_fretboard\",\"handedness\":\"right_handed\",\"frame\":\"local_part\",\"notes\":null,\"coordinate_confidence\":\"documented_from_current_code\"},\"canonical_toolpath\":{\"slots\":[{\"fret\":1,\"stringIndex\":0,\"positionMm\":36.3694453822626,\"widthMm\":43.147061288035,\"depthMm\":3.0,\"angleRad\":0.0,\"isPerpendicular\":false},{\"fret\":2,\"stringIndex\":0,\"positionMm\":70.69763064506014,\"widthMm\":44.2297429728828,\"depthMm\":3.0,\"angleRad\":0.0,\"isPerpendicular\":false},{\"fret\":3,\"stringIndex\":0,\"positionMm\":103.09912291559294,\"widthMm\":45.25165840402158,\"depthMm\":3.0,\"angleRad\":0.0,\"isPerp",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "json": {
+          "operation": "fret_slot_preview",
+          "status": "preview",
+          "gate": "yellow",
+          "units": "mm",
+          "coordinate_system": {
+            "units": "mm",
+            "origin": "nut_edge",
+            "x_axis": "scale_length_direction",
+            "y_axis": "bass_to_treble",
+            "z_axis": "depth_into_fretboard",
+            "z_zero": "top_of_fretboard",
+            "handedness": "right_handed",
+            "frame": "local_part",
+            "notes": null,
+            "coordinate_confidence": "documented_from_current_code"
+          },
+          "canonical_toolpath": {
+            "slots": [
+              {
+                "fret": 1,
+                "stringIndex": 0,
+                "positionMm": 36.3694453822626,
+                "widthMm": 43.147061288035,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 2,
+                "stringIndex": 0,
+                "positionMm": 70.69763064506014,
+                "widthMm": 44.2297429728828,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 3,
+                "stringIndex": 0,
+                "positionMm": 103.09912291559294,
+                "widthMm": 45.25165840402158,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 4,
+                "stringIndex": 0,
+                "positionMm": 133.6820591623034,
+                "widthMm": 46.216218129206524,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 5,
+                "stringIndex": 0,
+                "positionMm": 162.54850709195517,
+                "widthMm": 47.1266412768559,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 6,
+                "stringIndex": 0,
+                "positionMm": 189.79480579111726,
+                "widthMm": 47.98596629959296,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 7,
+                "stringIndex": 0,
+                "positionMm": 215.51188724890886,
+                "widthMm": 48.79706111479908,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 8,
+                "stringIndex": 0,
+                "positionMm": 239.78557983406108,
+                "widthMm": 49.56263267602144,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 9,
+                "stringIndex": 0,
+                "positionMm": 262.69689473911836,
+                "widthMm": 50.285236007178845,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 10,
+                "stringIndex": 0,
+                "positionMm": 284.32229634776314,
+                "widthMm": 50.967282729716544,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 11,
+                "stringIndex": 0,
+                "positionMm": 304.7339574275883,
+                "widthMm": 51.61104911116862,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 12,
+                "stringIndex": 0,
+                "positionMm": 324.0,
+                "widthMm": 52.21868366198928,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 13,
+                "stringIndex": 0,
+                "positionMm": 342.1847226911313,
+                "widthMm": 52.79221430600678,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 14,
+                "stringIndex": 0,
+                "positionMm": 359.3488153225301,
+                "widthMm": 53.33355514843068,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 15,
+                "stringIndex": 0,
+                "positionMm": 375.5495614577965,
+                "widthMm": 53.84451286400007,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 16,
+                "stringIndex": 0,
+                "positionMm": 390.8410295811517,
+                "widthMm": 54.326792726592544,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 17,
+                "stringIndex": 0,
+                "positionMm": 405.27425354597756,
+                "widthMm": 54.78200430041723,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 18,
+                "stringIndex": 0,
+                "positionMm": 418.8974028955586,
+                "widthMm": 55.21166681178576,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 19,
+                "stringIndex": 0,
+                "positionMm": 431.7559436244544,
+                "widthMm": 55.61721421938881,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              },
+              {
+                "fret": 20,
+                "stringIndex": 0,
+                "positionMm": 443.89278991703054,
+                "widthMm": 56.0,
+                "depthMm": 3.0,
+                "angleRad": 0.0,
+                "isPerpendicular": false
+              }
+            ],
+            "slot_count": 20,
+            "mode": "standard"
+          },
+          "warnings": [
+            "Model 'dreadnought' not found, using defaults"
+          ],
+          "errors": [],
+          "issues": [
+            {
+              "code": "MODEL_NOT_FOUND",
+              "severity": "yellow",
+              "message": "Model 'dreadnought' not found, using defaults",
+              "field": null
+            }
+          ],
+          "metadata": {
+            "generator_id": "fret_slots_cam",
+            "generator_version": "1.0.0",
+            "preview_only": true,
+            "machine_ready": false,
+            "risk_class": "A",
+            "generated_at": "2026-09-06T04:23:00.001192+00:00",
+            "mode": "standard"
+          },
+          "model_id": "dreadnought",
+          "fret_count": 20,
+          "slots": [
+            {
+              "fret": 1,
+              "stringIndex": 0,
+              "positionMm": 36.3694453822626,
+              "widthMm": 43.147061288035,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 2,
+              "stringIndex": 0,
+              "positionMm": 70.69763064506014,
+              "widthMm": 44.2297429728828,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 3,
+              "stringIndex": 0,
+              "positionMm": 103.09912291559294,
+              "widthMm": 45.25165840402158,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 4,
+              "stringIndex": 0,
+              "positionMm": 133.6820591623034,
+              "widthMm": 46.216218129206524,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 5,
+              "stringIndex": 0,
+              "positionMm": 162.54850709195517,
+              "widthMm": 47.1266412768559,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 6,
+              "stringIndex": 0,
+              "positionMm": 189.79480579111726,
+              "widthMm": 47.98596629959296,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 7,
+              "stringIndex": 0,
+              "positionMm": 215.51188724890886,
+              "widthMm": 48.79706111479908,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 8,
+              "stringIndex": 0,
+              "positionMm": 239.78557983406108,
+              "widthMm": 49.56263267602144,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 9,
+              "stringIndex": 0,
+              "positionMm": 262.69689473911836,
+              "widthMm": 50.285236007178845,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 10,
+              "stringIndex": 0,
+              "positionMm": 284.32229634776314,
+              "widthMm": 50.967282729716544,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 11,
+              "stringIndex": 0,
+              "positionMm": 304.7339574275883,
+              "widthMm": 51.61104911116862,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 12,
+              "stringIndex": 0,
+              "positionMm": 324.0,
+              "widthMm": 52.21868366198928,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 13,
+              "stringIndex": 0,
+              "positionMm": 342.1847226911313,
+              "widthMm": 52.79221430600678,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 14,
+              "stringIndex": 0,
+              "positionMm": 359.3488153225301,
+              "widthMm": 53.33355514843068,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 15,
+              "stringIndex": 0,
+              "positionMm": 375.5495614577965,
+              "widthMm": 53.84451286400007,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 16,
+              "stringIndex": 0,
+              "positionMm": 390.8410295811517,
+              "widthMm": 54.326792726592544,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 17,
+              "stringIndex": 0,
+              "positionMm": 405.27425354597756,
+              "widthMm": 54.78200430041723,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 18,
+              "stringIndex": 0,
+              "positionMm": 418.8974028955586,
+              "widthMm": 55.21166681178576,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 19,
+              "stringIndex": 0,
+              "positionMm": 431.7559436244544,
+              "widthMm": 55.61721421938881,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            },
+            {
+              "fret": 20,
+              "stringIndex": 0,
+              "positionMm": 443.89278991703054,
+              "widthMm": 56.0,
+              "depthMm": 3.0,
+              "angleRad": 0.0,
+              "isPerpendicular": false
+            }
+          ],
+          "messages": [
+            {
+              "code": "MODEL_NOT_FOUND",
+              "severity": "warning",
+              "message": "Model 'dreadnought' not found, using defaults",
+              "context": {
+                "model_id": "dreadnought"
+              },
+              "hint": "Check model registry for available model IDs"
+            }
+          ],
+          "statistics": {
+            "slot_count": 20,
+            "max_angle_deg": 0.0,
+            "total_cutting_length_mm": 1013.31,
+            "total_plunge_depth_mm": 60.0,
+            "total_time_s": 53.5,
+            "total_time_min": 0.89,
+            "avg_feed_mmpm": 1500.0,
+            "estimated_cost_usd": 1.0,
+            "operation_count": 20,
+            "move_count": 80,
+            "warning_count": 1,
+            "error_count": 0
+          }
+        }
+      },
+      "ACTUAL_CALLS": {
+        "expected_preview_handler": 1,
+        "expected_standard_generator": 0,
+        "alternate_fan_generator": 0
+      },
+      "TERMINAL_EFFECT": "HTTP 200; spies=expected_preview_handler",
+      "CONSUMER": "packages/client/src/stores/fretSlotsCamStore.ts; FretSlottingView.vue documents preview-only vs /api/v1/fretboard/dxf",
+      "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+      "LIMITATIONS": [
+        "This specimen does not POST /api/v1/fretboard/dxf; ecosphere is an alternate product path, not a runtime alternate for this URL.",
+        "model_id may be missing from the registry; handler has an explicit default-scale fallback \u2014 that fallback is not automatically D3."
+      ],
+      "SPY_CONTROL_FIRED": null,
+      "EXCEPTION": null,
+      "VOIDED": false,
+      "VOID_REASON": null,
+      "COLLECTED_AT_UTC": "2026-09-06T04:23:00Z",
+      "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+    }
+  ],
+  "d_status_by_tool": false
+}

@@ -1,0 +1,71 @@
+{
+  "SPECIMEN": "S4_DXF_CURVEMATH_LEGACY_EXPORT",
+  "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+  "ENTRYPOINT": "POST /exports/polyline_dxf  (packages/client/src/utils/curvemath_dxf.ts)",
+  "EXPECTED_IMPLEMENTATION": "app.routers.export.dxf_translate_router.translate_to_dxf (governed dxf_compat R12/R2000)",
+  "ALTERNATES": [
+    "app.routers.legacy_dxf_exports_router.export_polyline_dxf",
+    "app.exports.dxf_helpers.try_build_with_ezdxf",
+    "app.exports.dxf_helpers.build_ascii_r12"
+  ],
+  "SPY_LOCATION": {
+    "actual_legacy_handler": "app.routers.legacy_dxf_exports_router.export_polyline_dxf",
+    "legacy_ezdxf_helper": "app.exports.dxf_helpers.try_build_with_ezdxf",
+    "legacy_ascii_r12_fallback": "app.exports.dxf_helpers.build_ascii_r12",
+    "expected_governed_translate": "app.routers.export.dxf_translate_router.translate_to_dxf"
+  },
+  "REQUEST_OR_INVOCATION": {
+    "method": "POST",
+    "path": "/exports/polyline_dxf",
+    "json_body": {
+      "polyline": {
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            100,
+            50
+          ],
+          [
+            0,
+            50
+          ]
+        ]
+      }
+    },
+    "files": null
+  },
+  "HTTP_CLI_RESULT": {
+    "status_code": 500,
+    "content_type": "text/plain; charset=utf-8",
+    "text_snippet": "Internal Server Error",
+    "headers": {
+      "content-type": "text/plain; charset=utf-8"
+    }
+  },
+  "ACTUAL_CALLS": {
+    "actual_legacy_handler": 1,
+    "legacy_ezdxf_helper": 0,
+    "legacy_ascii_r12_fallback": 0,
+    "expected_governed_translate": 0
+  },
+  "TERMINAL_EFFECT": "HTTP 500; spies=actual_legacy_handler",
+  "CONSUMER": "packages/client/src/utils/curvemath_dxf.ts",
+  "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+  "LIMITATIONS": [
+    "Governed translator expects Export Object JSON, not a raw polyline; FE CurveMath never posts /api/export/translate/dxf in this specimen.",
+    "ASCII R12 fallback in the legacy handler is only a defect if ezdxf helper does not fire and ASCII is not the intended path for this consumer."
+  ],
+  "SPY_CONTROL_FIRED": null,
+  "EXCEPTION": null,
+  "VOIDED": false,
+  "VOID_REASON": null,
+  "COLLECTED_AT_UTC": "2026-09-06T04:22:56Z",
+  "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+}

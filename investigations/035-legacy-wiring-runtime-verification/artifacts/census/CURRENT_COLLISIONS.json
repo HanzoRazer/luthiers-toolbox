@@ -1,0 +1,284 @@
+{
+  "meta": {
+    "investigation": "035",
+    "dataset": "CURRENT",
+    "production_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "historical_comparator_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "specimen_root": "/workspace",
+    "collected_at_utc": "2026-09-06T04:19:01Z",
+    "historical_pr17_artifacts_present": false,
+    "comparison": "current SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; historical SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; PR #17 census artifacts not present in this environment; comparison not normalized"
+  },
+  "collisions": {
+    "GET /api/health": [
+      {
+        "path": "/api/health",
+        "methods": [
+          "GET"
+        ],
+        "name": "health_check",
+        "endpoint": "app.routers.health_router"
+      },
+      {
+        "path": "/api/health",
+        "methods": [
+          "GET"
+        ],
+        "name": "api_health_check",
+        "endpoint": "app.main"
+      }
+    ],
+    "GET /api/_meta/routing-truth": [
+      {
+        "path": "/api/_meta/routing-truth",
+        "methods": [
+          "GET"
+        ],
+        "name": "routing_truth",
+        "endpoint": "app.governance.governance_consolidated_router"
+      },
+      {
+        "path": "/api/_meta/routing-truth",
+        "methods": [
+          "GET"
+        ],
+        "name": "routing_truth",
+        "endpoint": "app.main"
+      }
+    ],
+    "POST /api/cam/polygon_offset.nc": [
+      {
+        "path": "/api/cam/polygon_offset.nc",
+        "methods": [
+          "POST"
+        ],
+        "name": "polygon_offset",
+        "endpoint": "app.cam.routers.utility.polygon_router"
+      },
+      {
+        "path": "/api/cam/polygon_offset.nc",
+        "methods": [
+          "POST"
+        ],
+        "name": "polygon_offset_nc",
+        "endpoint": "app.routers.polygon_offset_router"
+      }
+    ],
+    "POST /api/saw/batch/spec": [
+      {
+        "path": "/api/saw/batch/spec",
+        "methods": [
+          "POST"
+        ],
+        "name": "create_batch_spec",
+        "endpoint": "app.saw_lab.batch_router"
+      },
+      {
+        "path": "/api/saw/batch/spec",
+        "methods": [
+          "POST"
+        ],
+        "name": "create_batch_spec",
+        "endpoint": "app.saw_lab.batch_router"
+      }
+    ],
+    "POST /api/saw/batch/plan": [
+      {
+        "path": "/api/saw/batch/plan",
+        "methods": [
+          "POST"
+        ],
+        "name": "create_batch_plan",
+        "endpoint": "app.saw_lab.batch_router"
+      },
+      {
+        "path": "/api/saw/batch/plan",
+        "methods": [
+          "POST"
+        ],
+        "name": "create_batch_plan",
+        "endpoint": "app.saw_lab.batch_router"
+      }
+    ],
+    "POST /api/saw/batch/approve": [
+      {
+        "path": "/api/saw/batch/approve",
+        "methods": [
+          "POST"
+        ],
+        "name": "approve_batch_plan",
+        "endpoint": "app.saw_lab.batch_router"
+      },
+      {
+        "path": "/api/saw/batch/approve",
+        "methods": [
+          "POST"
+        ],
+        "name": "approve_batch_plan",
+        "endpoint": "app.saw_lab.batch_router"
+      }
+    ],
+    "POST /api/instrument/tuning-machine": [
+      {
+        "path": "/api/instrument/tuning-machine",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_tuning_machine_spec",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      },
+      {
+        "path": "/api/instrument/tuning-machine",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_tuning_machine_spec",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      }
+    ],
+    "POST /api/instrument/tuning-machine/required-height": [
+      {
+        "path": "/api/instrument/tuning-machine/required-height",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_required_post_height",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      },
+      {
+        "path": "/api/instrument/tuning-machine/required-height",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_required_post_height",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      }
+    ],
+    "GET /api/instrument/tuning-machine/post-heights": [
+      {
+        "path": "/api/instrument/tuning-machine/post-heights",
+        "methods": [
+          "GET"
+        ],
+        "name": "list_post_heights",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      },
+      {
+        "path": "/api/instrument/tuning-machine/post-heights",
+        "methods": [
+          "GET"
+        ],
+        "name": "list_post_heights",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      }
+    ],
+    "GET /api/instrument/tuning-machine/string-trees": [
+      {
+        "path": "/api/instrument/tuning-machine/string-trees",
+        "methods": [
+          "GET"
+        ],
+        "name": "list_string_trees",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      },
+      {
+        "path": "/api/instrument/tuning-machine/string-trees",
+        "methods": [
+          "GET"
+        ],
+        "name": "list_string_trees",
+        "endpoint": "app.routers.instrument_geometry.tuning_machine_router"
+      }
+    ],
+    "POST /api/instrument/nut-compensation": [
+      {
+        "path": "/api/instrument/nut-compensation",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_nut_compensation",
+        "endpoint": "app.routers.instrument_router"
+      },
+      {
+        "path": "/api/instrument/nut-compensation",
+        "methods": [
+          "POST"
+        ],
+        "name": "calculate_nut_compensation",
+        "endpoint": "app.routers.instrument_geometry.nut_fret_router"
+      }
+    ],
+    "POST /api/instrument/nut-compensation/compare": [
+      {
+        "path": "/api/instrument/nut-compensation/compare",
+        "methods": [
+          "POST"
+        ],
+        "name": "compare_nut_compensation_types",
+        "endpoint": "app.routers.instrument_router"
+      },
+      {
+        "path": "/api/instrument/nut-compensation/compare",
+        "methods": [
+          "POST"
+        ],
+        "name": "compare_nut_compensation",
+        "endpoint": "app.routers.instrument_geometry.nut_fret_router"
+      }
+    ],
+    "POST /api/instrument/soundhole": [
+      {
+        "path": "/api/instrument/soundhole",
+        "methods": [
+          "POST"
+        ],
+        "name": "get_soundhole_spec",
+        "endpoint": "app.routers.instrument_router"
+      },
+      {
+        "path": "/api/instrument/soundhole",
+        "methods": [
+          "POST"
+        ],
+        "name": "calculate_soundhole",
+        "endpoint": "app.routers.instrument_geometry.soundhole_router"
+      }
+    ],
+    "POST /api/instrument/soundhole/check-position": [
+      {
+        "path": "/api/instrument/soundhole/check-position",
+        "methods": [
+          "POST"
+        ],
+        "name": "check_soundhole_position_endpoint",
+        "endpoint": "app.routers.instrument_router"
+      },
+      {
+        "path": "/api/instrument/soundhole/check-position",
+        "methods": [
+          "POST"
+        ],
+        "name": "check_soundhole_position_endpoint",
+        "endpoint": "app.routers.instrument_geometry.soundhole_router"
+      }
+    ],
+    "GET /api/instrument/soundhole/types": [
+      {
+        "path": "/api/instrument/soundhole/types",
+        "methods": [
+          "GET"
+        ],
+        "name": "get_soundhole_types",
+        "endpoint": "app.routers.instrument_router"
+      },
+      {
+        "path": "/api/instrument/soundhole/types",
+        "methods": [
+          "GET"
+        ],
+        "name": "get_soundhole_types",
+        "endpoint": "app.routers.instrument_geometry.soundhole_router"
+      }
+    ]
+  }
+}

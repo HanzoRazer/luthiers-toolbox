@@ -1,0 +1,53 @@
+{
+  "SPECIMEN": "S1_CAM_SIM_FE_PATH",
+  "PRODUCTION_SHA": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+  "ENTRYPOINT": "POST /api/cam/simulate_gcode  (SimLab.vue / useGcodeSimulation.ts)",
+  "EXPECTED_IMPLEMENTATION": "app.routers.simulation_consolidated_router.simulate_gcode_json",
+  "ALTERNATES": [
+    "app.cam.routers.simulation.simulation_consolidated_router.simulate_gcode",
+    "app.routers.gcode_consolidated_router.simulate_gcode",
+    "app.routers.simulation_consolidated_router.simulate_gcode_legacy"
+  ],
+  "SPY_LOCATION": {
+    "expected_sim_json": "app.routers.simulation_consolidated_router.simulate_gcode_json",
+    "alternate_sim_legacy_under_sim_prefix": "app.routers.simulation_consolidated_router.simulate_gcode_legacy",
+    "alternate_gcode_consolidated_simulate": "app.routers.gcode_consolidated_router.simulate_gcode"
+  },
+  "REQUEST_OR_INVOCATION": {
+    "method": "POST",
+    "path": "/api/cam/simulate_gcode",
+    "json_body": {
+      "gcode": "G21\nG90\nG0 X0 Y0 Z5\nG1 X10 Y0 F300\nG1 X10 Y10\nM30\n"
+    },
+    "files": null
+  },
+  "HTTP_CLI_RESULT": {
+    "status_code": 404,
+    "content_type": "application/json",
+    "text_snippet": "{\"detail\":\"Not Found\"}",
+    "headers": {
+      "content-type": "application/json"
+    },
+    "json": {
+      "detail": "Not Found"
+    }
+  },
+  "ACTUAL_CALLS": {
+    "expected_sim_json": 0,
+    "alternate_sim_legacy_under_sim_prefix": 0,
+    "alternate_gcode_consolidated_simulate": 0
+  },
+  "TERMINAL_EFFECT": "HTTP 404; spies=NO_SPIED_IMPLEMENTATION_CALLED",
+  "CONSUMER": "packages/client SimLab.vue, SimLabWorker.vue, GeometryOverlay.vue, bridge_lab/useGcodeSimulation.ts",
+  "TEST_PATH_COMPARISON": "see artifacts/TEST_RUNTIME_COMPARISON.md",
+  "LIMITATIONS": [
+    "Disabled package app.cam.routers.simulation is not imported by aggregator (simulation_router=None); cannot spy a never-imported handler without importing it (which would not be the production path).",
+    "Spy targets are the live simulation_consolidated_router functions as bound on that module; FastAPI stores the function object at include_router time, so these patches match the production dereference if the route is hit."
+  ],
+  "SPY_CONTROL_FIRED": null,
+  "EXCEPTION": null,
+  "VOIDED": false,
+  "VOID_REASON": null,
+  "COLLECTED_AT_UTC": "2026-09-06T04:22:43Z",
+  "D_STATUS_ASSIGNED_BY_THIS_TOOL": false
+}

@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "investigation": "035",
+    "dataset": "CURRENT",
+    "production_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "historical_comparator_sha": "cab91edacaedc66a0492c35275ce2c255935bf8e",
+    "specimen_root": "/workspace",
+    "collected_at_utc": "2026-09-06T04:19:01Z",
+    "historical_pr17_artifacts_present": false,
+    "comparison": "current SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; historical SHA = cab91edacaedc66a0492c35275ce2c255935bf8e; PR #17 census artifacts not present in this environment; comparison not normalized"
+  },
+  "modules": [
+    {
+      "path": "scripts/check_dxf_compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "scripts/ci/scan_stub_endpoints.py",
+      "hint": "stub"
+    },
+    {
+      "path": "scripts/governance/check_legacy_endpoint_usage.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/blueprint-import/dxf_compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/tests/test_silent_fallback_elimination.py",
+      "hint": "fallback"
+    },
+    {
+      "path": "services/api/tests/test_dxf_compat_r12_compliance.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/tests/test_soundhole_facade.py",
+      "hint": "facade"
+    },
+    {
+      "path": "services/api/tests/test_saw_lab_fixture_compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/tests/test_legacy_endpoint_usage_gate_smoke.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/api/app/routers/legacy_dxf_exports_router.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/api/app/routers/misc_stub_routes.py",
+      "hint": "stub"
+    },
+    {
+      "path": "services/api/app/toolpath/dxf_io_legacy.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/api/app/ci/legacy_usage_gate.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/api/app/util/dxf_compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/app/calculators/soundhole_facade.py",
+      "hint": "facade"
+    },
+    {
+      "path": "services/api/app/cam/runtime_manifest/compatibility.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/app/rmos/engines/feasibility_stub.py",
+      "hint": "stub"
+    },
+    {
+      "path": "services/api/app/rmos/runs_v2/compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/app/cnc_production/schemas/saw_lab_compat.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/tests/cam/test_acoustic_semantic_compatibility.py",
+      "hint": "compat"
+    },
+    {
+      "path": "services/api/scripts/governance/check_legacy_endpoint_usage.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "services/api/scripts/governance/list_legacy_exemptions.py",
+      "hint": "legacy"
+    },
+    {
+      "path": "packages/client/src/components/rmos/composables/useLegacyBulkDecision.ts",
+      "hint": "legacy"
+    }
+  ]
+}

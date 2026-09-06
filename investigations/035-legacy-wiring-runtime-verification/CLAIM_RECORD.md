@@ -156,3 +156,338 @@ EVIDENCE
   services/api/app/routers/blueprint/vectorize_router.py
   services/api/app/routers/blueprint/__init__.py
 ```
+
+---
+
+## EQ-A01-035-05 — Current census (Lab workaround vs dump as-is)
+
+```text
+STATEMENT
+  On SHA cab91eda, Lab-workaround live route walk yields 1157 routes.
+  dump_and_assert_routes.collect_routes() yields 10 routes.
+  Collision count under Lab walk is 15.
+  FE API literals 276; 137 absent from live table.
+  Historical PR #17 counts are not available here.
+
+INSTRUMENT
+  artifacts/tools/census_refresh.py importing dump_and_assert_routes as-is
+  plus included-router walk.
+
+OBSERVATION
+  artifacts/census/CURRENT_CENSUS_SUMMARY.json collected 2026-09-06T04:19:01Z.
+  gate_exit=1 FAIL MVP uniqueness; missing_mvp_exact includes
+  /api/rmos/wrap/mvp/dxf-to-grbl and /api/v1/fretboard/dxf.
+  Divergence note: FastAPI 0.137 _IncludedRouter has no .path.
+
+SUPPORTED INFERENCE
+  Current candidate population exists for manual selection.
+  dump-as-is 10 vs workaround 1157 is instrumentation divergence, not a
+  production patch. Comparison with PR #17 is not normalized.
+
+SCOPE
+  Investigation 035 census files only. Production metrics/ not written.
+
+LIMITATION
+  Workaround walk is Lab-side. Production collector was not repaired.
+
+FALSIFIER / CONTROL
+  A later collect_routes() on the same SHA returning 1157 would mean the
+  FastAPI object model changed or the defect was repaired elsewhere.
+
+EVIDENCE
+  artifacts/census/CURRENT_CENSUS_SUMMARY.json
+  EXPERIMENTS.md Phase 2
+```
+
+---
+
+## EQ-A01-035-06 — IW-03 Vectorizer control reaches intended handler
+
+```text
+STATEMENT
+  POST /api/blueprint/vectorize on the current app reaches
+  vectorize_blueprint (APIRoute.handle spy count = 1).
+
+INSTRUMENT
+  runtime_reachability_witness.py iw03
+  spy: fastapi.routing.APIRoute.handle keyed by (module, name)
+
+OBSERVATION
+  HTTP 200; expected_vectorize_route=1; tiny PNG fails extraction.
+  Collected 2026-09-06T04:22:24Z. VOIDED prior run used route.endpoint wrap
+  and returned HTTP 422.
+
+SUPPORTED INFERENCE
+  Current Toolbox Vectorizer production path is wired to the intended
+  route function. Extraction quality of the tiny PNG is out of scope.
+  S1–S5 handler-identity spies using the same hook are trusted.
+
+SCOPE
+  Handler identity for this control request only.
+
+LIMITATION
+  Orchestrator.process_file was not separately counted (bound method).
+
+FALSIFIER / CONTROL
+  Repeat POST with expected_vectorize_route=0 would invalidate the hook.
+
+EVIDENCE
+  artifacts/census/WITNESS_IW03.json
+  artifacts/RUNTIME_WITNESSES.md IW-03
+```
+
+---
+
+## EQ-A01-035-07 — S1 SimLab FE URL is not mounted
+
+```text
+STATEMENT
+  POST /api/cam/simulate_gcode returns HTTP 404. No spied simulation
+  handler ran. Intended simulate_gcode_json lives at POST /api/cam/sim/gcode.
+
+INSTRUMENT
+  runtime_reachability_witness.py s1 + APIRoute.handle
+
+OBSERVATION
+  status 404 {"detail":"Not Found"}; expected_sim_json=0;
+  alternate_sim_legacy_under_sim_prefix=0;
+  alternate_gcode_consolidated_simulate=0.
+  Collected 2026-09-06T04:22:43Z.
+
+SUPPORTED INFERENCE
+  The SimLab FE contract URL is not a live mount. App tests of
+  /api/cam/sim/gcode do not witness this FE path (relation DIFFERENT).
+
+SCOPE
+  This request body and SHA. Does not prove /api/cam/sim/gcode works.
+
+LIMITATION
+  Disabled package simulation_router=None was not imported.
+
+FALSIFIER / CONTROL
+  A 2xx from POST /api/cam/simulate_gcode on this SHA would falsify.
+
+EVIDENCE
+  artifacts/census/WITNESS_S1.json
+  artifacts/RUNTIME_WITNESSES.md S1
+```
+
+---
+
+## EQ-A01-035-08 — S2 first-match is instrument_router, same facade
+
+```text
+STATEMENT
+  POST /api/instrument/soundhole first-match is
+  instrument_router.get_soundhole_spec, which called bound
+  compute_soundhole_spec. Geometry calculate_soundhole did not run.
+  Source-module facade spy was 0 (IW-02). HTTP 200 spiral spec.
+
+INSTRUMENT
+  runtime_reachability_witness.py s2
+
+OBSERVATION
+  expected_geometry_router=0; alternate_legacy_instrument_router=1;
+  legacy_router_bound_facade=1; geometry_router_bound_compute=0;
+  shared_facade_source_namespace=0.
+  diameter_mm=49.9; P:A note Williams 0.143. Collected 2026-09-06T04:22:47Z.
+
+SUPPORTED INFERENCE
+  HTTP ownership is the legacy instrument_router, not the geometry split
+  router. Physics is the shared facade, not an obsolete calculator.
+
+SCOPE
+  This spiral POST on this SHA.
+
+LIMITATION
+  Does not rank which router “should” own the URL; that is owner policy.
+
+FALSIFIER / CONTROL
+  expected_geometry_router=1 with alternate=0 on the same POST.
+
+EVIDENCE
+  artifacts/census/WITNESS_S2.json
+```
+
+---
+
+## EQ-A01-035-09 — S3 OffsetLab NC URL executes N17, not governed NC
+
+```text
+STATEMENT
+  POST /api/cam/polygon_offset.nc with OffsetLab-shaped JSON
+  (stepover=0.4, tool_dia=6, link_mode=arc, units=mm) executed
+  utility polygon_offset (N17), not governed polygon_offset_nc.
+  G-code pass insets step by 0.4 mm, not 0.4×6 mm.
+
+INSTRUMENT
+  runtime_reachability_witness.py s3 + APIRoute.handle
+
+OBSERVATION
+  HTTP 200 text/plain; expected_governed_nc=0; alternate_utility_n17=1.
+  Banner "(N17 Polygon Offset — arcs + feed floors)".
+  Pass starts 99.600, 99.200, 98.800, 98.400.
+  Collected 2026-09-06T04:22:51Z.
+
+SUPPORTED INFERENCE
+  Runtime-confirmed wrong/unintended implementation for this FE contract.
+  Manufacturing G-code; stepover unit mismatch is a material consequence.
+  Severe-stop predicates all three hold.
+
+SCOPE
+  This NC URL + this JSON. Preview URL not invoked.
+
+LIMITATION
+  OVERLAP.md records parallel mounts; n17_n18.ts also posts this URL.
+  Ownership policy is owner adjudication, not this packet.
+
+FALSIFIER / CONTROL
+  Same POST yielding expected_governed_nc=1 and N17 banner absent.
+
+EVIDENCE
+  artifacts/census/WITNESS_S3.json
+  artifacts/RUNTIME_WITNESSES.md S3 severe-stop freeze
+```
+
+---
+
+## EQ-A01-035-10 — S4 CurveMath hits legacy polyline DXF, not governed translate
+
+```text
+STATEMENT
+  POST /exports/polyline_dxf dispatched export_polyline_dxf.
+  Governed translate_to_dxf did not run. HTTP 500.
+
+INSTRUMENT
+  runtime_reachability_witness.py s4
+
+OBSERVATION
+  actual_legacy_handler=1; expected_governed_translate=0;
+  helper source spies 0. Collected 2026-09-06T04:22:56Z.
+  Logs showed ezdxf R12 dictionary activity before 500.
+
+SUPPORTED INFERENCE
+  FE CurveMath entrypoint is the legacy router, not the governed translator.
+  Handler identity is established. Cause of HTTP 500 is not fully isolated.
+
+SCOPE
+  This polyline JSON on this SHA. Collected after S3 severe condition.
+
+LIMITATION
+  Helper spies were source-module (IW-02). 500 may be history_store or
+  response assembly, not “legacy cannot emit DXF.”
+
+FALSIFIER / CONTROL
+  expected_governed_translate=1 on this URL, or actual_legacy_handler=0.
+
+EVIDENCE
+  artifacts/census/WITNESS_S4.json
+```
+
+---
+
+## EQ-A01-035-11 — S5 preview URL reaches preview_fret_slots
+
+```text
+STATEMENT
+  POST /api/cam/fret_slots/preview reached preview_fret_slots and returned
+  HTTP 200 preview JSON (gate=yellow). Fan generator did not run.
+  Source-module generate_fret_slot_toolpaths spy was 0 (IW-02).
+
+INSTRUMENT
+  runtime_reachability_witness.py s5
+
+OBSERVATION
+  expected_preview_handler=1; expected_standard_generator=0;
+  alternate_fan_generator=0. operation=fret_slot_preview.
+  Collected 2026-09-06T04:23 (WITNESS_S5.json).
+
+SUPPORTED INFERENCE
+  At the HTTP layer this specimen is the intended preview handler.
+  Yellow gate / missing-model default is not automatically D3 (IW-04).
+  Ecosphere DXF sibling was not posted.
+
+SCOPE
+  This preview POST. Collected after S3 severe condition.
+
+LIMITATION
+  Generator body not counted at bound-name namespace.
+
+FALSIFIER / CONTROL
+  expected_preview_handler=0 on this URL.
+
+EVIDENCE
+  artifacts/census/WITNESS_S5.json
+```
+
+---
+
+## EQ-A01-035-12 — Spy location: APIRoute.handle vs source-module patch
+
+```text
+STATEMENT
+  After FastAPI include_router, patching the source module name often
+  reports 0 calls (IW-02). Handler identity for S1–S5 used
+  fastapi.routing.APIRoute.handle.
+
+INSTRUMENT
+  tests/test_instrument_controls.py IW-01/IW-02; voided IW-03 endpoint wrap
+
+OBSERVATION
+  IW-01 bound spy fires; IW-02 source spy does not. endpoint wrap → 422.
+  APIRoute.handle spy fired on accepted IW-03 and on S2/S3/S4/S5 handlers.
+
+SUPPORTED INFERENCE
+  Zero on a source-module spy is not proof of non-execution.
+
+SCOPE
+  This harness and FastAPI 0.137 in /tmp/ltb-035-venv.
+
+LIMITATION
+  Not a general FastAPI version claim.
+
+FALSIFIER / CONTROL
+  Module patch after include_router incrementing on a live request.
+
+EVIDENCE
+  EXPERIMENTS.md Phase 4 and Voided runs
+  tests/test_instrument_controls.py
+```
+
+---
+
+## EQ-A01-035-13 — Sample recommendation TARGET_SPECIFIC_FAILURE_CLASS
+
+```text
+STATEMENT
+  In this five-specimen sample, the repeating mechanism is wire-URL /
+  FastAPI first-match among dual mounts or relocated prefixes, not
+  “all static candidates are unwired.” Recommendation:
+  TARGET_SPECIFIC_FAILURE_CLASS.
+
+INSTRUMENT
+  Manual adjudication after frozen witnesses (FINDINGS.md, RESULTS.md)
+
+OBSERVATION
+  D2=3 (S2, S3, S4); D5=1 (S5); D6=1 (S1).
+  Confirmed false-integration count 3 (S1, S3, S4) with S2 as ownership
+  D2 not obsolete calculator. Severe stop S3. S5 correctly wired at HTTP.
+
+SUPPORTED INFERENCE
+  Broader audit of all 15 collisions / 137 unmatched FE literals is not
+  justified by this sample. Owner adjudication of S3 is the next
+  production decision. No production patch is authorized here.
+
+SCOPE
+  These five manually selected specimens on SHA cab91eda.
+
+LIMITATION
+  Sample is not a repository-wide rate. Human selected high-risk cases.
+
+FALSIFIER / CONTROL
+  Re-run of the same five requests on this SHA with different handler
+  identity would require re-adjudication.
+
+EVIDENCE
+  artifacts/FINDINGS.md; RESULTS.md
+```

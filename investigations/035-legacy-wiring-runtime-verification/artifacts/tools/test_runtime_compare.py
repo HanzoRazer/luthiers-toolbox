@@ -72,13 +72,14 @@ def infer_relation(row: dict, witness: dict | None) -> str:
     if specimen.startswith("S2"):
         geo = calls.get("expected_geometry_router", 0)
         legacy = calls.get("alternate_legacy_instrument_router", 0)
-        facade = calls.get("shared_facade_compute", 0)
+        facade_bound = calls.get("legacy_router_bound_facade", 0)
+        geo_bound = calls.get("geometry_router_bound_compute", 0)
         if geo and not legacy:
             return "SAME"
-        if legacy and facade and not geo:
+        if legacy and not geo:
             return "PARTIAL"
-        if legacy and geo:
-            return "UNKNOWN"
+        if facade_bound or geo_bound:
+            return "PARTIAL"
         return "UNKNOWN"
     if specimen.startswith("S3"):
         gov = calls.get("expected_governed_nc", 0)

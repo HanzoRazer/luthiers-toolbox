@@ -18,12 +18,30 @@ It does not:
 - modify Vectorizer behavior
 - modify Manufacturing Spine, RMOS, CBSP21, or EQ-A01
 
-## Future remediation boundary (only if a confirmed severe defect exists)
+## Future remediation boundary (S3 severe stop)
 
-If FINDINGS.md records a severe stop (runtime-confirmed unintended
-implementation + material capability + material consequence), any later
-remediation is a **separate, owner-adjudicated production act**. That act would
-be bounded to the frozen specimen's entrypoint, expected implementation, actual
-implementation, and terminal effect. No implementation code is provided here.
+FINDINGS.md records a severe stop on S3: runtime-confirmed first-match of
+`POST /api/cam/polygon_offset.nc` is N17 `polygon_offset`, while OffsetLab
+posts governed-shaped `stepover` (0–1 fraction of `tool_dia`).
 
-If no severe defect is confirmed, there is no production patch to propose.
+Any later remediation is a **separate, owner-adjudicated production act**.
+It would be bounded to:
+
+```text
+ENTRYPOINT                 POST /api/cam/polygon_offset.nc
+EXPECTED (OffsetLab schema) polygon_offset_nc  (stepover as fraction)
+ACTUAL (this SHA)           utility polygon_offset / N17 (stepover as mm)
+TERMINAL EFFECT             N17 G-code; 0.4 mm pass insets vs 2.4 mm implied
+ALSO CONSUMES THIS URL      n17_n18.ts
+NOT IN SCOPE HERE           /api/cam/polygon_offset.preview
+```
+
+Do not silently delete the N17 handler if it still has a legitimate client.
+Do not change OffsetLab defaults in this packet. No implementation code is
+provided here.
+
+S1 (unmounted FE URL), S2 (HTTP ownership with shared facade), and S4
+(legacy DXF URL) are not authorized production patches in this increment.
+
+If the owner later opens a production change, it is a new PR against
+production, not a continuation of Investigation 035.
