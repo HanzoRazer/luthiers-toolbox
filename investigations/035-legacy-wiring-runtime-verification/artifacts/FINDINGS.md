@@ -77,9 +77,17 @@ silently deleting the N17 consumer if it still has a legitimate client
 
 ## LW-035-04 — CurveMath DXF uses the legacy export router
 
-S4. `export_polyline_dxf` ran. Governed `translate_to_dxf` did not. HTTP 500
-after ezdxf R12 activity. Helper source-module spies were IW-02 (0). Terminal
-500 is not fully explained; handler identity is.
+S4. `export_polyline_dxf` ran (count 1). Governed `translate_to_dxf` did not
+(count 0). The request terminated HTTP 500. Helper source-module spies were
+IW-02 (0).
+
+Handler identity is witnessed. **The cause of the 500 is not** — see the
+withdrawn "ezdxf activity" note in `RUNTIME_WITNESSES.md`; no frozen artifact
+records ezdxf running on this request. Note also that
+`app.routers.export.dxf_translate_router.translate_to_dxf` is not mounted at
+`/exports/polyline_dxf` at all (`CURRENT_LIVE_ROUTES.json` lists exactly one
+handler for that path), so its 0 is a property of the route table, not a
+first-match race.
 
 ---
 
@@ -88,6 +96,48 @@ after ezdxf R12 activity. Helper source-module spies were IW-02 (0). Terminal
 S5. `preview_fret_slots` ran; 200 preview envelope. Generator source-module
 spy 0 (likely bound import). Not a false-integration specimen at the HTTP
 layer.
+
+---
+
+## Operational severity is a different axis from D-status (added 2026-09-06)
+
+Raised during PR #356 review. This adds **no new evidence and changes no
+D-status**; it separates two things the packet currently reads as one.
+
+`SEVERE STOP = YES (S3)` is a statement about the **sampling protocol** — the
+predicates that told the investigation to stop sampling. It is not a ranking of
+user impact. Read only the D-column and RESULTS, and it is easy to conclude
+that S3 is the one urgent item. Two others are hard failures on live frontend
+call paths at this SHA:
+
+```text
+S1  POST /api/cam/simulate_gcode  → HTTP 404
+    five production call sites, not one:
+      GeometryOverlay.vue:259
+      SimLab.vue:292, SimLab.vue:329
+      SimLabWorker.vue:161
+      bridge_lab/composables/useGcodeSimulation.ts:47
+    the FE api() helper does not rewrite the path (API_BASE defaults to ''),
+    so the 404 is the shipped behaviour, not a harness artefact.
+
+S4  POST /exports/polyline_dxf   → HTTP 500
+    single call site: utils/curvemath_dxf.ts:57
+
+S3  POST /api/cam/polygon_offset.nc → HTTP 200, wrong stepover semantics
+```
+
+The distinction that matters for triage:
+
+- S3 fails **silently and plausibly**. It returns 200 and valid-looking G-code
+  with a 6× denser toolpath than the operator's control implies. Nothing in the
+  response says anything is wrong. That is why it is the severe stop.
+- S1 and S4 fail **loudly**. A 404 and a 500 are visible to the user and cannot
+  be mistaken for a good result — but they are still two broken production
+  features, and S1 is broken at five call sites.
+
+Correct reading: S3 is the highest **risk** finding; S1 and S4 are the most
+immediately **broken** features. Nothing here is authorized for repair in this
+increment (`PATCH_PROPOSAL.md`), and none of it is offered as a patch.
 
 ---
 

@@ -431,11 +431,21 @@ STATEMENT
   fastapi.routing.APIRoute.handle.
 
 INSTRUMENT
-  tests/test_instrument_controls.py IW-01/IW-02; voided IW-03 endpoint wrap
+  tests/test_instrument_controls.py IW-06 / IW-06b / IW-07 (the APIRoute.handle
+  hook itself), IW-01 / IW-02 (module patching, the contrasting mechanism),
+  voided IW-03 endpoint wrap.
+
+  CORRECTED 2026-09-06: this field previously named only IW-01/IW-02. Those
+  validate module-level patching — the mechanism that reads 0 — and said
+  nothing about the hook this claim certifies. IW-06 supplies the missing
+  positive and negative control on a purpose-built two-route app.
 
 OBSERVATION
   IW-01 bound spy fires; IW-02 source spy does not. endpoint wrap → 422.
   APIRoute.handle spy fired on accepted IW-03 and on S2/S3/S4/S5 handlers.
+  IW-06: dispatched endpoint counts 1, mounted-but-undispatched endpoint
+  counts 0 in the same request. IW-06b: status and body are byte-identical
+  with and without the hook.
 
 SUPPORTED INFERENCE
   Zero on a source-module spy is not proof of non-execution.

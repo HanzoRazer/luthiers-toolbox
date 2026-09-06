@@ -504,6 +504,11 @@ Repository_Critical_Evaluation.md
 # ------------------------------------------
 phase4_output/
 artifacts/
+# Unanchored 'artifacts/' above matches ANY directory of that name at any
+# depth. Investigation evidence packets keep their frozen witnesses under
+# <packet>/artifacts/, which the rule silently swallows: the files exist,
+# `git status` shows nothing, and `git add -A` adds nothing. Re-include them.
+!investigations/**/artifacts/
 benchmark_*/
 /benchmark_*
 sandbox/

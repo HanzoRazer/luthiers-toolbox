@@ -94,6 +94,44 @@ inside a feature branch of the production clone, **without modifying production
 source**. The Lab PR is this packet. Production application code is not part of
 the diff.
 
+### OPEN OWNER DECISION — this creates a new top-level directory
+
+Flagged during PR #356 review, unresolved, and deliberately not decided here.
+
+```text
+investigations/       does NOT exist on origin/main  (git ls-tree, cab91eda)
+docs/investigations/  DOES exist, 9 files, LTB's established convention
+```
+
+So merging this packet at `investigations/` does two things the Lab-placement
+note above does not say out loud:
+
+1. it establishes a **second, root-level home** for investigation evidence in a
+   repository that already has one under `docs/`; and
+2. it puts Lab evidence permanently in the production repo, whereas the
+   standing arrangement from Investigation 033 is that **evidence lives in the
+   Consolidation Lab and Luthier's Toolbox is the read-only subject**.
+
+Both may be the right call — the collection environment genuinely could not
+reach the Lab repo, and the Lab-conventional path is what makes a later
+migration mechanical. But it is a structural decision about repository layout,
+not a side effect of where a cloud agent happened to be mounted, and it should
+be made explicitly. Three dispositions, none of them free:
+
+```text
+A  MERGE AS-IS at investigations/ and record it as the Lab-mirror path,
+   accepting that LTB now has two investigation roots.
+B  RELOCATE to docs/investigations/035-legacy-wiring-runtime-verification/
+   before merge — matches LTB convention, breaks the Lab-conventional path,
+   rewrites 33 paths and this packet's CBSP21 manifest.
+C  MERGE AS-IS with a migration obligation: the packet moves to the
+   Consolidation Lab when that repo is reachable, and investigations/ is
+   deleted from LTB at that point.
+```
+
+Until an owner rules, treat the location as provisional. Nothing in the
+evidence depends on it.
+
 ## Packet layout
 
 ```text
@@ -109,6 +147,7 @@ artifacts/CANDIDATE_SELECTION.md
 artifacts/RUNTIME_WITNESSES.md
 artifacts/TEST_RUNTIME_COMPARISON.md
 artifacts/FINDINGS.md
+artifacts/EVIDENCE_INDEX.md   claim → artifact map; start here to check a claim
 artifacts/census/          current candidate population only
 artifacts/tools/           investigation-specific utilities
 tests/                     IW-01..IW-05 instrument controls

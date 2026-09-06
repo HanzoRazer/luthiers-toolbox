@@ -4,16 +4,18 @@
   "coverage_min": 0.95,
   "patch_id": "LEGACY_WIRING_035_RUNTIME_VERIFICATION",
   "title": "Investigation 035 Lab packet: LEGACY-WIRING-001B high-risk runtime verification",
-  "intent": "Add Investigation 035 evidence packet (census refresh, five-specimen runtime witnesses, instrument controls, D-status). Production application source is not modified. This manifest is the per-PR CBSP21 declaration required by the existing gate (CBSP21-NOBORROW-001); it does not change CBSP21 policy, schema, or checkers.",
+  "intent": "Add Investigation 035 evidence packet (census refresh, five-specimen runtime witnesses, instrument controls, D-status). Production application source is not modified. This manifest is the per-PR CBSP21 declaration required by the existing gate (CBSP21-NOBORROW-001); it does not change CBSP21 policy, schema, or checkers. PR #356 review pass (2026-09-06): corrected two unsupported claims, fixed two witness-harness defects (spy leak on a failing spec; silent double-wrap of the APIRoute.handle hook), added IW-06/IW-06b/IW-07/IW-08 controls for the spy mechanism the findings actually rest on, and added an evidence index. Still no production source, checker, schema or threshold change.",
   "change_type": "docs",
   "behavior_change": "none",
   "risk_level": "low",
   "scope": {
-        "paths_in_scope": [
-            "investigations/035-legacy-wiring-runtime-verification/",
-            ".cbsp21/patches/legacy-wiring-035-runtime-verification.json"
-        ],
+    "paths_in_scope": [
+      "investigations/035-legacy-wiring-runtime-verification/",
+      ".cbsp21/patches/legacy-wiring-035-runtime-verification.json",
+      ".gitignore"
+    ],
     "files_expected_to_change": [
+      ".gitignore",
       "investigations/035-legacy-wiring-runtime-verification/CLAIM_RECORD.md",
       "investigations/035-legacy-wiring-runtime-verification/EXPERIMENTS.md",
       "investigations/035-legacy-wiring-runtime-verification/FACTS/CURRENT_STATE.md",
@@ -24,6 +26,7 @@
       "investigations/035-legacy-wiring-runtime-verification/SCOPE.md",
       "investigations/035-legacy-wiring-runtime-verification/artifacts/CANDIDATE_SELECTION.md",
       "investigations/035-legacy-wiring-runtime-verification/artifacts/FINDINGS.md",
+      "investigations/035-legacy-wiring-runtime-verification/artifacts/EVIDENCE_INDEX.md",
       "investigations/035-legacy-wiring-runtime-verification/artifacts/RUNTIME_WITNESSES.md",
       "investigations/035-legacy-wiring-runtime-verification/artifacts/TEST_RUNTIME_COMPARISON.md",
       "investigations/035-legacy-wiring-runtime-verification/artifacts/census/CURRENT_CENSUS_SUMMARY.json",
@@ -50,18 +53,30 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Adds investigations/035-legacy-wiring-runtime-verification/ (Lab packet, census JSON, witness JSON, investigation-local tools and IW tests) plus this per-PR CBSP21 manifest. No services/, packages/, scripts/ci/, or CBSP21 checker files are in the diff.",
+    "what_changed": "Adds investigations/035-legacy-wiring-runtime-verification/ (Lab packet, census JSON, witness JSON, investigation-local tools and IW tests) plus this per-PR CBSP21 manifest. No services/, packages/, scripts/ci/, or CBSP21 checker files are in the diff. Review pass adds artifacts/EVIDENCE_INDEX.md and edits packet docs, the investigation-local witness tool, and the investigation-local instrument tests. The frozen census/WITNESS_*.json artifacts are NOT re-collected or edited. Also edits .gitignore: the unanchored 'artifacts/' rule silently ignored this packet's own evidence directory, so the negation '!investigations/**/artifacts/' is added. This is the only file outside investigations/ and .cbsp21/ in the diff; it is repository tooling, not application source.",
     "why_not_redundant": "The required CBSP21 Patch Manifest Gate fails closed when a PR brings no owned manifest (CBSP21-NOBORROW-001). This packet is new Lab evidence under investigations/035-*; no existing manifest covers it, and borrowing a historical manifest is forbidden. The declaration maps this PR's files; it does not alter gate logic."
   },
   "verification": {
     "commands_run": [
-      "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools /tmp/ltb-035-venv/bin/python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v -> 5 passed",
-      "runtime_reachability_witness.py iw03 s1 s2 s3 s4 s5 -> frozen under artifacts/census/WITNESS_*.json",
-      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD plus this manifest>",
+      "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v -> 9 passed (was 5; IW-07 and IW-08 fail against the pre-review harness, confirming they are regression witnesses)",
+      "runtime_reachability_witness.py iw03 s1 s2 s3 s4 s5 -> frozen under artifacts/census/WITNESS_*.json (collected pre-review; NOT re-run)",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD>",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
+    {
+      "path": ".gitignore",
+      "intent": "Re-include investigation evidence packets. The unanchored 'artifacts/' rule at line 506 matches any directory of that name at any depth, so <packet>/artifacts/ was silently ignored: new evidence files did not appear in git status and git add -A skipped them. Adds '!investigations/**/artifacts/' plus a comment naming the trap. Scoped to investigations/; no other path changes ignore state.",
+      "scan_targets": [
+        ".gitignore"
+      ],
+      "risk": "low",
+      "behavior_change": "none - repository tooling, not application source",
+      "verification": [
+        "git check-ignore -v investigations/035-legacy-wiring-runtime-verification/artifacts/EVIDENCE_INDEX.md -> exit 1 (no longer ignored); git status --porcelain -> exactly the 10 intended files, nothing else un-ignored by the negation"
+      ]
+    },
     {
       "path": "investigations/035-legacy-wiring-runtime-verification/CLAIM_RECORD.md",
       "intent": "EQ-A01 claims for baseline, census, IW-03, and S1\u2013S5.",
@@ -175,6 +190,18 @@
       "intent": "D-status and bounded LW findings after witness freeze.",
       "scan_targets": [
         "investigations/035-legacy-wiring-runtime-verification/artifacts/FINDINGS.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "PYTHONPATH=investigations/035-legacy-wiring-runtime-verification/artifacts/tools python -m pytest investigations/035-legacy-wiring-runtime-verification/tests/test_instrument_controls.py -v"
+      ]
+    },
+    {
+      "path": "investigations/035-legacy-wiring-runtime-verification/artifacts/EVIDENCE_INDEX.md",
+      "intent": "Claim -> artifact map added in PR #356 review; indexes existing frozen evidence, adds none.",
+      "scan_targets": [
+        "investigations/035-legacy-wiring-runtime-verification/artifacts/EVIDENCE_INDEX.md"
       ],
       "risk": "low",
       "behavior_change": "none",
@@ -470,6 +497,6 @@
     "authority_model_changed": false,
     "rmos_changed": false,
     "production_routes_changed": false,
-    "notes": "S3 severe-stop is recorded in FINDINGS.md. Remediation is not authorized in this increment."
+    "notes": "S3 severe-stop is recorded in FINDINGS.md. Remediation is not authorized in this increment. Review pass: witness-harness fixes are behaviour-preserving for the frozen run (every WITNESS_*.json has EXCEPTION=null, so the repaired failure paths were never taken). Packet placement at top-level investigations/ is recorded as an OPEN OWNER DECISION in README.md."
   }
 }

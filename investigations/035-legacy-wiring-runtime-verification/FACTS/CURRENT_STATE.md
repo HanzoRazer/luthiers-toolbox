@@ -113,7 +113,10 @@ S5 `POST /api/cam/fret_slots/preview`: HTTP 200 JSON
 
 S4 and S5 collected in the same command batch as S3.
 
-Instrument unit tests IW-01, IW-02, IW-04, IW-05: 5 passed. First IW-03
+Instrument unit tests IW-01, IW-02, IW-04, IW-05: 5 passed at collection time.
+After the 2026-09-06 review added IW-06, IW-06b, IW-07 and IW-08: 9 passed.
+IW-07 and IW-08 fail against the pre-review harness — that is what makes them
+regression witnesses rather than restatements. First IW-03
 attempt wrapping `route.endpoint` returned HTTP 422 and was not kept as
 accepted IW-03 evidence.
 

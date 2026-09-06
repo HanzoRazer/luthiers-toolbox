@@ -18,6 +18,17 @@ S4 and S5 were collected in the same batch as S3 before S3 was inspected.
 The severe-stop rule is satisfied by S3; S4/S5 remain frozen additional
 evidence, not a reason to keep sampling.
 
+**Unfrozen observation, withdrawn from the record (2026-09-06 review).** An
+earlier revision of the S4 block asserted "ezdxf creating dictionaries; R12
+$INSUNITS warning" and "ezdxf activity in logs". That came from console output
+during collection and was never written to `WITNESS_S4.json`, whose ezdxf
+helper spies are both **0** and whose captured body is the bare string
+"Internal Server Error". The assertion is therefore unsupported by any frozen
+artifact and has been removed rather than re-derived. What S4 supports is
+unchanged: `export_polyline_dxf` ran (count 1), the governed translator did
+not (count 0), and the request terminated 500. **Why the 500 happened is not
+witnessed by this packet.**
+
 ---
 
 ## SPECIMEN S1_CAM_SIM_FE_PATH
@@ -138,17 +149,17 @@ SPY LOCATION             APIRoute.handle on both handlers; module spies on helpe
 REQUEST OR INVOCATION    POST /exports/polyline_dxf
                          {polyline:{points:[[0,0],[100,0],[100,50],[0,50]]}}
 HTTP/CLI RESULT          500 Internal Server Error
-                         server log: ezdxf creating dictionaries; R12 $INSUNITS warning
+                         (WITNESS_S4.json text_snippet is exactly
+                          "Internal Server Error"; no body detail was captured)
 ACTUAL CALLS             actual_legacy_handler=1
                          legacy_ezdxf_helper=0
                          legacy_ascii_r12_fallback=0
                          expected_governed_translate=0
-TERMINAL EFFECT          HTTP 500 after legacy handler dispatch; ezdxf activity in logs
+TERMINAL EFFECT          HTTP 500 after legacy handler dispatch
 CONSUMER                 packages/client/src/utils/curvemath_dxf.ts
 TEST-PATH COMPARISON     DIFFERENT — governed translate tests use another URL
-LIMITATIONS              Helper spies were source-module (IW-02). ezdxf logs show
-                         R12 export work inside the legacy path. 500 cause not
-                         fully isolated (history_store / response assembly possible).
+LIMITATIONS              Helper spies were source-module (IW-02). 500 cause NOT
+                         isolated (history_store / response assembly possible).
                          Collected after S3 severe condition already existed.
 ```
 

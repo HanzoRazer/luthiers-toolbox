@@ -9,9 +9,13 @@ Spy discipline (from Vectorizer witness hazard):
   defining module. Each specimen records spy location. Instrument controls
   IW-01/IW-02 prove the difference.
 
-Containment:
+Containment (stated precisely — see _block_network):
   - filesystem writes go to artifacts/scratch (or LTB_035_SCRATCH)
-  - outbound network is blocked except loopback
+  - socket.create_connection to non-loopback addresses raises. This covers the
+    stdlib/urllib3/requests connect path. It does NOT block a direct
+    socket.socket().connect(), anyio's connect_tcp, or a raw AF_UNIX/UDP send.
+    Containment is a best-effort guard, not a sandbox; the specimens are driven
+    through starlette TestClient, which is in-process and opens no socket.
 """
 from __future__ import annotations
 
@@ -77,7 +81,14 @@ class CallCounter:
         @functools.wraps(original)
         def _wrapped(*args: Any, **kwargs: Any) -> Any:
             self.counts[label] = self.counts.get(label, 0) + 1
-            self.events.append({"label": label, "argc": len(args), "kwargs": list(kwargs)})
+            self.events.append(
+                {
+                    "label": label,
+                    "via": "module_patch",
+                    "argc": len(args),
+                    "kwargs": list(kwargs),
+                }
+            )
             return original(*args, **kwargs)
 
         try:
@@ -88,7 +99,12 @@ class CallCounter:
 
 
 def _block_network() -> Any:
-    """Replace socket.create_connection so non-loopback connects fail."""
+    """Replace socket.create_connection so non-loopback connects fail.
+
+    Scope limit (do not overstate this in findings): only
+    ``socket.create_connection`` is patched. Code that builds a socket and
+    calls ``.connect()`` itself is unaffected. See the module docstring.
+    """
     real_create = socket.create_connection
 
     def guarded(address, timeout=None, source_address=None, *, all_errors=False):
@@ -146,12 +162,35 @@ def _walk_fastapi_routes(app: Any):
     yield from walk(app.routes)
 
 
+_HANDLE_HOOK_MARK = "_ltb035_handle_hook"
+
+
 def bind_spies_to_fastapi_routes(app: Any, specs: list[SpySpec], counter: CallCounter) -> list[tuple[Any, str, Any]]:
     """Patch FastAPI APIRoute.handle — the dispatch FastAPI 0.137 actually uses.
 
     Module-level patches remain installed as the IW-02 control (they may not fire).
+
+    ``app`` is accepted for call-site symmetry and is deliberately unused: the
+    hook is installed on the APIRoute *class*, so it observes every router
+    reachable from any app in this process, not just this one.
+
+    Counting note: this hook and ``install_spies`` share ``counter.counts``.
+    A reported count is therefore mechanism-agnostic; ``counter.events`` carries
+    a ``via`` key ("APIRoute.handle" vs "module_patch") when the mechanism
+    matters. For a FastAPI endpoint the two do not double-count — the route
+    holds the function object captured at include_router time, so a later
+    module-level patch of that same name is never dereferenced.
     """
     from fastapi.routing import APIRoute
+
+    if getattr(APIRoute.handle, _HANDLE_HOOK_MARK, False):
+        # A previous install leaked (its restore never ran). Refusing here is
+        # required for evidence integrity: a second wrap would count each
+        # dispatch twice and inflate ACTUAL_CALLS.
+        raise RuntimeError(
+            "APIRoute.handle already carries a 035 witness hook; a prior "
+            "specimen did not restore it. Refusing to double-wrap."
+        )
 
     wanted = {(s.module, s.attr): s.label for s in specs}
     for spec in specs:
@@ -170,6 +209,7 @@ def bind_spies_to_fastapi_routes(app: Any, specs: list[SpySpec], counter: CallCo
             counter.events.append({"label": label, "via": "APIRoute.handle", "path": getattr(self, "path", None)})
         return await original_handle(self, scope, receive, send)
 
+    setattr(hooked, _HANDLE_HOOK_MARK, True)
     APIRoute.handle = hooked  # type: ignore[method-assign]
     return [(APIRoute, "handle", original_handle)]
 
@@ -183,17 +223,29 @@ def restore_fastapi_endpoints(restored: list[tuple[Any, str, Any]]) -> None:
 
 
 def install_spies(specs: list[SpySpec], counter: CallCounter) -> list[Any]:
-    patches = []
+    """Patch each spec's module-level name; all-or-nothing.
+
+    If any spec fails (bad module, renamed attr), every patch started so far is
+    stopped before re-raising. Without this the caller never receives the list,
+    so its ``finally: stop_spies(patches)`` runs against an empty list and the
+    started patches leak into the next specimen in the same process — silently
+    corrupting frozen evidence collected after the failure.
+    """
+    patches: list[Any] = []
     import importlib
 
-    for spec in specs:
-        target = f"{spec.module}.{spec.attr}"
-        mod = importlib.import_module(spec.module)
-        original = getattr(mod, spec.attr)
-        p = patch(target, counter.wrap(spec.label, original))
-        p.start()
-        patches.append(p)
-        counter.counts.setdefault(spec.label, 0)
+    try:
+        for spec in specs:
+            target = f"{spec.module}.{spec.attr}"
+            mod = importlib.import_module(spec.module)
+            original = getattr(mod, spec.attr)
+            p = patch(target, counter.wrap(spec.label, original))
+            p.start()
+            patches.append(p)
+            counter.counts.setdefault(spec.label, 0)
+    except BaseException:
+        stop_spies(patches)
+        raise
     return patches
 
 
@@ -262,6 +314,13 @@ def run_http_specimen(
 
             patches = install_spies(spies, counter)
             restored_routes = bind_spies_to_fastapi_routes(app, spies, counter)
+            # Drop FastAPI 0.137's per-router candidate memo so the first
+            # request rebuilds it. This does NOT perturb the object under
+            # measurement: effective_candidates() is version-keyed against
+            # original_router._get_routes_version() and recomputes the same
+            # list deterministically from original_router.routes. Clearing it
+            # changes when the list is built, never which routes it contains or
+            # their order — so first-match ownership (S2, S3) is unaffected.
             for r in app.routes:
                 if type(r).__name__ == "_IncludedRouter":
                     r._effective_candidates = []
