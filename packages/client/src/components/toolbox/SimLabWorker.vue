@@ -158,7 +158,7 @@ G0 Z5
 `
   
   try {
-    const res = await api('/api/cam/simulate_gcode', { 
+    const res = await api('/api/cam/sim/gcode', { 
       method:'POST', 
       headers:{'Content-Type':'application/json'}, 
       body: JSON.stringify({ gcode }) 

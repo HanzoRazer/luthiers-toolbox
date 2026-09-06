@@ -44,7 +44,7 @@ export function useGcodeSimulation(
       formData.append('file', gcodeFile.value)
       formData.append('units', adaptiveParams.value.units)
 
-      const response = await api('/api/cam/simulate_gcode', {
+      const response = await api('/api/cam/sim/upload', {
         method: 'POST',
         body: formData
       })
