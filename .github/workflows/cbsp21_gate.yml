@@ -36,9 +36,9 @@ jobs:
               echo "Failed to determine merge-base for $BASE and $HEAD. Ensure both refs exist and share history; this usually means the branch needs rebasing or the histories are unrelated." >&2
               exit 1
             fi
-            CHANGED=$(git diff --name-only "$MERGE_BASE" "$HEAD")
+            CHANGED=$(git -c core.quotepath=false diff --name-only "$MERGE_BASE" "$HEAD")
           else
-            CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+            CHANGED=$(git -c core.quotepath=false diff --name-only "$BASE" "$HEAD")
           fi
           {
             echo "files<<CBSP21_CHANGED_FILES"
