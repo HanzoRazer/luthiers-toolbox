@@ -269,8 +269,11 @@
       },
       "body_position_mm": {
         "x_center": 0.0,
-        "notes": "Converted from y_from_bridge=152.4mm. 167.6mm from top, 6 inches from bridge saddle, centered on axis",
-        "y_from_top": 167.6,
+        "notes": "REVISED 2026-09-06, owner-directed: the neck pickup is relocated to resolve the fret-24 collision. y_from_nut is the RULED authoritative station and is nut-referenced by construction: fret_24 (0.75 x 647.7 = 485.775) + setback_from_fret24_mm (10.0) + half the 40.0mm rout along the string (20.0) = 515.775. The 10.0 setback is a single declared minimum absorbing fretboard overhang and working clearance together, so neither has to be established before this is cut. It supersedes 152.4mm / 6.000in from the bridge, an exact round inch with no stated derivation. y_from_top (207.125) is DERIVED against the body-top datum 308.65 implicit in this spec (628.65 - 152.4 - 167.6) and therefore INHERITS THAT DATUM'S WITHDRAWAL; it is recomputed so the DXF/CAM consumers that read y_from_top move with the ruling, but it shifts if the body outline settles elsewhere. Prefer y_from_nut. NO y_from_bridge KEY IS PROVIDED AND THAT IS DELIBERATE: scripts/generate_smart_guitar_full_build.py read it against a hardcoded bridge at y_from_top=320.0, which is the superseded 628.65 scale, so supplying it would have placed this cavity at 188.075 instead of 207.125. That lane now reads y_from_top like the live lane does. Tonal effect is expected and is a setup decision downstream of this geometry.",
+        "y_from_nut": 515.775,
+        "setback_from_fret24_mm": 10.0,
+        "y_from_top": 207.125,
+        "y_from_top_superseded": 167.6,
         "y_from_bridge_original": 152.4
       }
     },

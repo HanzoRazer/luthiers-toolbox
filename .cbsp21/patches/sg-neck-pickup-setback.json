@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SG_NECK_PICKUP_SETBACK",
+  "title": "geom(smart-guitar): relocate the neck pickup off a ruled 10.0mm setback from fret 24",
+  "intent": "Resolves the fret-24 / neck-pickup collision by owner ruling. At the 25.5in scale merged in PR #355, fret 24 sits at 485.775mm from the nut and the recorded neck pickup rout (152.4mm / 6.000in from the bridge, an exact round inch with no stated derivation) spans 475.30..515.30, so the fretboard ran 10.475mm inside the rout. The cavity is relocated to a nut-referenced station derived from a single ruled minimum setback: 485.775 + 10.0 + 20.0 = 515.775mm from the nut. The setback absorbs fretboard overhang and working clearance together, so neither has to be established before this can be cut.",
+  "change_type": "geom",
+  "behavior_change": "cavity-position",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/instrument_geometry/body/specs/",
+      "scripts/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "scripts/generate_smart_guitar_full_build.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "smart_guitar_v1.json: cavities.neck_pickup_route.body_position_mm gains y_from_nut (515.775, the RULED authoritative nut-referenced station) and setback_from_fret24_mm (10.0); y_from_top moves 167.6 -> 207.125 so the DXF/CAM consumers that read it follow the ruling, with the superseded value retained as y_from_top_superseded; y_from_bridge_original (152.4) is retained as history. No y_from_bridge key is added, deliberately - see below. generate_smart_guitar_full_build.py: the neck-pickup station is now read straight from the record as y_from_top, matching the live DXF lane, instead of being derived as 320.0 - y_from_bridge with the bridge hardcoded at the superseded 628.65 scale.",
+    "why_not_redundant": "Two distinct defects. (1) The recorded cavity position produced a physical collision with the fretboard extension at the ruled scale - the extension and the rout occupied the same plan-view volume. (2) The full-build lane could not see any record change to this cavity at all: it ignored y_from_top and recomputed the station from a hardcoded bridge at y_from_top=320.0, which is the pre-PR-#355 scale. Supplying a y_from_bridge key to that lane would have placed the cavity at 188.075 rather than 207.125, so the record change alone would have silently split the two build lanes. Both are fixed together because fixing either alone leaves the program inconsistent."
+  },
+  "verification": {
+    "commands_run": [
+      "python -c 'json.load(smart_guitar_v1.json)' -> PASS, valid JSON, 1 block changed, all other keys byte-identical to origin/main",
+      "python -m ast.parse scripts/generate_smart_guitar_full_build.py -> PASS",
+      "arithmetic check: 0.75 * 647.7 = 485.775; 485.775 + 10.0 + 20.0 = 515.775; body-top datum implicit in the spec = 628.65 - 152.4 - 167.6 = 308.65; 515.775 - 308.65 = 207.125 -> PASS",
+      "collision check at the new station: rout spans 495.775..535.775 from the nut, fret 24 at 485.775, clearance 10.0mm -> PASS (was -10.475mm)",
+      "adjacency check: new rout far edge 535.775 vs bridge_pickup_route near edge 602.30 -> 66.5mm clear -> PASS",
+      "grep of y_from_top consumers -> 8 files; the live lane (services/api/app/instrument_geometry/body/smart_guitar_dxf.py:394) already reads it and needs no change",
+      "NOT RUN: pytest. No test in this repo asserts this cavity position; the owner runs pytest verification directly."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json",
+      "intent": "Relocate neck_pickup_route to a nut-referenced ruled station; record the setback and the provenance of the supersession.",
+      "scan_targets": ["services/api/app/instrument_geometry/body/specs/smart_guitar_v1.json"],
+      "risk": "medium",
+      "behavior_change": "The neck pickup cavity moves 20.475mm toward the bridge. y_from_top 167.6 -> 207.125 changes generated DXF and CAM output for this cavity. y_from_nut is new and is the authority; y_from_top is explicitly recorded as DERIVED against the body-top datum 308.65, which this spec has withdrawn pending a trustworthy body outline, so it inherits that withdrawal."
+    },
+    {
+      "path": "scripts/generate_smart_guitar_full_build.py",
+      "intent": "Make the full-build lane read the cavity station from the record instead of recomputing it from a hardcoded, superseded bridge.",
+      "scan_targets": ["scripts/generate_smart_guitar_full_build.py"],
+      "risk": "medium",
+      "behavior_change": "OP21 neck-pickup pocket centre moves from y_from_top 167.6 to 207.125, matching the record and the live DXF lane. Removes this lane's dependency on a hardcoded bridge at the superseded 628.65 scale."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-06-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 2, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Geometry change to a governed product record plus the one build lane that could not observe it. The moved cavity is verified clear of fret 24 by the ruled setback and clear of the bridge pickup route by 66.5mm. Two conditions are carried forward rather than fixed here and are out of scope: bridge_route.y_from_top is still flagged STALE at 320.0 from the superseded scale, and every cavity position in this spec remains withdrawn pending a trustworthy body outline - which is why y_from_nut is introduced as the nut-referenced authority and y_from_top is annotated as inheriting that withdrawal."
+  }
+}
