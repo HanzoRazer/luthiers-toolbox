@@ -194,12 +194,25 @@ class FretboardInput(BaseModel):
     extension_mm: float = Field(0.0, ge=0, le=50, description="Length past last fret")
 
     # Fret slot configuration (for DXF projection)
+    # Corrected 2026-09-08. The default is unchanged and was always right; its
+    # description was not. It called 0.58mm a *tang*, which invites comparison
+    # against fret_wire_calc.FRET_WIRE_CATALOG's tang_width_mm (medium 0.53,
+    # jumbo 0.58) and manufactures a conflict that does not exist. It also cited
+    # StewMac 0148, which fret_wire_physics.FRET_PROFILES identifies as
+    # vintage_medium (StewMac 148 / Dunlop 6150), not medium. The "Jescar 47104"
+    # citation is dropped rather than corrected: no registry in this repo carries
+    # Jescar part numbers, so it could not be checked.
     slot_width_mm: float = Field(
         default=0.58,
         ge=0.1,
         le=3.0,
-        description="Fret slot width in mm. Default 0.58mm matches standard "
-                    "Jescar 47104 / Stewart-MacDonald 0148 medium fret wire tang."
+        description="Fret slot width in mm. Default 0.58mm is the standard "
+                    "0.023in fret-saw kerf, which fret_wire_physics.FRET_PROFILES "
+                    "gives as slot_width_in for medium wire (StewMac 150 / "
+                    "Dunlop 6160) and for every lighter profile; only 'jumbo' "
+                    "needs a wider 0.025in / 0.635mm slot. This is the slot the "
+                    "wire seats in, not the wire's tang - the medium tang is "
+                    "0.53mm."
     )
 
     # Intonation
