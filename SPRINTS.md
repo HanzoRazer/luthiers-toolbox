@@ -961,6 +961,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-012 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
 | MAINT-DEFER-013 | `mesh-pipeline-ci` demo steps call `app.retopo` (deleted in `ee36ddf1`); now stubbed, so the gate is green but exercises nothing | CI / mesh pipeline | QUEUED | 2026-08-19 |
 | MAINT-DEFER-014 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
+| MAINT-DEFER-015 | `scaffold_agents_md.py --dry-run` dies on a cp1252 console (U+2500 fences) | Process / tooling | QUEUED | 2026-09-09 |
+| MAINT-DEFER-016 | `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-09-09 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1426,6 +1428,84 @@ should be applied once, deliberately, not mid-way through an unrelated PR.
 **Explicitly NOT to be batched into a feature branch:** changing an eigensolver could move existing plate-prediction outputs, and how far is not established here — no before/after comparison was run. It needs its own PR, its own witnesses, and a ruling on whether scipy may be added as a dependency.
 
 **Path:** HYG — numerics quality; feeds MESH-MAT-001 prediction confidence.
+
+---
+
+### MAINT-DEFER-015 — `scaffold_agents_md.py --dry-run` dies on a cp1252 console
+
+**Status:** QUEUED  
+**last_verified:** 2026-09-09 (reproduced against `Master-All-Strings`; write path re-verified clean)  
+**Category:** Process / tooling (AGENTS.md scaffolder)  
+**Lives on:** `docs/agents-md-scaffold` @ `bd0f5409` (SCAFFOLD-DIST-001) — **not on `main`**; branch pushed, no PR, held for owner triage.  
+
+**Symptom:** `python scripts/scaffold_agents_md.py <repo> --dry-run` exits **1** with
+`UnicodeEncodeError: 'charmap' codec can't encode characters`, after printing only
+`--- would write AGENTS.md ---`. The operator sees a header and a traceback, which reads like a
+partial success.
+
+**Cause:** the `INCIDENTS` and `VERIFICATION GATES` comment fences in `_AGENTS_UNIVERSAL` use
+**U+2500** (box-drawing), which cp1252 cannot encode, so `print(content)` dies on any cp1252
+console. Note the near-miss that hid it: cp1252 *does* carry **U+2014** em dash at `0x97`, so the
+other non-ASCII `print()` sites are safe and the em-dash-heavy prose never reveals the problem —
+one decorative glyph does.
+
+**Why deferred (blocks nothing):** the **write path is unaffected** — `path.write_text(...,
+encoding="utf-8")` is explicit, so scaffolding itself is correct on every platform. Verified by
+scaffolding Master All Strings on 2026-09-09: both files written, exit 0, content correct. Only
+the *preview* mode is broken, and only on one console encoding.
+
+**Why it survived a distribution-readiness review:** it was exercised only under PowerShell, whose
+stdout is utf-8; the identical command under Git Bash (cp1252) fails. Same machine, same
+`py -3.11`, opposite result — so "I ran it and it was clean" was true and not portable.
+
+**Restore trigger:** `--dry-run` exits 0 and renders the full body under **both** shells, pinned by
+a regression test that *forces* the failing condition (subprocess with `PYTHONIOENCODING=cp1252`,
+asserting exit 0 and a complete body). Forcing the encoding in the **test** is the opposite of
+setting it as a fix — it manufactures the witness the shell difference destroyed. **Changing the
+harness encoding is not an acceptable fix:** exporting `PYTHONIOENCODING` to make the run pass
+would keep it passing even if the production fix were removed.
+
+**First step:** replace the two U+2500 fences with ASCII rules. Cheap because LTB's own committed
+`AGENTS.md` no longer contains them (both blocks were filled by hand, which deletes the fences),
+and `scripts/ci/test_scaffold_agents_md.py` asserts only the `<!-- INCIDENTS` prefix, not the
+glyphs — so neither drifts.
+
+**Manifest coverage:** existing `.cbsp21/patches/scaffold-dist-001.json` already covers both
+affected files — `scripts/scaffold_agents_md.py` and `scripts/ci/test_scaffold_agents_md.py` are
+both in `paths_in_scope`; no manifest widening is presently required.
+
+**Path:** HYG — tooling correctness; gates nothing.
+
+---
+
+### MAINT-DEFER-016 — `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term
+
+**Status:** QUEUED  
+**last_verified:** 2026-09-09 (all anchors re-verified against current `main`; formula still at `services/api/app/calculators/acoustic_body_volume.py:220`)  
+**Category:** API / calculators (acoustics)  
+**Source:** `docs/LUTHERIE_MATH.md` §4 — "Existing implementation discrepancy" ("**Do not use the `acoustic_body_volume.py` formula for new code**").  
+
+**Why deferred:** `acoustic_body_volume.py:220` computes the Helmholtz effective neck length as
+`L_eff = 1.7 * top_thickness + 0.85 * soundhole_diameter_mm`. It **applies the end-correction
+coefficient to the plate-thickness term as well as the aperture-radius term**, unlike the canonical
+`soundhole_calc.py` form — since `0.85 · D = 1.7 · r`, the expression is effectively
+`k₀·t + k₀·r` where the canonical form is `t + k·r_eq`, thickness added un-scaled. That changes the
+effective neck length and therefore the Helmholtz estimate. The canonical, instrument-calibrated
+implementation is `calculators/soundhole_calc.py → compute_port_neck_length()`
+(`L_eff = thickness_m + k · r_eq`, `k` perimeter-corrected by γ, returning metres). Left in place
+because `soundhole_calc.py` is the path wired into the shipped soundhole tools; the
+`acoustic_body_volume` copy is a legacy second implementation, so the wrong formula is latent
+rather than user-facing.
+
+**Restore trigger:** `acoustic_body_volume.py` either delegates to / matches `soundhole_calc.py`'s
+`compute_port_neck_length()`, **or** its Helmholtz path (`calculate_helmholtz_frequency()`, line
+197) is confirmed unused and removed; the two implementations agree on a shared calibration case
+(Martin OM → ~108 Hz per §7).
+
+**First step:** grep consumers of `calculate_helmholtz_frequency()` to decide fix-vs-delete before
+touching the formula.
+
+**Path:** HYG — calculator correctness; latent, not on a shipped path.
 
 ---
 

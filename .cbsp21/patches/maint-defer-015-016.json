@@ -1,0 +1,65 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINT_DEFER_015_016",
+  "title": "docs(sprints): register MAINT-DEFER-015/016 — scaffolder cp1252 preview defect and Helmholtz L_eff defect",
+  "intent": "Record two real but non-blocking defects in the DEFERRED MAINTENANCE queue so neither is carried only in session memory. MAINT-DEFER-015: scripts/scaffold_agents_md.py --dry-run exits 1 with UnicodeEncodeError on a cp1252 console because the AGENTS.md template's comment fences use U+2500; the write path is unaffected (explicit encoding=\"utf-8\") and was verified by scaffolding an external repo, so only the preview mode breaks. MAINT-DEFER-016: acoustic_body_volume.py:220 applies the end-correction coefficient to the plate-thickness term as well as the aperture-radius term, unlike the canonical soundhole_calc.py form, changing the effective neck length and therefore the Helmholtz estimate. Registration only — NEITHER defect is implemented here, and no source file is touched.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "SPRINTS.md",
+      ".cbsp21/patches/maint-defer-015-016.json"
+    ],
+    "files_expected_to_change": [
+      "SPRINTS.md",
+      ".cbsp21/patches/maint-defer-015-016.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) SPRINTS.md: two index rows appended after MAINT-DEFER-014 and two detail sections inserted before ### CI-RED-001, following the section's declared schema (ID / Status / Why deferred / Restore trigger / last_verified). 80 insertions, 0 deletions, 2 hunks; no existing entry is modified. (2) this per-PR CBSP21 manifest.",
+    "why_not_redundant": "Neither defect is tracked upstream under any ID — grep of origin/main SPRINTS.md for acoustic_body_volume / Helmholtz / L_eff returns only roadmap prose, and the one existing cp1252 mention is a different, already-fixed incident about check-mark glyphs in a gate. Both entries were first drafted as 004/005 against a working tree 17 commits stale on SPRINTS.md, where both numbers are already allocated on main (004 = Dependency Security / DEP-SEC-001, 005 = Dependabot groups). Renumbered to the next genuinely free ids and re-checked against origin/main immediately before commit."
+  },
+  "verification": {
+    "commands_run": [
+      "git fetch origin main; grep -oE 'MAINT-DEFER-[0-9]+' <origin/main:SPRINTS.md> -> 001..014 allocated, 015 and 016 FREE (re-checked immediately before commit)",
+      "015 anchors: U+2500 count in _AGENTS_UNIVERSAL = 249; write path 'write_text(content, encoding=\"utf-8\")' present; scaffold-dist-001.json lists both implementation files in paths_in_scope; scripts/ci/test_scaffold_agents_md.py asserts only the '<!-- INCIDENTS' prefix, not the glyph; LTB's committed AGENTS.md contains 0 fences (so the ASCII fix causes no drift)",
+      "015 provenance: git merge-base --is-ancestor bd0f5409 origin/main -> NOT an ancestor, confirming the implementation is on the unmerged docs/agents-md-scaffold branch",
+      "016 anchors re-verified on this base (dba70265), not inherited: acoustic_body_volume.py:220 = 'L_eff = 1.7 * top_thickness + 0.85 * specs.soundhole_diameter_mm'; calculate_helmholtz_frequency() at line 197; soundhole_calc.py:357 = 'L_eff = thickness_m + k * r_eq'; docs/LUTHERIE_MATH.md:244 'Do not use the acoustic_body_volume.py formula'",
+      "016 arithmetic checked numerically rather than asserted: 0.85*D == 1.7*r (85.0 == 85.0 for D=100mm), which is what makes 'the coefficient is applied to the thickness term too' precise",
+      "git diff --numstat origin/main...HEAD -> 1 file, 80 insertions, 0 deletions; 0 added lines mention the superseded ids 004/005",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files SPRINTS.md .cbsp21/patches/maint-defer-015-016.json",
+      "python -m json.tool .cbsp21/patches/maint-defer-015-016.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register MAINT-DEFER-015 and MAINT-DEFER-016 as queue entries with falsifiable restore triggers.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - maintenance ledger only; no source file is touched"
+    },
+    {
+      "path": ".cbsp21/patches/maint-defer-015-016.json",
+      "intent": "Per-PR CBSP21 manifest declaring this queue registration (CBSP21-NOBORROW-001).",
+      "scan_targets": [".cbsp21/patches/maint-defer-015-016.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-09-MAINT-DEFER-015-016",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
