@@ -1,0 +1,62 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ECOSPHERE_SLOT_WIDTH_DOCSTRING",
+  "title": "docs(fretboard): correct the slot_width_mm field description - it is a slot, not a tang",
+  "intent": "FretboardInput.slot_width_mm described its 0.58mm default as a 'medium fret wire tang'. It is a slot width, not a tang width, and the part it cited (StewMac 0148) is the vintage_medium profile rather than medium. The wrong word is not cosmetic: comparing this slot against fret_wire_calc.FRET_WIRE_CATALOG's tang_width_mm (medium 0.53 / jumbo 0.58) makes the two registries look like they disagree about which wire the default is for, and that false conflict was reported as a finding before it was traced. Description text only - the default and its bounds are untouched.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/instrument_geometry/neck/",
+      "ci/file_size_baseline.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "ci/file_size_baseline.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "One Field description rewritten and a nine-line comment added above it. The new description sources 0.58mm to fret_wire_physics.FRET_PROFILES, where slot_width_in is 0.023in for medium wire (StewMac 150 / Dunlop 6160) and for every lighter profile, and notes that only 'jumbo' needs 0.025in / 0.635mm. It states explicitly that this is the slot and not the tang, and gives the medium tang as 0.53mm so the two registries cannot be conflated again. The 'Jescar 47104' citation is dropped rather than corrected, because no registry in this repo carries Jescar part numbers (FretProfile.jescar is declared but empty for all six profiles), so it could not be verified; the comment says so rather than leaving the removal silent. default=0.58, ge=0.1 and le=3.0 are unchanged. The correction is longer than the one wrong line it replaces, which takes fretboard_ecosphere.py from 821 to 830 lines and trips ci/file_size_gate.py - a ratchet whose Python limit is 500 and which already carries this file at 821 as declared debt. The comment was first tightened to remove its overlap with the Field description (both had been explaining the slot/tang confusion), cutting the growth from 13 lines to 9, and the residual 9 is then declared by raising this file's single baseline entry to 830. The baseline was edited by hand on that one key rather than by running file_size_gate.py --update, which rebuilds the file from the current tree and would silently re-peg all 109 entries.",
+    "why_not_redundant": "This is the only occurrence of the wrong wording in the repo - git grep for 'medium fret wire tang', '47104' and '0148' each return this one file. The field is consumed by cam/fret_slots_from_ecosphere.py and by every generated fretboard, so its description is the only in-code statement of what the number means; a reader who takes 'tang' literally reaches the wrong wire."
+  },
+  "verification": {
+    "commands_run": [
+      "git grep -l 'medium fret wire tang' -> exactly one file, this one; same for '47104' and '0148'",
+      "git grep of services/api/tests for slot_width_mm -> tests assert values (0.58 / 0.56 / 0.70 / 0.1), never the description string; no snapshot or contract file pins it",
+      "python compile() of the modified module -> PASS",
+      "regex check that the Field signature is byte-identical before and after -> default=0.58, ge=0.1, le=3.0 unchanged",
+      "collateral check: src.replace(OLD,'@@') == out.replace(NEW,'@@') -> nothing outside the anchor differs",
+      "assertion that '47104', '0148' and 'fret wire tang' appear nowhere inside the Field call (they remain in the comment above it, deliberately, to record what was removed)",
+      "extracted fret_wire_physics.FRET_PROFILES -> slot_width_in 0.023in for vintage_narrow / vintage_medium / medium / medium_jumbo / tall_narrow, 0.025in for jumbo; stewmac 148 = vintage_medium, stewmac 150 = medium",
+      "re-ran the anchor, collateral, signature and compile assertions after tightening the comment -> PASS; splitlines() 834 -> 830 against main's 821",
+      "parsed ci/file_size_baseline.json before and after -> exactly one key differs (fretboard_ecosphere.py 821 -> 830), 109 entries both sides",
+      "confirmed the gate's own arithmetic: ci/file_size_gate.py counts len(read_text().splitlines()) and fails only when a file exceeds its baseline entry, so 830 == 830 passes"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py",
+      "intent": "Say what 0.58mm actually is, and stop the slot/tang conflation at its source.",
+      "scan_targets": ["services/api/app/instrument_geometry/neck/fretboard_ecosphere.py"],
+      "risk": "low",
+      "behavior_change": "none - the Field description string and a preceding comment. The validated default and bounds are unchanged, so no request, response or generated fretboard differs."
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Declare the 9 lines the correction costs, on this file's entry only, rather than re-pegging the whole ratchet.",
+      "scan_targets": ["ci/file_size_baseline.json"],
+      "risk": "low",
+      "behavior_change": "none - CI ratchet data. Raising one entry from 821 to 830 restores the gate to green for this file and leaves the other 108 entries untouched."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-08-ECOSLOT",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only. Kept separate from SG_FRET_WIRE_MEDIUM on purpose: that patch records a Smart Guitar product ruling in a spec file, this one corrects a shared calculator module that every instrument uses. The description text is not referenced by any test or contract snapshot, so it cannot move a behavioural gate - but it does move the file-size ratchet, which is why ci/file_size_baseline.json is in scope here. Raising a size baseline is an accepted move in this repo when the growth is justified (precedent: cf4fa22b, neck_router.py 655 -> 683), and it is deliberately scoped to the one entry. It does not pay down the underlying debt: this file is 330 lines over the 500-line Python limit and remains a split candidate, which is a separate stream from a docstring correction."
+  }
+}
