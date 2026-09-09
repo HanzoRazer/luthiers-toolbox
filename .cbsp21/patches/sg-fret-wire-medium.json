@@ -1,0 +1,50 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SG_FRET_WIRE_MEDIUM",
+  "title": "spec(smart-guitar): record the owner ruling that the fret wire is medium (crown 1.19mm)",
+  "intent": "Fret wire was never recorded anywhere for the Smart Guitar, so the CAD pack's neck-angle section (3.2.3) had been working with an assumed 1.30mm crown height. The owner ruled on 2026-09-08 that the wire is medium. This commit writes that ruling, its crown height, and the slot width it implies into smart_guitar_setup_spec.json alongside string_recommendations, with per-field sourcing to the two in-repo fret-wire registries. Data-only: no code path reads these fields yet, and none is changed to read them here.",
+  "change_type": "spec",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/instrument_geometry/body/specs/"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/instrument_geometry/body/specs/smart_guitar_setup_spec.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Eight additive keys in smart_guitar_geometry: fret_wire_profile ('medium') and its source (owner ruling 2026-09-08); fret_wire_crown_height_mm (1.19) sourced to FRET_WIRE_CATALOG['medium'] in app/calculators/fret_wire_calc.py and corroborated at 1.143mm by the 'medium' profile in app/calculators/fret_wire_physics.py; fret_wire_slot_width_mm (0.58) sourced to the FretboardInput.slot_width_mm default in app/instrument_geometry/neck/fretboard_ecosphere.py and confirmed correct for medium wire by fret_wire_physics.py's slot_width_in of 0.023 in (0.584mm) for five of its six profiles; a fret_wire_note recording that slot width and tang width are distinct quantities; and a fret_wire_consumers field stating the string-plane arithmetic the ruling feeds. No existing key is modified or removed.",
+    "why_not_redundant": "No fret wire, crown height or slot width existed in any Smart Guitar record before this commit - grep for 'fret_wire' or 'crown' across services/api/app/instrument_geometry/body/specs/ returns nothing. Crown height is a term in the string-plane build-up at the neck joint, so without it the neck-angle question (currently blocking OP20) cannot be closed against a record. The note is not decoration: a prior reading of these same two registries compared the ecosphere's slot width against the catalog's tang width and reported a conflict that does not exist; the note is what stops that being re-derived."
+  },
+  "verification": {
+    "commands_run": [
+      "python -c 'json.load(...)' on the modified spec -> parses; diff of parsed dicts shows exactly the 8 new keys and no collateral change",
+      "re-derived the asserted arithmetic from the records themselves: -15.90 (neck_pocket depth, smart_guitar_v1.json) + 26.59 (total_stack_12th_fret_mm) + 1.19 (this ruling) + 1.98 (action_at_12th_fret.strings.low_E.mm) = 13.86 -> matches the fret_wire_consumers claim",
+      "grep -rn 'tang_width' services/api/app -> confirms fret_wire_calc.py tang_width_mm is a tang (0.53 medium / 0.58 jumbo) and fret_wire_physics.py carries tang_width_in and slot_width_in as separate fields",
+      "extracted the full fret_wire_physics.py registry -> slot_width_in is 0.023 in (0.584mm) for vintage_narrow, vintage_medium, medium, medium_jumbo and tall_narrow; only jumbo is 0.025 in (0.635mm)",
+      "git diff origin/main -- <spec> before the change -> empty, so the edit is built on origin/main d59de10f",
+      "AMENDED under owner authorization: fret_wire_consumers originally cited a 12-16mm headless bridge band and a 0.36 deg ceiling. The band contradicted this file's own open_items.neck_angle_analysis.headless_bridge_typical_height_mm of 10-14, and its 16mm top exceeds the published maximum of the one verified candidate part. Re-derived against the Hipshot Headless Solo 10.7-15.0mm: ceiling near 0.19 deg at 15.0mm. Recorded as constraint evidence and explicitly fenced off from becoming a neck-angle ruling; the authority remains the owner ruling of 1.5-2.5 deg and the binding unknown remains the heel stack.",
+      "scope guard on the amendment: parsed the spec before and after and diffed every leaf -> exactly one path differs (.smart_guitar_geometry.fret_wire_consumers). op20_status, neck_angle_deg and the whole open_items.neck_angle_analysis block are asserted unchanged; the 4.5 deg supersession is flagged in prose, not applied, and is a separate authorized change."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/instrument_geometry/body/specs/smart_guitar_setup_spec.json",
+      "intent": "Record the owner's fret-wire ruling with per-field sourcing, so crown height stops being an assumption in the neck-angle work.",
+      "scan_targets": ["services/api/app/instrument_geometry/body/specs/smart_guitar_setup_spec.json"],
+      "risk": "low",
+      "behavior_change": "none - additive data keys only; no consumer reads them yet."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-08-SGFW",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Additive data only. Two follow-ups are deliberately NOT bundled here, each being a separate stream: (1) the fretboard_ecosphere.py docstring calls its 0.58mm slot a 'medium fret wire tang' and cites StewMac 0148, which is fret_wire_physics.py's vintage_medium profile rather than its medium - a documentation correction in a different module; (2) smart_guitar_setup_spec.json still carries scale_mm 628.65, which the 2026-09-06 scale ruling superseded - that is a separate records question for the owner, not a side effect of this ruling."
+  }
+}
