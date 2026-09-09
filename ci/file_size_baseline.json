@@ -78,7 +78,7 @@
   "services/api/app/instrument_geometry/bridge/floyd_rose_tremolo.py": 589,
   "services/api/app/instrument_geometry/coordinate_system.py": 629,
   "services/api/app/instrument_geometry/neck/fret_math.py": 546,
-  "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py": 821,
+  "services/api/app/instrument_geometry/neck/fretboard_ecosphere.py": 830,
   "services/api/app/instrument_geometry/neck/setup_workflow.py": 855,
   "services/api/app/routers/binding_design_router.py": 589,
   "services/api/app/routers/blueprint/calibration_router.py": 502,
