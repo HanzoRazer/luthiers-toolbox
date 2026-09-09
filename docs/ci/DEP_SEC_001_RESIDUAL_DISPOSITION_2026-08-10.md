@@ -34,7 +34,7 @@ not blur them:
 
 | Kind | Meaning | Sections |
 |---|---|---|
-| **DESCRIPTIVE** | observed evidence, with its observation date | §3, §4, §5, §6, §7, §8, §15 |
+| **DESCRIPTIVE** | observed evidence, with its observation date | §3, §4, §5, §6, §7, §8, §8a, §15 |
 | **NORMATIVE** | binding disposition or rule | §2, §9, §10, §13, §14, §16 |
 | **PLANNING** | proposed sequencing; not yet authorized | §11, §12 |
 
@@ -275,6 +275,68 @@ No alert is dismissed by this sprint.
 
 ---
 
+## 8a. Re-grounding — DESCRIPTIVE (observed 2026-09-09, `main` @ `df39c4f3`)
+
+§8's numbers are the **2026-08-11** witness and are retained above unchanged. This section is a **later
+observation**, not a rewrite of it. Per §8's own rule, a count is true only as of its stated date.
+
+### Ledger progression
+
+| Observation date | Open alerts | crit / high / med / low |
+|---|---|---|
+| 2026-08-09 (#252 snapshot) | 65 | 1 / 28 / 35 / 1 |
+| 2026-08-11 (§8 witness) | 32 | 1 / 15 / 16 / 0 |
+| **2026-09-09 (this section)** | **10** | **1 / 3 / 6 / 0** |
+
+### Scope — the material change
+
+**All 10 open alerts are `development` scope. Zero runtime-scope.** `ws` (2 alerts), named in §8 and
+R-07 as *"the only runtime-scope residual"*, is **closed** — `ws` resolves to 8.21.3. The residual
+surface no longer contains any runtime-scope advisory.
+
+Evidence boundary, stated deliberately: **no production-facing exploit path was established in this
+re-grounding.** The remaining alerts are development/tooling scope and already governed by the
+dispositions in §10. This is not a claim that a critical-severity advisory is harmless — only that its
+exploit precondition is absent in this repository (re-derived below).
+
+### The 10, mapped to residuals
+
+| Alert(s) | Package | Installed → patched | Sev | Residual |
+|---|---|---|---|---|
+| #89 | `js-yaml` | 4.3.1 → 4.3.2 | high | R-07 — **DONE this increment** |
+| #24 | `minimatch` | 9.0.3 → 9.0.7 | high | R-07 — **blocked**, see corrected row |
+| #15 | `esbuild` | 0.21.5 → 0.25.0 | medium | R-07 — **blocked**, see corrected row |
+| #65, #66, #36 | `vite` | 5.4.21 → 6.4.3 | high, medium, medium | R-04 / Tranche C |
+| #6, #88, #87 | `vitest`, `@vitest/mocker` | 2.1.9 → 3.2.6 / 4.1.11 | **critical**, medium, medium | R-05 / Tranche C |
+| #56 | `pytest` | `<9.0` → 9.0.3 | medium | R-03 — OUT OF SCOPE, corrected reason |
+
+Closed since 2026-08-11: `lodash` (3), `brace-expansion` (2), `picomatch` (2), `ws` (2), `flatted` (1),
+`js-cookie` (1), `rollup` (1), plus 2 of 3 `js-yaml` and 1 of 2 `minimatch`; and the 9 archive `vite`
+alerts, dismissed `not_used` on 2026-08-26 (R-01 action 1 discharged).
+
+### The critical — precondition re-derived, not inherited
+
+§8 asserted the critical's precondition was unmet "established in #252 and unchanged." That claim is
+**re-derived here rather than carried forward**, and it holds:
+
+- Alert #6 **is** `GHSA-5xrq-8626-4rwp` / CVE-2026-47429 — confirmed the same advisory §8 reasoned
+  about, not a new critical wearing the same severity.
+- Its precondition is *"when Vitest UI server is listening."* **`@vitest/ui` is absent from
+  `packages/client/package-lock.json` entirely**, and no `--ui` flag appears in any client script or
+  any `.github/workflows` job.
+
+Disposition unchanged: **R-05 / Tranche C.** No action taken on it in this increment.
+
+### Snapshots are not invariants — restated
+
+`vitest` moved **1 → 3** alerts between the §8 witness and this one (a new advisory, GHSA for the
+`<4.1.11` range, plus `@vitest/mocker`), while the overall ledger fell 32 → 10. Counts move in both
+directions with no repository change. Re-ground again before implementing.
+
+No alert is dismissed by this increment.
+
+---
+
 ## 9. Dispositions (generated PRs)
 
 GitHub action for each: **CLOSE — DEFERRED TO CONSOLIDATED TRANCHE** (durable comment posted; PRs closed during DEP-SEC-001B).  
@@ -298,13 +360,13 @@ Do **not** merge merely to eliminate the PR.
 
 | ID | Origin | Obligation | Disposition | Trigger / notes |
 |----|--------|------------|-------------|-----------------|
-| R-01 | INHERITED | Archive Dependabot alerts (9 × `vite` in `archive/**`, `docs/archive/**`) | **OWNER ACTION** | **Still open — count re-confirmed at 9 on 2026-08-11 (§8).** Dismiss as unused; template in Tier-1 closeout §5. Dismissal requires write scope the read witness does not imply. Durable fix is the `.github/dependabot.yml` path exclusion (§11 item 5), which stops regeneration. |
+| R-01 | INHERITED | Archive Dependabot alerts (9 × `vite` in `archive/**`, `docs/archive/**`) | **OWNER ACTION** | **Still open — count re-confirmed at 9 on 2026-08-11 (§8).** Dismiss as unused; template in Tier-1 closeout §5. Dismissal requires write scope the read witness does not imply. **Dismissal DONE — witnessed 2026-09-09: all 9 dismissed `not_used` on 2026-08-26.** ~~Durable fix is the `.github/dependabot.yml` path exclusion (§11 item 5), which stops regeneration.~~ **CORRECTED 2026-09-09 — that durable fix is not achievable.** `dependabot.yml` `updates:`/`ignore:` configure *update PRs*; **alerts** are generated from the dependency graph and have no path-exclusion knob. In-repo proof: no `pip` ecosystem is configured at all, yet pytest alert **#56 is live**. The 9 dismissals therefore clear the ledger **once**; archive alerts will regenerate on the next `vite` advisory. Achievable durable fix = remove the archived `package.json` files from the default branch, or accept recurring dismissal. **Owner decision required; not taken here.** |
 | R-02 | INHERITED | Alert ledger recalculation witness after #253 | ~~OWNER ACTION / BLOCKED~~ → **COMPLETE (witnessed 2026-08-11)** | **Discharged.** Recalculation has occurred: **65 → 32** open; `axios` + `postcss` → **0**; `follow-redirects`/`form-data` cleared transitively. Evidence in §8. The prior `BLOCKED (on API)` status was an agent-credential limit, not a repository block — the API reads normally with owner credentials. |
-| R-03 | INHERITED | Python `services/api/requirements-dev.txt` alert | **OUT OF SCOPE** (standing from #253 ruling) | Separate later disposition; not absorbed into client npm work |
+| R-03 | INHERITED | Python `services/api/requirements-dev.txt` alert | **OUT OF SCOPE** (standing from #253 ruling) | Separate later disposition; not absorbed into client npm work. **CORRECTED 2026-09-09 — the blocker is a pin, not neglect:** `services/api/requirements-dev.txt` declares `pytest>=7.4,<9.0`, and the patched version for alert #56 is **9.0.3** — the declared ceiling **excludes its own fix**, so resolution requires raising the ceiling across a major. Additionally `dependabot.yml` configures **no `pip` ecosystem**, so no update PR will ever be offered for it. OUT OF SCOPE remains the disposition; only the stated reason is corrected. |
 | R-04 | INHERITED | `vite` major 5→6 | **DEFERRED** → **Tranche C** | Trigger: BR-021 resolved **or** explicit manual build-witness authorization |
 | R-05 | INHERITED | `vitest` major 2→3 | **DEFERRED** → **Tranche C** | Same trigger; preferred order **vitest → witness → vite** |
 | R-06 | INHERITED | BR-021 repair | **NOT APPLICABLE** to DEP-SEC implementation (boundary) | Remains BR lifecycle; Tier-2 must not silently bypass |
-| R-07 | INHERITED | Remaining #252 triage packages after axios/postcss | **DEFERRED** → **Tranche B** | **Re-grounded 2026-08-11 (§8): 18 alerts / 10 packages** — `js-yaml` 3, `lodash` 3, `brace-expansion` 2, `minimatch` 2, `picomatch` 2, `ws` 2, `esbuild`/`flatted`/`js-cookie`/`rollup` 1 each. **Only `ws` (2) is runtime-scope**; the other 16 are development-scope toolchain. Re-ground again before implementing — `js-yaml` gained an alert after the snapshot. |
+| R-07 | INHERITED | Remaining #252 triage packages after axios/postcss | **DEFERRED** → **Tranche B** | **Re-grounded 2026-08-11 (§8): 18 alerts / 10 packages** — `js-yaml` 3, `lodash` 3, `brace-expansion` 2, `minimatch` 2, `picomatch` 2, `ws` 2, `esbuild`/`flatted`/`js-cookie`/`rollup` 1 each. **Only `ws` (2) is runtime-scope**; the other 16 are development-scope toolchain. Re-ground again before implementing — `js-yaml` gained an alert after the snapshot. **Re-grounded 2026-09-09 (§8a): this row is now 3 alerts / 3 packages** — `js-yaml` 1, `minimatch` 1, `esbuild` 1; `lodash`, `brace-expansion`, `picomatch`, `ws`, `flatted`, `js-cookie`, `rollup` are all **closed**. **`ws` — the only runtime-scope alert in this row — is closed (8.21.3); the residual surface is now 100% development scope.** `js-yaml` 4.3.1→4.3.2 **DONE** in this increment. **CORRECTED 2026-09-09 — the remaining two are NOT independently actionable Tranche-B patches:** `esbuild` 0.21.5→0.25.0 is unreachable because `vite@5.4.21` pins `esbuild ^0.21.3`, so it moves only with **R-04 / Tranche C**; `minimatch` 9.0.3→9.0.7 is unreachable because `@typescript-eslint/typescript-estree@6.21.0` pins `"minimatch": "9.0.3"` **exactly (no range)**, so it needs a `@typescript-eslint` major — a lint major deliberately ignored in `dependabot.yml` pending the coordinated migration (#282/#283). |
 | R-08 | FAN-OUT | Version-hygiene majors/patches from #254–#258 | **DEFERRED** → **Tranche B** | Not #252 security packages; none appears in the live alert set of §8, so this is hygiene, not security. Authorize explicitly before merge |
 | R-09 | ONGOING | Ongoing weekly Dependabot PR review | **ACTIVE** ownership | Already in `MAINT-DEFER-004`; PRs enter adjudication before implementation |
 | R-10 | INHERITED | Residual `npm audit` surface in `packages/client` after Tier-1 patch (**21** issues at closeout witness) | **DEFERRED** → **Tranche B** / **Tranche C** as classified | Documented in Tier-1 closeout §6; **not** a Tier-1 failure criterion. Largely overlaps R-04/R-05/R-07. **Not independently re-verified here** — `npm audit` needs an install this sprint did not run, so the 21 figure remains a closeout-witness claim, not a live one |
@@ -318,7 +380,7 @@ Do **not** merge merely to eliminate the PR.
 2. ~~Witness Dependabot alert recalculation after #253~~ — **DONE 2026-08-11.** 65 → 32; `axios`/`postcss` → 0 (§8). Retained struck-through rather than deleted so the discharge is auditable.
 3. Authorize Tranche B / Tranche C implementation only via explicit Dev Order (not by leaving Dependabot PRs open).
 4. Do not treat Dependabot open-PR count as DEP-SEC program completeness.
-5. **Add `archive/**` and `docs/archive/**` path exclusions to `.github/dependabot.yml`.** Dismissing the 9 archive alerts (action 1) clears the ledger once; the exclusion stops them regenerating and is the durable fix. Recommended in #252 §7 and not yet implemented.
+5. ~~**Add `archive/**` and `docs/archive/**` path exclusions to `.github/dependabot.yml`.** Dismissing the 9 archive alerts (action 1) clears the ledger once; the exclusion stops them regenerating and is the durable fix. Recommended in #252 §7 and not yet implemented.~~ **WITHDRAWN 2026-09-09 — the mechanism does not exist.** `dependabot.yml` governs *update PRs*, not **alert** generation; alerts come from the dependency graph and cannot be path-excluded there. Proof: no `pip` ecosystem is configured, yet pytest alert #56 is live. Action 1 (dismissal) **is DONE** — all 9 dismissed `not_used` on 2026-08-26 — but it clears the ledger once, and archive alerts will regenerate on the next `vite` advisory. **Replacement owner decision (open):** either remove the archived `package.json` files from the default branch, or accept recurring dismissal as the standing cost. Retained struck-through rather than deleted so the withdrawal is auditable.
 
 ---
 
@@ -326,7 +388,7 @@ Do **not** merge merely to eliminate the PR.
 
 | Tranche | Scope | Gate |
 |---------|-------|------|
-| **Tranche B** — remaining bounded / residual dependency remediation | Security residuals open after the §8 witness: **18 alerts / 10 packages**, of which only `ws` (2) is runtime-scope. Optional coordinated version hygiene from #254–#258 when explicitly authorized | Owner Dev Order; no merge of Dependabot PRs solely because they exist. **One consolidated PR is required, not preferred** — per R-11 a Dependabot-authored PR can never pass `api-verify`, so it cannot be CI-verified before merge |
+| **Tranche B** — remaining bounded / residual dependency remediation | ~~Security residuals open after the §8 witness: **18 alerts / 10 packages**, of which only `ws` (2) is runtime-scope.~~ **RE-SCOPED 2026-09-09 (§8a): 3 alerts / 3 packages, none runtime-scope — and only ONE was actionable.** `js-yaml` 4.3.1→4.3.2 is **DONE** in this increment. `esbuild` and `minimatch` are **structurally blocked behind deferred majors** (R-07) and must NOT be counted as Tranche-B work: attempting them forces a `vite` major and a `@typescript-eslint` major respectively. **Tranche B is therefore empty of actionable security work until Tranche C or the lint-major migration moves.** Optional coordinated version hygiene from #254–#258 when explicitly authorized | Owner Dev Order; no merge of Dependabot PRs solely because they exist. **One consolidated PR is required, not preferred** — per R-11 a Dependabot-authored PR can never pass `api-verify`, so it cannot be CI-verified before merge |
 | **Tranche C** — major toolchain migration | `vitest` 2→3 → stabilize witness → `vite` 5→6 | **BR-021 resolved** or **explicit manual build-witness authorization** |
 
 No third implementation tranche is opened by this consolidation. Hard incompatibility was **not** demonstrated that would require splitting further.
