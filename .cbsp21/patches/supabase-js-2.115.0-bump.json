@@ -1,0 +1,71 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SUPABASE_JS_2_115_0_BUMP",
+  "title": "build(deps): bump @supabase/supabase-js from 2.112.4 to 2.115.0",
+  "intent": "Routine Dependabot currency, no advisory. @supabase/supabase-js 2.112.4 -> 2.115.0 in packages/client. The only upstream change of note is postgrest adding getOpenApiSpec(); no code in this repository calls it, and nothing in the client was changed to adopt it. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001) -- the point of the friction is the lockfile audit recorded in behavior_change below.",
+  "change_type": "chore",
+  "behavior_change": "none. Lockfile audited against merge-base d59de10f by parsing both package-lock.json trees and comparing every `packages` entry, not by reading the truncated diff view. Entry count is 412 before and 412 after. Exactly six entries changed version, all of them the @supabase family moving 2.112.4 -> 2.115.0 in lockstep: auth-js, functions-js, postgrest-js, realtime-js, storage-js, supabase-js. Zero packages added, zero removed, and zero non-@supabase entries touched. This is the check that PR #296 failed -- a supabase bump that also silently reverted zod 4 to 3 -- so it was run as an enumeration rather than an eyeball.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/supabase-js-2.115.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/supabase-js-2.115.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range `@supabase/supabase-js` from ^2.112.4 to ^2.115.0 -- one line, no other dependency touched. packages/client/package-lock.json resolves that range, moving the six @supabase packages listed in behavior_change to 2.115.0. There are no incidental version movements: the added/removed/changed sets outside @supabase are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff, and nine manifests written for other dependency work would each have covered these two files -- borrowing one is what CBSP21-NOBORROW-001 exists to refuse."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile audit (enumeration, not diff-reading): parsed `git show d59de10f:packages/client/package-lock.json` and the PR head lock into JSON and compared every `packages` entry -> base=412 head=412, version-changed=6 (all @supabase 2.112.4->2.115.0), added=0, removed=0, non-@supabase touched = NONE",
+      "package.json diff vs merge-base d59de10f -> exactly one changed line, the @supabase/supabase-js range",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the three files above>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "CI is the only build/test verification for this bump; no client smoke run was performed locally"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency version bump, ^2.112.4 -> ^2.115.0.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": ["git diff d59de10f -- packages/client/package.json -> one line"]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "none - six @supabase entries move in lockstep to 2.115.0; no incidental movement, no additions, no removals",
+      "verification": ["lockfile entry enumeration vs merge-base -> non-@supabase touched = NONE"]
+    },
+    {
+      "path": ".cbsp21/patches/supabase-js-2.115.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [".cbsp21/patches/supabase-js-2.115.0-bump.json"],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-08-SUPABASE-2115",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moved nothing beyond the titled package family -- enumerated, not assumed. Supabase is used by the client for auth/storage flows; this is a patch-level minor within the same major, and no repository code changed to adopt the new postgrest getOpenApiSpec() API.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
