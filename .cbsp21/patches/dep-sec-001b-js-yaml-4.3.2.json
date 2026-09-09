@@ -1,0 +1,90 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DEP_SEC_001B_JS_YAML_4_3_2",
+  "title": "chore(dep-sec): js-yaml 4.3.1 -> 4.3.2 (DEP-SEC-001 / Tranche B) + residual-matrix corrections",
+  "intent": "Bounded DEP-SEC-001 / Tranche B maintenance under explicit owner authorization. Clears Dependabot alert #89 (HIGH, js-yaml CVE-2026-84375) by moving the resolved js-yaml from 4.3.1 to 4.3.2 -- a patch bump inside the existing major, requiring no toolchain migration. Also corrects three statements in the authoritative residual matrix that today's re-grounding proves wrong. Not a new investigation and not a new governance regime: the corrections are to the authoritative record, exposed by the same re-grounding that authorized the bump.",
+  "change_type": "chore",
+  "behavior_change": "none. js-yaml is a transitive DEVELOPMENT dependency (eslint and @eslint/eslintrc, both requesting ^4.1.0, which 4.3.2 satisfies). It is not reachable from any shipped client bundle. Lockfile audited by enumeration against base df39c4f3, not by reading the diff view: entries 412 before and 412 after, added=0, removed=0, and exactly ONE entry differs in ANY field -- node_modules/js-yaml (version, resolved, integrity). No package.json change; the declared dependency set is untouched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dep-sec-001b-js-yaml-4.3.2.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/dep-sec-001b-js-yaml-4.3.2.json",
+      "packages/client/package-lock.json",
+      "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package-lock.json changes exactly three lines in the node_modules/js-yaml entry: version 4.3.1 -> 4.3.2, resolved tarball URL, and integrity hash. The integrity was cross-checked against two independent sources -- npm's own resolution and `npm view js-yaml@4.3.2 dist.integrity` -- which agree exactly. The residual matrix gains a dated section 8a and three corrected rows.",
+    "why_not_redundant": "No existing manifest covers this diff. Authored per CBSP21-NOBORROW-001, which refuses a manifest written for other work even when that manifest's declared paths would cover these files."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile enumeration vs base df39c4f3: entries 412 -> 412, added=0, removed=0, ANY-field-changed = ['node_modules/js-yaml'] ONLY",
+      "consumer satisfaction re-derived: eslint ^4.1.0 and @eslint/eslintrc ^4.1.0 are the only js-yaml requesters; 4.3.2 satisfies both; no exact pin exists",
+      "integrity cross-checked against `npm view js-yaml@4.3.2 dist.integrity` -- identical to the value written",
+      "npm ci -> exit 0, 412 packages audited (this is the decisive check: npm ci verifies every integrity hash against the downloaded tarball, so a hand-edited lockfile that was incoherent could not pass)",
+      "installed tree confirmed: require('js-yaml/package.json').version === '4.3.2'",
+      "npm audit -> js-yaml no longer present in the vulnerability set",
+      "npm test -> 777 passed, 17 todo, 45 of 47 suites green",
+      "npm run build -> exit 0, built in 25.46s",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the three files above>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ],
+    "known_failure_attributed": "src/testing/__tests__/nodeEngineFloor.spec.ts fails locally with SyntaxError. NOT caused here and NOT a repository defect. Attributed by control, not by inheriting the prior claim: with the lockfile change reverted and `git status` clean, the same spec fails identically. The file is valid UTF-8 (18 non-ASCII bytes, all E2 80 94 em-dashes, no BOM) and the reported position (line 4 col 31) is ordinary ASCII, so the location is misattributed by the transform. Windows-only; green on Linux CI. Independently recorded as pre-existing in .cbsp21/patches/tailwind-v4-migration.json and landed that way via #307."
+  },
+  "files": [
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolve js-yaml 4.3.1 -> 4.3.2, clearing Dependabot alert #89 (HIGH).",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - transitive dev dependency; three lines in one entry",
+      "verification": [
+        "enumeration -> ANY-field-changed = ['node_modules/js-yaml'] only",
+        "npm ci exit 0 (integrity verified against tarball)"
+      ]
+    },
+    {
+      "path": "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md",
+      "intent": "Correct three statements today's evidence proves wrong, and add dated section 8a. (a) R-01 / owner action 5: the 'durable fix' via dependabot.yml path exclusion is WITHDRAWN -- dependabot.yml governs update PRs, not alert generation; proof is that no pip ecosystem is configured yet pytest alert #56 is live. (b) R-07: minimatch and esbuild are structurally blocked behind deferred majors (an exact '9.0.3' pin in @typescript-eslint/typescript-estree, and vite's esbuild ^0.21.3 respectively), so Tranche B could never have cleared them independently. (c) R-03: pytest's blocker is the explicit <9.0 ceiling excluding its own 9.0.3 fix, not neglect.",
+      "scan_targets": [
+        "docs/ci/DEP_SEC_001_RESIDUAL_DISPOSITION_2026-08-10.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance record only. August observations are PRESERVED verbatim; section 8a is added as a separately dated DESCRIPTIVE observation and the section-kind index is updated to list it. Superseded text is struck through rather than deleted, matching the document's own auditable-withdrawal pattern in R-02 and owner action 2. No disposition is loosened: R-03 stays OUT OF SCOPE, R-04/R-05 stay Tranche C, and no alert is dismissed."
+    },
+    {
+      "path": ".cbsp21/patches/dep-sec-001b-js-yaml-4.3.2.json",
+      "intent": "Per-PR CBSP21 patch manifest for this increment.",
+      "scan_targets": [
+        ".cbsp21/patches/dep-sec-001b-js-yaml-4.3.2.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-09-JS-YAML-DEPSEC001B",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Transitive development-dependency patch bump plus a governance-record correction. No architectural surface, no production route, no authority model change. Explicitly NOT touched, per the authorizing ruling: vite, vitest, minimatch, esbuild, pytest, the archived package.json population, and dependabot.yml.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
