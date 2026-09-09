@@ -1,0 +1,85 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TYPES_NODE_26_4_1_BUMP",
+  "title": "build(deps): bump @types/node from 26.2.0 to 26.4.1",
+  "intent": "Routine Dependabot currency, no advisory. @types/node 26.2.0 -> 26.4.1 in packages/client (devDependency). Type declarations only. No runtime code; the risk surface is type-check output, which the client type-check job reports. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none. Lockfile audited against merge-base d59de10f by parsing both package-lock.json trees and comparing every `packages` entry, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 entry changed version: @types/node 26.2.0 -> 26.4.1. Zero packages added, zero removed, and no entry outside @types/node touched. This is the check PR #296 failed -- a bump whose title named one package while the lockfile moved another -- so it was run as an enumeration rather than an eyeball.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/types-node-26.4.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/types-node-26.4.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for @types/node from ^26.2.0 to ^26.4.1 -- one line, no other dependency touched. package-lock.json resolves it: @types/node 26.2.0 -> 26.4.1. No incidental version movement; the added, removed and non-@types/node changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff, and several manifests written for other dependency work would each have covered these two files -- borrowing one is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile audit (enumeration, not diff-reading) vs merge-base d59de10f: entries 412 -> 412, version-changed=1 (@types/node 26.2.0 -> 26.4.1), added=0, removed=0, non-@types/node touched = NONE",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the three files above>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "CI is the only build/test verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency bump, ^26.2.0 -> ^26.4.1.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "git diff <merge-base> -- packages/client/package.json -> one line"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - @types/node 26.2.0 -> 26.4.1; no incidental movement, additions or removals",
+      "verification": [
+        "lockfile entry enumeration -> non-@types/node touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/types-node-26.4.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/types-node-26.4.1-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-08-TYPES-NODE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moved nothing beyond @types/node -- enumerated, not assumed. Type declarations only. No runtime code; the risk surface is type-check output, which the client type-check job reports.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
