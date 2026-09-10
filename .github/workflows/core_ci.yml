@@ -61,6 +61,15 @@ jobs:
       - name: CBSP21 Manifest Ownership Tests (CBSP21-NOBORROW-001)
         run: |
           python -m pytest scripts/ci/test_cbsp21_*.py -v
+      # SCAFFOLD-DIST-001. Builds real temp git repos, so it needs git identity
+      # configured -- the runner has it. Pinned here for the same reason as the
+      # step above: nothing collects scripts/ci/ wholesale, and repo-root tests/
+      # is collected only file-by-file, so an unpinned self-test would exist and
+      # never run. A distribution-correctness test that CI does not execute is
+      # the hollow guarantee this tool is being hardened against.
+      - name: Scaffolder Self-Test (SCAFFOLD-DIST-001)
+        run: |
+          python -m pytest scripts/ci/test_scaffold_agents_md.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api

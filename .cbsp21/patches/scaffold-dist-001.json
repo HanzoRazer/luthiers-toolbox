@@ -1,0 +1,94 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SCAFFOLD_DIST_001",
+  "title": "SCAFFOLD-DIST-001: site the AGENTS.md scaffolder, pin its self-test in core_ci",
+  "intent": "Distribute the AGENTS.md scaffolder as tooling: site scripts/scaffold_agents_md.py, add its self-test at scripts/ci/test_scaffold_agents_md.py, pin that test in core_ci.yml so the contract is enforced rather than asserted, and record the defect-by-defect result. This is a TOOLING DISTRIBUTION change only — it does NOT adopt an AGENTS.md in this repository. No AGENTS.md is written, and none is expected to appear in the diff; adoption is a separate owner decision under a separate rollout.",
+  "change_type": "feature",
+  "behavior_change": "none at runtime; adds one CI test invocation",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/scaffold_agents_md.py",
+      "scripts/ci/test_scaffold_agents_md.py",
+      ".github/workflows/core_ci.yml",
+      "reports/scaffold/scaffold_dist_001/RESULT.md",
+      ".cbsp21/patches/scaffold-dist-001.json"
+    ],
+    "files_expected_to_change": [
+      "scripts/scaffold_agents_md.py",
+      "scripts/ci/test_scaffold_agents_md.py",
+      ".github/workflows/core_ci.yml",
+      "reports/scaffold/scaffold_dist_001/RESULT.md",
+      ".cbsp21/patches/scaffold-dist-001.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Transported as an ordered four-patch git format-patch series (D2 order preserved via git am, not flattened into one diff): (1) scripts/ci/test_scaffold_agents_md.py — 14-case self-test covering remote-derived repo naming, PR-template discovery in any casing across .github/ root and docs/, headless --force refusal, headless --force --yes overwrite, refusal on an undetectable default branch, --default-branch override, the happy path with TODO blocks left unfilled, non-clobber on a second run, and refusal of a non-git directory. (2) .github/workflows/core_ci.yml — pins that test so the contract is enforced by CI rather than by assertion. (3) scripts/scaffold_agents_md.py — the scaffolder itself, brought under the test contract. (4) reports/scaffold/scaffold_dist_001/RESULT.md — defect-by-defect record. (5) this per-PR CBSP21 manifest, added as commit 5.",
+    "why_not_redundant": "Neither scripts/scaffold_agents_md.py nor scripts/ci/test_scaffold_agents_md.py exists on main at the pinned base c9c60779 — both re-derived ABSENT via git ls-tree, not by a ref:path check (which silently mangles under MSYS and produced a false negative on first pass). core_ci.yml line 50 carries only the governance pytest pin; the scaffolder test is a new invocation, not a duplicate. The scaffolder's four fixed defects were all environment-coupling bugs invisible to reading and found only by execution, which is precisely why the self-test is pinned in CI rather than left as a one-time manual witness."
+  },
+  "verification": {
+    "commands_run": [
+      "expected-base pin: git rev-parse origin/main == c9c60779aa3bab645882adb9754a36997c3e3111 (re-verified on the fresh worktree before applying)",
+      "Stage 0 re-derived via git ls-tree at that SHA: scripts/scaffold_agents_md.py ABSENT, scripts/ci/test_scaffold_agents_md.py ABSENT, AGENTS.md ABSENT, .github/PULL_REQUEST_TEMPLATE.md present (uppercase, no lowercase sibling), core_ci.yml:50 = governance pytest pin, 55 workflow .yml files",
+      "sha256 of all four patch files matched EXPECTED_BASE.md before apply",
+      "git am patches/0001..0004 on a fresh worktree from origin/main -> applied clean, no rejects, four-commit D2 order preserved",
+      "post-apply digest of scripts/ci/test_scaffold_agents_md.py = e133b6f638ac581694f155933b08b8bda27c576f25a33879f69a297637e1189d (matches the packet's expected value)",
+      "py -3.11 -m pytest scripts/ci/test_scaffold_agents_md.py -v -> 14 passed",
+      "git diff origin/main -- AGENTS.md -> empty; no AGENTS.md is created by this PR or by the test run",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the five declared files>",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python -m json.tool .cbsp21/patches/scaffold-dist-001.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/scaffold_agents_md.py",
+      "intent": "Site the scaffolder as distributable tooling under a pinned test contract.",
+      "scan_targets": ["scripts/scaffold_agents_md.py"],
+      "risk": "low",
+      "behavior_change": "none - a standalone script; nothing in the app imports or invokes it."
+    },
+    {
+      "path": "scripts/ci/test_scaffold_agents_md.py",
+      "intent": "Pin the scaffolder's behavioural contract, including the headless-refusal paths that reading cannot verify.",
+      "scan_targets": ["scripts/ci/test_scaffold_agents_md.py"],
+      "risk": "low",
+      "behavior_change": "none - test only."
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Enforce the self-test in CI so the contract cannot silently rot.",
+      "scan_targets": [".github/workflows/core_ci.yml"],
+      "risk": "low",
+      "behavior_change": "adds one pytest invocation to an existing job; no job graph or trigger change."
+    },
+    {
+      "path": "reports/scaffold/scaffold_dist_001/RESULT.md",
+      "intent": "Defect-by-defect record under the repository's existing reports/ tree.",
+      "scan_targets": ["reports/scaffold/scaffold_dist_001/RESULT.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only."
+    },
+    {
+      "path": ".cbsp21/patches/scaffold-dist-001.json",
+      "intent": "Per-PR CBSP21 manifest declaring this transport (CBSP21-NOBORROW-001).",
+      "scan_targets": [".cbsp21/patches/scaffold-dist-001.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-10-SCAFFOLD-DIST-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
