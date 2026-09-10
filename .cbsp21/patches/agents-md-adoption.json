@@ -1,0 +1,64 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENTS_MD_ADOPTION",
+  "title": "docs(agents): adopt AGENTS.md — repository-specific base rules, incidents and gate commands",
+  "intent": "Adopt an AGENTS.md in this repository: the universal branch-from-main and merge-don't-rebase rules, this repo's own witnessed stale-base incidents, and the real verification-gate commands with the working directory each runs from. This is the ADOPTION decision, deliberately kept separate from SCAFFOLD-DIST-001 (#368), which distributed the scaffolder, its self-test and the CI pin but wrote no AGENTS.md. Documentation only: one new file, no source, no CI, no schema.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "AGENTS.md",
+      ".cbsp21/patches/agents-md-adoption.json"
+    ],
+    "files_expected_to_change": [
+      "AGENTS.md",
+      ".cbsp21/patches/agents-md-adoption.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds AGENTS.md (150 lines) at the repository root. Universal sections are the scaffolder's verbatim output; the two repository-specific blocks the scaffolder deliberately refuses to write are filled by hand. INCIDENTS carries this repository's witnessed stale-base failures. VERIFICATION GATES carries the gate commands copied from the workflow files, each annotated with the working directory it must run from, plus the CBSP21 per-PR manifest requirement introduced by #352.",
+    "why_not_redundant": "No AGENTS.md exists on main — verified with git ls-tree (not a ref:path check, which mangles under MSYS and produced a false negative earlier in this work). #368 landed the scaffolder and its self-test but wrote no AGENTS.md, by design: distributing the tool and adopting its output are separate decisions. The content is not generic advice — it records a per-gate working-directory hazard, the PowerShell glob-expansion difference that makes a copied CI command fail locally, and the post-#352 rule that a manifest belonging to another change can no longer satisfy this PR."
+  },
+  "verification": {
+    "commands_run": [
+      "git ls-tree -r --name-only origin/main -- AGENTS.md -> empty; no AGENTS.md on main at 2641b30c",
+      "cited authority checked: PR #352 is 'fix(cbsp21): a manifest satisfies a PR only if the PR brought it' — the NOBORROW change the file cites. It is the only PR/commit citation in the document.",
+      "gate claim re-run on current main: python -m pytest scripts/ci/ -k cbsp21 --collect-only -> 36/97 collected, 61 deselected (the -k form works from the repo root as the file states)",
+      "layout claim re-checked on current main: no root pyproject.toml; services/api/pyproject.toml present — the per-gate working-directory warning holds",
+      "content integrity: 150 lines, no unfilled '<!-- INCIDENTS' or '<!-- VERIFICATION GATES' fences, no U+2500 (so the document cannot reproduce MAINT-DEFER-015's cp1252 failure)",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files AGENTS.md .cbsp21/patches/agents-md-adoption.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "intent": "Adopt repository-specific agent instructions: base rules, witnessed incidents, and the real gate commands with their working directories.",
+      "scan_targets": ["AGENTS.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only; nothing reads this file at runtime or in CI."
+    },
+    {
+      "path": ".cbsp21/patches/agents-md-adoption.json",
+      "intent": "Per-PR CBSP21 manifest declaring this adoption (CBSP21-NOBORROW-001).",
+      "scan_targets": [".cbsp21/patches/agents-md-adoption.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-10-AGENTS-MD-ADOPTION",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}
