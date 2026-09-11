@@ -12,4 +12,4 @@ Bracing: X-brace + tone bars
 
 Note: Extra-light strings recommended
 
-Source: Purchased plan set
+Source: Purchased plan set. The plan sheets themselves are held in the owner's private reference corpus, not in this repository.

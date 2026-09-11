@@ -1,7 +1,7 @@
 {
   "model_id": "explorer",
   "display_name": "1958 Gibson Explorer",
-  "source": "Gibson factory drawings and measured specifications. Primary reference: LonelyStarGuitars.com Explorer blueprint (docs/archive/instrument_references/gibson_explorer/). Body outline from DXF (gibson_explorer_body.dxf). Neck thickness 20.32mm/21.59mm, joint angle 3.5 deg, headstock angle 14 deg verified from blueprint 2026-03-28.",
+  "source": "Gibson factory drawings and measured specifications. Primary reference: LonelyStarGuitars.com Explorer blueprint, Rev D (source id LONELYSTAR-EXP-REVD; private reference corpus, not held in this repository). Body outline from DXF (gibson_explorer_body.dxf). Neck thickness 20.32mm/21.59mm, joint angle 3.5 deg, headstock angle 14 deg verified from blueprint 2026-03-28.",
   "units": "mm",
   "variants": {
     "original_1958": {
