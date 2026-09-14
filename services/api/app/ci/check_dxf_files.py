@@ -81,11 +81,14 @@ def _dxf_version_number(version: str) -> Optional[int]:
     return int(suffix) if suffix.isdigit() else None
 
 
-def _is_advisory_preflight_issue(issue: Any) -> bool:
+def _is_advisory_preflight_issue(issue: Any, entity_types: Dict[str, int]) -> bool:
     message = issue.message.lower()
     return issue.severity == Severity.WARNING or (
         issue.category == "geometry" and "open lwpolyline" in message
-    ) or "no cam-compatible entities found" in message
+    ) or (
+        "no cam-compatible entities found" in message
+        and any(etype in entity_types for etype in ("POLYLINE", "SPLINE", "ELLIPSE"))
+    )
 
 
 def _is_advisory_topology_issue(issue: Any) -> bool:
@@ -174,7 +177,7 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
                 issue_dict["layer"] = issue.layer
             if issue.suggestion:
                 issue_dict["suggestion"] = issue.suggestion
-            if _is_advisory_preflight_issue(issue):
+            if _is_advisory_preflight_issue(issue, entity_types):
                 result["warnings"].append(issue_dict)
             elif issue.severity == Severity.ERROR:
                 result["passed"] = False
