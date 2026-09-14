@@ -1,0 +1,64 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "JSZIP_3_10_2_BUMP",
+  "title": "build(deps): bump jszip from 3.10.1 to 3.10.2",
+  "intent": "Routine currency (Dependabot), no security advisory: the GitHub Advisory Database lists no advisory affecting jszip 3.10.1 (the two known jszip advisories, GHSA-36fh-84j7-cv5h and GHSA-jg8v-48h5-wgxg, were fixed in 3.8.0 and 3.7.0). 3.10.2 (published 2026-09-08 by maintainer jkoops, the first release since 3.10.1 in 2022-08) carries three bug fixes: cross-realm binary type detection in getTypeOf, Blob reading via Blob.prototype.arrayBuffer() with an explicit rejection when no reader exists, and TypeScript types for JSZip.defaults.",
+  "change_type": "chore",
+  "behavior_change": "Lockfile enumerated as JSON against merge base 7685411c (every packages entry compared field by field, not the diff view): 412 -> 412 entries, added=0, removed=0, changed=2. The only package that moved is node_modules/jszip 3.10.1 -> 3.10.2 (version, resolved, integrity; its dependency ranges lie ~3.3.0, pako ~1.0.2, readable-stream ~2.3.6, setimmediate ^1.0.5 are unchanged). The other changed entry is the root package entry, whose dependencies.jszip range moves ^3.10.1 -> ^3.10.2. No other package moves or reverts. Runtime effect in the client: useBulkExport.ts passes Blobs to zip.file(), which now read through Blob.prototype.arrayBuffer() instead of FileReader in browsers that have it (same bytes; FileReader remains the fallback); evidence/zip_loader.ts passes an ArrayBuffer to JSZip.loadAsync(), whose type detection now uses the toString tag (same result for same-realm buffers).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/jszip-3.10.2-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/jszip-3.10.2-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json: jszip ^3.10.1 -> ^3.10.2. packages/client/package-lock.json: node_modules/jszip 3.10.1 -> 3.10.2 and the root dependency range; nothing else.",
+    "why_not_redundant": "Dependabot currency for a maintained dependency that the client uses for bulk export (useBulkExport.ts) and evidence-pack loading (evidence/zip_loader.ts); no other open PR moves jszip."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile audit: packages/client/package-lock.json at 7685411c vs ac397620 parsed as JSON, every packages entry compared -> changed: <root> dependencies.jszip, node_modules/jszip {version, resolved, integrity}; added 0; removed 0",
+      "npm view jszip@3.10.2 dist.integrity -> sha512-3l+rb15IOWtUhU0H5MFqES/T6Kh7abYwjosBey/vD6hDt8zoEffkSC5Ws5SGtgVw3gBx2NEbhTeSW1+kWkpyTQ== (matches the lockfile); publisher jkoops is a listed maintainer; no install-time scripts",
+      "npm pack jszip@3.10.1 jszip@3.10.2 and diff: lib/ changes are lib/utils.js (getTypeOf, Blob reading) and the version string in lib/index.js, matching CHANGES.md; dist/jszip.js diff is the same change; dist/jszip.min.js (the browser entry per jszip's package.json 'browser' map) +151 bytes, contains the new code, and shows no change in counts of network/eval/storage/cookie/beacon/process tokens",
+      "gh api /advisories?ecosystem=npm&affects=jszip@3.10.1 -> none",
+      "CI lint-build on ac397620: npm ci from the lockfile, vitest 46 files passed / 1 skipped (unrelated audio analyzer); src/evidence/__tests__/zip_loader.spec.ts 9 tests passed",
+      "git merge-tree against sibling bumps #373 marked, #375 supabase-js, #376 happy-dom, #377 zod: each merges cleanly with this PR, and all five stacked in order 373-377 merge cleanly with every bumped version intact (412 lock entries)"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency version bump.",
+      "risk": "low",
+      "behavior_change": "none beyond the jszip range"
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "node_modules/jszip 3.10.1 -> 3.10.2 only; no incidental movement"
+    },
+    {
+      "path": ".cbsp21/patches/jszip-3.10.2-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moves only jszip."
+  }
+}
