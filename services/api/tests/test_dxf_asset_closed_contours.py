@@ -169,6 +169,9 @@ def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
     result = validate_dxf_file(path)
     assert result["passed"], result["errors"]
     assert result["warnings"]
+
+
+def test_topology_validator_import_isolation():
     """Importing TopologyValidator must not require fastapi."""
     from app.cam.dxf_advanced_validation import TopologyValidator
 
