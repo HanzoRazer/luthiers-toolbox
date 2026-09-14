@@ -136,6 +136,19 @@ def test_empty_dxf_fails_asset_gate(validator):
     assert not result.passed
 
 
+def test_text_only_dxf_fails_asset_gate(validator):
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    msp.add_text("notes", dxfattribs={"layer": "TEXT"})
+    path = _write_dxf(doc)
+    try:
+        result = validator.validate_dxf_file(path)
+    finally:
+        path.unlink(missing_ok=True)
+    assert not result.passed
+    assert any("No drawable geometry found" in issue.message for issue in result.issues)
+
+
 def test_ac1024_closed_lwpolyline_is_allowed(validator):
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

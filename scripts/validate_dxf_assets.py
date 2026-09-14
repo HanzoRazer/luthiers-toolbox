@@ -64,6 +64,11 @@ MIN_POINTS_PRODUCTION = 50
 # Dimension tolerance (mm)
 DIMENSION_TOLERANCE_MM = 1.0
 
+# Entity types that count as drawable catalog geometry.
+DRAWABLE_ENTITY_TYPES = frozenset(
+    {"LWPOLYLINE", "POLYLINE", "LINE", "CIRCLE", "ARC", "SPLINE", "ELLIPSE"}
+)
+
 
 # -----------------------------------------------------------------------------
 # Data Structures
@@ -407,7 +412,11 @@ def validate_dxf_file(path: Path) -> DXFValidationResult:
     result.closed_polylines = closed_count
     result.point_count = total_points
 
-    has_geometry = total_points > 0 or closed_count > 0 or result.total_entities > 0
+    has_geometry = (
+        total_points > 0
+        or closed_count > 0
+        or any(entity.dxftype() in DRAWABLE_ENTITY_TYPES for entity in entities)
+    )
     if closed_count == 0:
         # Half-body sketches and SPLINE outlines exist in the catalog.
         # Fail only when the file has no drawable geometry at all.
