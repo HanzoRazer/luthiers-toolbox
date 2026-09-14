@@ -31,7 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import List, Optional, Tuple, Dict, Any, Iterable
@@ -164,9 +164,27 @@ def count_closed_line_loops(
         adj[a].append((b, eid))
         adj[b].append((a, eid))
 
+    degrees = {vertex: len(neighbors) for vertex, neighbors in adj.items()}
+    remaining_edges = set(range(len(edges)))
+    queue = deque(vertex for vertex, degree in degrees.items() if degree < 2)
+    while queue:
+        cur = queue.popleft()
+        if degrees.get(cur, 0) >= 2:
+            continue
+        for nxt, eid in adj[cur]:
+            if eid not in remaining_edges:
+                continue
+            remaining_edges.remove(eid)
+            degrees[cur] -= 1
+            degrees[nxt] -= 1
+            if degrees[nxt] == 1:
+                queue.append(nxt)
+
     loops = 0
     seen: set[Tuple[float, float]] = set()
     for start in adj:
+        if degrees.get(start, 0) < 2:
+            continue
         if start in seen:
             continue
         stack = [start]
@@ -179,6 +197,8 @@ def count_closed_line_loops(
             component_vertices.add(cur)
             seen.add(cur)
             for nxt, eid in adj[cur]:
+                if eid not in remaining_edges:
+                    continue
                 component_edges.add(eid)
                 if nxt not in component_vertices:
                     stack.append(nxt)
