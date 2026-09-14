@@ -220,8 +220,8 @@ def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
     assert result["warnings"]
 
 
-def test_topology_validator_import_isolation():
-    """Importing TopologyValidator must not require fastapi."""
+def test_topology_validator_processes_basic_square():
+    """TopologyValidator still validates a simple closed square."""
     from app.cam.dxf_advanced_validation import TopologyValidator
 
     doc = ezdxf.new("R2000")

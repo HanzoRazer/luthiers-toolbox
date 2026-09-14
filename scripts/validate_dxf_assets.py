@@ -230,7 +230,7 @@ def count_closed_line_loops(
 
     merged = 0
     seen_faces: set[int] = set()
-    for idx, edges_a in enumerate(face_edges):
+    for idx in range(len(face_edges)):
         if idx in seen_faces:
             continue
         merged += 1
@@ -241,9 +241,8 @@ def count_closed_line_loops(
                 continue
             seen_faces.add(cur)
             for other, edges_b in enumerate(face_edges):
-                if other not in seen_faces and edges_a & edges_b:
+                if other not in seen_faces and face_edges[cur] & edges_b:
                     stack.append(other)
-                    edges_a |= edges_b
     return merged
 
 
