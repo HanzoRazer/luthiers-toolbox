@@ -19,6 +19,7 @@
       "data/instrument_plans/12string_dreadnought/",
       "data/instrument_plans/epiphone_spartan/",
       ".github/workflows/dxf_validation_gate.yml",
+      "ci/file_size_baseline.json",
       "scripts/validate_dxf_assets.py",
       "services/api/app/cam/dxf_advanced_validation.py",
       "services/api/app/ci/check_dxf_files.py",
@@ -46,6 +47,7 @@
       "data/instrument_plans/epiphone_spartan/sheet2_neck.jpg",
       "data/instrument_plans/epiphone_spartan/sheet3_arch.jpg",
       ".github/workflows/dxf_validation_gate.yml",
+      "ci/file_size_baseline.json",
       "scripts/validate_dxf_assets.py",
       "services/api/app/cam/dxf_advanced_validation.py",
       "services/api/app/ci/check_dxf_files.py",
@@ -53,7 +55,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "13 deletions: the LonelyStar PDF, its three page PNGs, two DXFs traced from it in docs/archive and two in the production folder instrument_geometry/body/dxf/electric/, plus the five Antes plan scans in data/instrument_plans/. Forced repairs only: the fixture regression drops the gibson_explorer entry (with a comment saying why and that coverage fell from three fixtures to two); gibson_explorer.json cites the source id instead of the removed path; the LonelyStar README becomes a custody stub keeping only the bounded comparison values; the Spartan README and spartan_specs.json replace 'see sheet3_arch.jpg' with the plan sheet reference; both plan READMEs state that the sheets are held in the owner's private reference corpus. Follow-up: make the three red DXF CI jobs pass without restoring restricted media. DXF Validation Gate died on fastapi import; DXF Asset Validation failed R12 LINE dumps as 'no closed LWPOLYLINE' and blocked AC1024 catalog files. Catalog gates now parse-and-inventory; runtime DXFPreflight is unchanged.",
+    "what_changed": "13 deletions: the LonelyStar PDF, its three page PNGs, two DXFs traced from it in docs/archive and two in the production folder instrument_geometry/body/dxf/electric/, plus the five Antes plan scans in data/instrument_plans/. Forced repairs only: the fixture regression drops the gibson_explorer entry (with a comment saying why and that coverage fell from three fixtures to two); gibson_explorer.json cites the source id instead of the removed path; the LonelyStar README becomes a custody stub keeping only the bounded comparison values; the Spartan README and spartan_specs.json replace 'see sheet3_arch.jpg' with the plan sheet reference; both plan READMEs state that the sheets are held in the owner's private reference corpus. Follow-up: make the three red DXF CI jobs pass without restoring restricted media. DXF Validation Gate died on fastapi import; DXF Asset Validation failed R12 LINE dumps as 'no closed LWPOLYLINE' and blocked AC1024 catalog files. Catalog gates now parse-and-inventory; runtime DXFPreflight is unchanged. The CI file-size baseline is added because scripts/validate_dxf_assets.py grew to accommodate that gate repair and the ratchet must record the new size.",
     "why_not_redundant": "No existing manifest covers these paths. This is a custody change, not a feature or dependency change, so no other patch's manifest describes it - borrowing one is what CBSP21-NOBORROW-001 refuses. The DXF CI jobs are triggered by this PR's instrument_geometry DXF deletions; they were red on main too. This increment unblocks merge without rewriting catalog geometry."
   },
   "verification": {
@@ -323,6 +325,18 @@
       "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
       "verification": [
         "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
+      ]
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Record the new scripts/validate_dxf_assets.py size after the DXF gate repair so the file-size ratchet matches this PR.",
+      "scan_targets": [
+        "ci/file_size_baseline.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - CI ratchet metadata only",
+      "verification": [
+        "python - <<'PY' ... json load / key check for scripts/validate_dxf_assets.py ..."
       ]
     },
     {
