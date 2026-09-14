@@ -60,6 +60,20 @@ def test_count_closed_line_loops_open_chain(validator):
     assert validator.count_closed_line_loops(segs) == 0
 
 
+def test_count_closed_line_loops_touching_squares(validator):
+    segs = [
+        ((0.0, 0.0), (10.0, 0.0)),
+        ((10.0, 0.0), (10.0, 10.0)),
+        ((10.0, 10.0), (0.0, 10.0)),
+        ((0.0, 10.0), (0.0, 0.0)),
+        ((0.0, 0.0), (-10.0, 0.0)),
+        ((-10.0, 0.0), (-10.0, -10.0)),
+        ((-10.0, -10.0), (0.0, -10.0)),
+        ((0.0, -10.0), (0.0, 0.0)),
+    ]
+    assert validator.count_closed_line_loops(segs) == 2
+
+
 def test_r12_line_square_passes_asset_gate(validator):
     doc = ezdxf.new("R12")
     msp = doc.modelspace()

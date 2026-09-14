@@ -151,11 +151,7 @@ def count_closed_line_loops(
     segments: Iterable[Tuple[Tuple[float, float], Tuple[float, float]]],
     quantum: float = _LINE_ENDPOINT_QUANTUM_MM,
 ) -> int:
-    """Count simple closed loops in an undirected LINE graph.
-
-    A component is a loop when a walk along unused edges returns to its start
-    after at least three segments. Open chains do not count.
-    """
+    """Count independent closed loops in an undirected LINE graph."""
     adj: Dict[Tuple[float, float], List[Tuple[Tuple[float, float], int]]] = defaultdict(list)
     edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
     for (x1, y1), (x2, y2) in segments:
@@ -168,34 +164,26 @@ def count_closed_line_loops(
         adj[a].append((b, eid))
         adj[b].append((a, eid))
 
-    used = [False] * len(edges)
     loops = 0
-    for start, neighbors in adj.items():
-        for nxt, eid in neighbors:
-            if used[eid]:
+    seen: set[Tuple[float, float]] = set()
+    for start in adj:
+        if start in seen:
+            continue
+        stack = [start]
+        component_vertices: set[Tuple[float, float]] = set()
+        component_edges: set[int] = set()
+        while stack:
+            cur = stack.pop()
+            if cur in component_vertices:
                 continue
-            used[eid] = True
-            prev = start
-            cur = nxt
-            steps = 1
-            closed = False
-            while True:
-                if cur == start:
-                    closed = steps >= 3
-                    break
-                advanced = False
-                for nxt2, eid2 in adj[cur]:
-                    if used[eid2] or nxt2 == prev:
-                        continue
-                    used[eid2] = True
-                    prev, cur = cur, nxt2
-                    steps += 1
-                    advanced = True
-                    break
-                if not advanced:
-                    break
-            if closed:
-                loops += 1
+            component_vertices.add(cur)
+            seen.add(cur)
+            for nxt, eid in adj[cur]:
+                component_edges.add(eid)
+                if nxt not in component_vertices:
+                    stack.append(nxt)
+        if len(component_edges) >= 3:
+            loops += max(0, len(component_edges) - len(component_vertices) + 1)
     return loops
 
 
