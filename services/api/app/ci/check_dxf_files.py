@@ -1,162 +1,203 @@
 #!/usr/bin/env python3
 """
-DXF Validation Gate for CI
+DXF Validation Gate for CI: export-readiness of the DXF catalog.
 
-Validates all DXF files in instrument_geometry/ directory.
+Validates every DXF under instrument_geometry/ against the contract of its
+asset class, as declared in app/ci/dxf_catalog_registry.json (shared with
+scripts/validate_dxf_assets.py through app/ci/dxf_catalog_policy.py).
+
+Contract clauses (the registry says which apply to which class):
+- readable, nonempty, geometry_present
+- version_allowed: stored catalog files are R12 (AC1009) only
+- closed_outline: a closed contour on an outline layer bounds that layer
+- preflight_valid: DXFPreflight (the runtime export gate's pre-check) reports
+  no ERROR on the manufacturing view (declared reference layers removed)
+- topology_valid: TopologyValidator reports no ERROR on the manufacturing
+  view, and a chained (LINE/ARC) outline does not cross itself
+
+A check that crashes has not passed: a crash is a clause failure.
+A file on a quarantine record is QUARANTINED (not failed, not passed) only
+while it fails exactly the clauses its record declares.
 
 Exit codes:
-- 0: All DXF files pass validation
-- 1: One or more DXF files failed validation
-- 2: Runtime error (file not found, etc.)
-
-Requirements (from GAP_ANALYSIS_MASTER.md):
-1. Must be AC1009 or later (AutoCAD R12+)
-2. Must have at least 1 closed LWPOLYLINE
-3. Bounding box must be within reasonable dimensions
+- 0: every file PASSED or is QUARANTINED
+- 1: one or more files FAILED (or the registry has an orphan record)
+- 2: runtime error (catalog directory not found)
 
 Usage:
-    python -m app.ci.check_dxf_files [--strict] [--json]
-
-    --strict: Also fail on warnings (not just errors)
-    --json: Output JSON report instead of text
+    python -m app.ci.check_dxf_files [--strict] [--json] [--path DIR]
 """
 
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Callable, Dict, List, Optional
+
+import ezdxf
 
 # Add parent to path for imports
 REPO_ROOT = Path(__file__).resolve().parents[4]  # services/api/app/ci -> repo root
 sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
 
-try:
-    from app.cam.dxf_preflight import DXFPreflight, Severity
-    from app.cam.dxf_advanced_validation import TopologyValidator
-except ImportError:
-    # Fallback for direct execution
-    sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
-    from app.cam.dxf_preflight import DXFPreflight, Severity
-    from app.cam.dxf_advanced_validation import TopologyValidator
+from app.ci import dxf_catalog_policy as policy  # noqa: E402
+from app.cam.dxf_preflight import DXFPreflight, Severity  # noqa: E402
+from app.cam.dxf_advanced_validation import TopologyValidator  # noqa: E402
+
+CATALOG_ROOT = REPO_ROOT / "services" / "api" / "app" / "instrument_geometry"
+GATE_CLAUSES = frozenset({
+    "readable", "nonempty", "geometry_present", "version_allowed",
+    "closed_outline", "preflight_valid", "topology_valid",
+})
+BASE_CONTRACT = ["readable", "nonempty", "geometry_present", "version_allowed"]
 
 
-# DXF version mapping (AC codes)
-DXF_VERSION_MAP = {
-    "AC1006": "R10",
-    "AC1009": "R12",
-    "AC1012": "R13",
-    "AC1014": "R14",
-    "AC1015": "R2000",
-    "AC1018": "R2004",
-    "AC1021": "R2007",
-    "AC1024": "R2010",
-    "AC1027": "R2013",
-    "AC1032": "R2018",
+@dataclass
+class _Context:
+    """Everything the clause checks need for one file."""
+    path: Path
+    doc: Any
+    entities: List[Any]
+    class_spec: Dict[str, Any]
+    registry: Dict[str, Any]
+    outline_chain: List[Any] = field(default_factory=list)
+    _view_bytes: Optional[bytes] = None
+
+    @property
+    def manufacturing_entities(self) -> List[Any]:
+        reference = set(self.class_spec.get("reference_layers", []))
+        return [e for e in self.entities if e.dxf.layer not in reference]
+
+    def view_bytes(self) -> bytes:
+        """DXF bytes of the manufacturing view: reference layers removed."""
+        if self._view_bytes is None:
+            self._view_bytes = self._serialize_view()
+        return self._view_bytes
+
+    def _serialize_view(self) -> bytes:
+        reference = set(self.class_spec.get("reference_layers", []))
+        dropped = [e for e in self.entities if e.dxf.layer in reference]
+        if not dropped:
+            return self.path.read_bytes()
+        msp = self.doc.modelspace()
+        for entity in dropped:
+            msp.delete_entity(entity)
+        stream = io.StringIO()
+        self.doc.write(stream)
+        return self.doc.encode(stream.getvalue())
+
+
+def _clause_nonempty(ctx: _Context) -> List[str]:
+    return [] if ctx.entities else ["DXF modelspace is empty (no entities found)"]
+
+
+def _clause_geometry(ctx: _Context) -> List[str]:
+    problem = policy.check_geometry_present(ctx.entities)
+    return [problem] if problem else []
+
+
+def _clause_version(ctx: _Context) -> List[str]:
+    problem = policy.check_version(ctx.doc.dxfversion, ctx.registry)
+    return [problem] if problem else []
+
+
+def _clause_outline(ctx: _Context) -> List[str]:
+    result = policy.check_closed_outline(ctx.manufacturing_entities, ctx.class_spec)
+    ctx.outline_chain = result.covering_chain
+    return [result.failure] if result.failure else []
+
+
+def _clause_preflight(ctx: _Context) -> List[str]:
+    try:
+        report = DXFPreflight(ctx.view_bytes(), ctx.path.name).run_all_checks()
+    except Exception as exc:  # fail-closed: a crashed check has not passed
+        return [f"Preflight check crashed: {type(exc).__name__}: {exc}"]
+    return [i.message for i in report.issues if i.severity == Severity.ERROR]
+
+
+def _clause_topology(ctx: _Context) -> List[str]:
+    try:
+        report = TopologyValidator(ctx.view_bytes(), ctx.path.name).check_self_intersections()
+    except Exception as exc:  # fail-closed: a crashed check has not passed
+        return [f"Topology check crashed: {type(exc).__name__}: {exc}"]
+    problems = [i.message for i in report.issues if i.severity == Severity.ERROR]
+    return problems + _chain_crossings(ctx.outline_chain)
+
+
+def _chain_crossings(chain: List[Any]) -> List[str]:
+    """A chained outline must not cross itself (shared endpoints are fine)."""
+    if not chain:
+        return []
+    from shapely.geometry import MultiLineString
+
+    if MultiLineString([list(segment) for segment in chain]).is_simple:
+        return []
+    return ["Outline chain crosses itself (LINE/ARC edges intersect away from their endpoints)"]
+
+
+CLAUSE_CHECKS: Dict[str, Callable[[_Context], List[str]]] = {
+    "nonempty": _clause_nonempty,
+    "geometry_present": _clause_geometry,
+    "version_allowed": _clause_version,
+    "closed_outline": _clause_outline,
+    "preflight_valid": _clause_preflight,
+    "topology_valid": _clause_topology,
 }
 
-# Minimum acceptable version
-MIN_DXF_VERSION = "AC1009"  # R12
+
+def _evaluate(dxf_path: Path, contract: List[str], class_spec: Dict[str, Any],
+              registry: Dict[str, Any]) -> Dict[str, List[str]]:
+    """Clause failures for one file; stops after readable/nonempty/geometry fail."""
+    try:
+        doc = ezdxf.readfile(str(dxf_path))
+    except Exception as exc:  # unreadable is a failure, not a crash of the gate
+        return {"readable": [f"Failed to read DXF: {type(exc).__name__}: {exc}"]}
+    ctx = _Context(dxf_path, doc, list(doc.modelspace()), class_spec, registry)
+    failures: Dict[str, List[str]] = {}
+    for clause in contract:
+        problems = CLAUSE_CHECKS[clause](ctx) if clause in CLAUSE_CHECKS else []
+        if problems:
+            failures[clause] = problems
+            if clause in ("nonempty", "geometry_present"):
+                break
+    return failures
 
 
-def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
+def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None,
+                      asset_class: Optional[str] = None) -> Dict[str, Any]:
+    """Validate one DXF against its asset-class contract and quarantine record.
+
+    `asset_class` overrides registry classification (used by tests for files
+    outside the catalog).
     """
-    Validate a single DXF file.
+    registry = registry or policy.load_registry()
+    asset = policy.relative_asset(dxf_path, CATALOG_ROOT)
+    klass = asset_class or policy.classify(asset, registry)
+    contract = policy.contract_for(klass, registry) if klass else BASE_CONTRACT
+    spec = registry["asset_classes"].get(klass, {}) if klass else {}
+    failures = _evaluate(dxf_path, contract, spec, registry)
+    evaluated = set(contract) & GATE_CLAUSES
+    verdict = policy.judge(asset, klass, failures, evaluated, registry)
+    return _result_dict(dxf_path, verdict)
 
-    Args:
-        dxf_path: Path to DXF file
 
-    Returns:
-        Validation result dict with pass/fail and details
-    """
-    result = {
+def _result_dict(dxf_path: Path, verdict: policy.Verdict) -> Dict[str, Any]:
+    failure_lines = [f"[{c}] {m}" for c, msgs in verdict.failures.items() for m in msgs]
+    blocking = verdict.blocks_gate
+    return {
         "file": str(dxf_path),
-        "passed": True,
-        "errors": [],
-        "warnings": [],
-        "info": {},
+        "asset": verdict.asset,
+        "asset_class": verdict.asset_class,
+        "status": verdict.status,
+        "passed": not blocking,
+        "errors": (failure_lines + verdict.messages) if blocking else [],
+        "warnings": [] if blocking else (failure_lines + verdict.messages),
+        "info": {"failed_clauses": sorted(verdict.failures)},
     }
-
-    try:
-        dxf_bytes = dxf_path.read_bytes()
-    except (IOError, OSError) as e:
-        result["passed"] = False
-        result["errors"].append(f"Failed to read file: {e}")
-        return result
-
-    # Run preflight validation
-    try:
-        preflight = DXFPreflight(dxf_bytes, dxf_path.name)
-        report = preflight.run_all_checks()
-
-        result["info"]["dxf_version"] = report.dxf_version
-        result["info"]["entity_count"] = report.total_entities
-        result["info"]["layers"] = report.layers
-
-        # Check DXF version
-        version_friendly = DXF_VERSION_MAP.get(report.dxf_version, report.dxf_version)
-        if report.dxf_version < MIN_DXF_VERSION:
-            result["passed"] = False
-            result["errors"].append(
-                f"DXF version {report.dxf_version} ({version_friendly}) is too old. "
-                f"Minimum: {MIN_DXF_VERSION} ({DXF_VERSION_MAP.get(MIN_DXF_VERSION, 'R12')})"
-            )
-
-        # Collect issues
-        for issue in report.issues:
-            issue_dict = {
-                "severity": issue.severity.value,
-                "category": issue.category,
-                "message": issue.message,
-            }
-            if issue.layer:
-                issue_dict["layer"] = issue.layer
-            if issue.suggestion:
-                issue_dict["suggestion"] = issue.suggestion
-
-            if issue.severity == Severity.ERROR:
-                result["errors"].append(issue_dict)
-                result["passed"] = False
-            elif issue.severity == Severity.WARNING:
-                result["warnings"].append(issue_dict)
-
-    except (ValueError, TypeError, AttributeError) as e:
-        result["passed"] = False
-        result["errors"].append(f"Preflight validation failed: {e}")
-        return result
-
-    # Run topology validation
-    try:
-        validator = TopologyValidator(dxf_bytes, dxf_path.name)
-        topology_report = validator.check_self_intersections()
-
-        result["info"]["self_intersections"] = topology_report.self_intersections
-        result["info"]["degenerate_polygons"] = topology_report.degenerate_polygons
-
-        for issue in topology_report.issues:
-            issue_dict = {
-                "severity": issue.severity.value,
-                "category": issue.category,
-                "message": issue.message,
-            }
-            if issue.layer:
-                issue_dict["layer"] = issue.layer
-            if issue.repair_suggestion:
-                issue_dict["repair_suggestion"] = issue.repair_suggestion
-
-            if issue.severity == Severity.ERROR:
-                result["errors"].append(issue_dict)
-                result["passed"] = False
-            elif issue.severity == Severity.WARNING:
-                result["warnings"].append(issue_dict)
-
-    except (ValueError, TypeError, AttributeError) as e:
-        # Topology validation failure is a warning, not an error
-        result["warnings"].append(f"Topology validation skipped: {e}")
-
-    return result
 
 
 def find_dxf_files(search_dir: Path) -> List[Path]:
@@ -164,136 +205,75 @@ def find_dxf_files(search_dir: Path) -> List[Path]:
     return sorted(search_dir.rglob("*.dxf"))
 
 
+def _find_catalog(path_arg: Optional[str]) -> Optional[Path]:
+    if path_arg:
+        return Path(path_arg)
+    candidates = [
+        CATALOG_ROOT,
+        Path.cwd() / "services" / "api" / "app" / "instrument_geometry",
+        Path.cwd() / "app" / "instrument_geometry",
+    ]
+    return next((p for p in candidates if p.exists()), None)
+
+
+_ICONS = {"PASS": "✅", "QUARANTINED": "🔒", "FAIL": "❌"}
+
+
+def _print_result(result: Dict[str, Any], strict: bool) -> None:
+    print(f"{_ICONS[result['status']]} {Path(result['file']).name}")
+    for line in result["errors"]:
+        print(f"   ❌ {line}")
+    if result["status"] == "QUARANTINED" or strict:
+        for line in result["warnings"]:
+            print(f"   🔒 {line}")
+
+
+def _print_report(results: List[Dict[str, Any]], orphans: List[str], strict: bool) -> None:
+    counts = {s: sum(1 for r in results if r["status"] == s) for s in _ICONS}
+    print(f"\n{'=' * 60}")
+    print("DXF Validation Report - instrument_geometry/ (export readiness)")
+    print(f"{'=' * 60}")
+    print(f"Total files: {len(results)}")
+    print(f"Passed: {counts['PASS']}")
+    print(f"Quarantined: {counts['QUARANTINED']} (manufacturing authority BLOCKED)")
+    print(f"Failed: {counts['FAIL']}")
+    print(f"{'=' * 60}\n")
+    for result in results:
+        _print_result(result, strict)
+    for asset in orphans:
+        print(f"❌ quarantine record for missing asset: {asset}")
+    failed = counts["FAIL"] + len(orphans)
+    print(f"\n{'=' * 60}\nRESULT: {'FAILED' if failed else 'PASSED'}\n{'=' * 60}\n")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate DXF files in instrument_geometry/"
+        description="Validate DXF files in instrument_geometry/ against the catalog registry"
     )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail on warnings (not just errors)",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output JSON report",
-    )
-    parser.add_argument(
-        "--path",
-        type=str,
-        default=None,
-        help="Override search path (default: instrument_geometry/)",
-    )
+    parser.add_argument("--strict", action="store_true",
+                        help="Also fail on quarantined files")
+    parser.add_argument("--json", action="store_true", help="Output JSON report")
+    parser.add_argument("--path", type=str, default=None,
+                        help="Override search path (default: instrument_geometry/)")
     args = parser.parse_args()
 
-    # Find instrument_geometry directory
-    if args.path:
-        search_dir = Path(args.path)
-    else:
-        # Try multiple possible locations
-        possible_paths = [
-            REPO_ROOT / "services" / "api" / "app" / "instrument_geometry",
-            REPO_ROOT / "instrument_geometry",
-            Path.cwd() / "services" / "api" / "app" / "instrument_geometry",
-            Path.cwd() / "instrument_geometry",
-        ]
-        search_dir = None
-        for p in possible_paths:
-            if p.exists():
-                search_dir = p
-                break
+    search_dir = _find_catalog(args.path)
+    if not search_dir:
+        print("ERROR: Could not find instrument_geometry/ directory")
+        return 2
 
-        if not search_dir:
-            print("ERROR: Could not find instrument_geometry/ directory")
-            return 2
+    registry = policy.load_registry()
+    results = [validate_dxf_file(p, registry) for p in find_dxf_files(search_dir)]
+    orphans = policy.orphan_records(registry, CATALOG_ROOT)
 
-    # Find DXF files
-    dxf_files = find_dxf_files(search_dir)
-
-    if not dxf_files:
-        print(f"No DXF files found in {search_dir}")
-        return 0
-
-    # Validate all files
-    results: List[Dict[str, Any]] = []
-    passed = 0
-    failed = 0
-    warnings_only = 0
-
-    for dxf_path in dxf_files:
-        result = validate_dxf_file(dxf_path)
-        results.append(result)
-
-        if result["passed"]:
-            if result["warnings"]:
-                warnings_only += 1
-                if args.strict:
-                    failed += 1
-                else:
-                    passed += 1
-            else:
-                passed += 1
-        else:
-            failed += 1
-
-    # Output results
     if args.json:
-        output = {
-            "total": len(dxf_files),
-            "passed": passed,
-            "failed": failed,
-            "warnings_only": warnings_only,
-            "strict_mode": args.strict,
-            "results": results,
-        }
-        print(json.dumps(output, indent=2, default=str))
+        print(json.dumps({"results": results, "orphan_records": orphans}, indent=2, default=str))
     else:
-        print(f"\n{'='*60}")
-        print(f"DXF Validation Report - instrument_geometry/")
-        print(f"{'='*60}")
-        print(f"Total files: {len(dxf_files)}")
-        print(f"Passed: {passed}")
-        print(f"Failed: {failed}")
-        print(f"Warnings only: {warnings_only}")
-        print(f"{'='*60}\n")
+        _print_report(results, orphans, args.strict)
 
-        for result in results:
-            status = "✅" if result["passed"] else "❌"
-            warn_count = len(result["warnings"]) if isinstance(result["warnings"], list) else 0
-            err_count = len(result["errors"]) if isinstance(result["errors"], list) else 0
-
-            file_short = Path(result["file"]).name
-            print(f"{status} {file_short}")
-
-            if err_count > 0:
-                for err in result["errors"]:
-                    if isinstance(err, dict):
-                        print(f"   ❌ {err.get('message', err)}")
-                    else:
-                        print(f"   ❌ {err}")
-
-            if warn_count > 0 and (args.strict or not result["passed"]):
-                for warn in result["warnings"]:
-                    if isinstance(warn, dict):
-                        print(f"   ⚠️  {warn.get('message', warn)}")
-                    else:
-                        print(f"   ⚠️  {warn}")
-
-        print(f"\n{'='*60}")
-        if failed > 0:
-            print("RESULT: FAILED")
-        elif args.strict and warnings_only > 0:
-            print("RESULT: FAILED (strict mode)")
-        else:
-            print("RESULT: PASSED")
-        print(f"{'='*60}\n")
-
-    # Exit code
-    if failed > 0:
-        return 1
-    if args.strict and warnings_only > 0:
-        return 1
-    return 0
+    failed = sum(1 for r in results if r["status"] == "FAIL") + len(orphans)
+    quarantined = sum(1 for r in results if r["status"] == "QUARANTINED")
+    return 1 if failed or (args.strict and quarantined) else 0
 
 
 if __name__ == "__main__":

@@ -7,10 +7,12 @@
 # - Pushes to main
 # - Pull requests touching DXF files or instrument_geometry/
 #
-# Requirements (from GAP_ANALYSIS_MASTER.md):
-# 1. Must be AC1009 or later (AutoCAD R12+)
-# 2. Must have at least 1 closed LWPOLYLINE
-# 3. Bounding box must be within reasonable dimensions
+# Export-readiness contract per asset class, declared in
+# services/api/app/ci/dxf_catalog_registry.json (DXF-CATALOG-GATE-001):
+# readable, nonempty, geometry_present, version_allowed (R12 only),
+# closed_outline, preflight_valid, topology_valid. Files that fall short
+# either fail or carry an explicit quarantine record (manufacturing
+# authority BLOCKED); there is no warning downgrade.
 
 name: DXF Validation Gate
 
@@ -21,11 +23,15 @@ on:
       - 'services/api/app/instrument_geometry/**/*.dxf'
       - 'services/api/app/cam/dxf_*.py'
       - 'services/api/app/ci/check_dxf_files.py'
+      - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_registry.json'
   pull_request:
     paths:
       - 'services/api/app/instrument_geometry/**/*.dxf'
       - 'services/api/app/cam/dxf_*.py'
       - 'services/api/app/ci/check_dxf_files.py'
+      - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_registry.json'
 
 jobs:
   validate-dxf:

@@ -5,11 +5,15 @@ on:
     paths:
       - 'services/api/app/instrument_geometry/**/*.dxf'
       - 'scripts/validate_dxf_assets.py'
+      - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_registry.json'
       - '.github/workflows/dxf_validation.yml'
   pull_request:
     paths:
       - 'services/api/app/instrument_geometry/**/*.dxf'
       - 'scripts/validate_dxf_assets.py'
+      - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_registry.json'
   workflow_dispatch:
 
 jobs:
