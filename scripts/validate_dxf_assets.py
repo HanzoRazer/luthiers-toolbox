@@ -149,8 +149,8 @@ class ValidationReport:
 _LINE_ENDPOINT_QUANTUM_MM = 0.05
 
 
-def _quantize_point(x: float, y: float, quantum: float = _LINE_ENDPOINT_QUANTUM_MM) -> Tuple[float, float]:
-    return (round(x / quantum) * quantum, round(y / quantum) * quantum)
+def _quantize_point(x: float, y: float, quantum: float = _LINE_ENDPOINT_QUANTUM_MM) -> Tuple[int, int]:
+    return (round(x / quantum), round(y / quantum))
 
 
 def count_closed_line_loops(

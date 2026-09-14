@@ -97,6 +97,11 @@ def test_count_closed_line_loops_square_with_diagonal(validator):
     assert validator.count_closed_line_loops(segs) == 1
 
 
+def test_quantize_point_snaps_to_integer_grid(validator):
+    assert validator._quantize_point(0.15, 0.35) == (3, 7)
+    assert validator._quantize_point(0.1 + 0.2, 0.6 - 0.4) == (6, 4)
+
+
 def test_r12_line_square_passes_asset_gate(validator):
     doc = ezdxf.new("R12")
     msp = doc.modelspace()
