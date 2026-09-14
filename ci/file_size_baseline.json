@@ -40,7 +40,7 @@
   "services/api/app/cam/cam_lifecycle_policy_engine.py": 533,
   "services/api/app/cam/canonical_ontology_registry.py": 659,
   "services/api/app/cam/carving/surface_carving.py": 515,
-  "services/api/app/cam/dxf_advanced_validation.py": 623,
+  "services/api/app/cam/dxf_advanced_validation.py": 620,
   "services/api/app/cam/export_lifecycle_orchestrator.py": 648,
   "services/api/app/cam/flying_v/depth_validator.py": 522,
   "services/api/app/cam/manufacturing_replay_registry.py": 771,

@@ -4,9 +4,7 @@ DXF Asset Validation Gate
 
 CI validation script that checks all DXF files in instrument_geometry/ for:
 1. Format: AC1009 (R12) — not AC1024 (AutoCAD 2010+)
-2. Geometry: At least one closed contour. R12 files emit LINE chains via
-   dxf_compat (not LWPOLYLINE). Closed LWPOLYLINE, POLYLINE, CIRCLE, and
-   closed LINE loops all count.
+2. Geometry: At least 1 closed LWPOLYLINE
 3. Bounds: Bounding box within ±1mm of spec dimensions (if spec exists)
 
 Resolves DXF quality gaps:
@@ -30,12 +28,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
-from collections import defaultdict, deque
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict, Any, Iterable
+from typing import List, Optional, Tuple, Dict, Any
 
 # Try to import ezdxf
 try:
@@ -51,23 +47,17 @@ except ImportError:
 # Configuration
 # -----------------------------------------------------------------------------
 
-# Allowed DXF versions (R12 through R2010). Catalog assets include R2010
-# (AC1024) files written by ezdxf.new() defaults. R2013+ stays blocked.
-ALLOWED_VERSIONS = {"AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024"}
+# Allowed DXF versions (AC1009 = R12, AC1012 = R13, AC1014 = R14)
+ALLOWED_VERSIONS = {"AC1009", "AC1012", "AC1014", "AC1015"}  # R12-R2000
 
 # Versions that trigger errors
-BLOCKED_VERSIONS = {"AC1027", "AC1032"}  # 2013+
+BLOCKED_VERSIONS = {"AC1018", "AC1021", "AC1024", "AC1027", "AC1032"}  # 2004+
 
 # Minimum points for a "production quality" outline
 MIN_POINTS_PRODUCTION = 50
 
 # Dimension tolerance (mm)
 DIMENSION_TOLERANCE_MM = 1.0
-
-# Entity types that count as drawable catalog geometry.
-DRAWABLE_ENTITY_TYPES = frozenset(
-    {"LWPOLYLINE", "POLYLINE", "LINE", "CIRCLE", "ARC", "SPLINE", "ELLIPSE"}
-)
 
 
 # -----------------------------------------------------------------------------
@@ -142,166 +132,6 @@ class ValidationReport:
 
 
 # -----------------------------------------------------------------------------
-# Closed-contour detection
-# -----------------------------------------------------------------------------
-
-# Endpoint snap for R12 LINE chains (dxf_compat emits LINE segments).
-_LINE_ENDPOINT_QUANTUM_MM = 0.05
-
-
-def _quantize_point(x: float, y: float, quantum: float = _LINE_ENDPOINT_QUANTUM_MM) -> Tuple[int, int]:
-    return (round(x / quantum), round(y / quantum))
-
-
-def count_closed_line_loops(
-    segments: Iterable[Tuple[Tuple[float, float], Tuple[float, float]]],
-    quantum: float = _LINE_ENDPOINT_QUANTUM_MM,
-) -> int:
-    """Count closed contours in an undirected LINE graph.
-
-    Intended scope:
-    - R12 LINE dumps emitted by dxf_compat for catalog/body-outline assets
-    - multiple simple loops that may touch at snapped vertices
-    - extra tree branches that should not create additional contours
-
-    Algorithm:
-    1. Quantize endpoints and build an undirected graph.
-    2. Iteratively prune degree-0/1 vertices to remove open branches.
-    3. On the remaining 2-core, walk bounded faces by taking the next clockwise
-       half-edge at each vertex in angular order.
-    4. Merge faces that share an edge, because interior diagonals/chords split a
-       single outer contour into multiple bounded faces even though the catalog
-       asset still has one closed outline.
-    """
-    adj: Dict[Tuple[float, float], List[Tuple[Tuple[float, float], int]]] = defaultdict(list)
-    edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
-    for (x1, y1), (x2, y2) in segments:
-        a = _quantize_point(x1, y1, quantum)
-        b = _quantize_point(x2, y2, quantum)
-        if a == b:
-            continue
-        eid = len(edges)
-        edges.append((a, b))
-        adj[a].append((b, eid))
-        adj[b].append((a, eid))
-
-    degrees = {vertex: len(neighbors) for vertex, neighbors in adj.items()}
-    remaining_edges = set(range(len(edges)))
-    queue = deque(vertex for vertex, degree in degrees.items() if degree < 2)
-    while queue:
-        cur = queue.popleft()
-        if degrees.get(cur, 0) >= 2:
-            continue
-        for nxt, eid in adj[cur]:
-            if eid not in remaining_edges:
-                continue
-            remaining_edges.remove(eid)
-            degrees[cur] -= 1
-            degrees[nxt] -= 1
-            if degrees[nxt] == 1:
-                queue.append(nxt)
-
-    remaining_adj: Dict[Tuple[float, float], List[Tuple[float, float]]] = defaultdict(list)
-    for eid in remaining_edges:
-        a, b = edges[eid]
-        remaining_adj[a].append(b)
-        remaining_adj[b].append(a)
-
-    if not remaining_adj:
-        return 0
-
-    ordered_neighbors: Dict[Tuple[float, float], List[Tuple[float, float]]] = {}
-    for vertex, neighbors in remaining_adj.items():
-        ordered_neighbors[vertex] = sorted(
-            neighbors,
-            key=lambda nxt: math.atan2(nxt[1] - vertex[1], nxt[0] - vertex[0]),
-        )
-
-    def next_half_edge(src: Tuple[float, float], dst: Tuple[float, float]) -> Tuple[float, float]:
-        neighbors = ordered_neighbors[dst]
-        idx = neighbors.index(src)
-        return neighbors[idx - 1]
-
-    visited_half_edges: set[Tuple[Tuple[float, float], Tuple[float, float]]] = set()
-    face_edges: List[set[frozenset[Tuple[float, float]]]] = []
-    for src, dst in [(a, b) for a, neighbors in remaining_adj.items() for b in neighbors]:
-        half_edge = (src, dst)
-        if half_edge in visited_half_edges:
-            continue
-        cycle: List[Tuple[float, float]] = []
-        cur_src, cur_dst = src, dst
-        while (cur_src, cur_dst) not in visited_half_edges:
-            visited_half_edges.add((cur_src, cur_dst))
-            cycle.append(cur_src)
-            nxt = next_half_edge(cur_src, cur_dst)
-            cur_src, cur_dst = cur_dst, nxt
-        if len(cycle) < 3 or (cur_src, cur_dst) != half_edge:
-            continue
-        area2 = 0.0
-        edges_in_face: set[frozenset[Tuple[float, float]]] = set()
-        for a, b in zip(cycle, cycle[1:] + cycle[:1]):
-            area2 += a[0] * b[1] - b[0] * a[1]
-            edges_in_face.add(frozenset((a, b)))
-        if area2 > 0.0:
-            face_edges.append(edges_in_face)
-
-    if not face_edges:
-        return 0
-
-    # Shared-edge faces come from interior diagonals/chords in one outline;
-    # vertex-only contact stays separate and still counts as multiple contours.
-    merged = 0
-    seen_faces: set[int] = set()
-    for idx in range(len(face_edges)):
-        if idx in seen_faces:
-            continue
-        merged += 1
-        stack = [idx]
-        while stack:
-            cur = stack.pop()
-            if cur in seen_faces:
-                continue
-            seen_faces.add(cur)
-            for other, edges_b in enumerate(face_edges):
-                if other not in seen_faces and face_edges[cur] & edges_b:
-                    stack.append(other)
-    return merged
-
-
-def count_closed_contours(entities: Iterable[Any]) -> int:
-    """Count closed body-outline contours across DXF entity types.
-
-    R12 (AC1009) files from dxf_compat use LINE segments, not LWPOLYLINE.
-    """
-    closed = 0
-    line_segments: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
-
-    for entity in entities:
-        etype = entity.dxftype()
-        if etype == "LWPOLYLINE":
-            if getattr(entity, "closed", False):
-                closed += 1
-        elif etype == "POLYLINE":
-            try:
-                if entity.is_closed:
-                    closed += 1
-            except (AttributeError, TypeError):
-                pass
-        elif etype == "CIRCLE":
-            closed += 1
-        elif etype == "LINE":
-            try:
-                start = entity.dxf.start
-                end = entity.dxf.end
-                line_segments.append(((start.x, start.y), (end.x, end.y)))
-            except (AttributeError, TypeError):
-                pass
-
-    closed += count_closed_line_loops(line_segments)
-    return closed
-
-
-# -----------------------------------------------------------------------------
 # Validation Functions
 # -----------------------------------------------------------------------------
 
@@ -365,9 +195,8 @@ def validate_dxf_file(path: Path) -> DXFValidationResult:
     entities = list(msp)
     result.total_entities = len(entities)
 
-    # Count closed contours and collect points for bounds.
-    # R12 files emit LINE chains (dxf_compat); do not require LWPOLYLINE.
-    closed_count = count_closed_contours(entities)
+    # Count closed polylines and points
+    closed_count = 0
     total_points = 0
     all_points: List[Tuple[float, float]] = []
 
@@ -378,11 +207,17 @@ def validate_dxf_file(path: Path) -> DXFValidationResult:
             total_points += len(points)
             all_points.extend(points)
 
+            if lwpoly.closed:
+                closed_count += 1
+
         elif entity.dxftype() == "POLYLINE":
+            # 2D/3D polyline
             try:
                 points = [(v.dxf.location.x, v.dxf.location.y) for v in entity.vertices]
                 total_points += len(points)
                 all_points.extend(points)
+                if entity.is_closed:
+                    closed_count += 1
             except (AttributeError, TypeError):
                 pass
 
@@ -401,43 +236,16 @@ def validate_dxf_file(path: Path) -> DXFValidationResult:
             except (AttributeError, TypeError):
                 pass
 
-        elif entity.dxftype() == "CIRCLE":
-            total_points += 16
-            try:
-                cx, cy, r = entity.dxf.center.x, entity.dxf.center.y, entity.dxf.radius
-                all_points.extend([(cx - r, cy), (cx + r, cy), (cx, cy - r), (cx, cy + r)])
-            except (AttributeError, TypeError):
-                pass
-
     result.closed_polylines = closed_count
     result.point_count = total_points
 
-    has_geometry = (
-        total_points > 0
-        or closed_count > 0
-        or any(entity.dxftype() in DRAWABLE_ENTITY_TYPES for entity in entities)
-    )
+    # Check for closed polylines
     if closed_count == 0:
-        # Half-body sketches and SPLINE outlines exist in the catalog.
-        # Fail only when the file has no drawable geometry at all.
-        if not has_geometry:
-            result.issues.append(DXFIssue(
-                severity="ERROR",
-                message=(
-                    "No drawable geometry found. Body outline must contain "
-                    "LWPOLYLINE, POLYLINE, CIRCLE, LINE, ARC, or SPLINE entities."
-                ),
-                category="geometry",
-            ))
-        else:
-            result.issues.append(DXFIssue(
-                severity="WARNING",
-                message=(
-                    "No closed contour found (LWPOLYLINE, POLYLINE, CIRCLE, or "
-                    "closed R12 LINE chain). File still has drawable geometry."
-                ),
-                category="geometry",
-            ))
+        result.issues.append(DXFIssue(
+            severity="ERROR",
+            message="No closed LWPOLYLINE found. Body outline must be a closed polygon.",
+            category="geometry",
+        ))
 
     # Check point density
     if total_points > 0 and total_points < MIN_POINTS_PRODUCTION:

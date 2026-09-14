@@ -17,13 +17,7 @@
       "services/api/app/instrument_geometry/specs/gibson_explorer.json",
       "services/api/scripts/run_blueprint_dedupe_fixture_regression.py",
       "data/instrument_plans/12string_dreadnought/",
-      "data/instrument_plans/epiphone_spartan/",
-      ".github/workflows/dxf_validation_gate.yml",
-      "ci/file_size_baseline.json",
-      "scripts/validate_dxf_assets.py",
-      "services/api/app/cam/dxf_advanced_validation.py",
-      "services/api/app/ci/check_dxf_files.py",
-      "services/api/tests/test_dxf_asset_closed_contours.py"
+      "data/instrument_plans/epiphone_spartan/"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/custody-remed-001-restricted-source-media.json",
@@ -45,18 +39,12 @@
       "data/instrument_plans/epiphone_spartan/spartan_specs.json",
       "data/instrument_plans/epiphone_spartan/sheet1_body.jpg",
       "data/instrument_plans/epiphone_spartan/sheet2_neck.jpg",
-      "data/instrument_plans/epiphone_spartan/sheet3_arch.jpg",
-      ".github/workflows/dxf_validation_gate.yml",
-      "ci/file_size_baseline.json",
-      "scripts/validate_dxf_assets.py",
-      "services/api/app/cam/dxf_advanced_validation.py",
-      "services/api/app/ci/check_dxf_files.py",
-      "services/api/tests/test_dxf_asset_closed_contours.py"
+      "data/instrument_plans/epiphone_spartan/sheet3_arch.jpg"
     ]
   },
   "diff_articulation": {
-    "what_changed": "13 deletions: the LonelyStar PDF, its three page PNGs, two DXFs traced from it in docs/archive and two in the production folder instrument_geometry/body/dxf/electric/, plus the five Antes plan scans in data/instrument_plans/. Forced repairs only: the fixture regression drops the gibson_explorer entry (with a comment saying why and that coverage fell from three fixtures to two); gibson_explorer.json cites the source id instead of the removed path; the LonelyStar README becomes a custody stub keeping only the bounded comparison values; the Spartan README and spartan_specs.json replace 'see sheet3_arch.jpg' with the plan sheet reference; both plan READMEs state that the sheets are held in the owner's private reference corpus. Follow-up: make the three red DXF CI jobs pass without restoring restricted media. DXF Validation Gate died on fastapi import; DXF Asset Validation failed R12 LINE dumps as 'no closed LWPOLYLINE' and blocked AC1024 catalog files. Catalog gates now parse-and-inventory; runtime DXFPreflight is unchanged. The CI file-size baseline is added because scripts/validate_dxf_assets.py grew to accommodate that gate repair and the ratchet must record the new size.",
-    "why_not_redundant": "No existing manifest covers these paths. This is a custody change, not a feature or dependency change, so no other patch's manifest describes it - borrowing one is what CBSP21-NOBORROW-001 refuses. The DXF CI jobs are triggered by this PR's instrument_geometry DXF deletions; they were red on main too. This increment unblocks merge without rewriting catalog geometry."
+    "what_changed": "13 deletions: the LonelyStar PDF, its three page PNGs, two DXFs traced from it in docs/archive and two in the production folder instrument_geometry/body/dxf/electric/, plus the five Antes plan scans in data/instrument_plans/. Forced repairs only: the fixture regression drops the gibson_explorer entry (with a comment saying why and that coverage fell from three fixtures to two); gibson_explorer.json cites the source id instead of the removed path; the LonelyStar README becomes a custody stub keeping only the bounded comparison values; the Spartan README and spartan_specs.json replace 'see sheet3_arch.jpg' with the plan sheet reference; both plan READMEs state that the sheets are held in the owner's private reference corpus.",
+    "why_not_redundant": "No existing manifest covers these paths. This is a custody change, not a feature or dependency change, so no other patch's manifest describes it - borrowing one is what CBSP21-NOBORROW-001 refuses."
   },
   "verification": {
     "commands_run": [
@@ -65,327 +53,29 @@
       "py -3.11 services/api/scripts/run_blueprint_dedupe_fixture_regression.py -> OVERALL PASS on 2 fixtures",
       "json.load on gibson_explorer.json and spartan_specs.json -> parse; value fields unchanged",
       "python scripts/ci/check_cbsp21_gate.py --changed-files <files>",
-      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
-      "PYTHONPATH=services/api python3 -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest -> 10 passed",
-      "python3 scripts/validate_dxf_assets.py --root services/api/app/instrument_geometry -> PASSED with warnings",
-      "cd services/api && PYTHONPATH=. python3 -m app.ci.check_dxf_files -> PASSED"
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
   },
   "files": [
-    {
-      "path": ".cbsp21/patches/custody-remed-001-restricted-source-media.json",
-      "intent": "This manifest.",
-      "scan_targets": [
-        ".cbsp21/patches/custody-remed-001-restricted-source-media.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "check_cbsp21_patch_input.py"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_lonelystar.pdf",
-      "intent": "Delete licensed third-party blueprint (original media).",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page1_top_side_views.png",
-      "intent": "Delete page render of the licensed blueprint.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.png",
-      "intent": "Delete page render of the licensed blueprint.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page3_neck_frets.png",
-      "intent": "Delete page render of the licensed blueprint.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.dxf",
-      "intent": "Delete DXF traced from the licensed blueprint.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/",
-        "services/api/scripts/run_blueprint_dedupe_fixture_regression.py"
-      ],
-      "risk": "low",
-      "behavior_change": "fixture regression no longer finds it - entry removed in the same change",
-      "verification": [
-        "fixture regression PASS"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities_primitives.dxf",
-      "intent": "Delete DXF traced from the licensed blueprint.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_blueprint_page2_body_cavities_phase3.dxf",
-      "intent": "Delete DXF traced from the licensed blueprint (production folder).",
-      "scan_targets": [
-        "services/api/app/instrument_geometry/body/dxf/electric/",
-        "services/api/scripts/run_blueprint_dedupe_fixture_regression.py"
-      ],
-      "risk": "low",
-      "behavior_change": "fixture regression no longer finds it - entry removed in the same change; no other reader",
-      "verification": [
-        "git grep explorer_blueprint -- '*.py' '*.json' -> none"
-      ]
-    },
-    {
-      "path": "services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_blueprint_page2_body_cavities_phase3_primitives.dxf",
-      "intent": "Delete DXF traced from the licensed blueprint (production folder).",
-      "scan_targets": [
-        "services/api/app/instrument_geometry/body/dxf/electric/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reader",
-      "verification": [
-        "git grep explorer_blueprint -- '*.py' '*.json' -> none"
-      ]
-    },
-    {
-      "path": "docs/archive/instrument_references/gibson_explorer/README.md",
-      "intent": "Replace with a custody stub: source id, bounded comparison values (not presented as verified), reason for removal.",
-      "scan_targets": [
-        "docs/archive/instrument_references/gibson_explorer/README.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none - documentation",
-      "verification": [
-        "read"
-      ]
-    },
-    {
-      "path": "services/api/app/instrument_geometry/specs/gibson_explorer.json",
-      "intent": "Source citation string: cite source id + private corpus instead of the removed path. No value field changes.",
-      "scan_targets": [
-        "services/api/app/instrument_geometry/specs/gibson_explorer.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none - the source field is descriptive; values unchanged",
-      "verification": [
-        "json.load parses; diff is one string on line 4"
-      ]
-    },
-    {
-      "path": "services/api/scripts/run_blueprint_dedupe_fixture_regression.py",
-      "intent": "Drop the gibson_explorer fixture (both candidates removed); comment states the reason and the reduced coverage.",
-      "scan_targets": [
-        "services/api/scripts/run_blueprint_dedupe_fixture_regression.py",
-        ".github/workflows/blueprint-dedupe-regression.yml"
-      ],
-      "risk": "low",
-      "behavior_change": "PR-validation suite covers 2 fixtures instead of 3",
-      "verification": [
-        "script runs: OVERALL PASS"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/12string_dreadnought/sheet1_body.jpg",
-      "intent": "Delete scan of purchased plan AGP-03.",
-      "scan_targets": [
-        "data/instrument_plans/"
-      ],
-      "risk": "low",
-      "behavior_change": "none - no code reads data/instrument_plans/",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/12string_dreadnought/sheet2_neck.jpg",
-      "intent": "Delete scan of purchased plan AGP-03.",
-      "scan_targets": [
-        "data/instrument_plans/"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/12string_dreadnought/README.md",
-      "intent": "State that the plan sheets are held in the owner's private reference corpus.",
-      "scan_targets": [
-        "data/instrument_plans/12string_dreadnought/README.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "read"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/epiphone_spartan/sheet1_body.jpg",
-      "intent": "Delete scan of purchased plan AGP-11.",
-      "scan_targets": [
-        "data/instrument_plans/"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/epiphone_spartan/sheet2_neck.jpg",
-      "intent": "Delete scan of purchased plan AGP-11.",
-      "scan_targets": [
-        "data/instrument_plans/"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/epiphone_spartan/sheet3_arch.jpg",
-      "intent": "Delete scan of purchased plan AGP-11.",
-      "scan_targets": [
-        "data/instrument_plans/"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "absent from HEAD tree"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/epiphone_spartan/README.md",
-      "intent": "Replace 'see sheet3_arch.jpg' with the plan sheet reference; state private-corpus custody.",
-      "scan_targets": [
-        "data/instrument_plans/epiphone_spartan/README.md"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "read"
-      ]
-    },
-    {
-      "path": "data/instrument_plans/epiphone_spartan/spartan_specs.json",
-      "intent": "One note string: 'see sheet3_arch.jpg' -> 'see AGP-11 sheet 3 (private reference corpus)'. No value changes.",
-      "scan_targets": [
-        "data/instrument_plans/epiphone_spartan/spartan_specs.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none",
-      "verification": [
-        "json.load parses; diff is one string"
-      ]
-    },
-    {
-      "path": ".github/workflows/dxf_validation_gate.yml",
-      "intent": "Comment-only: catalog parse gate vs runtime CAM preflight.",
-      "scan_targets": [
-        ".github/workflows/dxf_validation_gate.yml"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
-      "verification": [
-        "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
-      ]
-    },
-    {
-      "path": "ci/file_size_baseline.json",
-      "intent": "Record the new scripts/validate_dxf_assets.py size after the DXF gate repair so the file-size ratchet matches this PR.",
-      "scan_targets": [
-        "ci/file_size_baseline.json"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI ratchet metadata only",
-      "verification": [
-        "python - <<'PY' ... json load / key check for scripts/validate_dxf_assets.py ..."
-      ]
-    },
-    {
-      "path": "scripts/validate_dxf_assets.py",
-      "intent": "Accept R12 LINE loops and R2010 catalog assets; missing closed contour is a warning when geometry exists.",
-      "scan_targets": [
-        "scripts/validate_dxf_assets.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
-      "verification": [
-        "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
-      ]
-    },
-    {
-      "path": "services/api/app/cam/dxf_advanced_validation.py",
-      "intent": "Lazy-import dxf_compat so the DXF CI job (ezdxf+shapely only) can import TopologyValidator without fastapi.",
-      "scan_targets": [
-        "services/api/app/cam/dxf_advanced_validation.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
-      "verification": [
-        "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
-      ]
-    },
-    {
-      "path": "services/api/app/ci/check_dxf_files.py",
-      "intent": "Catalog parse gate: fail on unreadable/empty/no-geometry; CAM preflight issues are advisory.",
-      "scan_targets": [
-        "services/api/app/ci/check_dxf_files.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
-      "verification": [
-        "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
-      ]
-    },
-    {
-      "path": "services/api/tests/test_dxf_asset_closed_contours.py",
-      "intent": "Pins R12 LINE loops, AC1024 allow, fastapi-free TopologyValidator import, and advisory open LWPOLYLINE.",
-      "scan_targets": [
-        "services/api/tests/test_dxf_asset_closed_contours.py"
-      ],
-      "risk": "low",
-      "behavior_change": "none - CI catalog gate / import isolation; runtime DXFPreflight unchanged",
-      "verification": [
-        "python -m pytest -o addopts= tests/test_dxf_asset_closed_contours.py --noconftest"
-      ]
-    }
+    {"path": ".cbsp21/patches/custody-remed-001-restricted-source-media.json", "intent": "This manifest.", "scan_targets": [".cbsp21/patches/custody-remed-001-restricted-source-media.json"], "risk": "low", "behavior_change": "none", "verification": ["check_cbsp21_patch_input.py"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_lonelystar.pdf", "intent": "Delete licensed third-party blueprint (original media).", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["absent from HEAD tree"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page1_top_side_views.png", "intent": "Delete page render of the licensed blueprint.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["absent from HEAD tree"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.png", "intent": "Delete page render of the licensed blueprint.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["absent from HEAD tree"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page3_neck_frets.png", "intent": "Delete page render of the licensed blueprint.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["absent from HEAD tree"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.dxf", "intent": "Delete DXF traced from the licensed blueprint.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/", "services/api/scripts/run_blueprint_dedupe_fixture_regression.py"], "risk": "low", "behavior_change": "fixture regression no longer finds it - entry removed in the same change", "verification": ["fixture regression PASS"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities_primitives.dxf", "intent": "Delete DXF traced from the licensed blueprint.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["absent from HEAD tree"]},
+    {"path": "services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_blueprint_page2_body_cavities_phase3.dxf", "intent": "Delete DXF traced from the licensed blueprint (production folder).", "scan_targets": ["services/api/app/instrument_geometry/body/dxf/electric/", "services/api/scripts/run_blueprint_dedupe_fixture_regression.py"], "risk": "low", "behavior_change": "fixture regression no longer finds it - entry removed in the same change; no other reader", "verification": ["git grep explorer_blueprint -- '*.py' '*.json' -> none"]},
+    {"path": "services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_blueprint_page2_body_cavities_phase3_primitives.dxf", "intent": "Delete DXF traced from the licensed blueprint (production folder).", "scan_targets": ["services/api/app/instrument_geometry/body/dxf/electric/"], "risk": "low", "behavior_change": "none - no code reader", "verification": ["git grep explorer_blueprint -- '*.py' '*.json' -> none"]},
+    {"path": "docs/archive/instrument_references/gibson_explorer/README.md", "intent": "Replace with a custody stub: source id, bounded comparison values (not presented as verified), reason for removal.", "scan_targets": ["docs/archive/instrument_references/gibson_explorer/README.md"], "risk": "low", "behavior_change": "none - documentation", "verification": ["read"]},
+    {"path": "services/api/app/instrument_geometry/specs/gibson_explorer.json", "intent": "Source citation string: cite source id + private corpus instead of the removed path. No value field changes.", "scan_targets": ["services/api/app/instrument_geometry/specs/gibson_explorer.json"], "risk": "low", "behavior_change": "none - the source field is descriptive; values unchanged", "verification": ["json.load parses; diff is one string on line 4"]},
+    {"path": "services/api/scripts/run_blueprint_dedupe_fixture_regression.py", "intent": "Drop the gibson_explorer fixture (both candidates removed); comment states the reason and the reduced coverage.", "scan_targets": ["services/api/scripts/run_blueprint_dedupe_fixture_regression.py", ".github/workflows/blueprint-dedupe-regression.yml"], "risk": "low", "behavior_change": "PR-validation suite covers 2 fixtures instead of 3", "verification": ["script runs: OVERALL PASS"]},
+    {"path": "data/instrument_plans/12string_dreadnought/sheet1_body.jpg", "intent": "Delete scan of purchased plan AGP-03.", "scan_targets": ["data/instrument_plans/"], "risk": "low", "behavior_change": "none - no code reads data/instrument_plans/", "verification": ["absent from HEAD tree"]},
+    {"path": "data/instrument_plans/12string_dreadnought/sheet2_neck.jpg", "intent": "Delete scan of purchased plan AGP-03.", "scan_targets": ["data/instrument_plans/"], "risk": "low", "behavior_change": "none", "verification": ["absent from HEAD tree"]},
+    {"path": "data/instrument_plans/12string_dreadnought/README.md", "intent": "State that the plan sheets are held in the owner's private reference corpus.", "scan_targets": ["data/instrument_plans/12string_dreadnought/README.md"], "risk": "low", "behavior_change": "none", "verification": ["read"]},
+    {"path": "data/instrument_plans/epiphone_spartan/sheet1_body.jpg", "intent": "Delete scan of purchased plan AGP-11.", "scan_targets": ["data/instrument_plans/"], "risk": "low", "behavior_change": "none", "verification": ["absent from HEAD tree"]},
+    {"path": "data/instrument_plans/epiphone_spartan/sheet2_neck.jpg", "intent": "Delete scan of purchased plan AGP-11.", "scan_targets": ["data/instrument_plans/"], "risk": "low", "behavior_change": "none", "verification": ["absent from HEAD tree"]},
+    {"path": "data/instrument_plans/epiphone_spartan/sheet3_arch.jpg", "intent": "Delete scan of purchased plan AGP-11.", "scan_targets": ["data/instrument_plans/"], "risk": "low", "behavior_change": "none", "verification": ["absent from HEAD tree"]},
+    {"path": "data/instrument_plans/epiphone_spartan/README.md", "intent": "Replace 'see sheet3_arch.jpg' with the plan sheet reference; state private-corpus custody.", "scan_targets": ["data/instrument_plans/epiphone_spartan/README.md"], "risk": "low", "behavior_change": "none", "verification": ["read"]},
+    {"path": "data/instrument_plans/epiphone_spartan/spartan_specs.json", "intent": "One note string: 'see sheet3_arch.jpg' -> 'see AGP-11 sheet 3 (private reference corpus)'. No value changes.", "scan_targets": ["data/instrument_plans/epiphone_spartan/spartan_specs.json"], "risk": "low", "behavior_change": "none", "verification": ["json.load parses; diff is one string"]}
   ]
 }
