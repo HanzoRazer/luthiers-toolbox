@@ -64,6 +64,26 @@ Disposition: unchanged. **UNADJUDICATED** pending the WIRING_CHANNEL CAM-consume
 ruling 2026-09-14). This is not evidence of defective geometry or of valid geometry; it shows that
 the validator treats every LWPOLYLINE as a polygon.
 
+## DXF Validation Gate: now runs, and fails honestly (owner ruling 2026-09-14, option 2)
+
+This PR also moves the `dxf_compat` import in `dxf_advanced_validation.py` from module level into
+the two test-DXF builders. `app.util`'s `__init__` imports `fastapi`, and the DXF Validation Gate job
+installs only `ezdxf` and `shapely`, so the job had been dying at import and checking nothing (red
+on main since 2026-05). Run the way CI runs it (from `services/api`, ezdxf 1.4.4 + shapely 2.1.2,
+no fastapi), `python -m app.ci.check_dxf_files` now completes: **95 files, 80 pass, 15 fail.**
+Those 15 are real findings. The gate stays red on purpose: making it green is the separate DXF
+catalog gate PR, with declarative asset/layer classes and evidence-backed quarantine records. No
+catalog file or gate rule changes here.
+
+| File(s) | Gate reason | Expected disposition (owner rulings 2026-09-14) |
+|---|---|---|
+| `classical_body`, `dreadnought_body`, `gibson_l_00_body`, `om_000_body`, `soprano_ukulele_body` | open, self-crossing polyline on `BODY_POINTS` | declared reference layer, exempt from outline rules |
+| `carlos_jumbo_body`, `mandolin_body`, `jaguar_body`, `mustang_body` | "No CAM-compatible entities": body is one closed R12 POLYLINE | closed POLYLINE accepted as a body outline |
+| `Stratocaster_body` | `BODY_OUTLINE` self-intersecting (folded ring) | quarantine candidate (strongest) |
+| `smart_guitar_front_v6_smoothed` | `BODY_OUTLINE` self-intersecting (F1; visible only with this PR's CRLF fix) | quarantine candidate |
+| `harmony_h44_body`, `concert_ukulele_body`, `octave_mandolin_body` | open `BODY_OUTLINE` (the uke and mandolin paths also cross themselves) | pending asset-intent adjudication |
+| `LesPaul_CAM_Closed` | open / 2-point / self-crossing `WIRING_CHANNEL` paths (F2) | UNADJUDICATED pending CAM-consumer trace |
+
 ## Operational consequence of the fix
 
 CRLF uploads are now topology-checked at export. A CRLF DXF containing a self-intersecting or
