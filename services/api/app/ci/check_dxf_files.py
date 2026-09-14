@@ -145,6 +145,7 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
             "No drawable geometry found. Expected one of: "
             + ", ".join(sorted(CATALOG_GEOM_TYPES))
         )
+        return result
 
     # Advisory CAM preflight — do not fail the catalog gate on open LWPOLYLINE
     # or self-intersections. Those remain ERROR in the runtime DXFPreflight API.

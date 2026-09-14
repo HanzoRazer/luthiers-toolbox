@@ -266,6 +266,19 @@ def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
     assert result["warnings"]
 
 
+def test_check_dxf_files_rejects_text_only_before_advisory_checks(tmp_path):
+    from app.ci.check_dxf_files import validate_dxf_file
+
+    doc = ezdxf.new("R2010")
+    doc.modelspace().add_text("notes", dxfattribs={"layer": "TEXT"})
+    path = tmp_path / "text_only.dxf"
+    doc.saveas(str(path))
+    result = validate_dxf_file(path)
+    assert not result["passed"]
+    assert any("No drawable geometry found" in error for error in result["errors"])
+    assert result["warnings"] == []
+
+
 def test_topology_validator_processes_basic_square():
     """TopologyValidator still validates a simple closed square."""
     from app.cam.dxf_advanced_validation import TopologyValidator
