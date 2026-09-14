@@ -266,6 +266,36 @@ def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
     assert result["warnings"]
 
 
+def test_check_dxf_files_self_intersection_is_advisory(tmp_path):
+    from app.ci.check_dxf_files import validate_dxf_file
+    from app.cam.dxf_advanced_validation import Severity
+
+    doc = ezdxf.new("R2000")
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (100, 0), (100, 60), (0, 60)], close=True)
+    path = tmp_path / "self_intersecting.dxf"
+    doc.saveas(str(path))
+
+    class _FakeTopologyIssue:
+        severity = Severity.ERROR
+        category = "geometry"
+        message = "Self-intersecting polygon on layer '0'"
+        layer = "0"
+        repair_suggestion = "Manual cleanup required"
+
+    class _FakeTopologyReport:
+        self_intersections = 1
+        degenerate_polygons = 0
+        issues = [_FakeTopologyIssue()]
+
+    with patch("app.ci.check_dxf_files.TopologyValidator") as validator_cls:
+        validator_cls.return_value.check_self_intersections.return_value = _FakeTopologyReport()
+        result = validate_dxf_file(path)
+
+    assert result["passed"], result["errors"]
+    assert any("Self-intersecting polygon" in warning["message"] for warning in result["warnings"])
+
+
 def test_check_dxf_files_rejects_text_only_before_advisory_checks(tmp_path):
     from app.ci.check_dxf_files import validate_dxf_file
 
@@ -277,6 +307,18 @@ def test_check_dxf_files_rejects_text_only_before_advisory_checks(tmp_path):
     assert not result["passed"]
     assert any("No drawable geometry found" in error for error in result["errors"])
     assert result["warnings"] == []
+
+
+def test_check_dxf_files_rejects_degenerate_lwpolyline(tmp_path):
+    from app.ci.check_dxf_files import validate_dxf_file
+
+    doc = ezdxf.new("R2000")
+    doc.modelspace().add_lwpolyline([(0, 0), (100, 0)], close=False)
+    path = tmp_path / "degenerate.dxf"
+    doc.saveas(str(path))
+    result = validate_dxf_file(path)
+    assert not result["passed"]
+    assert any("only 2 points" in error for error in result["errors"])
 
 
 def test_topology_validator_processes_basic_square():

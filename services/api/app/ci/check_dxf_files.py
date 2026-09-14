@@ -81,6 +81,17 @@ def _dxf_version_number(version: str) -> Optional[int]:
     return int(suffix) if suffix.isdigit() else None
 
 
+def _is_advisory_preflight_issue(issue: Any) -> bool:
+    message = issue.message.lower()
+    return issue.severity == Severity.WARNING or (
+        issue.category == "geometry" and "open lwpolyline" in message
+    ) or "no cam-compatible entities found" in message
+
+
+def _is_advisory_topology_issue(issue: Any) -> bool:
+    return issue.severity == Severity.WARNING or "Self-intersecting polygon" in issue.message
+
+
 def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
     """
     Catalog-parse a single DXF file.
@@ -163,8 +174,11 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
                 issue_dict["layer"] = issue.layer
             if issue.suggestion:
                 issue_dict["suggestion"] = issue.suggestion
-            if issue.severity in (Severity.ERROR, Severity.WARNING):
+            if _is_advisory_preflight_issue(issue):
                 result["warnings"].append(issue_dict)
+            elif issue.severity == Severity.ERROR:
+                result["passed"] = False
+                result["errors"].append(issue.message)
     except (ValueError, TypeError, AttributeError) as e:
         result["warnings"].append(f"Preflight validation skipped: {e}")
 
@@ -183,8 +197,11 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
                 issue_dict["layer"] = issue.layer
             if issue.repair_suggestion:
                 issue_dict["repair_suggestion"] = issue.repair_suggestion
-            if issue.severity in (Severity.ERROR, Severity.WARNING):
+            if _is_advisory_topology_issue(issue):
                 result["warnings"].append(issue_dict)
+            elif issue.severity == Severity.ERROR:
+                result["passed"] = False
+                result["errors"].append(issue.message)
     except (ValueError, TypeError, AttributeError) as e:
         result["warnings"].append(f"Topology validation skipped: {e}")
 
