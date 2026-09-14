@@ -1,0 +1,88 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MARKED_18_0_12_BUMP",
+  "title": "build(deps): bump marked from 18.0.10 to 18.0.12",
+  "intent": "Routine Dependabot currency, no advisory. marked 18.0.10 -> 18.0.12 in packages/client (runtime dependency). Patch-level: 10 upstream parser-conformance fixes across 18.0.11 and 18.0.12, no API change. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none in the shipped app. Lockfile audited against merge base 7685411c (= origin/main at audit time; the branch is not behind main) by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 entry changed version: marked 18.0.10 -> 18.0.12, with only its `resolved` (registry.npmjs.org, both sides) and `integrity` fields moving alongside. Zero packages added, zero removed, zero entries whose version stayed the same while other fields changed, apart from the root entry, which differs in exactly one key: dependencies.marked ^18.0.10 -> ^18.0.12. The new integrity hash equals the value the npm registry publishes for marked@18.0.12 (sha512-LEm4ga2Y...GuFScA==), so the tarball is the genuine release. Consumer analysis: marked has exactly one importer in packages/client/src, views/RMOSCncJobDetailView.vue, and that view is not mounted -- it is absent from router/index.ts, referenced by no other client file, and unreachable from src/main.ts in a full static+dynamic import-graph walk (824 of 1434 source files reachable; this one is not). A module no entry reaches is not bundled, so no user-facing code path renders with marked today.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/marked-18.0.12-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/marked-18.0.12-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for marked from ^18.0.10 to ^18.0.12 -- one line, no other dependency touched. package-lock.json resolves it: marked 18.0.10 -> 18.0.12. No incidental version movement; the added, removed and non-marked changed sets are all empty. Upstream content (release notes, markedjs/marked): 18.0.11 -- no nested link inside a link; per-call reflink-mask rebuild; keep emphasis in a rejected reference link. 18.0.12 -- tab before an ATX closing sequence; one more level of nested link-label brackets; no newline added to an empty code block; escape character references in autolink destinations; reject GFM email autolinks whose domain ends in _ or -; reject invalid characters in HTML tag names; strip fence indentation per content line. All are CommonMark/GFM conformance fixes; two of them tighten the HTML marked emits.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff, and five manifests written for other dependency work (dep-sec-001a-tier1-remediation, dep-sec-pr281-types-node, dep-sec-pr287-zod4, dep-sec-pr302-jsdom-happy-dom, happy-dom-20.14.0-bump) would each have covered these two files -- the CBSP21 gate named all five and refused to borrow them, which is CBSP21-NOBORROW-001 working as designed."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 07ffba4d reported 'this PR declares no CBSP21 manifest of its own' and listed the five refused borrow candidates -- the gates were correct; the PR lacked a manifest",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 7685411c: entries 412 -> 412, version-changed=1 (marked 18.0.10 -> 18.0.12), added=0, removed=0, same-version-but-entry-changed=root only (dependencies.marked)",
+      "supply-chain: `npm view marked@18.0.12 dist.integrity` equals the lockfile integrity; 18.0.12 published 2026-09-07T20:40Z, 18.0.11 2026-08-24",
+      "consumer trace: sole importer views/RMOSCncJobDetailView.vue; not in router/index.ts; no other file references it; unreachable from src/main.ts by import-graph walk",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/marked-18.0.12-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selected this PR's own manifest; changed_files=3)",
+      "CI is the only build/test verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^18.0.10 -> ^18.0.12.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed (dependencies.marked); no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - marked 18.0.10 -> 18.0.12; no incidental movement, additions or removals; integrity matches the npm registry",
+      "verification": [
+        "lockfile entry enumeration -> non-marked touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/marked-18.0.12-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/marked-18.0.12-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-14-MARKED",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface; this PR introduces no finding. Recorded here because the audit surfaced it, NOT because this PR causes it: the only marked consumer, views/RMOSCncJobDetailView.vue, renders server-supplied markdown (job.operator_report_md) through marked() straight into v-html, and packages/client declares no HTML sanitizer. marked does not sanitize its output. The view is unmounted today, so the sink is latent rather than exploitable -- but routing that view as it stands would open a stored-XSS path. That is a separate, pre-existing issue for its own order; it is not remediated in a dependency bump.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
