@@ -8,8 +8,8 @@ Body: Archtop with f-holes
 
 Top: Quarter-sawn spruce
 
-Arch: Top and back similar (see sheet3_arch.jpg)
+Arch: Top and back similar (see AGP-11 sheet 3 in the owner's private reference corpus)
 
 Significance: Direct competitor to 1941 Gibson L-37
 
-Source: Purchased plan set
+Source: Purchased plan set. The plan sheets themselves are held in the owner's private reference corpus, not in this repository.

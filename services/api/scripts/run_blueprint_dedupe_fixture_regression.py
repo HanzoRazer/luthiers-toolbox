@@ -47,11 +47,11 @@ FLAG = "BLUEPRINT_ENABLE_GEOMETRY_DEDUPE"
 # Per-fixture candidate paths (relative to repo root), in priority order.
 # First existing match wins; LINE-based extraction DXFs are preferred because the
 # cleanup path chains LINE entities (LWPOLYLINE-only files are not valid raw input).
+#
+# The former "gibson_explorer" fixture was removed by CUSTODY-REMED-001: both of its
+# candidate DXFs were traced from a licensed third-party blueprint that may not be
+# held in this public repository. This suite now covers two fixtures instead of three.
 FIXTURE_CANDIDATES: dict[str, list[str]] = {
-    "gibson_explorer": [
-        "docs/archive/instrument_references/gibson_explorer/gibson_explorer_blueprint_page2_body_cavities.dxf",
-        "services/api/app/instrument_geometry/body/dxf/electric/gibson_explorer_blueprint_page2_body_cavities_phase3.dxf",
-    ],
     "melody_maker": [
         "services/api/app/instrument_geometry/body/dxf/electric/Gibson-Melody-Maker_phase3.dxf",
         "phase4_output/melody_maker_geometry_only.dxf",
