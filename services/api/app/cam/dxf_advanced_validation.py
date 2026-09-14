@@ -264,7 +264,6 @@ from enum import Enum
 import ezdxf
 from shapely.geometry import Polygon, LineString, Point
 
-from app.util.dxf_compat import create_document
 from shapely.validation import explain_validity
 from shapely.ops import unary_union
 from shapely.errors import GEOSException
@@ -573,6 +572,8 @@ def create_test_figure8_dxf() -> bytes:
     Returns:
         DXF file bytes
     """
+    from app.util.dxf_compat import create_document
+
     doc = create_document(version='R2010')
     msp = doc.modelspace()
     
@@ -601,6 +602,8 @@ def create_test_valid_dxf() -> bytes:
     Returns:
         DXF file bytes
     """
+    from app.util.dxf_compat import create_document
+
     doc = create_document(version='R2010')
     msp = doc.modelspace()
     

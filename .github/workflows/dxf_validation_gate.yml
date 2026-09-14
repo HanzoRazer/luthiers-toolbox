@@ -8,9 +8,9 @@
 # - Pull requests touching DXF files or instrument_geometry/
 #
 # Requirements (from GAP_ANALYSIS_MASTER.md):
-# 1. Must be AC1009 or later (AutoCAD R12+)
-# 2. Must have at least 1 closed LWPOLYLINE
-# 3. Bounding box must be within reasonable dimensions
+# 1. Must parse and be AC1009 (R12) or later
+# 2. Must contain drawable geometry (including R12 POLYLINE / LINE chains)
+# 3. Runtime CAM preflight remains advisory in this CI wrapper
 
 name: DXF Validation Gate
 
