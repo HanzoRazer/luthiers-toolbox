@@ -85,6 +85,17 @@ def test_count_closed_line_loops_square_with_dangling_segment(validator):
     assert validator.count_closed_line_loops(segs) == 1
 
 
+def test_count_closed_line_loops_square_with_diagonal(validator):
+    segs = [
+        ((0.0, 0.0), (10.0, 0.0)),
+        ((10.0, 0.0), (10.0, 10.0)),
+        ((10.0, 10.0), (0.0, 10.0)),
+        ((0.0, 10.0), (0.0, 0.0)),
+        ((0.0, 0.0), (10.0, 10.0)),
+    ]
+    assert validator.count_closed_line_loops(segs) == 1
+
+
 def test_r12_line_square_passes_asset_gate(validator):
     doc = ezdxf.new("R12")
     msp = doc.modelspace()

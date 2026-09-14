@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import defaultdict, deque
 from dataclasses import dataclass, field, asdict
@@ -151,7 +152,7 @@ def count_closed_line_loops(
     segments: Iterable[Tuple[Tuple[float, float], Tuple[float, float]]],
     quantum: float = _LINE_ENDPOINT_QUANTUM_MM,
 ) -> int:
-    """Count independent closed loops in an undirected LINE graph."""
+    """Count closed contours in an undirected LINE graph."""
     adj: Dict[Tuple[float, float], List[Tuple[Tuple[float, float], int]]] = defaultdict(list)
     edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
     for (x1, y1), (x2, y2) in segments:
@@ -180,31 +181,70 @@ def count_closed_line_loops(
             if degrees[nxt] == 1:
                 queue.append(nxt)
 
-    loops = 0
-    seen: set[Tuple[float, float]] = set()
-    for start in adj:
-        if degrees.get(start, 0) < 2:
+    remaining_adj: Dict[Tuple[float, float], List[Tuple[float, float]]] = defaultdict(list)
+    for eid in remaining_edges:
+        a, b = edges[eid]
+        remaining_adj[a].append(b)
+        remaining_adj[b].append(a)
+
+    if not remaining_adj:
+        return 0
+
+    ordered_neighbors: Dict[Tuple[float, float], List[Tuple[float, float]]] = {}
+    for vertex, neighbors in remaining_adj.items():
+        ordered_neighbors[vertex] = sorted(
+            neighbors,
+            key=lambda nxt: math.atan2(nxt[1] - vertex[1], nxt[0] - vertex[0]),
+        )
+
+    def next_half_edge(src: Tuple[float, float], dst: Tuple[float, float]) -> Tuple[float, float]:
+        neighbors = ordered_neighbors[dst]
+        idx = neighbors.index(src)
+        return neighbors[idx - 1]
+
+    visited_half_edges: set[Tuple[Tuple[float, float], Tuple[float, float]]] = set()
+    face_edges: List[set[frozenset[Tuple[float, float]]]] = []
+    for src, dst in [(a, b) for a, neighbors in remaining_adj.items() for b in neighbors]:
+        half_edge = (src, dst)
+        if half_edge in visited_half_edges:
             continue
-        if start in seen:
+        cycle: List[Tuple[float, float]] = []
+        cur_src, cur_dst = src, dst
+        while (cur_src, cur_dst) not in visited_half_edges:
+            visited_half_edges.add((cur_src, cur_dst))
+            cycle.append(cur_src)
+            nxt = next_half_edge(cur_src, cur_dst)
+            cur_src, cur_dst = cur_dst, nxt
+        if len(cycle) < 3 or (cur_src, cur_dst) != half_edge:
             continue
-        stack = [start]
-        component_vertices: set[Tuple[float, float]] = set()
-        component_edges: set[int] = set()
+        area2 = 0.0
+        edges_in_face: set[frozenset[Tuple[float, float]]] = set()
+        for a, b in zip(cycle, cycle[1:] + cycle[:1]):
+            area2 += a[0] * b[1] - b[0] * a[1]
+            edges_in_face.add(frozenset((a, b)))
+        if area2 > 0.0:
+            face_edges.append(edges_in_face)
+
+    if not face_edges:
+        return 0
+
+    merged = 0
+    seen_faces: set[int] = set()
+    for idx, edges_a in enumerate(face_edges):
+        if idx in seen_faces:
+            continue
+        merged += 1
+        stack = [idx]
         while stack:
             cur = stack.pop()
-            if cur in component_vertices:
+            if cur in seen_faces:
                 continue
-            component_vertices.add(cur)
-            seen.add(cur)
-            for nxt, eid in adj[cur]:
-                if eid not in remaining_edges:
-                    continue
-                component_edges.add(eid)
-                if nxt not in component_vertices:
-                    stack.append(nxt)
-        if len(component_edges) >= 3:
-            loops += max(0, len(component_edges) - len(component_vertices) + 1)
-    return loops
+            seen_faces.add(cur)
+            for other, edges_b in enumerate(face_edges):
+                if other not in seen_faces and edges_a & edges_b:
+                    stack.append(other)
+                    edges_a |= edges_b
+    return merged
 
 
 def count_closed_contours(entities: Iterable[Any]) -> int:
