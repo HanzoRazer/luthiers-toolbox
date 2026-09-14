@@ -132,6 +132,7 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
             f"DXF version {version} ({version_friendly}) is too old. "
             f"Minimum: {MIN_DXF_VERSION} ({DXF_VERSION_MAP.get(MIN_DXF_VERSION, 'R12')})"
         )
+        return result
 
     if not msp_entities:
         result["passed"] = False

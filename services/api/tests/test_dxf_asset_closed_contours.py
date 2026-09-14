@@ -9,6 +9,7 @@ import importlib.util
 import io
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import ezdxf
 import pytest
@@ -218,6 +219,33 @@ def test_check_dxf_files_accepts_ac1024(tmp_path):
     result = validate_dxf_file(path)
     assert result["info"]["dxf_version"] == "AC1024"
     assert result["passed"], result["errors"]
+
+
+def test_check_dxf_files_rejects_pre_r12_before_advisory_checks(tmp_path):
+    path = tmp_path / "body_r10.dxf"
+    path.write_text("placeholder", encoding="utf-8")
+
+    class _FakeEntity:
+        def dxftype(self):
+            return "LINE"
+
+    class _FakeDoc:
+        dxfversion = "AC1006"
+
+        def modelspace(self):
+            return [_FakeEntity()]
+
+    with (
+        patch("app.ci.check_dxf_files.ezdxf.readfile", return_value=_FakeDoc()),
+        patch("app.ci.check_dxf_files.DXFPreflight", side_effect=AssertionError("DXFPreflight should not run")),
+        patch("app.ci.check_dxf_files.TopologyValidator", side_effect=AssertionError("TopologyValidator should not run")),
+    ):
+        from app.ci.check_dxf_files import validate_dxf_file
+
+        result = validate_dxf_file(path)
+    assert not result["passed"]
+    assert any("too old" in error for error in result["errors"])
+    assert result["warnings"] == []
 
 
 def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
