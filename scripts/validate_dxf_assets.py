@@ -152,7 +152,22 @@ def count_closed_line_loops(
     segments: Iterable[Tuple[Tuple[float, float], Tuple[float, float]]],
     quantum: float = _LINE_ENDPOINT_QUANTUM_MM,
 ) -> int:
-    """Count closed contours in an undirected LINE graph."""
+    """Count closed contours in an undirected LINE graph.
+
+    Intended scope:
+    - R12 LINE dumps emitted by dxf_compat for catalog/body-outline assets
+    - multiple simple loops that may touch at snapped vertices
+    - extra tree branches that should not create additional contours
+
+    Algorithm:
+    1. Quantize endpoints and build an undirected graph.
+    2. Iteratively prune degree-0/1 vertices to remove open branches.
+    3. On the remaining 2-core, walk bounded faces by taking the next clockwise
+       half-edge at each vertex in angular order.
+    4. Merge faces that share an edge, because interior diagonals/chords split a
+       single outer contour into multiple bounded faces even though the catalog
+       asset still has one closed outline.
+    """
     adj: Dict[Tuple[float, float], List[Tuple[Tuple[float, float], int]]] = defaultdict(list)
     edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
     for (x1, y1), (x2, y2) in segments:
@@ -228,6 +243,8 @@ def count_closed_line_loops(
     if not face_edges:
         return 0
 
+    # Shared-edge faces come from interior diagonals/chords in one outline;
+    # vertex-only contact stays separate and still counts as multiple contours.
     merged = 0
     seen_faces: set[int] = set()
     for idx in range(len(face_edges)):
