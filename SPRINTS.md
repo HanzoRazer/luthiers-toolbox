@@ -963,6 +963,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-014 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
 | MAINT-DEFER-015 | `scaffold_agents_md.py --dry-run` dies on a cp1252 console (U+2500 fences) | Process / tooling | QUEUED | 2026-09-09 |
 | MAINT-DEFER-016 | `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-09-09 |
+| NECK-DEFER-001 | Neck & fretboard solver: wire into the Toolbox as a generic neck tool (width, compound radius, board and neck thickness, back profile at any station; DXF sections) | API / instrument geometry / client / DXF | DEFERRED | 2026-09-13 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
 | CI-RED-003 | debt-gates complexity ratchet (current SAW batch tail) — **CLOSED by witness:** `technical_debt.yml` green on `main` (run `28693530077` @ `e1310768`, 2026-07-04); the `batch_router.py` complexity tail no longer trips the ratcheted `debt-gates` baseline. | CI / quality | CLOSED | 2026-07-04 |
@@ -1506,6 +1507,66 @@ rather than user-facing.
 touching the formula.
 
 **Path:** HYG — calculator correctness; latent, not on a shipped path.
+
+---
+
+### NECK-DEFER-001 — Neck & fretboard solver: wire into the Toolbox as a generic neck tool
+
+**Status:** DEFERRED (owner decision, 2026-09-13). Not started; no code in the repo.  
+**last_verified:** 2026-09-13 (anchors read on `origin/main` @ `0679dbf6`)  
+**Category:** API / instrument geometry / client / DXF  
+**Handoff (detail, evidence, spec):** `docs/handoffs/NECK_DEFER_001_NECK_FRETBOARD_SOLVER_HANDOFF_2026-09-13.md`  
+
+**Why deferred:** The files this wiring would touch are being rewritten by unmerged work, and four owner rulings
+are still open:
+- Inv-037 R4a (`fix/p1-r4a-fail-closed-resolution`) rewrites `routers/neck/gcode_router.py`,
+  `routers/neck/schemas.py`, `routers/neck/headstock_transition_export.py` and
+  `instrument_geometry/models/loader.py`.
+- The blocked DXF-writer extents fix (`fix/dxf-writer-extents`) rewrites the protected `cam/dxf_writer.py`.
+
+Starting now means conflicts and rework, and the preset contract changes when R4a lands.
+
+**What exists:** a standalone single-file solver outside the repo (owner-private artifact + an offline portable
+copy).
+- It calculates width (straight edges from the nut), fretboard radius (single / compound / true cone), board
+  centre and edge thickness, neck depth, and a superellipse back profile at any station.
+- It produces a table of every fret, 1:1 templates, and R12 mm DXF sections with a PROVENANCE layer
+  (PREVIEW / design reference, not for machining).
+- Verified: 7/7 neck acceptance vectors PASS; the DXF opens in AutoCAD's engine with 0 errors. The vectors and
+  the full model spec are in the handoff.
+
+**Plan when restored** (per `docs/governance/ARCHITECTURE_INVARIANTS.md`):
+- L1 `geometry/` → L2 `instrument_geometry/neck/`, reusing `fret_math` / `taper_math`, with one radius function.
+- L3 `calculators/`, with the acceptance vectors as pytest.
+- L4 `cam/`: an Export Object + `translators/dxf/neck_section_translator.py`, registered `validation_only`,
+  writing through `DxfWriter`, with a `DxfLifecycleContext` asserted at save.
+- L6: extend `routers/neck_router.py`.
+- Client: a beta panel in `views/cam/NeckView.vue` (Feature Parity State 3).
+- Phases P1 → P6, one PR each with a CBSP21 manifest. P4 (DXF) is gated on the extents fix and on the
+  translator lane opening.
+
+**Rulings required before any code** (justification in handoff §6):
+- **(a) Canonical compound-radius definition. Blocks P1.** For the same "10 in → 16 in" board, the radius at
+  the 12th is 14.00 / 13.33 / 12.26 in (linear in distance / curvature-linear / radius ∝ width). That is a
+  0.14 mm spread in edge height, and it feeds slots, levelling, CAM surfacing and binding.
+- **(b) Neck-angle definition. Blocks P6 only.** `neck_angle.py` aims the fret plane at the saddle crown, and
+  its "required saddle height" echoes its input (asserted at `tests/test_neck_angle.py:219`).
+- **(c) Ownership.** The neck model is generic (Production Shop); Smart Guitar presets stay separate, per
+  `docs/architecture/DXF_COMPAT_EXEMPTIONS.md` (SG = EXCLUDED_EXTERNAL_ECOSYSTEM).
+- **(d) Confirm `NeckView.vue` is canonical.** The feature parity policy requires the canonical implementation
+  to be declared before a beta shell is mounted.
+
+**Restore trigger:**
+- R4a is merged or abandoned, and the neck router files are stable on `main`.
+- `fix/dxf-writer-extents` is merged.
+- Rulings (a), (c) and (d) are recorded.
+- The owner gives an explicit GO.
+
+**First step on restore:** re-verify every handoff anchor against the then-current `main`, then port the 7
+acceptance vectors as pytest before any implementation.
+
+**Path:** not gating — a new capability. It blocks neither the MVP cut nor external work, because the
+standalone solver already serves the external CAD designer.
 
 ---
 
