@@ -1,0 +1,1187 @@
+{
+  "order": "G2-MANUFACTURING-SPINE-001",
+  "harness": "docs/audit/evidence/manufacturing_spine_current_state_001/method/run_runtime_witnesses.py",
+  "python": "3.11.9",
+  "fastapi": "0.137.2",
+  "ephemeral_state_root": "<tempdir, discarded>",
+  "witnesses": [
+    {
+      "cap": "retract",
+      "expect": "BLOCKED",
+      "method": "POST",
+      "path": "/api/cam/retract/gcode/download",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:160",
+      "synthetic_probe": true,
+      "request": {
+        "strategy": "direct",
+        "features": []
+      },
+      "status": 409,
+      "content_type": "application/json",
+      "bytes": 822,
+      "body_sha256": "cfbebcdd8a854f04cc6ecca472d88e8cfd38e6cf364b830abb077d71f3c8cd11",
+      "headers": {
+        "x-run-id": "run_be25b621288d4394a84f182b138bebe1",
+        "x-toolbox-lane": "governed"
+      },
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "error_detail": "{\"detail\": {\"error\": \"SAFETY_BLOCKED\", \"message\": \"Retract G-code generation blocked by server-side safety policy.\", \"run_id\": \"run_be25b621288d4394a84f182b138bebe1\", \"decision\": {\"risk_level\": \"UNKNOWN\", \"score\": null, \"block_reason\": \"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility engine for mode 'retract'\", \"warnings\": [\"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility eng",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "policy 409 on a valid request; no program emitted"
+    },
+    {
+      "cap": "adaptive",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/pocket/adaptive/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:24",
+      "synthetic_probe": true,
+      "request": {
+        "loops": [
+          {
+            "pts": [
+              [
+                0,
+                0
+              ],
+              [
+                100,
+                0
+              ],
+              [
+                100,
+                60
+              ],
+              [
+                0,
+                60
+              ]
+            ]
+          }
+        ],
+        "units": "mm",
+        "tool_d": 6.0,
+        "stepover": 0.45,
+        "stepdown": 2.0,
+        "margin": 0.5,
+        "strategy": "Spiral",
+        "smoothing": 0.5,
+        "climb": true,
+        "feed_xy": 1200.0,
+        "safe_z": 5.0,
+        "z_rough": -1.5
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 4411,
+      "body_sha256": "e5b475024d17d0bb958a8dae7b05074be15b5fd5522581bc70d93393a45cbd6a",
+      "headers": {
+        "x-run-id": "run_d45c90681f434c91ac8029b04a4f0870",
+        "x-gcode-sha256": "ca0de241fe47eb64b8727989c8e80843f5d5c64c59d1bb36814607eed3ceca4e",
+        "x-toolbox-lane": "governed"
+      },
+      "analysis": {
+        "lines": 165,
+        "cut_moves": 148,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -1.5,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 69.688,
+          "x_max": 94.8523,
+          "y_min": 32.2,
+          "y_max": 56.6356,
+          "x_span": 25.164,
+          "y_span": 24.436
+        },
+        "swept_coverage": 0.0568
+      },
+      "excerpt": "G21\n(POST=NONE;UNITS=mm;DATE=2026-09-11T15:28:29.811189Z)\n(GRBL CNC Controller)\nG90\nG17\nG21\nM3 S18000\nG4 P2",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "swept coverage 5.7% of the 100x60 pocket (need >= 80%); inside pocket: True; extent {'x_min': 69.688, 'x_max': 94.8523, 'y_min': 32.2, 'y_max': 56.6356, 'x_span': 25.164, 'y_span': 24.436}"
+    },
+    {
+      "cap": "drilling",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/drilling/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:113",
+      "synthetic_probe": true,
+      "request": {
+        "holes": [
+          {
+            "x": 10,
+            "y": 10,
+            "z": -5,
+            "feed": 500
+          }
+        ],
+        "cycle": "G83",
+        "peck_q": 2.0,
+        "safe_z": 5.0,
+        "units": "mm"
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 69,
+      "body_sha256": "d65bb9e97bad889b8a79fcf866663878d8830464dc09569daa844a96cd44f674",
+      "headers": {},
+      "analysis": {
+        "lines": 4,
+        "cut_moves": 0,
+        "canned_cycles": 1,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": -5.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 10.0,
+          "x_max": 10.0,
+          "y_min": 10.0,
+          "y_max": 10.0,
+          "x_span": 0.0,
+          "y_span": 0.0
+        }
+      },
+      "excerpt": "G90\nG0 Z5.000\nG83 X10.000 Y10.000 Z-5.000 R5.000 Q2.000 F500.000\nG80",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "1 canned cycle line(s); hole at (10,10)"
+    },
+    {
+      "cap": "profiling",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/profiling/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:252",
+      "synthetic_probe": true,
+      "request": {
+        "contour": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 80.0,
+            "y": 0.0
+          },
+          {
+            "x": 80.0,
+            "y": 50.0
+          },
+          {
+            "x": 0.0,
+            "y": 50.0
+          }
+        ]
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 2886,
+      "body_sha256": "e129a56a71c410be636a9f8cace67879bb275975e3c54d8207aea90ef54ae1b9",
+      "headers": {
+        "x-run-id": "run_19ddde22697640d0b3f29c852789281b",
+        "x-risk-level": "GREEN",
+        "x-gcode-sha256": "e129a56a71c410be636a9f8cace67879bb275975e3c54d8207aea90ef54ae1b9",
+        "x-toolbox-lane": "governed"
+      },
+      "analysis": {
+        "lines": 114,
+        "cut_moves": 80,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -4.5,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -3.475,
+          "x_max": 83.475,
+          "y_min": -3.475,
+          "y_max": 53.475,
+          "x_span": 86.95,
+          "y_span": 56.95
+        }
+      },
+      "excerpt": "(Profile Toolpath - Body Perimeter)\n(Tool: 6.35mm endmill)\n(Depth: 6.0mm in 3 passes)\n(Direction: climb)\n(Tabs: 4)\n\nG21 (Units: mm)\nG90 (Absolute positioning)",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "extent {'x_min': -3.475, 'x_max': 83.475, 'y_min': -3.475, 'y_max': 53.475, 'x_span': 86.95, 'y_span': 56.95} vs input box (0, 0, 80, 50) (tol 12.0, coverage >= 90%)"
+    },
+    {
+      "cap": "vcarve",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/vcarve/production/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:267",
+      "synthetic_probe": true,
+      "request": {
+        "paths": [
+          {
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 20,
+                "y": 0
+              },
+              {
+                "x": 20,
+                "y": 10
+              }
+            ],
+            "is_closed": false
+          }
+        ],
+        "bit_angle_deg": 60.0,
+        "target_line_width_mm": 2.0
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 576,
+      "body_sha256": "1dab60251402c447de5fca47647d349f953ad709061ca629220f6fe2b9da250d",
+      "headers": {},
+      "analysis": {
+        "lines": 33,
+        "cut_moves": 6,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -1.732,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 20.0,
+          "x_max": 20.0,
+          "y_min": 0.0,
+          "y_max": 10.0,
+          "x_span": 0.0,
+          "y_span": 10.0
+        }
+      },
+      "excerpt": "(Production V-Carve Toolpath)\n(Bit: 60.0deg V-bit)\n(Depth: 1.732mm in 2 pass(es))\n(Material: hardwood)\n(Feed: 3240mm/min, Spindle: 18000RPM)\n\nG21 (Units: mm)\nG90 (Absolute positioning)",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "extent {'x_min': 20.0, 'x_max': 20.0, 'y_min': 0.0, 'y_max': 10.0, 'x_span': 0.0, 'y_span': 10.0} vs input box (0, 0, 20, 10) (tol 3.0, coverage >= 80%)"
+    },
+    {
+      "cap": "roughing",
+      "expect": "BLOCKED",
+      "method": "POST",
+      "path": "/api/cam/toolpath/roughing/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:175",
+      "synthetic_probe": true,
+      "request": {
+        "width": 80.0,
+        "height": 50.0,
+        "stepdown": 2.0,
+        "stepover": 0.4,
+        "feed": 1200.0,
+        "safe_z": 5.0
+      },
+      "status": 409,
+      "content_type": "application/json",
+      "bytes": 822,
+      "body_sha256": "fe42fa9b84334f3b80820a0c5157c1e20662fbf04442d5180ee5b8601b54504c",
+      "headers": {},
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "error_detail": "{\"detail\": {\"error\": \"SAFETY_BLOCKED\", \"message\": \"Roughing G-code generation blocked by server-side safety policy.\", \"run_id\": \"run_50b1a485a3694268a746986f407be0a9\", \"decision\": {\"risk_level\": \"UNKNOWN\", \"score\": null, \"block_reason\": \"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility engine for mode 'roughing'\", \"warnings\": [\"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility e",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "policy 409 on a valid request; no program emitted"
+    },
+    {
+      "cap": "helical",
+      "expect": "BLOCKED",
+      "method": "POST",
+      "path": "/api/cam/toolpath/helical_entry",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:186",
+      "synthetic_probe": true,
+      "request": {
+        "cx": 0.0,
+        "cy": 0.0,
+        "radius_mm": 6.0,
+        "z_target_mm": -3.0,
+        "pitch_mm_per_rev": 1.5
+      },
+      "status": 409,
+      "content_type": "application/json",
+      "bytes": 822,
+      "body_sha256": "d44919c091d278f118cb2a12e9f812f147fe2db17563ae029ff6c1ededbfe27e",
+      "headers": {},
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "error_detail": "{\"detail\": {\"error\": \"SAFETY_BLOCKED\", \"message\": \"Helical G-code generation blocked due to unresolved feasibility concerns.\", \"run_id\": \"run_2c8fd4cc47d8422485b520e5fc0d9c60\", \"decision\": {\"risk_level\": \"UNKNOWN\", \"score\": null, \"block_reason\": \"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility engine for mode 'helical'\", \"warnings\": [\"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasi",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "policy 409 on a valid request; no program emitted"
+    },
+    {
+      "cap": "biarc-contour",
+      "expect": "BLOCKED",
+      "method": "POST",
+      "path": "/api/cam/toolpath/biarc/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:197",
+      "synthetic_probe": true,
+      "request": {
+        "path": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 40,
+            "y": 0
+          },
+          {
+            "x": 40,
+            "y": 20
+          }
+        ],
+        "z": -2.0,
+        "feed": 800.0
+      },
+      "status": 409,
+      "content_type": "application/json",
+      "bytes": 817,
+      "body_sha256": "80072723002829865a73cdc8c19141308b861fcb91021ad00f30349124047e94",
+      "headers": {},
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "error_detail": "{\"detail\": {\"error\": \"SAFETY_BLOCKED\", \"message\": \"Bi-arc G-code generation blocked due to unresolved feasibility concerns.\", \"run_id\": \"run_012744eee9174a4989b4598cbce91aed\", \"decision\": {\"risk_level\": \"UNKNOWN\", \"score\": null, \"block_reason\": \"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasibility engine for mode 'unknown'\", \"warnings\": [\"FEASIBILITY_ENGINE_UNAVAILABLE: no substantive feasib",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "policy 409 on a valid request; no program emitted"
+    },
+    {
+      "cap": "rosette",
+      "expect": "BROKEN",
+      "method": "POST",
+      "path": "/api/cam/rosette/plan-toolpath",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:330",
+      "synthetic_probe": true,
+      "request": {
+        "inner_radius": 10.0,
+        "outer_radius": 40.0,
+        "tool_d": 3.0,
+        "cut_depth": 2.0,
+        "feed_xy": 800.0
+      },
+      "status": 400,
+      "content_type": "application/json",
+      "bytes": 201,
+      "body_sha256": "7bb50ea18cb55469f504b37c8d14b19ad65201e06854a1a4b4ae43fbfcc79d34",
+      "headers": {},
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "error_detail": "{\"detail\": {\"error\": \"TOOLPATH_PLAN_ERROR\", \"run_id\": \"run_c374f3a015404a32912f84ac9bed21a1\", \"message\": \"Toolpath planning failed: RosetteGeometry.__init__() got an unexpected keyword argument 'center_x'\"}}",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "400 after the evaluator ran; no program emitted"
+    },
+    {
+      "cap": "probing",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/probe/boss/gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "pattern": "boss_circular",
+        "estimated_diameter": 50.0,
+        "estimated_center_x": 0.0,
+        "estimated_center_y": 0.0,
+        "probe_count": 4,
+        "approach_distance": 5.0
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 1835,
+      "body_sha256": "dc079156f174960f54ba2dd3601fc78f3ed064997e6b3fe3725677434204e443",
+      "headers": {},
+      "analysis": {
+        "lines": 79,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 4,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": 10.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -30.0,
+          "x_max": 30.0,
+          "y_min": -30.0,
+          "y_max": 30.0,
+          "x_span": 60.0,
+          "y_span": 60.0
+        }
+      },
+      "excerpt": "(Boss/Hole Find - boss_circular)\n(G54 Work Offset)\n(Estimated center: X0.00 Y0.00)\n(Estimated diameter: 50.00mm)\n\nG90 (Absolute mode)\nM5 (Spindle off - safety)\nG0 Z10.0000",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "spans [60.0, 60.0] vs input-derived [60.0, 60.0] (x0.95..x1.05)"
+    },
+    {
+      "cap": "binding",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/binding/channel/gcode",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:355",
+      "synthetic_probe": true,
+      "request": {
+        "body_outline": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 80.0,
+            "y": 0.0
+          },
+          {
+            "x": 80.0,
+            "y": 50.0
+          },
+          {
+            "x": 0.0,
+            "y": 50.0
+          }
+        ]
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 638,
+      "body_sha256": "9af75c7b80a8b3adb68de3a8f45b9f25b723fc436a8a566bce4b3b20d858b4c1",
+      "headers": {},
+      "analysis": {
+        "lines": 34,
+        "cut_moves": 10,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -2.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 1.0,
+          "x_max": 79.0,
+          "y_min": 1.0,
+          "y_max": 49.0,
+          "x_span": 78.0,
+          "y_span": 48.0
+        }
+      },
+      "excerpt": "(Binding Channel Toolpath)\n(Channel: 2.0mm W x 2.0mm D)\n(Tool: 3.175mm straight bit)\n(Passes: 2 depth x 1 width)\n\nG21 (Units: mm)\nG90 (Absolute positioning)\nG17 (XY plane)",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "extent {'x_min': 1.0, 'x_max': 79.0, 'y_min': 1.0, 'y_max': 49.0, 'x_span': 78.0, 'y_span': 48.0} vs input box (0, 0, 80, 50) (tol 15.0, coverage >= 90%)"
+    },
+    {
+      "cap": "inlay",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/art-studio/inlay/export-gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "pattern_type": "dot",
+        "fret_positions": [
+          3,
+          5,
+          7,
+          9,
+          12
+        ],
+        "double_at_12": false,
+        "marker_diameter_mm": 6.0,
+        "scale_length_mm": 648.0,
+        "pocket_depth_mm": 1.5
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 13429,
+      "body_sha256": "adeb71cbaeff41fa964bd4782d10727185b822b567e2d528a99f43fbd5520c33",
+      "headers": {},
+      "analysis": {
+        "lines": 544,
+        "cut_moves": 480,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -1.5,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 85.4936,
+          "x_max": 315.7719,
+          "y_min": -1.4048,
+          "y_max": 1.4048,
+          "x_span": 230.278,
+          "y_span": 2.81
+        }
+      },
+      "excerpt": "; Inlay pocket G-code\n; Pattern: dot\n; Shapes: 5\n; Pocket depth: 1.5mm\n; Tool: 3.175mm end mill\n;\nG21\nG90",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "spans [230.278, 2.81] vs input-derived [228.20000000000002, 2.825] (x0.85..x1.3)"
+    },
+    {
+      "cap": "radius-dish",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/acoustics/radius-dish/generate-gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "radius_ft": 25.0,
+        "dish_width_mm": 200.0,
+        "dish_length_mm": 300.0,
+        "ball_nose_dia_mm": 12.7,
+        "stepover_mm": 6.0,
+        "include_roughing": false
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 154442,
+      "body_sha256": "2e5675a222f42c9e575b87f141b5368a083af867f26d3e24b4a4f08b63a85270",
+      "headers": {},
+      "analysis": {
+        "lines": 5316,
+        "cut_moves": 5202,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -2.1328,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -100.0,
+          "x_max": 100.0,
+          "y_min": -150.0,
+          "y_max": 150.0,
+          "x_span": 200.0,
+          "y_span": 300.0
+        }
+      },
+      "excerpt": "%\n(G21 mm)\nG17 G40 G49 G80 G90\nG21\nG54\nS18000 M3\nG0 Z15.0000\n(FINISHING: stepover=6.0mm allowance=0.00mm)",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "spans [300.0, 200.0] vs input-derived [300.0, 200.0] (x0.8..x1.2)"
+    },
+    {
+      "cap": "feeds-speeds",
+      "expect": "ADVISORY",
+      "method": "POST",
+      "path": "/api/cam/opt/feeds-speeds",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:367",
+      "synthetic_probe": true,
+      "request": {
+        "tool_id": "endmill_6mm",
+        "material": "hardwood",
+        "strategy": "roughing"
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 274,
+      "body_sha256": "e297468a1e55ffc8afe8cb1284ca153d950aaebd03aab3548e0007496a4d5862",
+      "headers": {},
+      "analysis": {
+        "lines": 0,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": null
+      },
+      "excerpt": "",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "advisory JSON with positive ['feed_xy', 'rpm']; no program"
+    },
+    {
+      "cap": "cam-guitar",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/guitar/acoustic/dreadnought/body/gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "note": "acoustic body routes need no project/auth; project routes withheld",
+      "request": {
+        "tool_diameter_mm": 6.35,
+        "total_depth_mm": 3.0,
+        "stepdown_mm": 3.0,
+        "tab_count": 4
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 1025,
+      "body_sha256": "44cca1337e5b3a1c639a5002fc76ae3a61092b4b2e22649b50cef07c10d73932",
+      "headers": {},
+      "analysis": {
+        "lines": 47,
+        "cut_moves": 25,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -3.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 3.174,
+          "x_max": 401.314,
+          "y_min": 3.174,
+          "y_max": 507.281,
+          "x_span": 398.14,
+          "y_span": 504.107
+        }
+      },
+      "excerpt": "( ACOUSTIC BODY PERIMETER - DREADNOUGHT )\n( Generated by AcousticBodyGenerator - GEN-6 )\n( Tool: 6.35mm end mill )\n( Depth: 3.0mm in 1 passes )\n( Stepdown: 3.0mm per pass )\n( Tabs: 4 x 15.0mm wide x 3.0mm tall )\n( Body size: 404.0mm W x 510.2mm L )\n",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "valid program, but no input-derived check was established; structure alone does not prove EFFECTIVE"
+    },
+    {
+      "cap": "cam-post",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/post/post_v155",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "contour": [
+          [
+            0,
+            0
+          ],
+          [
+            50,
+            0
+          ],
+          [
+            50,
+            30
+          ],
+          [
+            0,
+            30
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "z_cut_mm": -1.0
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 2333,
+      "body_sha256": "cae1f7b65a04f397897d5060bb452a7c1d51426e15cc2c02fe8d0e5403d4d45b",
+      "headers": {},
+      "analysis": {
+        "lines": 24,
+        "cut_moves": 11,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -1.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -3.0,
+          "x_max": 50.4,
+          "y_min": -3.0,
+          "y_max": 30.4,
+          "x_span": 53.4,
+          "y_span": 33.4
+        }
+      },
+      "excerpt": "(GRBL post v15.5)\nG21\nG90\nG94\nG21\nG90\nG94\nF600.000",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "extent {'x_min': -3.0, 'x_max': 50.4, 'y_min': -3.0, 'y_max': 30.4, 'x_span': 53.4, 'y_span': 33.4} vs input box (0, 0, 50, 30) (tol 6.0, coverage >= 90%)"
+    },
+    {
+      "cap": "geometry",
+      "expect": "TRANSFORM",
+      "method": "POST",
+      "path": "/api/geometry/export_gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "gcode": "G21\nG90\nG0 X0 Y0\nG1 X10 Y0 F500\nG1 X10 Y10\nM30\n",
+        "units": "mm"
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 104,
+      "body_sha256": "fa51e05634961ae73b422d8b1340980011a35d009a040cf5cc756e436df62efe",
+      "headers": {
+        "x-toolbox-lane": "draft"
+      },
+      "analysis": {
+        "lines": 8,
+        "cut_moves": 2,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": null,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 10.0,
+          "x_max": 10.0,
+          "y_min": 0.0,
+          "y_max": 10.0,
+          "x_span": 0.0,
+          "y_span": 10.0
+        }
+      },
+      "excerpt": "G21\n(POST=NONE;UNITS=mm;DATE=2026-09-11T15:28:31.247139Z)\nG21\nG90\nG0 X0 Y0\nG1 X10 Y0 F500\nG1 X10 Y10\nM30",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "supplied moves preserved: ['X10 Y0', 'X10 Y10'] of ['X10 Y0', 'X10 Y10']"
+    },
+    {
+      "cap": "headstock-transition",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/headstock/transition/gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "note": "no input-derived envelope established for the blend surface",
+      "request": {
+        "nut_width_mm": 43.0,
+        "y_margin_mm": 5.0,
+        "blend_length_mm": 22.0
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 42226,
+      "body_sha256": "ae242c1809743410d5c76f70a9999ea72f13e1d4e6d5c0a3c57d512763d265e2",
+      "headers": {},
+      "analysis": {
+        "lines": 1231,
+        "cut_moves": 1113,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -46.7618,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -26.589,
+          "x_max": 33.174,
+          "y_min": -11.0,
+          "y_max": 21.0,
+          "x_span": 59.763,
+          "y_span": 32.0
+        }
+      },
+      "excerpt": "; Headstock Transition Zone \u2014 Production Shop\n; HS_Transition  angled  14.0\u00b0\n; Y: -11.0mm \u2192 21.0mm  (VINE-05: Y=0 at nut)\n; Blend: 22.0mm centred at Y=5.0mm\n; Volute: none\n; Ball-nose \u00d89.525mm  step 1.14mm  53 passes/station\n; Thin point: 11.51mm\n",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "valid program, but no input-derived check was established; structure alone does not prove EFFECTIVE"
+    },
+    {
+      "cap": "neck-gcode",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/neck/gcode/generate",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "note": "scale_length units not established from the contract",
+      "request": {
+        "headstock_style": "paddle",
+        "profile": "c"
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 10956,
+      "body_sha256": "5fc36baeb8bab475acbb94b2c050ec73e1c60e52e4b7c7d16ab1e340aee705e2",
+      "headers": {},
+      "analysis": {
+        "lines": 570,
+        "cut_moves": 224,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": false,
+        "units_g20": true,
+        "min_z": -0.8371,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": -7.5,
+          "x_max": 18.0,
+          "y_min": -1.75,
+          "y_max": 1.75,
+          "x_span": 25.5,
+          "y_span": 3.5
+        }
+      },
+      "excerpt": "; Neck_Program - Neck Program\n; Generated: 2026-09-11 10:28\n; Generator: The Production Shop - Neck Generator\n; Scale: 25.5\"\n; Headstock: paddle\n; Profile: c\n;\n",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "valid program, but no input-derived check was established; structure alone does not prove EFFECTIVE"
+    },
+    {
+      "cap": "pocketing",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/pocketing/intent-gcode",
+      "source": "repo_fixture:services/api/tests/cam/test_pocketing_intent_migration.py:139",
+      "synthetic_probe": true,
+      "request": {
+        "mode": "router_3axis",
+        "units": "mm",
+        "design": {
+          "boundary": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 100,
+              "y": 0
+            },
+            {
+              "x": 100,
+              "y": 100
+            },
+            {
+              "x": 0,
+              "y": 100
+            }
+          ],
+          "islands": [],
+          "pocket_depth_mm": 6.0,
+          "tool_diameter_mm": 6.0,
+          "stepover_percent": 50.0
+        },
+        "context": {
+          "stepdown_mm": 2.0,
+          "feed_rate_mm_min": 1500.0
+        },
+        "options": {}
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 5991,
+      "body_sha256": "c0e7dd205c77af02baa1b719e48d624eddee8df43b86c38ded78fb9370283740",
+      "headers": {},
+      "analysis": {
+        "lines": 215,
+        "cut_moves": 192,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -6.0,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 3.0,
+          "x_max": 97.0,
+          "y_min": 3.0,
+          "y_max": 97.0,
+          "x_span": 94.0,
+          "y_span": 94.0
+        },
+        "swept_coverage": 0.9441
+      },
+      "excerpt": "(Pocketing Operation - L.1 Adaptive Core)\n(Pocket depth: 6.0mm in 3 passes)\n(Tool: 6.0mm, Stepover: 50%)\n(Islands: 0)\nG90 (Absolute positioning)\nG21 (Units: mm)\nM3 S18000 (Spindle on)\nG4 P2 (Dwell for spindle)",
+      "exercised": "YES",
+      "effective": "YES",
+      "effective_basis": "swept coverage 94.4% of the 100x100 pocket (need >= 80%); inside pocket: True; extent {'x_min': 3.0, 'x_max': 97.0, 'y_min': 3.0, 'y_max': 97.0, 'x_span': 94.0, 'y_span': 94.0}"
+    },
+    {
+      "cap": "polygon-offset",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/cam/polygon_offset_governed.nc",
+      "source": "repo_fixture:services/api/tests/rmos/test_manufacturing_authority_stage2.py:380",
+      "synthetic_probe": true,
+      "request": {
+        "polygon": [
+          [
+            0,
+            0
+          ],
+          [
+            60,
+            0
+          ],
+          [
+            60,
+            40
+          ],
+          [
+            0,
+            40
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "tool_dia": 6.0,
+        "stepover": 0.4
+      },
+      "status": 200,
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 1214,
+      "body_sha256": "bfc42c6f09ce63bd35e704e0dbfa1f5a0e360efca542f34de87e2d93bfe8fe44",
+      "headers": {
+        "x-run-id": "run_e794599159be493b8c3a5fb116d4b58b",
+        "x-gcode-sha256": "bfc42c6f09ce63bd35e704e0dbfa1f5a0e360efca542f34de87e2d93bfe8fe44",
+        "x-toolbox-lane": "governed"
+      },
+      "analysis": {
+        "lines": 63,
+        "cut_moves": 32,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -0.5,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 2.4,
+          "x_max": 57.6,
+          "y_min": 2.4,
+          "y_max": 37.6,
+          "x_span": 55.2,
+          "y_span": 35.2
+        },
+        "swept_coverage": 0.6138
+      },
+      "excerpt": "G21\nG90\nG17\nG0 Z5.0\nM3\n(PASS 1)\nG0 X57.600 Y37.600\nG1 Z-0.500 F300.0",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "swept coverage 61.4% of the 60x40 pocket (need >= 80%); inside pocket: True; extent {'x_min': 2.4, 'x_max': 57.6, 'y_min': 2.4, 'y_max': 37.6, 'x_span': 55.2, 'y_span': 35.2}"
+    },
+    {
+      "cap": "rmos-wrap",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/rmos/wrap/mvp/dxf-to-grbl",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "multipart_file": "rect_60x40.dxf (constructed, 14034 bytes)",
+        "form": {
+          "tool_d": "6.0"
+        }
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 3677,
+      "body_sha256": "b489832fea34edda346f37a054ca77a5b06207ac5b9e65c92571a853c0bd698b",
+      "headers": {},
+      "analysis": {
+        "lines": 98,
+        "cut_moves": 86,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": -1.5,
+        "placeholder": false,
+        "xy_extent": {
+          "x_min": 11.459,
+          "x_max": 56.5,
+          "y_min": 19.846,
+          "y_max": 36.657,
+          "x_span": 45.041,
+          "y_span": 16.811
+        },
+        "swept_coverage": 0.1596
+      },
+      "excerpt": "; DXF-to-GRBL MVP Export\n; Run ID: RUN-DXF-B42EA2911238\n; Tool: 6.0mm, Stepover: 40.0%, Stepdown: 2.0mm\nG21 ; mm mode\nG90 ; absolute\nG0 Z10.0\nM3 S18000 ; spindle on CW\nG4 P2.0 ; dwell for spindle ramp-up",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "swept coverage 16.0% of the 60x40 pocket (need >= 80%); inside pocket: True; extent {'x_min': 11.459, 'x_max': 56.5, 'y_min': 19.846, 'y_max': 36.657, 'x_span': 45.041, 'y_span': 16.811}"
+    },
+    {
+      "cap": "v1-dxf",
+      "expect": "EMIT",
+      "method": "POST",
+      "path": "/api/v1/dxf/cam/gcode",
+      "source": "constructed_minimal",
+      "synthetic_probe": true,
+      "request": {
+        "operation": "profile",
+        "tool_diameter_mm": 6.0,
+        "dxf_base64": "<constructed rect_60x40.dxf, base64>"
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 446,
+      "body_sha256": "c8542f14c5bb7c956967c64c6012bbe4ca99a4541be15ffcdd115f57e8e449f6",
+      "headers": {},
+      "analysis": {
+        "lines": 16,
+        "cut_moves": 0,
+        "canned_cycles": 0,
+        "probe_moves": 0,
+        "units_g21": true,
+        "units_g20": false,
+        "min_z": 4.0,
+        "placeholder": true,
+        "xy_extent": null
+      },
+      "excerpt": "; Generated by The Production Shop API v1\n; Dialect: GRBL\n; Tool: 6.0mm, Depth: 3.0mm\n\nG21 ; mm mode\nG90 ; absolute\nG17 ; XY plane\n",
+      "exercised": "YES",
+      "effective": "NO",
+      "effective_basis": "200 but the program is a placeholder (TODO), not a toolpath"
+    },
+    {
+      "cap": "operator-pack",
+      "expect": "RETRIEVE",
+      "method": "GET",
+      "path": "/api/rmos/runs_v2/{run_id}/operator-pack",
+      "synthetic_probe": true,
+      "source": "chain: rmos-wrap dxf-to-grbl (constructed rect_60x40.dxf) -> run_id -> operator-pack",
+      "upstream": {
+        "status": 200,
+        "run_id": "RUN-DXF-E4A6F5BADB25"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "bytes": 26,
+      "body_sha256": "dd59a76d2c1d40269ca62320aafac7c5a69d08cd0efc1708f1309fa4acaed8d9",
+      "error_detail": "{\"detail\":\"Run not found\"}",
+      "exercised": "YES",
+      "effective": "UNKNOWN",
+      "effective_basis": "pack not produced for a real run id (status 404)"
+    }
+  ],
+  "diagnostics": {
+    "adaptive_plan": {
+      "path": "/api/cam/pocket/adaptive/plan",
+      "status": 200,
+      "request": "repo_fixture SANE_ADAPTIVE (same input as the adaptive witness)",
+      "keys": [
+        "job_int",
+        "moves",
+        "overlays",
+        "stats"
+      ],
+      "move_count": 151,
+      "cut_move_count": 147,
+      "xy_extent": {
+        "x_min": 69.68804657792136,
+        "x_max": 96.5,
+        "y_min": 32.2,
+        "y_max": 56.63560108396187
+      },
+      "swept_coverage": 0.0568,
+      "stats": {
+        "length_mm": 110.215,
+        "area_mm2": 6000.0,
+        "time_s": 10.1,
+        "time_s_classic": 10.1,
+        "time_s_jerk": null,
+        "volume_mm3": 12000.0,
+        "move_count": 151,
+        "tight_segments": 146,
+        "trochoid_arcs": 0,
+        "caps": {
+          "feed_cap": 0,
+          "accel": 0,
+          "jerk": 0,
+          "none": 0
+        },
+        "machine_profile_id": null,
+        "session_override_factor": null
+      }
+    }
+  },
+  "wiring_support": [
+    {
+      "cap": "operator-pack",
+      "path": "/api/rmos/runs_v2/does-not-exist/operator-pack",
+      "status": 404,
+      "role": "wiring_support_only",
+      "note": "missing-id request: proves the route is live, not that it retrieves"
+    },
+    {
+      "cap": "saw-batch",
+      "path": "/api/saw/batch/executions/does-not-exist/gcode",
+      "status": 404,
+      "role": "wiring_support_only",
+      "note": "missing-id request: proves the route is live, not that it retrieves"
+    }
+  ],
+  "withheld": {
+    "vision": {
+      "status": "NOT_OBTAINED_SAFELY",
+      "reason": "photo-to-G-code depends on an external AI service; `openai` is also not installed in the witness environment. No safe local witness exists."
+    },
+    "saw-batch": {
+      "status": "UNKNOWN",
+      "reason": "retrieval of a saw-lab execution artifact; producing one needs the multi-step saw batch flow. Not attempted in this baseline. Missing-id 404 recorded as wiring only."
+    }
+  }
+}

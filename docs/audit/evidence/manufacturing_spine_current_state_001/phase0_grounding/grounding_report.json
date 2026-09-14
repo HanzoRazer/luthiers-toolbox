@@ -1,0 +1,203 @@
+{
+  "schema_version": "grounding_report_v0.1",
+  "status": "MATCH",
+  "decision": "PROCEED",
+  "active_lane": {
+    "project": "Luthiers-Toolbox",
+    "active_repository": "HanzoRazer/luthiers-toolbox",
+    "active_program": "Luthier's Toolbox Completion",
+    "active_order": "G2-MANUFACTURING-SPINE-001",
+    "active_state": "EVIDENCE",
+    "cross_repo_policy": "EVIDENCE_ONLY"
+  },
+  "repository_state": {
+    "active_repository": "HanzoRazer/luthiers-toolbox"
+  },
+  "claims": [
+    {
+      "claim_id": "C-PROV",
+      "type": "handoff_provenance",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "INPUT_CONTRACT",
+      "confidence": "HIGH",
+      "expected": {
+        "active_repository": "HanzoRazer/luthiers-toolbox",
+        "active_program": "Luthier's Toolbox Completion",
+        "active_order": "G2-MANUFACTURING-SPINE-001",
+        "declared_repository": "HanzoRazer/luthiers-toolbox",
+        "declared_program": "Luthier's Toolbox Completion",
+        "declared_work_order": "G2-MANUFACTURING-SPINE-001",
+        "required": [
+          "repository",
+          "program",
+          "work_order"
+        ]
+      },
+      "observed": {
+        "active_repository": "HanzoRazer/luthiers-toolbox",
+        "active_program": "Luthier's Toolbox Completion",
+        "active_order": "G2-MANUFACTURING-SPINE-001",
+        "declared_repository": "HanzoRazer/luthiers-toolbox",
+        "declared_program": "Luthier's Toolbox Completion",
+        "declared_work_order": "G2-MANUFACTURING-SPINE-001",
+        "required": [
+          "repository",
+          "program",
+          "work_order"
+        ]
+      },
+      "message": "Handoff provenance matches the active lane.",
+      "source": "handoff-provenance contract"
+    },
+    {
+      "claim_id": "C-LANE",
+      "type": "active_lane",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "INPUT_CONTRACT",
+      "confidence": "HIGH",
+      "expected": {
+        "active_repository": "HanzoRazer/luthiers-toolbox",
+        "target_repository": "HanzoRazer/luthiers-toolbox",
+        "action": "mutation",
+        "cross_repo_policy": "EVIDENCE_ONLY"
+      },
+      "observed": {
+        "active_repository": "HanzoRazer/luthiers-toolbox",
+        "target_repository": "HanzoRazer/luthiers-toolbox",
+        "action": "mutation",
+        "cross_repo_policy": "EVIDENCE_ONLY"
+      },
+      "message": "Target repository matches the active lane.",
+      "source": "active-lane contract"
+    },
+    {
+      "claim_id": "C-HEAD",
+      "type": "repo_head",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "GIT_REF",
+      "confidence": "HIGH",
+      "expected": {
+        "ref": "HEAD",
+        "sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"
+      },
+      "observed": {
+        "ref": "HEAD",
+        "sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"
+      },
+      "message": "HEAD resolves to expected SHA.",
+      "source": "git ref HEAD"
+    },
+    {
+      "claim_id": "C-MAIN",
+      "type": "repo_head",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "GIT_REF",
+      "confidence": "HIGH",
+      "expected": {
+        "ref": "origin/main",
+        "sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"
+      },
+      "observed": {
+        "ref": "origin/main",
+        "sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"
+      },
+      "message": "origin/main resolves to expected SHA.",
+      "source": "git ref origin/main"
+    },
+    {
+      "claim_id": "C-CLEAN",
+      "type": "worktree_clean",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "WORKTREE_STATE",
+      "confidence": "HIGH",
+      "expected": {
+        "tracked_clean": true,
+        "untracked_clean": false
+      },
+      "observed": {
+        "tracked_dirty": false,
+        "untracked": true,
+        "tracked_files": [],
+        "untracked_files": [
+          "docs/audit/evidence/"
+        ]
+      },
+      "message": "Working tree matches expected cleanliness.",
+      "source": "git status --porcelain"
+    },
+    {
+      "claim_id": "C-MAP",
+      "type": "file_exists",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "FILE_PRESENCE",
+      "confidence": "HIGH",
+      "expected": {
+        "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "observed": {
+        "path": "docs/audit/rmos_manufacturing_authority_map_001.md",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "message": "docs/audit/rmos_manufacturing_authority_map_001.md presence at HEAD matches expected.",
+      "source": "git HEAD:docs/audit/rmos_manufacturing_authority_map_001.md"
+    },
+    {
+      "claim_id": "C-REG",
+      "type": "file_exists",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "FILE_PRESENCE",
+      "confidence": "HIGH",
+      "expected": {
+        "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "observed": {
+        "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "message": "services/api/app/rmos/manufacturing_authority_registry.json presence at HEAD matches expected.",
+      "source": "git HEAD:services/api/app/rmos/manufacturing_authority_registry.json"
+    },
+    {
+      "claim_id": "C-CENSUS",
+      "type": "file_exists",
+      "material": true,
+      "verdict": "MATCH",
+      "evidence_class": "FILE_PRESENCE",
+      "confidence": "HIGH",
+      "expected": {
+        "path": "scripts/audit/rmos_authority_map.py",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "observed": {
+        "path": "scripts/audit/rmos_authority_map.py",
+        "ref": "HEAD",
+        "exists": true
+      },
+      "message": "scripts/audit/rmos_authority_map.py presence at HEAD matches expected.",
+      "source": "git HEAD:scripts/audit/rmos_authority_map.py"
+    }
+  ],
+  "material_divergences": [],
+  "blocked_checks": [],
+  "summary": {
+    "checked": 8,
+    "matched": 8,
+    "mismatched": 0,
+    "insufficient": 0,
+    "blocked": 0
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "grounding_request_v0.1",
+  "active_lane": {
+    "project": "Luthiers-Toolbox",
+    "active_repository": "HanzoRazer/luthiers-toolbox",
+    "active_program": "Luthier's Toolbox Completion",
+    "active_order": "G2-MANUFACTURING-SPINE-001",
+    "active_state": "EVIDENCE",
+    "cross_repo_policy": "EVIDENCE_ONLY"
+  },
+  "claims": [
+    {"claim_id": "C-PROV", "type": "handoff_provenance", "material": true,
+     "expected": {"repository": "HanzoRazer/luthiers-toolbox", "program": "Luthier's Toolbox Completion",
+                  "work_order": "G2-MANUFACTURING-SPINE-001", "required": ["repository", "program", "work_order"]}},
+    {"claim_id": "C-LANE", "type": "active_lane", "material": true,
+     "target_repository": "HanzoRazer/luthiers-toolbox", "action": "mutation"},
+    {"claim_id": "C-HEAD", "type": "repo_head", "material": true, "ref": "HEAD", "expected_sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"},
+    {"claim_id": "C-MAIN", "type": "repo_head", "material": true, "ref": "origin/main", "expected_sha": "0679dbf62d5829207f56618b3fbdbbee433493a0"},
+    {"claim_id": "C-CLEAN", "type": "worktree_clean", "material": true},
+    {"claim_id": "C-MAP", "type": "file_exists", "material": true, "repository": "HanzoRazer/luthiers-toolbox",
+     "ref": "HEAD", "path": "docs/audit/rmos_manufacturing_authority_map_001.md", "expected": true},
+    {"claim_id": "C-REG", "type": "file_exists", "material": true, "repository": "HanzoRazer/luthiers-toolbox",
+     "ref": "HEAD", "path": "services/api/app/rmos/manufacturing_authority_registry.json", "expected": true},
+    {"claim_id": "C-CENSUS", "type": "file_exists", "material": true, "repository": "HanzoRazer/luthiers-toolbox",
+     "ref": "HEAD", "path": "scripts/audit/rmos_authority_map.py", "expected": true}
+  ]
+}

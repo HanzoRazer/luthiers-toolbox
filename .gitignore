@@ -157,6 +157,7 @@ templates/
 !/tools/grounding_agent/
 !/tools/agent_program/
 !/tools/codegen/
+!/tools/manufacturing_spine/
 assets_staging/
 blueprint-reader/
 guitar_tap/

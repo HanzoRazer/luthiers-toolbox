@@ -64,6 +64,8 @@ ALLOWED_NAMESPACE_PROBES = [
     "tools/grounding_agent/adapters/__probe_boundary__.py",
     "tools/agent_program/__probe_boundary__.py",
     "tools/codegen/__probe_boundary__.sh",
+    # G2-MANUFACTURING-SPINE-001 (D7): admitted as a new tooling namespace.
+    "tools/manufacturing_spine/__probe_boundary__.py",
     "tools/README.md",
 ]
 
@@ -73,6 +75,8 @@ IGNORED_PROBES = [
     "tools/__probe_scratch__.py",
     "tools/grounding_agent/__pycache__/__probe__.pyc",
     "tools/grounding_agent/__probe__.pyc",
+    # Admitting a namespace must not admit its generated artifacts.
+    "tools/manufacturing_spine/__pycache__/__probe__.pyc",
 ]
 
 # Representative files that already exist and must stay tracked.
@@ -108,5 +112,10 @@ def test_existing_tracked_tooling_remains_tracked(rel_path):
 
 def test_authorized_namespaces_are_real_directories():
     """Guards against the probe list drifting away from real tracked namespaces."""
-    for ns in ("tools/grounding_agent", "tools/agent_program", "tools/codegen"):
+    for ns in (
+        "tools/grounding_agent",
+        "tools/agent_program",
+        "tools/codegen",
+        "tools/manufacturing_spine",
+    ):
         assert (_REPO_ROOT / ns).is_dir(), f"expected tracked namespace {ns} to exist"

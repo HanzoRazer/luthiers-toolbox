@@ -1,0 +1,977 @@
+{
+  "mounted_operations_walked": 1155,
+  "capabilities": [
+    {
+      "capability_id": "retract",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/retract/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.retract.retract_gcode_router",
+          "endpoint": "generate_simple_retract_gcode",
+          "file": "services/api/app/routers/retract/retract_gcode_router.py",
+          "line": 314,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/retract/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.retract.retract_gcode_router",
+          "endpoint": "download_retract_gcode",
+          "file": "services/api/app/routers/retract/retract_gcode_router.py",
+          "line": 365,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/cam/retract/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.retract.retract_gcode_router",
+          "endpoint": "download_retract_gcode_governed",
+          "file": "services/api/app/routers/retract/retract_gcode_router.py",
+          "line": 431,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/cam/retract/gcode_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.retract.retract_gcode_router",
+          "endpoint": "generate_simple_retract_gcode_governed",
+          "file": "services/api/app/routers/retract/retract_gcode_router.py",
+          "line": 404,
+          "symbol_resolved": true,
+          "route_role": "alias"
+        }
+      ]
+    },
+    {
+      "capability_id": "adaptive",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/pocket/adaptive/batch_export",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.adaptive.batch_router",
+          "endpoint": "batch_export",
+          "file": "services/api/app/routers/adaptive/batch_router.py",
+          "line": 41,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/cam/pocket/adaptive/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.adaptive.gcode_router",
+          "endpoint": "gcode",
+          "file": "services/api/app/routers/adaptive/gcode_router.py",
+          "line": 49,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "drilling",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/drilling/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.drilling.drill_modal_router",
+          "endpoint": "drill_gcode",
+          "file": "services/api/app/cam/routers/drilling/drill_modal_router.py",
+          "line": 83,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/drilling/intent-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.drilling.intent_router",
+          "endpoint": "generate_drilling_intent_gcode",
+          "file": "services/api/app/cam/routers/drilling/intent_router.py",
+          "line": 111,
+          "symbol_resolved": true,
+          "route_role": "intent"
+        },
+        {
+          "path": "/api/cam/drilling/pattern/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.drilling.drill_pattern_router",
+          "endpoint": "drill_pattern_gcode",
+          "file": "services/api/app/cam/routers/drilling/drill_pattern_router.py",
+          "line": 134,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "profiling",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/profiling/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.profiling.profile_router",
+          "endpoint": "generate_profile_gcode",
+          "file": "services/api/app/cam/routers/profiling/profile_router.py",
+          "line": 225,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/profiling/intent-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.profiling.intent_router",
+          "endpoint": "generate_profile_intent_gcode",
+          "file": "services/api/app/cam/routers/profiling/intent_router.py",
+          "line": 97,
+          "symbol_resolved": true,
+          "route_role": "intent"
+        }
+      ]
+    },
+    {
+      "capability_id": "vcarve",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/vcarve/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.toolpath.vcarve_router",
+          "endpoint": "generate_vcarve_gcode",
+          "file": "services/api/app/cam/routers/toolpath/vcarve_router.py",
+          "line": 265,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/vcarve/intent-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.vcarve.intent_router",
+          "endpoint": "generate_vcarve_intent_gcode",
+          "file": "services/api/app/cam/routers/vcarve/intent_router.py",
+          "line": 81,
+          "symbol_resolved": true,
+          "route_role": "intent"
+        },
+        {
+          "path": "/api/cam/vcarve/production/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.vcarve.production_router",
+          "endpoint": "generate_production_vcarve_gcode",
+          "file": "services/api/app/cam/routers/vcarve/production_router.py",
+          "line": 126,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "roughing",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/roughing/gcode_intent",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam_roughing_intent_router",
+          "endpoint": "roughing_gcode_intent",
+          "file": "services/api/app/routers/cam_roughing_intent_router.py",
+          "line": 74,
+          "symbol_resolved": true,
+          "route_role": "intent"
+        },
+        {
+          "path": "/api/cam/toolpath/roughing/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.toolpath.roughing_router",
+          "endpoint": "roughing_gcode",
+          "file": "services/api/app/cam/routers/toolpath/roughing_router.py",
+          "line": 96,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "helical",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/helical_entry",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.toolpath.helical_router",
+          "endpoint": "helical_entry",
+          "file": "services/api/app/cam/routers/toolpath/helical_router.py",
+          "line": 282,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "rosette",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/rosette/plan-toolpath",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.rosette.rosette_toolpath_router",
+          "endpoint": "plan_rosette_cam_toolpath",
+          "file": "services/api/app/cam/routers/rosette/rosette_toolpath_router.py",
+          "line": 118,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/cam/rosette/post-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.rosette.rosette_toolpath_router",
+          "endpoint": "post_rosette_gcode",
+          "file": "services/api/app/cam/routers/rosette/rosette_toolpath_router.py",
+          "line": 268,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "probing",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/probe/boss/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.boss_router",
+          "endpoint": "generate_boss_probe",
+          "file": "services/api/app/routers/probe/boss_router.py",
+          "line": 22,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/probe/boss/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.boss_router",
+          "endpoint": "download_boss_probe",
+          "file": "services/api/app/routers/probe/boss_router.py",
+          "line": 49,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/boss/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.boss_router",
+          "endpoint": "download_boss_probe_governed",
+          "file": "services/api/app/routers/probe/boss_router.py",
+          "line": 79,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/corner/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.corner_router",
+          "endpoint": "generate_corner_probe",
+          "file": "services/api/app/routers/probe/corner_router.py",
+          "line": 22,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/probe/corner/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.corner_router",
+          "endpoint": "download_corner_probe",
+          "file": "services/api/app/routers/probe/corner_router.py",
+          "line": 44,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/corner/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.corner_router",
+          "endpoint": "download_corner_probe_governed",
+          "file": "services/api/app/routers/probe/corner_router.py",
+          "line": 71,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/pocket/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.pocket_router",
+          "endpoint": "generate_pocket_probe",
+          "file": "services/api/app/routers/probe/pocket_router.py",
+          "line": 22,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/probe/pocket/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.pocket_router",
+          "endpoint": "download_pocket_probe",
+          "file": "services/api/app/routers/probe/pocket_router.py",
+          "line": 49,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/pocket/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.pocket_router",
+          "endpoint": "download_pocket_probe_governed",
+          "file": "services/api/app/routers/probe/pocket_router.py",
+          "line": 78,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/surface_z/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.surface_z_router",
+          "endpoint": "generate_surface_z_probe",
+          "file": "services/api/app/routers/probe/surface_z_router.py",
+          "line": 22,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/probe/surface_z/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.surface_z_router",
+          "endpoint": "download_surface_z_probe",
+          "file": "services/api/app/routers/probe/surface_z_router.py",
+          "line": 43,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/surface_z/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.surface_z_router",
+          "endpoint": "download_surface_z_probe_governed",
+          "file": "services/api/app/routers/probe/surface_z_router.py",
+          "line": 69,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/vise_square/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.vise_square_router",
+          "endpoint": "generate_vise_square_probe",
+          "file": "services/api/app/routers/probe/vise_square_router.py",
+          "line": 22,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/probe/vise_square/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.vise_square_router",
+          "endpoint": "download_vise_square_probe",
+          "file": "services/api/app/routers/probe/vise_square_router.py",
+          "line": 44,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/probe/vise_square/gcode/download_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.probe.vise_square_router",
+          "endpoint": "download_vise_square_probe_governed",
+          "file": "services/api/app/routers/probe/vise_square_router.py",
+          "line": 70,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/v1/machines/probe/corner",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.api_v1.machines",
+          "endpoint": "generate_corner_probe",
+          "file": "services/api/app/api_v1/machines.py",
+          "line": 215,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/v1/machines/probe/surface",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.api_v1.machines",
+          "endpoint": "generate_surface_probe",
+          "file": "services/api/app/api_v1/machines.py",
+          "line": 163,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "binding",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/binding/channel/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.binding.binding_router",
+          "endpoint": "generate_binding_channel_gcode",
+          "file": "services/api/app/cam/routers/binding/binding_router.py",
+          "line": 125,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/binding/purfling/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.binding.binding_router",
+          "endpoint": "generate_purfling_ledge_gcode",
+          "file": "services/api/app/cam/routers/binding/binding_router.py",
+          "line": 173,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/binding/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.acoustic_cam_router",
+          "endpoint": "generate_binding_channel",
+          "file": "services/api/app/routers/cam/guitar/acoustic_cam_router.py",
+          "line": 273,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "inlay",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/art-studio/inlay/export-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.art_studio.inlay_router",
+          "endpoint": "export_inlay_gcode",
+          "file": "services/api/app/art_studio/inlay_router.py",
+          "line": 385,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "radius-dish",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/acoustics/radius-dish/generate-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.radius_dish_router",
+          "endpoint": "generate_gcode",
+          "file": "services/api/app/routers/radius_dish_router.py",
+          "line": 240,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "feeds-speeds",
+      "surface_kind": "advisory",
+      "routes": [
+        {
+          "path": "/api/cam/opt/feeds-speeds",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.utility.optimization_router",
+          "endpoint": "calculate_feeds_speeds",
+          "file": "services/api/app/cam/routers/utility/optimization_router.py",
+          "line": 161,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "biarc-contour",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/toolpath/biarc/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.toolpath.biarc_router",
+          "endpoint": "biarc_gcode",
+          "file": "services/api/app/cam/routers/toolpath/biarc_router.py",
+          "line": 96,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "cam-guitar",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/body/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.acoustic_cam_router",
+          "endpoint": "generate_body_perimeter",
+          "file": "services/api/app/routers/cam/guitar/acoustic_cam_router.py",
+          "line": 192,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/acoustic/{style}/soundhole/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.acoustic_cam_router",
+          "endpoint": "generate_soundhole",
+          "file": "services/api/app/routers/cam/guitar/acoustic_cam_router.py",
+          "line": 234,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/flying_v/body/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.body_gcode_router",
+          "endpoint": "generate_flying_v_body_gcode",
+          "file": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+          "line": 275,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/les_paul/body/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.body_gcode_router",
+          "endpoint": "generate_les_paul_body_gcode",
+          "file": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+          "line": 212,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/stratocaster/body/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.body_gcode_router",
+          "endpoint": "generate_stratocaster_body_gcode",
+          "file": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+          "line": 151,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/cam/guitar/{model_id}/neck/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam.guitar.body_gcode_router",
+          "endpoint": "generate_neck_gcode",
+          "file": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+          "line": 354,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "cam-post",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/post/post_v155",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.cam_post_v155_router",
+          "endpoint": "post_v155",
+          "file": "services/api/app/routers/cam_post_v155_router.py",
+          "line": 448,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "geometry",
+      "surface_kind": "artifact_transformation",
+      "routes": [
+        {
+          "path": "/api/geometry/export_bundle",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.geometry.bundle_router",
+          "endpoint": "export_bundle",
+          "file": "services/api/app/routers/geometry/bundle_router.py",
+          "line": 44,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/geometry/export_bundle_multi",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.geometry.bundle_router",
+          "endpoint": "export_bundle_multi",
+          "file": "services/api/app/routers/geometry/bundle_router.py",
+          "line": 118,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/geometry/export_gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.geometry.export_router",
+          "endpoint": "export_gcode",
+          "file": "services/api/app/routers/geometry/export_router.py",
+          "line": 165,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/geometry/export_gcode_governed",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.geometry.export_router",
+          "endpoint": "export_gcode_governed",
+          "file": "services/api/app/routers/geometry/export_router.py",
+          "line": 220,
+          "symbol_resolved": true,
+          "route_role": "alias"
+        }
+      ]
+    },
+    {
+      "capability_id": "headstock-transition",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/headstock/transition/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.neck.headstock_transition_export",
+          "endpoint": "transition_gcode",
+          "file": "services/api/app/routers/neck/headstock_transition_export.py",
+          "line": 299,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "neck-gcode",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/neck/gcode/download",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.neck.gcode_router",
+          "endpoint": "download_neck_gcode",
+          "file": "services/api/app/routers/neck/gcode_router.py",
+          "line": 99,
+          "symbol_resolved": true,
+          "route_role": "download"
+        },
+        {
+          "path": "/api/neck/gcode/generate",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.neck.gcode_router",
+          "endpoint": "generate_neck_gcode",
+          "file": "services/api/app/routers/neck/gcode_router.py",
+          "line": 23,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "operator-pack",
+      "surface_kind": "artifact_retrieval",
+      "routes": [
+        {
+          "path": "/api/rmos/runs_v2/{run_id}/operator-pack",
+          "method": "GET",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.rmos.runs_v2.exports",
+          "endpoint": "export_operator_pack",
+          "file": "services/api/app/rmos/runs_v2/exports.py",
+          "line": 268,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "pocketing",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/pocketing/intent-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.pocketing.intent_router",
+          "endpoint": "generate_pocketing_intent_gcode",
+          "file": "services/api/app/cam/routers/pocketing/intent_router.py",
+          "line": 131,
+          "symbol_resolved": true,
+          "route_role": "intent"
+        }
+      ]
+    },
+    {
+      "capability_id": "polygon-offset",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/cam/polygon_offset.nc",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.polygon_offset_router",
+          "endpoint": "polygon_offset_nc",
+          "file": "services/api/app/routers/polygon_offset_router.py",
+          "line": 127,
+          "symbol_resolved": true,
+          "route_role": "other"
+        },
+        {
+          "path": "/api/cam/polygon_offset_governed.nc",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.routers.polygon_offset_router",
+          "endpoint": "polygon_offset_nc_governed",
+          "file": "services/api/app/routers/polygon_offset_router.py",
+          "line": 145,
+          "symbol_resolved": true,
+          "route_role": "alias"
+        },
+        {
+          "path": "/api/cam/polygon_offset_n17.nc",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.cam.routers.utility.polygon_router",
+          "endpoint": "polygon_offset",
+          "file": "services/api/app/cam/routers/utility/polygon_router.py",
+          "line": 58,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "rmos-wrap",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/rmos/wrap/mvp/dxf-to-grbl",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.rmos.mvp_router",
+          "endpoint": "dxf_to_grbl",
+          "file": "services/api/app/rmos/mvp_router.py",
+          "line": 24,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    },
+    {
+      "capability_id": "saw-batch",
+      "surface_kind": "artifact_retrieval",
+      "routes": [
+        {
+          "path": "/api/saw/batch/executions/{batch_execution_artifact_id}/gcode",
+          "method": "GET",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.saw_lab.batch_gcode_router",
+          "endpoint": "get_execution_gcode",
+          "file": "services/api/app/saw_lab/batch_gcode_router.py",
+          "line": 68,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/saw/batch/op-toolpaths/{op_toolpaths_artifact_id}/gcode",
+          "method": "GET",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.saw_lab.batch_gcode_router",
+          "endpoint": "get_op_toolpaths_gcode",
+          "file": "services/api/app/saw_lab/batch_gcode_router.py",
+          "line": 39,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        },
+        {
+          "path": "/api/saw/batch/toolpaths/{toolpaths_artifact_id}/download/gcode",
+          "method": "GET",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.saw_lab.toolpaths_router",
+          "endpoint": "download_toolpaths_gcode",
+          "file": "services/api/app/saw_lab/toolpaths_router.py",
+          "line": 268,
+          "symbol_resolved": true,
+          "route_role": "download"
+        }
+      ]
+    },
+    {
+      "capability_id": "v1-dxf",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/v1/dxf/cam/gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.api_v1.dxf_workflow",
+          "endpoint": "generate_gcode",
+          "file": "services/api/app/api_v1/dxf_workflow.py",
+          "line": 260,
+          "symbol_resolved": true,
+          "route_role": "primary"
+        }
+      ]
+    },
+    {
+      "capability_id": "vision",
+      "surface_kind": "manufacturing_capability",
+      "routes": [
+        {
+          "path": "/api/vision/photo-to-gcode",
+          "method": "POST",
+          "mounted": true,
+          "duplicate_mounts": 1,
+          "module": "app.vision.segmentation_router",
+          "endpoint": "photo_to_gcode",
+          "file": "services/api/app/vision/segmentation_router.py",
+          "line": 141,
+          "symbol_resolved": true,
+          "route_role": "other"
+        }
+      ]
+    }
+  ]
+}

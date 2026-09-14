@@ -1,0 +1,277 @@
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+{
+  "top_level_route_objects": 155,
+  "walked_operations": 1155,
+  "unique_mounted_operations": 1141,
+  "unique_mounted_paths": 1082,
+  "openapi_paths": 1078,
+  "machine_output_candidates": 68,
+  "excluded_hint_matches": 7,
+  "capability_count": 26,
+  "seeded_capabilities": [
+    "retract",
+    "adaptive",
+    "drilling",
+    "profiling",
+    "vcarve",
+    "roughing",
+    "helical",
+    "rosette",
+    "probing",
+    "binding",
+    "inlay",
+    "radius-dish",
+    "feeds-speeds",
+    "biarc-contour"
+  ],
+  "derived_capabilities": [
+    "cam-guitar",
+    "cam-post",
+    "geometry",
+    "headstock-transition",
+    "neck-gcode",
+    "operator-pack",
+    "pocketing",
+    "polygon-offset",
+    "rmos-wrap",
+    "saw-batch",
+    "v1-dxf",
+    "vision"
+  ],
+  "empty_seeded_capabilities": [],
+  "unexplained_emitters": [],
+  "route_aliases": [
+    {
+      "capability_id": "retract",
+      "route_count": 4,
+      "paths": [
+        "/api/cam/retract/gcode",
+        "/api/cam/retract/gcode/download",
+        "/api/cam/retract/gcode/download_governed",
+        "/api/cam/retract/gcode_governed"
+      ]
+    },
+    {
+      "capability_id": "adaptive",
+      "route_count": 2,
+      "paths": [
+        "/api/cam/pocket/adaptive/batch_export",
+        "/api/cam/pocket/adaptive/gcode"
+      ]
+    },
+    {
+      "capability_id": "drilling",
+      "route_count": 3,
+      "paths": [
+        "/api/cam/drilling/gcode",
+        "/api/cam/drilling/intent-gcode",
+        "/api/cam/drilling/pattern/gcode"
+      ]
+    },
+    {
+      "capability_id": "profiling",
+      "route_count": 2,
+      "paths": [
+        "/api/cam/profiling/gcode",
+        "/api/cam/profiling/intent-gcode"
+      ]
+    },
+    {
+      "capability_id": "vcarve",
+      "route_count": 3,
+      "paths": [
+        "/api/cam/toolpath/vcarve/gcode",
+        "/api/cam/vcarve/intent-gcode",
+        "/api/cam/vcarve/production/gcode"
+      ]
+    },
+    {
+      "capability_id": "roughing",
+      "route_count": 2,
+      "paths": [
+        "/api/cam/roughing/gcode_intent",
+        "/api/cam/toolpath/roughing/gcode"
+      ]
+    },
+    {
+      "capability_id": "rosette",
+      "route_count": 2,
+      "paths": [
+        "/api/cam/rosette/plan-toolpath",
+        "/api/cam/rosette/post-gcode"
+      ]
+    },
+    {
+      "capability_id": "probing",
+      "route_count": 17,
+      "paths": [
+        "/api/probe/boss/gcode",
+        "/api/probe/boss/gcode/download",
+        "/api/probe/boss/gcode/download_governed",
+        "/api/probe/corner/gcode",
+        "/api/probe/corner/gcode/download",
+        "/api/probe/corner/gcode/download_governed",
+        "/api/probe/pocket/gcode",
+        "/api/probe/pocket/gcode/download",
+        "/api/probe/pocket/gcode/download_governed",
+        "/api/probe/surface_z/gcode",
+        "/api/probe/surface_z/gcode/download",
+        "/api/probe/surface_z/gcode/download_governed",
+        "/api/probe/vise_square/gcode",
+        "/api/probe/vise_square/gcode/download",
+        "/api/probe/vise_square/gcode/download_governed",
+        "/api/v1/machines/probe/corner",
+        "/api/v1/machines/probe/surface"
+      ]
+    },
+    {
+      "capability_id": "binding",
+      "route_count": 3,
+      "paths": [
+        "/api/cam/binding/channel/gcode",
+        "/api/cam/binding/purfling/gcode",
+        "/api/cam/guitar/acoustic/{style}/binding/gcode"
+      ]
+    },
+    {
+      "capability_id": "cam-guitar",
+      "route_count": 6,
+      "paths": [
+        "/api/cam/guitar/acoustic/{style}/body/gcode",
+        "/api/cam/guitar/acoustic/{style}/soundhole/gcode",
+        "/api/cam/guitar/flying_v/body/gcode",
+        "/api/cam/guitar/les_paul/body/gcode",
+        "/api/cam/guitar/stratocaster/body/gcode",
+        "/api/cam/guitar/{model_id}/neck/gcode"
+      ]
+    },
+    {
+      "capability_id": "geometry",
+      "route_count": 4,
+      "paths": [
+        "/api/geometry/export_bundle",
+        "/api/geometry/export_bundle_multi",
+        "/api/geometry/export_gcode",
+        "/api/geometry/export_gcode_governed"
+      ]
+    },
+    {
+      "capability_id": "neck-gcode",
+      "route_count": 2,
+      "paths": [
+        "/api/neck/gcode/download",
+        "/api/neck/gcode/generate"
+      ]
+    },
+    {
+      "capability_id": "polygon-offset",
+      "route_count": 3,
+      "paths": [
+        "/api/cam/polygon_offset.nc",
+        "/api/cam/polygon_offset_governed.nc",
+        "/api/cam/polygon_offset_n17.nc"
+      ]
+    },
+    {
+      "capability_id": "saw-batch",
+      "route_count": 3,
+      "paths": [
+        "/api/saw/batch/executions/{batch_execution_artifact_id}/gcode",
+        "/api/saw/batch/op-toolpaths/{op_toolpaths_artifact_id}/gcode",
+        "/api/saw/batch/toolpaths/{toolpaths_artifact_id}/download/gcode"
+      ]
+    }
+  ],
+  "duplicate_mounts": [
+    {
+      "path": "/api/instrument/nut-compensation",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/nut-compensation/compare",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/soundhole",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/soundhole/check-position",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/soundhole/types",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/instrument/tuning-machine",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/tuning-machine/required-height",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/instrument/tuning-machine/post-heights",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/instrument/tuning-machine/string-trees",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/_meta/routing-truth",
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/api/saw/batch/spec",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/saw/batch/plan",
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/api/saw/batch/approve",
+      "methods": [
+        "POST"
+      ]
+    }
+  ],
+  "validation_errors": [],
+  "runtime_witnesses_attempted": [],
+  "runtime_witnesses_withheld": [
+    "all POST machine-artifact endpoints (Stage 1 does not deep-trace)",
+    "any endpoint that persists RunArtifact, writes operator files, or mutates durable state"
+  ]
+}

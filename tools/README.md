@@ -14,6 +14,7 @@ that ordinary source additions are tracked **without needing `git add -f`**:
 | `tools/grounding_agent/**` | Yes — repository-owned package |
 | `tools/agent_program/**` | Yes — repository-owned package |
 | `tools/codegen/**` | Yes — repository-owned tooling |
+| `tools/manufacturing_spine/**` | Yes — G2-MANUFACTURING-SPINE-001 registry validator |
 | `tools/README.md` | Yes — this document |
 | Loose new files directly under `tools/` (e.g. `tools/scratch.py`) | No — ignored by default |
 | Generated Python artifacts (`__pycache__/`, `*.pyc`) | No — ignored globally |
