@@ -1,7 +1,7 @@
 {
   "schema": "dxf_catalog_registry_v1",
   "catalog_root": "services/api/app/instrument_geometry",
-  "purpose": "Declarative classification and quarantine register for the DXF catalog. Read by app/ci/dxf_catalog_policy.py for both catalog gates (app/ci/check_dxf_files.py and scripts/validate_dxf_assets.py). A quarantine record never passes a file: it names the failed contract, keeps manufacturing authority BLOCKED, and states the exit condition.",
+  "purpose": "Declarative classification and quarantine register for the DXF catalog. Read by app/ci/dxf_catalog_policy.py for both catalog gates (app/ci/check_dxf_files.py and scripts/validate_dxf_assets.py). A quarantine record never passes a file: it names the failed contract, keeps manufacturing authority BLOCKED, and states the exit condition. manufacturing_authority is recorded and enforced in CI; runtime paths do not yet read it. Known runtime consumer: generators/body_generator.py and lespaul_body_generator.py load LesPaul_CAM_Closed.dxf (UNADJUDICATED here) as the Les Paul G-code template without reading this registry.",
   "rulings": [
     "2026-09-13 owner ruling: the Files gate is an export-readiness gate; files that fall short are fixed or recorded with reason and owner, never downgraded to warnings",
     "2026-09-14 owner ruling: folder + layer define asset class, declared here rather than as exceptions in validator code; BODY_POINTS is reference/measurement data; WIRING_CHANNEL open paths are not declared valid until the CAM consumer is traced; owner stream is DXF Catalog Integrity",

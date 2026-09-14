@@ -2,6 +2,11 @@
 
 **Status:** landed with this PR. Both DXF catalog gates read one registry,
 `services/api/app/ci/dxf_catalog_registry.json`, through `services/api/app/ci/dxf_catalog_policy.py`.
+**Scope of enforcement:** manufacturing_authority is recorded and enforced in CI; runtime paths do not yet read it. Quarantine is evidence of known nonconformance, not permission to
+manufacture, but today only the CI gates act on it. Known runtime consumer that does not:
+`generators/body_generator.py` and `generators/lespaul_body_generator.py` load `LesPaul_CAM_Closed.dxf`
+(UNADJUDICATED here) as the Les Paul G-code template, reachable from the CAM routers, without
+reading this registry or calling the export gate. Runtime enforcement is a separate order.
 **Evidence base:** `docs/investigations/dxf_gate_repair_audit_2026-09-14.md` (rule-by-rule audit of the
 Copilot/Cursor repair) and `docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md`.
 
@@ -82,5 +87,6 @@ These are out of the ruled contract. They are recorded here so a green gate is n
   no catalog file does this today.
 - **What CAM actually consumes.** `preflight_valid` mirrors the runtime pre-check, not every consumer;
   the CAM lanes read closed LWPOLYLINE only, and R12 cannot carry LWPOLYLINE. That is consistent with
-  the tier rule (CAM input is the paid-tier vectorizer's R2000 output), but the consumers of the catalog
-  files themselves (`body/outlines.py`, `catalog.json`) were not traced here.
+  the tier rule (CAM input is the paid-tier vectorizer's R2000 output). The consumers of the catalog
+  files themselves (`body/outlines.py`, `catalog.json`) were not traced here, except the Les Paul
+  G-code generator named under **Scope of enforcement**.
