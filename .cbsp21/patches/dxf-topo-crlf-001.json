@@ -1,0 +1,44 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DXF_TOPO_CRLF_001",
+  "title": "fix(cam): make TopologyValidator independent of DXF line endings (DXF-TOPO-CRLF-001)",
+  "intent": "TopologyValidator parsed the decoded DXF text through io.StringIO without newline translation. ezdxf then read any CRLF (or CR) file as an empty R12 document, so the self-intersection check examined zero entities and reported nothing. The fail-closed export gate (enforce_dxf_validation) therefore blocked a self-intersecting outline stored LF and allowed the identical outline stored CRLF. 73 of the 95 catalog DXFs are stored CRLF. Owner ruling 2026-09-14: fix this first, in its own bounded PR, with an LF/CRLF equivalence regression; no catalog remediation here; rerun the catalog and record newly exposed findings.",
+  "change_type": "fix",
+  "behavior_change": "TopologyValidator now sees the same entities, and returns the same topology report, for LF, CRLF and CR input. Consequence: CRLF DXFs are topology-checked for the first time, so the export gate can now block CRLF uploads that contain self-intersecting or degenerate LWPOLYLINEs, exactly as it already blocked the same geometry stored LF. No rule, threshold or severity changes. DXFPreflight is untouched (it already read via ezdxf.readfile).",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dxf-topo-crlf-001.json",
+      "services/api/app/cam/dxf_advanced_validation.py",
+      "services/api/tests/test_topology_validator_line_endings.py",
+      "docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/dxf-topo-crlf-001.json",
+      "services/api/app/cam/dxf_advanced_validation.py",
+      "services/api/tests/test_topology_validator_line_endings.py",
+      "docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "One argument: io.StringIO(text_content) becomes io.StringIO(text_content, newline=None) in TopologyValidator.__init__, which turns on universal-newline translation, plus the comment above it. Line count unchanged (620). New regression test file with LF/CRLF/CR witnesses at validator level and through enforce_dxf_validation. New investigation note recording the catalog rerun.",
+    "why_not_redundant": "No existing test feeds TopologyValidator CRLF bytes: the smoke tests build DXFs through io.StringIO/doc.encode, which always yields LF, so the defect was invisible to them. The new test fails 12 of 17 cases on the unpatched module (every CRLF and CR case) and passes all 17 with the fix."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/test_topology_validator_line_endings.py against unpatched main a64f0f44 -> 12 failed, 5 passed (all CRLF/CR cases fail)",
+      "pytest tests/test_topology_validator_line_endings.py tests/test_dxf_advanced_validation_smoke.py tests/test_preflight_gate.py tests/test_dxf_preflight_endpoint_smoke.py tests/test_golden_dxf_preflight.py -> 122 passed, 1 skipped",
+      "pytest tests/cam/test_certified_runtime_service_integration.py tests/cam/test_runtime_admission.py tests/cam/test_runtime_provenance_replay.py tests/cam/test_runtime_service_governance.py tests/cam/test_runtime_spine_full_verification.py tests/cam/test_runtime_spine_integration.py -> 193 passed",
+      "catalog acceptance (95 DXFs, ezdxf 1.4.4): entity population vs ezdxf.readfile, LF vs CRLF report equality, patched vs unpatched exposure -> see docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {"path": ".cbsp21/patches/dxf-topo-crlf-001.json", "intent": "This manifest.", "scan_targets": [".cbsp21/patches/dxf-topo-crlf-001.json"], "risk": "low", "behavior_change": "none", "verification": ["check_cbsp21_patch_input.py"]},
+    {"path": "services/api/app/cam/dxf_advanced_validation.py", "intent": "Universal-newline parsing in TopologyValidator.__init__ so CRLF/CR DXFs are read with their entities.", "scan_targets": ["services/api/app/cam/dxf_advanced_validation.py", "services/api/app/cam/dxf_validation_gate.py", "services/api/app/ci/check_dxf_files.py"], "risk": "medium", "behavior_change": "CRLF/CR input is now topology-checked; the export gate can block CRLF files it previously passed unchecked", "verification": ["test_topology_validator_line_endings.py", "test_dxf_advanced_validation_smoke.py", "tests/cam runtime suites"]},
+    {"path": "services/api/tests/test_topology_validator_line_endings.py", "intent": "Regression: identical geometry gives identical entity population and verdict for LF, CRLF and CR, at validator level and through enforce_dxf_validation.", "scan_targets": ["services/api/tests/test_topology_validator_line_endings.py"], "risk": "low", "behavior_change": "none - test only", "verification": ["fails 12/17 on unpatched main; passes 17/17 patched"]},
+    {"path": "docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md", "intent": "Record of the catalog rerun through the repaired validator and the findings it newly exposes (not remediated here).", "scan_targets": ["docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md"], "risk": "low", "behavior_change": "none - documentation", "verification": ["read"]}
+  ]
+}

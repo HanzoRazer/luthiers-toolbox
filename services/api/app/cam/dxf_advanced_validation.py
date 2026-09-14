@@ -338,9 +338,9 @@ class TopologyValidator:
             dxf_bytes: Raw DXF file content
             filename: Original filename (for reporting)
         """
-        # ezdxf 1.4.3 read() expects a text stream, so decode bytes first
+        # ezdxf read() needs a text stream; newline=None maps CRLF/CR to LF (DXF-TOPO-CRLF-001)
         text_content = dxf_bytes.decode("cp1252")  # DXF default encoding
-        self.doc = ezdxf.read(io.StringIO(text_content))
+        self.doc = ezdxf.read(io.StringIO(text_content, newline=None))
         self.filename = filename
         self.msp = self.doc.modelspace()
         self.issues: List[TopologyIssue] = []
