@@ -183,6 +183,19 @@ def test_check_dxf_files_accepts_r12_polyline(tmp_path):
     assert result["passed"], result["errors"]
 
 
+def test_check_dxf_files_accepts_ac1024(tmp_path):
+    from app.ci.check_dxf_files import validate_dxf_file
+
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (100, 0), (100, 60), (0, 60)], close=True)
+    path = tmp_path / "body_r2010.dxf"
+    doc.saveas(str(path))
+    result = validate_dxf_file(path)
+    assert result["info"]["dxf_version"] == "AC1024"
+    assert result["passed"], result["errors"]
+
+
 def test_check_dxf_files_open_lwpolyline_is_advisory(tmp_path):
     from app.ci.check_dxf_files import validate_dxf_file
 

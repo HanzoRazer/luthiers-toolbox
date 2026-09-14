@@ -76,6 +76,11 @@ CATALOG_GEOM_TYPES = frozenset(
 )
 
 
+def _dxf_version_number(version: str) -> Optional[int]:
+    suffix = version[2:] if version.startswith("AC") else ""
+    return int(suffix) if suffix.isdigit() else None
+
+
 def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
     """
     Catalog-parse a single DXF file.
@@ -115,7 +120,13 @@ def validate_dxf_file(dxf_path: Path) -> Dict[str, Any]:
     result["info"]["entity_types"] = entity_types
 
     version_friendly = DXF_VERSION_MAP.get(version, version)
-    if version < MIN_DXF_VERSION:
+    version_number = _dxf_version_number(version)
+    min_version_number = _dxf_version_number(MIN_DXF_VERSION)
+    if (
+        version_number is None
+        or min_version_number is None
+        or version_number < min_version_number
+    ):
         result["passed"] = False
         result["errors"].append(
             f"DXF version {version} ({version_friendly}) is too old. "
