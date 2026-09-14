@@ -263,8 +263,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 import ezdxf
 from shapely.geometry import Polygon, LineString, Point
-
-from app.util.dxf_compat import create_document
 from shapely.validation import explain_validity
 from shapely.ops import unary_union
 from shapely.errors import GEOSException
@@ -338,9 +336,9 @@ class TopologyValidator:
             dxf_bytes: Raw DXF file content
             filename: Original filename (for reporting)
         """
-        # ezdxf 1.4.3 read() expects a text stream, so decode bytes first
+        # ezdxf read() needs a text stream; newline=None maps CRLF/CR to LF (DXF-TOPO-CRLF-001)
         text_content = dxf_bytes.decode("cp1252")  # DXF default encoding
-        self.doc = ezdxf.read(io.StringIO(text_content))
+        self.doc = ezdxf.read(io.StringIO(text_content, newline=None))
         self.filename = filename
         self.msp = self.doc.modelspace()
         self.issues: List[TopologyIssue] = []
@@ -573,9 +571,10 @@ def create_test_figure8_dxf() -> bytes:
     Returns:
         DXF file bytes
     """
+    from app.util.dxf_compat import create_document  # lazy: app.util pulls in fastapi
     doc = create_document(version='R2010')
     msp = doc.modelspace()
-    
+
     # Figure-8 path (self-intersects at center)
     points = [
         (0, 0),
@@ -601,9 +600,10 @@ def create_test_valid_dxf() -> bytes:
     Returns:
         DXF file bytes
     """
+    from app.util.dxf_compat import create_document  # lazy: app.util pulls in fastapi
     doc = create_document(version='R2010')
     msp = doc.modelspace()
-    
+
     # Simple rectangle (valid)
     points = [
         (0, 0),
