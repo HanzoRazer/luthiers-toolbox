@@ -1,0 +1,91 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ZOD_4_6_2_BUMP",
+  "title": "build(deps): bump zod from 4.5.4 to 4.6.2",
+  "intent": "Routine Dependabot currency, no advisory. zod 4.5.4 -> 4.6.2 in packages/client -- a FORWARD move within zod 4, the opposite direction to PR #296's silent 4 -> 3 revert. Minor release, mostly additive (.validate(), z.instanceof().properties(), z.iban(), z.withParser(), faster CommonJS, a 4.5 recursive-schema memory-retention fix, @zod/mini as its own package) plus two patches. Three items can change validation behaviour for code that uses them: fromJSONSchema() now enforces six keywords it used to ignore; .prefault() now preserves undefined outputs and object keys (4.6.2); defaulted discriminators keep unique tags (4.6.1). This repository's client uses none of the three. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none in the shipped app. Lockfile audited against merge base 7685411c by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 node_modules entry changed: zod 4.5.4 -> 4.6.2 (forward), changing only version, resolved and integrity; its own dependency map is unchanged. Zero packages added, zero removed, no other entry touched. The root entry differs in one key, dependencies.zod ^4.5.4 -> ^4.6.2. Consumer analysis: zod has exactly one importer in packages/client/src, cam/compare/compare_types.ts, and it is unreachable from src/main.ts in a full static+dynamic import-graph walk, so no shipped code path validates with zod today. Independently, a search of all client source finds zero uses of fromJSONSchema, prefault or discriminatedUnion -- the three APIs whose behaviour 4.6.x changes -- so the bump would be behaviour-neutral even if that module were mounted.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/zod-4.6.2-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/zod-4.6.2-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for zod from ^4.5.4 to ^4.6.2 -- one line, no other dependency touched. package-lock.json resolves it: zod 4.5.4 -> 4.6.2. No incidental version movement; the added, removed and non-zod changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; the prior zod-4.5.4-bump manifest, dep-sec-pr287-zod4 and other dependency manifests would each cover these two files, and borrowing one is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 74145f25 reported that the PR declares no manifest of its own -- the gates were correct",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 7685411c: entries 412 -> 412, version-changed=1 (zod 4.5.4 -> 4.6.2, forward), added=0, removed=0, non-zod touched = NONE",
+      "supply-chain: `npm view zod@4.6.2 dist.integrity` equals the lockfile integrity; resolved from registry.npmjs.org; publisher 'GitHub Actions' via npm OIDC trusted publishing; no install-time hooks; published 2026-09-10T21:44Z",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=zod@4.5.4 and @4.6.2 -> 0 and 0 (query validated against a known-vulnerable control)",
+      "release notes v4.6.0, v4.6.1, v4.6.2 read; behaviour-changing APIs identified: fromJSONSchema, prefault, discriminatedUnion -> 0 uses each in packages/client/src",
+      "consumer trace: sole importer cam/compare/compare_types.ts; unreachable from src/main.ts by import-graph walk",
+      "merge onto current origin/main 6016ea98 (contains #373 marked and #374 jszip): git merge-tree clean; merged lockfile 412 entries; no reversions",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/zod-4.6.2-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selected this PR's own manifest; changed_files=3)",
+      "CI (lint-build, build-and-test) is the build/test verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^4.5.4 -> ^4.6.2.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - zod 4.5.4 -> 4.6.2 forward; no incidental movement, additions or removals; integrity matches the npm registry",
+      "verification": [
+        "lockfile entry enumeration -> non-zod touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/zod-4.6.2-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/zod-4.6.2-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-14-ZOD",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. zod is the package PR #296 silently reverted, so direction was checked first: this is a forward move within zod 4. The lockfile moved nothing beyond zod -- enumerated, not assumed.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
