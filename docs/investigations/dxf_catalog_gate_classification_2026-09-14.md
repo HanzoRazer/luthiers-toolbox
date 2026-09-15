@@ -137,6 +137,39 @@ repeating its values. Any file that explains this test and also mentions a jumbo
 Also found: the Files gate workflow's "upload report on failure" step pointed at a file nothing wrote. The gate now
 takes `--report FILE`, and the workflow writes the path the upload step already expects.
 
+## Third review round: the outline geometry model (2026-09-15)
+
+A third external risk assessment named `dxf_catalog_policy.py`'s geometry as the riskiest code in the PR.
+It flagged the endpoint graph, arc and spline approximations, the 0.05 mm snap, bbox coverage as the
+definition of "bounds", clause order, and the healed-clause rule. Five chain-geometry defects found in
+round two had been held for a scope ruling; this round fixes them and the rest. Each fix has a witness
+test that **fails on the previous model and passes on this one**. Verified by running the new tests
+against the `d37073f2` gate code: 17 of 25 failed there. The 8 that passed are non-regression cases,
+clean positions of a parametrized witness, and the spline evaluator's unit test.
+
+The geometry now lives in its own module, `app/ci/dxf_catalog_geometry.py` (stdlib only). Its docstring
+is the design note: every rule and the reason for each number.
+
+| Review item | Probe result | Resolution |
+|---|---|---|
+| ARC handling approximates | **Confirmed**: an ARC that crosses another edge passed both gates, because the crossing test saw its chord. An outline built from ARCs failed `closed_outline` (a stadium covered 0.67 of its layer), because the contour's bbox used endpoints while the layer's extent sampled the arcs | One sampling per entity feeds every test. ARC, CIRCLE, ELLIPSE (its start/end parameters honoured) and polyline bulges are sampled to a 0.01 mm chord error. The crossing test reads the sampled ring |
+| Spline endpoints under-specified | **Confirmed**: an unclamped spline was chained at its first and last control points. A curve that stops short of the outline's corners closed it anyway | Splines with control points are evaluated (de Boor, weights honoured). A fit-point-only spline is the polyline through its fit points, which the curve passes through. The catalog's only splines (Flying V) are fit-point-only; their ends are unchanged |
+| Dedupe by endpoint pair collapses distinct geometry | **Confirmed**: a LINE chord across a shallow ARC was dropped and the outline passed. Also found: a lens of two ARCs between the same vertices failed as open | Two edges are one edge only if they join the same vertices **and** share a midpoint |
+| 0.05 mm snap is arbitrary | **Confirmed, broader**: grid rounding made the verdict depend on where a gap fell. 0.03 mm gaps joined or not by position, and 164 of 360 rotated filleted rectangles failed falsely (a false crossing in the Files gate, or an outline split on the grid) | Vertices join by distance: any endpoint within 0.05 mm of a vertex joins it, wherever it falls. The number is unchanged, with its reason recorded: it is the repo's R12 LINE-dedupe endpoint tolerance, 50x the 0.001 mm catalog precision, and 20x tighter than the 1.0 mm gap the DXF cleaner closes. This **supersedes** round two's "straddle treated as open" test |
+| bbox coverage is not containment | **Confirmed**: a 2 mm sliver running corner to corner spanned the layer's bbox and passed as the body next to an open outline | bbox coverage is now necessary, not sufficient. The contour must also enclose (inside, or within 0.06 mm) `outline_coverage_min` of the layer's drawn length. Round one's table called bbox coverage "the ruled criterion". No owner ruling set it; it was this PR's design, and so is the enclosure test |
+| Clause order could change results | **Confirmed**: `topology_valid`'s chain-crossing check read a chain that only `closed_outline` built. With `closed_outline` ordered last, a bowtie LINE chain passed | The outline is computed once, on demand, by whichever clause asks first |
+| Reference-layer removal consistent across gates | Consistent, but by duplicated code; **found**: layer names were compared case-sensitively (DXF compares them without case), so `body_outline` was not an outline layer | One `manufacturing_entities` in the policy, used by both gates; layer names compared case-insensitively |
+| Healed-clause logic depends on what was evaluated | **Confirmed**: after an early stop (`nonempty`/`geometry_present` failed), clauses never run were reported as "now pass", which failed a correct record | A record can be stale only for clauses the gate actually ran |
+| Glob semantics custom; no exactly-once check | **Not reproduced**: `test_every_catalog_dxf_is_classified` classifies every catalog path, and `classify` raises on a path two classes claim (tested) | None |
+| `record_sha256` only hashes recorded files | Intentional (round two): an unrecorded file has no digest to compare against | None |
+| Split the PR | Declined here | The registry, schema, policy and both gates are one contract. Any split leaves a gate reading a registry that doesn't exist yet. The owner can still ask for it |
+| Rationale for the 0.9 threshold | Measured on the catalog: every body that passes scores 1.000 on both bbox coverage and enclosure; the best contour of every body that fails scores at most 0.085 (bbox) and 0.454 (enclosed, the Flying V strip), or has no closed contour at all | 0.9 is a margin, not a measured value: it tolerates a stray mark up to a tenth of the layer. Recorded in the geometry module's docstring |
+| OCS (found, not raised) | **Confirmed latent**: ARCs in a mirrored object coordinate system (extrusion -Z) were placed unmirrored. No catalog entity uses one | Extrusion -Z is mirrored into world XY; any other extrusion yields no points, so it cannot close an outline |
+| A crash in a recorded clause (found, not raised) | **Confirmed**: with TopologyValidator made to raise, `Stratocaster_body.dxf` (record declares `topology_valid`) stayed QUARANTINED and the gate stayed green. The crash showed only as a warning line | A quarantine record cannot cover a crash: the check failed, not the file. Both gates now fail with "Checks for recorded clauses crashed", in either gate, tested with a control |
+
+**Catalog impact: none.** Both gates still report 95 files, 65 PASS, 30 QUARANTINED, 0 FAIL, with the
+same 30 assets, the same failed clauses, and the same messages as before this round.
+
 ## What the gate still does not check
 
 These are out of the ruled contract. They are recorded here so a green gate is not read as more than it is:
@@ -149,8 +182,19 @@ These are out of the ruled contract. They are recorded here so a green gate is n
   coordinates are millimetres (the other 5 declare 4, mm).
 - **Half-body closed by a centreline.** A half outline closed by a centreline LINE is a closed contour
   that bounds its own layer, so it passes. Only asset intent or a spec comparison can tell.
-- **Title-block borders on an outline layer.** A closed border on `BODY_OUTLINE` would bound the layer;
-  no catalog file does this today.
+- **Title-block borders on an outline layer.** A closed border on `BODY_OUTLINE` would bound the layer
+  and enclose everything on it, so it passes even around an open body. No catalog file does this today.
+- **What chains.** Only LINE, ARC and open SPLINE edges chain. Open polylines, partial ELLIPSEs, closed
+  SPLINEs and CIRCLEs never form part of a chained contour, and an outline drawn from them fails
+  `closed_outline` (the conservative direction).
+- **Tangent self-contact.** A chained contour that touches itself at a tangent, without crossing, can
+  be missed by the crossing test, because arcs are read as chords within 0.01 mm.
+- **Upper-case extensions.** Both gates collect `*.dxf`, and the workflow path filters are
+  `**/*.dxf`. On Linux CI both are case-sensitive, so a catalog file named `*.DXF` would be neither
+  scanned nor a trigger. None exists today.
+- **`export_ready` means "passes its class contract".** A `reference` trace that PASSes is reported
+  `export_ready: true`, although its contract makes no manufacturing claim. No in-repo consumer
+  reads the field.
 - **What CAM actually consumes.** `preflight_valid` mirrors the runtime pre-check, not every consumer;
   the CAM lanes read closed LWPOLYLINE only, and R12 cannot carry LWPOLYLINE. That is consistent with
   the tier rule (CAM input is the paid-tier vectorizer's R2000 output). The consumers of the catalog

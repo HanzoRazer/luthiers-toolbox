@@ -15,10 +15,12 @@ validator code, says:
   disposition, owner stream and exit condition. A record never passes a file;
   it marks manufacturing authority BLOCKED and keeps the failure visible.
 
-Dependencies: stdlib + ezdxf entity attributes, plus the sibling
-dxf_catalog_schema module (stdlib), which validates the registry at load time.
-The asset gate job installs only ezdxf, so this module must not import shapely
-or anything outside app/ci; and it avoids ezdxf's numpy-backed helpers (bbox, flattening),
+Dependencies: stdlib + ezdxf entity attributes, plus two sibling stdlib
+modules: dxf_catalog_schema, which validates the registry at load time, and
+dxf_catalog_geometry, the outline geometry model (sampling, vertex tolerance,
+edge identity, containment) with the reason for each of its numbers. The asset
+gate job installs only ezdxf, so none of them may import shapely or anything
+outside app/ci; and they avoid ezdxf's numpy-backed helpers (bbox, flattening),
 whose mid-test numpy import is the double-binding hazard documented in
 services/api/tests/conftest.py.
 """
@@ -27,13 +29,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
-from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Sequence, Set, Tuple
 
+from . import dxf_catalog_geometry as geometry
 from . import dxf_catalog_schema as schema
 
 REGISTRY_PATH = Path(__file__).with_name("dxf_catalog_registry.json")
@@ -42,11 +43,9 @@ DRAWABLE_TYPES = frozenset({"LWPOLYLINE", "POLYLINE", "LINE", "CIRCLE", "ARC", "
 RECORD_FIELDS = schema.RECORD_FIELDS
 KNOWN_CLAUSES = schema.KNOWN_CLAUSES
 RegistryError = schema.RegistryError
-ENDPOINT_QUANTUM_MM = 0.05  # endpoint snap when chaining LINE/ARC/SPLINE edges
 
-Point = Tuple[float, float]
-Segment = Tuple[Point, Point]
-BBox = Tuple[float, float, float, float]
+Point = geometry.Point
+BBox = geometry.BBox
 
 
 # -----------------------------------------------------------------------------
@@ -145,222 +144,114 @@ def check_geometry_present(entities: Sequence[Any]) -> Optional[str]:
     return "No drawable geometry (expected one of: " + ", ".join(sorted(DRAWABLE_TYPES)) + ")"
 
 
-def _key(point: Point) -> Tuple[int, int]:
-    return (round(point[0] / ENDPOINT_QUANTUM_MM), round(point[1] / ENDPOINT_QUANTUM_MM))
+def layer_names(names: Iterable[str]) -> FrozenSet[str]:
+    """Layer names as DXF compares them: case-insensitively."""
+    return frozenset(name.upper() for name in names)
 
 
-def _arc_point(entity: Any, degrees: float) -> Point:
-    c, r = entity.dxf.center, entity.dxf.radius
-    return (c[0] + r * math.cos(math.radians(degrees)), c[1] + r * math.sin(math.radians(degrees)))
+def on_layer(entity: Any, names: FrozenSet[str]) -> bool:
+    return entity.dxf.layer.upper() in names
 
 
-def _spline_defining_points(entity: Any) -> List[Point]:
-    pts = list(entity.fit_points) or list(entity.control_points)
-    return [(p[0], p[1]) for p in pts]
-
-
-def _edge(entity: Any) -> Optional[Segment]:
-    """Start/end of an open chainable entity; None for anything else.
-
-    Plain math only: ezdxf's curve/bbox helpers pull in numpy mid-import,
-    which the test suite's conftest documents as a double-binding hazard.
-    """
-    kind = entity.dxftype()
-    if kind == "LINE":
-        s, e = entity.dxf.start, entity.dxf.end
-        return (s[0], s[1]), (e[0], e[1])
-    if kind == "ARC":
-        return _arc_point(entity, entity.dxf.start_angle), _arc_point(entity, entity.dxf.end_angle)
-    if kind == "SPLINE" and not entity.closed:
-        pts = _spline_defining_points(entity)  # clamped DXF splines start/end on these
-        return (pts[0], pts[-1]) if len(pts) >= 2 else None
-    return None
-
-
-def _two_core(edges: List[Segment]) -> List[int]:
-    """Indices of edges that lie on a cycle (degree-1 branches pruned)."""
-    adjacency: Dict[Tuple[int, int], Set[int]] = defaultdict(set)
-    for i, (a, b) in enumerate(edges):
-        if _key(a) != _key(b):
-            adjacency[_key(a)].add(i)
-            adjacency[_key(b)].add(i)
-    alive = set(i for ids in adjacency.values() for i in ids)
-    queue = deque(v for v, ids in adjacency.items() if len(ids) < 2)
-    while queue:
-        vertex = queue.popleft()
-        for i in list(adjacency[vertex]):
-            other = next(k for k in (_key(edges[i][0]), _key(edges[i][1])) if k != vertex)
-            adjacency[vertex].discard(i)
-            adjacency[other].discard(i)
-            alive.discard(i)
-            if len(adjacency[other]) == 1:
-                queue.append(other)
-    return sorted(alive)
-
-
-def _dedupe(edges: List[Segment]) -> List[Segment]:
-    """Drop repeated edges: a LINE drawn twice is not a closed contour."""
-    unique: Dict[frozenset, Segment] = {}
-    for a, b in edges:
-        unique.setdefault(frozenset((_key(a), _key(b))), (a, b))
-    return list(unique.values())
-
-
-def closed_chain_components(edges: List[Segment]) -> List[List[Segment]]:
-    """Connected components of the cycle-bearing part of an edge graph."""
-    edges = _dedupe(edges)
-    core = _two_core(edges)
-    by_vertex: Dict[Tuple[int, int], List[int]] = defaultdict(list)
-    for i in core:
-        by_vertex[_key(edges[i][0])].append(i)
-        by_vertex[_key(edges[i][1])].append(i)
-    seen: Set[int] = set()
-    components: List[List[Segment]] = []
-    for start in core:
-        if start in seen:
-            continue
-        stack, members = [start], []
-        while stack:
-            i = stack.pop()
-            if i in seen:
-                continue
-            seen.add(i)
-            members.append(edges[i])
-            for end in edges[i]:
-                stack.extend(j for j in by_vertex[_key(end)] if j not in seen)
-        components.append(members)
-    return components
-
-
-def _bbox(points: Iterable[Point]) -> Optional[BBox]:
-    pts = list(points)
-    if not pts:
-        return None
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
-    return min(xs), min(ys), max(xs), max(ys)
-
-
-def is_simple_cycle(chain: List[Segment]) -> bool:
-    """Every vertex joins exactly two edges: one closed contour, no branch or pinch.
-
-    A figure-8 whose lobes share a vertex, or a body with a chord across it,
-    has vertices of degree > 2 and is not a single closed contour.
-    """
-    degree: Dict[Tuple[int, int], int] = defaultdict(int)
-    for a, b in chain:
-        degree[_key(a)] += 1
-        degree[_key(b)] += 1
-    return bool(degree) and all(d == 2 for d in degree.values())
-
-
-def _closed_polyline_points(entity: Any) -> Optional[List[Point]]:
-    kind = entity.dxftype()
-    if kind == "LWPOLYLINE" and entity.closed:
-        return [(p[0], p[1]) for p in entity.get_points("xy")]
-    if kind == "POLYLINE" and entity.is_closed:
-        return [(v.dxf.location.x, v.dxf.location.y) for v in entity.vertices]
-    return None
+def manufacturing_entities(entities: Sequence[Any], class_spec: Dict[str, Any]) -> List[Any]:
+    """The manufacturing view: every entity not on one of the class's reference layers."""
+    reference = layer_names(class_spec.get("reference_layers", []))
+    return [e for e in entities if not on_layer(e, reference)]
 
 
 @dataclass
 class OutlineResult:
-    """Outcome of the closed_outline clause for one file."""
+    """Outcome of the closed_outline clause for one file.
+
+    `chained_ring` is the covering contour's ring when it is a chain of
+    LINE/ARC/SPLINE edges (the Files gate checks it for crossings); it is empty
+    for a closed polyline, which TopologyValidator checks instead.
+    """
     failure: Optional[str]
-    covering_chain: List[Segment] = field(default_factory=list)
+    chained_ring: List[Point] = field(default_factory=list)
+
+
+@dataclass
+class _Candidate:
+    ring: List[Point]
+    sources: Set[int]  # indexes of the outline entities that draw it
+    chained: bool
 
 
 def check_closed_outline(entities: Sequence[Any], asset_class_spec: Dict[str, Any]) -> OutlineResult:
     """closed_outline: a simple closed contour on an outline layer bounds that layer.
 
-    Closed contours: closed LWPOLYLINE, closed POLYLINE, or a closed chain of
-    LINE/ARC/open-SPLINE edges (endpoints snapped to 0.05 mm) that is a simple
-    cycle (every vertex joins exactly two edges). CIRCLE never counts.
-    "Bounds" is a bounding-box test: the contour's bbox must cover
-    `outline_coverage_min` of the outline layer's bbox in both axes, so a small
-    closed strip or cavity on the outline layer cannot stand in for the outline.
-    Geometric self-crossing is checked by the Files gate's topology_valid.
+    The geometry model (sampling, 0.05 mm vertex tolerance, edge identity,
+    simple cycles, containment) is documented in dxf_catalog_geometry. A
+    contour bounds the layer when its bbox spans `outline_coverage_min` of the
+    layer's bbox in both axes and that fraction of the layer's drawn length
+    lies inside it or on it. Geometric self-crossing is the Files gate's
+    topology_valid.
     """
-    layers = set(asset_class_spec["outline_layers"])
-    outline = [e for e in entities if e.dxf.layer in layers and e.dxftype() in DRAWABLE_TYPES]
+    layers = layer_names(asset_class_spec["outline_layers"])
+    outline = [e for e in entities if on_layer(e, layers) and e.dxftype() in DRAWABLE_TYPES]
     if not outline:
         return OutlineResult(f"No geometry on an outline layer ({', '.join(sorted(layers))})")
-    extent = _outline_extent(outline)
+    paths = [geometry.entity_path(e) for e in outline]
+    extent = geometry.bbox(p for path in paths for p in path)
     if extent is None:
         return OutlineResult("Outline-layer geometry has no measurable extent (no usable points)")
     coverage_min = asset_class_spec["outline_coverage_min"]
     candidates, branched = _closed_candidates(outline)
-    best = (0.0, 0.0)
-    for bbox, chain in candidates:
-        cov = _coverage(bbox, extent)
-        if min(cov) >= coverage_min:
-            return OutlineResult(None, chain)
-        if min(cov) > min(best):
-            best = cov
-    return OutlineResult(_outline_failure(best, extent, coverage_min, branched))
+    found, best_cov, best_enclosed = _bounding_contour(candidates, paths, extent, coverage_min)
+    if found is not None:
+        return OutlineResult(None, found.ring if found.chained else [])
+    return OutlineResult(_outline_failure(best_cov, extent, coverage_min, branched, best_enclosed))
 
 
-def _outline_failure(best: Tuple[float, float], extent: BBox, coverage_min: float, branched: int) -> str:
-    message = (f"No simple closed contour bounds the outline layer: the best closed contour's bbox covers "
-               f"{best[0]:.2f} x {best[1]:.2f} of the layer's {extent[2] - extent[0]:.1f} x "
-               f"{extent[3] - extent[1]:.1f} mm bbox (need {coverage_min})")
+def _bounding_contour(candidates: List[_Candidate], paths: List[List[Point]], extent: BBox, coverage_min: float
+                      ) -> Tuple[Optional[_Candidate], Tuple[float, float], Optional[float]]:
+    """The first candidate that bounds the layer, else None with the best near misses (for the message)."""
+    best_cov, best_enclosed = (0.0, 0.0), None
+    for candidate in candidates:
+        cov = _coverage(geometry.bbox(candidate.ring), extent)
+        best_cov = max(best_cov, cov, key=min)
+        if min(cov) < coverage_min:
+            continue
+        enclosed = _enclosed_fraction(candidate, paths)
+        if enclosed >= coverage_min:
+            return candidate, best_cov, best_enclosed
+        best_enclosed = max(best_enclosed or 0.0, enclosed)
+    return None, best_cov, best_enclosed
+
+
+def _outline_failure(best: Tuple[float, float], extent: BBox, coverage_min: float, branched: int,
+                     enclosed: Optional[float]) -> str:
+    size = f"{extent[2] - extent[0]:.1f} x {extent[3] - extent[1]:.1f} mm"
+    if enclosed is None:
+        message = (f"No simple closed contour bounds the outline layer: the best closed contour's bbox covers "
+                   f"{best[0]:.2f} x {best[1]:.2f} of the layer's {size} bbox (need {coverage_min})")
+    else:
+        message = (f"No simple closed contour bounds the outline layer: the closed contour spanning the "
+                   f"layer's {size} bbox encloses only {enclosed:.2f} of the layer's drawn length "
+                   f"(need {coverage_min})")
     if branched:
         message += (f"; {branched} closed chain(s) rejected because they branch or touch themselves "
                     f"(a vertex joins more than two edges)")
     return message
 
 
-def _closed_candidates(outline: Sequence[Any]) -> Tuple[List[Tuple[BBox, List[Segment]]], int]:
-    """(bbox, chain) per closed polyline (chain empty) and per simple closed edge chain.
-
-    Returns the candidates and how many closed chains were rejected as
-    non-simple. Candidates carry only a bbox: the chain's point order is not
-    needed for the coverage test, so none is reconstructed.
-    """
-    candidates = [(_bbox(pts), []) for pts in (_closed_polyline_points(e) for e in outline) if pts]
-    chains = closed_chain_components([s for s in (_edge(e) for e in outline) if s])
-    simple = [c for c in chains if is_simple_cycle(c)]
-    candidates += [(_bbox(p for seg in c for p in seg), c) for c in simple]
-    return candidates, len(chains) - len(simple)
+def _closed_candidates(outline: Sequence[Any]) -> Tuple[List[_Candidate], int]:
+    """Closed polylines and simple closed edge chains, plus how many chains were not simple."""
+    candidates = [_Candidate(ring, {i}, False)
+                  for i, ring in enumerate(geometry.closed_ring(e) for e in outline) if ring]
+    components = geometry.closed_components(geometry.build_edges([geometry.edge_path(e) for e in outline]))
+    simple = [c for c in components if geometry.is_simple_cycle(c)]
+    candidates += [_Candidate(geometry.cycle_ring(c), {edge.source for edge in c}, True) for c in simple]
+    return candidates, len(components) - len(simple)
 
 
-def _arc_points(entity: Any) -> List[Point]:
-    start, end = entity.dxf.start_angle, entity.dxf.end_angle
-    sweep = (end - start) % 360 or 360
-    return [_arc_point(entity, start + sweep * i / 32) for i in range(33)]
-
-
-def _spline_extent_points(entity: Any) -> List[Point]:
-    return [(p[0], p[1]) for p in entity.control_points] or _spline_defining_points(entity)
-
-
-def _ellipse_points(entity: Any) -> List[Point]:
-    c, major, ratio = entity.dxf.center, entity.dxf.major_axis, entity.dxf.ratio
-    minor = (-major[1] * ratio, major[0] * ratio)
-    return [(c[0] + major[0] * math.cos(t) + minor[0] * math.sin(t),
-             c[1] + major[1] * math.cos(t) + minor[1] * math.sin(t))
-            for t in (2 * math.pi * i / 32 for i in range(32))]
-
-
-_EXTENT_POINTS = {
-    "LINE": lambda e: list(_edge(e) or ()),
-    "LWPOLYLINE": lambda e: [(p[0], p[1]) for p in e.get_points("xy")],
-    "POLYLINE": lambda e: [(v.dxf.location.x, v.dxf.location.y) for v in e.vertices],
-    "ARC": _arc_points,
-    "CIRCLE": lambda e: [_arc_point(e, a) for a in (0, 90, 180, 270)],
-    "SPLINE": _spline_extent_points,
-    "ELLIPSE": _ellipse_points,
-}
-
-
-def _extent_points(entity: Any) -> List[Point]:
-    """Points whose bbox bounds the entity (spline control points bound the curve)."""
-    points = _EXTENT_POINTS.get(entity.dxftype())
-    return points(entity) if points else []
-
-
-def _outline_extent(outline: Sequence[Any]) -> Optional[BBox]:
-    return _bbox(p for e in outline for p in _extent_points(e))
+def _enclosed_fraction(candidate: _Candidate, paths: List[List[Point]]) -> float:
+    """Share of the layer's drawn length that the contour draws or encloses."""
+    total = sum(geometry.path_length(p) for p in paths)
+    own = sum(geometry.path_length(paths[i]) for i in candidate.sources)
+    others = [p for i, p in enumerate(paths) if i not in candidate.sources]
+    return (own + geometry.enclosed_length(candidate.ring, others)) / max(total, 1e-9)
 
 
 def _coverage(box: BBox, extent: BBox) -> Tuple[float, float]:
@@ -388,15 +279,18 @@ class Verdict:
 
 
 def judge(asset: Optional[str], asset_class: Optional[str], failures: Dict[str, List[str]],
-          evaluated: Set[str], registry: Dict[str, Any], asset_sha256: Optional[str] = None) -> Verdict:
+          evaluated: Set[str], registry: Dict[str, Any], asset_sha256: Optional[str] = None, *,
+          crashed: Iterable[str] = ()) -> Verdict:
     """Apply the class contract and any quarantine record to clause failures.
 
-    Outcomes, in order:
+    `evaluated` is the clauses this gate actually ran; `crashed` the ones whose
+    check raised. Outcomes, in order:
     - unclassified asset -> FAIL
     - no record: no failures -> PASS, any failure -> FAIL
     - record: QUARANTINED only if all of these hold, otherwise FAIL with the reasons:
       * every failure is a clause the record declares (no extra failure);
-      * every declared clause this gate evaluates still fails (no healed clause);
+      * no declared clause crashed (a crash is not the recorded nonconformance);
+      * every declared clause this gate ran still fails (no healed clause);
       * the record's asset_class matches the classification;
       * the file's bytes still hash to the record's asset_sha256 (the gates
         always pass it; a changed file must be re-adjudicated).
@@ -409,7 +303,7 @@ def judge(asset: Optional[str], asset_class: Optional[str], failures: Dict[str, 
     record = quarantine_record(asset, registry)
     if record is None:
         return Verdict("FAIL" if failures else "PASS", asset, asset_class, failures)
-    messages = _record_mismatches(asset_class, failures, evaluated, record, asset_sha256)
+    messages = _record_mismatches(asset_class, failures, evaluated, record, asset_sha256, set(crashed))
     if messages:
         return Verdict("FAIL", asset, asset_class, failures, messages)
     return Verdict("QUARANTINED", asset, asset_class, failures, [
@@ -418,7 +312,7 @@ def judge(asset: Optional[str], asset_class: Optional[str], failures: Dict[str, 
 
 
 def _record_mismatches(asset_class: str, failures: Dict[str, List[str]], evaluated: Set[str],
-                       record: Dict[str, Any], asset_sha256: Optional[str]) -> List[str]:
+                       record: Dict[str, Any], asset_sha256: Optional[str], crashed: Set[str]) -> List[str]:
     """Reasons a quarantine record no longer describes the file (empty = it still does)."""
     declared = set(record["failed_contract"])
     extra = sorted(set(failures) - declared)
@@ -426,6 +320,9 @@ def _record_mismatches(asset_class: str, failures: Dict[str, List[str]], evaluat
     messages = []
     if extra:
         messages.append(f"Fails clauses not in its quarantine record: {', '.join(extra)}")
+    if declared & crashed:
+        messages.append(f"Checks for recorded clauses crashed: {', '.join(sorted(declared & crashed))} "
+                        f"(a crash is not the recorded nonconformance: fix the check, then re-adjudicate)")
     if healed:
         messages.append(f"Quarantine record lists clauses that now pass: {', '.join(healed)} "
                         f"(exit condition may be met: re-adjudicate and update the record)")

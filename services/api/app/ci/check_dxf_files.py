@@ -10,13 +10,17 @@ Contract clauses (the registry says which apply to which class):
 - readable, nonempty, geometry_present
 - version_allowed: stored catalog files are R12 (AC1009) only
 - closed_outline: a simple closed contour on an outline layer bounds that
-  layer (bbox test; every chained vertex joins exactly two edges)
+  layer (its bbox spans the layer and it encloses the layer's drawn length;
+  geometry model: app/ci/dxf_catalog_geometry.py)
 - preflight_valid: DXFPreflight (the runtime export gate's pre-check) reports
   no ERROR on the manufacturing view (declared reference layers removed)
 - topology_valid: TopologyValidator reports no ERROR on the manufacturing
-  view, and a chained (LINE/ARC) outline does not cross itself
+  view, and a chained (LINE/ARC/SPLINE) outline does not cross itself
 
-A check that crashes has not passed: a crash is a clause failure.
+A check that crashes has not passed: a crash is a clause failure, and one a
+quarantine record cannot cover (a crash is not the recorded nonconformance). Clause
+order comes from the registry and never changes a verdict: every clause reads
+the same unmodified document, and the outline is computed once, on demand.
 A file on a quarantine record is QUARANTINED (not failed, not passed) only
 while it fails exactly the clauses its record declares.
 
@@ -39,9 +43,9 @@ import argparse
 import io
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import ezdxf
 
@@ -69,13 +73,18 @@ class _Context:
     entities: List[Any]
     class_spec: Dict[str, Any]
     registry: Dict[str, Any]
-    outline_chain: List[Any] = field(default_factory=list)
+    _outline: Optional[policy.OutlineResult] = None
     _view_bytes: Optional[bytes] = None
 
     @property
     def manufacturing_entities(self) -> List[Any]:
-        reference = set(self.class_spec.get("reference_layers", []))
-        return [e for e in self.entities if e.dxf.layer not in reference]
+        return policy.manufacturing_entities(self.entities, self.class_spec)
+
+    def outline(self) -> policy.OutlineResult:
+        """The closed_outline result, computed once for whichever clause asks first."""
+        if self._outline is None:
+            self._outline = policy.check_closed_outline(self.manufacturing_entities, self.class_spec)
+        return self._outline
 
     def view_bytes(self) -> bytes:
         """DXF bytes of the manufacturing view: reference layers removed."""
@@ -90,12 +99,12 @@ class _Context:
         holds, so any clause evaluated afterwards (clause order comes from the
         registry) would crash on them.
         """
-        reference = set(self.class_spec.get("reference_layers", []))
-        if not any(e.dxf.layer in reference for e in self.entities):
+        reference = policy.layer_names(self.class_spec.get("reference_layers", []))
+        if not any(policy.on_layer(e, reference) for e in self.entities):
             return self.path.read_bytes()
         view = ezdxf.readfile(str(self.path))
         msp = view.modelspace()
-        for entity in [e for e in msp if e.dxf.layer in reference]:
+        for entity in [e for e in msp if policy.on_layer(e, reference)]:
             msp.delete_entity(entity)
         stream = io.StringIO()
         view.write(stream)
@@ -117,37 +126,37 @@ def _clause_version(ctx: _Context) -> List[str]:
 
 
 def _clause_outline(ctx: _Context) -> List[str]:
-    result = policy.check_closed_outline(ctx.manufacturing_entities, ctx.class_spec)
-    ctx.outline_chain = result.covering_chain
-    return [result.failure] if result.failure else []
+    failure = ctx.outline().failure
+    return [failure] if failure else []
 
 
 def _clause_preflight(ctx: _Context) -> List[str]:
-    try:
-        report = DXFPreflight(ctx.view_bytes(), ctx.path.name).run_all_checks()
-    except Exception as exc:  # fail-closed: a crashed check has not passed
-        return [f"Preflight check crashed: {type(exc).__name__}: {exc}"]
+    report = DXFPreflight(ctx.view_bytes(), ctx.path.name).run_all_checks()
     return [i.message for i in report.issues if i.severity == Severity.ERROR]
 
 
 def _clause_topology(ctx: _Context) -> List[str]:
-    try:
-        report = TopologyValidator(ctx.view_bytes(), ctx.path.name).check_self_intersections()
-    except Exception as exc:  # fail-closed: a crashed check has not passed
-        return [f"Topology check crashed: {type(exc).__name__}: {exc}"]
+    report = TopologyValidator(ctx.view_bytes(), ctx.path.name).check_self_intersections()
     problems = [i.message for i in report.issues if i.severity == Severity.ERROR]
-    return problems + _chain_crossings(ctx.outline_chain)
+    if "outline_layers" not in ctx.class_spec:  # no outline declared, so no chained outline to check
+        return problems
+    return problems + _chain_crossings(ctx.outline().chained_ring)
 
 
-def _chain_crossings(chain: List[Any]) -> List[str]:
-    """A chained outline must not cross itself (shared endpoints are fine)."""
-    if not chain:
+def _chain_crossings(ring: List[Any]) -> List[str]:
+    """A chained outline must not cross itself.
+
+    The ring is the sampled contour from the shared geometry model (arcs and
+    splines as curves, vertices already snapped), so an ARC crossing is seen
+    and two endpoints within the vertex tolerance are one point, not a crossing.
+    """
+    if len(ring) < 3:
         return []
-    from shapely.geometry import MultiLineString
+    from shapely.geometry import LineString
 
-    if MultiLineString([list(segment) for segment in chain]).is_simple:
+    if LineString(list(ring) + [ring[0]]).is_simple:
         return []
-    return ["Outline chain crosses itself (LINE/ARC edges intersect away from their endpoints)"]
+    return ["Outline chain crosses itself (its LINE/ARC/SPLINE edges intersect away from their shared vertices)"]
 
 
 CLAUSE_CHECKS: Dict[str, Callable[[_Context], List[str]]] = {
@@ -160,35 +169,50 @@ CLAUSE_CHECKS: Dict[str, Callable[[_Context], List[str]]] = {
 }
 
 
-def _run_clause(clause: str, ctx: _Context) -> List[str]:
-    """One clause check; a crash fails that clause for this file, never the whole run."""
+def _run_clause(clause: str, ctx: _Context) -> Tuple[List[str], bool]:
+    """(problems, crashed) for one clause; a crash fails that clause for this file, never the whole run."""
     if clause == "readable":
-        return []  # established by _evaluate before any clause runs
+        return [], False  # established by _evaluate before any clause runs
     check = CLAUSE_CHECKS.get(clause)
     if check is None:  # a typo or future clause must never count as a pass
-        return [f"No implementation for contract clause {clause!r} in this gate"]
+        return [f"No implementation for contract clause {clause!r} in this gate"], False
     try:
-        return check(ctx)
+        return check(ctx), False
     except Exception as exc:  # fail-closed: a crashed check has not passed
-        return [f"{clause} check crashed: {type(exc).__name__}: {exc}"]
+        return [f"{clause} check crashed: {type(exc).__name__}: {exc}"], True
+
+
+@dataclass
+class _Evaluation:
+    """Clause failures for one file, which clauses ran, and which of them crashed."""
+    failures: Dict[str, List[str]]
+    ran: Set[str]
+    crashed: Set[str]
 
 
 def _evaluate(dxf_path: Path, contract: List[str], class_spec: Dict[str, Any],
-              registry: Dict[str, Any]) -> Dict[str, List[str]]:
-    """Clause failures for one file; stops after readable/nonempty/geometry fail."""
+              registry: Dict[str, Any]) -> _Evaluation:
+    """Evaluate the contract for one file.
+
+    Stops after readable/nonempty/geometry_present fail. Clauses after the stop
+    were not run, so a quarantine record cannot call them healed.
+    """
     try:
         doc = ezdxf.readfile(str(dxf_path))
     except Exception as exc:  # unreadable is a failure, not a crash of the gate
-        return {"readable": [f"Failed to read DXF: {type(exc).__name__}: {exc}"]}
+        return _Evaluation({"readable": [f"Failed to read DXF: {type(exc).__name__}: {exc}"]}, {"readable"}, set())
     ctx = _Context(dxf_path, doc, list(doc.modelspace()), class_spec, registry)
-    failures: Dict[str, List[str]] = {}
+    result = _Evaluation({}, {"readable"}, set())
     for clause in contract:
-        problems = _run_clause(clause, ctx)
+        result.ran.add(clause)
+        problems, crashed = _run_clause(clause, ctx)
+        if crashed:
+            result.crashed.add(clause)
         if problems:
-            failures[clause] = problems
+            result.failures[clause] = problems
             if clause in ("nonempty", "geometry_present"):
                 break
-    return failures
+    return result
 
 
 def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None, *,
@@ -203,10 +227,9 @@ def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None,
     klass = asset_class or policy.classify(asset, registry)
     contract = policy.contract_for(klass, registry) if klass else BASE_CONTRACT
     spec = registry["asset_classes"].get(klass, {}) if klass else {}
-    failures = _evaluate(dxf_path, contract, spec, registry)
-    evaluated = set(contract) & GATE_CLAUSES
+    run = _evaluate(dxf_path, contract, spec, registry)
     sha = policy.record_sha256(dxf_path, asset, registry)
-    verdict = policy.judge(asset, klass, failures, evaluated, registry, sha)
+    verdict = policy.judge(asset, klass, run.failures, run.ran & GATE_CLAUSES, registry, sha, crashed=run.crashed)
     return _result_dict(dxf_path, verdict)
 
 

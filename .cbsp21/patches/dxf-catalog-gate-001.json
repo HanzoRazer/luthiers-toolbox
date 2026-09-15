@@ -6,7 +6,7 @@
   "title": "ci(dxf): declarative catalog gates with evidence-backed quarantine records (DXF-CATALOG-GATE-001)",
   "intent": "Step 3 of the owner's DXF order (2026-09-14). Both DXF catalog gates (DXF Validation Gate = app/ci/check_dxf_files.py; DXF Asset Validation = scripts/validate_dxf_assets.py) now judge every catalog file against the contract of its asset class, declared in one registry (app/ci/dxf_catalog_registry.json) and read through one policy module (app/ci/dxf_catalog_policy.py). Implements the owner rulings: export-readiness semantics with no warning downgrade; folder + layer classification declared, not coded; BODY_POINTS reference layer; WIRING_CHANNEL not declared valid; stored catalog DXFs R12 only (R2000 is bucket-1 paid-tier canonical vectorizer output); quarantine records with the required fields, owner stream DXF Catalog Integrity, manufacturing authority BLOCKED; complexity under 15 with no baseline raised.",
   "change_type": "ci",
-  "behavior_change": "Both catalog gates change verdicts. Before: the Files gate ran main's old logic (80 pass / 15 fail after #372) and the asset gate failed 76 of 95 on an R12-R2000 + closed-LWPOLYLINE-only rule. After: 95 files -> 65 PASS, 30 QUARANTINED, 0 FAIL in both gates. QUARANTINED means the file fails exactly the clauses its registry record declares; any other failure, a healed clause (stale record), an unclassified catalog file or a record for a missing file fails the gate. New failing conditions that did not exist before: stored R2000/R2010 files (R12-only policy), an outline-layer closed contour that does not bound its layer, chained outlines that cross themselves, and preflight/topology crashes (previously a warning). No runtime or export behaviour changes: only CI gate code, the registry and tests. Per-file JSON results replace the old passed field with blocks_gate and export_ready (no in-repo consumer reads either gate's JSON).",
+  "behavior_change": "Both catalog gates change verdicts. Before: the Files gate ran main's old logic (80 pass / 15 fail after #372) and the asset gate failed 76 of 95 on an R12-R2000 + closed-LWPOLYLINE-only rule. After: 95 files -> 65 PASS, 30 QUARANTINED, 0 FAIL in both gates. QUARANTINED means the file fails exactly the clauses its registry record declares; any other failure, a healed clause (stale record), an unclassified catalog file or a record for a missing file fails the gate. New failing conditions that did not exist before: stored R2000/R2010 files (R12-only policy), an outline-layer closed contour that does not bound its layer, chained outlines that cross themselves, and preflight/topology crashes (previously a warning). No runtime or export behaviour changes: only CI gate code, the registry and tests. Per-file JSON results replace the old passed field with blocks_gate and export_ready (no in-repo consumer reads either gate's JSON). Third review round (sixth commit): closed_outline additionally requires the covering contour to enclose outline_coverage_min of the outline layer's drawn length (bbox coverage alone let a thin corner-to-corner contour pass); a quarantine record no longer covers a crash of a clause it declares; clauses after an early stop are no longer called healed. On the current catalog no verdict, clause or message changes: both gates still give 65 PASS, 30 QUARANTINED, 0 FAIL.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
@@ -24,7 +24,9 @@
       "services/api/app/ci/dxf_catalog_schema.py",
       "services/api/tests/test_dxf_catalog_registry.py",
       "services/api/tests/test_dxf_catalog_gate_robustness.py",
-      "services/api/tests/test_jumbo_dimension_consistency.py"
+      "services/api/tests/test_jumbo_dimension_consistency.py",
+      "services/api/app/ci/dxf_catalog_geometry.py",
+      "services/api/tests/test_dxf_catalog_geometry.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/dxf-catalog-gate-001.json",
@@ -41,11 +43,13 @@
       "services/api/app/ci/dxf_catalog_schema.py",
       "services/api/tests/test_dxf_catalog_registry.py",
       "services/api/tests/test_dxf_catalog_gate_robustness.py",
-      "services/api/tests/test_jumbo_dimension_consistency.py"
+      "services/api/tests/test_jumbo_dimension_consistency.py",
+      "services/api/app/ci/dxf_catalog_geometry.py",
+      "services/api/tests/test_dxf_catalog_geometry.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "New app/ci/dxf_catalog_policy.py (classification, version clause, closed_outline via pruned edge-graph components with 0.05 mm snap and layer-extent coverage, quarantine judging; stdlib + ezdxf entity attributes only, no numpy-backed helpers). New app/ci/dxf_catalog_registry.json (classes, contracts, outline/reference layers with evidence, R12-only version policy with its sources, 30 quarantine records generated from the gate's own output plus traced evidence). check_dxf_files.py rewritten around a clause table (preflight/topology on the manufacturing view with reference layers removed; chained-outline crossing check; crash = failure); main() complexity 29 -> 11 and its complexity-baseline entry removed (violation_count 274 -> 273). validate_dxf_assets.py rewritten on the same policy (ezdxf-only clauses; false bounds-vs-spec claim removed from its docstring). Both workflows trigger on the policy module and registry. New test file (34 tests). The audit doc from ci/dxf-gate-repair-001 lands with a correction header; a new classification note records every rule's resolution and what the gate does not check. Review hardening (third commit): registry schema v2 validated at load by the new app/ci/dxf_catalog_schema.py (required keys and types, clause set == implemented clauses, class/rule/record consistency, dispositions, BLOCKED authority, owner stream, gate evidence lines covering exactly failed_contract, sha256 pin); per-segment class globs with an error on ambiguous classification; closed chains must be simple cycles (rejects pinched figure-8s and chords); records pinned to asset_sha256; a crashing clause fails that file instead of the run; registry catalog_root checked against the scanned root; the asset gate imports the policy as a package; tests split into test_dxf_catalog_gate.py and test_dxf_catalog_registry.py (500-line limit). Second review round (fourth commit): the manufacturing view is serialized from a fresh parse so ctx.doc is never mutated (a registry ordering closed_outline after preflight used to crash on destroyed entities); an unimplemented contract clause fails instead of passing; files are hashed only when a quarantine record exists and an unreadable recorded file fails instead of crashing the run; results carry blocks_gate/export_ready instead of an ambiguous passed; the Files gate JSON regains summary counts and a --report option, which makes the workflow's existing upload-on-failure step real; the asset_class override is keyword-only. test_jumbo_dimension_consistency.py acknowledges the registry: its canonical-magnitude hits were substrings of asset_sha256 digests, which made the jumbo namespace scan fail API Tests / api-verify / Core CI Summary on acb7fde6.",
+    "what_changed": "New app/ci/dxf_catalog_policy.py (classification, version clause, closed_outline via pruned edge-graph components with 0.05 mm snap and layer-extent coverage, quarantine judging; stdlib + ezdxf entity attributes only, no numpy-backed helpers). New app/ci/dxf_catalog_registry.json (classes, contracts, outline/reference layers with evidence, R12-only version policy with its sources, 30 quarantine records generated from the gate's own output plus traced evidence). check_dxf_files.py rewritten around a clause table (preflight/topology on the manufacturing view with reference layers removed; chained-outline crossing check; crash = failure); main() complexity 29 -> 11 and its complexity-baseline entry removed (violation_count 274 -> 273). validate_dxf_assets.py rewritten on the same policy (ezdxf-only clauses; false bounds-vs-spec claim removed from its docstring). Both workflows trigger on the policy module and registry. New test file (34 tests). The audit doc from ci/dxf-gate-repair-001 lands with a correction header; a new classification note records every rule's resolution and what the gate does not check. Review hardening (third commit): registry schema v2 validated at load by the new app/ci/dxf_catalog_schema.py (required keys and types, clause set == implemented clauses, class/rule/record consistency, dispositions, BLOCKED authority, owner stream, gate evidence lines covering exactly failed_contract, sha256 pin); per-segment class globs with an error on ambiguous classification; closed chains must be simple cycles (rejects pinched figure-8s and chords); records pinned to asset_sha256; a crashing clause fails that file instead of the run; registry catalog_root checked against the scanned root; the asset gate imports the policy as a package; tests split into test_dxf_catalog_gate.py and test_dxf_catalog_registry.py (500-line limit). Second review round (fourth commit): the manufacturing view is serialized from a fresh parse so ctx.doc is never mutated (a registry ordering closed_outline after preflight used to crash on destroyed entities); an unimplemented contract clause fails instead of passing; files are hashed only when a quarantine record exists and an unreadable recorded file fails instead of crashing the run; results carry blocks_gate/export_ready instead of an ambiguous passed; the Files gate JSON regains summary counts and a --report option, which makes the workflow's existing upload-on-failure step real; the asset_class override is keyword-only. test_jumbo_dimension_consistency.py acknowledges the registry: its canonical-magnitude hits were substrings of asset_sha256 digests, which made the jumbo namespace scan fail API Tests / api-verify / Core CI Summary on acb7fde6. Third review round (sixth commit): the outline geometry moves to a new stdlib module, app/ci/dxf_catalog_geometry.py, whose docstring is the design note (every rule and the reason for each number). One sampling per entity feeds every test: ARC/CIRCLE/ELLIPSE and polyline bulges to a 0.01 mm chord error, splines evaluated by de Boor (weights honoured; fit-point-only splines as their fit polyline), mirrored OCS (extrusion -Z) placed in world XY. Vertices join by distance (0.05 mm), not by grid cell; edges are one edge only if they share both vertices and a midpoint; a contour must enclose the layer's drawn length as well as span its bbox. Fixes the five chain defects held in round two (ARC crossing unseen; chain-crossing check depended on clause order; chord over a shallow ARC de-duplicated; ARC outlines failed coverage; sub-micron endpoint differences read as crossings) and, from the third review: grid-position-dependent joins, splines chained at control points, bbox coverage standing in for containment, case-sensitive layer names, healed-clause reports for clauses never run, and a crash in a recorded clause reported QUARANTINED. The policy keeps registry, clause and verdict logic and exposes manufacturing_entities, used by both gates. The Files gate computes the outline once, on demand, and crash-checks every clause in one place. Round two's straddle-is-open test is replaced by a position-invariance test. Both workflows trigger on the geometry module.",
     "why_not_redundant": "No existing manifest covers these paths; the #372 manifest covered only the topology validator fix and its test. The LINE-loop recognition idea comes from the reverted Copilot repair (df2f6876..e9ffd088 on ci/dxf-gate-repair-001) but is reimplemented here (component-based, bounded by layer coverage) and every warning downgrade from that repair is rejected, per the audit."
   },
   "verification": {
@@ -60,7 +64,12 @@
       "after review hardening: Files gate (CI mirror) and asset gate (ezdxf only) both -> 95 files, 65 passed, 30 quarantined, 0 failed; the same 30 assets, clauses and dispositions as schema v1",
       "second round: pytest tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_registry.py tests/test_dxf_catalog_gate_robustness.py tests/test_jumbo_dimension_consistency.py -> 93 passed, 1 skipped, 1 xfailed; both gates on the catalog -> 65/30/0; --report JSON total 95",
       "correction to the line above: that run preceded the last edit to the classification doc, whose explanation of the jumbo test quoted the four magnitudes it scans for; the pushed ceae5c6f failed test_no_undeclared_jumbo_dimension_artifacts on that doc in CI (6 red checks, 1 failed of 8903)",
-      "third round, after rewording the doc to name CANONICAL_MAGNITUDES instead of quoting it: pytest tests/test_jumbo_dimension_consistency.py tests/test_jumbo_family_regression.py tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_registry.py -> 100 passed, 1 skipped, 1 xfailed"
+      "third round, after rewording the doc to name CANONICAL_MAGNITUDES instead of quoting it: pytest tests/test_jumbo_dimension_consistency.py tests/test_jumbo_family_regression.py tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_registry.py -> 100 passed, 1 skipped, 1 xfailed",
+      "third review round, witness check: the new tests (test_dxf_catalog_geometry.py + the two crash tests in test_dxf_catalog_gate_robustness.py) run against the d37073f2 gate code -> 17 failed, 8 passed (the 8: non-regression cases, clean positions of parametrized witnesses, and the spline evaluator unit test); against this commit -> 25 passed",
+      "catalog before/after, per file (status, class, every error/warning line, failed clauses): Files gate and asset gate each -> 95 files, 65 PASS, 30 QUARANTINED, 0 FAIL, zero differences from d37073f2",
+      "rotated filleted rectangle sweep (0-89.5 deg in 0.5 deg steps, radius 20 and 7.5): d37073f2 model -> 164 of 360 false failures; this commit -> 0",
+      "third round, CI mirrors: Files gate in a venv with ezdxf 1.4.4 + shapely 2.1.2 and no fastapi, asset gate in an ezdxf 1.4.4-only venv -> both 95 files, 65 passed, 30 quarantined, 0 failed, exit 0, same per-file verdicts",
+      "third round: pytest tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_registry.py tests/test_dxf_catalog_geometry.py tests/test_topology_validator_line_endings.py tests/test_dxf_advanced_validation_smoke.py tests/test_jumbo_dimension_consistency.py tests/test_jumbo_family_regression.py (coverage on) -> 162 passed, 1 skipped, 1 xfailed; re-run after the last doc and manifest edit for the jumbo namespace scan"
     ]
   },
   "files": [
@@ -81,13 +90,15 @@
       "intent": "Shared, dependency-light policy: classify, version clause, closed_outline, quarantine judgement, orphan records.",
       "scan_targets": [
         "services/api/app/ci/dxf_catalog_policy.py",
-        "services/api/app/ci/dxf_catalog_registry.json"
+        "services/api/app/ci/dxf_catalog_registry.json",
+        "services/api/app/ci/dxf_catalog_geometry.py"
       ],
       "risk": "medium",
       "behavior_change": "new CI gate logic",
       "verification": [
         "test_dxf_catalog_gate.py",
-        "both gates on the 95-file catalog"
+        "both gates on the 95-file catalog",
+        "test_dxf_catalog_geometry.py"
       ]
     },
     {
@@ -233,7 +244,7 @@
     },
     {
       "path": "services/api/tests/test_dxf_catalog_gate_robustness.py",
-      "intent": "Second review round: clause-order independence, unimplemented clause fails, unreadable recorded file fails without crashing, unrecorded files are not hashed, snap-grid straddle is conservative, no ambiguous passed field, both CLIs end to end.",
+      "intent": "Second review round: clause-order independence, unimplemented clause fails, unreadable recorded file fails without crashing, unrecorded files are not hashed, no ambiguous passed field, both CLIs end to end. Third round: a crash in a recorded clause fails both gates (with a control); the round-two straddle test moved to test_dxf_catalog_geometry.py as a position-invariance test.",
       "scan_targets": [
         "services/api/tests/test_dxf_catalog_gate_robustness.py"
       ],
@@ -254,6 +265,32 @@
       "behavior_change": "none - test acknowledgement",
       "verification": [
         "pytest tests/test_jumbo_dimension_consistency.py"
+      ]
+    },
+    {
+      "path": "services/api/app/ci/dxf_catalog_geometry.py",
+      "intent": "Outline geometry model for both gates (stdlib only): one sampling per entity, OCS, distance-based vertices, edge identity by vertices + midpoint, simple cycles, containment; docstring records the reason for every number.",
+      "scan_targets": [
+        "services/api/app/ci/dxf_catalog_geometry.py",
+        "services/api/app/ci/dxf_catalog_policy.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "decides closed_outline and the chained-outline crossing check; no catalog verdict change",
+      "verification": [
+        "test_dxf_catalog_geometry.py (witnesses fail on d37073f2)",
+        "both gates on the 95-file catalog, per-file diff vs d37073f2"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_dxf_catalog_geometry.py",
+      "intent": "Third review round witnesses: ARC crossing, clause order, chord over arc, arc outlines, sub-micron endpoints, position-invariant joins, spline curve ends, thin contour vs body, bulges, mirrored OCS, layer-name case, healed clauses after an early stop.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_catalog_geometry.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test only",
+      "verification": [
+        "pytest"
       ]
     }
   ]

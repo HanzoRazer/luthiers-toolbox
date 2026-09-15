@@ -15,8 +15,10 @@ nothing else):
 2. version_allowed: stored catalog files are R12 (AC1009) only; R2000 is
    paid-tier output of the canonical vectorizer, not a catalog format
 3. closed_outline (manufacturing_body class): a simple closed contour on an
-   outline layer bounds that layer (bbox test); closed R12 LINE chains count if
-   every vertex joins exactly two edges, CIRCLE never does
+   outline layer bounds that layer: its bbox spans the layer and it encloses
+   the layer's drawn length. Closed R12 LINE/ARC chains count if every vertex
+   joins exactly two edges; CIRCLE never does. Geometry model:
+   services/api/app/ci/dxf_catalog_geometry.py
 
 Preflight and topology clauses are evaluated by the DXF Validation Gate.
 Bounds and point counts are reported for information only; nothing here
@@ -44,7 +46,7 @@ import json
 import sys
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
     import ezdxf
@@ -159,37 +161,44 @@ class ValidationReport:
 # Validation Functions
 # -----------------------------------------------------------------------------
 
-def _run_check(clause: str, checks: Dict[str, Any]) -> Optional[str]:
-    """One clause check; a crash fails that clause for this file, never the whole run."""
+def _run_check(clause: str, checks: Dict[str, Any]) -> Tuple[Optional[str], bool]:
+    """(problem, crashed) for one clause; a crash fails that clause for this file, never the whole run."""
     if clause == "readable" or (clause in policy.KNOWN_CLAUSES and clause not in GATE_CLAUSES):
-        return None  # readable is established first; preflight/topology belong to the Files gate
+        return None, False  # readable is established first; preflight/topology belong to the Files gate
     if clause not in checks:  # a typo or future clause must never count as a pass
-        return f"No implementation for contract clause {clause!r} in this gate"
+        return f"No implementation for contract clause {clause!r} in this gate", False
     try:
-        return checks[clause]()
+        return checks[clause](), False
     except Exception as exc:  # fail-closed: a crashed check has not passed
-        return f"{clause} check crashed: {type(exc).__name__}: {exc}"
+        return f"{clause} check crashed: {type(exc).__name__}: {exc}", True
 
 
-def _clause_failures(doc: Any, entities: List[Any], contract: List[str],
-                     class_spec: Dict[str, Any], registry: Dict[str, Any]) -> Dict[str, List[str]]:
-    """Failures of the ezdxf-only clauses, in contract order."""
-    reference = set(class_spec.get("reference_layers", []))
+def _clause_failures(doc: Any, entities: List[Any], contract: List[str], class_spec: Dict[str, Any],
+                     registry: Dict[str, Any]) -> Tuple[Dict[str, List[str]], Set[str], Set[str]]:
+    """(failures of the ezdxf-only clauses, clauses iterated, clauses that crashed), in contract order.
+
+    Stops after nonempty/geometry_present fail; clauses after the stop were not
+    run, so a quarantine record cannot call them healed.
+    """
     checks = {
         "nonempty": lambda: None if entities else "DXF modelspace is empty (no entities found)",
         "geometry_present": lambda: policy.check_geometry_present(entities),
         "version_allowed": lambda: policy.check_version(doc.dxfversion, registry),
         "closed_outline": lambda: policy.check_closed_outline(
-            [e for e in entities if e.dxf.layer not in reference], class_spec).failure,
+            policy.manufacturing_entities(entities, class_spec), class_spec).failure,
     }
     failures: Dict[str, List[str]] = {}
+    ran, crashed = {"readable"}, set()
     for clause in contract:
-        problem = _run_check(clause, checks)
+        ran.add(clause)
+        problem, crash = _run_check(clause, checks)
+        if crash:
+            crashed.add(clause)
         if problem:
             failures[clause] = [problem]
             if clause in ("nonempty", "geometry_present"):
                 break
-    return failures
+    return failures, ran, crashed
 
 
 def _entity_points(entity: Any) -> List[Tuple[float, float]]:
@@ -250,22 +259,21 @@ def validate_dxf_file(path: Path, registry: Optional[Dict[str, Any]] = None, *,
     contract = policy.contract_for(result.asset_class, registry) if result.asset_class else BASE_CONTRACT
     spec = registry["asset_classes"].get(result.asset_class, {}) if result.asset_class else {}
     if not HAS_EZDXF:
-        failures = {"readable": ["ezdxf not installed - cannot validate"]}
+        failures, ran, crashed = {"readable": ["ezdxf not installed - cannot validate"]}, {"readable"}, set()
     else:
-        failures = _read_and_check(path, result, contract, spec, registry)
-    evaluated = set(contract) & GATE_CLAUSES
-    verdict = policy.judge(result.asset, result.asset_class, failures, evaluated, registry,
-                           policy.record_sha256(path, result.asset, registry))
+        failures, ran, crashed = _read_and_check(path, result, contract, spec, registry)
+    verdict = policy.judge(result.asset, result.asset_class, failures, ran & GATE_CLAUSES, registry,
+                           policy.record_sha256(path, result.asset, registry), crashed=crashed)
     _apply_verdict(result, verdict)
     return result
 
 
-def _read_and_check(path: Path, result: DXFValidationResult, contract: List[str],
-                    spec: Dict[str, Any], registry: Dict[str, Any]) -> Dict[str, List[str]]:
+def _read_and_check(path: Path, result: DXFValidationResult, contract: List[str], spec: Dict[str, Any],
+                    registry: Dict[str, Any]) -> Tuple[Dict[str, List[str]], Set[str], Set[str]]:
     try:
         doc = ezdxf.readfile(str(path))
     except Exception as exc:  # unreadable is a failure, not a crash of the gate
-        return {"readable": [f"Failed to read DXF: {type(exc).__name__}: {exc}"]}
+        return {"readable": [f"Failed to read DXF: {type(exc).__name__}: {exc}"]}, {"readable"}, set()
     result.dxf_version = doc.dxfversion
     entities = list(doc.modelspace())
     _fill_metrics(result, entities)

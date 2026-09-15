@@ -7,6 +7,8 @@ Each test pins a defect a probe confirmed:
   crash on them;
 - a contract clause with no implementation used to be skipped as a pass;
 - hashing an unreadable file used to crash the gate instead of failing it;
+- (third round) a crash in a clause a quarantine record declares was reported
+  QUARANTINED, so a broken check hid behind the record;
 plus the CLI entry points end to end (exit code and the JSON report CI uploads).
 """
 import copy
@@ -83,19 +85,32 @@ def test_unrecorded_files_are_not_hashed(mini_catalog, bare_registry, monkeypatc
     assert check_dxf_files.validate_dxf_file(path, bare_registry)["status"] == "PASS"
 
 
-def test_endpoints_straddling_the_snap_grid_are_treated_as_open(tmp_path, registry):  # noqa: F811
-    # 0.03 mm apart but on opposite sides of a 0.05 mm snap boundary: conservative, the chain is open.
-    pts = list(ELLIPSE)
-    x0, y0 = 175.024, 0.0
-    pts[0] = (x0, y0)
-    path = _save(tmp_path, "straddle", "R12", lambda m: (
-        _lines(m, pts[1:] + [(x0 + 0.03, y0)], closed=False),
-        m.add_line(pts[0], pts[1], dxfattribs={"layer": "BODY_OUTLINE"})))
-    import ezdxf
+def _crash(*args, **kwargs):
+    raise RuntimeError("synthetic check bug")
 
-    doc = ezdxf.readfile(str(path))
-    failure = policy.check_closed_outline(list(doc.modelspace()), registry["asset_classes"][BODY]).failure
-    assert failure and "No simple closed contour" in failure
+
+def test_files_gate_does_not_quarantine_a_crash_in_a_recorded_clause(mini_catalog, bare_registry,  # noqa: F811
+                                                                     monkeypatch):
+    path = _save(mini_catalog / "body" / "dxf" / "electric", "x", "R12",
+                 lambda m: m.add_polyline2d(ELLIPSE, close=True, dxfattribs={"layer": "GEOMETRY"}))
+    bare_registry["quarantine"] = [
+        _record("body/dxf/electric/x.dxf", ["preflight_valid"], policy.file_sha256(path))]
+    assert check_dxf_files.validate_dxf_file(path, bare_registry)["status"] == "QUARANTINED"  # control
+    monkeypatch.setattr(check_dxf_files, "DXFPreflight", _crash)
+    result = check_dxf_files.validate_dxf_file(path, bare_registry)
+    assert result["status"] == "FAIL"
+    assert any("Checks for recorded clauses crashed: preflight_valid" in e for e in result["errors"])
+
+
+def test_asset_gate_does_not_quarantine_a_crash_in_a_recorded_clause(mini_catalog, bare_registry,  # noqa: F811
+                                                                     asset_gate, monkeypatch):  # noqa: F811
+    path = _save(mini_catalog / "body" / "dxf" / "electric", "x", "R12", lambda m: _lines(m, ELLIPSE, closed=False))
+    bare_registry["quarantine"] = [_record("body/dxf/electric/x.dxf", ["closed_outline"], policy.file_sha256(path))]
+    assert asset_gate.validate_dxf_file(path, bare_registry).status == "QUARANTINED"  # control
+    monkeypatch.setattr(asset_gate.policy, "check_closed_outline", _crash)
+    result = asset_gate.validate_dxf_file(path, bare_registry)
+    assert result.status == "FAIL"
+    assert any("Checks for recorded clauses crashed: closed_outline" in i.message for i in result.issues)
 
 
 def test_result_has_no_ambiguous_passed_field(tmp_path, bare_registry):  # noqa: F811
