@@ -106,9 +106,15 @@ file (`smart_guitar_front_v6_smoothed.dxf`) as a fixture. After hardening the ca
 
 **The six red checks** (API Tests ×2, api-verify ×2, Core CI Summary ×2) were one test:
 `test_jumbo_dimension_consistency.py::test_no_undeclared_jumbo_dimension_artifacts`. It flags any file that mentions
-"jumbo" and contains three of the substrings `530`, `432`, `305`, `254`. Schema v2's `asset_sha256` digests happened
-to contain `432`, `305` and `254`; the v1 registry had none. The registry mentions jumbo only in asset paths. Fixed the
-way the test prescribes: an `ACKNOWLEDGED_NON_DIMENSION_FILES` entry with that reason, scan filters unchanged.
+"jumbo" and contains at least three of the four canonical jumbo body magnitudes (`CANONICAL_MAGNITUDES` in that test)
+as substrings anywhere in its text. Schema v2's `asset_sha256` digests happened to contain three of them; the v1
+registry had none. The registry mentions jumbo only in asset paths. Fixed the way the test prescribes: an
+`ACKNOWLEDGED_NON_DIMENSION_FILES` entry with that reason, scan filters unchanged.
+
+**The same six went red again on `ceae5c6f`**, from the same test, now flagging *this document*: the paragraph above
+first quoted the four magnitudes literally, and the document names `Jumbo_body.dxf` and `carlos_jumbo_body.dxf`
+elsewhere. The fix is the wording, not an acknowledgement entry: the paragraph now names the constant instead of
+repeating its values. Any file that explains this test and also mentions a jumbo asset will trip it the same way.
 
 | Copilot item | Probe result | Resolution |
 |---|---|---|

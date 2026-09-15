@@ -58,7 +58,9 @@
       "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
       "pytest tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_registry.py tests/test_topology_validator_line_endings.py tests/test_dxf_advanced_validation_smoke.py (coverage on) -> 110 passed",
       "after review hardening: Files gate (CI mirror) and asset gate (ezdxf only) both -> 95 files, 65 passed, 30 quarantined, 0 failed; the same 30 assets, clauses and dispositions as schema v1",
-      "second round: pytest tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_registry.py tests/test_dxf_catalog_gate_robustness.py tests/test_jumbo_dimension_consistency.py -> 93 passed, 1 skipped, 1 xfailed; both gates on the catalog -> 65/30/0; --report JSON total 95"
+      "second round: pytest tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_registry.py tests/test_dxf_catalog_gate_robustness.py tests/test_jumbo_dimension_consistency.py -> 93 passed, 1 skipped, 1 xfailed; both gates on the catalog -> 65/30/0; --report JSON total 95",
+      "correction to the line above: that run preceded the last edit to the classification doc, whose explanation of the jumbo test quoted the four magnitudes it scans for; the pushed ceae5c6f failed test_no_undeclared_jumbo_dimension_artifacts on that doc in CI (6 red checks, 1 failed of 8903)",
+      "third round, after rewording the doc to name CANONICAL_MAGNITUDES instead of quoting it: pytest tests/test_jumbo_dimension_consistency.py tests/test_jumbo_family_regression.py tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_registry.py -> 100 passed, 1 skipped, 1 xfailed"
     ]
   },
   "files": [
@@ -200,7 +202,8 @@
       "risk": "low",
       "behavior_change": "none - documentation",
       "verification": [
-        "read"
+        "read",
+        "pytest tests/test_jumbo_dimension_consistency.py (the doc names jumbo assets, so the repo-wide jumbo namespace scan reads it)"
       ]
     },
     {
