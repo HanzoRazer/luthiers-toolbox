@@ -1,0 +1,90 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HAPPY_DOM_20_14_3_BUMP",
+  "title": "build(deps-dev): bump happy-dom from 20.14.0 to 20.14.3",
+  "intent": "Routine Dependabot currency, no advisory. happy-dom 20.14.0 -> 20.14.3 in packages/client (devDependency: the vitest DOM environment). Three patch releases, all CSS computed-style fixes: 20.14.1 invalidates the computed-style cache for the whole subtree; 20.14.2 fixes a regression where not all CSS variables were resolved in getComputedStyle(); 20.14.3 avoids cloning all properties in CSSPropertyManager.toString. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none in the shipped app -- test environment only. Lockfile audited against merge base 7685411c by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 node_modules entry changed: happy-dom 20.14.0 -> 20.14.3, changing only version, resolved and integrity; its own dependency map is unchanged. Zero packages added, zero removed, no other entry touched. The root entry differs in one key, devDependencies.happy-dom ^20.14.0 -> ^20.14.3. happy-dom is the vitest default environment (packages/client/vitest.config.ts: environment \"happy-dom\") and is imported by four audio-analyzer specs; it is not bundled into the application. The only plausible effect is on test assertions that depended on the pre-20.14.2 CSS-variable resolution bug; CI's vitest run is the check for that.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/happy-dom-20.14.3-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/happy-dom-20.14.3-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared devDependency range for happy-dom from ^20.14.0 to ^20.14.3 -- one line, no other dependency touched. package-lock.json resolves it: happy-dom 20.14.0 -> 20.14.3. No incidental version movement; the added, removed and non-happy-dom changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; the prior happy-dom-20.14.0-bump manifest and other dependency manifests would each cover these two files, and borrowing one is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 251bde4f reported that the PR declares no manifest of its own -- the gates were correct",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 7685411c: entries 412 -> 412, version-changed=1 (happy-dom 20.14.0 -> 20.14.3), added=0, removed=0, non-happy-dom touched = NONE",
+      "supply-chain: `npm view happy-dom@20.14.3 dist.integrity` equals the lockfile integrity; resolved from registry.npmjs.org; publisher 'GitHub Actions' via npm OIDC trusted publishing; no install-time hooks; published 2026-09-09T22:39Z",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=happy-dom@20.14.0 and @20.14.3 -> 0 and 0 (query validated against a known-vulnerable control)",
+      "consumer trace: vitest.config.ts environment \"happy-dom\" plus four audio-analyzer spec files; test-only, not bundled",
+      "merge onto current origin/main 6016ea98 (contains #373 marked and #374 jszip): git merge-tree clean; merged lockfile 412 entries; no reversions",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/happy-dom-20.14.3-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selected this PR's own manifest; changed_files=3)",
+      "CI vitest (lint-build, build-and-test) is the verification that no test depended on the old CSS-variable behaviour"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency bump, ^20.14.0 -> ^20.14.3.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - happy-dom 20.14.0 -> 20.14.3; no incidental movement, additions or removals; integrity matches the npm registry",
+      "verification": [
+        "lockfile entry enumeration -> non-happy-dom touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/happy-dom-20.14.3-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/happy-dom-20.14.3-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-14-HAPPYDOM",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. Test environment only; the lockfile moved nothing beyond happy-dom -- enumerated, not assumed.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
