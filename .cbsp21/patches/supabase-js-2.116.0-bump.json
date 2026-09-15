@@ -1,0 +1,90 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SUPABASE_JS_2_116_0_BUMP",
+  "title": "build(deps): bump @supabase/supabase-js from 2.115.0 to 2.116.0",
+  "intent": "Routine Dependabot currency, no advisory. @supabase/supabase-js 2.115.0 -> 2.116.0 in packages/client, which moves the whole @supabase family in lockstep. Minor release: four additive features (auth MFA recovery codes API; storage bucket lifecycle configuration, top-k 10k, versionId on create-URL methods) and three fixes (auth: silence a commit-guard-discarded refresh in the initial session; storage: drop a legacy lifecycle prefix; supabase: warn when `schema` is passed outside `db` options). No repository code adopts any new API. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "No declared-dependency movement beyond the titled family; one small runtime effect on the live auth path, stated rather than hidden. Lockfile audited against merge base 7685411c by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly six node_modules entries changed, all the @supabase family moving 2.115.0 -> 2.116.0 in lockstep: auth-js, functions-js, postgrest-js, realtime-js, storage-js, supabase-js -- each changing only version, resolved and integrity, except supabase-js, whose `dependencies` map also changed. That map was checked key by key because a family bump is exactly where PR #296 hid an unrelated revert: its only movements are the five sibling pins 2.115.0 -> 2.116.0, and it gained no new dependency. Zero packages added, zero removed, zero non-@supabase entries touched. The root entry differs in one key, dependencies.@supabase/supabase-js ^2.115.0 -> ^2.116.0. Runtime: the sole importer, src/auth/supabase.ts, IS reachable from src/main.ts, so this bump does reach users. It calls createClient with only auth {autoRefreshToken, persistSession, detectSessionInUrl} and supabase.auth.getSession(); it passes no `schema` option, so the new 2.116.0 warning cannot fire. The auth fix touches the initial-session refresh path those flags use: it silences a discarded refresh rather than changing session semantics.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/supabase-js-2.116.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/supabase-js-2.116.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for @supabase/supabase-js from ^2.115.0 to ^2.116.0 -- one line, no other dependency touched. package-lock.json resolves the family: auth-js, functions-js, postgrest-js, realtime-js, storage-js and supabase-js 2.115.0 -> 2.116.0, plus supabase-js's own sibling pins. No incidental version movement outside the family; the added, removed and non-@supabase changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; the prior family manifest (supabase-js-2.115.0-bump) and other dependency manifests would each cover these two files, and borrowing one is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 784667ad reported that the PR declares no manifest of its own -- the gates were correct",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 7685411c: entries 412 -> 412, changed=7 (root + six @supabase entries), added=0, removed=0; supabase-js dependencies map checked key by key -> only the five sibling pins moved, no new keys",
+      "supply-chain, all six moved packages: `npm view @supabase/{auth-js,functions-js,postgrest-js,realtime-js,storage-js,supabase-js}@2.116.0 dist.integrity` each equals its lockfile integrity; all resolved from registry.npmjs.org; publisher 'GitHub Actions' via npm OIDC trusted publishing; no install-time hooks; published 2026-09-07 16:26-16:30Z as one release",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=@supabase/supabase-js@2.115.0 and @2.116.0 -> 0 and 0 (query validated against a known-vulnerable control, jszip@3.6.0 -> 2)",
+      "consumer trace: sole importer src/auth/supabase.ts, reachable from src/main.ts; no `schema` option passed to createClient",
+      "merge onto current origin/main 6016ea98 (which already contains #373 marked and #374 jszip): git merge-tree clean; merged lockfile 412 entries; every already-merged version preserved, no reversions",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/supabase-js-2.116.0-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selected this PR's own manifest; changed_files=3)",
+      "CI (lint-build, build-and-test) is the build/test verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^2.115.0 -> ^2.116.0.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "six @supabase entries 2.115.0 -> 2.116.0 in lockstep; no movement outside the family; integrity matches the npm registry for all six",
+      "verification": [
+        "lockfile entry enumeration -> non-@supabase touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/supabase-js-2.116.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/supabase-js-2.116.0-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-14-SUPABASE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moved nothing beyond the @supabase family -- enumerated, not assumed, including the sibling-pin map inside supabase-js. Unlike the marked and jszip bumps in this batch, this package IS on a live path (client auth), so CI and the auth flow are the meaningful runtime checks; the release is additive and its one auth fix is a refresh-noise suppression.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
