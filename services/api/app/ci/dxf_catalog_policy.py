@@ -93,6 +93,22 @@ def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def record_sha256(path: Path, asset: Optional[str], registry: Dict[str, Any]) -> Optional[str]:
+    """The file's sha256 when a quarantine record needs it, else None.
+
+    Hashing only record-bearing files keeps a gate from adding a failure
+    surface to files it already judged. An unreadable file yields a marker
+    string, which can never equal a recorded digest, so the record fails
+    verification instead of the gate crashing.
+    """
+    if quarantine_record(asset, registry) is None:
+        return None
+    try:
+        return file_sha256(path)
+    except OSError as exc:
+        return f"unreadable ({type(exc).__name__})"
+
+
 def contract_for(asset_class: str, registry: Dict[str, Any]) -> List[str]:
     return list(registry["asset_classes"][asset_class]["contract"])
 
@@ -386,8 +402,10 @@ def judge(asset: Optional[str], asset_class: Optional[str], failures: Dict[str, 
         always pass it; a changed file must be re-adjudicated).
     """
     if asset_class is None:
-        return Verdict("FAIL", asset, None, failures,
-                       ["Unclassified catalog asset: add a class_rules entry to dxf_catalog_registry.json"])
+        reason = ("File is outside the catalog root the gate scans; it cannot be classified or recorded"
+                  if asset is None else
+                  "Unclassified catalog asset: add a class_rules entry to dxf_catalog_registry.json")
+        return Verdict("FAIL", asset, None, failures, [reason])
     record = quarantine_record(asset, registry)
     if record is None:
         return Verdict("FAIL" if failures else "PASS", asset, asset_class, failures)
@@ -415,8 +433,9 @@ def _record_mismatches(asset_class: str, failures: Dict[str, List[str]], evaluat
         messages.append(f"Quarantine record says asset_class {record['asset_class']!r}, "
                         f"registry classifies it as {asset_class!r}")
     if asset_sha256 is not None and asset_sha256 != record["asset_sha256"]:
+        now = f"{asset_sha256[:12]}..." if len(asset_sha256) == 64 else asset_sha256
         messages.append(f"Asset bytes changed since the record was made (recorded sha256 "
-                        f"{record['asset_sha256'][:12]}..., now {asset_sha256[:12]}...): re-adjudicate "
+                        f"{record['asset_sha256'][:12]}..., now {now}): re-adjudicate "
                         f"and refresh the record")
     return messages
 

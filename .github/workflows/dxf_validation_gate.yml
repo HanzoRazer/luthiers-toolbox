@@ -58,7 +58,7 @@ jobs:
 
       - name: Run DXF validation gate
         run: |
-          python -m app.ci.check_dxf_files
+          python -m app.ci.check_dxf_files --report dxf_validation_report.json
 
       - name: Upload validation report (on failure)
         if: failure()

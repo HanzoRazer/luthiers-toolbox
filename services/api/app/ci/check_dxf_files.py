@@ -27,7 +27,10 @@ Exit codes:
 - 2: runtime error (catalog directory not found)
 
 Usage:
-    python -m app.ci.check_dxf_files [--strict] [--json] [--path DIR]
+    python -m app.ci.check_dxf_files [--strict] [--json] [--path DIR] [--report FILE]
+
+JSON (--json / --report): total, passed, quarantined, failed, registry_problems, and
+per-file results with status, blocks_gate and export_ready (only PASS is export-ready).
 """
 
 from __future__ import annotations
@@ -81,16 +84,22 @@ class _Context:
         return self._view_bytes
 
     def _serialize_view(self) -> bytes:
+        """Serialize a fresh copy with reference layers removed; ctx.doc is never mutated.
+
+        Deleting from ctx.doc would destroy the entities that ctx.entities still
+        holds, so any clause evaluated afterwards (clause order comes from the
+        registry) would crash on them.
+        """
         reference = set(self.class_spec.get("reference_layers", []))
-        dropped = [e for e in self.entities if e.dxf.layer in reference]
-        if not dropped:
+        if not any(e.dxf.layer in reference for e in self.entities):
             return self.path.read_bytes()
-        msp = self.doc.modelspace()
-        for entity in dropped:
+        view = ezdxf.readfile(str(self.path))
+        msp = view.modelspace()
+        for entity in [e for e in msp if e.dxf.layer in reference]:
             msp.delete_entity(entity)
         stream = io.StringIO()
-        self.doc.write(stream)
-        return self.doc.encode(stream.getvalue())
+        view.write(stream)
+        return view.encode(stream.getvalue())
 
 
 def _clause_nonempty(ctx: _Context) -> List[str]:
@@ -153,9 +162,11 @@ CLAUSE_CHECKS: Dict[str, Callable[[_Context], List[str]]] = {
 
 def _run_clause(clause: str, ctx: _Context) -> List[str]:
     """One clause check; a crash fails that clause for this file, never the whole run."""
+    if clause == "readable":
+        return []  # established by _evaluate before any clause runs
     check = CLAUSE_CHECKS.get(clause)
-    if check is None:
-        return []  # "readable" is established by _evaluate before any clause runs
+    if check is None:  # a typo or future clause must never count as a pass
+        return [f"No implementation for contract clause {clause!r} in this gate"]
     try:
         return check(ctx)
     except Exception as exc:  # fail-closed: a crashed check has not passed
@@ -180,12 +191,12 @@ def _evaluate(dxf_path: Path, contract: List[str], class_spec: Dict[str, Any],
     return failures
 
 
-def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None,
+def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None, *,
                       asset_class: Optional[str] = None) -> Dict[str, Any]:
     """Validate one DXF against its asset-class contract and quarantine record.
 
-    `asset_class` overrides registry classification (used by tests for files
-    outside the catalog).
+    `asset_class` (keyword-only) overrides registry classification. It exists for
+    tests of files outside the catalog; the CLI never passes it.
     """
     registry = registry or policy.load_registry()
     asset = policy.relative_asset(dxf_path, CATALOG_ROOT)
@@ -194,11 +205,14 @@ def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None,
     spec = registry["asset_classes"].get(klass, {}) if klass else {}
     failures = _evaluate(dxf_path, contract, spec, registry)
     evaluated = set(contract) & GATE_CLAUSES
-    verdict = policy.judge(asset, klass, failures, evaluated, registry, policy.file_sha256(dxf_path))
+    sha = policy.record_sha256(dxf_path, asset, registry)
+    verdict = policy.judge(asset, klass, failures, evaluated, registry, sha)
     return _result_dict(dxf_path, verdict)
 
 
 def _result_dict(dxf_path: Path, verdict: policy.Verdict) -> Dict[str, Any]:
+    """Per-file result. `status` is the verdict; there is deliberately no `passed`
+    field: QUARANTINED does not fail the gate but is not export-ready either."""
     failure_lines = [f"[{c}] {m}" for c, msgs in verdict.failures.items() for m in msgs]
     blocking = verdict.blocks_gate
     return {
@@ -206,7 +220,8 @@ def _result_dict(dxf_path: Path, verdict: policy.Verdict) -> Dict[str, Any]:
         "asset": verdict.asset,
         "asset_class": verdict.asset_class,
         "status": verdict.status,
-        "passed": not blocking,
+        "blocks_gate": blocking,
+        "export_ready": verdict.status == "PASS",
         "errors": (failure_lines + verdict.messages) if blocking else [],
         "warnings": [] if blocking else (failure_lines + verdict.messages),
         "info": {"failed_clauses": sorted(verdict.failures)},
@@ -259,6 +274,13 @@ def _print_report(results: List[Dict[str, Any]], problems: List[str], strict: bo
     print(f"\n{'=' * 60}\nRESULT: {'FAILED' if failed else 'PASSED'}\n{'=' * 60}\n")
 
 
+def _json_report(results: List[Dict[str, Any]], problems: List[str]) -> Dict[str, Any]:
+    """Summary counts first, then per-file results; PASS is the only export-ready status."""
+    counts = {s: sum(1 for r in results if r["status"] == s) for s in _ICONS}
+    return {"total": len(results), "passed": counts["PASS"], "quarantined": counts["QUARANTINED"],
+            "failed": counts["FAIL"], "registry_problems": problems, "results": results}
+
+
 def _run(search_dir: Path) -> "tuple[List[Dict[str, Any]], List[str]]":
     """Validate every DXF under search_dir; registry errors become one failing problem."""
     try:
@@ -278,6 +300,8 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--path", type=str, default=None,
                         help="Override search path (default: instrument_geometry/)")
+    parser.add_argument("--report", type=str, default=None,
+                        help="Also write the JSON report to this file (CI uploads it on failure)")
     args = parser.parse_args()
 
     search_dir = _find_catalog(args.path)
@@ -286,9 +310,11 @@ def main() -> int:
         return 2
 
     results, problems = _run(search_dir)
-
+    report = json.dumps(_json_report(results, problems), indent=2, default=str)
+    if args.report:
+        Path(args.report).write_text(report + "\n", encoding="utf-8")
     if args.json:
-        print(json.dumps({"results": results, "registry_problems": problems}, indent=2, default=str))
+        print(report)
     else:
         _print_report(results, problems, args.strict)
 

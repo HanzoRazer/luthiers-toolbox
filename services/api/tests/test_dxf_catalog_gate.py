@@ -195,11 +195,11 @@ def test_reference_class_makes_no_outline_assertion(tmp_path, bare_registry):
     assert _files(path, bare_registry, klass="reference")["status"] == "PASS"
 
 
-def test_file_outside_the_catalog_is_unclassified(tmp_path, bare_registry):
+def test_file_outside_the_catalog_fails_as_outside_the_root(tmp_path, bare_registry):
     path = _save(tmp_path, "stray", "R12", lambda m: _lines(m, ELLIPSE))
     result = check_dxf_files.validate_dxf_file(path, bare_registry)
     assert result["status"] == "FAIL"
-    assert any("Unclassified" in line for line in result["errors"])
+    assert any("outside the catalog root" in line for line in result["errors"])
 
 
 # -----------------------------------------------------------------------------

@@ -41,7 +41,13 @@ class RegistryError(ValueError):
 
 
 def validate_registry(registry: Dict[str, Any], classify: Callable[[str, Dict[str, Any]], Optional[str]]) -> None:
-    """Raise RegistryError listing every problem found; return None if valid."""
+    """Raise RegistryError listing the problems found; return None if valid.
+
+    Stages run in order (top level, then classes and rules, then records) and a
+    later stage runs only if the earlier ones are clean: record checks depend
+    on valid classes and rules, so running them on a broken base would bury the
+    real problem under consequential ones. Within a stage every problem is listed.
+    """
     problems = _top_level(registry)
     if not problems:
         problems += _classes(registry) + _rules(registry)
@@ -128,9 +134,9 @@ def _record_problems(record: Dict[str, Any], registry: Dict[str, Any], classify:
     klass = record["asset_class"]
     if klass not in registry["asset_classes"]:
         return [f"unknown asset_class {klass!r}"]
-    if classify(record["asset"], registry) != klass:
-        problems.append(f"asset_class {klass!r} but class_rules classify the asset as "
-                        f"{classify(record['asset'], registry)!r}")
+    classified = classify(record["asset"], registry)
+    if classified != klass:
+        problems.append(f"asset_class {klass!r} but class_rules classify the asset as {classified!r}")
     contract = registry["asset_classes"][klass]["contract"]
     if not set(record["failed_contract"]) <= set(contract):
         problems.append(f"failed_contract {record['failed_contract']} is not within the {klass} contract")

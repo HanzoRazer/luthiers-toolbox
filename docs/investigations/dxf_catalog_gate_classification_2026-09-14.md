@@ -15,7 +15,7 @@ Copilot/Cursor repair) and `docs/investigations/dxf_topology_crlf_catalog_rerun_
 | Ruling (2026-09-13/14) | Where it lives |
 |---|---|
 | The Files gate is an export-readiness gate; no blanket warning downgrade | `check_dxf_files.py`: every clause failure fails, unless an explicit record covers exactly that clause |
-| Folder + layer define asset class, declared rather than scattered through code | registry `class_rules`, `outline_layers`, `reference_layers`, `layer_evidence` |
+| Folder + layer define asset class, declared rather than scattered through code | the folder picks the class (`class_rules`); layer roles act within the class contract (`outline_layers`, `reference_layers`, `layer_evidence`) |
 | `BODY_POINTS` is reference/measurement data | registry `reference_layers`; the manufacturing view drops it before preflight and topology |
 | `WIRING_CHANNEL` open paths are not declared valid until the CAM consumer is traced | not declared; `LesPaul_CAM_Closed.dxf` is `UNADJUDICATED` |
 | Stored catalog DXFs are R12 only; R2000 is bucket-① paid-tier vectorizer output | registry `version_policy.approved = ["AC1009"]`; no per-file allowance |
@@ -101,6 +101,35 @@ broken outline-like geometry (still PASS), crash isolation in both gates, end-to
 failure / healed record / changed bytes / absent class rule through **both** gates, and a real CRLF catalog
 file (`smart_guitar_front_v6_smoothed.dxf`) as a fixture. After hardening the catalog result is unchanged:
 65 PASS, 30 QUARANTINED, 0 FAIL, with the same 30 assets, clauses and dispositions.
+
+## Second review round (Copilot) and the red CI on `acb7fde6`
+
+**The six red checks** (API Tests ×2, api-verify ×2, Core CI Summary ×2) were one test:
+`test_jumbo_dimension_consistency.py::test_no_undeclared_jumbo_dimension_artifacts`. It flags any file that mentions
+"jumbo" and contains three of the substrings `530`, `432`, `305`, `254`. Schema v2's `asset_sha256` digests happened
+to contain `432`, `305` and `254`; the v1 registry had none. The registry mentions jumbo only in asset paths. Fixed the
+way the test prescribes: an `ACKNOWLEDGED_NON_DIMENSION_FILES` entry with that reason, scan filters unchanged.
+
+| Copilot item | Probe result | Resolution |
+|---|---|---|
+| `_chain_crossings` adds a shapely dependency to a gate meant to run without it | **Rejected**: the Files gate job installs `ezdxf shapely`, and its TopologyValidator already imports shapely at module load. The ezdxf-only asset gate never imports this code | None |
+| `_serialize_view` mutates the parsed document | **Confirmed, real latent bug**: with `closed_outline` ordered after preflight in the registry, it crashed on destroyed entities (`'LWPolyline' object has no attribute 'dxf'`) | The view is built from a fresh parse; `ctx.doc` is never mutated. A clause-order test pins it |
+| Unknown clauses silently pass | **Confirmed** when handed an unvalidated registry (the loader already rejects them) | Defense in depth: an unimplemented clause fails in both gates. The asset gate still skips the clauses the Files gate owns |
+| sha256 computed for every file | **Confirmed**: a missing file raised `FileNotFoundError` and would have crashed the run | Hash only files that have a record; an unreadable recorded file fails its record check instead of crashing. Tested |
+| Files outside the catalog reported as "unclassified" | Accurate but imprecise | Its own message: outside the catalog root |
+| `passed=True` for QUARANTINED is ambiguous | Accurate; no in-repo consumer reads either gate's JSON | `passed` replaced by `blocks_gate` and `export_ready` (only PASS is export-ready); the Files gate JSON regains summary counts |
+| `asset_class` override is reachable from normal use | Accurate | Keyword-only; documented as test-only. The CLIs never pass it |
+| CLI entry points not tested end to end | Accurate | Both CLIs run as subprocesses in tests (exit code, report JSON) |
+| bbox coverage "is a regression in strictness" | **Rejected**: main's gates had no bounding requirement at all (the old asset gate accepted any closed LWPOLYLINE anywhere). This is strictly stronger, and documented as a bbox test | None |
+| Closed POLYLINE accepted by the asset gate vs "export-ready" | **Rejected**: the asset gate evaluates closure only. The POLYLINE bodies fail `preflight_valid` in the Files gate and carry records that declare it | None |
+| Degenerate graph cases | Covered last round; added a near-miss that straddles the 0.05 mm snap grid (treated as open, the conservative direction) | Test |
+| Schema stops after an earlier stage fails | Intentional; the docstring now says why | Docstring |
+| `classify` called twice | Accurate | Computed once |
+| Review notes aren't machine-checked | By design (`review` is human findings; `gate` is checked) | None |
+| Classification is path-only | Accurate: folders pick the class, and layers act within the class contract | Wording |
+
+Also found: the Files gate workflow's "upload report on failure" step pointed at a file nothing wrote. The gate now
+takes `--report FILE`, and the workflow writes the path the upload step already expects.
 
 ## What the gate still does not check
 

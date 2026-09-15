@@ -101,8 +101,8 @@ class DXFValidationResult:
     issues: List[DXFIssue] = field(default_factory=list)
 
     @property
-    def passed(self) -> bool:
-        return self.status != "FAIL"
+    def blocks_gate(self) -> bool:
+        return self.status == "FAIL"
 
     @property
     def error_count(self) -> int:
@@ -124,7 +124,8 @@ class DXFValidationResult:
             "closed_polylines": self.closed_polylines,
             "point_count": self.point_count,
             "bounds": self.bounds,
-            "passed": self.passed,
+            "blocks_gate": self.blocks_gate,
+            "export_ready": self.status == "PASS",
             "error_count": self.error_count,
             "warning_count": self.warning_count,
             "issues": [asdict(i) for i in self.issues],
@@ -160,8 +161,10 @@ class ValidationReport:
 
 def _run_check(clause: str, checks: Dict[str, Any]) -> Optional[str]:
     """One clause check; a crash fails that clause for this file, never the whole run."""
-    if clause not in checks:
-        return None  # "readable" is established before any clause runs
+    if clause == "readable" or (clause in policy.KNOWN_CLAUSES and clause not in GATE_CLAUSES):
+        return None  # readable is established first; preflight/topology belong to the Files gate
+    if clause not in checks:  # a typo or future clause must never count as a pass
+        return f"No implementation for contract clause {clause!r} in this gate"
     try:
         return checks[clause]()
     except Exception as exc:  # fail-closed: a crashed check has not passed
@@ -233,12 +236,12 @@ def _apply_verdict(result: DXFValidationResult, verdict: Any) -> None:
         result.issues.append(DXFIssue(severity or "ERROR", message, "quarantine"))
 
 
-def validate_dxf_file(path: Path, registry: Optional[Dict[str, Any]] = None,
+def validate_dxf_file(path: Path, registry: Optional[Dict[str, Any]] = None, *,
                       asset_class: Optional[str] = None) -> DXFValidationResult:
     """Validate one DXF against its asset-class contract and quarantine record.
 
-    `asset_class` overrides registry classification (used by tests for files
-    outside the catalog).
+    `asset_class` (keyword-only) overrides registry classification. It exists for
+    tests of files outside the catalog; the CLI never passes it.
     """
     registry = registry or policy.load_registry()
     result = DXFValidationResult(str(path), path.name, "UNKNOWN", 0, 0, 0, None)
@@ -252,7 +255,7 @@ def validate_dxf_file(path: Path, registry: Optional[Dict[str, Any]] = None,
         failures = _read_and_check(path, result, contract, spec, registry)
     evaluated = set(contract) & GATE_CLAUSES
     verdict = policy.judge(result.asset, result.asset_class, failures, evaluated, registry,
-                           policy.file_sha256(path))
+                           policy.record_sha256(path, result.asset, registry))
     _apply_verdict(result, verdict)
     return result
 
@@ -286,7 +289,7 @@ def validate_all(root: Path) -> ValidationReport:
         passed=sum(1 for r in results if r.status == "PASS"),
         quarantined=sum(1 for r in results if r.status == "QUARANTINED"),
         failed=sum(1 for r in results if r.status == "FAIL"),
-        warnings=sum(1 for r in results if r.warning_count > 0 and r.passed),
+        warnings=sum(1 for r in results if r.warning_count > 0 and not r.blocks_gate),
         registry_problems=policy.registry_problems(registry, REPO_ROOT, CATALOG_ROOT),
         results=results,
     )
