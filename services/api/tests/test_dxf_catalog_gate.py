@@ -79,39 +79,6 @@ def _files(path, registry, klass=BODY):
 
 
 # -----------------------------------------------------------------------------
-# Registry integrity
-# -----------------------------------------------------------------------------
-
-def test_version_policy_is_r12_only(registry):
-    assert registry["version_policy"]["approved"] == ["AC1009"]
-
-
-def test_every_catalog_dxf_is_classified(registry):
-    unclassified = [p for p in CATALOG_ROOT.rglob("*.dxf")
-                    if policy.classify(policy.relative_asset(p, CATALOG_ROOT), registry) is None]
-    assert unclassified == []
-
-
-def test_quarantine_records_are_complete_and_blocked(registry):
-    clauses = set(registry["clauses"])
-    dispositions = {"QUARANTINED", "QUARANTINE_CANDIDATE", "UNADJUDICATED", "NONCONFORMING_VERSION"}
-    assets = [r["asset"] for r in registry["quarantine"]]
-    assert len(assets) == len(set(assets)), "one record per asset"
-    for record in registry["quarantine"]:
-        assert all(record.get(f) for f in policy.RECORD_FIELDS), record["asset"]
-        assert record["manufacturing_authority"] == "BLOCKED"
-        assert record["owner_stream"] == "DXF Catalog Integrity"
-        assert record["disposition"] in dispositions
-        assert set(record["failed_contract"]) <= clauses
-        assert set(record["failed_contract"]) <= set(policy.contract_for(record["asset_class"], registry))
-        assert policy.classify(record["asset"], registry) == record["asset_class"]
-
-
-def test_no_orphan_quarantine_records(registry):
-    assert policy.orphan_records(registry, CATALOG_ROOT) == []
-
-
-# -----------------------------------------------------------------------------
 # closed_outline
 # -----------------------------------------------------------------------------
 
@@ -194,7 +161,9 @@ def test_body_points_reference_layer_is_exempt(tmp_path, bare_registry):
         m.add_lwpolyline(ELLIPSE, close=True, dxfattribs={"layer": "BODY_OUTLINE"})
         m.add_lwpolyline([(0, 0), (50, 50), (50, 0), (0, 50), (0, 0)], dxfattribs={"layer": "BODY_POINTS"})
     result = _files(_save(tmp_path, "points", "R2000", build), bare_registry)
-    assert result["info"]["failed_clauses"] == ["version_allowed"]  # only the R2000 storage
+    # The open, self-crossing BODY_POINTS path would fail preflight_valid and topology_valid if it were
+    # manufacturing geometry. Exempting the layer leaves exactly one failure: the R2000 storage version.
+    assert result["info"]["failed_clauses"] == ["version_allowed"]
 
 
 def test_same_open_self_crossing_polyline_on_an_undeclared_layer_fails(tmp_path, bare_registry):
@@ -237,8 +206,9 @@ def test_file_outside_the_catalog_is_unclassified(tmp_path, bare_registry):
 # Quarantine semantics
 # -----------------------------------------------------------------------------
 
-def _record(asset, failed):
-    return {"asset": asset, "asset_class": BODY, "failed_contract": failed, "observed_evidence": ["test"],
+def _record(asset, failed, sha="0" * 64):
+    return {"asset": asset, "asset_class": BODY, "asset_sha256": sha, "failed_contract": failed,
+            "observed_evidence": {"gate": [f"[{c}] test" for c in failed], "review": []},
             "disposition": "QUARANTINE_CANDIDATE", "reason": "test", "owner_stream": "DXF Catalog Integrity",
             "manufacturing_authority": "BLOCKED", "exit_condition": "test"}
 
@@ -293,3 +263,154 @@ def test_asset_gate_rejects_malformed_witnesses(tmp_path, bare_registry, asset_g
     result = asset_gate.validate_dxf_file(_save(tmp_path, name, version, build), bare_registry, asset_class=BODY)
     assert result.status == "FAIL"
     assert clause in {i.category for i in result.issues}
+
+
+# -----------------------------------------------------------------------------
+# closed_outline edge cases and exact messages
+# -----------------------------------------------------------------------------
+
+PINCH = [(0, 0), (100, 100), (200, 0), (200, 200), (100, 100), (0, 200)]  # lobes touch at (100, 100)
+
+
+def test_pinched_figure8_chain_is_not_a_closed_outline(tmp_path, registry):
+    failure = _outline(_save(tmp_path, "pinch", "R12", lambda m: _lines(m, PINCH)), registry)
+    assert "branch or touch themselves" in failure
+
+
+def test_body_with_a_chord_is_not_a_simple_closed_outline(tmp_path, registry):
+    path = _save(tmp_path, "chord", "R12", lambda m: (
+        _lines(m, ELLIPSE), m.add_line(ELLIPSE[16], ELLIPSE[48], dxfattribs={"layer": "BODY_OUTLINE"})))
+    assert "branch or touch themselves" in _outline(path, registry)
+
+
+def test_zero_length_and_sub_snap_segments_do_not_break_a_closed_body(tmp_path, registry):
+    path = _save(tmp_path, "tiny", "R12", lambda m: (
+        _lines(m, ELLIPSE),
+        m.add_line(ELLIPSE[3], ELLIPSE[3], dxfattribs={"layer": "BODY_OUTLINE"}),
+        m.add_line(ELLIPSE[5], (ELLIPSE[5][0] + 0.01, ELLIPSE[5][1]), dxfattribs={"layer": "BODY_OUTLINE"})))
+    assert _outline(path, registry) is None
+
+
+def test_degenerate_outline_geometry_fails_instead_of_crashing(registry):
+    class _Spline:
+        closed = False
+        fit_points, control_points = [], []
+        dxf = type("D", (), {"layer": "BODY_OUTLINE"})()
+
+        def dxftype(self):
+            return "SPLINE"
+
+    result = policy.check_closed_outline([_Spline()], registry["asset_classes"][BODY])
+    assert "no measurable extent" in result.failure
+
+
+@pytest.mark.parametrize("name,build,expected", [
+    ("circle_only", lambda m: m.add_circle((0, 0), 3.0, dxfattribs={"layer": "BODY_OUTLINE"}),
+     "No simple closed contour bounds the outline layer"),
+    ("no_outline_layer", lambda m: _lines(m, ELLIPSE, layer="0"), "No geometry on an outline layer"),
+])
+def test_closed_outline_failure_messages(tmp_path, registry, name, build, expected):
+    assert expected in _outline(_save(tmp_path, name, "R12", build), registry)
+
+
+# -----------------------------------------------------------------------------
+# Class-based contract: reference assets make no outline assertion
+# -----------------------------------------------------------------------------
+
+def test_reference_asset_with_broken_outline_like_geometry_still_passes(tmp_path, bare_registry):
+    bowtie = [(-175, -225), (175, 225), (175, -225), (-175, 225)]
+    path = _save(tmp_path, "ref", "R12", lambda m: (_lines(m, bowtie), _lines(m, ELLIPSE, closed=False)))
+    assert _files(path, bare_registry, klass="reference")["status"] == "PASS"
+
+
+# -----------------------------------------------------------------------------
+# A crash in one clause fails that file, never the whole run
+# -----------------------------------------------------------------------------
+
+def test_files_gate_turns_a_crashing_clause_into_a_failure(tmp_path, bare_registry, monkeypatch):
+    def boom(ctx):
+        raise RuntimeError("synthetic")
+    monkeypatch.setitem(check_dxf_files.CLAUSE_CHECKS, "closed_outline", boom)
+    result = _files(_save(tmp_path, "body", "R12", lambda m: _lines(m, ELLIPSE)), bare_registry)
+    assert result["status"] == "FAIL"
+    assert any("closed_outline check crashed: RuntimeError: synthetic" in e for e in result["errors"])
+
+
+def test_asset_gate_turns_a_crashing_clause_into_a_failure(tmp_path, bare_registry, asset_gate, monkeypatch):
+    def boom(*args, **kwargs):
+        raise RuntimeError("synthetic")
+    monkeypatch.setattr(asset_gate.policy, "check_closed_outline", boom)
+    result = asset_gate.validate_dxf_file(_save(tmp_path, "body", "R12", lambda m: _lines(m, ELLIPSE)),
+                                          bare_registry, asset_class=BODY)
+    assert result.status == "FAIL"
+    assert any("closed_outline check crashed" in i.message for i in result.issues)
+
+
+# -----------------------------------------------------------------------------
+# End to end through both gates: quarantine, extra failure, healed record,
+# changed bytes, absent class rule
+# -----------------------------------------------------------------------------
+
+@pytest.fixture
+def mini_catalog(tmp_path, asset_gate, monkeypatch):
+    """A one-folder catalog at <tmp>/catalog/body/dxf/electric/, wired into both gates."""
+    root = tmp_path / "catalog"
+    (root / "body" / "dxf" / "electric").mkdir(parents=True)
+    monkeypatch.setattr(check_dxf_files, "CATALOG_ROOT", root)
+    monkeypatch.setattr(asset_gate, "CATALOG_ROOT", root)
+    return root
+
+
+def _both(path, registry, asset_gate):
+    return (check_dxf_files.validate_dxf_file(path, registry)["status"],
+            asset_gate.validate_dxf_file(path, registry).status)
+
+
+def _electric(root):
+    return root / "body" / "dxf" / "electric"
+
+
+def test_e2e_record_matching_the_failures_quarantines_in_both_gates(mini_catalog, bare_registry, asset_gate):
+    path = _save(_electric(mini_catalog), "x", "R2000",
+                 lambda m: m.add_lwpolyline(ELLIPSE, close=True, dxfattribs={"layer": "BODY_OUTLINE"}))
+    bare_registry["quarantine"] = [_record("body/dxf/electric/x.dxf", ["version_allowed"], policy.file_sha256(path))]
+    assert _both(path, bare_registry, asset_gate) == ("QUARANTINED", "QUARANTINED")
+
+
+def test_e2e_extra_failure_beyond_the_record_fails_both_gates(mini_catalog, bare_registry, asset_gate):
+    path = _save(_electric(mini_catalog), "x", "R2000",
+                 lambda m: m.add_lwpolyline(ELLIPSE, close=False, dxfattribs={"layer": "BODY_OUTLINE"}))
+    bare_registry["quarantine"] = [_record("body/dxf/electric/x.dxf", ["version_allowed"], policy.file_sha256(path))]
+    assert _both(path, bare_registry, asset_gate) == ("FAIL", "FAIL")  # closed_outline is not in the record
+
+
+def test_e2e_healed_record_fails_both_gates(mini_catalog, bare_registry, asset_gate):
+    path = _save(_electric(mini_catalog), "x", "R12", lambda m: _lines(m, ELLIPSE))
+    bare_registry["quarantine"] = [_record("body/dxf/electric/x.dxf", ["version_allowed"], policy.file_sha256(path))]
+    assert _both(path, bare_registry, asset_gate) == ("FAIL", "FAIL")  # the file is R12 now
+
+
+def test_e2e_changed_bytes_fail_both_gates(mini_catalog, bare_registry, asset_gate):
+    path = _save(_electric(mini_catalog), "x", "R2000",
+                 lambda m: m.add_lwpolyline(ELLIPSE, close=True, dxfattribs={"layer": "BODY_OUTLINE"}))
+    bare_registry["quarantine"] = [_record("body/dxf/electric/x.dxf", ["version_allowed"], "f" * 64)]
+    assert _both(path, bare_registry, asset_gate) == ("FAIL", "FAIL")
+    errors = check_dxf_files.validate_dxf_file(path, bare_registry)["errors"]
+    assert any("bytes changed" in e for e in errors)
+
+
+def test_e2e_file_whose_class_rule_is_absent_fails(mini_catalog, bare_registry, asset_gate):
+    bare_registry["class_rules"] = [r for r in bare_registry["class_rules"] if r["class"] != BODY]
+    path = _save(_electric(mini_catalog), "x", "R12", lambda m: _lines(m, ELLIPSE))
+    assert _both(path, bare_registry, asset_gate) == ("FAIL", "FAIL")
+
+
+# -----------------------------------------------------------------------------
+# A real CRLF catalog file, not a synthetic fixture
+# -----------------------------------------------------------------------------
+
+def test_real_crlf_catalog_file_is_topology_checked(bare_registry):
+    path = CATALOG_ROOT / "body" / "dxf" / "electric" / "smart_guitar_front_v6_smoothed.dxf"
+    data = path.read_bytes()
+    assert data.count(b"\r\n") == data.count(b"\n"), "fixture must be stored CRLF"
+    assert "topology_valid" in _files(path, bare_registry)["info"]["failed_clauses"]

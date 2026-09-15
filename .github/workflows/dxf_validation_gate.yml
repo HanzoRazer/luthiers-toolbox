@@ -24,6 +24,7 @@ on:
       - 'services/api/app/cam/dxf_*.py'
       - 'services/api/app/ci/check_dxf_files.py'
       - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_schema.py'
       - 'services/api/app/ci/dxf_catalog_registry.json'
   pull_request:
     paths:
@@ -31,6 +32,7 @@ on:
       - 'services/api/app/cam/dxf_*.py'
       - 'services/api/app/ci/check_dxf_files.py'
       - 'services/api/app/ci/dxf_catalog_policy.py'
+      - 'services/api/app/ci/dxf_catalog_schema.py'
       - 'services/api/app/ci/dxf_catalog_registry.json'
 
 jobs:

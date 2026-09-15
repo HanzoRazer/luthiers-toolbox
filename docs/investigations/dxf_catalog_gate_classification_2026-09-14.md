@@ -26,14 +26,14 @@ Copilot/Cursor repair) and `docs/investigations/dxf_topology_crlf_catalog_rerun_
 
 ## How a file is judged
 
-1. The registry classifies the path: `body/dxf/*/*.dxf` = `manufacturing_body`, `reference_dxf/*` =
-   `reference`. An unclassified catalog file **fails**.
+1. The registry classifies the path: `body/dxf/*/*.dxf` = `manufacturing_body`, `reference_dxf/**/*.dxf` =
+   `reference` (per-segment globs). An unclassified catalog file **fails**; a path two classes claim is an error.
 2. Each clause in the class contract is evaluated (the asset gate evaluates the ezdxf-only clauses; the
    Files gate evaluates all of them). A check that crashes is a failure of that clause.
 3. No failures: **PASS**. Failures with no record: **FAIL**. Failures with a record: **QUARANTINED**,
-   but only if the failures are exactly the record's declared clauses. An extra failure fails the gate,
-   a declared clause that now passes makes the record stale and fails the gate, and a record for a
-   missing file fails the gate.
+   but only if the failures are exactly the record's declared clauses and the file still hashes to the
+   record's `asset_sha256`. An extra failure fails the gate; a declared clause that now passes makes the
+   record stale and fails the gate; changed bytes fail the gate; a record for a missing file fails the gate.
 
 ## Result on the current catalog (both gates, CI toolchains)
 
@@ -70,6 +70,37 @@ Every record's exit condition names what would clear it. Most end in "regenerate
 | F6 self-intersection → warning | rejected; chained outlines are now also checked for crossings |
 | F7 preflight crash → "skipped" | rejected: a crash is a clause failure (topology too) |
 | F8 remaining preflight ERRORs block | kept, now on the manufacturing view |
+
+## Review hardening (registry schema v2)
+
+An external review of #378 raised the items below. Each was checked against the code with an executable
+probe before acting; the verdicts are what the probes showed.
+
+| Review item | Probe result | Resolution |
+|---|---|---|
+| No registry schema validation | **Confirmed**: a record naming an unknown clause was accepted; a missing `outline_coverage_min` surfaced as a `KeyError` mid-evaluation | New `app/ci/dxf_catalog_schema.py`, run at load: required keys/types, clause set == implemented clauses, class/rule/record consistency, dispositions, BLOCKED, owner stream, sha256 format. It rejects a malformed registry with a message listing every problem, and both gates report that as a failure. Schema renamed `dxf_catalog_registry_v2`; any other name is rejected |
+| Registry clauses can drift from the implementation | Confirmed possible | `KNOWN_CLAUSES` must equal the registry's `clauses` and the Files gate's implemented checks (test) |
+| First-match classification, `*` spans folders | **Confirmed**: `body/dxf/electric/sub/x.dxf` classified as a body | Globs match per path segment (`**` spans folders). A path matched by rules for two classes raises an error, so order never matters |
+| Figure-8 / self-touching cycles accepted | **Confirmed, broader than stated**: a pinched figure-8 of LINEs passed `closed_outline` *and* the Files gate's crossing check; a body with a chord also passed | A chained outline must be a simple cycle (every vertex joins exactly two edges). All three real chain outlines in the catalog already are, so no verdict changed |
+| Coverage is only a bbox test | Accurate | Kept as the ruled criterion, now named as a bounding-box test in code, messages and the clause text |
+| Record matched only by asset | Asset + class were already checked; **real gap**: changed bytes that fail the same clause stayed quarantined | Every record pins `asset_sha256`; changed bytes fail both gates until re-adjudicated |
+| Evidence mixes gate output and reviewer notes | Accurate | `observed_evidence` is `{gate, review}`: gate lines are `[clause] message` and must cover exactly `failed_contract` (schema-checked) |
+| Path-based dynamic import in the asset gate | Accurate (it also created two copies of the policy module in tests) | Normal package import; `app/__init__.py` and `app/ci/__init__.py` are empty |
+| `catalog_root` in the registry is unused | Accurate | Both gates fail if the registry's `catalog_root` is not the root they scan |
+| Spline with no defining points makes `_edge` raise | **Not reproduced**: `_edge` returns `None` | No change; covered by a new degenerate-geometry test |
+| `_two_core` brittle on collapsed / zero-length edges | **Not reproduced** | No change; covered by a new test |
+| Structure the version policy as rules/ranges | Declined | `approved` is already a machine-readable allowlist, separate from its prose `basis`. Ranges would weaken the owner's R12-only ruling |
+
+Found while verifying (not in the review): **a clause that raised crashed the whole gate run.** An outline
+layer holding only a degenerate spline hit `min()` on an empty sequence. Both gates now turn a crashing
+clause into a failure of that clause for that file, and the empty-extent case has its own message.
+
+The review also asked for tests; added: 13 malformed-registry cases, clause drift, per-segment globs and
+ambiguity, pinch/chord/zero-length/degenerate geometry, exact failure messages, a reference asset with
+broken outline-like geometry (still PASS), crash isolation in both gates, end-to-end quarantine / extra
+failure / healed record / changed bytes / absent class rule through **both** gates, and a real CRLF catalog
+file (`smart_guitar_front_v6_smoothed.dxf`) as a fixture. After hardening the catalog result is unchanged:
+65 PASS, 30 QUARANTINED, 0 FAIL, with the same 30 assets, clauses and dispositions.
 
 ## What the gate still does not check
 

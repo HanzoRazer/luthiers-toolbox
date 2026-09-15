@@ -9,7 +9,8 @@ scripts/validate_dxf_assets.py through app/ci/dxf_catalog_policy.py).
 Contract clauses (the registry says which apply to which class):
 - readable, nonempty, geometry_present
 - version_allowed: stored catalog files are R12 (AC1009) only
-- closed_outline: a closed contour on an outline layer bounds that layer
+- closed_outline: a simple closed contour on an outline layer bounds that
+  layer (bbox test; every chained vertex joins exactly two edges)
 - preflight_valid: DXFPreflight (the runtime export gate's pre-check) reports
   no ERROR on the manufacturing view (declared reference layers removed)
 - topology_valid: TopologyValidator reports no ERROR on the manufacturing
@@ -21,7 +22,8 @@ while it fails exactly the clauses its record declares.
 
 Exit codes:
 - 0: every file PASSED or is QUARANTINED
-- 1: one or more files FAILED (or the registry has an orphan record)
+- 1: one or more files FAILED, or the registry is malformed, names a missing
+  asset, or declares a catalog_root other than the one scanned
 - 2: runtime error (catalog directory not found)
 
 Usage:
@@ -149,6 +151,17 @@ CLAUSE_CHECKS: Dict[str, Callable[[_Context], List[str]]] = {
 }
 
 
+def _run_clause(clause: str, ctx: _Context) -> List[str]:
+    """One clause check; a crash fails that clause for this file, never the whole run."""
+    check = CLAUSE_CHECKS.get(clause)
+    if check is None:
+        return []  # "readable" is established by _evaluate before any clause runs
+    try:
+        return check(ctx)
+    except Exception as exc:  # fail-closed: a crashed check has not passed
+        return [f"{clause} check crashed: {type(exc).__name__}: {exc}"]
+
+
 def _evaluate(dxf_path: Path, contract: List[str], class_spec: Dict[str, Any],
               registry: Dict[str, Any]) -> Dict[str, List[str]]:
     """Clause failures for one file; stops after readable/nonempty/geometry fail."""
@@ -159,7 +172,7 @@ def _evaluate(dxf_path: Path, contract: List[str], class_spec: Dict[str, Any],
     ctx = _Context(dxf_path, doc, list(doc.modelspace()), class_spec, registry)
     failures: Dict[str, List[str]] = {}
     for clause in contract:
-        problems = CLAUSE_CHECKS[clause](ctx) if clause in CLAUSE_CHECKS else []
+        problems = _run_clause(clause, ctx)
         if problems:
             failures[clause] = problems
             if clause in ("nonempty", "geometry_present"):
@@ -181,7 +194,7 @@ def validate_dxf_file(dxf_path: Path, registry: Optional[Dict[str, Any]] = None,
     spec = registry["asset_classes"].get(klass, {}) if klass else {}
     failures = _evaluate(dxf_path, contract, spec, registry)
     evaluated = set(contract) & GATE_CLAUSES
-    verdict = policy.judge(asset, klass, failures, evaluated, registry)
+    verdict = policy.judge(asset, klass, failures, evaluated, registry, policy.file_sha256(dxf_path))
     return _result_dict(dxf_path, verdict)
 
 
@@ -228,7 +241,7 @@ def _print_result(result: Dict[str, Any], strict: bool) -> None:
             print(f"   🔒 {line}")
 
 
-def _print_report(results: List[Dict[str, Any]], orphans: List[str], strict: bool) -> None:
+def _print_report(results: List[Dict[str, Any]], problems: List[str], strict: bool) -> None:
     counts = {s: sum(1 for r in results if r["status"] == s) for s in _ICONS}
     print(f"\n{'=' * 60}")
     print("DXF Validation Report - instrument_geometry/ (export readiness)")
@@ -240,10 +253,20 @@ def _print_report(results: List[Dict[str, Any]], orphans: List[str], strict: boo
     print(f"{'=' * 60}\n")
     for result in results:
         _print_result(result, strict)
-    for asset in orphans:
-        print(f"❌ quarantine record for missing asset: {asset}")
-    failed = counts["FAIL"] + len(orphans)
+    for problem in problems:
+        print(f"❌ registry: {problem}")
+    failed = counts["FAIL"] + len(problems)
     print(f"\n{'=' * 60}\nRESULT: {'FAILED' if failed else 'PASSED'}\n{'=' * 60}\n")
+
+
+def _run(search_dir: Path) -> "tuple[List[Dict[str, Any]], List[str]]":
+    """Validate every DXF under search_dir; registry errors become one failing problem."""
+    try:
+        registry = policy.load_registry()
+        results = [validate_dxf_file(p, registry) for p in find_dxf_files(search_dir)]
+    except policy.RegistryError as exc:
+        return [], [str(exc)]
+    return results, policy.registry_problems(registry, REPO_ROOT, CATALOG_ROOT)
 
 
 def main() -> int:
@@ -262,16 +285,14 @@ def main() -> int:
         print("ERROR: Could not find instrument_geometry/ directory")
         return 2
 
-    registry = policy.load_registry()
-    results = [validate_dxf_file(p, registry) for p in find_dxf_files(search_dir)]
-    orphans = policy.orphan_records(registry, CATALOG_ROOT)
+    results, problems = _run(search_dir)
 
     if args.json:
-        print(json.dumps({"results": results, "orphan_records": orphans}, indent=2, default=str))
+        print(json.dumps({"results": results, "registry_problems": problems}, indent=2, default=str))
     else:
-        _print_report(results, orphans, args.strict)
+        _print_report(results, problems, args.strict)
 
-    failed = sum(1 for r in results if r["status"] == "FAIL") + len(orphans)
+    failed = sum(1 for r in results if r["status"] == "FAIL") + len(problems)
     quarantined = sum(1 for r in results if r["status"] == "QUARANTINED")
     return 1 if failed or (args.strict and quarantined) else 0
 

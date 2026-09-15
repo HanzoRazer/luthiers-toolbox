@@ -1,5 +1,6 @@
 {
-  "schema": "dxf_catalog_registry_v1",
+  "schema": "dxf_catalog_registry_v2",
+  "schema_notes": "v2 (2026-09-14): observed_evidence is {gate, review}: gate lines are '[clause] message' as the gate prints them and must cover exactly failed_contract; review lines are human findings. Every record pins asset_sha256; a changed file fails the gate until re-adjudicated. class_rules globs match per path segment ('*' within a segment, '**' across segments); a path matched by rules for two classes is an error. app/ci/dxf_catalog_schema.py validates all of this at load time and rejects any other schema name: bump the name whenever the structure changes.",
   "catalog_root": "services/api/app/instrument_geometry",
   "purpose": "Declarative classification and quarantine register for the DXF catalog. Read by app/ci/dxf_catalog_policy.py for both catalog gates (app/ci/check_dxf_files.py and scripts/validate_dxf_assets.py). A quarantine record never passes a file: it names the failed contract, keeps manufacturing authority BLOCKED, and states the exit condition. manufacturing_authority is recorded and enforced in CI; runtime paths do not yet read it. Known runtime consumer: generators/body_generator.py and lespaul_body_generator.py load LesPaul_CAM_Closed.dxf (UNADJUDICATED here) as the Les Paul G-code template without reading this registry.",
   "rulings": [
@@ -18,7 +19,7 @@
     "nonempty": "modelspace has at least one entity",
     "geometry_present": "at least one LWPOLYLINE, POLYLINE, LINE, CIRCLE, ARC, SPLINE or ELLIPSE",
     "version_allowed": "DXF version is in version_policy.approved",
-    "closed_outline": "a closed contour on an outline layer (closed LWPOLYLINE/POLYLINE, or a closed LINE/ARC/open-SPLINE chain with 0.05 mm endpoint snap; never CIRCLE) covers outline_coverage_min of that layer's extents in both axes",
+    "closed_outline": "a simple closed contour on an outline layer (closed LWPOLYLINE/POLYLINE, or a closed LINE/ARC/open-SPLINE chain with 0.05 mm endpoint snap in which every vertex joins exactly two edges; never CIRCLE) whose bounding box covers outline_coverage_min of the outline layer's bounding box in both axes",
     "preflight_valid": "DXFPreflight (the runtime export gate's pre-check) reports no ERROR on the manufacturing view (reference layers removed)",
     "topology_valid": "TopologyValidator reports no ERROR on the manufacturing view, and a chained outline does not cross itself"
   },
@@ -58,12 +59,12 @@
     {
       "glob": "body/dxf/*/*.dxf",
       "class": "manufacturing_body",
-      "basis": "body/dxf/{acoustic,electric,other}/ is the body-outline catalog read by instrument_geometry/body/outlines.py and catalog.json"
+      "basis": "body/dxf/{acoustic,electric,other}/ is the body-outline catalog read by instrument_geometry/body/outlines.py and catalog.json; '*' stays within one folder, so a DXF nested deeper under body/dxf/ is unclassified and fails until classified"
     },
     {
-      "glob": "reference_dxf/*",
+      "glob": "reference_dxf/**/*.dxf",
       "class": "reference",
-      "basis": "reference_dxf/ holds blueprint reference traces (62 cuatro extractions); fnmatch '*' spans subdirectories"
+      "basis": "reference_dxf/ holds blueprint reference traces (62 cuatro extractions, nested up to three levels)"
     }
   ],
   "layer_evidence": {
@@ -77,14 +78,19 @@
     {
       "asset": "body/dxf/acoustic/carlos_jumbo_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "48605e835b6836f04941822ffc5142d24ec27401a245209d8c2f7f4735922305",
       "failed_contract": [
         "preflight_valid"
       ],
-      "observed_evidence": [
-        "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC",
-        "GEOMETRY: one closed POLYLINE; extents 400.0 x 360.0 mm",
-        "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC"
+        ],
+        "review": [
+          "GEOMETRY: one closed POLYLINE; extents 400.0 x 360.0 mm",
+          "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "The outline is a closed R12 POLYLINE, which the runtime export pre-check (DXFPreflight) does not accept, so the file is not export-ready as stored.",
       "owner_stream": "DXF Catalog Integrity",
@@ -95,12 +101,16 @@
     {
       "asset": "body/dxf/acoustic/classical_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "697c886deace6c204411b2e9501c1ec167ae669688cafb96c88dfb148c2d4309",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -111,12 +121,16 @@
     {
       "asset": "body/dxf/acoustic/dreadnought_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "78d293664a8e60f06b4a7e35997cd8a57ee73d70cd98f1483206a7db5280a4bb",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -127,12 +141,16 @@
     {
       "asset": "body/dxf/acoustic/gibson_l_00_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "af8154182a4ecc50f5980c98e90b5079d222d5d6279d0fdda1e8e5757648fa3b",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -143,12 +161,16 @@
     {
       "asset": "body/dxf/acoustic/J45_body_outline.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "fb122dd940fcebe3b784c40da991fb6ee38a9737acdc189611a8ae3519338e5a",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -159,12 +181,16 @@
     {
       "asset": "body/dxf/acoustic/J45_body_outline_dense.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "c9eff10aaab1bfd88bf52e0d1309d55352da6f8d7928a21ba82c921a8c1283e1",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -175,12 +201,16 @@
     {
       "asset": "body/dxf/acoustic/Jumbo_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "960c2fdadb168cc829bfc5cb9f9c76026899dacb9b0da12367359c4e0e08b119",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -191,14 +221,19 @@
     {
       "asset": "body/dxf/acoustic/mandolin_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "5af1a92d491690c63cb56a087d0b9877845ea86f769f68bdbc35601bbd5e2e1b",
       "failed_contract": [
         "preflight_valid"
       ],
-      "observed_evidence": [
-        "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC",
-        "GEOMETRY: one closed POLYLINE; extents 200.0 x 90.0 mm, implausible for a mandolin body (out-of-contract observation)",
-        "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC"
+        ],
+        "review": [
+          "GEOMETRY: one closed POLYLINE; extents 200.0 x 90.0 mm, implausible for a mandolin body (out-of-contract observation)",
+          "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "The outline is a closed R12 POLYLINE, which the runtime export pre-check (DXFPreflight) does not accept, so the file is not export-ready as stored.",
       "owner_stream": "DXF Catalog Integrity",
@@ -209,12 +244,16 @@
     {
       "asset": "body/dxf/acoustic/om_000_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "e4e677360484e2e32af8358d61abd5276482873d2c3cc9219b5831f89cc62bf8",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -225,15 +264,20 @@
     {
       "asset": "body/dxf/acoustic/orchestra_model_body_view.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "7197e5cd8b8e254ba0599418e8095cf6de3d602d3ecc4b788e4edbba77ae2ff5",
       "failed_contract": [
         "closed_outline",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)",
-        "layer 0 only: LINE x1845, ARC x39, SPLINE x12, CIRCLE x14, ELLIPSE x36; extents 913.2 x 769.1 mm; no declared outline layer"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)"
+        ],
+        "review": [
+          "layer 0 only: LINE x1845, ARC x39, SPLINE x12, CIRCLE x14, ELLIPSE x36; extents 913.2 x 769.1 mm; no declared outline layer"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Appears misclassified by location: a blueprint view dump in the body-outline catalog, not necessarily defective geometry.",
       "owner_stream": "DXF Catalog Integrity",
@@ -244,15 +288,20 @@
     {
       "asset": "body/dxf/acoustic/orchestra_model_clean.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "6580fc3bda7151aa219c215f8d6ca1888fea1ac42612970ff96d7cf84262505d",
       "failed_contract": [
         "closed_outline",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)",
-        "layers OUTLINE (LINE x1924, ARC x163, SPLINE x37, CIRCLE x29, ELLIPSE x66), KERFING (LINE x1692), ANNOTATIONS (MTEXT x47, LINE x2); extents 1353.9 x 809.0 mm; OUTLINE is not a declared outline layer (role not demonstrated)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)"
+        ],
+        "review": [
+          "layers OUTLINE (LINE x1924, ARC x163, SPLINE x37, CIRCLE x29, ELLIPSE x66), KERFING (LINE x1692), ANNOTATIONS (MTEXT x47, LINE x2); extents 1353.9 x 809.0 mm; OUTLINE is not a declared outline layer (role not demonstrated)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Appears misclassified by location: a blueprint view (outline, kerfing and annotation layers) in the body-outline catalog.",
       "owner_stream": "DXF Catalog Integrity",
@@ -263,15 +312,20 @@
     {
       "asset": "body/dxf/electric/flying_v_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "216d3d32eabdbaec1abc1b34263b84516ccb1b5c9013c6809527cce6cb5b124d",
       "failed_contract": [
         "closed_outline",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No closed contour bounds the outline layer: best closed contour covers 1.00 x 0.09 of its 486.5 x 606.8 mm extents (need 0.9)",
-        "BODY_OUTLINE: LINE x15, SPLINE x5; only closed chain 486.5 x 51.9 mm; referenced by instrument_geometry/body/outlines.py, catalog.json and specs/gibson_flying_v_1958.json (read paths not traced)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 1.00 x 0.09 of the layer's 486.5 x 606.8 mm bbox (need 0.9)"
+        ],
+        "review": [
+          "BODY_OUTLINE: LINE x15, SPLINE x5; only closed chain 486.5 x 51.9 mm; referenced by instrument_geometry/body/outlines.py, catalog.json and specs/gibson_flying_v_1958.json (read paths not traced)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Outline role unadjudicated: the BODY_OUTLINE layer mixes LINE and SPLINE, and its only closed chain is a thin strip, not the body.",
       "owner_stream": "DXF Catalog Integrity",
@@ -282,12 +336,16 @@
     {
       "asset": "body/dxf/electric/flying_v_body_phase3.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "f011786e763f7638cc45ba6a3f5b7ca28fcf59db147b807e2b5e170a8b57d806",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -298,15 +356,20 @@
     {
       "asset": "body/dxf/electric/flying_v_full.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "014bd2e38fc3eb66c60dbce5111205d64814d0c59fe1058a6cb24fd33aad799f",
       "failed_contract": [
         "closed_outline",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No closed contour bounds the outline layer: best closed contour covers 0.99 x 0.09 of its 490.2 x 608.3 mm extents (need 0.9)",
-        "BODY: LINE x15, SPLINE x5; HARDWARE: LWPOLYLINE x6, LINE x146, SPLINE x5, CIRCLE x6; HEADSTOCK and NECK layers; only closed BODY chain 486.5 x 51.9 mm"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 0.99 x 0.09 of the layer's 490.2 x 608.3 mm bbox (need 0.9)"
+        ],
+        "review": [
+          "BODY: LINE x15, SPLINE x5; HARDWARE: LWPOLYLINE x6, LINE x146, SPLINE x5, CIRCLE x6; HEADSTOCK and NECK layers; only closed BODY chain 486.5 x 51.9 mm"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Outline role unadjudicated: same BODY-layer LINE/SPLINE outline as flying_v_body.dxf, plus neck, headstock and hardware layers.",
       "owner_stream": "DXF Catalog Integrity",
@@ -317,13 +380,18 @@
     {
       "asset": "body/dxf/electric/Gibson-Melody-Maker_phase3_primitives.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "91fa4e3dd6feeadc4463141438b4d081fc4ea08faab8fa10e6d5154afc36f480",
       "failed_contract": [
         "closed_outline"
       ],
-      "observed_evidence": [
-        "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)",
-        "layers CIRCLES (LINE x5568) and ELLIPSES (LINE x38706); no declared outline layer; extents 1109.8 x 831.7 mm"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)"
+        ],
+        "review": [
+          "layers CIRCLES (LINE x5568) and ELLIPSES (LINE x38706); no declared outline layer; extents 1109.8 x 831.7 mm"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Appears misclassified by location: a vectorizer primitives dump (CIRCLES/ELLIPSES layers) in the body-outline catalog. Its sibling Gibson-Melody-Maker_phase3.dxf passes under the corrected LINE-loop semantics.",
       "owner_stream": "DXF Catalog Integrity",
@@ -334,12 +402,16 @@
     {
       "asset": "body/dxf/electric/gibson_explorer_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "02dd5c1e63cbf61a30a1cc1e8b322bc70cc0eff33aa1fb9d580eba5494ae04c5",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -350,18 +422,23 @@
     {
       "asset": "body/dxf/electric/harmony_h44_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "3b175d305f53cc34f15444a5c7a10c08e9d91260b2336a7e810504833035605b",
       "failed_contract": [
         "closed_outline",
         "preflight_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No closed contour bounds the outline layer: best closed contour covers 0.00 x 0.00 of its 389.8 x 269.9 mm extents (need 0.9)",
-        "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
-        "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)",
-        "BODY_OUTLINE: one open LWPOLYLINE, 389 vertices, 389.8 x 269.9 mm, start-end gap 346.5 mm, path does not cross itself (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 0.00 x 0.00 of the layer's 389.8 x 269.9 mm bbox (need 0.9)",
+          "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
+          "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)"
+        ],
+        "review": [
+          "BODY_OUTLINE: one open LWPOLYLINE, 389 vertices, 389.8 x 269.9 mm, start-end gap 346.5 mm, path does not cross itself (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Open body outline. Owner default ruling: a named body DXF is a complete closed outline unless the file or registry says otherwise; asset intent (full body vs half template) is pending adjudication.",
       "owner_stream": "DXF Catalog Integrity",
@@ -372,14 +449,19 @@
     {
       "asset": "body/dxf/electric/jaguar_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "08d0cc2ce712112d74409bced5bab22045dfefbc25c07472964aa908c79cc7f0",
       "failed_contract": [
         "preflight_valid"
       ],
-      "observed_evidence": [
-        "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC",
-        "GEOMETRY: one closed POLYLINE; extents 20.9 x 25.6 mm with $INSUNITS=4 (mm), implausible for a Jaguar body (out-of-contract observation)",
-        "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC"
+        ],
+        "review": [
+          "GEOMETRY: one closed POLYLINE; extents 20.9 x 25.6 mm with $INSUNITS=4 (mm), implausible for a Jaguar body (out-of-contract observation)",
+          "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "The outline is a closed R12 POLYLINE, which the runtime export pre-check (DXFPreflight) does not accept, so the file is not export-ready as stored.",
       "owner_stream": "DXF Catalog Integrity",
@@ -390,12 +472,16 @@
     {
       "asset": "body/dxf/electric/JS1000_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "0d614c82776f9f41f58888fe7175f323bb6b8ee5953a2974c752e650189bf34f",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -406,12 +492,16 @@
     {
       "asset": "body/dxf/electric/LesPaul_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "40e46c3910a2b6cd0b56dd452f40ae18df72b81970bf581f77c3fe9ad7286c2a",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -422,23 +512,28 @@
     {
       "asset": "body/dxf/electric/LesPaul_CAM_Closed.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "3d9d8f44949c653c7f8d666211069fe57bdbc36516e47f461a8e12d3195766b0",
       "failed_contract": [
         "closed_outline",
         "preflight_valid",
         "topology_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)",
-        "[preflight_valid] Open LWPOLYLINE found on layer 'WIRING_CHANNEL'",
-        "[preflight_valid] 3 open LWPOLYLINE entities found (must be closed for pocketing)",
-        "[preflight_valid] LWPOLYLINE with only 2 points (need at least 3)",
-        "[topology_valid] Self-intersecting polygon on layer 'WIRING_CHANNEL'",
-        "[topology_valid] Degenerate polygon on layer 'WIRING_CHANNEL' (only 2 vertices)",
-        "WIRING_CHANNEL: three open LWPOLYLINEs (4, 2 and 2 vertices); the 4-vertex path does not cross itself; the reported self-intersection is on the validator's implied closing segment",
-        "CUTOUT (closed, valid, 669 vertices, 383.5 x 269.2 mm), NECK_MORTISE, 2 x PICKUP_CAVITY, ELECTRONIC_CAVITIES all closed and valid; no declared outline layer (docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md F2)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)",
+          "[preflight_valid] Open LWPOLYLINE found on layer 'WIRING_CHANNEL'",
+          "[preflight_valid] 3 open LWPOLYLINE entities found (must be closed for pocketing)",
+          "[preflight_valid] LWPOLYLINE with only 2 points (need at least 3)",
+          "[topology_valid] Self-intersecting polygon on layer 'WIRING_CHANNEL'",
+          "[topology_valid] Degenerate polygon on layer 'WIRING_CHANNEL' (only 2 vertices)"
+        ],
+        "review": [
+          "WIRING_CHANNEL: three open LWPOLYLINEs (4, 2 and 2 vertices); the 4-vertex path does not cross itself; the reported self-intersection is on the validator's implied closing segment",
+          "CUTOUT (closed, valid, 669 vertices, 383.5 x 269.2 mm), NECK_MORTISE, 2 x PICKUP_CAVITY, ELECTRONIC_CAVITIES all closed and valid; no declared outline layer (docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md F2)"
+        ]
+      },
       "disposition": "UNADJUDICATED",
       "reason": "Not defective and not cleared (owner ruling 2026-09-14): its WIRING_CHANNEL open paths may be intended routing centrelines, and CUTOUT may be the body outline, but neither role has been demonstrated.",
       "owner_stream": "DXF Catalog Integrity",
@@ -449,14 +544,19 @@
     {
       "asset": "body/dxf/electric/mustang_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "7348f52d1abfc8603a4e8b91bba587101f6c0d0ae2829ded923cff4e0e09b4f9",
       "failed_contract": [
         "preflight_valid"
       ],
-      "observed_evidence": [
-        "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC",
-        "GEOMETRY: one closed POLYLINE; extents 39.7 x 40.8 mm with $INSUNITS=4 (mm), implausible for a Mustang body (out-of-contract observation)",
-        "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[preflight_valid] No CAM-compatible entities found. Expected: LWPOLYLINE, LINE, CIRCLE, ARC"
+        ],
+        "review": [
+          "GEOMETRY: one closed POLYLINE; extents 39.7 x 40.8 mm with $INSUNITS=4 (mm), implausible for a Mustang body (out-of-contract observation)",
+          "the adaptive CAM lane (routers/adaptive/dxf_router.py) and blueprint extraction read closed LWPOLYLINE only"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "The outline is a closed R12 POLYLINE, which the runtime export pre-check (DXFPreflight) does not accept, so the file is not export-ready as stored.",
       "owner_stream": "DXF Catalog Integrity",
@@ -467,12 +567,16 @@
     {
       "asset": "body/dxf/electric/Smart-Guitar-v1_back.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "cf02c7e6202f8601bdb02cf80c034d4877ed9816f98b3c7f5b4b9eaf36b7408f",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -483,12 +587,16 @@
     {
       "asset": "body/dxf/electric/Smart-Guitar-v1_front.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "8493717cc8243cb0c5213b2145f1687774323c11112f79a49c172407abc566d7",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -499,12 +607,16 @@
     {
       "asset": "body/dxf/electric/smart_guitar_back_v6_smoothed.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "eebd4307ab0eabfca68127399291430a65425aa714b0ec257887c5dc0fbeeafc",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",
@@ -515,15 +627,20 @@
     {
       "asset": "body/dxf/electric/smart_guitar_front_v6_smoothed.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "fe135c3d51a69488441e71fee8acf7a0d046f4312f69e8632d1f59cb43987e64",
       "failed_contract": [
         "topology_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'",
-        "BODY_OUTLINE: closed LWPOLYLINE, 300 vertices, 377.0 x 438.6 mm; segments 226/234 cross near (-105.66, -18.76) forming a 10.8 mm^2 twisted loop; Smart-Guitar-v1_front.dxf BODY_OUTLINE (60 vertices) is valid, so the smoothing step is suspected, not traced (docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md F1)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'"
+        ],
+        "review": [
+          "BODY_OUTLINE: closed LWPOLYLINE, 300 vertices, 377.0 x 438.6 mm; segments 226/234 cross near (-105.66, -18.76) forming a 10.8 mm^2 twisted loop; Smart-Guitar-v1_front.dxf BODY_OUTLINE (60 vertices) is valid, so the smoothing step is suspected, not traced (docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md F1)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "BODY_OUTLINE has a demonstrated topological defect; which side of the twist is intended needs owner adjudication.",
       "owner_stream": "DXF Catalog Integrity",
@@ -534,15 +651,20 @@
     {
       "asset": "body/dxf/electric/Stratocaster_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "41598d8a169878577807a1d5985e5eb1a2096408625fefbea4432709cb4a735e",
       "failed_contract": [
         "topology_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'",
-        "BODY_OUTLINE: closed LWPOLYLINE, 1417 vertices, bbox 322.3 x 458.8 mm, net polygon area 5 mm^2, 26 repeated vertices (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F6)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'"
+        ],
+        "review": [
+          "BODY_OUTLINE: closed LWPOLYLINE, 1417 vertices, bbox 322.3 x 458.8 mm, net polygon area 5 mm^2, 26 repeated vertices (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F6)"
+        ]
+      },
       "disposition": "QUARANTINED",
       "reason": "Demonstrated malformed manufacturing outline: the only BODY_OUTLINE is a closed ring that folds back on itself.",
       "owner_stream": "DXF Catalog Integrity",
@@ -553,20 +675,25 @@
     {
       "asset": "body/dxf/other/concert_ukulele_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "ed8be0c18ea6fa451148835e7d666903cb2206b4ad32c17537a7f0acfb3e53dd",
       "failed_contract": [
         "closed_outline",
         "preflight_valid",
         "topology_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No closed contour bounds the outline layer: best closed contour covers 0.00 x 0.00 of its 203.1 x 393.7 mm extents (need 0.9)",
-        "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
-        "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)",
-        "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'",
-        "BODY_OUTLINE: one open LWPOLYLINE, 14 vertices, 203.1 x 393.7 mm, start-end gap 302.9 mm, the open path crosses itself (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4/F6)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 0.00 x 0.00 of the layer's 203.1 x 393.7 mm bbox (need 0.9)",
+          "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
+          "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)",
+          "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'"
+        ],
+        "review": [
+          "BODY_OUTLINE: one open LWPOLYLINE, 14 vertices, 203.1 x 393.7 mm, start-end gap 302.9 mm, the open path crosses itself (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4/F6)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Open body outline that also crosses itself; asset intent is pending adjudication (owner default: defect).",
       "owner_stream": "DXF Catalog Integrity",
@@ -577,20 +704,25 @@
     {
       "asset": "body/dxf/other/octave_mandolin_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "78279ecb04a1aa24054b2c2f185f70a0deac179127a2c15e3b5019ecc291339a",
       "failed_contract": [
         "closed_outline",
         "preflight_valid",
         "topology_valid",
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-        "[closed_outline] No closed contour bounds the outline layer: best closed contour covers 0.00 x 0.00 of its 364.8 x 408.3 mm extents (need 0.9)",
-        "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
-        "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)",
-        "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'",
-        "BODY_OUTLINE: one open LWPOLYLINE, 52 vertices, 364.8 x 408.3 mm, start-end gap 408.35 mm (equals the full height), the open path crosses itself and encloses zero net area (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4/F6)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
+          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 0.00 x 0.00 of the layer's 364.8 x 408.3 mm bbox (need 0.9)",
+          "[preflight_valid] Open LWPOLYLINE found on layer 'BODY_OUTLINE'",
+          "[preflight_valid] 1 open LWPOLYLINE entities found (must be closed for pocketing)",
+          "[topology_valid] Self-intersecting polygon on layer 'BODY_OUTLINE'"
+        ],
+        "review": [
+          "BODY_OUTLINE: one open LWPOLYLINE, 52 vertices, 364.8 x 408.3 mm, start-end gap 408.35 mm (equals the full height), the open path crosses itself and encloses zero net area (docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4/F6)"
+        ]
+      },
       "disposition": "QUARANTINE_CANDIDATE",
       "reason": "Open body outline that also crosses itself; asset intent is pending adjudication (owner default: defect).",
       "owner_stream": "DXF Catalog Integrity",
@@ -601,12 +733,16 @@
     {
       "asset": "body/dxf/other/soprano_ukulele_body.dxf",
       "asset_class": "manufacturing_body",
+      "asset_sha256": "5dc9cb0efaaebd044ac6c25947edf2c9dcad9256bd9dd4f613e29ab72934e61a",
       "failed_contract": [
         "version_allowed"
       ],
-      "observed_evidence": [
-        "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-      ],
+      "observed_evidence": {
+        "gate": [
+          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
+        ],
+        "review": []
+      },
       "disposition": "NONCONFORMING_VERSION",
       "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
       "owner_stream": "DXF Catalog Integrity",

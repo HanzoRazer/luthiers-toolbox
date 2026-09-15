@@ -15,53 +15,82 @@ validator code, says:
   disposition, owner stream and exit condition. A record never passes a file;
   it marks manufacturing authority BLOCKED and keeps the failure visible.
 
-Dependencies: stdlib + ezdxf entity attributes only. The asset gate job
-installs nothing else, so this module must not import shapely or anything
-under `app`; and it avoids ezdxf's numpy-backed helpers (bbox, flattening),
+Dependencies: stdlib + ezdxf entity attributes, plus the sibling
+dxf_catalog_schema module (stdlib), which validates the registry at load time.
+The asset gate job installs only ezdxf, so this module must not import shapely
+or anything outside app/ci; and it avoids ezdxf's numpy-backed helpers (bbox, flattening),
 whose mid-test numpy import is the double-binding hazard documented in
 services/api/tests/conftest.py.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+
+from . import dxf_catalog_schema as schema
 
 REGISTRY_PATH = Path(__file__).with_name("dxf_catalog_registry.json")
 
 DRAWABLE_TYPES = frozenset({"LWPOLYLINE", "POLYLINE", "LINE", "CIRCLE", "ARC", "SPLINE", "ELLIPSE"})
-RECORD_FIELDS = (
-    "asset", "asset_class", "failed_contract", "observed_evidence", "disposition",
-    "reason", "owner_stream", "manufacturing_authority", "exit_condition",
-)
+RECORD_FIELDS = schema.RECORD_FIELDS
+KNOWN_CLAUSES = schema.KNOWN_CLAUSES
+RegistryError = schema.RegistryError
 ENDPOINT_QUANTUM_MM = 0.05  # endpoint snap when chaining LINE/ARC/SPLINE edges
 
 Point = Tuple[float, float]
 Segment = Tuple[Point, Point]
+BBox = Tuple[float, float, float, float]
 
 
 # -----------------------------------------------------------------------------
 # Registry
 # -----------------------------------------------------------------------------
 
-def load_registry(path: Optional[Path] = None) -> Dict[str, Any]:
+def load_registry(path: Optional[Path] = None, validate: bool = True) -> Dict[str, Any]:
+    """Load the registry; by default reject a malformed one (RegistryError)."""
     with open(path or REGISTRY_PATH, encoding="utf-8") as fh:
-        return json.load(fh)
+        registry = json.load(fh)
+    if validate:
+        schema.validate_registry(registry, classify)
+    return registry
+
+
+def glob_match(path: str, pattern: str) -> bool:
+    """Match per '/' segment: '*' stays inside one segment, '**' spans any number."""
+    return _match_segments(path.split("/"), pattern.split("/"))
+
+
+def _match_segments(parts: List[str], patterns: List[str]) -> bool:
+    if not patterns:
+        return not parts
+    if patterns[0] == "**":
+        return any(_match_segments(parts[i:], patterns[1:]) for i in range(len(parts) + 1))
+    return bool(parts) and fnmatchcase(parts[0], patterns[0]) and _match_segments(parts[1:], patterns[1:])
 
 
 def classify(asset: Optional[str], registry: Dict[str, Any]) -> Optional[str]:
-    """Asset class for a catalog-relative POSIX path, or None if unclassified."""
+    """Asset class for a catalog-relative POSIX path, or None if unclassified.
+
+    Raises RegistryError when rules for different classes match the same path:
+    classification must never depend on rule order.
+    """
     if asset is None:
         return None
-    for rule in registry["class_rules"]:
-        if fnmatch(asset, rule["glob"]):
-            return rule["class"]
-    return None
+    classes = {rule["class"] for rule in registry["class_rules"] if glob_match(asset, rule["glob"])}
+    if len(classes) > 1:
+        raise RegistryError(f"Ambiguous classification: {asset!r} matches rules for {sorted(classes)}")
+    return classes.pop() if classes else None
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def contract_for(asset_class: str, registry: Dict[str, Any]) -> List[str]:
@@ -187,11 +216,26 @@ def closed_chain_components(edges: List[Segment]) -> List[List[Segment]]:
     return components
 
 
-def _bbox(points: Iterable[Point]) -> Tuple[float, float, float, float]:
+def _bbox(points: Iterable[Point]) -> Optional[BBox]:
     pts = list(points)
+    if not pts:
+        return None
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     return min(xs), min(ys), max(xs), max(ys)
+
+
+def is_simple_cycle(chain: List[Segment]) -> bool:
+    """Every vertex joins exactly two edges: one closed contour, no branch or pinch.
+
+    A figure-8 whose lobes share a vertex, or a body with a chord across it,
+    has vertices of degree > 2 and is not a single closed contour.
+    """
+    degree: Dict[Tuple[int, int], int] = defaultdict(int)
+    for a, b in chain:
+        degree[_key(a)] += 1
+        degree[_key(b)] += 1
+    return bool(degree) and all(d == 2 for d in degree.values())
 
 
 def _closed_polyline_points(entity: Any) -> Optional[List[Point]]:
@@ -211,38 +255,57 @@ class OutlineResult:
 
 
 def check_closed_outline(entities: Sequence[Any], asset_class_spec: Dict[str, Any]) -> OutlineResult:
-    """closed_outline: a closed contour on an outline layer bounds that layer.
+    """closed_outline: a simple closed contour on an outline layer bounds that layer.
 
     Closed contours: closed LWPOLYLINE, closed POLYLINE, or a closed chain of
-    LINE/ARC/open-SPLINE edges (endpoints snapped to 0.05 mm). CIRCLE never
-    counts. The contour's bbox must cover `outline_coverage_min` of the outline
-    layer's extents in both axes, so a small closed strip or cavity on the
-    outline layer cannot stand in for the outline.
+    LINE/ARC/open-SPLINE edges (endpoints snapped to 0.05 mm) that is a simple
+    cycle (every vertex joins exactly two edges). CIRCLE never counts.
+    "Bounds" is a bounding-box test: the contour's bbox must cover
+    `outline_coverage_min` of the outline layer's bbox in both axes, so a small
+    closed strip or cavity on the outline layer cannot stand in for the outline.
+    Geometric self-crossing is checked by the Files gate's topology_valid.
     """
     layers = set(asset_class_spec["outline_layers"])
     outline = [e for e in entities if e.dxf.layer in layers and e.dxftype() in DRAWABLE_TYPES]
     if not outline:
         return OutlineResult(f"No geometry on an outline layer ({', '.join(sorted(layers))})")
     extent = _outline_extent(outline)
+    if extent is None:
+        return OutlineResult("Outline-layer geometry has no measurable extent (no usable points)")
     coverage_min = asset_class_spec["outline_coverage_min"]
+    candidates, branched = _closed_candidates(outline)
     best = (0.0, 0.0)
-    for points, chain in _closed_candidates(outline):
-        cov = _coverage(_bbox(points), extent)
+    for bbox, chain in candidates:
+        cov = _coverage(bbox, extent)
         if min(cov) >= coverage_min:
             return OutlineResult(None, chain)
-        best = max(best, cov, key=min)
-    return OutlineResult(
-        f"No closed contour bounds the outline layer: best closed contour covers "
-        f"{best[0]:.2f} x {best[1]:.2f} of its {extent[2] - extent[0]:.1f} x "
-        f"{extent[3] - extent[1]:.1f} mm extents (need {coverage_min})"
-    )
+        if min(cov) > min(best):
+            best = cov
+    return OutlineResult(_outline_failure(best, extent, coverage_min, branched))
 
 
-def _closed_candidates(outline: Sequence[Any]) -> List[Tuple[List[Point], List[Segment]]]:
-    """Closed polylines (no chain) and closed edge-chain components (with their edges)."""
-    polylines = [pts for pts in (_closed_polyline_points(e) for e in outline) if pts]
+def _outline_failure(best: Tuple[float, float], extent: BBox, coverage_min: float, branched: int) -> str:
+    message = (f"No simple closed contour bounds the outline layer: the best closed contour's bbox covers "
+               f"{best[0]:.2f} x {best[1]:.2f} of the layer's {extent[2] - extent[0]:.1f} x "
+               f"{extent[3] - extent[1]:.1f} mm bbox (need {coverage_min})")
+    if branched:
+        message += (f"; {branched} closed chain(s) rejected because they branch or touch themselves "
+                    f"(a vertex joins more than two edges)")
+    return message
+
+
+def _closed_candidates(outline: Sequence[Any]) -> Tuple[List[Tuple[BBox, List[Segment]]], int]:
+    """(bbox, chain) per closed polyline (chain empty) and per simple closed edge chain.
+
+    Returns the candidates and how many closed chains were rejected as
+    non-simple. Candidates carry only a bbox: the chain's point order is not
+    needed for the coverage test, so none is reconstructed.
+    """
+    candidates = [(_bbox(pts), []) for pts in (_closed_polyline_points(e) for e in outline) if pts]
     chains = closed_chain_components([s for s in (_edge(e) for e in outline) if s])
-    return [(pts, []) for pts in polylines] + [([p for seg in c for p in seg], c) for c in chains]
+    simple = [c for c in chains if is_simple_cycle(c)]
+    candidates += [(_bbox(p for seg in c for p in seg), c) for c in simple]
+    return candidates, len(chains) - len(simple)
 
 
 def _arc_points(entity: Any) -> List[Point]:
@@ -264,7 +327,7 @@ def _ellipse_points(entity: Any) -> List[Point]:
 
 
 _EXTENT_POINTS = {
-    "LINE": lambda e: list(_edge(e)),
+    "LINE": lambda e: list(_edge(e) or ()),
     "LWPOLYLINE": lambda e: [(p[0], p[1]) for p in e.get_points("xy")],
     "POLYLINE": lambda e: [(v.dxf.location.x, v.dxf.location.y) for v in e.vertices],
     "ARC": _arc_points,
@@ -280,11 +343,11 @@ def _extent_points(entity: Any) -> List[Point]:
     return points(entity) if points else []
 
 
-def _outline_extent(outline: Sequence[Any]) -> Tuple[float, float, float, float]:
+def _outline_extent(outline: Sequence[Any]) -> Optional[BBox]:
     return _bbox(p for e in outline for p in _extent_points(e))
 
 
-def _coverage(box: Tuple[float, float, float, float], extent: Tuple[float, float, float, float]) -> Tuple[float, float]:
+def _coverage(box: BBox, extent: BBox) -> Tuple[float, float]:
     width = max(extent[2] - extent[0], 1e-9)
     height = max(extent[3] - extent[1], 1e-9)
     return (box[2] - box[0]) / width, (box[3] - box[1]) / height
@@ -309,39 +372,66 @@ class Verdict:
 
 
 def judge(asset: Optional[str], asset_class: Optional[str], failures: Dict[str, List[str]],
-          evaluated: Set[str], registry: Dict[str, Any]) -> Verdict:
-    """Apply the class contract and any quarantine record to clause failures."""
+          evaluated: Set[str], registry: Dict[str, Any], asset_sha256: Optional[str] = None) -> Verdict:
+    """Apply the class contract and any quarantine record to clause failures.
+
+    Outcomes, in order:
+    - unclassified asset -> FAIL
+    - no record: no failures -> PASS, any failure -> FAIL
+    - record: QUARANTINED only if all of these hold, otherwise FAIL with the reasons:
+      * every failure is a clause the record declares (no extra failure);
+      * every declared clause this gate evaluates still fails (no healed clause);
+      * the record's asset_class matches the classification;
+      * the file's bytes still hash to the record's asset_sha256 (the gates
+        always pass it; a changed file must be re-adjudicated).
+    """
     if asset_class is None:
         return Verdict("FAIL", asset, None, failures,
                        ["Unclassified catalog asset: add a class_rules entry to dxf_catalog_registry.json"])
     record = quarantine_record(asset, registry)
     if record is None:
-        status = "FAIL" if failures else "PASS"
-        return Verdict(status, asset, asset_class, failures)
-    return _judge_record(asset, asset_class, failures, evaluated, record)
+        return Verdict("FAIL" if failures else "PASS", asset, asset_class, failures)
+    messages = _record_mismatches(asset_class, failures, evaluated, record, asset_sha256)
+    if messages:
+        return Verdict("FAIL", asset, asset_class, failures, messages)
+    return Verdict("QUARANTINED", asset, asset_class, failures, [
+        f"QUARANTINED ({record['disposition']}): manufacturing authority "
+        f"{record['manufacturing_authority']}; owner {record['owner_stream']}"])
 
 
-def _judge_record(asset: Optional[str], asset_class: str, failures: Dict[str, List[str]],
-                  evaluated: Set[str], record: Dict[str, Any]) -> Verdict:
+def _record_mismatches(asset_class: str, failures: Dict[str, List[str]], evaluated: Set[str],
+                       record: Dict[str, Any], asset_sha256: Optional[str]) -> List[str]:
+    """Reasons a quarantine record no longer describes the file (empty = it still does)."""
     declared = set(record["failed_contract"])
-    uncovered = sorted(set(failures) - declared)
-    stale = sorted((declared & evaluated) - set(failures))
+    extra = sorted(set(failures) - declared)
+    healed = sorted((declared & evaluated) - set(failures))
     messages = []
-    if uncovered:
-        messages.append(f"Fails clauses not in its quarantine record: {', '.join(uncovered)}")
-    if stale:
-        messages.append(f"Quarantine record lists clauses that now pass: {', '.join(stale)} "
+    if extra:
+        messages.append(f"Fails clauses not in its quarantine record: {', '.join(extra)}")
+    if healed:
+        messages.append(f"Quarantine record lists clauses that now pass: {', '.join(healed)} "
                         f"(exit condition may be met: re-adjudicate and update the record)")
     if record["asset_class"] != asset_class:
         messages.append(f"Quarantine record says asset_class {record['asset_class']!r}, "
                         f"registry classifies it as {asset_class!r}")
-    status = "FAIL" if messages else "QUARANTINED"
-    if status == "QUARANTINED":
-        messages.append(f"QUARANTINED ({record['disposition']}): manufacturing authority "
-                        f"{record['manufacturing_authority']}; owner {record['owner_stream']}")
-    return Verdict(status, asset, asset_class, failures, messages)
+    if asset_sha256 is not None and asset_sha256 != record["asset_sha256"]:
+        messages.append(f"Asset bytes changed since the record was made (recorded sha256 "
+                        f"{record['asset_sha256'][:12]}..., now {asset_sha256[:12]}...): re-adjudicate "
+                        f"and refresh the record")
+    return messages
 
 
 def orphan_records(registry: Dict[str, Any], catalog_root: Path) -> List[str]:
     """Quarantine records whose asset is not in the catalog."""
     return [r["asset"] for r in registry.get("quarantine", []) if not (catalog_root / r["asset"]).is_file()]
+
+
+def registry_problems(registry: Dict[str, Any], repo_root: Path, catalog_root: Path) -> List[str]:
+    """Registry-level failures a gate reports once per run: root mismatch, orphan records."""
+    problems = []
+    declared = (repo_root / registry["catalog_root"]).resolve()
+    if declared != catalog_root.resolve():
+        problems.append(f"registry catalog_root {registry['catalog_root']!r} resolves to {declared}, "
+                        f"but the gate scans {catalog_root.resolve()}")
+    problems += [f"quarantine record for missing asset: {a}" for a in orphan_records(registry, catalog_root)]
+    return problems

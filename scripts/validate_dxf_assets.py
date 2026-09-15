@@ -14,8 +14,9 @@ nothing else):
 1. readable, nonempty, geometry_present
 2. version_allowed: stored catalog files are R12 (AC1009) only; R2000 is
    paid-tier output of the canonical vectorizer, not a catalog format
-3. closed_outline (manufacturing_body class): a closed contour on an outline
-   layer bounds that layer; closed R12 LINE chains count, CIRCLE never does
+3. closed_outline (manufacturing_body class): a simple closed contour on an
+   outline layer bounds that layer (bbox test); closed R12 LINE chains count if
+   every vertex joins exactly two edges, CIRCLE never does
 
 Preflight and topology clauses are evaluated by the DXF Validation Gate.
 Bounds and point counts are reported for information only; nothing here
@@ -31,14 +32,14 @@ Usage:
 
 Exit codes:
     0 = every file PASSED or is QUARANTINED
-    1 = one or more files FAILED, or a quarantine record names a missing asset
+    1 = one or more files FAILED, or the registry is malformed, names a missing
+        asset, or declares a catalog_root other than the one scanned
     2 = quarantined files present (only with --strict)
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 from dataclasses import dataclass, field, asdict
@@ -54,19 +55,12 @@ except ImportError:
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CATALOG_ROOT = REPO_ROOT / "services" / "api" / "app" / "instrument_geometry"
-POLICY_PATH = REPO_ROOT / "services" / "api" / "app" / "ci" / "dxf_catalog_policy.py"
 
-
-def _load_policy():
-    """Import the shared policy module by path (the job installs only ezdxf)."""
-    spec = importlib.util.spec_from_file_location("dxf_catalog_policy", POLICY_PATH)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["dxf_catalog_policy"] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-policy = _load_policy()
+# Same package import the DXF Validation Gate uses. app/__init__.py and
+# app/ci/__init__.py are empty, so this pulls in only the policy and schema
+# modules (stdlib + ezdxf), which is all this job installs.
+sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
+from app.ci import dxf_catalog_policy as policy  # noqa: E402
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -145,7 +139,7 @@ class ValidationReport:
     quarantined: int
     failed: int
     warnings: int
-    orphan_records: List[str] = field(default_factory=list)
+    registry_problems: List[str] = field(default_factory=list)
     results: List[DXFValidationResult] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -155,7 +149,7 @@ class ValidationReport:
             "quarantined": self.quarantined,
             "failed": self.failed,
             "warnings": self.warnings,
-            "orphan_records": self.orphan_records,
+            "registry_problems": self.registry_problems,
             "results": [r.to_dict() for r in self.results],
         }
 
@@ -163,6 +157,16 @@ class ValidationReport:
 # -----------------------------------------------------------------------------
 # Validation Functions
 # -----------------------------------------------------------------------------
+
+def _run_check(clause: str, checks: Dict[str, Any]) -> Optional[str]:
+    """One clause check; a crash fails that clause for this file, never the whole run."""
+    if clause not in checks:
+        return None  # "readable" is established before any clause runs
+    try:
+        return checks[clause]()
+    except Exception as exc:  # fail-closed: a crashed check has not passed
+        return f"{clause} check crashed: {type(exc).__name__}: {exc}"
+
 
 def _clause_failures(doc: Any, entities: List[Any], contract: List[str],
                      class_spec: Dict[str, Any], registry: Dict[str, Any]) -> Dict[str, List[str]]:
@@ -177,7 +181,7 @@ def _clause_failures(doc: Any, entities: List[Any], contract: List[str],
     }
     failures: Dict[str, List[str]] = {}
     for clause in contract:
-        problem = checks[clause]() if clause in checks else None
+        problem = _run_check(clause, checks)
         if problem:
             failures[clause] = [problem]
             if clause in ("nonempty", "geometry_present"):
@@ -247,7 +251,9 @@ def validate_dxf_file(path: Path, registry: Optional[Dict[str, Any]] = None,
     else:
         failures = _read_and_check(path, result, contract, spec, registry)
     evaluated = set(contract) & GATE_CLAUSES
-    _apply_verdict(result, policy.judge(result.asset, result.asset_class, failures, evaluated, registry))
+    verdict = policy.judge(result.asset, result.asset_class, failures, evaluated, registry,
+                           policy.file_sha256(path))
+    _apply_verdict(result, verdict)
     return result
 
 
@@ -269,16 +275,19 @@ def find_dxf_files(root: Path) -> List[Path]:
 
 
 def validate_all(root: Path) -> ValidationReport:
-    """Validate all DXF files under the given root."""
-    registry = policy.load_registry()
-    results = [validate_dxf_file(p, registry) for p in sorted(find_dxf_files(root))]
+    """Validate all DXF files under the given root; a malformed registry fails the run."""
+    try:
+        registry = policy.load_registry()
+        results = [validate_dxf_file(p, registry) for p in sorted(find_dxf_files(root))]
+    except policy.RegistryError as exc:
+        return ValidationReport(0, 0, 0, 0, 0, registry_problems=[str(exc)])
     return ValidationReport(
         total_files=len(results),
         passed=sum(1 for r in results if r.status == "PASS"),
         quarantined=sum(1 for r in results if r.status == "QUARANTINED"),
         failed=sum(1 for r in results if r.status == "FAIL"),
         warnings=sum(1 for r in results if r.warning_count > 0 and r.passed),
-        orphan_records=policy.orphan_records(registry, CATALOG_ROOT),
+        registry_problems=policy.registry_problems(registry, REPO_ROOT, CATALOG_ROOT),
         results=results,
     )
 
@@ -317,10 +326,10 @@ def print_report(report: ValidationReport, verbose: bool = False) -> None:
         _print_result(result)
         if verbose or result.issues:
             print()
-    for asset in report.orphan_records:
-        print(f"✗ quarantine record for missing asset: {asset}")
+    for problem in report.registry_problems:
+        print(f"✗ registry: {problem}")
     print("=" * 70)
-    failed = report.failed + len(report.orphan_records)
+    failed = report.failed + len(report.registry_problems)
     print(f"FAILED: {failed} problem(s)" if failed else
           f"PASSED: {report.passed} passed, {report.quarantined} quarantined")
 
@@ -357,7 +366,7 @@ def main() -> int:
     else:
         print_report(report, verbose=args.verbose)
 
-    if report.failed or report.orphan_records:
+    if report.failed or report.registry_problems:
         return 1
     if args.strict and report.quarantined:
         return 2
