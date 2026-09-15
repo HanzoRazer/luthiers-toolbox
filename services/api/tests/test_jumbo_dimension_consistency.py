@@ -99,6 +99,10 @@ ACKNOWLEDGED_NON_DIMENSION_FILES = {
     # Coincidental matches.
     "services/api/app/calculators/nut_slot_calc.py":
         "'jumbo' here is a fret-wire gauge, unrelated to body geometry.",
+    "services/api/app/ci/dxf_catalog_registry.json":
+        "DXF catalog registry. 'jumbo' appears only in asset paths (Jumbo_body.dxf, "
+        "carlos_jumbo_body.dxf); the canonical-magnitude hits are substrings of the "
+        "records' asset_sha256 hex digests, not body dimensions.",
 
     # Documentation that discusses the drift, including superseded values.
     "docs/Body_Outline_Editor_CHANGELOG.md":

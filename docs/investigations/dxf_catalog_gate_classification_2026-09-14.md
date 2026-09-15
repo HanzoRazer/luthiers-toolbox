@@ -1,0 +1,202 @@
+# DXF-CATALOG-GATE-001 — declarative catalog gate: classification and records (2026-09-14)
+
+**Status:** landed with this PR. Both DXF catalog gates read one registry,
+`services/api/app/ci/dxf_catalog_registry.json`, through `services/api/app/ci/dxf_catalog_policy.py`.
+**Scope of enforcement:** manufacturing_authority is recorded and enforced in CI; runtime paths do not yet read it. Quarantine is evidence of known nonconformance, not permission to
+manufacture, but today only the CI gates act on it. Known runtime consumer that does not:
+`generators/body_generator.py` and `generators/lespaul_body_generator.py` load `LesPaul_CAM_Closed.dxf`
+(UNADJUDICATED here) as the Les Paul G-code template, reachable from the CAM routers, without
+reading this registry or calling the export gate. Runtime enforcement is a separate order.
+**Evidence base:** `docs/investigations/dxf_gate_repair_audit_2026-09-14.md` (rule-by-rule audit of the
+Copilot/Cursor repair) and `docs/investigations/dxf_topology_crlf_catalog_rerun_2026-09-14.md`.
+
+## Owner rulings implemented
+
+| Ruling (2026-09-13/14) | Where it lives |
+|---|---|
+| The Files gate is an export-readiness gate; no blanket warning downgrade | `check_dxf_files.py`: every clause failure fails, unless an explicit record covers exactly that clause |
+| Folder + layer define asset class, declared rather than scattered through code | the folder picks the class (`class_rules`); layer roles act within the class contract (`outline_layers`, `reference_layers`, `layer_evidence`) |
+| `BODY_POINTS` is reference/measurement data | registry `reference_layers`; the manufacturing view drops it before preflight and topology |
+| `WIRING_CHANNEL` open paths are not declared valid until the CAM consumer is traced | not declared; `LesPaul_CAM_Closed.dxf` is `UNADJUDICATED` |
+| Stored catalog DXFs are R12 only; R2000 is bucket-① paid-tier vectorizer output | registry `version_policy.approved = ["AC1009"]`; no per-file allowance |
+| Quarantine records carry asset, asset_class, failed_contract, observed_evidence, disposition, reason, owner_stream, manufacturing_authority = BLOCKED, exit_condition | registry `quarantine`; `test_quarantine_records_are_complete_and_blocked` |
+| Owner stream is DXF Catalog Integrity, not Ross | every record; enforced by test |
+| Complexity < 15, no baseline raised | highest new function 12; `check_dxf_files.main` 29 → 11, baseline entry removed |
+| Malformed witnesses must still fail | `services/api/tests/test_dxf_catalog_gate.py` |
+
+## How a file is judged
+
+1. The registry classifies the path: `body/dxf/*/*.dxf` = `manufacturing_body`, `reference_dxf/**/*.dxf` =
+   `reference` (per-segment globs). An unclassified catalog file **fails**; a path two classes claim is an error.
+2. Each clause in the class contract is evaluated (the asset gate evaluates the ezdxf-only clauses; the
+   Files gate evaluates all of them). A check that crashes is a failure of that clause.
+3. No failures: **PASS**. Failures with no record: **FAIL**. Failures with a record: **QUARANTINED**,
+   but only if the failures are exactly the record's declared clauses and the file still hashes to the
+   record's `asset_sha256`. An extra failure fails the gate; a declared clause that now passes makes the
+   record stale and fails the gate; changed bytes fail the gate; a record for a missing file fails the gate.
+
+## Result on the current catalog (both gates, CI toolchains)
+
+**95 files: 65 PASS, 30 QUARANTINED, 0 FAIL.**
+
+- PASS: the 62 `reference_dxf/cuatro` traces; `Cuatro_Venezolano_body.dxf` and `jazzmaster_body.dxf`
+  (closed R12 LINE outlines); `Gibson-Melody-Maker_phase3.dxf` (its `BODY_OUTLINE` LINE chain closes
+  and bounds the layer under the corrected LINE-loop semantics).
+- QUARANTINED, by disposition:
+
+| Disposition | Count | Assets |
+|---|---|---|
+| `NONCONFORMING_VERSION` | 15 | stored R2000/R2010 but every geometry clause passes: classical, dreadnought, gibson_l_00, J45_body_outline, J45_body_outline_dense, Jumbo, om_000, soprano_ukulele, flying_v_body_phase3, gibson_explorer_body, JS1000, LesPaul_body, Smart-Guitar-v1_back, Smart-Guitar-v1_front, smart_guitar_back_v6_smoothed |
+| `QUARANTINED` | 1 | Stratocaster_body: folded BODY_OUTLINE ring |
+| `QUARANTINE_CANDIDATE` | 13 | smart_guitar_front_v6_smoothed (twist); harmony_h44, concert_ukulele, octave_mandolin (open outlines, asset intent pending); orchestra_model_body_view, orchestra_model_clean, Gibson-Melody-Maker_phase3_primitives (appear misclassified by location); flying_v_body, flying_v_full (outline role unadjudicated); carlos_jumbo, mandolin, jaguar, mustang (closed R12 POLYLINE, rejected by the runtime pre-check) |
+| `UNADJUDICATED` | 1 | LesPaul_CAM_Closed (WIRING_CHANNEL and CUTOUT roles not demonstrated) |
+
+Every record's exit condition names what would clear it. Most end in "regenerate as R12 through
+`dxf_compat`", because no body file may stay stored as R2000.
+
+## How each audited rule was resolved
+
+| Audit rule | Resolution |
+|---|---|
+| F0 lazy import | on main via #372 |
+| A1 closed R12 LINE loops | kept, reimplemented: pruned-graph components, 0.05 mm snap, duplicate edges ignored, ARC/open-SPLINE edges chain too. The closed contour must **bound the outline layer** (≥ 0.9 of its extents in both axes), so a small closed strip cannot stand in for the body (the Flying V case) |
+| A1 CIRCLE as a body contour | dropped: CIRCLE never counts |
+| A2 R2010 widening | superseded by the R12-only ruling |
+| A3 no closed contour → warning | rejected: `closed_outline` is a failing clause |
+| F1 numeric version compare | moot: the version clause is an explicit approved list |
+| F2/F3 empty / no-geometry hard fail | kept (`nonempty`, `geometry_present`) |
+| F4 open LWPOLYLINE → warning | rejected; `BODY_POINTS` exempted by declaration instead |
+| F5 closed POLYLINE accepted | **reversed** (see the audit's correction note): the runtime rejects it |
+| F6 self-intersection → warning | rejected; chained outlines are now also checked for crossings |
+| F7 preflight crash → "skipped" | rejected: a crash is a clause failure (topology too) |
+| F8 remaining preflight ERRORs block | kept, now on the manufacturing view |
+
+## Review hardening (registry schema v2)
+
+An external review of #378 raised the items below. Each was checked against the code with an executable
+probe before acting; the verdicts are what the probes showed.
+
+| Review item | Probe result | Resolution |
+|---|---|---|
+| No registry schema validation | **Confirmed**: a record naming an unknown clause was accepted; a missing `outline_coverage_min` surfaced as a `KeyError` mid-evaluation | New `app/ci/dxf_catalog_schema.py`, run at load: required keys/types, clause set == implemented clauses, class/rule/record consistency, dispositions, BLOCKED, owner stream, sha256 format. It rejects a malformed registry with a message listing every problem, and both gates report that as a failure. Schema renamed `dxf_catalog_registry_v2`; any other name is rejected |
+| Registry clauses can drift from the implementation | Confirmed possible | `KNOWN_CLAUSES` must equal the registry's `clauses` and the Files gate's implemented checks (test) |
+| First-match classification, `*` spans folders | **Confirmed**: `body/dxf/electric/sub/x.dxf` classified as a body | Globs match per path segment (`**` spans folders). A path matched by rules for two classes raises an error, so order never matters |
+| Figure-8 / self-touching cycles accepted | **Confirmed, broader than stated**: a pinched figure-8 of LINEs passed `closed_outline` *and* the Files gate's crossing check; a body with a chord also passed | A chained outline must be a simple cycle (every vertex joins exactly two edges). All three real chain outlines in the catalog already are, so no verdict changed |
+| Coverage is only a bbox test | Accurate | Kept as the ruled criterion, now named as a bounding-box test in code, messages and the clause text |
+| Record matched only by asset | Asset + class were already checked; **real gap**: changed bytes that fail the same clause stayed quarantined | Every record pins `asset_sha256`; changed bytes fail both gates until re-adjudicated |
+| Evidence mixes gate output and reviewer notes | Accurate | `observed_evidence` is `{gate, review}`: gate lines are `[clause] message` and must cover exactly `failed_contract` (schema-checked) |
+| Path-based dynamic import in the asset gate | Accurate (it also created two copies of the policy module in tests) | Normal package import; `app/__init__.py` and `app/ci/__init__.py` are empty |
+| `catalog_root` in the registry is unused | Accurate | Both gates fail if the registry's `catalog_root` is not the root they scan |
+| Spline with no defining points makes `_edge` raise | **Not reproduced**: `_edge` returns `None` | No change; covered by a new degenerate-geometry test |
+| `_two_core` brittle on collapsed / zero-length edges | **Not reproduced** | No change; covered by a new test |
+| Structure the version policy as rules/ranges | Declined | `approved` is already a machine-readable allowlist, separate from its prose `basis`. Ranges would weaken the owner's R12-only ruling |
+
+Found while verifying (not in the review): **a clause that raised crashed the whole gate run.** An outline
+layer holding only a degenerate spline hit `min()` on an empty sequence. Both gates now turn a crashing
+clause into a failure of that clause for that file, and the empty-extent case has its own message.
+
+The review also asked for tests; added: 13 malformed-registry cases, clause drift, per-segment globs and
+ambiguity, pinch/chord/zero-length/degenerate geometry, exact failure messages, a reference asset with
+broken outline-like geometry (still PASS), crash isolation in both gates, end-to-end quarantine / extra
+failure / healed record / changed bytes / absent class rule through **both** gates, and a real CRLF catalog
+file (`smart_guitar_front_v6_smoothed.dxf`) as a fixture. After hardening the catalog result is unchanged:
+65 PASS, 30 QUARANTINED, 0 FAIL, with the same 30 assets, clauses and dispositions.
+
+## Second review round (Copilot) and the red CI on `acb7fde6`
+
+**The six red checks** (API Tests ×2, api-verify ×2, Core CI Summary ×2) were one test:
+`test_jumbo_dimension_consistency.py::test_no_undeclared_jumbo_dimension_artifacts`. It flags any file that mentions
+"jumbo" and contains at least three of the four canonical jumbo body magnitudes (`CANONICAL_MAGNITUDES` in that test)
+as substrings anywhere in its text. Schema v2's `asset_sha256` digests happened to contain three of them; the v1
+registry had none. The registry mentions jumbo only in asset paths. Fixed the way the test prescribes: an
+`ACKNOWLEDGED_NON_DIMENSION_FILES` entry with that reason, scan filters unchanged.
+
+**The same six went red again on `ceae5c6f`**, from the same test, now flagging *this document*: the paragraph above
+first quoted the four magnitudes literally, and the document names `Jumbo_body.dxf` and `carlos_jumbo_body.dxf`
+elsewhere. The fix is the wording, not an acknowledgement entry: the paragraph now names the constant instead of
+repeating its values. Any file that explains this test and also mentions a jumbo asset will trip it the same way.
+
+| Copilot item | Probe result | Resolution |
+|---|---|---|
+| `_chain_crossings` adds a shapely dependency to a gate meant to run without it | **Rejected**: the Files gate job installs `ezdxf shapely`, and its TopologyValidator already imports shapely at module load. The ezdxf-only asset gate never imports this code | None |
+| `_serialize_view` mutates the parsed document | **Confirmed, real latent bug**: with `closed_outline` ordered after preflight in the registry, it crashed on destroyed entities (`'LWPolyline' object has no attribute 'dxf'`) | The view is built from a fresh parse; `ctx.doc` is never mutated. A clause-order test pins it |
+| Unknown clauses silently pass | **Confirmed** when handed an unvalidated registry (the loader already rejects them) | Defense in depth: an unimplemented clause fails in both gates. The asset gate still skips the clauses the Files gate owns |
+| sha256 computed for every file | **Confirmed**: a missing file raised `FileNotFoundError` and would have crashed the run | Hash only files that have a record; an unreadable recorded file fails its record check instead of crashing. Tested |
+| Files outside the catalog reported as "unclassified" | Accurate but imprecise | Its own message: outside the catalog root |
+| `passed=True` for QUARANTINED is ambiguous | Accurate; no in-repo consumer reads either gate's JSON | `passed` replaced by `blocks_gate` and `export_ready` (only PASS is export-ready); the Files gate JSON regains summary counts |
+| `asset_class` override is reachable from normal use | Accurate | Keyword-only; documented as test-only. The CLIs never pass it |
+| CLI entry points not tested end to end | Accurate | Both CLIs run as subprocesses in tests (exit code, report JSON) |
+| bbox coverage "is a regression in strictness" | **Rejected**: main's gates had no bounding requirement at all (the old asset gate accepted any closed LWPOLYLINE anywhere). This is strictly stronger, and documented as a bbox test | None |
+| Closed POLYLINE accepted by the asset gate vs "export-ready" | **Rejected**: the asset gate evaluates closure only. The POLYLINE bodies fail `preflight_valid` in the Files gate and carry records that declare it | None |
+| Degenerate graph cases | Covered last round; added a near-miss that straddles the 0.05 mm snap grid (treated as open, the conservative direction) | Test |
+| Schema stops after an earlier stage fails | Intentional; the docstring now says why | Docstring |
+| `classify` called twice | Accurate | Computed once |
+| Review notes aren't machine-checked | By design (`review` is human findings; `gate` is checked) | None |
+| Classification is path-only | Accurate: folders pick the class, and layers act within the class contract | Wording |
+
+Also found: the Files gate workflow's "upload report on failure" step pointed at a file nothing wrote. The gate now
+takes `--report FILE`, and the workflow writes the path the upload step already expects.
+
+## Third review round: the outline geometry model (2026-09-15)
+
+A third external risk assessment named `dxf_catalog_policy.py`'s geometry as the riskiest code in the PR.
+It flagged the endpoint graph, arc and spline approximations, the 0.05 mm snap, bbox coverage as the
+definition of "bounds", clause order, and the healed-clause rule. Five chain-geometry defects found in
+round two had been held for a scope ruling; this round fixes them and the rest. Each fix has a witness
+test that **fails on the previous model and passes on this one**. Verified by running the new tests
+against the `d37073f2` gate code: 17 of 25 failed there. The 8 that passed are non-regression cases,
+clean positions of a parametrized witness, and the spline evaluator's unit test.
+
+The geometry now lives in its own module, `app/ci/dxf_catalog_geometry.py` (stdlib only). Its docstring
+is the design note: every rule and the reason for each number.
+
+| Review item | Probe result | Resolution |
+|---|---|---|
+| ARC handling approximates | **Confirmed**: an ARC that crosses another edge passed both gates, because the crossing test saw its chord. An outline built from ARCs failed `closed_outline` (a stadium covered 0.67 of its layer), because the contour's bbox used endpoints while the layer's extent sampled the arcs | One sampling per entity feeds every test. ARC, CIRCLE, ELLIPSE (its start/end parameters honoured) and polyline bulges are sampled to a 0.01 mm chord error. The crossing test reads the sampled ring |
+| Spline endpoints under-specified | **Confirmed**: an unclamped spline was chained at its first and last control points. A curve that stops short of the outline's corners closed it anyway | Splines with control points are evaluated (de Boor, weights honoured). A fit-point-only spline is the polyline through its fit points, which the curve passes through. The catalog's only splines (Flying V) are fit-point-only; their ends are unchanged |
+| Dedupe by endpoint pair collapses distinct geometry | **Confirmed**: a LINE chord across a shallow ARC was dropped and the outline passed. Also found: a lens of two ARCs between the same vertices failed as open | Two edges are one edge only if they join the same vertices **and** share a midpoint |
+| 0.05 mm snap is arbitrary | **Confirmed, broader**: grid rounding made the verdict depend on where a gap fell. 0.03 mm gaps joined or not by position, and 164 of 360 rotated filleted rectangles failed falsely (a false crossing in the Files gate, or an outline split on the grid) | Vertices join by distance: any endpoint within 0.05 mm of a vertex joins it, wherever it falls. The number is unchanged, with its reason recorded: it is the repo's R12 LINE-dedupe endpoint tolerance, 50x the 0.001 mm catalog precision, and 20x tighter than the 1.0 mm gap the DXF cleaner closes. This **supersedes** round two's "straddle treated as open" test |
+| bbox coverage is not containment | **Confirmed**: a 2 mm sliver running corner to corner spanned the layer's bbox and passed as the body next to an open outline | bbox coverage is now necessary, not sufficient. The contour must also enclose (inside, or within 0.06 mm) `outline_coverage_min` of the layer's drawn length. Round one's table called bbox coverage "the ruled criterion". No owner ruling set it; it was this PR's design, and so is the enclosure test |
+| Clause order could change results | **Confirmed**: `topology_valid`'s chain-crossing check read a chain that only `closed_outline` built. With `closed_outline` ordered last, a bowtie LINE chain passed | The outline is computed once, on demand, by whichever clause asks first |
+| Reference-layer removal consistent across gates | Consistent, but by duplicated code; **found**: layer names were compared case-sensitively (DXF compares them without case), so `body_outline` was not an outline layer | One `manufacturing_entities` in the policy, used by both gates; layer names compared case-insensitively |
+| Healed-clause logic depends on what was evaluated | **Confirmed**: after an early stop (`nonempty`/`geometry_present` failed), clauses never run were reported as "now pass", which failed a correct record | A record can be stale only for clauses the gate actually ran |
+| Glob semantics custom; no exactly-once check | **Not reproduced**: `test_every_catalog_dxf_is_classified` classifies every catalog path, and `classify` raises on a path two classes claim (tested) | None |
+| `record_sha256` only hashes recorded files | Intentional (round two): an unrecorded file has no digest to compare against | None |
+| Split the PR | Declined here | The registry, schema, policy and both gates are one contract. Any split leaves a gate reading a registry that doesn't exist yet. The owner can still ask for it |
+| Rationale for the 0.9 threshold | Measured on the catalog: every body that passes scores 1.000 on both bbox coverage and enclosure; the best contour of every body that fails scores at most 0.085 (bbox) and 0.454 (enclosed, the Flying V strip), or has no closed contour at all | 0.9 is a margin, not a measured value: it tolerates a stray mark up to a tenth of the layer. Recorded in the geometry module's docstring |
+| OCS (found, not raised) | **Confirmed latent**: ARCs in a mirrored object coordinate system (extrusion -Z) were placed unmirrored. No catalog entity uses one | Extrusion -Z is mirrored into world XY; any other extrusion yields no points, so it cannot close an outline |
+| A crash in a recorded clause (found, not raised) | **Confirmed**: with TopologyValidator made to raise, `Stratocaster_body.dxf` (record declares `topology_valid`) stayed QUARANTINED and the gate stayed green. The crash showed only as a warning line | A quarantine record cannot cover a crash: the check failed, not the file. Both gates now fail with "Checks for recorded clauses crashed", in either gate, tested with a control |
+
+**Catalog impact: none.** Both gates still report 95 files, 65 PASS, 30 QUARANTINED, 0 FAIL, with the
+same 30 assets, the same failed clauses, and the same messages as before this round.
+
+## What the gate still does not check
+
+These are out of the ruled contract. They are recorded here so a green gate is not read as more than it is:
+
+- **Dimensions.** Nothing compares a body against its instrument spec; the asset gate's old docstring
+  claimed it did, and it never did (the docstring is corrected). Observed: `jazzmaster_body.dxf`
+  158 × 104 mm (PASS), `jaguar_body.dxf` 20.9 × 25.6 mm and `mustang_body.dxf` 39.7 × 40.8 mm (both
+  `$INSUNITS=4`, mm), `mandolin_body.dxf` 200 × 90 mm. The last three are noted in their records.
+- **Header units.** 20 of the 25 R2000/R2010 body files declare `$INSUNITS=6` (metres) while their
+  coordinates are millimetres (the other 5 declare 4, mm).
+- **Half-body closed by a centreline.** A half outline closed by a centreline LINE is a closed contour
+  that bounds its own layer, so it passes. Only asset intent or a spec comparison can tell.
+- **Title-block borders on an outline layer.** A closed border on `BODY_OUTLINE` would bound the layer
+  and enclose everything on it, so it passes even around an open body. No catalog file does this today.
+- **What chains.** Only LINE, ARC and open SPLINE edges chain. Open polylines, partial ELLIPSEs, closed
+  SPLINEs and CIRCLEs never form part of a chained contour, and an outline drawn from them fails
+  `closed_outline` (the conservative direction).
+- **Tangent self-contact.** A chained contour that touches itself at a tangent, without crossing, can
+  be missed by the crossing test, because arcs are read as chords within 0.01 mm.
+- **Upper-case extensions.** Both gates collect `*.dxf`, and the workflow path filters are
+  `**/*.dxf`. On Linux CI both are case-sensitive, so a catalog file named `*.DXF` would be neither
+  scanned nor a trigger. None exists today.
+- **`export_ready` means "passes its class contract".** A `reference` trace that PASSes is reported
+  `export_ready: true`, although its contract makes no manufacturing claim. No in-repo consumer
+  reads the field.
+- **What CAM actually consumes.** `preflight_valid` mirrors the runtime pre-check, not every consumer;
+  the CAM lanes read closed LWPOLYLINE only, and R12 cannot carry LWPOLYLINE. That is consistent with
+  the tier rule (CAM input is the paid-tier vectorizer's R2000 output). The consumers of the catalog
+  files themselves (`body/outlines.py`, `catalog.json`) were not traced here, except the Les Paul
+  G-code generator named under **Scope of enforcement**.

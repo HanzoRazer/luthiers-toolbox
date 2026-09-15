@@ -1,6 +1,6 @@
 {
   "threshold": 15,
-  "violation_count": 274,
+  "violation_count": 273,
   "violations": [
     {
       "file": "app/services/blueprint_orchestrator.py",
@@ -203,13 +203,6 @@
       "function": "preview_infill",
       "complexity": 29,
       "line": 141,
-      "letter": "F"
-    },
-    {
-      "file": "app/ci/check_dxf_files.py",
-      "function": "main",
-      "complexity": 29,
-      "line": 167,
       "letter": "F"
     },
     {
