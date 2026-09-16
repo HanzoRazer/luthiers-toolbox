@@ -535,14 +535,13 @@ def test_auto_fix_convert_to_r12(client):
     assert "R12" in " ".join(data["fixes_applied"])
 
 
-def test_auto_fix_convert_to_r12_preserves_a_consolidated_body_outline(client):
-    """The acceptance case: a consolidated outline must survive the round trip.
+def _convert_consolidated(client):
+    """POST a consolidated R2000 file and reopen what comes back.
 
-    Before the repair, this endpoint returned an EMPTY file for exactly this input --
-    measured on the live consolidator's own output, 25 LWPOLYLINE contours in and zero
-    entities out, while fixes_applied said "Converted to R12 format".
-
-    Every assertion below reads the REOPENED returned file, not the endpoint's report.
+    Every assertion in the tests below reads the REOPENED returned file, not the
+    endpoint's own report. Before the repair this endpoint returned an EMPTY file for
+    exactly this input -- measured on the live consolidator's output, 25 LWPOLYLINE
+    contours in and zero entities out, while fixes_applied said "Converted to R12".
     """
     response = client.post("/api/dxf/preflight/auto_fix", json={
         "dxf_base64": _consolidated_r2000_base64(),
@@ -551,34 +550,46 @@ def test_auto_fix_convert_to_r12_preserves_a_consolidated_body_outline(client):
     })
     assert response.status_code == 200, response.text
     data = response.json()
-    saved = _reopen(data)
+    return data, _reopen(data)
 
+
+def test_auto_fix_convert_to_r12_preserves_the_contour_geometry(client):
+    """Points, bulges, widths, closure and layer assignment survive."""
+    _, saved = _convert_consolidated(client)
     assert saved.dxfversion == "AC1009", "the output must really be R12"
 
     polylines = [e for e in saved.modelspace() if e.dxftype() == "POLYLINE"]
-    assert len(polylines) == 1, (
-        f"the contour must survive as an R12 POLYLINE; got "
-        f"{[e.dxftype() for e in saved.modelspace()]}"
-    )
+    assert len(polylines) == 1, [e.dxftype() for e in saved.modelspace()]
     contour = polylines[0]
-    assert contour.is_closed, "closure survives"
+    assert contour.is_closed
+    assert contour.dxf.layer == "BODY_OUTLINE"
+
     vertices = [(round(v.dxf.location.x, 6), round(v.dxf.location.y, 6),
                  round(v.dxf.start_width, 6), round(v.dxf.end_width, 6),
                  round(v.dxf.bulge, 6)) for v in contour.vertices]
     assert vertices == [(0.0, 0.0, 0.0, 0.0, 0.5), (100.0, 0.0, 0.0, 0.0, 0.0),
-                        (100.0, 60.0, 0.0, 0.0, 0.0), (0.0, 60.0, 0.0, 0.0, 0.0)], (
-        "points, widths and bulges survive"
-    )
-    assert contour.dxf.layer == "BODY_OUTLINE", "layer assignment survives"
-    assert "BODY_OUTLINE" in saved.layers, "layer DEFINITION survives, not just the name"
+                        (100.0, 60.0, 0.0, 0.0, 0.0), (0.0, 60.0, 0.0, 0.0, 0.0)]
+
+
+def test_auto_fix_convert_to_r12_preserves_layer_and_style_resources(client):
+    """A layer NAME without its definition is not preservation."""
+    _, saved = _convert_consolidated(client)
+
+    assert "BODY_OUTLINE" in saved.layers
     assert saved.layers.get("BODY_OUTLINE").dxf.color == 1
 
     texts = [e for e in saved.modelspace() if e.dxftype() == "TEXT"]
-    assert len(texts) == 1 and texts[0].dxf.text == "cut depth 6mm", "TEXT survives"
-    assert texts[0].dxf.style == "NOTES", "text style survives, not reset to Standard"
-    assert "NOTES" in saved.styles, "the style definition survives"
+    assert len(texts) == 1
+    assert texts[0].dxf.text == "cut depth 6mm"
+    assert texts[0].dxf.style == "NOTES", "style must not fall back to Standard"
+    assert "NOTES" in saved.styles
 
+
+def test_auto_fix_convert_to_r12_reports_what_the_conversion_cost(client):
+    """The caller can check the conversion instead of trusting a sentence."""
+    data, _ = _convert_consolidated(client)
     report = data["conversion_report"]
+
     assert report["conversions"] == {"LWPOLYLINE->POLYLINE": 1}
     assert report["verification"]["missing_from_saved_file"] == []
     assert report["verification"]["layer_attribute_drift"] == {}

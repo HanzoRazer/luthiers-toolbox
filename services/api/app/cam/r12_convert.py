@@ -49,6 +49,13 @@ from pathlib import Path
 
 import ezdxf
 
+# Documents are created through the repository's compatibility layer, never by
+# calling the ezdxf constructor directly -- scripts/check_dxf_compat.py enforces
+# that, and flags the call even when it appears in a comment. The sandbox copy of
+# this module (vectorizer-sandbox scripts/vectorize/r12_convert.py) differs here by
+# design: it has no app package to import from.
+from app.util.dxf_compat import create_document
+
 # Entity types DXF R12 can hold. Anything else must be converted or refused.
 R12_NATIVE = frozenset({
     "LINE", "POINT", "CIRCLE", "ARC", "TEXT", "SHAPE", "INSERT", "ATTRIB",
@@ -145,7 +152,7 @@ assert set(CONVERTERS) == set(CONVERSIONS), "every declared conversion needs a c
 
 def convert_document(doc, target_version: str = "R12"):
     """Return (converted document, report). Raises rather than losing an entity."""
-    target = ezdxf.new(target_version)
+    target = create_document(version=target_version)
     source_msp = doc.modelspace()
     target_msp = target.modelspace()
 
@@ -252,6 +259,41 @@ def _semantics(msp) -> Counter:
     return Counter(semantic_record(e) for e in msp)
 
 
+def _undefined_references(saved_msp, saved) -> tuple:
+    """Entities pointing at a layer or style the file never defines."""
+    layers = sorted({e.dxf.layer for e in saved_msp}
+                    - {layer.dxf.name for layer in saved.layers})
+    styles = sorted({e.dxf.style for e in saved_msp if e.dxf.hasattr("style")}
+                    - {style.dxf.name for style in saved.styles})
+    return layers, styles
+
+
+def _compare_semantics(source_msp, saved_msp) -> tuple:
+    """What the source means that the saved file does not, and the reverse."""
+    source_semantics = _semantics(source_msp)
+    saved_semantics = _semantics(saved_msp)
+    missing = sorted(str(k) for k in (source_semantics - saved_semantics))
+    unexpected = sorted(str(k) for k in (saved_semantics - source_semantics))
+    return missing, unexpected
+
+
+def _compare_layer_tables(source_doc, saved, saved_msp) -> tuple:
+    """Split layer-table differences into defects and losses the format forces."""
+    cannot_store = FORMAT_LIMITED_LAYER_ATTRIBUTES.get(saved.dxfversion, ())
+    drift, format_limited = {}, {}
+    for name in {e.dxf.layer for e in saved_msp}:
+        before = _table_attributes(source_doc.layers, name, LAYER_ATTRIBUTES)
+        after = _table_attributes(saved.layers, name, LAYER_ATTRIBUTES)
+        for attr, value in before.items():
+            if after.get(attr) == value:
+                continue
+            if attr in cannot_store:
+                format_limited.setdefault(name, {})[attr] = value
+            else:
+                drift.setdefault(name, {})[attr] = {"source": value, "saved": after.get(attr)}
+    return drift, format_limited
+
+
 def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     """Reopen the written file and compare what it MEANS with the source.
 
@@ -266,39 +308,22 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     """
     saved = ezdxf.readfile(str(path))
     saved_msp = saved.modelspace()
-    found_types = Counter(e.dxftype() for e in saved_msp)
-
-    undefined_layers = sorted({e.dxf.layer for e in saved_msp}
-                              - {layer.dxf.name for layer in saved.layers})
-    undefined_styles = sorted({e.dxf.style for e in saved_msp if e.dxf.hasattr("style")}
-                              - {style.dxf.name for style in saved.styles})
+    undefined_layers, undefined_styles = _undefined_references(saved_msp, saved)
 
     missing_semantics, unexpected_semantics = [], []
     layer_attribute_drift, format_limited = {}, {}
-    cannot_store = FORMAT_LIMITED_LAYER_ATTRIBUTES.get(saved.dxfversion, ())
     if source_doc is not None:
-        source_semantics = _semantics(source_doc.modelspace())
-        saved_semantics = _semantics(saved_msp)
-        missing_semantics = sorted(str(k) for k in (source_semantics - saved_semantics))
-        unexpected_semantics = sorted(str(k) for k in (saved_semantics - source_semantics))
-        for name in {e.dxf.layer for e in saved_msp}:
-            before = _table_attributes(source_doc.layers, name, LAYER_ATTRIBUTES)
-            after = _table_attributes(saved.layers, name, LAYER_ATTRIBUTES)
-            for attr, value in before.items():
-                if after.get(attr) == value:
-                    continue
-                if attr in cannot_store:
-                    format_limited.setdefault(name, {})[attr] = value
-                else:
-                    layer_attribute_drift.setdefault(name, {})[attr] = {
-                        "source": value, "saved": after.get(attr)}
+        missing_semantics, unexpected_semantics = _compare_semantics(
+            source_doc.modelspace(), saved_msp)
+        layer_attribute_drift, format_limited = _compare_layer_tables(
+            source_doc, saved, saved_msp)
 
     verification = {
         "gate": "semantic comparison against the source document; entity counts are "
                 "reported but are not the pass condition",
         "precision": PRECISION,
         "saved_version": saved.dxfversion,
-        "saved_entity_types": dict(sorted(found_types.items())),
+        "saved_entity_types": dict(sorted(Counter(e.dxftype() for e in saved_msp).items())),
         "semantics_compared": source_doc is not None,
         "missing_from_saved_file": missing_semantics,
         "unexpected_in_saved_file": unexpected_semantics,
@@ -312,12 +337,12 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     if (missing_semantics or unexpected_semantics or undefined_layers
             or undefined_styles or layer_attribute_drift):
         raise FidelityError(
-            "the saved file does not carry the source's meaning:\n"
-            f"  missing: {missing_semantics or 'none'}\n"
-            f"  unexpected: {unexpected_semantics or 'none'}\n"
-            f"  layer attributes changed: {layer_attribute_drift or 'none'}\n"
-            f"  undefined layers referenced: {undefined_layers or 'none'}\n"
-            f"  undefined styles referenced: {undefined_styles or 'none'}"
+            f"""the saved file does not carry the source's meaning:
+  missing: {missing_semantics or 'none'}
+  unexpected: {unexpected_semantics or 'none'}
+  layer attributes changed: {layer_attribute_drift or 'none'}
+  undefined layers referenced: {undefined_layers or 'none'}
+  undefined styles referenced: {undefined_styles or 'none'}"""
         )
     return verification
 
