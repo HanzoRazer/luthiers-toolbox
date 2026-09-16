@@ -16,6 +16,12 @@ try:
         DxfLifecycleContext,
         assert_dxf_lifecycle_context,
     )
+    from app.cam.r12_convert import (
+        FidelityError,
+        UnconvertibleEntity,
+        convert_document,
+        verify_saved_file,
+    )
     EZDXF_AVAILABLE = True
 except ImportError:
     EZDXF_AVAILABLE = False
@@ -253,11 +259,11 @@ async def auto_fix_dxf(request: AutoFixRequest):
             doc.header['$INSUNITS'] = 4  # mm (only if not converting to R12)
             fixes_applied.append("Set units to millimeters")
         
-        if "convert_to_r12" in request.fixes:
-            # To convert to R12, we need to create a new R12 document and copy entities
-            # ezdxf doesn't support direct format conversion via fmt parameter
-            fixes_applied.append("Converted to R12 format (note: R12 doesn't store units)")
-        
+        # convert_to_r12 appends its message AFTER the saved file has been verified
+        # (below). It used to be announced here, before the conversion ran, so the
+        # response said "Converted to R12 format" even when the output came back empty.
+        conversion_report = None
+
         if "close_open_polylines" in request.fixes:
             msp = doc.modelspace()
             closed_count = 0
@@ -284,23 +290,16 @@ async def auto_fix_dxf(request: AutoFixRequest):
             tmp_out_path = Path(tmp_out.name)
         
         if "convert_to_r12" in request.fixes:
-            # Create a new R12 document and copy entities
-            r12_doc = create_document(version='R12')
-            r12_msp = r12_doc.modelspace()
-            
-            # Copy entities from original doc
+            # R12 conversion is explicit, verified against the SAVED file, and fails
+            # closed. The previous implementation copied entities with
+            # add_foreign_entity, which accepts an LWPOLYLINE into an R12 document and
+            # then loses it at write time: a consolidated body outline (R2000, one
+            # LWPOLYLINE per contour) came back EMPTY while this endpoint reported
+            # "Converted to R12 format". See app/cam/r12_convert.py.
             try:
-                for entity in doc.modelspace():
-                    # Copy entity to R12 document (R12 may not support all entity types)
-                    try:
-                        r12_msp.add_foreign_entity(entity)
-                    except (TypeError, ValueError, AttributeError):  # WP-1: narrowed — entity copy fallback
-                        # Fallback: try direct copy for simple entities
-                        if entity.dxftype() in ('LINE', 'CIRCLE', 'ARC', 'LWPOLYLINE', 'POLYLINE'):
-                            r12_msp.add_entity(entity.copy())
-            except (TypeError, ValueError, AttributeError) as e:  # WP-1: narrowed — R12 copy fallback
-                # If copying fails, at least save as R12 even if empty
-                pass
+                r12_doc, conversion = convert_document(doc, "R12")
+            except UnconvertibleEntity as exc:
+                raise HTTPException(status_code=422, detail=str(exc))
 
             assert_dxf_lifecycle_context(
                 DxfLifecycleContext(
@@ -314,6 +313,23 @@ async def auto_fix_dxf(request: AutoFixRequest):
                 )
             )
             r12_doc.saveas(tmp_out_path, encoding='cp1252')
+
+            # The document in memory is not evidence: the loss happened at write time.
+            # source_doc makes this source-vs-saved, not saved-vs-its-own-prediction.
+            try:
+                conversion["verification"] = verify_saved_file(
+                    tmp_out_path, conversion, source_doc=doc
+                )
+            except FidelityError as exc:
+                raise HTTPException(status_code=500, detail=str(exc))
+
+            conversion_report = conversion
+            verified = sum(conversion["verification"]["saved_entity_types"].values())
+            fixes_applied.append(
+                f"Converted to R12 format: {conversion['conversions'] or 'no entity conversions needed'}; "
+                f"{verified} entities verified in the saved file "
+                f"(note: R12 doesn't store units)"
+            )
         else:
             doc.saveas(tmp_out_path)
         
@@ -326,11 +342,17 @@ async def auto_fix_dxf(request: AutoFixRequest):
         # Generate new validation report
         new_report = validate_dxf_file(tmp_out_path)
         
-        return {
+        response = {
             "fixed_dxf_base64": fixed_base64,
             "fixes_applied": fixes_applied,
             "validation_report": new_report
         }
+        if conversion_report is not None:
+            # What the conversion did and what it cost, so a caller can check rather
+            # than trust a sentence: entity conversions, layer/style tables carried,
+            # the saved-file verification, and losses R12's format forces.
+            response["conversion_report"] = conversion_report
+        return response
     
     finally:
         tmp_in_path.unlink()
