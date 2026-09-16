@@ -68,7 +68,21 @@ Both gates, exit 0: **33 files, 6 PASS, 27 QUARANTINED, 0 FAIL** (was 95 / 65 / 
 PASS is the 59 deleted reference traces, which passed the reference contract; the drop in
 QUARANTINED is the three deleted records.
 
-## Not done here
+## Adjudication closed for the files that remain
+
+**Owner ruling, 2026-09-15:** the catalog files that code or data still reference need no further
+adjudication. They will be replaced at some point. The 27 quarantine records stay, because they are
+what keeps the gates honest about known nonconformance, but they are not a work queue and nobody
+owes a disposition against them. That includes the five whose measured size contradicts
+`body/catalog.json`, the three page dumps the catalog still points at, and
+`LesPaul_CAM_Closed.dxf`, which is `UNADJUDICATED` in the registry only because its layer roles were
+never demonstrated.
+
+This closes the adjudication step of the DXF order. It does not change any gate behaviour: a
+recorded file is still QUARANTINED, not passed, and manufacturing authority is still recorded in CI
+only - no runtime path reads the registry.
+
+## Left for whoever replaces these files
 
 - The five wired files above, and their `catalog.json` entries.
 - The three page dumps the catalog still points at (`orchestra_model_clean.dxf`,

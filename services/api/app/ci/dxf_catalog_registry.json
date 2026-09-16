@@ -6,7 +6,8 @@
   "rulings": [
     "2026-09-13 owner ruling: the Files gate is an export-readiness gate; files that fall short are fixed or recorded with reason and owner, never downgraded to warnings",
     "2026-09-14 owner ruling: folder + layer define asset class, declared here rather than as exceptions in validator code; BODY_POINTS is reference/measurement data; WIRING_CHANNEL open paths are not declared valid until the CAM consumer is traced; owner stream is DXF Catalog Integrity",
-    "2026-09-14 owner ruling: only R12 is approved; R2000 is allowed only in the canonical vectorizer system (bucket 1: blueprint reader mode cam_ready_r2000, auth-gated, routers/blueprint/vectorize_router.py). Stored catalog files are therefore R12 only"
+    "2026-09-14 owner ruling: only R12 is approved; R2000 is allowed only in the canonical vectorizer system (bucket 1: blueprint reader mode cam_ready_r2000, auth-gated, routers/blueprint/vectorize_router.py). Stored catalog files are therefore R12 only",
+    "2026-09-15 owner ruling: the catalog files that code or data still reference need no further adjudication - they will be replaced. Their quarantine records stay as evidence of known nonconformance and keep the gates honest, but no adjudication work is owed against them, and nothing here is a queue for the owner. Files nothing referenced were deleted (PR #379)."
   ],
   "version_policy": {
     "approved": [
