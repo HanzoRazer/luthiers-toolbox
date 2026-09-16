@@ -1,0 +1,177 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DXF_RUNTIME_AUTHORITY_001",
+  "title": "fix(dxf): enforce catalog manufacturing authority at runtime",
+  "intent": "Close the gap PR #378 recorded: CI classified catalog DXFs and marked manufacturing authority BLOCKED, but runtime generators never read that authority, so the Les Paul G-code path consumed LesPaul_CAM_Closed.dxf while it was UNADJUDICATED. Owner ruling 2026-09-16: quarantine records describe known failure and never grant authority; authority is a separate positive assertion over one asset and its exact bytes. This PR does not repair catalog assets - it prevents assets without positive manufacturing authority from being consumed by runtime manufacturing paths.",
+  "change_type": "fix",
+  "behavior_change": "POST /api/cam/guitar/les_paul/body/gcode previously returned G-code generated from an UNADJUDICATED catalog asset; it now returns 422 DXF_MANUFACTURING_AUTHORITY_BLOCKED with the asset, disposition, reason and exit condition, and produces no .nc output. That is the intended outcome and stays until a replacement asset is adjudicated and its digest authorized. LesPaulBodyGenerator.from_project() no longer substitutes LesPaul_body.dxf for a missing template: it refuses. No other runtime route reads a catalog DXF (Stage 0 census in the investigation note), and DXFs outside the catalog root keep their existing preflight/topology contract unchanged. Registry schema v2 -> v3 adds an empty manufacturing_authority section; both catalog gates still report 33 files, 6 PASS, 27 QUARANTINED, 0 FAIL.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/dxf-runtime-authority-001.json",
+      "docs/investigations/dxf_runtime_authority_consumers_2026-09-16.md",
+      "services/api/app/instrument_geometry/dxf_authority.py",
+      "services/api/app/ci/dxf_catalog_schema.py",
+      "services/api/app/ci/dxf_catalog_policy.py",
+      "services/api/app/ci/dxf_catalog_registry.json",
+      "services/api/app/generators/lespaul_body_generator.py",
+      "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/tests/test_dxf_runtime_authority.py",
+      "services/api/tests/test_lespaul_manufacturing_authority.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/dxf-runtime-authority-001.json",
+      "docs/investigations/dxf_runtime_authority_consumers_2026-09-16.md",
+      "services/api/app/instrument_geometry/dxf_authority.py",
+      "services/api/app/ci/dxf_catalog_schema.py",
+      "services/api/app/ci/dxf_catalog_policy.py",
+      "services/api/app/ci/dxf_catalog_registry.json",
+      "services/api/app/generators/lespaul_body_generator.py",
+      "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/tests/test_dxf_runtime_authority.py",
+      "services/api/tests/test_lespaul_manufacturing_authority.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New app/instrument_geometry/dxf_authority.py: the runtime-safe authority substrate (catalog-relative path normalization that refuses traversal, class_rules classification, the authorization lookup, sha256 comparison, a structured DXFManufacturingAuthority result, and ManufacturingAuthorityBlocked - a ValueError so the existing 422 mapping in the CAM routers covers it). Stdlib only; no HTTP, no ezdxf, no import of app/ci, so production does not depend on CI modules. Registry schema v3 adds the manufacturing_authority section ({asset, asset_sha256, authority: ALLOWED, basis}), validated by the substrate and called from dxf_catalog_schema.py: an asset may not be both quarantined and authorized, the section only grants authority, and it is empty today. dxf_catalog_policy.py now takes classification, path normalization and hashing from the substrate instead of keeping its own copies, so CI and runtime cannot drift. Enforcement sits in LesPaulBodyGenerator.__init__ - the choke point shared by the factory, from_project() and direct construction - before the DXF reader is built; ezdxf.readfile itself is deliberately not authority-aware, so blocked assets stay readable for inspection and adjudication. The body G-code router maps the exception to a 422 whose detail carries the catalog-relative asset, never a filesystem path. Two test files: resolver and schema contract (CI-runtime agreement over every record, an ALLOWED fixture the real schema accepts, digest mismatch, missing entry, malformed registry, reference asset, traversal) and the Les Paul witnesses (factory, direct construction, from_project, no fallback, route 422).",
+    "why_not_redundant": "PR #378 built the CI gates and explicitly recorded that runtime does not read them; PR #379 deleted debris. No manifest covers runtime enforcement, and no existing module answers whether an asset may be manufactured from."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/test_dxf_runtime_authority.py tests/test_lespaul_manufacturing_authority.py tests/test_dxf_catalog_gate.py tests/test_dxf_catalog_registry.py tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_geometry.py tests/test_body_gcode_router_smoke.py tests/test_cam_workspace_smoke.py tests/test_carving_pipeline.py -> 204 passed",
+      "pytest tests/test_body_generator_router.py tests/test_acoustic_body_generator_smoke.py tests/test_bezier_body_generator.py tests/test_contracts_governance_gate.py tests/test_governance_constitutional_runtime.py -> 121 passed",
+      "python -m app.ci.check_dxf_files -> 33 files, 6 passed, 27 quarantined, 0 failed, exit 0",
+      "python scripts/validate_dxf_assets.py --json -> 33 / 6 / 27 / 0, exit 0",
+      "check_complexity OK (no function over 15); check_file_sizes OK (no file over 500 lines)",
+      "Stage 0 census: searched main for .dxf, instrument_geometry, ezdxf.readfile, body/dxf, reference_dxf and LesPaul_CAM_Closed; one runtime manufacturing consumer with three entry points"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/dxf-runtime-authority-001.json",
+      "intent": "This manifest.",
+      "scan_targets": [
+        ".cbsp21/patches/dxf-runtime-authority-001.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "check_cbsp21_patch_input.py"
+      ]
+    },
+    {
+      "path": "services/api/app/instrument_geometry/dxf_authority.py",
+      "intent": "Runtime-safe manufacturing authority substrate shared by CI and runtime.",
+      "scan_targets": [
+        "services/api/app/instrument_geometry/dxf_authority.py",
+        "services/api/app/ci/dxf_catalog_registry.json"
+      ],
+      "risk": "medium",
+      "behavior_change": "new runtime control: governed assets need positive authorization",
+      "verification": [
+        "test_dxf_runtime_authority.py"
+      ]
+    },
+    {
+      "path": "services/api/app/ci/dxf_catalog_schema.py",
+      "intent": "Schema v3: require and validate the manufacturing_authority section.",
+      "scan_targets": [
+        "services/api/app/ci/dxf_catalog_schema.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "a registry without the section, or with a contradictory authorization, fails at load",
+      "verification": [
+        "test_dxf_runtime_authority.py",
+        "test_dxf_catalog_registry.py"
+      ]
+    },
+    {
+      "path": "services/api/app/ci/dxf_catalog_policy.py",
+      "intent": "Take classification, path normalization and hashing from the shared substrate.",
+      "scan_targets": [
+        "services/api/app/ci/dxf_catalog_policy.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "none - same verdicts, one implementation",
+      "verification": [
+        "both gates on the catalog",
+        "test_dxf_catalog_gate.py"
+      ]
+    },
+    {
+      "path": "services/api/app/ci/dxf_catalog_registry.json",
+      "intent": "Schema v3, empty authorization section, and the 2026-09-16 ruling.",
+      "scan_targets": [
+        "services/api/app/ci/dxf_catalog_registry.json"
+      ],
+      "risk": "medium",
+      "behavior_change": "no record or disposition changes",
+      "verification": [
+        "both gates -> 33/6/27/0"
+      ]
+    },
+    {
+      "path": "services/api/app/generators/lespaul_body_generator.py",
+      "intent": "Require manufacturing authority before reading the template; delete the silent fallback.",
+      "scan_targets": [
+        "services/api/app/generators/lespaul_body_generator.py",
+        "services/api/app/generators/body_generator.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "Les Paul G-code refuses while its template is UNADJUDICATED",
+      "verification": [
+        "test_lespaul_manufacturing_authority.py"
+      ]
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "intent": "Map the authority block to a deterministic 422 with a structured detail.",
+      "scan_targets": [
+        "services/api/app/routers/cam/guitar/body_gcode_router.py"
+      ],
+      "risk": "low",
+      "behavior_change": "422 instead of G-code on a blocked template",
+      "verification": [
+        "test_route_returns_a_deterministic_422_and_no_gcode"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_dxf_runtime_authority.py",
+      "intent": "Resolver and schema contract, including CI-runtime agreement on every record.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_runtime_authority.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test only",
+      "verification": [
+        "pytest"
+      ]
+    },
+    {
+      "path": "services/api/tests/test_lespaul_manufacturing_authority.py",
+      "intent": "Les Paul witnesses: factory, direct construction, from_project, no fallback, route 422.",
+      "scan_targets": [
+        "services/api/tests/test_lespaul_manufacturing_authority.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test only",
+      "verification": [
+        "pytest"
+      ]
+    },
+    {
+      "path": "docs/investigations/dxf_runtime_authority_consumers_2026-09-16.md",
+      "intent": "Stage 0 census of runtime catalog consumers and the enforcement disposition.",
+      "scan_targets": [
+        "docs/investigations/dxf_runtime_authority_consumers_2026-09-16.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation",
+      "verification": [
+        "read"
+      ]
+    }
+  ]
+}

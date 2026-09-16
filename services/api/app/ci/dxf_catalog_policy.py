@@ -15,10 +15,17 @@ validator code, says:
   disposition, owner stream and exit condition. A record never passes a file;
   it marks manufacturing authority BLOCKED and keeps the failure visible.
 
+Manufacturing authority is NOT decided here. Positive authorization of an
+asset and its exact bytes lives in the runtime-safe substrate
+app/instrument_geometry/dxf_authority.py, which the runtime generators and this
+module share: a quarantine record marks manufacturing authority BLOCKED, and
+only an entry in the registry's manufacturing_authority section grants it.
+
 Dependencies: stdlib + ezdxf entity attributes, plus two sibling stdlib
 modules: dxf_catalog_schema, which validates the registry at load time, and
 dxf_catalog_geometry, the outline geometry model (sampling, vertex tolerance,
-edge identity, containment) with the reason for each of its numbers. The asset
+edge identity, containment) with the reason for each of its numbers; and the
+authority substrate above for path normalization and classification. The asset
 gate job installs only ezdxf, so none of them may import shapely or anything
 outside app/ci; and they avoid ezdxf's numpy-backed helpers (bbox, flattening),
 whose mid-test numpy import is the double-binding hazard documented in
@@ -27,13 +34,19 @@ services/api/tests/conftest.py.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import dataclass, field
-from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Sequence, Set, Tuple
 
+from ..instrument_geometry.dxf_authority import (  # the shared substrate; see module docstring
+    AmbiguousClassification,
+    catalog_relative_path,
+    classify as _classify_asset,
+    file_sha256 as _file_sha256,
+    glob_match as _glob_match,
+    quarantine_record as _quarantine_record,
+)
 from . import dxf_catalog_geometry as geometry
 from . import dxf_catalog_schema as schema
 
@@ -61,35 +74,21 @@ def load_registry(path: Optional[Path] = None, validate: bool = True) -> Dict[st
     return registry
 
 
-def glob_match(path: str, pattern: str) -> bool:
-    """Match per '/' segment: '*' stays inside one segment, '**' spans any number."""
-    return _match_segments(path.split("/"), pattern.split("/"))
-
-
-def _match_segments(parts: List[str], patterns: List[str]) -> bool:
-    if not patterns:
-        return not parts
-    if patterns[0] == "**":
-        return any(_match_segments(parts[i:], patterns[1:]) for i in range(len(parts) + 1))
-    return bool(parts) and fnmatchcase(parts[0], patterns[0]) and _match_segments(parts[1:], patterns[1:])
+glob_match = _glob_match
+file_sha256 = _file_sha256
 
 
 def classify(asset: Optional[str], registry: Dict[str, Any]) -> Optional[str]:
     """Asset class for a catalog-relative POSIX path, or None if unclassified.
 
     Raises RegistryError when rules for different classes match the same path:
-    classification must never depend on rule order.
+    classification must never depend on rule order. Thin wrapper over the shared
+    substrate so both gates keep reporting registry problems as RegistryError.
     """
-    if asset is None:
-        return None
-    classes = {rule["class"] for rule in registry["class_rules"] if glob_match(asset, rule["glob"])}
-    if len(classes) > 1:
-        raise RegistryError(f"Ambiguous classification: {asset!r} matches rules for {sorted(classes)}")
-    return classes.pop() if classes else None
-
-
-def file_sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    try:
+        return _classify_asset(asset, registry)
+    except AmbiguousClassification as exc:
+        raise RegistryError(str(exc)) from exc
 
 
 def record_sha256(path: Path, asset: Optional[str], registry: Dict[str, Any]) -> Optional[str]:
@@ -112,18 +111,11 @@ def contract_for(asset_class: str, registry: Dict[str, Any]) -> List[str]:
     return list(registry["asset_classes"][asset_class]["contract"])
 
 
-def quarantine_record(asset: Optional[str], registry: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    for record in registry.get("quarantine", []):
-        if record["asset"] == asset:
-            return record
-    return None
+quarantine_record = _quarantine_record
 
 
 def relative_asset(path: Path, catalog_root: Path) -> Optional[str]:
-    try:
-        return path.resolve().relative_to(catalog_root.resolve()).as_posix()
-    except ValueError:
-        return None
+    return catalog_relative_path(path, catalog_root)
 
 
 # -----------------------------------------------------------------------------

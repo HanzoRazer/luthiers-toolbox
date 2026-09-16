@@ -15,6 +15,7 @@ from pathlib import Path
 if TYPE_CHECKING:
     from ..schemas.instrument_project import InstrumentProjectData
 
+from ..instrument_geometry.dxf_authority import require_manufacturing_authority
 from .lespaul_dxf_reader import ExtractedPath, LesPaulDXFReader
 from .lespaul_config import ToolConfig as ToolConfig, MachineConfig as MachineConfig
 from .lespaul_config import TOOLS as TOOLS, MACHINES as MACHINES
@@ -30,7 +31,18 @@ class LesPaulBodyGenerator:
     """Main interface for Les Paul body G-code generation."""
 
     def __init__(self, dxf_path: str, machine: str = "txrx_router"):
+        """Prepare G-code generation from a DXF template.
+
+        This is the manufacturing choke point for every entry path (the
+        BodyGenerator factory, from_project(), and direct construction): a
+        governed catalog asset must hold positive manufacturing authority
+        before its geometry is read. Raises ManufacturingAuthorityBlocked
+        (a ValueError, so the CAM routers' 422 mapping covers it) when it does
+        not. DXFs outside the catalog keep their existing contract - the export
+        gate's preflight and topology checks - and are not judged here.
+        """
         self.dxf_path = Path(dxf_path)
+        self.authority = require_manufacturing_authority(self.dxf_path)
         self.machine = MACHINES.get(machine, MACHINES["txrx_router"])
 
         # Load DXF
@@ -60,7 +72,8 @@ class LesPaulBodyGenerator:
             Configured LesPaulBodyGenerator instance
 
         Raises:
-            ValueError: If project is not CAM-ready or DXF template not found
+            ValueError: If project is not CAM-ready, the DXF template is missing,
+                or the template lacks manufacturing authority
 
         Example:
             >>> gen = LesPaulBodyGenerator.from_project(project)
@@ -79,16 +92,13 @@ class LesPaulBodyGenerator:
             / "LesPaul_CAM_Closed.dxf"
         )
 
+        # No fallback: substituting a different asset for a missing manufacturing
+        # template hides the real failure and would machine geometry nobody asked
+        # for (owner ruling 2026-09-16).
         if not dxf_path.exists():
-            # Fallback to LesPaul_body.dxf
-            alt_path = dxf_path.parent / "LesPaul_body.dxf"
-            if alt_path.exists():
-                dxf_path = alt_path
-            else:
-                raise ValueError(
-                    f"Les Paul DXF template not found. "
-                    f"Checked: {dxf_path} and {alt_path}"
-                )
+            raise ValueError(
+                f"Les Paul manufacturing template is unavailable: {dxf_path.name} is not in the catalog"
+            )
 
         return cls(str(dxf_path), machine=machine)
 
