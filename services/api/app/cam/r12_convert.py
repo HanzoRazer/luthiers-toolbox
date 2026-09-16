@@ -1,46 +1,20 @@
 """
 r12_convert.py -- convert a DXF document to R12 without losing geometry silently.
 
-Replaces the `add_foreign_entity` loop that the `/auto_fix` `convert_to_r12` fix used.
-Built and verified in vectorizer-sandbox (`scripts/vectorize/r12_convert.py`,
-`tests/skills/test_r12_convert.py`, PR #101) and transported here; this repository is
-the authority for the endpoint.
+Replaces the `add_foreign_entity` loop that `/auto_fix` `convert_to_r12` used.
+`add_foreign_entity` accepts an LWPOLYLINE into an R12 document so in-memory
+counts look right, then the writer drops it: consolidator output (R2000, 25
+LWPOLYLINE) came back EMPTY while the endpoint reported the fix applied. Layer
+definitions and text styles failed the same way -- an entity kept the NAME while
+the table defined only `0`/`Standard` (same string, different font).
 
-## What went wrong without this
+This module converts LWPOLYLINE to POLYLINE explicitly, carries layer and style
+tables first, reopens the SAVED file and compares meaning (including style
+definitions, not just names), and fails closed on unverified natives, INSERT/
+blocks, 3D/mesh polylines, and paper-space geometry. Format-forced layer losses
+(R12 has no lineweight) are reported, not hidden.
 
-Measured on the live consolidator's own output -- 25 LWPOLYLINE contours on
-BODY_OUTLINE, produced by `app.cam.layer_consolidator` from a raw 1,726-LINE
-vectorizer dump:
-
-    consolidator output   : R2000, {'LWPOLYLINE': 25}
-    in memory after copy  : {'LWPOLYLINE': 25}   <- count looks right
-    in the saved R12 file : {}                   <- EMPTY; what the caller received
-
-`Layout.add_foreign_entity()` accepts an LWPOLYLINE into an R12 document, so any
-in-memory count passes. The writer drops it on save, because R12 has no LWPOLYLINE.
-Nothing raises and ezdxf's auditor reports the result clean. The same call drops
-resources the target does not define: an entity keeps its layer NAME while the
-output's LAYER table never defines that layer, and a TEXT's style falls back to
-`Standard` -- same string, different font.
-
-Consolidation emits exactly that shape: `app/cam/layer_consolidator.py` creates an
-R2000 document because "LWPOLYLINE not supported in R12", one LWPOLYLINE per chain.
-
-## What this does instead
-
-1. **Converts explicitly.** LWPOLYLINE becomes an R12 POLYLINE, carrying vertex
-   coordinates, bulges, widths, the closed flag and elevation.
-2. **Carries resources first.** Layer and text-style table entries are created in
-   the target, with their attributes, before any entity is copied.
-3. **Verifies the SAVED file, semantically.** The output is written, reopened, and
-   compared with the source's meaning. `LWPOLYLINE -> POLYLINE` is not a difference;
-   a moved vertex, a lost bulge or a changed layer colour is. Entity counts are
-   reported and are never the pass condition.
-4. **Fails closed.** An entity R12 cannot hold raises `UnconvertibleEntity`; a caller
-   must not present a partial file as a completed fix.
-
-Losses the format itself forces -- R12's LAYER table has no lineweight -- are reported
-under `format_limited_layer_attributes`, not hidden and not treated as defects.
+Transported from vectorizer-sandbox PR #101; this repository owns the endpoint.
 """
 from __future__ import annotations
 
@@ -49,35 +23,38 @@ from pathlib import Path
 
 import ezdxf
 
-# Documents are created through the repository's compatibility layer, never by
-# calling the ezdxf constructor directly -- scripts/check_dxf_compat.py enforces
-# that, and flags the call even when it appears in a comment. The sandbox copy of
-# this module (vectorizer-sandbox scripts/vectorize/r12_convert.py) differs here by
-# design: it has no app package to import from.
+# Documents go through dxf_compat -- scripts/check_dxf_compat.py flags ezdxf.new
+# even in comments. The sandbox copy of this module has no app package to import.
 from app.util.dxf_compat import create_document
 
-# Entity types DXF R12 can hold. Anything else must be converted or refused.
-R12_NATIVE = frozenset({
-    "LINE", "POINT", "CIRCLE", "ARC", "TEXT", "SHAPE", "INSERT", "ATTRIB",
-    "ATTDEF", "POLYLINE", "VERTEX", "SEQEND", "SOLID", "TRACE", "3DFACE",
-    "DIMENSION", "VIEWPORT", "BLOCK", "ENDBLK",
-})
+# Types we copy AND fully compare. R12 can store SHAPE/INSERT/SOLID/TRACE/3DFACE/
+# DIMENSION/VIEWPORT/ATTDEF/ATTRIB, but type+layer is not a meaning check, block
+# records are not copied, and ATTDEF was not even in the TEXT comparator. Those
+# are refused until a dedicated comparator and resource copy exist.
+R12_VERIFIED = frozenset({"LINE", "POINT", "CIRCLE", "ARC", "TEXT", "POLYLINE"})
 
 # Conversions this module performs, as {source type: target type}.
 CONVERSIONS = {"LWPOLYLINE": "POLYLINE"}
 
+# Group-70 bits that mean this POLYLINE is not a verified 2D contour.
+_POLYLINE_UNVERIFIED_FLAGS = 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40
+
+_MODELSPACE_NAMES = frozenset({"MODEL", "*MODEL_SPACE"})
+_STANDARD_LINETYPES = frozenset({"BYLAYER", "BYBLOCK", "CONTINUOUS"})
+
 LAYER_ATTRIBUTES = ("color", "true_color", "linetype", "lineweight", "plot", "flags")
 
-# Layer properties a target version cannot store at all. R12's LAYER table carries
-# name, flags, colour and linetype; lineweight, true colour and the plot flag arrived
-# with R2000. Losing one of these is a property of the format, so it is REPORTED as a
-# declared loss rather than treated as a defect -- and anything not on this list that
-# changes is still a failure. Keyed by the written $ACADVER.
+# R12 LAYER stores name/flags/colour/linetype. lineweight, true_color and plot
+# arrived with R2000 -- reported as format-limited, not defects. Keyed by $ACADVER.
 FORMAT_LIMITED_LAYER_ATTRIBUTES = {
     "AC1009": ("lineweight", "true_color", "plot"),
 }
 STYLE_ATTRIBUTES = ("font", "bigfont", "width", "oblique", "height", "flags",
                     "text_generation_flags", "last_height")
+# last_height is a cache of the last height used, not a definition. Do not treat
+# it as fidelity.
+STYLE_COMPARE_ATTRIBUTES = ("font", "bigfont", "width", "oblique", "height", "flags",
+                            "text_generation_flags")
 
 
 class ConversionError(RuntimeError):
@@ -126,11 +103,7 @@ def _carry(names, source_attrs, target_table, create) -> dict:
 
 
 def _lwpolyline_to_polyline(entity, target_msp):
-    """R12's POLYLINE, carrying points, bulges, widths, closure and elevation.
-
-    `format="xyseb"` gives (x, y, start_width, end_width, bulge) per vertex, which is
-    the whole of an LWPOLYLINE's per-vertex state.
-    """
+    """R12 POLYLINE with points, bulges, widths, closure and elevation (`xyseb`)."""
     points = list(entity.get_points(format="xyseb"))
     attribs = {"layer": entity.dxf.layer}
     for attr in ("linetype", "color", "true_color", "elevation", "extrusion", "thickness"):
@@ -150,8 +123,80 @@ CONVERTERS = {"LWPOLYLINE": _lwpolyline_to_polyline}
 assert set(CONVERTERS) == set(CONVERSIONS), "every declared conversion needs a converter"
 
 
+def _occupied_non_model_layouts(doc) -> dict:
+    """Layouts other than modelspace that actually contain entities."""
+    occupied = {}
+    for name in doc.layout_names():
+        if str(name).upper() in _MODELSPACE_NAMES:
+            continue
+        count = sum(1 for _ in doc.layout(name))
+        if count:
+            occupied[name] = count
+    return occupied
+
+
+def _unverified_polyline_reason(entity) -> str | None:
+    """Return a reason if this POLYLINE is not a verified 2D contour."""
+    if entity.dxftype() != "POLYLINE":
+        return None
+    if getattr(entity, "is_3d_polyline", False):
+        return "3D POLYLINE"
+    if getattr(entity, "is_polygon_mesh", False):
+        return "polygon-mesh POLYLINE"
+    if getattr(entity, "is_polyface_mesh", False):
+        return "polyface-mesh POLYLINE"
+    flags = int(entity.dxf.flags) if entity.dxf.hasattr("flags") else 0
+    if flags & 0x02:
+        return "curve-fit POLYLINE"
+    if flags & 0x04:
+        return "spline-fit POLYLINE"
+    if flags & _POLYLINE_UNVERIFIED_FLAGS:
+        return "non-2D POLYLINE"
+    return None
+
+
+def _unverified_linetype_reason(entity) -> str | None:
+    if not entity.dxf.hasattr("linetype"):
+        return None
+    name = entity.dxf.linetype
+    if name.upper() in _STANDARD_LINETYPES:
+        return None
+    return f"custom linetype {name}"
+
+
+def _copy_modelspace_entities(source_msp, target_msp):
+    """Copy verified modelspace entities. Collect unverified types rather than dropping them."""
+    source_types, expected_types, converted = Counter(), Counter(), Counter()
+    unconvertible = []
+    for entity in source_msp:
+        kind = entity.dxftype()
+        source_types[kind] += 1
+        reason = _unverified_polyline_reason(entity) or _unverified_linetype_reason(entity)
+        if reason:
+            unconvertible.append(reason)
+            continue
+        if kind in CONVERSIONS:
+            CONVERTERS[kind](entity, target_msp)
+            converted[f"{kind}->{CONVERSIONS[kind]}"] += 1
+            expected_types[CONVERSIONS[kind]] += 1
+            continue
+        if kind not in R12_VERIFIED:
+            unconvertible.append(kind)
+            continue
+        target_msp.add_foreign_entity(entity, copy=True)
+        expected_types[kind] += 1
+    return source_types, expected_types, converted, unconvertible
+
+
 def convert_document(doc, target_version: str = "R12"):
     """Return (converted document, report). Raises rather than losing an entity."""
+    occupied = _occupied_non_model_layouts(doc)
+    if occupied:
+        raise UnconvertibleEntity(
+            f"{target_version} conversion is modelspace-only; refusing rather than "
+            f"discarding paper-space geometry: {occupied}"
+        )
+
     target = create_document(version=target_version)
     source_msp = doc.modelspace()
     target_msp = target.modelspace()
@@ -171,26 +216,13 @@ def convert_document(doc, target_version: str = "R12"):
         lambda name, attrs: target.styles.add(name, font=attrs.get("font", "txt")),
     )
 
-    source_types, expected_types, converted = Counter(), Counter(), Counter()
-    unconvertible = []
-    for entity in source_msp:
-        kind = entity.dxftype()
-        source_types[kind] += 1
-        if kind in CONVERSIONS:
-            CONVERTERS[kind](entity, target_msp)
-            converted[f"{kind}->{CONVERSIONS[kind]}"] += 1
-            expected_types[CONVERSIONS[kind]] += 1
-            continue
-        if kind not in R12_NATIVE:
-            unconvertible.append(kind)
-            continue
-        target_msp.add_foreign_entity(entity, copy=True)
-        expected_types[kind] += 1
+    source_types, expected_types, converted, unconvertible = _copy_modelspace_entities(
+        source_msp, target_msp)
 
     if unconvertible:
         raise UnconvertibleEntity(
-            f"{target_version} cannot hold these entity types and this converter will "
-            f"not approximate them: {sorted(set(unconvertible))}\n"
+            f"{target_version} conversion refused rather than dropping unverified "
+            f"or unsupported content: {sorted(set(unconvertible))}\n"
             f"  affected entities: {len(unconvertible)}\n"
             "Converting them is a modelling decision with its own losses (a SPLINE "
             "becomes an approximation at some tolerance), not a format fix. Refused "
@@ -200,6 +232,7 @@ def convert_document(doc, target_version: str = "R12"):
 
     return target, {
         "target_version": target_version,
+        "conversion_boundary": "modelspace-only; unverified R12 types are refused",
         "source_entity_types": dict(sorted(source_types.items())),
         "expected_entity_types": dict(sorted(expected_types.items())),
         "conversions": dict(sorted(converted.items())),
@@ -217,42 +250,103 @@ def _r(value) -> float:
     return round(float(value), PRECISION)
 
 
+def _vec3(value) -> tuple:
+    return (_r(value.x), _r(value.y), _r(value.z))
+
+
+def _extrusion(entity) -> tuple:
+    if entity.dxf.hasattr("extrusion"):
+        return _vec3(entity.dxf.extrusion)
+    return (0.0, 0.0, 1.0)
+
+
+def _entity_cam_attrs(entity) -> tuple:
+    color = entity.dxf.color if entity.dxf.hasattr("color") else 256
+    linetype = (entity.dxf.linetype if entity.dxf.hasattr("linetype") else "BYLAYER").upper()
+    thickness = _r(entity.dxf.thickness) if entity.dxf.hasattr("thickness") else 0.0
+    return (color, linetype, thickness)
+
+
+def _polyline_record(entity) -> tuple:
+    layer = entity.dxf.layer
+    if entity.dxftype() == "LWPOLYLINE":
+        points = [tuple(_r(v) for v in p) for p in entity.get_points(format="xyseb")]
+        closed = bool(entity.closed)
+        elevation = _r(entity.dxf.elevation) if entity.dxf.hasattr("elevation") else 0.0
+        vertex_z = tuple(elevation for _ in points)
+        unverified_flags = 0
+    else:
+        points = [(_r(v.dxf.location.x), _r(v.dxf.location.y), _r(v.dxf.start_width),
+                   _r(v.dxf.end_width), _r(v.dxf.bulge)) for v in entity.vertices]
+        closed = bool(entity.is_closed)
+        elevation = _r(entity.dxf.elevation.z) if entity.dxf.hasattr("elevation") else 0.0
+        vertex_z = tuple(_r(v.dxf.location.z) for v in entity.vertices)
+        flags = int(entity.dxf.flags) if entity.dxf.hasattr("flags") else 0
+        unverified_flags = flags & _POLYLINE_UNVERIFIED_FLAGS
+    return ("polyline", layer, closed, elevation, tuple(points), vertex_z, unverified_flags,
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+def _line_record(entity) -> tuple:
+    return ("line", entity.dxf.layer, _vec3(entity.dxf.start), _vec3(entity.dxf.end),
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+def _circle_record(entity) -> tuple:
+    return ("circle", entity.dxf.layer, _vec3(entity.dxf.center), _r(entity.dxf.radius),
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+def _arc_record(entity) -> tuple:
+    return ("arc", entity.dxf.layer, _vec3(entity.dxf.center), _r(entity.dxf.radius),
+            _r(entity.dxf.start_angle), _r(entity.dxf.end_angle),
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+def _text_record(entity) -> tuple:
+    width = _r(entity.dxf.width) if entity.dxf.hasattr("width") else 1.0
+    oblique = _r(entity.dxf.oblique) if entity.dxf.hasattr("oblique") else 0.0
+    gen = int(entity.dxf.text_generation_flag) if entity.dxf.hasattr("text_generation_flag") else 0
+    halign = int(entity.dxf.halign) if entity.dxf.hasattr("halign") else 0
+    valign = int(entity.dxf.valign) if entity.dxf.hasattr("valign") else 0
+    return ("text", entity.dxf.layer, entity.dxf.style, entity.dxf.text,
+            _vec3(entity.dxf.insert), _r(entity.dxf.height), _r(entity.dxf.rotation),
+            width, oblique, gen, halign, valign,
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+def _point_record(entity) -> tuple:
+    return ("point", entity.dxf.layer, _vec3(entity.dxf.location),
+            _entity_cam_attrs(entity), _extrusion(entity))
+
+
+_SEMANTIC_BUILDERS = {
+    "LWPOLYLINE": _polyline_record,
+    "POLYLINE": _polyline_record,
+    "LINE": _line_record,
+    "CIRCLE": _circle_record,
+    "ARC": _arc_record,
+    "TEXT": _text_record,
+    "POINT": _point_record,
+}
+
+
 def semantic_record(entity) -> tuple:
     """What an entity MEANS, independent of how the format stores it.
 
     LWPOLYLINE and POLYLINE both reduce to ("polyline", ...), so converting between
     the two is not a difference. An entity count would call it one; that is why the
     gate below is this and not a count.
+
+    Types without a builder raise: the generic (type, layer) fallback is how INSERT,
+    ATTDEF, SOLID and DIMENSION could change geometry and still compare equal.
     """
-    kind = entity.dxftype()
-    layer = entity.dxf.layer
-    if kind in ("LWPOLYLINE", "POLYLINE"):
-        if kind == "LWPOLYLINE":
-            points = [tuple(_r(v) for v in p) for p in entity.get_points(format="xyseb")]
-            closed = bool(entity.closed)
-            elevation = _r(entity.dxf.elevation) if entity.dxf.hasattr("elevation") else 0.0
-        else:
-            points = [(_r(v.dxf.location.x), _r(v.dxf.location.y), _r(v.dxf.start_width),
-                       _r(v.dxf.end_width), _r(v.dxf.bulge)) for v in entity.vertices]
-            closed = bool(entity.is_closed)
-            elevation = _r(entity.dxf.elevation.z) if entity.dxf.hasattr("elevation") else 0.0
-        return ("polyline", layer, closed, elevation, tuple(points))
-    if kind == "LINE":
-        return ("line", layer, (_r(entity.dxf.start.x), _r(entity.dxf.start.y)),
-                (_r(entity.dxf.end.x), _r(entity.dxf.end.y)))
-    if kind == "CIRCLE":
-        return ("circle", layer, (_r(entity.dxf.center.x), _r(entity.dxf.center.y)),
-                _r(entity.dxf.radius))
-    if kind == "ARC":
-        return ("arc", layer, (_r(entity.dxf.center.x), _r(entity.dxf.center.y)),
-                _r(entity.dxf.radius), _r(entity.dxf.start_angle), _r(entity.dxf.end_angle))
-    if kind in ("TEXT", "ATTRIB"):
-        return ("text", layer, entity.dxf.style, entity.dxf.text,
-                (_r(entity.dxf.insert.x), _r(entity.dxf.insert.y)),
-                _r(entity.dxf.height), _r(entity.dxf.rotation))
-    if kind == "POINT":
-        return ("point", layer, (_r(entity.dxf.location.x), _r(entity.dxf.location.y)))
-    return (kind.lower(), layer)
+    builder = _SEMANTIC_BUILDERS.get(entity.dxftype())
+    if builder is None:
+        raise FidelityError(
+            f"no semantic comparator for {entity.dxftype()}; type+layer is not sufficient"
+        )
+    return builder(entity)
 
 
 def _semantics(msp) -> Counter:
@@ -294,30 +388,75 @@ def _compare_layer_tables(source_doc, saved, saved_msp) -> tuple:
     return drift, format_limited
 
 
+def _style_attr_equal(attr: str, before, after) -> bool:
+    if attr in ("font", "bigfont"):
+        return str(before or "").lower() == str(after or "").lower()
+    if attr in ("width", "oblique", "height"):
+        return _r(before) == _r(after if after is not None else 0)
+    return before == after
+
+
+def _compare_style_tables(source_doc, saved, source_msp, saved_msp) -> dict:
+    """Style NAME equality is not preservation -- NOTES/arial vs NOTES/txt is a loss."""
+    used = {e.dxf.style for e in source_msp if e.dxf.hasattr("style")}
+    used |= {e.dxf.style for e in saved_msp if e.dxf.hasattr("style")}
+    drift = {}
+    for name in sorted(used):
+        before = _table_attributes(source_doc.styles, name, STYLE_COMPARE_ATTRIBUTES)
+        after = _table_attributes(saved.styles, name, STYLE_COMPARE_ATTRIBUTES)
+        changed = {}
+        for attr, value in before.items():
+            saved_val = after.get(attr)
+            if _style_attr_equal(attr, value, saved_val):
+                continue
+            changed[attr] = {"source": value, "saved": saved_val}
+        if changed:
+            drift[name] = changed
+    return drift
+
+
+_FIDELITY_KEYS = (
+    "missing_from_saved_file", "unexpected_in_saved_file",
+    "layer_attribute_drift", "style_attribute_drift",
+    "entities_referencing_undefined_layers", "entities_referencing_undefined_styles",
+    "discarded_non_modelspace_layouts",
+)
+
+
+def _compare_source_to_saved(source_doc, saved, saved_msp) -> dict:
+    discarded = dict(_occupied_non_model_layouts(source_doc))
+    discarded.update({
+        f"saved:{name}": n for name, n in _occupied_non_model_layouts(saved).items()
+    })
+    missing, unexpected = _compare_semantics(source_doc.modelspace(), saved_msp)
+    layer_drift, format_limited = _compare_layer_tables(source_doc, saved, saved_msp)
+    return {
+        "missing_from_saved_file": missing,
+        "unexpected_in_saved_file": unexpected,
+        "layer_attribute_drift": layer_drift,
+        "style_attribute_drift": _compare_style_tables(
+            source_doc, saved, source_doc.modelspace(), saved_msp),
+        "format_limited_layer_attributes": format_limited,
+        "discarded_non_modelspace_layouts": discarded,
+    }
+
+
 def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     """Reopen the written file and compare what it MEANS with the source.
 
     In-memory state is not evidence: the loss this module repairs happened at write
-    time, with the in-memory document still looking correct.
-
-    The gate is semantic, not a count. `LWPOLYLINE -> POLYLINE` legitimately changes
-    representation, so entity counts and types are reported for information and are
-    never the pass condition. What must survive is geometry (points, bulges, widths,
-    closure, elevation), text and its style, layer assignment, and the resource
-    definitions those references need.
+    time. Counts are reported and are never the pass condition.
     """
     saved = ezdxf.readfile(str(path))
     saved_msp = saved.modelspace()
     undefined_layers, undefined_styles = _undefined_references(saved_msp, saved)
-
-    missing_semantics, unexpected_semantics = [], []
-    layer_attribute_drift, format_limited = {}, {}
+    compared = {
+        "missing_from_saved_file": [], "unexpected_in_saved_file": [],
+        "layer_attribute_drift": {}, "style_attribute_drift": {},
+        "format_limited_layer_attributes": {}, "discarded_non_modelspace_layouts": {},
+    }
     if source_doc is not None:
-        missing_semantics, unexpected_semantics = _compare_semantics(
-            source_doc.modelspace(), saved_msp)
-        layer_attribute_drift, format_limited = _compare_layer_tables(
-            source_doc, saved, saved_msp)
-
+        compared = _compare_source_to_saved(source_doc, saved, saved_msp)
     verification = {
         "gate": "semantic comparison against the source document; entity counts are "
                 "reported but are not the pass condition",
@@ -325,24 +464,20 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
         "saved_version": saved.dxfversion,
         "saved_entity_types": dict(sorted(Counter(e.dxftype() for e in saved_msp).items())),
         "semantics_compared": source_doc is not None,
-        "missing_from_saved_file": missing_semantics,
-        "unexpected_in_saved_file": unexpected_semantics,
-        "layer_attribute_drift": layer_attribute_drift,
-        # Declared, expected losses: the target format has nowhere to put these.
-        # Reported so a caller can say what the conversion cost.
-        "format_limited_layer_attributes": format_limited,
         "entities_referencing_undefined_layers": undefined_layers,
         "entities_referencing_undefined_styles": undefined_styles,
+        **compared,
     }
-    if (missing_semantics or unexpected_semantics or undefined_layers
-            or undefined_styles or layer_attribute_drift):
+    if any(verification[key] for key in _FIDELITY_KEYS):
         raise FidelityError(
             f"""the saved file does not carry the source's meaning:
-  missing: {missing_semantics or 'none'}
-  unexpected: {unexpected_semantics or 'none'}
-  layer attributes changed: {layer_attribute_drift or 'none'}
-  undefined layers referenced: {undefined_layers or 'none'}
-  undefined styles referenced: {undefined_styles or 'none'}"""
+  missing: {verification['missing_from_saved_file'] or 'none'}
+  unexpected: {verification['unexpected_in_saved_file'] or 'none'}
+  layer attributes changed: {verification['layer_attribute_drift'] or 'none'}
+  style attributes changed: {verification['style_attribute_drift'] or 'none'}
+  undefined layers referenced: {verification['entities_referencing_undefined_layers'] or 'none'}
+  undefined styles referenced: {verification['entities_referencing_undefined_styles'] or 'none'}
+  non-modelspace layouts: {verification['discarded_non_modelspace_layouts'] or 'none'}"""
         )
     return verification
 

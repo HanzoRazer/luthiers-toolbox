@@ -583,6 +583,8 @@ def test_auto_fix_convert_to_r12_preserves_layer_and_style_resources(client):
     assert texts[0].dxf.text == "cut depth 6mm"
     assert texts[0].dxf.style == "NOTES", "style must not fall back to Standard"
     assert "NOTES" in saved.styles
+    # A surviving style NAME is not preservation: NOTES/txt.shx is the original loss.
+    assert saved.styles.get("NOTES").dxf.font.lower() == "arial.ttf"
 
 
 def test_auto_fix_convert_to_r12_reports_what_the_conversion_cost(client):
@@ -618,6 +620,49 @@ def test_auto_fix_convert_to_r12_refuses_what_it_cannot_convert(client):
     assert "SPLINE" in detail
     assert "fixed_dxf_base64" not in response.json(), "no partial output is returned"
     assert "Converted to R12" not in detail, "no fix may be claimed for a refusal"
+
+
+def _auto_fix_r12_payload(doc):
+    import io
+    buf = io.StringIO()
+    doc.write(buf)
+    return base64.b64encode(buf.getvalue().encode("cp1252")).decode("utf-8")
+
+
+def test_auto_fix_convert_to_r12_refuses_insert_blocks(client):
+    """Block geometry must not come back as a verified empty INSERT."""
+    ezdxf = pytest.importorskip("ezdxf")
+    doc = ezdxf.new("R2000")
+    block = doc.blocks.new("BODY_BLOCK")
+    block.add_line((0, 0), (10, 0))
+    doc.modelspace().add_blockref("BODY_BLOCK", insert=(0, 0))
+
+    response = client.post("/api/dxf/preflight/auto_fix", json={
+        "dxf_base64": _auto_fix_r12_payload(doc),
+        "filename": "insert.dxf",
+        "fixes": ["convert_to_r12"],
+    })
+    assert response.status_code == 422, response.text
+    assert "INSERT" in response.json()["detail"]
+    assert "fixed_dxf_base64" not in response.json()
+
+
+def test_auto_fix_convert_to_r12_refuses_paperspace(client):
+    """Paper-space entities must not be silently discarded on HTTP 200."""
+    ezdxf = pytest.importorskip("ezdxf")
+    doc = ezdxf.new("R2000")
+    doc.modelspace().add_line((0, 0), (10, 0))
+    doc.paperspace().add_circle((0, 0), 3.0)
+
+    response = client.post("/api/dxf/preflight/auto_fix", json={
+        "dxf_base64": _auto_fix_r12_payload(doc),
+        "filename": "paperspace.dxf",
+        "fixes": ["convert_to_r12"],
+    })
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"].lower()
+    assert "paper" in detail or "modelspace-only" in detail
+    assert "fixed_dxf_base64" not in response.json()
 
 
 def test_auto_fix_close_polylines(client):
