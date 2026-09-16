@@ -6,7 +6,8 @@
   "rulings": [
     "2026-09-13 owner ruling: the Files gate is an export-readiness gate; files that fall short are fixed or recorded with reason and owner, never downgraded to warnings",
     "2026-09-14 owner ruling: folder + layer define asset class, declared here rather than as exceptions in validator code; BODY_POINTS is reference/measurement data; WIRING_CHANNEL open paths are not declared valid until the CAM consumer is traced; owner stream is DXF Catalog Integrity",
-    "2026-09-14 owner ruling: only R12 is approved; R2000 is allowed only in the canonical vectorizer system (bucket 1: blueprint reader mode cam_ready_r2000, auth-gated, routers/blueprint/vectorize_router.py). Stored catalog files are therefore R12 only"
+    "2026-09-14 owner ruling: only R12 is approved; R2000 is allowed only in the canonical vectorizer system (bucket 1: blueprint reader mode cam_ready_r2000, auth-gated, routers/blueprint/vectorize_router.py). Stored catalog files are therefore R12 only",
+    "2026-09-15 owner ruling: the catalog files that code or data still reference need no further adjudication - they will be replaced. Their quarantine records stay as evidence of known nonconformance and keep the gates honest, but no adjudication work is owed against them, and nothing here is a queue for the owner. Files nothing referenced were deleted (PR #379)."
   ],
   "version_policy": {
     "approved": [
@@ -262,30 +263,6 @@
       "recorded": "2026-09-14 (DXF-CATALOG-GATE-001)"
     },
     {
-      "asset": "body/dxf/acoustic/orchestra_model_body_view.dxf",
-      "asset_class": "manufacturing_body",
-      "asset_sha256": "7197e5cd8b8e254ba0599418e8095cf6de3d602d3ecc4b788e4edbba77ae2ff5",
-      "failed_contract": [
-        "closed_outline",
-        "version_allowed"
-      ],
-      "observed_evidence": {
-        "gate": [
-          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-          "[closed_outline] No geometry on an outline layer (BODY, BODY_OUTLINE, GEOMETRY)"
-        ],
-        "review": [
-          "layer 0 only: LINE x1845, ARC x39, SPLINE x12, CIRCLE x14, ELLIPSE x36; extents 913.2 x 769.1 mm; no declared outline layer"
-        ]
-      },
-      "disposition": "QUARANTINE_CANDIDATE",
-      "reason": "Appears misclassified by location: a blueprint view dump in the body-outline catalog, not necessarily defective geometry.",
-      "owner_stream": "DXF Catalog Integrity",
-      "manufacturing_authority": "BLOCKED",
-      "exit_condition": "DXF Catalog Integrity adjudicates: relocate or reclassify as a reference asset, or extract a closed body outline onto a declared outline layer as R12; update this record.",
-      "recorded": "2026-09-14 (DXF-CATALOG-GATE-001)"
-    },
-    {
       "asset": "body/dxf/acoustic/orchestra_model_clean.dxf",
       "asset_class": "manufacturing_body",
       "asset_sha256": "6580fc3bda7151aa219c215f8d6ca1888fea1ac42612970ff96d7cf84262505d",
@@ -331,50 +308,6 @@
       "owner_stream": "DXF Catalog Integrity",
       "manufacturing_authority": "BLOCKED",
       "exit_condition": "Adjudicate the outline: make the LINE/SPLINE chain close, or rebuild as a closed R12 outline; re-run both gates. flying_v_body_phase3.dxf holds a closed LWPOLYLINE outline of the same width (R2000, also non-conforming).",
-      "recorded": "2026-09-14 (DXF-CATALOG-GATE-001)"
-    },
-    {
-      "asset": "body/dxf/electric/flying_v_body_phase3.dxf",
-      "asset_class": "manufacturing_body",
-      "asset_sha256": "f011786e763f7638cc45ba6a3f5b7ca28fcf59db147b807e2b5e170a8b57d806",
-      "failed_contract": [
-        "version_allowed"
-      ],
-      "observed_evidence": {
-        "gate": [
-          "[version_allowed] DXF version AC1015 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)"
-        ],
-        "review": []
-      },
-      "disposition": "NONCONFORMING_VERSION",
-      "reason": "Stored as a DXF version the catalog does not approve; every geometry clause passes.",
-      "owner_stream": "DXF Catalog Integrity",
-      "manufacturing_authority": "BLOCKED",
-      "exit_condition": "Regenerate the file as R12 (AC1009) through app.util.dxf_compat (LINE chains, the free-tier form), then re-run both catalog gates; remove this record when every clause passes. R2000 is reserved for paid-tier canonical vectorizer output.",
-      "recorded": "2026-09-14 (DXF-CATALOG-GATE-001)"
-    },
-    {
-      "asset": "body/dxf/electric/flying_v_full.dxf",
-      "asset_class": "manufacturing_body",
-      "asset_sha256": "014bd2e38fc3eb66c60dbce5111205d64814d0c59fe1058a6cb24fd33aad799f",
-      "failed_contract": [
-        "closed_outline",
-        "version_allowed"
-      ],
-      "observed_evidence": {
-        "gate": [
-          "[version_allowed] DXF version AC1024 is not approved for stored catalog files (approved: AC1009; R2000 is paid-tier vectorizer output only)",
-          "[closed_outline] No simple closed contour bounds the outline layer: the best closed contour's bbox covers 0.99 x 0.09 of the layer's 490.2 x 608.3 mm bbox (need 0.9)"
-        ],
-        "review": [
-          "BODY: LINE x15, SPLINE x5; HARDWARE: LWPOLYLINE x6, LINE x146, SPLINE x5, CIRCLE x6; HEADSTOCK and NECK layers; only closed BODY chain 486.5 x 51.9 mm"
-        ]
-      },
-      "disposition": "QUARANTINE_CANDIDATE",
-      "reason": "Outline role unadjudicated: same BODY-layer LINE/SPLINE outline as flying_v_body.dxf, plus neck, headstock and hardware layers.",
-      "owner_stream": "DXF Catalog Integrity",
-      "manufacturing_authority": "BLOCKED",
-      "exit_condition": "Adjudicate whether this full-instrument drawing belongs in the body-outline catalog; if so, close the body outline and regenerate as R12; update this record.",
       "recorded": "2026-09-14 (DXF-CATALOG-GATE-001)"
     },
     {
