@@ -486,6 +486,43 @@ def test_auto_fix_returns_base64(client):
         pytest.fail("fixed_dxf_base64 is not valid base64")
 
 
+def _consolidated_r2000_base64():
+    """What the consolidator emits: R2000, LWPOLYLINE contours, plus resources.
+
+    `app.cam.layer_consolidator` creates an R2000 document because "LWPOLYLINE not
+    supported in R12" and writes one LWPOLYLINE per chain. Built here rather than
+    committed as a binary so the test stays readable and portable.
+    """
+    import io
+    ezdxf = pytest.importorskip("ezdxf")
+    doc = ezdxf.new("R2000")
+    doc.layers.add("BODY_OUTLINE").dxf.color = 1
+    doc.layers.add("ANNOTATION").dxf.color = 3
+    doc.styles.add("NOTES", font="arial.ttf")
+    msp = doc.modelspace()
+    msp.add_lwpolyline(
+        [(0.0, 0.0, 0.0, 0.0, 0.5), (100.0, 0.0, 0.0, 0.0, 0.0),
+         (100.0, 60.0, 0.0, 0.0, 0.0), (0.0, 60.0, 0.0, 0.0, 0.0)],
+        format="xyseb", close=True, dxfattribs={"layer": "BODY_OUTLINE", "elevation": 0.0},
+    )
+    msp.add_text("cut depth 6mm", dxfattribs={
+        "layer": "ANNOTATION", "style": "NOTES", "insert": (5.0, 5.0), "height": 2.5})
+    buf = io.StringIO()
+    doc.write(buf)
+    return base64.b64encode(buf.getvalue().encode("cp1252")).decode("utf-8")
+
+
+def _reopen(data):
+    """Write the returned base64 to disk and reopen it. The saved file is the evidence."""
+    import tempfile
+    ezdxf = pytest.importorskip("ezdxf")
+    raw = base64.b64decode(data["fixed_dxf_base64"])
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".dxf", mode="wb") as handle:
+        handle.write(raw)
+        path = handle.name
+    return ezdxf.readfile(path)
+
+
 def test_auto_fix_convert_to_r12(client):
     """Auto-fix can convert to R12."""
     response = client.post("/api/dxf/preflight/auto_fix", json={
@@ -496,6 +533,80 @@ def test_auto_fix_convert_to_r12(client):
     data = response.json()
 
     assert "R12" in " ".join(data["fixes_applied"])
+
+
+def test_auto_fix_convert_to_r12_preserves_a_consolidated_body_outline(client):
+    """The acceptance case: a consolidated outline must survive the round trip.
+
+    Before the repair, this endpoint returned an EMPTY file for exactly this input --
+    measured on the live consolidator's own output, 25 LWPOLYLINE contours in and zero
+    entities out, while fixes_applied said "Converted to R12 format".
+
+    Every assertion below reads the REOPENED returned file, not the endpoint's report.
+    """
+    response = client.post("/api/dxf/preflight/auto_fix", json={
+        "dxf_base64": _consolidated_r2000_base64(),
+        "filename": "consolidated.dxf",
+        "fixes": ["convert_to_r12"],
+    })
+    assert response.status_code == 200, response.text
+    data = response.json()
+    saved = _reopen(data)
+
+    assert saved.dxfversion == "AC1009", "the output must really be R12"
+
+    polylines = [e for e in saved.modelspace() if e.dxftype() == "POLYLINE"]
+    assert len(polylines) == 1, (
+        f"the contour must survive as an R12 POLYLINE; got "
+        f"{[e.dxftype() for e in saved.modelspace()]}"
+    )
+    contour = polylines[0]
+    assert contour.is_closed, "closure survives"
+    vertices = [(round(v.dxf.location.x, 6), round(v.dxf.location.y, 6),
+                 round(v.dxf.start_width, 6), round(v.dxf.end_width, 6),
+                 round(v.dxf.bulge, 6)) for v in contour.vertices]
+    assert vertices == [(0.0, 0.0, 0.0, 0.0, 0.5), (100.0, 0.0, 0.0, 0.0, 0.0),
+                        (100.0, 60.0, 0.0, 0.0, 0.0), (0.0, 60.0, 0.0, 0.0, 0.0)], (
+        "points, widths and bulges survive"
+    )
+    assert contour.dxf.layer == "BODY_OUTLINE", "layer assignment survives"
+    assert "BODY_OUTLINE" in saved.layers, "layer DEFINITION survives, not just the name"
+    assert saved.layers.get("BODY_OUTLINE").dxf.color == 1
+
+    texts = [e for e in saved.modelspace() if e.dxftype() == "TEXT"]
+    assert len(texts) == 1 and texts[0].dxf.text == "cut depth 6mm", "TEXT survives"
+    assert texts[0].dxf.style == "NOTES", "text style survives, not reset to Standard"
+    assert "NOTES" in saved.styles, "the style definition survives"
+
+    report = data["conversion_report"]
+    assert report["conversions"] == {"LWPOLYLINE->POLYLINE": 1}
+    assert report["verification"]["missing_from_saved_file"] == []
+    assert report["verification"]["layer_attribute_drift"] == {}
+    # R12 has no lineweight: a declared cost, reported rather than hidden
+    assert "BODY_OUTLINE" in report["verification"]["format_limited_layer_attributes"]
+
+
+def test_auto_fix_convert_to_r12_refuses_what_it_cannot_convert(client):
+    """The negative case: refuse, leave no partial output, claim no fix."""
+    import io
+    ezdxf = pytest.importorskip("ezdxf")
+    doc = ezdxf.new("R2000")
+    doc.modelspace().add_spline([(0, 0), (10, 10), (20, 0)])
+    buf = io.StringIO()
+    doc.write(buf)
+    payload = base64.b64encode(buf.getvalue().encode("cp1252")).decode("utf-8")
+
+    response = client.post("/api/dxf/preflight/auto_fix", json={
+        "dxf_base64": payload,
+        "filename": "spline.dxf",
+        "fixes": ["convert_to_r12"],
+    })
+
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"]
+    assert "SPLINE" in detail
+    assert "fixed_dxf_base64" not in response.json(), "no partial output is returned"
+    assert "Converted to R12" not in detail, "no fix may be claimed for a refusal"
 
 
 def test_auto_fix_close_polylines(client):

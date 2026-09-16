@@ -1,0 +1,76 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_R12_CONVERT_REPAIR",
+  "title": "fix(preflight): convert_to_r12 returned an empty DXF for consolidated input",
+  "intent": "The /auto_fix convert_to_r12 fix copied entities into a fresh R12 document with add_foreign_entity. That call accepts an LWPOLYLINE into an R12 document -- so the in-memory count looks right -- and the writer drops it on save, because R12 has no LWPOLYLINE. Measured on the live consolidator's own output (25 LWPOLYLINE contours from app.cam.layer_consolidator): the returned file contained ZERO entities while fixes_applied reported 'Converted to R12 format'. Layer definitions and text styles were lost the same way. Replaces the loop with an explicit converter that carries layer and style tables, converts LWPOLYLINE to POLYLINE with points/bulges/widths/closure/elevation, verifies the SAVED file against the source's meaning, and fails closed on entity types R12 cannot hold.",
+  "change_type": "fix",
+  "behavior_change": "yes",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/cam/r12_convert.py",
+      "services/api/app/routers/dxf_preflight_router.py",
+      "services/api/tests/test_dxf_preflight_endpoint_smoke.py",
+      ".cbsp21/patches/ltb-r12-convert-repair.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/cam/r12_convert.py",
+      "services/api/app/routers/dxf_preflight_router.py",
+      "services/api/tests/test_dxf_preflight_endpoint_smoke.py",
+      ".cbsp21/patches/ltb-r12-convert-repair.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds app/cam/r12_convert.py (explicit LWPOLYLINE->POLYLINE; layer and style tables carried before entities; saved-file semantic verification; UnconvertibleEntity for SPLINE/ELLIPSE/MTEXT; losses R12's format forces reported as format_limited_layer_attributes). Rewires the convert_to_r12 branch to use it, surfaces its two named failures as 422 and 500 instead of returning a file, moves the 'Converted to R12' message to AFTER verification (it was announced before the conversion ran), and returns a conversion_report so a caller can check rather than trust a sentence. Adds two endpoint tests: a consolidated R2000 input whose contour, bulges, widths, closure, layer definition, TEXT and text style are asserted on the REOPENED returned file, and a SPLINE input that must be refused with no partial output.",
+    "why_not_redundant": "The existing test_auto_fix_convert_to_r12 asserted only that 'R12' appears in fixes_applied, which passes on an empty file -- that is how this reached production. ezdxf's auditor also reports the empty output as clean, so nothing downstream could detect it."
+  },
+  "verification": {
+    "commands_run": [
+      "TestClient end-to-end on the live consolidator's own output (25 LWPOLYLINE, R2000): HTTP 200, returned file AC1009 with 25 POLYLINE, BODY_OUTLINE defined, verification clean; before the change the same input returned an empty file",
+      "TestClient negative case (SPLINE): HTTP 422, no fixed_dxf_base64 in the response",
+      "vectorizer-sandbox: python -m pytest tests/skills/test_r12_convert.py -q -> 14 passed",
+      "NOT RUN LOCALLY: pytest services/api/tests -- the suite cannot import numpy under Python 3.14 / numpy 2.4.2 in this environment; an untouched test file fails identically, so this is pre-existing and CI must run the new tests"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/r12_convert.py",
+      "intent": "New self-contained R12 converter: explicit entity conversion, resource carry, saved-file semantic verification, fail-closed on unsupported types.",
+      "scan_targets": [
+        "services/api/app/cam/layer_consolidator.py",
+        "services/api/app/routers/dxf_preflight_router.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "new module"
+    },
+    {
+      "path": "services/api/app/routers/dxf_preflight_router.py",
+      "intent": "Replace the add_foreign_entity conversion loop; report the fix only after the saved file is verified; surface refusal as 422 and fidelity failure as 500.",
+      "scan_targets": [
+        "services/api/app/routers/dxf_preflight_router.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "yes - convert_to_r12 now refuses unsupported input instead of returning a lossy file"
+    },
+    {
+      "path": "services/api/tests/test_dxf_preflight_endpoint_smoke.py",
+      "intent": "Add the saved-output fidelity witness and the refusal case; the existing R12 test could pass on an empty file.",
+      "scan_targets": [
+        "services/api/tests/test_dxf_preflight_endpoint_smoke.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": ".cbsp21/patches/ltb-r12-convert-repair.json",
+      "intent": "CBSP21 per-PR manifest for this patch.",
+      "scan_targets": [
+        ".cbsp21/patches/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - manifest only"
+    }
+  ]
+}
