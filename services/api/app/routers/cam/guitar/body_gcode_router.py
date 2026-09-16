@@ -27,6 +27,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+from ....instrument_geometry.dxf_authority import ManufacturingAuthorityBlocked
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -256,6 +258,10 @@ def generate_les_paul_body_gcode(
         filename = f"lespaul_body_{_generate_timestamp()}.nc"
         return _make_nc_response(gcode, filename)
 
+    except ManufacturingAuthorityBlocked as e:
+        # The catalog says this asset may not be manufactured from. Deterministic
+        # client refusal with the asset's catalog-relative name, never a filesystem path.
+        raise HTTPException(status_code=422, detail=e.as_detail())
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except ValueError as e:

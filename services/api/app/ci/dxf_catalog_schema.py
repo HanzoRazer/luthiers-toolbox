@@ -5,13 +5,19 @@ The registry is the policy source of truth for both DXF catalog gates, so a
 malformed registry must fail loudly at load time with a message that names the
 problem, not deep inside a clause check as a KeyError.
 
-Schema dxf_catalog_registry_v2 (v1 -> v2: observed_evidence split into
-machine-checked `gate` lines and free-text `review` notes; every record pinned
-to its asset's sha256; class globs match per path segment, `**` spans
-segments). A registry declaring any other schema is rejected; bump the schema
-name whenever the structure changes.
+Schema dxf_catalog_registry_v3. History: v1 -> v2 split observed_evidence into
+machine-checked `gate` lines and free-text `review` notes, pinned every record
+to its asset's sha256, and made class globs match per path segment. v2 -> v3
+adds the `manufacturing_authority` section: positive authorization of a named
+asset and its exact bytes, which is the only thing that permits manufacturing
+use at runtime. A quarantine record still never grants authority, and an asset
+may not be both quarantined and authorized. A registry declaring any other
+schema is rejected; bump the schema name whenever the structure changes.
 
-Dependencies: stdlib only (the asset gate job installs only ezdxf).
+Dependencies: stdlib only (the asset gate job installs only ezdxf). The
+authorization section is defined and validated by the runtime-safe substrate
+app/instrument_geometry/dxf_authority.py, which both this schema and the
+runtime generators read, so CI and runtime cannot disagree about authority.
 """
 
 from __future__ import annotations
@@ -19,7 +25,9 @@ from __future__ import annotations
 import re
 from typing import Any, Callable, Dict, List, Optional
 
-SCHEMA = "dxf_catalog_registry_v2"
+from ..instrument_geometry.dxf_authority import validate_authorization_section
+
+SCHEMA = "dxf_catalog_registry_v3"
 KNOWN_CLAUSES = (
     "readable", "nonempty", "geometry_present", "version_allowed",
     "closed_outline", "preflight_valid", "topology_valid",
@@ -52,7 +60,7 @@ def validate_registry(registry: Dict[str, Any], classify: Callable[[str, Dict[st
     if not problems:
         problems += _classes(registry) + _rules(registry)
     if not problems:
-        problems += _records(registry, classify)
+        problems += _records(registry, classify) + validate_authorization_section(registry, classify)
     if problems:
         raise RegistryError("dxf_catalog_registry.json is invalid:\n  - " + "\n  - ".join(problems))
 
@@ -62,7 +70,8 @@ def _top_level(registry: Dict[str, Any]) -> List[str]:
     if registry.get("schema") != SCHEMA:
         problems.append(f"schema is {registry.get('schema')!r}, expected {SCHEMA!r}")
     for key, kind in (("catalog_root", str), ("version_policy", dict), ("clauses", dict),
-                      ("asset_classes", dict), ("class_rules", list), ("quarantine", list)):
+                      ("asset_classes", dict), ("class_rules", list), ("quarantine", list),
+                      ("manufacturing_authority", dict)):
         if not isinstance(registry.get(key), kind):
             problems.append(f"top-level {key!r} missing or not a {kind.__name__}")
     if problems:

@@ -1,13 +1,14 @@
 {
-  "schema": "dxf_catalog_registry_v2",
-  "schema_notes": "v2 (2026-09-14): observed_evidence is {gate, review}: gate lines are '[clause] message' as the gate prints them and must cover exactly failed_contract; review lines are human findings. Every record pins asset_sha256; a changed file fails the gate until re-adjudicated. class_rules globs match per path segment ('*' within a segment, '**' across segments); a path matched by rules for two classes is an error. app/ci/dxf_catalog_schema.py validates all of this at load time and rejects any other schema name: bump the name whenever the structure changes.",
+  "schema": "dxf_catalog_registry_v3",
+  "schema_notes": "v3 (2026-09-16): adds the manufacturing_authority section - positive authorization of a named asset and its exact bytes, which is the only thing that permits runtime manufacturing use. A quarantine record still never grants authority, the absence of a record is not authorization, and an asset may not be both quarantined and authorized. Runtime reads this section through the neutral substrate app/instrument_geometry/dxf_authority.py; app/ci/dxf_catalog_schema.py validates the whole registry at load and rejects any other schema name. v2 (2026-09-14): observed_evidence is {gate, review}: gate lines are '[clause] message' as the gate prints them and must cover exactly failed_contract; review lines are human findings. Every record pins asset_sha256; a changed file fails the gate until re-adjudicated. class_rules globs match per path segment ('*' within a segment, '**' across segments); a path matched by rules for two classes is an error. app/ci/dxf_catalog_schema.py validates all of this at load time and rejects any other schema name: bump the name whenever the structure changes.",
   "catalog_root": "services/api/app/instrument_geometry",
   "purpose": "Declarative classification and quarantine register for the DXF catalog. Read by app/ci/dxf_catalog_policy.py for both catalog gates (app/ci/check_dxf_files.py and scripts/validate_dxf_assets.py). A quarantine record never passes a file: it names the failed contract, keeps manufacturing authority BLOCKED, and states the exit condition. manufacturing_authority is recorded and enforced in CI; runtime paths do not yet read it. Known runtime consumer: generators/body_generator.py and lespaul_body_generator.py load LesPaul_CAM_Closed.dxf (UNADJUDICATED here) as the Les Paul G-code template without reading this registry.",
   "rulings": [
     "2026-09-13 owner ruling: the Files gate is an export-readiness gate; files that fall short are fixed or recorded with reason and owner, never downgraded to warnings",
     "2026-09-14 owner ruling: folder + layer define asset class, declared here rather than as exceptions in validator code; BODY_POINTS is reference/measurement data; WIRING_CHANNEL open paths are not declared valid until the CAM consumer is traced; owner stream is DXF Catalog Integrity",
     "2026-09-14 owner ruling: only R12 is approved; R2000 is allowed only in the canonical vectorizer system (bucket 1: blueprint reader mode cam_ready_r2000, auth-gated, routers/blueprint/vectorize_router.py). Stored catalog files are therefore R12 only",
-    "2026-09-15 owner ruling: the catalog files that code or data still reference need no further adjudication - they will be replaced. Their quarantine records stay as evidence of known nonconformance and keep the gates honest, but no adjudication work is owed against them, and nothing here is a queue for the owner. Files nothing referenced were deleted (PR #379)."
+    "2026-09-15 owner ruling: the catalog files that code or data still reference need no further adjudication - they will be replaced. Their quarantine records stay as evidence of known nonconformance and keep the gates honest, but no adjudication work is owed against them, and nothing here is a queue for the owner. Files nothing referenced were deleted (PR #379).",
+    "2026-09-16 owner ruling (DXF-RUNTIME-AUTHORITY-001): quarantine records describe known failure; they never grant manufacturing authority. Manufacturing authority is a separate positive assertion over a specific catalog asset and its exact bytes, recorded in manufacturing_authority.authorized and enforced at runtime before any manufacturing path consumes a governed catalog DXF. Replacing a file does not restore manufacturing: the new digest must be authorized."
   ],
   "version_policy": {
     "approved": [
@@ -74,6 +75,10 @@
     "GEOMETRY": "layer read by the adaptive DXF CAM lane (routers/adaptive/dxf_router.py: closed LWPOLYLINE on layer GEOMETRY); outline layer of the four R12 POLYLINE bodies",
     "BODY_POINTS": "reference/measurement data (owner ruling 2026-09-14). In all five files that carry it, it is one open LWPOLYLINE that revisits its own vertices 31-865 times next to a closed, valid BODY_OUTLINE (audit docs/investigations/dxf_gate_repair_audit_2026-09-14.md F4)",
     "not_declared": "CUTOUT, OUTLINE, WIRING_CHANNEL and layer 0 are deliberately not outline or reference layers: their role has not been demonstrated (WIRING_CHANNEL awaits the CAM-consumer trace)"
+  },
+  "manufacturing_authority": {
+    "basis": "Positive authorization for runtime manufacturing use. An entry names one catalog asset and the exact sha256 its bytes must have, with the basis for the decision. Empty means no catalog asset is currently authorized for manufacturing: every governed asset is either quarantined or simply never adjudicated, so runtime manufacturing of catalog geometry is blocked until a replacement asset is authorized.",
+    "authorized": []
   },
   "quarantine": [
     {
