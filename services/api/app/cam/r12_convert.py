@@ -556,18 +556,53 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     return verification
 
 
-def convert_file(source_path: Path, out_path: Path, target_version: str = "R12") -> dict:
+def publish_converted_document(target, report, out_path, source_doc, encoding=None) -> dict:
+    """Write a converted document, verify the bytes, then publish. Fails closed.
+
+    The destination is replaced only after verification succeeds (G3): the previous
+    order wrote `out_path` and verified afterwards, so a failed verification left the
+    caller's existing file already overwritten by output just judged unfit. The
+    temporary file is removed on either outcome -- publishing renames it away, and a
+    failure unlinks it -- so no `.tmp` is left behind.
+
+    Takes a document rather than a path because the endpoint applies its other fixes
+    (close_open_polylines, units) to the document in memory. Re-reading the source
+    from disk here would silently discard them.
+
+    `encoding` is forwarded to ezdxf's `saveas`. Measured on this base: for a target
+    built by `create_document("R12")` the document's own `output_encoding` is already
+    cp1252 (from $DWGCODEPAGE: ANSI_1252), so passing "cp1252" changes no byte other
+    than the writer's timestamp. It is kept explicit because the endpoint's contract
+    said cp1252, not because it alters the output.
+    """
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = out_path.with_suffix(out_path.suffix + ".tmp")
+    try:
+        if encoding is None:
+            target.saveas(str(temporary_path))
+        else:
+            target.saveas(str(temporary_path), encoding=encoding)
+        report["source_version"] = source_doc.dxfversion
+        # The source document is passed in so the check is source-vs-saved meaning, not
+        # saved-vs-its-own-prediction. A converter that mispredicts would otherwise
+        # agree with itself.
+        report["verification"] = verify_saved_file(
+            temporary_path, report, source_doc=source_doc
+        )
+        temporary_path.replace(out_path)
+    except Exception:
+        temporary_path.unlink(missing_ok=True)
+        raise
+    return report
+
+
+def convert_file(source_path: Path, out_path: Path, target_version: str = "R12",
+                 encoding: str | None = None) -> dict:
     """Convert a DXF file, write it, and verify the written bytes. Fails closed."""
     source_path, out_path = Path(source_path), Path(out_path)
     if not source_path.is_file():
         raise ConversionError(f"input is not a file: {source_path}")
     doc = ezdxf.readfile(str(source_path))
     target, report = convert_document(doc, target_version)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    target.saveas(str(out_path))
-    report["source_version"] = doc.dxfversion
-    # The source document is passed in so the check is source-vs-saved meaning, not
-    # saved-vs-its-own-prediction. A converter that mispredicts would otherwise agree
-    # with itself.
-    report["verification"] = verify_saved_file(out_path, report, source_doc=doc)
-    return report
+    return publish_converted_document(target, report, out_path, doc, encoding=encoding)

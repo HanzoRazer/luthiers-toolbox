@@ -191,6 +191,57 @@ def test_g3_failed_verification_leaves_the_destination_untouched(tmp_path, monke
     assert not list(tmp_path.glob("*.tmp")), "no temporary file may be left behind"
 
 
+def test_g3_a_successful_publish_also_leaves_no_temporary_file(tmp_path):
+    """The other half of the failure path: success must clean up too.
+
+    Writing to a temporary and renaming is the fix for G3, but a temporary that
+    survives is a new leak introduced by the fix. The failure path unlinks it; the
+    success path must rename it away rather than leave a copy beside the output.
+    """
+    source = tmp_path / "source.dxf"
+    doc = ezdxf.new("R2000")
+    doc.layers.add("BODY_OUTLINE")
+    doc.modelspace().add_lwpolyline(
+        [(0, 0), (10, 0), (10, 10)], close=True, dxfattribs={"layer": "BODY_OUTLINE"})
+    doc.saveas(str(source))
+
+    destination = tmp_path / "out" / "converted.dxf"
+    convert_file(source, destination)
+
+    assert destination.is_file()
+    assert not list(destination.parent.glob("*.tmp")), (
+        "the temporary survived a successful publish; it must be renamed, not copied"
+    )
+    assert ezdxf.readfile(str(destination)).dxfversion == "AC1009"
+
+
+@pytest.mark.parametrize("verification_fails", [False, True])
+def test_g3_the_endpoint_leaves_no_temporary_behind_either_way(
+    client, monkeypatch, verification_fails
+):
+    """The endpoint publishes through the same helper, so it inherits the temporary.
+
+    Its destination is already a NamedTemporaryFile, so G3's data-loss cannot reach a
+    caller's file here -- but the `.tmp` sibling is written into the system temp
+    directory, where nothing in the endpoint's `finally` block knows to remove it. Both
+    outcomes are checked: a 200 and a forced verification failure.
+    """
+    system_temp = Path(tempfile.gettempdir())
+    before = set(system_temp.glob("*.dxf.tmp"))
+
+    if verification_fails:
+        def _always_fails(*args, **kwargs):
+            raise FidelityError("forced failure: temporary cleanup is under test")
+
+        monkeypatch.setattr(r12_convert, "verify_saved_file", _always_fails)
+
+    response = _post(client, _elevated_contour(), "leak.dxf")
+    assert response.status_code == (500 if verification_fails else 200), response.text[:300]
+
+    leaked = set(system_temp.glob("*.dxf.tmp")) - before
+    assert not leaked, f"temporary files survived the request: {sorted(leaked)}"
+
+
 # --------------------------------------------------------------------------- G4
 
 
