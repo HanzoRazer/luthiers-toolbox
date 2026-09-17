@@ -102,6 +102,27 @@ def _apply_table_attributes(entry, attributes) -> tuple:
     return applied, failed
 
 
+def _entity_style_name(entity):
+    """Style an entity uses, including the default a TEXT does not declare.
+
+    After a write/read round trip a TEXT reports its style through the DXF default
+    rather than through `hasattr("style")`. Collecting names with `hasattr` alone
+    therefore missed `Standard` entirely, so a source that customised its default
+    style never had it carried -- the other half of G4, alongside reserved entries
+    being skipped.
+    """
+    if entity.dxftype() == "TEXT":
+        return entity.dxf.style
+    if entity.dxf.hasattr("style"):
+        return entity.dxf.style
+    return None
+
+
+def _style_names(msp) -> set:
+    """Style names actually referenced, defaults included."""
+    return {name for name in (_entity_style_name(e) for e in msp) if name}
+
+
 def _carry(names, source_attrs, target_table, create) -> dict:
     """Create or update table entries, including reserved names already in the target.
 
@@ -250,7 +271,7 @@ def convert_document(doc, target_version: str = "R12"):
     target_msp = target.modelspace()
 
     used_layers = {e.dxf.layer for e in source_msp}
-    used_styles = {e.dxf.style for e in source_msp if e.dxf.hasattr("style")}
+    used_styles = _style_names(source_msp)
     layers = _carry(
         used_layers,
         lambda n: _table_attributes(doc.layers, n, LAYER_ATTRIBUTES),
@@ -410,7 +431,7 @@ def _undefined_references(saved_msp, saved) -> tuple:
     """Entities pointing at a layer or style the file never defines."""
     layers = sorted({e.dxf.layer for e in saved_msp}
                     - {layer.dxf.name for layer in saved.layers})
-    styles = sorted({e.dxf.style for e in saved_msp if e.dxf.hasattr("style")}
+    styles = sorted(_style_names(saved_msp)
                     - {style.dxf.name for style in saved.styles})
     return layers, styles
 
@@ -451,8 +472,8 @@ def _style_attr_equal(attr: str, before, after) -> bool:
 
 def _compare_style_tables(source_doc, saved, source_msp, saved_msp) -> dict:
     """Style NAME equality is not preservation -- NOTES/arial vs NOTES/txt is a loss."""
-    used = {e.dxf.style for e in source_msp if e.dxf.hasattr("style")}
-    used |= {e.dxf.style for e in saved_msp if e.dxf.hasattr("style")}
+    used = _style_names(source_msp)
+    used |= _style_names(saved_msp)
     drift = {}
     for name in sorted(used):
         before = _table_attributes(source_doc.styles, name, STYLE_COMPARE_ATTRIBUTES)
