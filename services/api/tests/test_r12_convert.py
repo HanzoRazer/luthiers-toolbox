@@ -118,15 +118,29 @@ def test_attdef_is_named_in_the_refusal():
     assert "ATTDEF" in str(exc.value)
 
 
-def test_custom_linetype_is_refused():
-    """Linetype names without copied table definitions would pass a type+layer check."""
+def test_custom_linetype_is_carried_not_refused():
+    """Supersedes `test_custom_linetype_is_refused` (LTB-R12-002 D5.2).
+
+    The original concern stands and is unchanged: *"linetype names without copied
+    table definitions would pass a type+layer check."* What changed is the answer to
+    it. Refusing the whole file was too blunt -- R12 cannot store a modern dash
+    pattern, but it stores the NAME, and a reference that resolves keeps the drawing
+    readable. Refusing over a dash pattern reports a format limit as a defect.
+
+    The concern is now enforced where it belongs, on the SAVED file: an entity
+    pointing at a linetype the file never defines fails verification. See
+    `test_d5_the_verifier_took_over_the_refusals_job` in
+    tests/test_r12_convert_divergences.py.
+    """
     doc = ezdxf.new("R2000")
     if "DASHED" not in doc.linetypes:
         doc.linetypes.add("DASHED", pattern=[0.5, 0.25, -0.25])
     doc.modelspace().add_line((0, 0), (10, 0), dxfattribs={"linetype": "DASHED"})
-    with pytest.raises(UnconvertibleEntity) as exc:
-        convert_document(doc, "R12")
-    assert "DASHED" in str(exc.value)
+
+    target, report = convert_document(doc, "R12")
+
+    assert "DASHED" in target.linetypes
+    assert report["linetypes"]["DASHED"]["status"] in {"created", "updated"}
 
 
 def test_verified_line_circle_arc_point_roundtrip(tmp_path):

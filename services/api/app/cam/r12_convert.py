@@ -41,7 +41,9 @@ CONVERSIONS = {"LWPOLYLINE": "POLYLINE"}
 _POLYLINE_UNVERIFIED_FLAGS = 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40
 
 _MODELSPACE_NAMES = frozenset({"MODEL", "*MODEL_SPACE"})
-_STANDARD_LINETYPES = frozenset({"BYLAYER", "BYBLOCK", "CONTINUOUS"})
+
+# Every DXF document defines these; they are references, not resources to carry.
+BUILTIN_LINETYPES = frozenset({"BYLAYER", "BYBLOCK", "CONTINUOUS"})
 
 LAYER_ATTRIBUTES = ("color", "true_color", "linetype", "lineweight", "plot", "flags")
 
@@ -68,6 +70,10 @@ class UnconvertibleEntity(ConversionError):
     """R12 cannot hold this entity and this module will not approximate it."""
 
     exit_code = 7
+
+
+class OutputPathError(ConversionError):
+    """The destination is the source. Converting in place destroys the only copy."""
 
 
 class FidelityError(ConversionError):
@@ -224,13 +230,51 @@ def _unverified_polyline_reason(entity) -> str | None:
     return None
 
 
-def _unverified_linetype_reason(entity) -> str | None:
-    if not entity.dxf.hasattr("linetype"):
-        return None
-    name = entity.dxf.linetype
-    if name.upper() in _STANDARD_LINETYPES:
-        return None
-    return f"custom linetype {name}"
+def _used_linetypes(doc, source_msp, used_layers) -> set[str]:
+    """Custom linetype names referenced by an entity or by a layer definition."""
+    names = {str(e.dxf.linetype).upper() for e in source_msp
+             if e.dxf.hasattr("linetype")}
+    for layer_name in used_layers:
+        attrs = _table_attributes(doc.layers, layer_name, LAYER_ATTRIBUTES)
+        if "linetype" in attrs:
+            names.add(str(attrs["linetype"]).upper())
+    return (names - BUILTIN_LINETYPES) - {""}
+
+
+def _carry_linetypes(doc, target, names) -> dict:
+    """Ensure referenced custom linetype names exist in the target.
+
+    R12 rarely holds a modern linetype's full definition, but it holds the NAME, and
+    a reference that resolves is what keeps the drawing readable. The pattern is
+    carried when ezdxf can simplify it and reported when it cannot; losing the dash
+    pattern is a format limit, not a converter defect.
+
+    This replaces a blanket refusal. Because it does, `_undefined_references` now
+    checks linetypes as well -- a carry that fails silently would otherwise produce
+    exactly the dangling reference the refusal used to prevent.
+    """
+    carried = {}
+    for name in sorted(names):
+        if name not in doc.linetypes:
+            carried[name] = {"status": "missing_in_source"}
+            continue
+        source_lt = doc.linetypes.get(name)
+        description = ""
+        if source_lt.dxf.hasattr("description"):
+            description = source_lt.dxf.description or ""
+        try:
+            pattern = tuple(source_lt.simplified_line_pattern())
+        except (TypeError, ValueError, AttributeError):
+            pattern = ()
+        if name in target.linetypes:
+            carried[name] = {"status": "updated", "pattern": list(pattern)}
+            continue
+        try:
+            target.linetypes.add(name, pattern=pattern or [0.0], description=description)
+            carried[name] = {"status": "created", "pattern": list(pattern)}
+        except _TABLE_SET_ERRORS as exc:
+            carried[name] = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}
+    return carried
 
 
 def _copy_modelspace_entities(source_msp, target_msp):
@@ -240,7 +284,7 @@ def _copy_modelspace_entities(source_msp, target_msp):
     for entity in source_msp:
         kind = entity.dxftype()
         source_types[kind] += 1
-        reason = _unverified_polyline_reason(entity) or _unverified_linetype_reason(entity)
+        reason = _unverified_polyline_reason(entity)
         if reason:
             unconvertible.append(reason)
             continue
@@ -285,6 +329,9 @@ def convert_document(doc, target_version: str = "R12"):
         lambda name, attrs: target.styles.add(name, font=attrs.get("font", "txt")),
     )
 
+    linetypes = _carry_linetypes(
+        doc, target, _used_linetypes(doc, source_msp, used_layers))
+
     source_types, expected_types, converted, unconvertible = _copy_modelspace_entities(
         source_msp, target_msp)
 
@@ -307,6 +354,7 @@ def convert_document(doc, target_version: str = "R12"):
         "conversions": dict(sorted(converted.items())),
         "layers": layers,
         "styles": styles,
+        "linetypes": linetypes,
     }
 
 
@@ -428,12 +476,24 @@ def _semantics(msp) -> Counter:
 
 
 def _undefined_references(saved_msp, saved) -> tuple:
-    """Entities pointing at a layer or style the file never defines."""
+    """Entities pointing at a layer, style or linetype the file never defines.
+
+    Linetypes joined this check when the blanket refusal of custom linetypes was
+    replaced by carrying the name (D5.2). The refusal used to guarantee no saved file
+    could hold a dangling linetype reference; this is what guarantees it now.
+    """
     layers = sorted({e.dxf.layer for e in saved_msp}
                     - {layer.dxf.name for layer in saved.layers})
     styles = sorted(_style_names(saved_msp)
                     - {style.dxf.name for style in saved.styles})
-    return layers, styles
+    referenced = {str(e.dxf.linetype).upper() for e in saved_msp
+                  if e.dxf.hasattr("linetype")}
+    for layer in saved.layers:
+        if layer.dxf.hasattr("linetype"):
+            referenced.add(str(layer.dxf.linetype).upper())
+    linetypes = sorted((referenced - BUILTIN_LINETYPES)
+                       - {lt.dxf.name.upper() for lt in saved.linetypes})
+    return layers, styles, linetypes
 
 
 def _compare_semantics(source_msp, saved_msp) -> tuple:
@@ -493,6 +553,7 @@ _FIDELITY_KEYS = (
     "missing_from_saved_file", "unexpected_in_saved_file",
     "layer_attribute_drift", "style_attribute_drift",
     "entities_referencing_undefined_layers", "entities_referencing_undefined_styles",
+    "entities_referencing_undefined_linetypes",
     "discarded_non_modelspace_layouts",
 )
 
@@ -523,7 +584,8 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
     """
     saved = ezdxf.readfile(str(path))
     saved_msp = saved.modelspace()
-    undefined_layers, undefined_styles = _undefined_references(saved_msp, saved)
+    undefined_layers, undefined_styles, undefined_linetypes = _undefined_references(
+        saved_msp, saved)
     compared = {
         "missing_from_saved_file": [], "unexpected_in_saved_file": [],
         "layer_attribute_drift": {}, "style_attribute_drift": {},
@@ -540,6 +602,7 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
         "semantics_compared": source_doc is not None,
         "entities_referencing_undefined_layers": undefined_layers,
         "entities_referencing_undefined_styles": undefined_styles,
+        "entities_referencing_undefined_linetypes": undefined_linetypes,
         **compared,
     }
     if any(verification[key] for key in _FIDELITY_KEYS):
@@ -551,6 +614,7 @@ def verify_saved_file(path: Path, report: dict, source_doc=None) -> dict:
   style attributes changed: {verification['style_attribute_drift'] or 'none'}
   undefined layers referenced: {verification['entities_referencing_undefined_layers'] or 'none'}
   undefined styles referenced: {verification['entities_referencing_undefined_styles'] or 'none'}
+  undefined linetypes referenced: {verification['entities_referencing_undefined_linetypes'] or 'none'}
   non-modelspace layouts: {verification['discarded_non_modelspace_layouts'] or 'none'}"""
         )
     return verification
@@ -597,12 +661,29 @@ def publish_converted_document(target, report, out_path, source_doc, encoding=No
     return report
 
 
+def same_path(a: Path, b: Path) -> bool:
+    """Do two paths name the same file? Resolves links, relative forms and case."""
+    try:
+        if a.exists() and b.exists():
+            return a.samefile(b)
+    except OSError:
+        pass
+    return a.resolve(strict=False) == b.resolve(strict=False)
+
+
 def convert_file(source_path: Path, out_path: Path, target_version: str = "R12",
                  encoding: str | None = None) -> dict:
     """Convert a DXF file, write it, and verify the written bytes. Fails closed."""
     source_path, out_path = Path(source_path), Path(out_path)
     if not source_path.is_file():
         raise ConversionError(f"input is not a file: {source_path}")
+    if same_path(source_path, out_path):
+        raise OutputPathError(
+            f"output path is the input: {out_path}\n"
+            "Converting a file onto itself destroys the only copy of the source: an "
+            "R2000 original is replaced by its R12 reduction, so the conversion can "
+            "no longer be checked, repeated or undone. Write a new file."
+        )
     doc = ezdxf.readfile(str(source_path))
     target, report = convert_document(doc, target_version)
     return publish_converted_document(target, report, out_path, doc, encoding=encoding)
