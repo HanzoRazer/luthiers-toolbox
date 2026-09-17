@@ -22,6 +22,7 @@ from collections import Counter
 from pathlib import Path
 
 import ezdxf
+from ezdxf.lldxf.const import DXFAttributeError, DXFValueError
 
 # Documents go through dxf_compat -- scripts/check_dxf_compat.py flags ezdxf.new
 # even in comments. The sandbox copy of this module has no app package to import.
@@ -82,23 +83,47 @@ def _table_attributes(table, name: str, attributes) -> dict:
     return {a: getattr(entry.dxf, a) for a in attributes if entry.dxf.hasattr(a)}
 
 
+# Errors a table entry can legitimately raise when a value is not storable at the
+# target version. Anything else is a bug here and propagates rather than being
+# recorded as a routine failure.
+_TABLE_SET_ERRORS = (AttributeError, TypeError, ValueError, DXFAttributeError, DXFValueError)
+
+
+def _apply_table_attributes(entry, attributes) -> tuple:
+    """Set attributes on a table entry. Record failures; unexpected errors propagate."""
+    applied, failed = {}, {}
+    for attr, value in attributes.items():
+        try:
+            setattr(entry.dxf, attr, value)
+        except _TABLE_SET_ERRORS as exc:
+            failed[attr] = {"source": value, "error": f"{type(exc).__name__}: {exc}"}
+            continue
+        applied[attr] = value
+    return applied, failed
+
+
 def _carry(names, source_attrs, target_table, create) -> dict:
-    """Create missing table entries in the target, carrying their attributes."""
+    """Create or update table entries, including reserved names already in the target.
+
+    Every document defines layer `0` and style `Standard`, so skipping a name the
+    target already has meant a source that customised either one silently converted
+    with the target's defaults (G2). Updating is what "preserve the table" has to mean;
+    the distinction between `created` and `updated` stays in the report.
+    """
     carried = {}
     for name in sorted(names):
         attributes = source_attrs(name)
         if name in target_table:
-            carried[name] = {"status": "already_present"}
-            continue
-        entry = create(name, attributes)
-        applied = {}
-        for attr, value in attributes.items():
-            try:
-                setattr(entry.dxf, attr, value)
-            except Exception:  # not supported at this DXF version; reported, not hidden
-                continue
-            applied[attr] = value
-        carried[name] = {"status": "created", "attributes": applied}
+            entry = target_table.get(name)
+            status = "updated"
+        else:
+            entry = create(name, attributes)
+            status = "created"
+        applied, failed = _apply_table_attributes(entry, attributes)
+        record = {"status": status, "attributes": applied}
+        if failed:
+            record["failed_attributes"] = failed
+        carried[name] = record
     return carried
 
 
