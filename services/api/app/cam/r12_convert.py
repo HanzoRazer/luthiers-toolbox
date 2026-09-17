@@ -102,13 +102,36 @@ def _carry(names, source_attrs, target_table, create) -> dict:
     return carried
 
 
+def _as_elevation_vec(value) -> tuple:
+    """POLYLINE.elevation is a point; LWPOLYLINE.elevation is a float z.
+
+    Passing the float straight through to add_polyline2d raises TypeError -- the Vec3
+    constructor calls len() on it -- which aborted conversion of any elevated contour
+    and reached the caller as an unhandled 500 (G1). ezdxf hands this attribute back as
+    a Vec3, a float, or a sequence depending on the entity class and DXF version, so
+    the variance is flattened here, once, rather than per call site.
+    """
+    if hasattr(value, "z"):
+        return (0.0, 0.0, float(value.z))
+    if isinstance(value, (int, float)):
+        return (0.0, 0.0, float(value))
+    coords = list(value)
+    if len(coords) == 1:
+        return (0.0, 0.0, float(coords[0]))
+    while len(coords) < 3:
+        coords.append(0.0)
+    return (float(coords[0]), float(coords[1]), float(coords[2]))
+
+
 def _lwpolyline_to_polyline(entity, target_msp):
     """R12 POLYLINE with points, bulges, widths, closure and elevation (`xyseb`)."""
     points = list(entity.get_points(format="xyseb"))
     attribs = {"layer": entity.dxf.layer}
-    for attr in ("linetype", "color", "true_color", "elevation", "extrusion", "thickness"):
+    for attr in ("linetype", "color", "true_color", "extrusion", "thickness"):
         if entity.dxf.hasattr(attr):
             attribs[attr] = getattr(entity.dxf, attr)
+    if entity.dxf.hasattr("elevation"):
+        attribs["elevation"] = _as_elevation_vec(entity.dxf.elevation)
     polyline = target_msp.add_polyline2d(points, format="xyseb", dxfattribs=attribs)
     if entity.closed:
         polyline.close(True)
@@ -273,7 +296,12 @@ def _polyline_record(entity) -> tuple:
         points = [tuple(_r(v) for v in p) for p in entity.get_points(format="xyseb")]
         closed = bool(entity.closed)
         elevation = _r(entity.dxf.elevation) if entity.dxf.hasattr("elevation") else 0.0
-        vertex_z = tuple(elevation for _ in points)
+        # An LWPOLYLINE's vertices carry no z of their own: for a 2D polyline the z
+        # lives in `elevation`, which is compared separately. Synthesising it into
+        # vertex_z made this branch disagree with the POLYLINE branch by construction
+        # -- a converted 2D POLYLINE stores z=0 per vertex -- so every elevated contour
+        # failed verification even once it stopped crashing (G1).
+        vertex_z = tuple(0.0 for _ in points)
         unverified_flags = 0
     else:
         points = [(_r(v.dxf.location.x), _r(v.dxf.location.y), _r(v.dxf.start_width),
