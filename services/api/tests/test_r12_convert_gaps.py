@@ -75,16 +75,34 @@ def _elevated_contour():
     return doc
 
 
+@pytest.mark.allow_missing_request_id
 def test_g1_elevated_contour_converts_through_the_endpoint(client):
     """CONFIRMED against 22e6768: HTTP 500, unhandled TypeError.
 
     `add_polyline2d` is handed the LWPOLYLINE's float elevation where it expects a
     point, so it raises `object of type 'float' has no len()`. Nothing catches it, so
     the caller receives a stack trace rather than a named refusal.
+
+    **Why the marker.** conftest's autouse guard patches `TestClient.request` and
+    asserts `x-request-id` on every response. The unhandled TypeError means the
+    middleware never sets that header, so the guard fired BEFORE this test's own
+    assertion and CI reported *"Missing required response header: x-request-id.
+    Middleware regression"* — red for a real reason, naming the wrong defect, and it
+    would have gone green at the fix without ever asserting elevation. The sanctioned
+    marker steps around the guard; the header is asserted below instead, so the
+    contract is still checked, just after the status code rather than before it.
+
+    That the header is missing at all is a second observable symptom of G1: request
+    correlation is lost for exactly the requests that fail hardest. Recorded in the
+    order as a CONFIRMED consequence.
     """
     response = _post(client, _elevated_contour(), "elevated.dxf")
     assert response.status_code == 200, (
-        f"elevated contour must convert, not 500: {response.text[:300]}"
+        f"elevated contour must convert, not {response.status_code}: {response.text[:300]}"
+    )
+    assert response.headers.get("x-request-id"), (
+        "x-request-id missing on a successful conversion; this is what conftest's "
+        "guard checks, asserted here because the marker disables it for this test"
     )
 
     saved = _reopen(response.json())
