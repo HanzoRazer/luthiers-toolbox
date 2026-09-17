@@ -15,6 +15,13 @@ blocks, 3D/mesh polylines, and paper-space geometry. Format-forced layer losses
 (R12 has no lineweight) are reported, not hidden.
 
 Transported from vectorizer-sandbox PR #101; this repository owns the endpoint.
+The sandbox's TEST suite was never transported -- LTB's tests are its own, written
+for PR #381. See docs/handoffs/LTB_R12_002_DIVERGENCE_RECORD.md for the measured
+behavioural delta and the one divergence still open.
+
+`ezdxf` validated at **1.4.2** (local, Python 3.13) and **1.4.3** (sandbox). Recorded,
+deliberately NOT pinned: `requirements.txt` declares `ezdxf>=1.1.0` in two services and
+pinning one splits them. A recorded version still makes a version change diagnosable.
 """
 from __future__ import annotations
 
