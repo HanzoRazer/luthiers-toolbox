@@ -23,7 +23,25 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Tuple, Dict, Any
 import logging
 
+# Import dxf_compat for centralized DXF creation, so the entity type tracks the
+# version instead of being chosen by hand (R12 -> LINE segments, R13+ -> LWPOLYLINE).
+# Same pattern as multi_view_reconstructor.py in this directory.
+try:
+    import sys
+    _bp_import_path = Path(__file__).parent.parent / "blueprint-import"
+    if str(_bp_import_path) not in sys.path:
+        sys.path.insert(0, str(_bp_import_path))
+    from dxf_compat import add_polyline as dxf_add_polyline
+    from dxf_compat import create_document as dxf_create_document
+except ImportError:  # pragma: no cover - exercised only without the wrapper present
+    dxf_add_polyline = None
+    dxf_create_document = None
+
 logger = logging.getLogger(__name__)
+
+# Output format. R12 is the free-tier contract; dxf_compat emits LINE segments
+# for it. Changing this alone is safe — the wrapper picks the matching entity.
+DXF_OUTPUT_VERSION = "R12"
 
 
 @dataclass
@@ -498,10 +516,10 @@ def save_contour_to_dxf(
         scale_to_dimensions: If provided, scale to (width_mm, height_mm)
         layer_name: DXF layer name
     """
-    try:
-        import ezdxf
-    except ImportError:
-        raise ImportError("ezdxf not installed")
+    if dxf_create_document is None or dxf_add_polyline is None:
+        raise ImportError(
+            "dxf_compat not importable from services/blueprint-import — cannot write DXF"
+        )
 
     # Convert to mm coordinates
     pts_mm = body.to_mm_coordinates()
@@ -521,26 +539,30 @@ def save_contour_to_dxf(
         pts_mm[:, 0] = (pts_mm[:, 0] - cx) * scale_x
         pts_mm[:, 1] = (pts_mm[:, 1] - cy) * scale_y
 
-    # Create DXF
-    doc = ezdxf.new('R12')
-    doc.units = ezdxf.units.MM
-
+    # Create DXF through dxf_compat: it selects the entity for the version, so the
+    # two cannot drift apart again. R12 -> LINE segments; R13+ -> LWPOLYLINE.
+    doc = dxf_create_document(version=DXF_OUTPUT_VERSION)
     msp = doc.modelspace()
 
     # Add layer
     doc.layers.add(layer_name, color=7)
 
-    # Create closed polyline
-    points_3d = [(p[0], p[1], 0.0) for p in pts_mm]
-    points_3d.append(points_3d[0])  # Close the loop
+    # Closed contour; the wrapper adds the closing segment itself
+    points_2d = [(float(p[0]), float(p[1])) for p in pts_mm]
 
-    msp.add_lwpolyline(
-        points_3d,
-        dxfattribs={'layer': layer_name}
+    dxf_add_polyline(
+        msp,
+        points_2d,
+        layer=layer_name,
+        closed=True,
+        version=DXF_OUTPUT_VERSION,
     )
 
     doc.saveas(str(output_path))
-    logger.info(f"Saved body contour to {output_path}")
+    logger.info(
+        f"Saved body contour to {output_path} "
+        f"({DXF_OUTPUT_VERSION}, {len(points_2d)} vertices, layer {layer_name})"
+    )
 
 
 # CLI interface
