@@ -592,6 +592,12 @@ if __name__ == "__main__":
         type=float,
         help="Scale output to this height (mm)"
     )
+    parser.add_argument(
+        "--no-crop",
+        action="store_true",
+        help="Search the whole page. The default crops to the right 65%% because the "
+             "Carlos Jumbo front view sits there; use this for sheets laid out differently"
+    )
 
     args = parser.parse_args()
 
@@ -615,6 +621,9 @@ if __name__ == "__main__":
 
     # Extract
     config = create_acoustic_body_config()
+    if args.no_crop:
+        config.crop_left = 0.0
+        config.crop_right = 1.0
     result = extract_body_from_pdf(
         args.pdf_path,
         page_number=args.page,
