@@ -1,0 +1,42 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_PROVENANCE_FORENSIC",
+  "title": "Commit the blueprint vectorizer provenance forensic record",
+  "intent": "Commit a read-only forensic audit of the canonical blueprint vectorizer platform that has existed only as an untracked file. It records what the runtime does, where the documentation and the code disagree, and which claims rest on inference rather than evidence; unresolved claims stay marked UNRESOLVED. Committed now because four defects were established or corrected on 2026-09-18 (D-04 corrected, D-12, D-13, D-14) and they exist nowhere else.",
+  "change_type": "docs",
+  "behavior_change": "None. A single new Markdown file under docs/audit/. No code, configuration, workflow or test is touched, and no defect recorded in it is approved for fixing.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vectorizer-provenance-forensic.json",
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds one previously-uncommitted audit document at its native path. 692 lines, 14 defect entries. D-04 is corrected in place with the superseded row struck through rather than deleted, so the original claim remains auditable beside its correction.",
+    "why_not_redundant": "The file was committed nowhere: `git log --all --oneline -- docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md` returns nothing. Four of its defects (D-04 corrected, D-12, D-13, D-14) are recorded in no other document, so without this commit they exist only on one disk."
+  },
+  "verification": {
+    "commands_run": [
+      "git log --all --oneline -- docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md -> no output, confirming the file was committed nowhere.",
+      "Screened for public-repo safety before committing: no credentials, tokens, emails or personal data; the only local-path references are drive letters (G:\\My Drive, C:\\tmp) carrying no user path.",
+      "D-12 verified by probe on ezdxf 1.4.2 (fresh doc -> assign $EXTMIN/$EXTMAX -> saveas -> read back = 1e+20 sentinel) and by scanning the March corpus: 42 of 42 files carry the sentinel, 0 carry geometry extents.",
+      "D-13 verified by running vectorizer_phase3.py --dpi 400 -t acoustic on a second, unrelated plan: BODY_OUTLINE returns 6 segments spanning 634.7 x 493.4 mm, a rectangle, reported as the body.",
+      "D-14 verified by running the same input with and without --gap-close: identical geometry, 93,379,060 bytes and 853,947 segments both, differing only in header timestamps.",
+      "check_cbsp21_patch_input.py --base origin/main --head HEAD and check_cbsp21_gate.py --changed-files <diff> run locally."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md",
+      "intent": "Commit the forensic audit record so its findings, in particular the four defects established or corrected on 2026-09-18, are held in git rather than on one disk.",
+      "risk": "low",
+      "behavior_change": "None - documentation only. The record is explicit that it is an audit, not an authorization."
+    }
+  ]
+}
