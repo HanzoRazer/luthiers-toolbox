@@ -206,6 +206,20 @@ def _used_linetypes(doc, source_msp, used_layers) -> set[str]:
     return (names - BUILTIN_LINETYPES) - {""}
 
 
+def _ltype_add_pattern(simplified) -> list:
+    """`simplified_line_pattern()` output in the form `linetypes.add` expects.
+
+    The two use different encodings: the simplified pattern is plain lengths
+    `[dash, gap, dash, ...]`; `add` takes `[total_length, dash, -gap, ...]`. Passing
+    one as the other read the first dash as the total -- a 7-on/3-off pattern saved
+    as a 7-unit cycle holding a single 3-unit dash.
+    """
+    if not simplified:
+        return [0.0]
+    elements = [v if i % 2 == 0 else -v for i, v in enumerate(simplified)]
+    return [float(sum(simplified)), *elements]
+
+
 def _carry_linetypes(doc, target, names) -> dict:
     """Ensure referenced custom linetype names exist in the target.
 
@@ -235,7 +249,8 @@ def _carry_linetypes(doc, target, names) -> dict:
             carried[name] = {"status": "updated", "pattern": list(pattern)}
             continue
         try:
-            target.linetypes.add(name, pattern=pattern or [0.0], description=description)
+            target.linetypes.add(name, pattern=_ltype_add_pattern(pattern),
+                                 description=description)
             carried[name] = {"status": "created", "pattern": list(pattern)}
         except _TABLE_SET_ERRORS as exc:
             carried[name] = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}

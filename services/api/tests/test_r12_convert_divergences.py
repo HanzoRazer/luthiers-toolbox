@@ -177,6 +177,29 @@ def test_d5_the_carried_linetype_survives_to_the_saved_file(tmp_path):
     assert [e for e in saved.modelspace()][0].dxf.linetype == "CUTLINE"
 
 
+def test_d5_the_carried_linetype_keeps_its_dash_pattern(tmp_path):
+    """The NAME surviving is not the pattern surviving.
+
+    `simplified_line_pattern()` returns plain `[dash, gap, ...]` lengths, but
+    `linetypes.add` expects `[total, dash, -gap, ...]`. Passing one as the other saved
+    CUTLINE (a 1.0 cycle: 0.6 dash, 0.2 gap, dot, 0.2 gap) as a 0.6 cycle holding
+    0.2 / 0.0 / 0.2 -- while the report still said the pattern was carried. Compared
+    on the reopened file, because that is where the loss would be.
+    """
+    source_doc = _custom_linetype_doc()
+    source = tmp_path / "custom.dxf"
+    source_doc.saveas(str(source))
+    destination = tmp_path / "out.dxf"
+
+    convert_file(source, destination)
+
+    expected = source_doc.linetypes.get("CUTLINE").simplified_line_pattern()
+    saved = ezdxf.readfile(str(destination)).linetypes.get("CUTLINE")
+    assert saved.simplified_line_pattern() == pytest.approx(expected)
+    total_length = [tag.value for tag in saved.pattern_tags.tags if tag.code == 40]
+    assert total_length == [pytest.approx(1.0)]
+
+
 def test_d5_the_verifier_took_over_the_refusals_job(tmp_path):
     """The gate this contract change depends on.
 
