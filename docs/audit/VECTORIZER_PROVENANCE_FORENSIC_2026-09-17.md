@@ -361,10 +361,11 @@ Two audits ran in parallel on 2026-09-17: the *finding aid* (luthiers-toolbox se
 | D-07 | An unevidenced provenance claim is live in production source | Root of the conflation chain; still reads as authoritative | `edge_to_dxf_router.py:7, :273` |
 | D-08 | Sandbox PRs #97/#98 state "DRAFT … No merge requested" yet were merged same-day with no review | Process record contradicts itself | GitHub, 09-16 |
 | **D-09** | **`_remove_page_borders_early` assigns into the tuple `cv2.findContours` returns** — `TypeError: 'tuple' object does not support item assignment`. Fires only when a page border is detected | **The Fender Strat '62 plan cannot be processed at all.** Fails closed (`ok=False`, `stage=edge_extraction`, REJECT, no artifacts), so it announces rather than corrupts | `edge_to_dxf.py:395`, reached from `:1632`. Reproduced on cv2 **5.0.0 and 4.13.0**; pin is `opencv-python-headless>=4.8.0`, no upper bound (`services/api/requirements.txt:36`) |
-| **D-13** *(new 09-18)* | **Phase 3 certifies the sheet border as the body, on a second unrelated plan.** On `Gibson-L0-IN.pdf` the classified run returns `BODY_OUTLINE` = **6 segments spanning 634.7 × 493.4 mm** — a rectangle — and reports `Body: 635x493mm`, `Scale validation PASSED (generic plausibility)`. The generic window is 200–700 mm, so a sheet border passes it | Same inverted-certification class as **D-10**, now shown to be general rather than sample-specific. The plan states its own lower bout (13¾ in = 349.25 mm), so a correct answer was checkable and the reported one is out by 82% | Run 09-18, `--dpi 400 -t acoustic`. Evidence + 9 re-runnable passes: `vectorizer-sandbox/reports/extraction/gibson_l00_002/` |
+| ~~**D-13** *(new 09-18)*~~ | ~~**Phase 3 certifies the sheet border as the body, on a second unrelated plan.** Same inverted-certification class as **D-10**, now shown to be general rather than sample-specific~~ | ~~filed as a new September finding~~ | ~~Run 09-18~~ |
+| **D-13** *(corrected 09-19)* | **NOT a new defect — this is the `BORDER_FALLBACK` regression of `f49ead1d` (2026-04-12 15:42, "feat: hierarchy-based isolation"), unfixed and reproducing on a new plan.** On `Gibson-L0-IN.pdf` the classified run returns `BODY_OUTLINE` = **6 segments spanning 634.7 × 493.4 mm** — a rectangle — and reports `Body: 635x493mm`, `Scale validation PASSED (generic plausibility)`. `docs/archive/2026/status/RECOVERY_BASELINE.md` (2026-04-13) describes the mechanism exactly: *"hierarchy-based filtering removes all non-border contours, leaving only the page border as a candidate"* | The observation stands — the generic 200–700 mm window admits a sheet border, and the plan states its own lower bout (13¾ in = 349.25 mm) so the reported figure is out by 82%. What was wrong was the **attribution**: filed on 09-18 as a September discovery when it is a five-month-old diagnosed regression whose fix was specified on 2026-04-13, marked CRITICAL, and never shipped (`Ship as fallback \| PENDING`). Re-measured 09-19 with `isolate_body` as the only variable: SG Custom 16,762 → 462,053 entities (27.6×), 12-String 12,785 → 1,071,127 (83.8×), and the 12-String refined output is a page border and nothing else | Run 09-18, `--dpi 400 -t acoustic`; evidence `vectorizer-sandbox/reports/extraction/gibson_l00_002/`. Regression bounded by `86c49526` (2026-04-11 01:41, last good) and `f49ead1d`. Order: `docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md` |
 | **D-14** *(new 09-18)* | **`--gap-close` is silently ignored in `--raw` mode, which also hardcodes its threshold.** `raw_output` returns at `vectorizer_phase3.py:3378`, **before** `body_gap_close` is read at `:3430`; `_raw_extract` calls `extract_dark_lines(image, threshold=120)` at `:2864` with no `gap_close` argument | The CLI advertises a flag that does nothing, and raw mode cannot be tuned for any document. `morph_close_kernel` is the documented routing control for text-dense sheets, so the one lever the routing guidance depends on is unreachable in the mode the owner ruled canonical (`--raw`, not `--simple`) | Two runs with and without the flag produced **identical geometry** — 93,379,060 bytes and 853,947 segments both, differing only in header timestamps |
 | **D-12** *(new 09-18)* | **`set_document_bounds()` is a no-op on the installed ezdxf, and the audit that cleared it checked the call site rather than the output.** `services/blueprint-import/dxf_compat.py:185-200` assigns `$EXTMIN`/`$EXTMAX`; on **ezdxf 1.4.2** `saveas()` overwrites both with the inverted `1e+20` sentinel — *including in memory*, so the assignment cannot be observed after the save either. It is live-called at `vectorizer_phase3.py:2630` | Every Phase 3 DXF ships the blank-canvas extents CLAUDE.md forbids. **42 of 42** March corpus files carry the sentinel; **0** carry geometry extents. CLAUDE.md:212 cites this function as the correct mechanism, and `SURFACE_GROUNDING_2026-06-04.md:140-141` marks it "live-called (VERIFIED)" — a call-site check read as an output guarantee. `zoom.extents()` (VPORT) does survive the save and is the working alternative | Probe on ezdxf 1.4.2: fresh doc → assign → `saveas` → read back = sentinel. Corpus scan 09-18, 42/42 |
-| **D-10** | **On the cuatro, the default lane returns the neck and certifies it** `accept` at 0.745 confidence, while returning a substantially correct body outline on the Melody Maker and flagging it `review` at 0.475 | The confidence signal is inverted on this sample; a wrong result is presented as accepted | Live `process_file` runs, 09-17. Owner identified the contour in DWG TrueView |
+| **D-10** *(re-attributed 09-19)* | **On the cuatro, the default lane returns the neck and certifies it** `accept` at 0.745 confidence, while returning a substantially correct body outline on the Melody Maker and flagging it `review` at 0.475 | The confidence signal is inverted on this sample; a wrong result is presented as accepted. **Probable shared root cause with D-13: `f49ead1d`.** `RECOVERY_BASELINE.md` benchmarks the *same Melody Maker plan* at REFINED score **0.086 / REJECT** against RESTORED_BASELINE **0.690 / REVIEW** on an unchanged scorer, and concludes *"scoring works; the candidate field was the problem."* A scorer fed a corrupted candidate set produces exactly this inversion. **Not yet proven for the cuatro** — that requires running it through both paths, which has not been done | Live `process_file` runs, 09-17. Owner identified the contour in DWG TrueView. Re-attribution basis: `docs/archive/2026/status/RECOVERY_BASELINE.md` (2026-04-13) |
 
 ---
 
@@ -684,6 +685,56 @@ It went unnoticed for five months because the file sits inside the directory-wid
 
 Repaired writer, routed through `dxf_compat` so the entity type tracks the version: branch
 `fix/lightline-dxf-writer` @ `e72d0156`, pushed, no PR.
+
+---
+
+## 16. Correction, 2026-09-19 — the default lane's failures trace to one April commit
+
+Several defects in this record were filed as September discoveries. At least one, and probably
+two, are a single regression from **2026-04-12** that was diagnosed the next day and never fixed.
+
+**The window.** `86c49526` (2026-04-11 01:41) was the last good state. **`f49ead1d`
+(2026-04-12 15:42, "feat: hierarchy-based isolation")** replaced `RETR_LIST` with `RETR_TREE`
+and added `_remove_page_borders_early()`, `_isolate_with_grouping()` and cleanup-stage border
+removal. `docs/archive/2026/status/RECOVERY_BASELINE.md`, dated **2026-04-13**, names the cause:
+
+> *"The regression was caused by early filtering / structure enforcement, NOT by lack of
+> detection capability."*
+> *"If you destroy the candidate field early, no amount of scoring can recover the object."*
+
+**The fix was specified and never shipped.** That document's Step 2 gives the code; its own
+status table still reads `Ship as fallback | PENDING | —`. It was archived on 2026-05-02 with
+the work outstanding. Verified 2026-09-19: **no automatic fallback exists in
+`services/api/app`** — `restored_baseline` must be requested by name, and
+`blueprint_async_router.py:147` still defaults to `refined`.
+
+**Still live, and wider than when measured.** Re-run 2026-09-19 with `isolate_body` as the only
+variable:
+
+| Plan | REFINED | RESTORED_BASELINE | Ratio |
+|---|---:|---:|---:|
+| Gibson-SG-Custom | 16,762 | 462,053 | 27.6× |
+| 12 StringDreadnaught_2 | 12,785 | 1,071,127 | 83.8× |
+| Melody Maker (April) | 24,097 | 343,399 | 14.3× |
+
+Counts are not the point; what survives is. The **12-String refined output is a page border and
+nothing else** — zero usable content — while its baseline counterpart carries both peghead
+designs, the fret-spacing table, neck sections, dovetail options, bridge detail and title block.
+
+**What this corrects in this record:**
+
+- **D-13** — re-attributed. Not a new defect; it is `BORDER_FALLBACK` from `f49ead1d`. The
+  original row is struck through rather than deleted.
+- **D-10** — probable shared root cause, **not proven**. The same document benchmarks the same
+  Melody Maker plan at 0.086/REJECT against 0.690/REVIEW on an unchanged scorer. Confirming it
+  for the cuatro means running that plan through both paths, which has not been done.
+- **A framing error of this audit's author.** Edge-to-DXF was judged here against blueprint
+  output without recording that its documented behaviour — *"captures every edge pixel",
+  "50,000–300,000+ LINE entities"* — describes the **pre-`f49ead1d`** tool. The docstring was
+  kept; the behaviour was not. Measurements taken against the post-regression artifact and read
+  as the tool's design are unsafe.
+
+Order: `docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md`.
 
 ---
 

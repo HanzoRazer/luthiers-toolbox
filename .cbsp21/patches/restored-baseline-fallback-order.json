@@ -11,10 +11,12 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/restored-baseline-fallback-order.json",
-      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md"
+      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ],
     "files_expected_to_change": [
-      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md"
+      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ]
   },
   "diff_articulation": {
@@ -35,6 +37,12 @@
       "intent": "Record the order so a diagnosed, benchmarked, five-month-old regression in the default blueprint path is tracked rather than left in an archived document.",
       "risk": "low",
       "behavior_change": "None - documentation only. The order changes no code and authorizes no merge."
+    },
+    {
+      "path": "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md",
+      "intent": "Re-attribute D-13 from a September discovery to the April 2026 BORDER_FALLBACK regression, note D-10's probable shared root cause as unproven, and add section 16 recording the correction. The superseded D-13 row is struck through rather than deleted so the original claim stays auditable beside its correction.",
+      "risk": "low",
+      "behavior_change": "None - audit record only. No defect in it is approved for fixing."
     }
   ]
 }
