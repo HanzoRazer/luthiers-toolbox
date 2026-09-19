@@ -147,12 +147,10 @@ section details, title blocks — is not in question.
 **What it explicitly does not settle,** and the owner said so in the same breath with "the
 dreadnaught issue aside":
 
-- **Absolute scale is not correct as written** — the millimetres in these files come from a
-  `target_height_mm` chosen by the operator. **But it is now recoverable and has been recovered
-  for one plan:** see Step 3c, where the aperture measures 160.59 mm, divides by the
-  independently-documented 1.574803 to 101.97 mm against a stated 102, and the rosette family
-  corroborates. Scale recovery is no longer the open problem it was; **applying it automatically
-  is.**
+- **Absolute scale is unverified.** The millimetres in these files come from a `target_height_mm`
+  chosen by the operator. A recovery attempt via the soundhole anchor was reported as confirmed and
+  has been **retracted** — the detected circle was not the soundhole (Step 3c). The anchor concept
+  is sound; the detector is not. **No scale has been recovered for any plan.**
 - **These are edge fields, not contours.** See §5.
 - **`max_chord / perimeter` does not discriminate here.** On an assembled contour it catches a
   leak; on a raw edge field every segment is short by construction — measured max **0.13–0.27 mm**
@@ -292,45 +290,49 @@ detection returns a *family* sharing a centre. Cluster by centre and take the **
 largest concentric family: the soundhole is the actual aperture, everything concentric outside it
 is decoration. Skipping this is how a 135 mm ring was called the soundhole on the Carlos plan.
 
-#### Worked case — 12-String Dreadnought (AGP-03, SCALE 1/1 FULL)
+#### RETRACTED — the 12-String Dreadnought "confirmation" was a false positive
 
-Three independent quantities, none derived from another:
+**An earlier revision of this section reported a confirmed scale recovery. It was wrong, and the
+error is instructive enough to keep in full.**
 
-| | value | provenance |
-|---|---|---|
-| divisor | **1.574803** | render arithmetic, `0.1 ÷ (25.4/400)`, documented in `vectorizer-sandbox/reports/lightline/vec_lightline_002/METHOD.md:189` **before this measurement existed** |
-| measured aperture | **160.59 mm** | least-squares circle fit, 10,458 points, residual mean 0.707 mm |
-| stated aperture | **102 mm** | the sheet's own callout, *4.00 DIA (102 MM)* |
+The claim was: divisor **1.574803** (render arithmetic, `0.1 ÷ (25.4/400)`, documented in
+`vec_lightline_002/METHOD.md:189` before the measurement existed) × a measured aperture of
+**160.59 mm** gives **101.97 mm** against the sheet's stated **102 mm** — an error of 0.026%,
+corroborated by a rosette family that landed at 135.57 mm with a 1.59 mm purfling gap.
+
+**The 160.59 mm circle is not the soundhole.** Rendered onto the plan, its centre sits left of and
+below the labelled *4.00 DIA (102 MM) SOUNDHOLE* and its radius is roughly twice it. The 0.026%
+agreement was coincidence.
+
+**How it survived two "independent" checks:**
+
+| check | why it passed anyway |
+|---|---|
+| ratio to the stated 102 mm | one number matching another is cheap; nothing tied the circle to the feature |
+| rosette family in luthier range | a family of concentric ink at plausible spacings exists in bracing and pick-guard geometry too |
+| 94% angular coverage, 0.707 mm fit residual | **these statistics do not separate a circle from scattered ink at a similar radius** — the cuatro produced 88% and 0.736 mm on a circle sitting in *empty space* |
+
+**The verification that would have caught it immediately was to draw the circle on the drawing
+and look.** Arithmetic agreement and plausibility were both satisfied by a false positive.
+
+**Three detections, three different answers, none verified:**
 
 ```
-160.59 / 1.574803 = 101.97 mm   against a stated 102.00 mm   error -0.026%
+160.59 mm  centre (529.82, 310.71)   offset from the soundhole, ~2x its radius
+132.41 mm  centre (489.90, 326.24)   42.8 mm away from the first; 2.7% of the annulus in one bin
+101.80 mm  cuatro                    centred in blank sheet, over a fret table
 ```
 
-**This is a prediction confirmed, not a fact restated.** Circularity would require the divisor to
-have been fitted from the circle; it was not — it is DPI arithmetic with its own provenance in the
-repository.
+**What survives, and what does not:**
 
-**Second, independent confirmation** from the rosette family through the same divisor, using no
-body measurement:
-
-```
-radius   diameter   corrected    radial gap
- 80.25    160.50      101.92         —        aperture
- 87.75    175.50      111.44       4.76
- 98.25    196.50      124.78       6.67
-100.75    201.50      127.95       1.59       purfling
-106.75    213.50      135.57       3.81
-```
-
-A dreadnought rosette around a 102 mm hole runs to roughly 135–150 mm; this lands at 135.57 with a
-**1.59 mm radial purfling gap**. Uncorrected, the same gaps are 2.50 and 6.00 mm, which is not what
-purfling looks like.
-
-**One thing remains open, and it is not the correction factor.** The divisor for this file is
-1.5748 and that is confirmed. *Why* it is that number is not: this run's scale came from
-`target_height_mm=505`, not from the 0.1 mm/px constant that produces 1.5748 in the documented
-defect. Same number, mechanism unexplained. That is a question about provenance, not about the
-measurement.
+- **The argument for the soundhole as the anchor is unaffected** and still correct: it is a circle,
+  so least squares gives sub-pixel accuracy with no ambiguity about where to measure; its diameter
+  is stated on the plan; there is exactly one; and it cannot leak, because nothing crosses blank
+  soundboard.
+- **A reliable detector does not exist.** Radius-histogram search with a coverage threshold finds
+  circles that are not there. Any future detector must be validated by rendering the detection onto
+  the source, on every plan, before a number from it is reported.
+- **No scale has been recovered for any plan.** Absolute scale remains unverified, as it was.
 
 **What does NOT work, recorded so it is not retried:**
 
