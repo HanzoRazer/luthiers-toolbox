@@ -959,7 +959,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-010 | Orphaned `packages/client/src/views/cam/headstock/` — 42% of client type errors | Cleanup / client | DEFERRED | 2026-08-18 |
 | MAINT-DEFER-011 | `.gitignore` `/ci/` swallows newly added CI data files | Process / repo hygiene | QUEUED | 2026-08-18 |
 | MAINT-DEFER-012 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
-| MAINT-DEFER-013 | `mesh-pipeline-ci` demo steps call `app.retopo` (deleted in `ee36ddf1`); now stubbed, so the gate is green but exercises nothing | CI / mesh pipeline | QUEUED | 2026-08-19 |
+| MAINT-DEFER-013 | `mesh-pipeline-ci` demo steps call `app.retopo` (deleted in `ee36ddf1`); stub removed, demo steps now report NOT RUN instead of certifying fabricated output | CI / mesh pipeline | RESOLVED — TRUTH ONLY | 2026-09-17 |
 | MAINT-DEFER-014 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
 | MAINT-DEFER-015 | `scaffold_agents_md.py --dry-run` dies on a cp1252 console (U+2500 fences) | Process / tooling | QUEUED | 2026-09-09 |
 | MAINT-DEFER-016 | `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-09-09 |
@@ -1392,9 +1392,10 @@ should be applied once, deliberately, not mid-way through an unrelated PR.
 
 ### MAINT-DEFER-013 — `mesh-pipeline-ci` demo steps call a deleted module; the failure is now stubbed over
 
-**Status:** QUEUED  
-**last_verified:** 2026-08-19  
-**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-013
+**Status:** RESOLVED — TRUTH ONLY (2026-09-17). Restore-versus-retire remains **deferred**.  
+**last_verified:** 2026-09-17  
+**Evidence:** `docs/ci/MESH_PIPELINE_AND_PLATE_SOLVER_DEBT_2026-08-19.md` §MAINT-DEFER-013;
+resolution + disposition matrix in `docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md`
 
 **Why deferred:** `ee36ddf1` (2026-02-10, "refactor(api): remove orphaned feature modules (Phase 4)") deleted `services/api/app/retopo/` — 612 lines, five files, including the `run.py` that defined `run_pipeline` — describing them as "unused retopology tools". **That description was accurate for application code and still left live callers behind.** At `ee36ddf1^` the only importers of `app.retopo` were the package's own `run.py` and `examples/retopo/run.sh`; no module under `services/api/app/` imported it. The orphan sweep evidently scoped "used" to Python imports from application code, so it did not see a shell script — or the workflow that runs it. `.github/workflows/mesh-pipeline-ci.yml` invokes `examples/retopo/run.sh` twice (`qrm`, `miq`) and then validates its outputs. **The transferable lesson is the detection criterion, not the deletion:** an orphan check that only reads Python imports will keep deleting things that shell, CI, and docs still call.
 
@@ -1405,6 +1406,12 @@ should be applied once, deliberately, not mid-way through an unrelated PR.
 **Why it still belongs in the queue:** the stub is labelled honestly (`overall_status: review_required`, plus a note naming the absent module), so nothing is disguised at the artifact level. But the two demo steps now exercise the fallback's own JSON literals rather than a pipeline, so a green `mesh-pipeline-ci` no longer carries the meaning a reader will take from it. The debt moved from visible to invisible, which is the harder state to notice later.
 
 **Restore trigger — a disposition, and the stub makes it a three-way choice.** (a) Restore `services/api/app/retopo/` from `ee36ddf1^` if the retopology lane is wanted; (b) retire the scaffold — delete `examples/retopo/` and drop the three demo steps; or (c) keep the stub deliberately, and then make the workflow say so — the demo steps should not be named as if they exercise a pipeline. Done-condition: whichever is chosen, `mesh-pipeline-ci`'s green means something a reader can rely on without opening `run.sh`.
+
+**Resolution (2026-09-17) — option (c), with the stub removed rather than kept.** Filed under **CAM** per owner ruling; `MESH` was deliberately **not** registered as a sprint prefix, since one order does not demonstrate a durable program. The fabrication branch is gone from `examples/retopo/run.sh` (it now exits 3 and writes nothing), and `mesh-pipeline-ci.yml` gates the two demo steps and the validation step on `services/api/app/retopo/run.py` existing — skipping them with an explicit `retopo demo NOT RUN` notice when it does not. `tests/test_o3d_heal_topology.py` still runs unconditionally and still enforces, so the workflow keeps the part of its signal that was always real.
+
+**Two findings this resolution added.** (1) The green run's `Validated 2 artifacts` was the stub's fingerprint: `validate_schemas.py` keys `qa_core` off a `mesh_healing` field the stub never wrote, so **both** stub `qa_core.json` files were skipped without a warning; the real pipeline validates **4**. (2) Restoring `app/retopo/` alone does not work — `run.py:17-19` imports three services from `app/fields/`, which `ee36ddf1` deleted in the same sweep. **The restore unit is 12 files / 1,179 lines, not 5 / 617.** Both witnessed by restoring `ee36ddf1^` into a scratch worktree and running the pipeline for real.
+
+**Still open, deliberately.** Whether to reverse `ee36ddf1` is a separate order with a different burden of proof — a deliberate deletion stands until evidence justifies reversal. Restore baseline would be `ee36ddf1^` (retopo **and** fields); `feature/mesh-pipeline-scaffold` and `feature/adapter-guide` are comparison variants, not authority. Two pre-existing `validate_schemas.py` weaknesses are recorded, not fixed: it passes vacuously over an empty tree, and it skips unrecognized artifacts silently.
 
 **Path:** HYG — CI signal quality; not on the CAM MVP cut path.
 

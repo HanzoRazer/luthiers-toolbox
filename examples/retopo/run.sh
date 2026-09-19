@@ -2,78 +2,63 @@
 set -euo pipefail
 # Mesh Pipeline scaffold example runner.
 # Usage: bash examples/retopo/run.sh [qrm|miq]
+#
+# This runner executes the REAL retopo pipeline or it fails. It must never
+# fabricate qa_core.json / cam_policy.json on its own: artifacts written by this
+# script rather than by app.retopo.run cannot evidence that the pipeline ran,
+# and a downstream schema check against them certifies nothing (MAINT-DEFER-013).
+#
+# `services/api/app/retopo/` was deleted from main by ee36ddf1 (2026-02-10), so
+# on current main this script is expected to exit 3 (pipeline unavailable). The
+# workflow gates the demo steps on the module's presence and reports them as
+# NOT RUN rather than invoking this script and interpreting a stub as success.
 
 PRESET="${1:-qrm}"
 OUT="examples/retopo/out_${PRESET}"
-mkdir -p "$OUT"
 
+# The output directory is created only once the pipeline is known to be
+# importable. An empty out_*/ left behind by an unavailable run is what lets
+# `validate_schemas.py --out-root examples/retopo` report "Validated 0
+# artifacts ... [OK] All schemas valid" and exit 0 over nothing.
 echo "=== Running Mesh Pipeline scaffold with preset: $PRESET ==="
 
-# Run the pipeline via Python. If the historical retopo module is unavailable,
-# emit schema-valid scaffold artifacts so CI can still exercise validation.
 PRESET_ENV="$PRESET" OUT_ENV="$OUT" python - <<'PY'
-import json
-import os
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
+import os
 
 sys.path.insert(0, "services/api")
 
 preset = os.environ["PRESET_ENV"]
 out_dir = Path(os.environ["OUT_ENV"])
-out_dir.mkdir(parents=True, exist_ok=True)
-input_mesh = "examples/retopo/intake.obj"
-model_id = "DEMO_MODEL"
-session_id = "demo_session_001"
-timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 try:
     from app.retopo.run import run_pipeline  # type: ignore
-except ImportError:
-    qa_core_path = out_dir / "qa_core.json"
-    cam_policy_path = out_dir / "cam_policy.json"
-    qa_core = {
-        "version": "1.0.0",
-        "timestamp_utc": timestamp,
-        "model_id": model_id,
-        "session_id": session_id,
-        "overall_status": "review_required",
-        "notes": "Scaffold fallback: app.retopo module not available in this repository snapshot.",
-        "provenance": {
-            "preset": preset,
-            "source_mesh": input_mesh,
-            "commit": None,
-        },
-    }
-    cam_policy = {
-        "version": "1.0.0",
-        "timestamp_utc": timestamp,
-        "model_id": model_id,
-        "source_qa_id": f"{model_id}:{session_id}",
-        "global_defaults": {},
-        "regions": [],
-        "provenance": {
-            "preset": preset,
-            "runner": "examples/retopo/run.sh",
-            "commit": None,
-        },
-    }
-    qa_core_path.write_text(json.dumps(qa_core, indent=2), encoding="utf-8")
-    cam_policy_path.write_text(json.dumps(cam_policy, indent=2), encoding="utf-8")
-    print("retopo pipeline unavailable; wrote scaffold artifacts instead.")
-    print(f"QA Core: {qa_core_path}")
-    print(f"CAM Policy: {cam_policy_path}")
-else:
-    result = run_pipeline(
-        input_mesh=input_mesh,
-        model_id=model_id,
-        preset=preset,
-        out_dir=str(out_dir),
-        session_id=session_id,
+except ImportError as exc:
+    print(
+        "ERROR: the retopo pipeline is unavailable in this checkout "
+        f"({exc.__class__.__name__}: {exc}).",
+        file=sys.stderr,
     )
-    print(f"QA Core: {result['qa_core_path']}")
-    print(f"CAM Policy: {result['cam_policy_path']}")
+    print(
+        "services/api/app/retopo/ was deleted by ee36ddf1 (2026-02-10). "
+        "Whether to reverse that deletion is an open disposition "
+        "(MAINT-DEFER-013); this runner will not fabricate artifacts to "
+        "stand in for it.",
+        file=sys.stderr,
+    )
+    raise SystemExit(3)
+
+out_dir.mkdir(parents=True, exist_ok=True)
+result = run_pipeline(
+    input_mesh="examples/retopo/intake.obj",
+    model_id="DEMO_MODEL",
+    preset=preset,
+    out_dir=str(out_dir),
+    session_id="demo_session_001",
+)
+print(f"QA Core: {result['qa_core_path']}")
+print(f"CAM Policy: {result['cam_policy_path']}")
 PY
 
 echo ""

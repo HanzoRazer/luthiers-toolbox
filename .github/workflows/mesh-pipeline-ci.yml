@@ -1,10 +1,25 @@
 name: mesh-pipeline-ci
 
+# What this workflow certifies on current main (MAINT-DEFER-013):
+#   tests/test_o3d_heal_topology.py  PRESENT / REAL       -> RUN + ENFORCE
+#   retopo demo (app.retopo)         IMPLEMENTATION ABSENT -> reported NOT RUN
+#   fields demo (app.fields)         IMPLEMENTATION ABSENT -> no step exists
+#   schema validation                PRESENT               -> runs only over real output
+#   fallback stub generation         REMOVED               -> cannot satisfy the demo
+#
+# Two trigger paths below match nothing on current main. Both directories were
+# deleted by ee36ddf1 (2026-02-10): app/retopo/ and app/fields/. They are kept
+# so the triggers fire if either is ever restored, and are recorded here rather
+# than left to read as active surfaces.
+# Audit: docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md
+
 on:
   pull_request:
     paths:
+      # absent on main (ee36ddf1) — retained for a possible restore
       - "services/api/app/fields/**"
       - "services/api/app/mesh/**"
+      # absent on main (ee36ddf1) — retained for a possible restore
       - "services/api/app/retopo/**"
       - "contracts/qa_core.schema.json"
       - "contracts/cam_policy.schema.json"
@@ -49,15 +64,39 @@ jobs:
       - name: Run unit tests (topology helpers)
         run: PYTHONPATH=. pytest -q tests/test_o3d_heal_topology.py
 
+      # The retopo demo steps below are the only part of this workflow that ever
+      # claimed to exercise a pipeline. app/retopo/ was deleted by ee36ddf1, so
+      # they are gated on the implementation actually being present. When it is
+      # absent they are SKIPPED and reported as NOT RUN — they are never allowed
+      # to pass against artifacts written by anything other than the pipeline.
+      - name: Detect retopo implementation
+        id: retopo
+        run: |
+          if [ -f services/api/app/retopo/run.py ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "retopo implementation PRESENT — demo steps will run."
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "retopo implementation ABSENT (deleted by ee36ddf1, 2026-02-10)."
+          fi
+
+      - name: Report retopo demo NOT RUN
+        if: steps.retopo.outputs.present != 'true'
+        run: |
+          echo "::notice title=retopo demo NOT RUN::services/api/app/retopo/ is absent on this ref (deleted by ee36ddf1). The QRM/MIQ demo steps and their schema validation are skipped. This job does NOT certify the retopo pipeline. See MAINT-DEFER-013."
+
       - name: Run example (QRM preset)
+        if: steps.retopo.outputs.present == 'true'
         run: bash examples/retopo/run.sh qrm
-      
+
       - name: Run example (MIQ preset)
+        if: steps.retopo.outputs.present == 'true'
         run: bash examples/retopo/run.sh miq
-      
-      - name: Validate scaffold outputs
+
+      - name: Validate pipeline outputs
+        if: steps.retopo.outputs.present == 'true'
         run: python scripts/validate_schemas.py --out-root examples/retopo
-      
+
       - name: Upload artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
