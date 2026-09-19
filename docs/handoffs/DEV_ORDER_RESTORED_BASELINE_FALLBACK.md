@@ -170,10 +170,17 @@ extraction path — that is precisely the mistake `f49ead1d` made.
 round-trip to delete ~2% of entities: **122 s** on 462k entities, and still running past **1,300 s**
 on a 1M-entity file. Unusable as a pipeline stage.
 
-`strip_border_streaming.py` (beside this order) does the same job on the DXF text. An R12 `LINE`
-is a fixed group-code block, so the file is scanned for its `10/20/11/21` pairs without building
-a document — one pass for the bounding box, one to copy through minus the border blocks.
-Everything else, including non-`LINE` entities, passes through untouched.
+A streaming implementation does the same job on the DXF text. An R12 `LINE` is a fixed group-code
+block, so the file is scanned for its `10/20/11/21` pairs without building a document — one pass
+for the bounding box, one to copy through minus the border blocks. Everything else, including
+non-`LINE` entities, passes through untouched.
+
+> **The implementation is deliberately NOT in this PR.** A runnable script that nothing imports,
+> filed under `docs/handoffs/` beside an order, is the exact shape this repository keeps being
+> misled by — a retrofit present in the tree, reasoned about later from its position rather than
+> its wiring. The timings below are measured and are cited here as evidence that the cost is
+> solvable; the code is reviewed on its own merits in a separate PR, against the follow-on step,
+> not merged inside a documentation change.
 
 Measured on the same 81.5 MB / 567,692-entity file: **15.1 s**, roughly **8× faster**, identical
 rule and identical result.

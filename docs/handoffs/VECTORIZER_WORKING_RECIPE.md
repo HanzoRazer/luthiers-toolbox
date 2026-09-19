@@ -99,7 +99,7 @@ pages 13–24 the streaming implementation, on comparable files:
 | | per page | 24-page total |
 |---|---:|---:|
 | `ezdxf` parse-and-rewrite | 1,177–1,434 s | ~4.5 h |
-| `strip_border_streaming.py` | 144–295 s | ~40 min |
+| streaming group-code strip *(implementation not in this PR)* | 144–295 s | ~40 min |
 
 Roughly **6–8× faster**, same rule, same result. This is the difference between a bench tool and
 a pipeline stage.
