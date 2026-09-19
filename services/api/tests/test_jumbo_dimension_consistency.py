@@ -120,6 +120,11 @@ ACKNOWLEDGED_NON_DIMENSION_FILES = {
         "Sprint ledger narrative.",
     ".cbsp21/patches/boe-changelog.json":
         "CBSP21 manifest describing the drift.",
+    "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md":
+        "Forensic audit of the Carlos Jumbo vectorizer run. It names the plan and "
+        "records measured vs typed millimetre outputs; it does not assert IBG jumbo "
+        "body dimensions. The scan hits because a git hash contains 432, a pixel "
+        "width contains 305, and a scale note contains 254.",
 }
 
 
