@@ -1,0 +1,65 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RESTORED_BASELINE_FALLBACK_ORDER",
+  "title": "Dev order: ship the restored_baseline fallback specified on 2026-04-13",
+  "intent": "Add a dev order for the automatic refined -> restored_baseline fallback that docs/archive/2026/status/RECOVERY_BASELINE.md specified on 2026-04-13, marked CRITICAL, and whose own status table still reads 'Ship as fallback | PENDING'. The blueprint lane's default extraction has been in a diagnosed regression since f49ead1d (2026-04-12) and the fix was never implemented. Documentation only: the order is written, no code is changed and no implementation is authorized by it.",
+  "change_type": "docs",
+  "behavior_change": "None. A single new Markdown file under docs/handoffs/. No code, configuration, workflow or test is touched. The order explicitly states it is not an authorization to merge.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/restored-baseline-fallback-order.json",
+      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "docs/handoffs/strip_border_streaming.py",
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "docs/handoffs/strip_border_streaming.py",
+      "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds one dev order. It pins the regression to f49ead1d (2026-04-12 15:42, 'feat: hierarchy-based isolation'), carries the April benchmark beside a 2026-09-19 re-run, specifies the fallback at the exact return site, repeats April's do-not-modify constraints verbatim, states the output-size cost up front, and records that D-13 in the forensic report should be re-pointed at this regression rather than carried as a September discovery.",
+    "why_not_redundant": "RECOVERY_BASELINE.md diagnosed the regression but was archived on 2026-05-02 with its Step 2 unimplemented; no order exists asking for it. Verified 2026-09-19 that no automatic refined -> restored_baseline fallback exists anywhere in services/api/app, and that blueprint_async_router.py:147 still defaults to mode='refined'."
+  },
+  "verification": {
+    "commands_run": [
+      "git log --follow on services/photo-vectorizer/edge_to_dxf.py -> regression window bounded by 86c49526 (2026-04-11 01:41) and f49ead1d (2026-04-12 15:42).",
+      "git grep restored_baseline -- services/api/app -> mode is selectable by name only; no automatic fallback exists.",
+      "extract_blueprint_to_dxf run with isolate_body True vs False on two production plans, 2026-09-19: Gibson-SG-Custom 16,762 vs 462,053 entities (27.6x); 12 StringDreadnaught_2 12,785 vs 1,071,127 (83.8x).",
+      "Rendered both paths for visual comparison: the 12-String refined output is a page border only, reproducing the BORDER_FALLBACK case RECOVERY_BASELINE.md describes."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "intent": "Record the order so a diagnosed, benchmarked, five-month-old regression in the default blueprint path is tracked rather than left in an archived document.",
+      "risk": "low",
+      "behavior_change": "None - documentation only. The order changes no code and authorizes no merge."
+    },
+    {
+      "path": "docs/handoffs/strip_border_streaming.py",
+      "intent": "Reference implementation of post-extraction border removal that is fast enough to be a pipeline stage: streams the R12 DXF text rather than building an ezdxf document, 15.1 s against roughly 2 minutes for the same file and the same geometric rule. Not wired into anything; it sits beside the order as the artifact the order's follow-on step refers to.",
+      "risk": "low",
+      "behavior_change": "None. A standalone script under docs/handoffs/, imported by nothing and called by no pipeline. It is documentation with a runnable body.",
+      "scan_targets": []
+    },
+    {
+      "path": "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "intent": "Record the method that demonstrably produces usable output today, with every number measured rather than asserted. At least three documents in this repository describe a 'secret sauce' and they disagree; two describe behaviour the code no longer has. This one states the two rules that matter, the single flag that carries them, the parameters, the domain boundaries, and explicitly what the recipe does NOT give you.",
+      "risk": "low",
+      "behavior_change": "None - method record. It describes how to obtain usable output from the code as it exists; it approves no change to the production default."
+    },
+    {
+      "path": "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md",
+      "intent": "Re-attribute D-13 from a September discovery to the April 2026 BORDER_FALLBACK regression, note D-10's probable shared root cause as unproven, and add section 16 recording the correction. The superseded D-13 row is struck through rather than deleted so the original claim stays auditable beside its correction.",
+      "risk": "low",
+      "behavior_change": "None - audit record only. No defect in it is approved for fixing."
+    }
+  ]
+}
