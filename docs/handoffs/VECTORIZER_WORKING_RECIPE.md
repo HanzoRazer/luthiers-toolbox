@@ -60,24 +60,28 @@ The scorer is fine. On the Melody Maker the identical scorer produces 0.086/REJE
 
 ---
 
-## 1a. Measured at scale — 15 Fender headstock pages
+## 1a. Measured at scale — all 24 Fender headstock pages
 
-Four one-off plans are an anecdote. This is one document family, 15 pages, all 2200 × 1700 px so
-**no downscale fires** and resolution cannot confound the comparison. `isolate_body` is the only
-variable.
+Four one-off plans are an anecdote. This is one document family, **24 pages**, all 2200 × 1700 px
+so **no downscale fires** and resolution cannot confound the comparison. `isolate_body` is the
+only variable.
 
-| | REFINED | RESTORED_BASELINE |
-|---|---:|---:|
-| Ratio, min / median / max | — | **25.7× / 99.5× / 144.3×** |
-| Border share of baseline output | — | 9.34% / 12.21% / 17.81% |
+| | Pages 01–12 | Pages 13–24 |
+|---|---|---|
+| Ratio min / median / max | 20.7× / 75.8× / 83.6× | 25.7× / 99.5× / 144.3× |
+| Border share of baseline | 14.08% / 15.58% / 15.98% | 9.34% / 12.21% / 17.81% |
 
 **The finding is not the ratio. It is this:**
 
-> **Six different plans return byte-identical REFINED output.**
+> **13 of 24 plans return byte-identical REFINED output.**
 
-Pages **01, 02, 03, 13, 15, 19** all produce geometry hash `f13dab6370b2ba8b` — 7,004 entities,
-329.7 × 247.4 mm, the same in every one. Pages 17 and 18 share a second identical result. Of 15
-refined outputs only **9 geometries are distinct**.
+Pages **01, 02, 03, 04, 07, 08, 09, 10, 11, 12, 13, 15, 19** all produce geometry hash
+`f13dab6370b2ba8b` — 7,004 entities, 329.7 × 247.4 mm, identical in every one. Pages 17 and 18
+share a second identical result. **24 sheets produce only 11 distinct geometries.**
+
+Note that entity count alone would have understated this: pages 16, 17, 18 and 22 also return
+7,004 entities but *different* geometry. The duplication is only visible by hashing the
+coordinates, which is why this was checked that way rather than by counting.
 
 Rendered, that shared output is **an empty rectangle**: the page frame and nothing else. The
 baseline path on the same page (13) returns two Telecaster headstocks with tuner holes, the
@@ -88,6 +92,17 @@ This is `BORDER_FALLBACK` at scale. The default is not producing a poor result o
 is producing **the same result regardless of what is drawn on them**, because the candidate field
 is destroyed before scoring and only the frame survives. A system in that state cannot be
 distinguished from one that ignores its input.
+
+**Border-strip timing, measured across both batches.** Pages 01–12 used the `ezdxf` round-trip,
+pages 13–24 the streaming implementation, on comparable files:
+
+| | per page | 24-page total |
+|---|---:|---:|
+| `ezdxf` parse-and-rewrite | 1,177–1,434 s | ~4.5 h |
+| `strip_border_streaming.py` | 144–295 s | ~40 min |
+
+Roughly **6–8× faster**, same rule, same result. This is the difference between a bench tool and
+a pipeline stage.
 
 Per-page detail, pages 13–24:
 

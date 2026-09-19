@@ -744,12 +744,16 @@ The re-measurement above used four one-off plans. A 15-page sample from one docu
 Fender headstock sheets, all 2200 × 1700 px so **no downscale fires** and resolution cannot
 confound the comparison, `isolate_body` the only variable — gives a much stronger result.
 
-Ratio min **25.7×**, median **99.5×**, max **144.3×**. But the ratio is not the finding:
+Ratios: pages 01–12 min 20.7× / median 75.8× / max 83.6×; pages 13–24 min 25.7× / median 99.5× /
+max 144.3×. But the ratio is not the finding:
 
-> **Six different plans return byte-identical REFINED output.** Pages 01, 02, 03, 13, 15 and 19
-> all produce geometry hash `f13dab6370b2ba8b` — 7,004 entities, 329.7 × 247.4 mm, identical in
-> every one. Pages 17 and 18 share a second identical result. Of 15 refined outputs only **9
-> geometries are distinct**.
+> **13 of 24 plans return byte-identical REFINED output.** Pages 01, 02, 03, 04, 07, 08, 09, 10,
+> 11, 12, 13, 15 and 19 all produce geometry hash `f13dab6370b2ba8b` — 7,004 entities,
+> 329.7 × 247.4 mm, identical in every one. Pages 17 and 18 share a second. **24 sheets produce
+> only 11 distinct geometries.**
+
+Entity count alone would have understated this: pages 16, 17, 18 and 22 also return 7,004
+entities but *different* geometry. The duplication is visible only by hashing coordinates.
 
 Rendered, that shared output is **an empty rectangle** — the page frame. The permissive path on
 the same page returns two Telecaster headstocks with tuner holes, the callouts *1.590 nut width*
