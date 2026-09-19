@@ -134,6 +134,42 @@ Controlled reduction is explicitly post-stabilisation work: *"Remove obvious jun
 extraction, not before."* If size is unacceptable for the web tier, that is a separate order
 about output reduction, and it must not be solved by leaving the regression in place.
 
+## 7a. Follow-on step — border removal, AFTER extraction
+
+The permissive path returns the sheet's printed border along with everything else, because edge
+tracing has no concept of "frame" versus "instrument". That is cosmetic and cheap to fix, and
+fixing it is the whole difference between this order and the regression it addresses.
+
+**The pipeline already has a border remover, and it is the regression.**
+`_remove_page_borders_early()` runs *before* grouping — the name says it — so when the body
+contour is fragmented it removes the body along with the frame. That is the mechanism behind
+the page-border-only result.
+
+`RECOVERY_BASELINE.md`'s post-stabilisation plan states the correct order:
+
+> *"Controlled reduction — Remove obvious junk AFTER extraction, not before."*
+
+**Measured 2026-09-19** on the SG Custom baseline, with a purely geometric rule — both endpoints
+within 6 mm of the same bounding-box edge, and running parallel to it:
+
+| | |
+|---|---|
+| Border segments | **6,508 of 462,053 (1.41%)** |
+| Extent before | 336.3 × 536.5 mm |
+| Extent after | 321.9 × 524.7 mm |
+| Interior geometry lost | none — plan view, side elevation, Section A-A, headstock, split-diamond inlay and the full specification block all intact |
+
+Artifact: `CMP_Gibson-SG-Custom_baseline_noborder.dxf` (60.7 MB, 455,545 entities), rendered
+as `CMP_Gibson-SG-Custom_noborder.png`.
+
+**Sequencing.** This is a follow-on, not a precondition. Ship the fallback first; add border
+removal as a post-extraction stage once the fallback is stable. Do **not** fold it into the
+extraction path — that is precisely the mistake `f49ead1d` made.
+
+**Known cost.** The reference implementation is `ezdxf`-based and took **122 s** on 462k
+entities, nearly all of it parse-and-rewrite; on a 1M-entity file that is roughly four minutes.
+It needs a streaming implementation before it is a pipeline stage rather than a bench tool.
+
 ## 8. Out of scope
 
 - **D-12** — `set_document_bounds()` is a no-op on ezdxf 1.4.2, so every DXF ships `1e+20`
