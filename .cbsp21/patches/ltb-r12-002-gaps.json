@@ -1,0 +1,145 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_R12_002_GAPS",
+  "title": "fix(ltb-r12-002): close G1-G4 in the R12 converter, refuse in-place conversion, carry custom linetypes",
+  "intent": "Closes four measured gaps in the R12 converter landed by #381, each reproduced red against 22e6768 before its fix. G1: an elevated LWPOLYLINE raised TypeError inside add_polyline2d and reached /api/dxf/preflight/auto_fix callers as an unhandled HTTP 500. G2: reserved layer 0 / style Standard were skipped as already_present, so a source that customised them converted with the target's defaults. G3: convert_file wrote the destination and verified afterwards, so a failed verification left the caller's file overwritten. G4: TEXT's default style was missed after a round trip. D5: convert_file(p, p) now refuses (OutputPathError) instead of destroying the source; custom linetypes are carried by name and pattern instead of refused (422 -> 200), with _undefined_references extended to linetypes so the verifier, not the old refusal, guarantees no dangling reference. The verification half of r12_convert.py moves to r12_verify.py to hold both modules under the 500-line file-size ratchet; r12_convert re-exports every public name.",
+  "change_type": "fix",
+  "behavior_change": "yes",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "services/api/app/cam/r12_convert.py",
+      "services/api/app/cam/r12_verify.py",
+      "services/api/app/routers/dxf_preflight_router.py",
+      "services/api/tests/fixtures/r12_convert/generate.py",
+      "services/api/tests/test_r12_convert.py",
+      "services/api/tests/test_r12_convert_consolidator.py",
+      "services/api/tests/test_r12_convert_divergences.py",
+      "services/api/tests/test_r12_convert_gaps.py",
+      "docs/handoffs/LTB_R12_002_DIVERGENCE_RECORD.md",
+      ".cbsp21/patches/ltb-r12-002-gaps.json"
+    ],
+    "files_expected_to_change": [
+      "services/api/app/cam/r12_convert.py",
+      "services/api/app/cam/r12_verify.py",
+      "services/api/app/routers/dxf_preflight_router.py",
+      "services/api/tests/fixtures/r12_convert/generate.py",
+      "services/api/tests/test_r12_convert.py",
+      "services/api/tests/test_r12_convert_consolidator.py",
+      "services/api/tests/test_r12_convert_divergences.py",
+      "services/api/tests/test_r12_convert_gaps.py",
+      "docs/handoffs/LTB_R12_002_DIVERGENCE_RECORD.md",
+      ".cbsp21/patches/ltb-r12-002-gaps.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "r12_convert: elevation carried as a point (_as_elevation_vec) and LWPOLYLINE vertex_z aligned with POLYLINE (G1); _carry updates reserved entries instead of skipping them (G2); publish_converted_document saves to a .tmp, verifies, then renames, unlinking the .tmp on failure, and is shared by convert_file and the endpoint (G3); TEXT style read from the entity including its default (G4); same_path guard (D5.1); _carry_linetypes carries custom linetypes with the simplified pattern re-encoded to linetypes.add's [total, dash, -gap] form (D5.2). r12_verify: the unchanged verification half, plus linetypes in _undefined_references. Router: calls publish_converted_document instead of saveas + verify_saved_file.",
+    "why_not_redundant": "G1 is a live HTTP 500 on a route two clients forward user files to. G3 is data loss on a failed verification. The existing suite passed with all four gaps present; each new test was run red against 22e6768 or against a mutant before its fix."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.13 -m pytest tests/test_r12_convert*.py tests/test_dxf_preflight_endpoint_smoke.py -q -> 86 passed",
+      "test_d5_the_carried_linetype_keeps_its_dash_pattern fails against the pre-fix pattern encoding (3/4 elements mismatched), passes with _ltype_add_pattern",
+      "Isolated FastAPI app mounting dxf_preflight_router only: elevated LWPOLYLINE -> 200, saved AC1009 POLYLINE elevation 5.0; custom linetype -> 200; SPLINE -> 422",
+      "python ci/file_size_gate.py -> OK (r12_convert.py 407, r12_verify.py 352; limit 500)",
+      "pytest tests/test_technical_debt_gates.py -> 7 passed (large file count back within target)"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/r12_convert.py",
+      "intent": "G1-G4 and D5 fixes in the conversion half; re-exports the verification half's public names.",
+      "scan_targets": [
+        "services/api/app/cam/r12_verify.py",
+        "services/api/app/routers/dxf_preflight_router.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "yes - elevated contours convert; custom linetypes carried (422 -> 200); in-place conversion refused; destination replaced only after verification"
+    },
+    {
+      "path": "services/api/app/cam/r12_verify.py",
+      "intent": "Saved-file semantic verification, split out of r12_convert.py for the file-size ratchet; adds undefined-linetype detection.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py"
+      ],
+      "risk": "medium",
+      "behavior_change": "yes - a saved file referencing an undefined linetype now fails verification"
+    },
+    {
+      "path": "services/api/app/routers/dxf_preflight_router.py",
+      "intent": "Publish through the shared verify-then-rename path instead of saveas followed by verify_saved_file.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py"
+      ],
+      "risk": "low",
+      "behavior_change": "yes - a failed verification no longer leaves a written output behind"
+    },
+    {
+      "path": "services/api/tests/fixtures/r12_convert/generate.py",
+      "intent": "Committed generator for a real LayerConsolidator fixture (64 LINE -> 2 LWPOLYLINE, AC1015).",
+      "scan_targets": [
+        "services/api/app/cam/layer_consolidator.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - test fixture only"
+    },
+    {
+      "path": "services/api/tests/test_r12_convert.py",
+      "intent": "Custom-linetype test updated from refused to carried (D5.2 contract change).",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_r12_convert_consolidator.py",
+      "intent": "End-to-end conversion of real LayerConsolidator output.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_r12_convert_divergences.py",
+      "intent": "D5.1 same-path refusal, D5.2 linetype carry (name, layer reference, saved file, dash pattern) and the verifier's undefined-linetype gate.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py",
+        "services/api/app/cam/r12_verify.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "services/api/tests/test_r12_convert_gaps.py",
+      "intent": "G1-G4 reproductions, G1 through the endpoint, G3 destination and .tmp guarantees.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py",
+        "services/api/app/routers/dxf_preflight_router.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - tests only"
+    },
+    {
+      "path": "docs/handoffs/LTB_R12_002_DIVERGENCE_RECORD.md",
+      "intent": "Measured 21-behaviour divergence table against the sandbox source; the section 9.3 correction.",
+      "scan_targets": [
+        "services/api/app/cam/r12_convert.py"
+      ],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": ".cbsp21/patches/ltb-r12-002-gaps.json",
+      "intent": "CBSP21 per-PR manifest for this patch.",
+      "scan_targets": [
+        ".cbsp21/patches/README.md"
+      ],
+      "risk": "low",
+      "behavior_change": "none - manifest only"
+    }
+  ]
+}

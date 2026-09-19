@@ -20,7 +20,7 @@ try:
         FidelityError,
         UnconvertibleEntity,
         convert_document,
-        verify_saved_file,
+        publish_converted_document,
     )
     EZDXF_AVAILABLE = True
 except ImportError:
@@ -312,13 +312,17 @@ async def auto_fix_dxf(request: AutoFixRequest):
                     provenance_status="NO",
                 )
             )
-            r12_doc.saveas(tmp_out_path, encoding='cp1252')
-
-            # The document in memory is not evidence: the loss happened at write time.
+            # Save, verify the SAVED bytes, then publish -- one shared implementation
+            # with convert_file, so the two publish paths cannot drift apart. The
+            # document in memory is not evidence: the loss happened at write time.
             # source_doc makes this source-vs-saved, not saved-vs-its-own-prediction.
+            #
+            # `doc` is passed, not tmp_in_path: the fixes above (close_open_polylines,
+            # units) were applied to this document in memory. Re-reading the source
+            # from disk would silently discard them.
             try:
-                conversion["verification"] = verify_saved_file(
-                    tmp_out_path, conversion, source_doc=doc
+                publish_converted_document(
+                    r12_doc, conversion, tmp_out_path, doc, encoding='cp1252'
                 )
             except FidelityError as exc:
                 raise HTTPException(status_code=500, detail=str(exc))
