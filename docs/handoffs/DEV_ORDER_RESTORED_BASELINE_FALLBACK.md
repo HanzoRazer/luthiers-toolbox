@@ -166,9 +166,31 @@ as `CMP_Gibson-SG-Custom_noborder.png`.
 removal as a post-extraction stage once the fallback is stable. Do **not** fold it into the
 extraction path — that is precisely the mistake `f49ead1d` made.
 
-**Known cost.** The reference implementation is `ezdxf`-based and took **122 s** on 462k
-entities, nearly all of it parse-and-rewrite; on a 1M-entity file that is roughly four minutes.
-It needs a streaming implementation before it is a pipeline stage rather than a bench tool.
+**Known cost, and it is solved.** The obvious `ezdxf` implementation costs a full document
+round-trip to delete ~2% of entities: **122 s** on 462k entities, and still running past **1,300 s**
+on a 1M-entity file. Unusable as a pipeline stage.
+
+`strip_border_streaming.py` (beside this order) does the same job on the DXF text. An R12 `LINE`
+is a fixed group-code block, so the file is scanned for its `10/20/11/21` pairs without building
+a document — one pass for the bounding box, one to copy through minus the border blocks.
+Everything else, including non-`LINE` entities, passes through untouched.
+
+Measured on the same 81.5 MB / 567,692-entity file: **15.1 s**, roughly **8× faster**, identical
+rule and identical result.
+
+**One caveat, found by rendering what it removed rather than trusting the percentage.** Border
+share is not constant by document family:
+
+| Sheet | Border share | Why |
+|---|---:|---|
+| Gibson SG Custom | 1.41% | plain frame |
+| Cuatro | 2.22% | plain frame |
+| Fender headstock page | **14.52%** | frame **plus a dense perimeter ruler scale** |
+
+The Fender removal is correct — it is frame furniture — but at that margin the rule also clipped
+two edge-adjacent dimension annotations ("least nut width", "7.06"). **Verify by rendering the
+removed set, not by reading the percentage.** `--margin` should be tuned per sheet family, and a
+frame-detection pass would be better than a fixed margin if this becomes a product stage.
 
 ## 8. Out of scope
 

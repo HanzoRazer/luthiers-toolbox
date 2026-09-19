@@ -13,11 +13,13 @@
       ".cbsp21/patches/restored-baseline-fallback-order.json",
       "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
       "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "docs/handoffs/strip_border_streaming.py",
       "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ],
     "files_expected_to_change": [
       "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
       "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "docs/handoffs/strip_border_streaming.py",
       "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ]
   },
@@ -39,6 +41,13 @@
       "intent": "Record the order so a diagnosed, benchmarked, five-month-old regression in the default blueprint path is tracked rather than left in an archived document.",
       "risk": "low",
       "behavior_change": "None - documentation only. The order changes no code and authorizes no merge."
+    },
+    {
+      "path": "docs/handoffs/strip_border_streaming.py",
+      "intent": "Reference implementation of post-extraction border removal that is fast enough to be a pipeline stage: streams the R12 DXF text rather than building an ezdxf document, 15.1 s against roughly 2 minutes for the same file and the same geometric rule. Not wired into anything; it sits beside the order as the artifact the order's follow-on step refers to.",
+      "risk": "low",
+      "behavior_change": "None. A standalone script under docs/handoffs/, imported by nothing and called by no pipeline. It is documentation with a runnable body.",
+      "scan_targets": []
     },
     {
       "path": "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
