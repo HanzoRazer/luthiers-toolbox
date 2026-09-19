@@ -122,6 +122,48 @@ Page_23      6,108    766,846  125.5x    679,174   11.43%   318.0 x 235.5
 Page_24      8,438    941,571  111.6x    853,667    9.34%   317.9 x 235.5
 ```
 
+## 1b. Owner assessment, 2026-09-19
+
+> **"the dreadnaught issue aside, the file rendered is of brilliant photographic quality"**
+> — owner, on `12String_1_restored_noborder.dxf` (1,238,673 entities) viewed in DWG TrueView
+
+Recorded as an assessment, not a measurement, and kept because it completes an A/B judgement by
+the same person on the same instruments:
+
+| Date | Path | Verdict |
+|---|---|---|
+| 2026-09-18 | REFINED | *"the refined method is a regression"* |
+| 2026-09-19 | REFINED output, mistakenly presented as the tool's capability | *"not even near commercial quality"* |
+| 2026-09-19 | RESTORED_BASELINE | *"brilliant photographic quality"* |
+
+The middle row matters: that verdict was passed on numbers taken from the regressed path, which
+this record's own author generated and presented as characterising the tool. The same eye,
+shown the same plans through the permissive path, reached the opposite conclusion. **The
+difference between those two judgements is one boolean.**
+
+**What this settles:** visual fidelity. The reproduction of the drawing — curves, annotation,
+section details, title blocks — is not in question.
+
+**What it explicitly does not settle,** and the owner said so in the same breath with "the
+dreadnaught issue aside":
+
+- **Absolute scale is unverified.** The millimetres in these files come from a `target_height_mm`
+  chosen by the operator. An attempt to check `12String_1` against the sheet's own stated
+  dimensions *failed*: a circle detected at 160.50 mm was assumed to be the 102 mm soundhole, and
+  the ratio test (lower bout / soundhole measured 1.745 against a stated 3.892) showed it was not.
+  A second attempt measured a "body width" of 280.04 mm inside a 280.7 mm crop — it measured the
+  crop boundary. Both attempts are recorded because both were wrong.
+- **These are edge fields, not contours.** See §5.
+- **`max_chord / perimeter` does not discriminate here.** On an assembled contour it catches a
+  leak; on a raw edge field every segment is short by construction — measured max **0.13–0.27 mm**
+  across all four plans — so the metric cannot fail and therefore cannot inform. Reporting it
+  would produce a reassuring number that means nothing, which is the V3.6 benchmark's instrument
+  in a different costume.
+
+**Promotion therefore remains gated on a feature-level scale check**, not on this assessment and
+not on entity counts. Visual excellence and dimensional correctness are different claims, and
+only one of them is currently supported.
+
 ## 2. Step by step
 
 ### Step 1 — check the input is even loadable
