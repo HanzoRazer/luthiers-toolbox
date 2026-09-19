@@ -60,6 +60,53 @@ The scorer is fine. On the Melody Maker the identical scorer produces 0.086/REJE
 
 ---
 
+## 1a. Measured at scale — 15 Fender headstock pages
+
+Four one-off plans are an anecdote. This is one document family, 15 pages, all 2200 × 1700 px so
+**no downscale fires** and resolution cannot confound the comparison. `isolate_body` is the only
+variable.
+
+| | REFINED | RESTORED_BASELINE |
+|---|---:|---:|
+| Ratio, min / median / max | — | **25.7× / 99.5× / 144.3×** |
+| Border share of baseline output | — | 9.34% / 12.21% / 17.81% |
+
+**The finding is not the ratio. It is this:**
+
+> **Six different plans return byte-identical REFINED output.**
+
+Pages **01, 02, 03, 13, 15, 19** all produce geometry hash `f13dab6370b2ba8b` — 7,004 entities,
+329.7 × 247.4 mm, the same in every one. Pages 17 and 18 share a second identical result. Of 15
+refined outputs only **9 geometries are distinct**.
+
+Rendered, that shared output is **an empty rectangle**: the page frame and nothing else. The
+baseline path on the same page (13) returns two Telecaster headstocks with tuner holes, the
+dimensions *1.590 nut width* and *0.122 as drawn*, a 7.53° angle callout, and the label
+*"Bonnie Raitt"* — 468,929 entities.
+
+This is `BORDER_FALLBACK` at scale. The default is not producing a poor result on these pages; it
+is producing **the same result regardless of what is drawn on them**, because the candidate field
+is destroyed before scoring and only the frame survives. A system in that state cannot be
+distinguished from one that ignores its input.
+
+Per-page detail, pages 13–24:
+
+```
+page       refined   baseline   ratio      final  border%     extent mm
+Page_13      7,004    468,929   67.0x    386,489   17.58%   317.9 x 235.5
+Page_14     18,035    463,231   25.7x    381,761   17.59%   317.9 x 235.5
+Page_15      7,004    480,839   68.7x    398,823   17.06%   317.9 x 235.5
+Page_16      7,004    801,529  114.4x    715,239   10.77%   317.9 x 235.5
+Page_17      7,004    708,712  101.2x    623,741   11.99%   317.9 x 235.5
+Page_18      7,004    696,819   99.5x    611,730   12.21%   317.9 x 235.5
+Page_19      7,004    462,225   66.0x    379,881   17.81%   317.9 x 235.5
+Page_20      5,148    742,669  144.3x    657,299   11.50%   317.9 x 236.4
+Page_21     12,952    651,639   50.3x    579,544   11.06%   317.9 x 239.6
+Page_22      7,004    636,308   90.8x    550,112   13.55%   317.9 x 235.5
+Page_23      6,108    766,846  125.5x    679,174   11.43%   318.0 x 235.5
+Page_24      8,438    941,571  111.6x    853,667    9.34%   317.9 x 235.5
+```
+
 ## 2. Step by step
 
 ### Step 1 — check the input is even loadable
@@ -75,6 +122,25 @@ PIL.open    cuatro puertoriqueño.png  -> (3600, 6450) RGB    <- the file is fin
 
 Until that is fixed (**D-15**), rename accented files before processing. This is not exotic —
 it hits Spanish, French, Portuguese and Scandinavian instrument names.
+
+### Step 1a — copy your input somewhere else first
+
+**`extract_blueprint_to_dxf` overwrites its own input file when it downscales.**
+`blueprint_extract.py:247`:
+
+```python
+if (final_w, final_h) != (original_w, original_h):
+    cv2.imwrite(source_path, image)     # rewrites the SOURCE
+```
+
+In production the source is a temp render of an upload, so this is invisible — which is why it
+has survived. Call it directly on a plan over the size cap and **that plan is replaced by a
+4000 px version, in place, with no warning.** The docstring says *"Run edge-to-DXF conversion on
+an image file"* and promises nothing about mutating it.
+
+Verified the hard way on 2026-09-19: three source plans were silently downscaled in place
+(7200 × 9600 → 3000 × 4000, and two 10 000 px scans → 4000 px). Recovered byte-for-byte from
+other copies. **Always process a copy.** Filed as **D-16**.
 
 ### Step 2 — know what the size caps will do to you
 
