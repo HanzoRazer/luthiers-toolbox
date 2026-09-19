@@ -1,0 +1,86 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINT_DEFER_013_MESH_CI_TRUTH",
+  "title": "fix(ci): mesh-pipeline-ci must not certify fabricated retopo output (MAINT-DEFER-013)",
+  "intent": "mesh-pipeline-ci reported green on main while exercising no pipeline. services/api/app/retopo/ was deleted by ee36ddf1 (2026-02-10); examples/retopo/run.sh then gained an except-ImportError branch (93b3e581, with #305) that writes qa_core.json and cam_policy.json from inline literals, and the next step validated those. Remove the fabrication path and gate the demo steps on the implementation actually being present, so an absent pipeline is reported NOT RUN rather than passing. Preserves the one genuinely real step (tests/test_o3d_heal_topology.py), which continues to run unconditionally and enforce. Scope is CI truthfulness only: whether to reverse ee36ddf1 and restore retopo is explicitly deferred to a separate order with a different burden of proof.",
+  "change_type": "ci",
+  "behavior_change": "ci-signal",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/mesh-pipeline-ci.yml",
+      "examples/retopo/run.sh",
+      "docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md",
+      "SPRINTS.md",
+      ".cbsp21/patches/maint-defer-013-mesh-ci-truth.json"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/mesh-pipeline-ci.yml",
+      "examples/retopo/run.sh",
+      "docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md",
+      "SPRINTS.md",
+      ".cbsp21/patches/maint-defer-013-mesh-ci-truth.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "examples/retopo/run.sh: the except-ImportError branch that fabricated qa_core.json and cam_policy.json is removed; the runner now exits 3 with a diagnostic naming ee36ddf1 and MAINT-DEFER-013 and writes nothing, and creates its output directory only after a successful import so no empty out_*/ is left for the validator to pass vacuously over. .github/workflows/mesh-pipeline-ci.yml: adds a Detect retopo implementation step that gates the QRM/MIQ demo steps and the schema-validation step on services/api/app/retopo/run.py existing, adds a Report retopo demo NOT RUN notice step for the absent case, renames 'Validate scaffold outputs' to 'Validate pipeline outputs', and comments the two trigger paths (app/retopo/**, app/fields/**) that match nothing on current main. tests/test_o3d_heal_topology.py remains unconditional and enforcing. docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md: new audit recording the disposition matrix, the evidence, and what is deliberately not decided. SPRINTS.md: MAINT-DEFER-013 moved QUEUED -> RESOLVED - TRUTH ONLY with the resolution, the two new findings, and the deferred reversal question.",
+    "why_not_redundant": "No existing check distinguishes a real retopo run from the stub. The gate's own green was the defect: it validated two cam_policy.json files that run.sh had just written, and silently skipped both qa_core.json stubs because validate_schemas.py keys qa_core off a mesh_healing field the stub never wrote. Nothing else in CI would surface that."
+  },
+  "verification": {
+    "commands_run": [
+      "bash examples/retopo/run.sh qrm on clean main @ 22e67686 -> exit 3, 0 artifacts written, no out_qrm/ directory created",
+      "git checkout ee36ddf1^ -- services/api/app/retopo -> run.sh still exits 3 with ModuleNotFoundError: No module named 'app.fields'; confirms app/retopo/run.py:17-19 imports app.fields services that ee36ddf1 deleted in the same sweep, so the restore unit is 12 files / 1179 lines, not 5 / 617",
+      "git checkout ee36ddf1^ -- services/api/app/retopo services/api/app/fields -> run.sh qrm and miq exit 0, emit 4 artifacts including real geometry (healed.obj, retopo_qrm.obj)",
+      "python scripts/validate_schemas.py --out-root examples/retopo over real output -> 'Validated 4 artifacts, 0 with errors', exit 0; contrast with the stubbed green run 32306907869 which reported 'Validated 2 artifacts'",
+      "python -c json check: real qa_core.json carries mesh_healing (plus brace_graph, grain_analysis, retopo_metrics, thickness_zones); the stub did not, which is why it was skipped unvalidated",
+      "temporary restore removed and unstaged by explicit path; git status shows only the intended files",
+      "python -c yaml.safe_load on .github/workflows/mesh-pipeline-ci.yml -> parses, 10 steps"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/workflows/mesh-pipeline-ci.yml",
+      "intent": "Gate the retopo demo and validation steps on the implementation being present; report NOT RUN when absent; keep the o3d topology test unconditional; record the two dead trigger paths.",
+      "scan_targets": [".github/workflows/mesh-pipeline-ci.yml"],
+      "risk": "low",
+      "behavior_change": "ci-signal - a job that previously reported success without exercising a pipeline now skips those steps and says so; the real o3d test is unaffected"
+    },
+    {
+      "path": "examples/retopo/run.sh",
+      "intent": "Remove the fabrication fallback so the runner can never stand in for the pipeline; exit 3 when unavailable; create the output directory only on success.",
+      "scan_targets": ["examples/retopo/run.sh"],
+      "risk": "low",
+      "behavior_change": "ci-signal - script exits 3 instead of 0 when app.retopo is absent; it is no longer invoked in that case"
+    },
+    {
+      "path": "docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md",
+      "intent": "Record what mesh-pipeline-ci certifies on current main, the evidence, the findings left unfixed, and the deferred reversal question.",
+      "scan_targets": ["docs/audit/CAM_MESH_CI_TRUTH_AUDIT_2026-09-17.md"],
+      "risk": "low",
+      "behavior_change": "none - documentation only"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Move MAINT-DEFER-013 to RESOLVED - TRUTH ONLY under CAM, recording the resolution and the still-deferred restore/retire decision.",
+      "scan_targets": ["SPRINTS.md"],
+      "risk": "low",
+      "behavior_change": "none - register entry only"
+    },
+    {
+      "path": ".cbsp21/patches/maint-defer-013-mesh-ci-truth.json",
+      "intent": "Per-PR CBSP21 manifest for this change.",
+      "scan_targets": [".cbsp21/patches/maint-defer-013-mesh-ci-truth.json"],
+      "risk": "low",
+      "behavior_change": "none - manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-17-001",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 2 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Two pre-existing weaknesses in scripts/validate_schemas.py are recorded in the audit and deliberately NOT fixed here, to keep this change bounded to CI truthfulness: validate_dir() returns 0 when n_validated == 0 so the script passes vacuously over an empty tree, and a document matching no schema key is skipped with no warning. Neither is introduced or worsened by this change, and the new gating keeps CI off the vacuous path. No application code is touched; services/api/app/retopo/ and app/fields/ remain absent and this change does not restore them."
+  }
+}
