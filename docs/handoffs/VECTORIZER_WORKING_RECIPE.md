@@ -186,6 +186,48 @@ Expect a large file. That is correct and documented:
 > *"The 14x Entity Increase is NOT a Bug... This is exactly what the old system did. That's why
 > it worked as a starter. DO NOT try to 'fix' or reduce this yet."*
 
+### Step 3a — how to get restored output WITHOUT writing Python
+
+`restored_baseline` is reachable over HTTP today. It is not new code and nothing needs building
+— it only has to be asked for by name, because the production page never sends a `mode` field
+(`hostinger/blueprint-reader.html:1078-1083` appends `file`, `target_height_mm`,
+`min_contour_length_mm`, `close_gaps_mm` and `debug`, and nothing else), so
+`blueprint_async_router.py:147` falls to its `refined` default on every upload ever made.
+
+Route verified 2026-09-19: manifest prefix `/api` + router prefix `/blueprint` + `/vectorize/async`.
+
+```bash
+curl -X POST "http://localhost:8000/api/blueprint/vectorize/async" \
+  -F "file=@plan.pdf" \
+  -F "mode=restored_baseline" \
+  -F "target_height_mm=500"
+# -> {"job_id": "..."}   then poll /api/blueprint/vectorize/status/{job_id}
+```
+
+A PDF is fine here — the orchestrator renders it before extraction. That is the one place the
+PDF path is handled for you.
+
+### Step 3b — ingesting a PDF yourself
+
+The `edge_to_dxf` CLI and `extract_blueprint_to_dxf` both take **images**, not PDFs; handing
+either a PDF raises `ValueError: Failed to load image`, which is correct behaviour rather than a
+defect. The render step lives one level up, in `blueprint_extract.render_pdf_page()`, capped at
+`LIMITS.max_pdf_dpi` (200).
+
+To do it by hand:
+
+```python
+import pymupdf
+page = pymupdf.open("plan.pdf")[0]
+page.get_pixmap(dpi=200).save("plan.png")          # 200 = the production cap
+# then Step 1a (copy), Step 3 (isolate_body=False), Step 4 (strip), Step 5 (viewport)
+```
+
+Read the page size from the PDF rather than assuming one — `page.rect.width / 72 * 25.4` gives
+millimetres. A Letter-size sheet carrying a scaled drawing will not yield real instrument
+dimensions no matter what is done downstream, and that mistake has already been made in this
+investigation.
+
 ### Step 4 — remove the sheet border, AFTER extraction
 
 The plan's printed frame is ink, so it gets traced. It is removable with a purely geometric
