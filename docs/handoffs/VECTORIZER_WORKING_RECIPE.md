@@ -147,12 +147,12 @@ section details, title blocks — is not in question.
 **What it explicitly does not settle,** and the owner said so in the same breath with "the
 dreadnaught issue aside":
 
-- **Absolute scale is unverified.** The millimetres in these files come from a `target_height_mm`
-  chosen by the operator. An attempt to check `12String_1` against the sheet's own stated
-  dimensions *failed*: a circle detected at 160.50 mm was assumed to be the 102 mm soundhole, and
-  the ratio test (lower bout / soundhole measured 1.745 against a stated 3.892) showed it was not.
-  A second attempt measured a "body width" of 280.04 mm inside a 280.7 mm crop — it measured the
-  crop boundary. Both attempts are recorded because both were wrong.
+- **Absolute scale is not correct as written** — the millimetres in these files come from a
+  `target_height_mm` chosen by the operator. **But it is now recoverable and has been recovered
+  for one plan:** see Step 3c, where the aperture measures 160.59 mm, divides by the
+  independently-documented 1.574803 to 101.97 mm against a stated 102, and the rosette family
+  corroborates. Scale recovery is no longer the open problem it was; **applying it automatically
+  is.**
 - **These are edge fields, not contours.** See §5.
 - **`max_chord / perimeter` does not discriminate here.** On an assembled contour it catches a
   leak; on a raw edge field every segment is short by construction — measured max **0.13–0.27 mm**
@@ -269,6 +269,80 @@ Read the page size from the PDF rather than assuming one — `page.rect.width / 
 millimetres. A Letter-size sheet carrying a scaled drawing will not yield real instrument
 dimensions no matter what is done downstream, and that mistake has already been made in this
 investigation.
+
+### Step 3c — recover absolute scale from the soundhole (CONFIRMED 2026-09-19)
+
+The soundhole is the anchor. Not a bout width, not the body extent — **the soundhole**, and the
+reason is structural:
+
+- It is a circle, so a least-squares fit gives a diameter to sub-pixel accuracy with no ambiguity
+  about *where* you measure. A bout width requires already knowing where the maximum is.
+- Its diameter is almost always stated on the plan.
+- There is exactly one.
+- **It cannot leak.** Every extraction failure in this investigation has been a contour walking
+  out along something that touches it — leaders to the frame, bracing across the soundboard,
+  dimension runs breaking the outline. The soundhole sits in blank soundboard with nothing
+  crossing it. It is structurally immune to the one failure mode that has defeated every
+  extractor tested.
+
+That last property is what makes it usable **now**, without the body isolation that does not exist.
+
+**The rosette rule — mandatory.** Rosette rings are concentric with the soundhole, so circle
+detection returns a *family* sharing a centre. Cluster by centre and take the **innermost** of the
+largest concentric family: the soundhole is the actual aperture, everything concentric outside it
+is decoration. Skipping this is how a 135 mm ring was called the soundhole on the Carlos plan.
+
+#### Worked case — 12-String Dreadnought (AGP-03, SCALE 1/1 FULL)
+
+Three independent quantities, none derived from another:
+
+| | value | provenance |
+|---|---|---|
+| divisor | **1.574803** | render arithmetic, `0.1 ÷ (25.4/400)`, documented in `vectorizer-sandbox/reports/lightline/vec_lightline_002/METHOD.md:189` **before this measurement existed** |
+| measured aperture | **160.59 mm** | least-squares circle fit, 10,458 points, residual mean 0.707 mm |
+| stated aperture | **102 mm** | the sheet's own callout, *4.00 DIA (102 MM)* |
+
+```
+160.59 / 1.574803 = 101.97 mm   against a stated 102.00 mm   error -0.026%
+```
+
+**This is a prediction confirmed, not a fact restated.** Circularity would require the divisor to
+have been fitted from the circle; it was not — it is DPI arithmetic with its own provenance in the
+repository.
+
+**Second, independent confirmation** from the rosette family through the same divisor, using no
+body measurement:
+
+```
+radius   diameter   corrected    radial gap
+ 80.25    160.50      101.92         —        aperture
+ 87.75    175.50      111.44       4.76
+ 98.25    196.50      124.78       6.67
+100.75    201.50      127.95       1.59       purfling
+106.75    213.50      135.57       3.81
+```
+
+A dreadnought rosette around a 102 mm hole runs to roughly 135–150 mm; this lands at 135.57 with a
+**1.59 mm radial purfling gap**. Uncorrected, the same gaps are 2.50 and 6.00 mm, which is not what
+purfling looks like.
+
+**One thing remains open, and it is not the correction factor.** The divisor for this file is
+1.5748 and that is confirmed. *Why* it is that number is not: this run's scale came from
+`target_height_mm=505`, not from the 0.1 mm/px constant that produces 1.5748 in the documented
+defect. Same number, mechanism unexplained. That is a question about provenance, not about the
+measurement.
+
+**What does NOT work, recorded so it is not retried:**
+
+- **Ratio tests against body dimensions.** Attempted and withdrawn. Two of three ratios had a
+  numerator that was a crop boundary, and the third — length/bout, 1.756 measured against 1.280
+  stated, containing no circle at all — was two body dimensions disagreeing by 37%, which can only
+  be the crop. The test failed for a reason already diagnosed and **carries no information in
+  either direction.**
+- **Measuring the body extent.** Three attempts, three failures, all returning the sheet:
+  a manual crop (280.04 mm inside a 280.7 mm window), and connected components with a 1.25 mm close
+  (727.0 × 493.0 against a 739.3 × 492.9 sheet — the three views are joined by leaders and dimension
+  runs). **Body isolation does not exist**, which is why the anchor must be a feature that needs none.
 
 ### Step 4 — remove the sheet border, AFTER extraction
 
