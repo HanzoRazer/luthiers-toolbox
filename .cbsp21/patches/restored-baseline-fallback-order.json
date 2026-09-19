@@ -12,10 +12,12 @@
     "paths_in_scope": [
       ".cbsp21/patches/restored-baseline-fallback-order.json",
       "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
       "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ],
     "files_expected_to_change": [
       "docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md",
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
       "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md"
     ]
   },
@@ -37,6 +39,12 @@
       "intent": "Record the order so a diagnosed, benchmarked, five-month-old regression in the default blueprint path is tracked rather than left in an archived document.",
       "risk": "low",
       "behavior_change": "None - documentation only. The order changes no code and authorizes no merge."
+    },
+    {
+      "path": "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "intent": "Record the method that demonstrably produces usable output today, with every number measured rather than asserted. At least three documents in this repository describe a 'secret sauce' and they disagree; two describe behaviour the code no longer has. This one states the two rules that matter, the single flag that carries them, the parameters, the domain boundaries, and explicitly what the recipe does NOT give you.",
+      "risk": "low",
+      "behavior_change": "None - method record. It describes how to obtain usable output from the code as it exists; it approves no change to the production default."
     },
     {
       "path": "docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md",
