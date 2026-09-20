@@ -1,0 +1,42 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VEC_ROOT_001",
+  "title": "File VEC-ROOT-001: the eligibility block defines 'body' in photograph terms",
+  "intent": "File the primary finding from the 2026-09-19 vectorizer investigation into the repository, where it is currently untracked. It records that the eligibility block at services/photo-vectorizer/edge_to_dxf.py:941-950 encodes three assumptions true of a photographed subject and false of a drawn one, and discards the body on both plans measured, by two different branches. Includes a positive control on the input class the tool was built for, and a corpus census taken before any fix is scoped. Documentation only: one new Markdown file, no code.",
+  "change_type": "docs",
+  "behavior_change": "None. One new Markdown file under docs/audit/ plus this manifest. No code, configuration, workflow or test is touched. The document proposes NO fix -- sections 5 and 7 state this explicitly -- and authorizes no implementation.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vec-root-001.json",
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/audit/VEC-ROOT-001_eligibility_body_definition.md. Section 0 states the lineage boundary: everything concerns edge_to_dxf.py only, and D-13 is a vectorizer_phase3.py artifact that this document does NOT explain. Section 1 sets out the three premises the eligibility block encodes. Section 2 carries two instrumented censuses -- the cuatro dies at too_small (943), L-00 at child_contour (947). Section 3 records that rejecting a contour does not unparent what sits inside it. Section 11 is the positive control: the archtop, an AI-generated image, passes eligibility at 0.8464 on the background-removed input, confirming the premises by positive evidence rather than failure analysis alone. Section 11a records that passing is not constructibility -- the eligible contour weaves between neck edge and inlay blocks, which explains the April decision to stop. Section 13 is a corpus census run before scoping any fix.",
+    "why_not_redundant": "The finding exists only as an untracked file in the owner's Downloads directory. The forensic audit merged in PR #385 records D-13's measurement and withdraws its attribution, but carries none of the eligibility-block analysis, neither census, the archtop control, nor the corpus census. Nothing in the repository currently records why the body is discarded."
+  },
+  "verification": {
+    "commands_run": [
+      "Instrumented extract_blueprint_to_dxf(isolate_body=True) on the cuatro and on Gibson-L0-IN.png, 2026-09-19, by wrapping _build_hierarchy_nodes and _score_contour_group at runtime. No repo file was edited by any run.",
+      "Cuatro per stage: 7,368 findContours -> 7,368 after border removal -> 7,332 nodes -> 3 eligible. Refusals 7,328 too_small, 1 child_contour. Lower bout: 1,437 contours, 0 eligible.",
+      "L-00: 3,053 contours, 0 eligible, run returns 'No valid contours found in edge image'. Largest contour 1815x1365 px encloses 0.276 of the raster -- 55x the 0.005 floor -- and is refused as child_contour.",
+      "Archtop control through the same path: 488 contours, 1 eligible at area_ratio 0.0145 with parent None, winner score 0.8464 on the background-removed input and 0.9894 on the original. Rendered and confirmed to be the guitar.",
+      "Every claim tagged [RENDER] rests on drawing the result onto the source image and looking, per the standing rule written after the soundhole retraction (30b8a5db).",
+      "Corpus census: 314 distinct PDFs opened read-only with PyMuPDF; 215 VECTOR, 5 MIXED, 41 RASTER, 50 EMPTY, 3 ERROR. The cuatro and L-00 are both RASTER; Carlos Jumbo 3-3 is VECTOR with 76,063 paths."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "intent": "Record why the body is discarded, with the lineage boundary stated first so the finding is not carried into vectorizer_phase3.py, and with the dead ends recorded so they are not retried: convex hull re-introduces an area assumption, and arc length ranks a ruled fret table fifth.",
+      "risk": "low",
+      "behavior_change": "None - audit record. The document proposes no replacement primitive and no fix, and states so in sections 5 and 7. Section 8 gives outcome criteria any future fix must satisfy; it does not authorize one."
+    }
+  ]
+}
