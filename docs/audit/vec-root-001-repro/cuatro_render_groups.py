@@ -7,23 +7,19 @@ been drawn on the source and looked at.
 Same runtime wrap as cuatro_instrumented.py -- edge_to_dxf.py is not edited.
 """
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, imread, out_path, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-SRC = SP / "stocktake" / "cuatro_ascii.png"
-WORK = SP / "instr_run"
-WORK.mkdir(exist_ok=True)
-OUT = Path(r"C:\Users\thepr\Downloads\CUATRO_scored_groups.png")
+SRC = corpus("cuatro")
+WORK = work_dir()
+OUT = out_path("CUATRO_scored_groups.png")
 
 _orig = etd._score_contour_group
 CAPTURED = []
@@ -42,7 +38,7 @@ shutil.copyfile(SRC, work_src)
 extract_blueprint_to_dxf(source_path=str(work_src), output_path=str(WORK / "r.dxf"),
                          target_height_mm=500.0, warnings=[], isolate_body=True)
 
-img = cv2.imdecode(np.fromfile(str(SRC), dtype=np.uint8), cv2.IMREAD_COLOR)   # D-15-safe
+img = imread(SRC)   # D-15-safe
 H, W = img.shape[:2]
 vis = cv2.addWeighted(img, 0.35, np.full_like(img, 255), 0.65, 0)
 

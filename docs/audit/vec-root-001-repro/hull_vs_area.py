@@ -11,24 +11,21 @@ how the verdicts change under that one substitution. It is a measurement of the 
 a proposed fix -- what to replace contourArea with is a design question this does not answer.
 """
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, imread, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-SRC = SP / "stocktake" / "cuatro_ascii.png"
-WORK = SP / "instr_run"
+SRC = corpus("cuatro")
+WORK = work_dir()
 FLOOR = 0.005
 
-img0 = cv2.imdecode(np.fromfile(str(SRC), dtype=np.uint8), cv2.IMREAD_COLOR)
+img0 = imread(SRC)
 IH, IW = img0.shape[:2]
 AREA = float(IW * IH)
 BOUT = (950, 2250, 2100, 3800)
@@ -74,9 +71,9 @@ for label, sel in (("WHOLE SHEET", NODES),
           f"({len(rescued)/max(len(small),1)*100:.1f}% of the refusals)")
     if rescued:
         hr = sorted((hull_ratio(n) for n in rescued), reverse=True)
-        print(f"  largest hull ratios: " + ", ".join(f"{v:.4f}" for v in hr[:6]))
+        print("  largest hull ratios: " + ", ".join(f"{v:.4f}" for v in hr[:6]))
         mult = []
         for n in sorted(rescued, key=hull_ratio, reverse=True)[:6]:
             mult.append(hull_ratio(n) / max(n.area_ratio, 1e-12))
-        print(f"  hull/enclosed multiple:   " + ", ".join(f"{v:>7,.0f}x" for v in mult))
+        print("  hull/enclosed multiple:   " + ", ".join(f"{v:>7,.0f}x" for v in mult))
     print()

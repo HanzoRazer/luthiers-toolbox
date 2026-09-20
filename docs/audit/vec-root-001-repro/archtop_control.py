@@ -24,25 +24,19 @@ border removal, no eligibility block, no grouping. It cannot confirm or refute a
 """
 import hashlib
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-GP = Path(r"C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans")
-BASE = "Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway"
-RUNS = [("CONTROL  (rembg foreground, confound removed)", GP / f"{BASE}_02_foreground.jpg"),
-        ("compare  (original, plank-wall confound PRESENT)", GP / f"{BASE}_00_original.jpg")]
-WORK = SP / "archtop_run"
-WORK.mkdir(exist_ok=True)
+RUNS = [("CONTROL  (rembg foreground, confound removed)", corpus("archtop_foreground")),
+        ("compare  (original, plank-wall confound PRESENT)", corpus("archtop_original"))]
+WORK = work_dir()
 
 
 def sha(p):

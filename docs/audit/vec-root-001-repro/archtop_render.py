@@ -4,27 +4,22 @@ A score of 0.8464 on the control and 0.9894 on the original means nothing until 
 earned it has been looked at -- the fret table scored 0.732.
 """
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, out_path, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-GP = Path(r"C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans")
-BASE = "Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway"
-WORK = SP / "archtop_run"
-OUT = Path(r"C:\Users\thepr\Downloads\ARCHTOP_eligible.png")
+WORK = work_dir()
+OUT = out_path("ARCHTOP_eligible.png")
 
 panels = []
-for tag, src in (("CONTROL foreground", GP / f"{BASE}_02_foreground.jpg"),
-                 ("original + plank wall", GP / f"{BASE}_00_original.jpg")):
+for tag, src in (("CONTROL foreground", corpus("archtop_foreground")),
+                 ("original + plank wall", corpus("archtop_original"))):
     work = WORK / f"r_{tag.split()[0]}.jpg"
     shutil.copyfile(src, work)
     img = cv2.imdecode(np.fromfile(str(work), dtype=np.uint8), cv2.IMREAD_COLOR)

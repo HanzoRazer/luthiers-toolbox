@@ -9,24 +9,19 @@ neck means the contour carries the neck's two long side edges. A fret ladder mea
 transverse rungs and inlay blocks and no continuous sides.
 """
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, out_path, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-GP = Path(r"C:\Users\thepr\Downloads\luthiers-toolbox\Guitar Plans")
-BASE = "Jumbo Tiger Maple Archtop Guitar with a Florentine Cutaway"
-SRC = GP / f"{BASE}_00_original.jpg"          # the run that scored 0.9894
-WORK = SP / "archtop_run"
-OUT = Path(r"C:\Users\thepr\Downloads\ARCHTOP_neck_check.png")
+SRC = corpus("archtop_original")              # the run that scored 0.9894
+WORK = work_dir()
+OUT = out_path("ARCHTOP_neck_check.png")
 
 work = WORK / "neck.jpg"
 shutil.copyfile(SRC, work)

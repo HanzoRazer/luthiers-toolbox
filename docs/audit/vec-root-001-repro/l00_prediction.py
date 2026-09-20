@@ -14,23 +14,19 @@ the ORIGINAL is hashed before and after.
 """
 import hashlib
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, out_path, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-SRC = Path(r"C:\Users\thepr\My Drive\Guitar Plans\Gibson-L0-IN.png")
-WORK = SP / "instr_run"
-WORK.mkdir(exist_ok=True)
-OUT = Path(r"C:\Users\thepr\Downloads\L00_too_small_pile.png")
+SRC = corpus("l00")
+WORK = work_dir()
+OUT = out_path("L00_too_small_pile.png")
 FLOOR = 0.005
 
 
@@ -95,7 +91,7 @@ for i, (L, hull, n, p) in enumerate(rows[:15]):
 if small:
     L, hull, n, p = max(small, key=lambda r: r[1])
     x, y, w_, h_ = n.bbox
-    print(f"\nlargest-hull contour in the too_small pile:")
+    print("\nlargest-hull contour in the too_small pile:")
     print(f"  bbox {w_} x {h_} at ({x},{y}) = {w_/IW*100:.0f}% x {h_/IH*100:.0f}% of raster")
     print(f"  arc {L:,.0f} px   enclosed {n.area_ratio:.6f}   hull {hull:.4f}   "
           f"hull/enclosed {hull/max(n.area_ratio,1e-12):,.0f}x")
@@ -110,7 +106,7 @@ for L, hull, n, p in rows:
 for i, (t, c) in enumerate([("L-00, arcs >=200px", (0, 0, 0)),
                             (f"BLUE(bgr) = ELIGIBLE ({len(elig)})", (200, 40, 40)),
                             (f"RED = too_small but hull>=0.005 ({len(rescued)})", (0, 0, 230)),
-                            (f"GREEN = too_small, hull<0.005", (0, 150, 0))]):
+                            ("GREEN = too_small, hull<0.005", (0, 150, 0))]):
     cv2.putText(vis, t, (25, 55 + i * 52), cv2.FONT_HERSHEY_SIMPLEX, 1.3, c, 3)
 sc = 1500 / IH
 cv2.imencode(".png", cv2.resize(vis, (int(IW * sc), 1500),

@@ -48,6 +48,14 @@ The block itself is **byte-identical on both revisions**: the same five-branch l
 `min_area_ratio=0.005` and `max_area_ratio=0.95`. Only its position moved. The finding transfers
 unchanged; the coordinates do not.
 
+**Measured, not just argued.** On 2026-09-20 all eleven reproduction scripts were re-run against
+`main`'s blob. **Every figure in this document reproduced** — 7,368 → 7,332 → 3 eligible on the
+cuatro, 7,328 `too_small`, winner 0.7323; 1,437 / 0 in the lower bout; L-00 3,053 / 0 failing at
+`child_contour`; the archtop 488 / 1 at 0.014521 with score 0.8464. The six renders came back
+**byte-identical** to the SHA-256 recorded on 09-19. The original measurements were only ever taken
+on the stale branch; this is the first evidence they hold on the branch this document merges into.
+Table: `vec-root-001-repro/README.md` §6. **[RUN]**
+
 | symbol | measured (`ffd155e4`) | `main` (blob `c847c043`) |
 |---|---|---|
 | `area = float(cv2.contourArea(contour))` | 930 | 956 |
@@ -505,14 +513,23 @@ proposes no fix.
 
 ## 13. Reproduction
 
-**The scripts are in the repository:** `docs/audit/vec-root-001-repro/` — eleven of them, with a
-README that pins the revision, maps every line citation onto `main`, and names which audit claim
-each script carries. The first draft's reproduction section listed six and named them as scratchpad files; three
-archtop scripts carrying §11 and §11a were missing, and two of the six renders it listed had no
-producer in its own list. **[CODE]**
+**The scripts are in the repository:** `docs/audit/vec-root-001-repro/` — eleven of them plus the
+shared `_repro.py`, with a README that pins the revision, maps every line citation onto `main`, and
+names which audit claim each script carries. The first draft's reproduction section listed six and
+named them as scratchpad files; three archtop scripts carrying §11 and §11a were missing, and two of
+the six renders it listed had no producer in its own list. **[CODE]**
+
+**They run from a fresh clone.** One option set, handled once in `_repro.py`: `--repo-root` is
+discovered from the enclosing `.git`, `--corpus-root` resolves inputs **by logical name and verifies
+each one's SHA-256**, `--out-dir` and `--work-dir` default to a temp directory and are **refused if
+they resolve inside the checkout**. No absolute path appears in any script. The imported
+`edge_to_dxf.py` is hashed before anything else runs, and an unrecognised revision **refuses to
+run** rather than emitting numbers that look like this document's and are not. Absent inputs exit
+`NOT_RUN_SOURCE_ABSENT`, loudly — a reproduction record that quietly skips its own run cannot fail.
 
 Every script is a runtime wrap — it replaces functions on the imported `edge_to_dxf` module at call
-time. **No repo file is edited by any run**, and the refined-extraction freeze is untouched.
+time. **No repo file is edited by any run and nothing is written inside the checkout** (verified:
+`git status` clean after fifteen runs), and the refined-extraction freeze is untouched.
 
 **The inputs and the renders are not in the repository, and will not be.** They are third-party plan
 material, and the renders draw the result *on top of the plan*, reproducing it in full. Owner ruling
@@ -523,11 +540,14 @@ from this tree ten days ago.
 
 So the honest statement of this document's evidentiary standing:
 
-> **The measurements are not independently reproducible from this repository alone.** They are
-> reproducible by anyone holding the corpus: the scripts are here, and the README pins each input
-> and each render by SHA-256, so a re-run can be compared rather than merely repeated.
+> **The measurements are not independently reproducible from this repository alone** — the inputs
+> are not here and will not be. They **are** reproducible by anyone holding the corpus, and that is
+> now demonstrated rather than asserted: re-run on 2026-09-20 from a clean invocation, against
+> `main` rather than the measured branch, **every figure in this document came back the same and
+> the six renders came back byte-identical to their recorded SHA-256** (§6 of the repro README).
 
-That is a custody consequence, not an omission, and the hashes are what stand in for the files.
+That is a custody consequence, not an omission, and the hashes are what stand in for the files —
+as a bit-exact target, not as a souvenir. **[RUN]**
 
 D-16 guard observed on every run: source copied to scratch, original hashed before and after,
 both `OK`.

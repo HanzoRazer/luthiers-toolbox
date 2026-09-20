@@ -14,24 +14,21 @@ Regions are taken from geometry already established this session, not from eyeba
   WOOD_LEGEND = the species table along the bottom edge
 """
 import shutil
-import sys
-from pathlib import Path
 
 import cv2
 import numpy as np
 
-SP = Path(__file__).parent
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\api")
-sys.path.insert(0, r"C:\Users\thepr\Downloads\luthiers-toolbox\services\photo-vectorizer")
+from _repro import (
+    banner, corpus, etd, extract_blueprint_to_dxf, imread, out_path, work_dir,
+)
 
-import edge_to_dxf as etd                                            # noqa: E402
-from app.services.blueprint_extract import extract_blueprint_to_dxf  # noqa: E402
+banner(__doc__)
 
-SRC = SP / "stocktake" / "cuatro_ascii.png"
-WORK = SP / "instr_run"
-OUT = Path(r"C:\Users\thepr\Downloads\CUATRO_top50_by_arclength.png")
+SRC = corpus("cuatro")
+WORK = work_dir()
+OUT = out_path("CUATRO_top50_by_arclength.png")
 
-img0 = cv2.imdecode(np.fromfile(str(SRC), dtype=np.uint8), cv2.IMREAD_COLOR)
+img0 = imread(SRC)
 IH, IW = img0.shape[:2]
 
 REGIONS = {
