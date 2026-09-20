@@ -44,8 +44,9 @@ Measured, same input, nothing else changed:
 | Gibson SG Custom | 16,762 | 462,053 | **27.6×** |
 | Melody Maker (April benchmark) | 24,097 | 343,399 | 14.3× |
 
-**Counts are not the point. What survives is.** On the cuatro, REFINED returns a page border
-and one stray fragment — not the instrument. RESTORED_BASELINE returns the slotted peghead with
+**Counts are not the point. What survives is.** On the cuatro, REFINED returns **the
+fret-interval table** — 3,437 entities spanning 30.8 × 68.9 mm, measured 2026-09-19 — and nothing
+of the instrument. RESTORED_BASELINE returns the slotted peghead with
 its inlay, the fretboard and frets, the scalloped waist, soundhole and rosette, the bridge, the
 tail motif, the side elevation with neck profile, the fret-interval table and the title block.
 
@@ -268,7 +269,7 @@ millimetres. A Letter-size sheet carrying a scaled drawing will not yield real i
 dimensions no matter what is done downstream, and that mistake has already been made in this
 investigation.
 
-### Step 3c — recover absolute scale from the soundhole (CONFIRMED 2026-09-19)
+### Step 3c — the soundhole as a scale anchor (RETRACTED 2026-09-19 — NO SCALE HAS BEEN RECOVERED)
 
 The soundhole is the anchor. Not a bout width, not the body extent — **the soundhole**, and the
 reason is structural:
