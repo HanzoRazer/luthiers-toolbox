@@ -8,6 +8,26 @@
 
 ## 0. Read this first
 
+> ### 🔴 Lineage and scale — both apply to every number below
+>
+> **Lineage.** Unless a section says otherwise, this document describes
+> **`services/photo-vectorizer/edge_to_dxf.py`**, reached via
+> `extract_blueprint_to_dxf(...)` and the public `/api/blueprint/vectorize/async` lane.
+> **`services/blueprint-import/vectorizer_phase3.py` is a SEPARATE implementation** — it does
+> not import `edge_to_dxf` and none of these line numbers apply to it. Where a claim concerns
+> Phase 3 it is labelled: §3's `--gap-close` row (D-14), §4's routing table, and §5's
+> layer-name note. **Do not carry a finding across the two.**
+>
+> **Scale.** Every millimetre in this document is `target_height_mm / image_height_px ×
+> pixels`, with `target_height_mm` chosen by the operator — **500 for every run recorded
+> here.** They are output coordinates, not validated physical dimensions. **No scale has been
+> recovered for any plan** (§1b, Step 3c). Ratios and aspect are unaffected; absolute
+> millimetres are not established.
+>
+> **Commit hashes.** `f49ead1d` and `86c49526`, cited in earlier revisions, **do not resolve**
+> after a history rewrite. The verified regression commit is **`9cc92ba9`** (2026-04-12 15:42,
+> same subject). See `DEV_ORDER_RESTORED_BASELINE_FALLBACK.md` §0a.
+
 There are at least three documents in this repository describing a "secret sauce" for the
 vectorizer, and they disagree with each other. Two of them describe behaviour the code no
 longer has. This document exists because the recipe is actually short, and every number in it
@@ -35,7 +55,7 @@ and 127× thinner than the same code produces with one flag changed.
 | Border removal | yes, **before** grouping | no |
 | Grouping + scoring | winning group only is exported | all contours exported |
 
-Measured, same input, nothing else changed:
+Measured in **output coordinates at `target_height_mm = 500`** (absolute scale unvalidated — see the banner in §0), same input, nothing else changed:
 
 | Plan | REFINED | RESTORED_BASELINE | Ratio |
 |---|---:|---:|---:|
@@ -105,7 +125,8 @@ pages 13–24 the streaming implementation, on comparable files:
 Roughly **6–8× faster**, same rule, same result. This is the difference between a bench tool and
 a pipeline stage.
 
-Per-page detail, pages 13–24:
+Per-page detail, pages 13–24. **The `extent mm` column is output coordinates at
+`target_height_mm = 500`, not validated physical dimensions** — see the banner in §0:
 
 ```
 page       refined   baseline   ratio      final  border%     extent mm
@@ -276,9 +297,12 @@ reason is structural:
 
 - It is a circle, so a least-squares fit gives a diameter to sub-pixel accuracy with no ambiguity
   about *where* you measure. A bout width requires already knowing where the maximum is.
-- Its diameter is almost always stated on the plan.
-- There is exactly one.
-- **It cannot leak.** Every extraction failure in this investigation has been a contour walking
+- Its diameter is usually stated on the plan.
+- On the plan family examined here it is a single, locally isolated circular feature. A plan
+  may carry more than one, an unusual layout, or none visible.
+- **It is less exposed to contour leakage than the body outline — not immune.** The detector
+  built on this argument produced three false positives (Step 3c), so the property makes it a
+  better anchor candidate, not a guaranteed one. Every extraction failure in this investigation has been a contour walking
   out along something that touches it — leaders to the frame, bracing across the soundboard,
   dimension runs breaking the outline. The soundhole sits in blank soundboard with nothing
   crossing it. It is structurally immune to the one failure mode that has defeated every
@@ -358,9 +382,35 @@ parallel to that edge.**
 | Gibson SG Custom | 6,508 of 462,053 | 1.41% | none |
 | Cuatro | 9,718 of 437,469 | 2.22% | none |
 
-**Never do this before extraction.** The pipeline already has `_remove_page_borders_early()`,
-and that function *is* the regression — it runs before grouping, so on a fragmented body it
-removes the body along with the frame. That is the mechanism behind the page-border-only result.
+**Never do this before extraction** — but not for the reason an earlier revision gave. It
+claimed `_remove_page_borders_early()` "removes the body along with the frame", and that **is
+not what happens**. Corrected 2026-09-19 by instrumenting the production path:
+
+| plan | `_remove_page_borders_early` | what actually discards the body |
+|---|---|---|
+| Cuatro | **7,368 → 7,368 — removed nothing** | `too_small` at `edge_to_dxf.py:943` |
+| Gibson L-00 | **missed the real page border** — it reached the next gate at `area_ratio` 0.962 and was labelled `too_large`, not `page_border` | `child_contour` at `:947` |
+
+The mechanism is the **eligibility block at `edge_to_dxf.py:941-950`**, which decides what may
+be a body before anything is scored:
+
+- **`too_small` (`:943`)** tests `cv2.contourArea(contour) / image_area < 0.005`. `contourArea`
+  is **enclosed** area, and `findContours` traces a drawn stroke up one side and back down the
+  other — so a contour that draws the entire body encloses only its own line width. On the
+  cuatro the lower bout's perimeter is **fully traced and entirely refused**: 1,437 contours in
+  that region, **0 eligible**.
+- **`child_contour` (`:947`)** fires when a contour has any parent. Rejecting the page border
+  does **not** unparent what sits inside it, so on L-00 two individually-correct rejections
+  compose into **0 eligible contours** and the run fails outright.
+
+**So border removal is not the thing to fix**, and a reader who goes there will find a function
+that did nothing wrong on either plan. Strip borders afterwards because the geometric rule is
+clean and verifiable — it loses no interior on either plan measured — not because the early
+pass is eating bodies. Full evidence: `VEC-ROOT-001` §1–§2.
+
+**12-String caveat.** The page-border-only result on that plan has **not** been traced to a
+stage. It is consistent with early filtering but was not instrumented; do not assume the
+cuatro's mechanism applies to it.
 
 ### Step 5 — set the viewport, or the file opens blank
 

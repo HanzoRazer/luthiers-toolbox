@@ -7,6 +7,29 @@ Step 2, whose own status table still reads `Ship as fallback | PENDING | —`
 
 ---
 
+## 0a. 🔴 Commit-hash provenance — read before citing any hash in this order
+
+**The hashes this order was originally written against do not resolve in the current repository.**
+The history was rewritten; `VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md` §5.3 records
+`f49ead1d` and `86c49526` among the hashes that no longer resolve. This order nevertheless used
+them as its anchors. Corrected here, verified 2026-09-19:
+
+| role | originally cited | resolves? | current, verified |
+|---|---|---|---|
+| Regression introduced | `f49ead1d`, 2026-04-12 15:42 | **no** | **`9cc92ba9`** — 2026-04-12 15:42, *"feat(vectorizer): hierarchy-based contour isolation + debug overlay"*. **Same timestamp and same subject**; twin of the cited hash |
+| Last good state | `86c49526`, 2026-04-11 01:41 | **no** | **not re-identified — see below** |
+
+**The "last good state" anchor is withdrawn, not merely re-pointed.** Two commits exist at
+2026-04-11 01:41 (`757370cf`, `89f4a9b8`) and **neither touches
+`services/photo-vectorizer/edge_to_dxf.py`**. The last commit that actually changed that file
+before the regression is **`38e609bd`** (2026-04-09 14:33, *"feat(vectorizer): triage
+implementation with timing + diagnostics"*). Treat `38e609bd` as the defensible lower bound;
+the original 2026-04-11 01:41 claim is unsupported for this file.
+
+**Every other hash cited in this document carries the same risk** and has not been individually
+re-verified. Before acting on any of them, run `git cat-file -t <hash>` — a hash that does not
+resolve is a claim that cannot be checked, not a claim that is false.
+
 ## 1. Why this exists
 
 The blueprint lane's default extraction mode has been in a known, diagnosed, benchmarked
@@ -19,8 +42,8 @@ This order asks for that one change and nothing else.
 
 | | |
 |---|---|
-| Last good state | `86c49526`, 2026-04-11 01:41 |
-| Regression introduced | **`f49ead1d`, 2026-04-12 15:42** — "feat: hierarchy-based isolation" |
+| Last good state | **not re-identified** — the cited `86c49526` does not resolve and no commit at 2026-04-11 01:41 touches `edge_to_dxf.py`. Defensible lower bound: `38e609bd`, 2026-04-09 14:33. See §0a |
+| Regression introduced | **`9cc92ba9`, 2026-04-12 15:42** — *"feat(vectorizer): hierarchy-based contour isolation + debug overlay"* (verified twin of the unreachable `f49ead1d`; see §0a) |
 | What it added | `RETR_TREE` in place of `RETR_LIST`, `_remove_page_borders_early()`, `_isolate_with_grouping()`, cleanup-stage border removal |
 | Diagnosed | 2026-04-13, `RECOVERY_BASELINE.md` |
 | Fix specified | Same document, Step 2, marked CRITICAL |
@@ -90,6 +113,26 @@ return result_refined
 - OR a page-border warning is present
 - OR `selection.selection_score < 0.15`
 - OR `dxf.entity_count < 5000`
+
+> **This predicate is NOT implementable as written, and that must be closed before any code.**
+> Carried verbatim from April so the order records what was specified, not because it is
+> sufficient. Five things are undefined and each changes behaviour:
+>
+> 1. **Which DXF `entity_count` refers to** — the extractor's output, or the post-cleanup /
+>    post-border-strip artifact. On a page-border-only result these differ by the whole frame.
+> 2. **Whether `selection.selection_score` is always present.** On the restored path there is no
+>    grouping and therefore no selection score; on refined it can be absent when grouping falls
+>    back. A missing score must not read as `< 0.15`.
+> 3. **The page-border warning's exact key and value** — no warning string is named anywhere in
+>    the April document or here.
+> 4. **Precedence when `rec.action == ACCEPT` but cleanup then removes nearly everything.** The
+>    cuatro is exactly this shape: a confident verdict over a 3,437-entity result.
+> 5. **How a fallback failure is represented** if the baseline path itself errors or exceeds the
+>    size budget. Falling back into a second failure must not surface as the first one.
+>
+> **Acceptance criterion:** these five must be concretely mapped to fields, keys and precedence
+> rules, and the mapping reviewed, before implementation starts. An unimplementable predicate that
+> looks implementable is how a gate that cannot fire gets shipped.
 
 **Telemetry (Step 3):** emit `behavior_source` in the response so fallback frequency and the
 files that still break refined can be tracked. Note `behavior_source` is already used at `:458`
@@ -210,11 +253,25 @@ frame-detection pass would be better than a fixed margin if this becomes a produ
 
 ## 9. Record correction this order implies
 
-**D-13** in `docs/audit/VECTORIZER_PROVENANCE_FORENSIC_2026-09-17.md` — "Phase 3 certifies the
-sheet border as the body" — was filed on 2026-09-18 as a new finding. It is not. It is this
-April regression reproducing on a different plan. **D-10** (cuatro neck certified `accept` at
-0.745) is likely the same root cause. Both should be re-pointed at `f49ead1d` rather than
-carried as independent defects.
+> **An earlier revision of this section said D-13 "is this April regression reproducing on a
+> different plan" and that D-13 and D-10 "should be re-pointed at `f49ead1d`". That is WITHDRAWN.**
+> It was a cross-lineage attribution: D-13's artifact is `Gibson-L0-IN_phase3.dxf`, produced by
+> `services/blueprint-import/vectorizer_phase3.py`, and the regression commit is on
+> `services/photo-vectorizer/edge_to_dxf.py`. The two are separate implementations —
+> `vectorizer_phase3.py` does not import `edge_to_dxf`, has no `is_eligible_root`, no
+> `too_small`/`child_contour` reject reasons, and calls `cv2.findContours` itself at 2216, 2867,
+> 3035 and 3836. The regression commit is not in its call graph and cannot be its cause.
+
+**D-13 remains an independent Phase 3 finding with an UNKNOWN cause.** It is filed against no
+commit and must not be attributed to this regression. It needs its own investigation in its own
+lineage.
+
+**D-10** (cuatro neck certified `accept` at 0.745) remains a **candidate cause in the
+`edge_to_dxf` lane only — unproven and unbisected.** It is not a shared cause with D-13.
+
+**This order implies no correction to the audit's defect attributions.** The only record
+correction it carries is the one in §0a: the commit hashes this order was originally written
+against do not resolve.
 
 ---
 

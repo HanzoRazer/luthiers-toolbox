@@ -2,7 +2,16 @@
 
 **Date:** 2026-09-17
 **Subject repos:** `luthiers-toolbox` @ `origin/main 22e67686` (all refs) · `vectorizer-sandbox` @ `origin/master e32e9da` (all branches + tags)
-**Method:** read-only. Nothing executed — no vectorizer, no server, not even `--help`. Git, code reading, file stat, GitHub read API.
+**Method — scoped by section, corrected 2026-09-19.** An earlier header read *"read-only. Nothing
+executed."* That was true of the original audit and became false as dated addenda were appended.
+
+- **§1–§11 (2026-09-17): read-only.** Nothing executed — no vectorizer, no server, not even
+  `--help`. Git, code reading, file stat, GitHub read API.
+- **§12 onward: dated addenda that ARE execution-based.** They include vectorizer runs, rendered
+  outputs, owner validation in DWG TrueView, and re-runs on 2026-09-18 and 2026-09-19.
+
+**Claims in the addenda do not inherit the read-only framing**, and the evidence tags must be read
+per section rather than against the header.
 **Repos modified:** none. **Authorizes:** nothing.
 **Rendered copy:** https://claude.ai/artifact/YYdrqgBtFDDCAK924CQvCK
 
@@ -755,7 +764,7 @@ designs, the fret-spacing table, neck sections, dovetail options, bridge detail 
   commit, and the two are separate implementations. D-13's cause is **unknown** and is filed
   against no commit. See the lineage note beside the D-13 row. The
   original row is struck through rather than deleted.
-- **D-10** — probable shared root cause, **not proven**. The same document benchmarks the same
+- **D-10** — **candidate cause in the `edge_to_dxf` lane only, unproven and unbisected.** Not a shared cause with D-13. The same document benchmarks the same
   Melody Maker plan at 0.086/REJECT against 0.690/REVIEW on an unchanged scorer. Confirming it
   for the cuatro means running that plan through both paths, which has not been done.
 - **A framing error of this audit's author.** Edge-to-DXF was judged here against blueprint
@@ -768,7 +777,7 @@ Order: `docs/handoffs/DEV_ORDER_RESTORED_BASELINE_FALLBACK.md`.
 
 ### 16a. The regression, measured at scale (added 2026-09-19)
 
-The re-measurement above used four one-off plans. A 15-page sample from one document family —
+The re-measurement above used four one-off plans. A 24-page sample from one document family —
 Fender headstock sheets, all 2200 × 1700 px so **no downscale fires** and resolution cannot
 confound the comparison, `isolate_body` the only variable — gives a much stronger result.
 
