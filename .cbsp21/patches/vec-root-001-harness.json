@@ -1,0 +1,93 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VEC_ROOT_001_SECTION_8_FAILING_HARNESS",
+  "title": "test(vectorizer): land VEC-ROOT-001 section 8 as a failing harness",
+  "intent": "Convert VEC-ROOT-001 section 8 ('first measurements any fix must not break') from prose into an executing regression harness that is RED today. Step (a) of the ruled plan. Adds tests only. Does not touch services/photo-vectorizer, does not propose or apply a fix to the eligibility gate, and does not lift the refined-patch freeze; steps (b) replacement primitive and (c) fix the gate remain blocked.",
+  "change_type": "test",
+  "behavior_change": "No production behavior change. Adds services/api/tests/vec_root_001/, which is collected by the Core CI 'cd services/api && pytest' lane. The plan corpus cannot be committed, so on CI every corpus-dependent criterion reports NOT_RUN_SOURCE_ABSENT and the lane stays green (exit 0); the failures are only reachable on a machine holding the corpus. The harness wraps edge_to_dxf._build_hierarchy_nodes and _score_contour_group at runtime inside a try/finally and restores both; no repository file is edited by the run.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vec-root-001-harness.json",
+      "services/api/tests/vec_root_001/"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vec-root-001-harness.json",
+      "services/api/tests/vec_root_001/__init__.py",
+      "services/api/tests/vec_root_001/conftest.py",
+      "services/api/tests/vec_root_001/corpus.py",
+      "services/api/tests/vec_root_001/harness.py",
+      "services/api/tests/vec_root_001/test_vec_root_001_eligibility.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) corpus.py declares the three plans by filename and SHA-256 and resolves a corpus root from $VEC_ROOT_001_CORPUS, defaulting to '<repo>/Guitar Plans' (gitignored, .gitignore:462). A missing file yields NOT_RUN_SOURCE_ABSENT; a file present with the wrong hash is an assertion failure, not a skip. (2) harness.py drives the production path blueprint_extract.extract_blueprint_to_dxf -> edge_to_dxf.convert with isolate_body=True, wrapping two module functions to observe the eligibility gate, and caches one run per plan per session. (3) conftest.py records every skip and prints an end-of-session banner naming each missing path. (4) test_vec_root_001_eligibility.py encodes section 8's four criteria plus the section 11 archtop control, and test_harness_is_wired, which always runs and requires no corpus.",
+    "why": "The finding existed only as prose in a document awaiting merge. A red test is a bookmark that cannot be lost or argued with. Section 8's criteria are outcome criteria, so they survive whatever eventually replaces cv2.contourArea.",
+    "what_did_not_change": "services/photo-vectorizer/edge_to_dxf.py is untouched (blob c847c043 on both main and this branch). No eligibility threshold, no scoring, no export path. The refined-patch freeze is not lifted.",
+    "why_not_redundant": "No existing test observes the eligibility gate's verdicts. tests/test_vectorizer_grouping_telemetry.py covers grouping fallback telemetry with synthetic inputs and an empty contour list; tests/test_vectorizer_canonical_only.py covers lane selection; tests/test_text_masking.py covers masking in isolation. None of them runs a real plan through blueprint_extract, and none asserts anything about is_eligible_root, reject_reason counts or which contour group is certified. This is the only harness that would go red if the gate kept discarding the body, and the only one that would go green if a fix worked."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && pytest tests/vec_root_001/ -q -rs -p no:logging --no-cov  (corpus present) -> 4 failed, 2 passed, 2 skipped in 11.04s -- the intended red",
+      "VEC_ROOT_001_CORPUS=<empty dir> cd services/api && pytest tests/vec_root_001/ -q -rs -p no:logging --no-cov -> 1 passed, 7 skipped, exit 0 -- the CI case, banner printed",
+      "clean worktree off origin/main with no 'Guitar Plans' present -> 1 passed, 7 skipped, exit 0 -- CI case reproduced in a fresh checkout",
+      "corpus file replaced with a different raster under the expected name -> 1 failed, assertion prints expected and found SHA-256 -- a swapped corpus cannot pass",
+      "baseline reproduced against ROOT-001 section 2 before the harness was written: cuatro 3 eligible / too_small 7,328 / child_contour 1 / winner s=0.7323 with 446 members; L-00 0 eligible / too_small 3,034 / child_contour 15 / too_large 4 / run fails",
+      "byte scan of all five files: no non-ASCII and no 0x1b ESC bytes"
+    ],
+    "expected_failures": [
+      "test_criterion_1_cuatro_eligible_count_exceeds_three -- 3 eligible",
+      "test_criterion_1b_cuatro_lower_bout_perimeter_is_eligible -- 0 of 1,437 lower-bout contours eligible",
+      "test_criterion_2_l00_eligible_count_exceeds_zero -- 0 eligible, run aborts",
+      "test_criterion_3_cuatro_does_not_certify_the_fret_table -- winner is the fret-interval table at s=0.7323"
+    ],
+    "citation_check": "ROOT-001 was measured at ffd155e4 and cites the eligibility ladder at 941-950. That range resolves only against blob f3e7d802, a July fork still checked out locally; on origin/main (blob c847c043) the byte-identical ladder sits at 967-976. ROOT-001 section 0a already declares this offset, names its cause (97460755, BR-037 / PR #232, which edits this file) and supplies a full measured-to-main symbol mapping, so PR #387 is NOT carrying a stale citation. This harness independently confirmed the block is byte-identical across the two blobs and cites the function name first, with 963-976 (comment line through the ladder) second."
+  },
+  "files": [
+    {
+      "path": "services/api/tests/vec_root_001/__init__.py",
+      "intent": "Package marker, matching the convention of the other tests/ subpackages",
+      "risk": "low",
+      "behavior_change": "None"
+    },
+    {
+      "path": "services/api/tests/vec_root_001/corpus.py",
+      "intent": "Hash-pinned corpus declaration and root resolution; distinguishes absent from swapped",
+      "risk": "low",
+      "behavior_change": "None; test-support module"
+    },
+    {
+      "path": "services/api/tests/vec_root_001/harness.py",
+      "intent": "Runs the production extraction path and reports what the eligibility gate did",
+      "risk": "low",
+      "behavior_change": "None; wraps two module functions at runtime and restores them in a finally block"
+    },
+    {
+      "path": "services/api/tests/vec_root_001/conftest.py",
+      "intent": "Forced-visible NOT_RUN reporting so an absent corpus can never read as a pass",
+      "risk": "low",
+      "behavior_change": "Adds a pytest_terminal_summary hook scoped to this directory only"
+    },
+    {
+      "path": "services/api/tests/vec_root_001/test_vec_root_001_eligibility.py",
+      "intent": "Section 8's four criteria, the section 11 archtop control, and the always-runs wiring guard",
+      "risk": "low",
+      "behavior_change": "Adds tests that FAIL by design when the corpus is present"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-20-VEC-ROOT-001-HARNESS",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      "The harness monkeypatches two private functions on the edge_to_dxf module. If either is renamed the wrappers stop observing the gate; test_harness_is_wired asserts both names and the 0.005/0.95 defaults so that rename surfaces as a failure rather than as a silent pass.",
+      "The corpus lives outside the repository by necessity, so the criteria cannot run on CI. This is mitigated by forced-visible NOT_RUN reporting and by test_harness_is_wired, which always executes, but it remains true that CI green does not mean the defect was measured."
+    ]
+  }
+}
