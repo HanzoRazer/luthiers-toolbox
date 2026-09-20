@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "behavior_change": "none (documentation)",
+      "path": "SPRINTS.md",
+      "intent": "Register Sprint M9 / SG-GEOM-AUTH-001: the Smart Guitar geometry authority package, its dispositions, and the contradictions already on main.",
+      "risk": "low"
+    },
+    {
+      "behavior_change": "none",
+      "path": ".cbsp21/patches/sg-geometry-authority-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low"
+    }
+  ],
+  "coverage_min": 0.95,
+  "patch_id": "SG_GEOMETRY_AUTHORITY_001",
+  "change_type": "docs",
+  "title": "Register the Smart Guitar geometry authority package in SPRINTS.md",
+  "diff_articulation": {
+    "why_not_redundant": "The current Smart Guitar design rulings exist only in session notes. docs/SPRINTS_MAINTENANCE.md Rule 6 forbids chat-only notes as the system of record, which is how the 4.5 deg op20_status survived three supersessions unnoticed. No other SPRINTS entry carries body height, the 12th-fret attachment, the neck-angle band or the neck-pocket dispositions.",
+    "what_changed": "Appends one DATA INTEGRITY sprint section before ## COMPLETED. It records the owner's 2026-09-20 geometry package with a per-quantity disposition table (521.8 current working authority / 528.1 superseded / 438.15 reference only), the design-ruling-to-CAM authority chain, the provisional body-height-to-body_length_mm equivalence, the quantities derived from 528.1 that must be recomputed before reuse, and the contradictions re-read on main. No record file, schema or calculator is amended."
+  },
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/sg-geometry-authority-001.json",
+      "SPRINTS.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/sg-geometry-authority-001.json",
+      "SPRINTS.md"
+    ]
+  },
+  "schema_version": "cbsp21_patch_input_v1",
+  "schema": "cbsp21_patch_input_v1",
+  "risk_level": "low",
+  "intent": "Give the geometry reconciliation a system-of-record starting point that preserves the authority distinctions exactly, without prematurely claiming CAD verification.",
+  "verification": {
+    "commands_run": [
+      "Every record value in the entry re-read from origin/main @ c7523677: smart_guitar_v1.json neck_pocket.neck_angle_deg=3.5 with op20_status 'READY - cut at 4.5deg' in the same object; body.dimensions.thickness_mm=44.45; neck_pocket 76.2x55.9x15.9, y_from_top 53.3; neck.neck_length.body_length_mm=438.15.",
+      "smart_guitar_setup_spec.json: smart_guitar_geometry.neck_angle_deg=4.5; open_items.neck_angle_confirmation 'RESOLVED - Cut at 4.5deg'; solver_discrepancy offset_deg=3.15; sweep GREEN 1.68 deg @10mm through 2.5 deg @13mm; sweep inputs scale 628.65 and neck_joint_fret 19, both superseded.",
+      "git grep for 47.0 under the specs directory: no match - 47.0 is in no record.",
+      "Namespace checked against docs/governance/SPRINT_NAMESPACE_STANDARD.md: SG is not registered; no new prefix is registered here.",
+      "M7/M8 confirmed claimed by unmerged docs/recover-sprints-lutherie-math (1a86d883) and cited by docs/audit/formula_authority_census.md, so M9 was taken instead.",
+      "Insertion asserted single-anchor and additive: one '## COMPLETED' occurrence, no pre-existing 'SG-GEOM-AUTH-001' or 'Sprint M9'; diff is 97 insertions, 0 deletions."
+    ]
+  },
+  "architecture_scan": {
+    "acknowledged": true,
+    "findings": [],
+    "risk_summary": { "high": 0, "low": 1, "critical": 0, "medium": 0 },
+    "acknowledgement_notes": "The one low item is the finding ID. SG-GEOM-AUTH-001 is a finding ID inside the sprint, not a registered namespace; promoting SG to SPRINT_NAMESPACE_STANDARD is an owner ruling and nothing else references the ID yet, so renaming it is a single-file edit.",
+    "scan_id": "AS-2026-09-20-001"
+  },
+  "behavior_change": "None. SPRINTS.md plus this manifest. No code, config, route, schema or instrument record."
+}

@@ -2961,6 +2961,103 @@ Systematic audit to identify code that was developed for purposes that may have 
 
 ---
 
+### Sprint M9 — Smart Guitar geometry authority reconciliation (SG-GEOM-AUTH-001)
+
+**Status:** ACTIVE — step 1 (this registration) COMPLETE; reconciliation NOT started
+**last_verified:** 2026-09-20 (every record value below re-read on `origin/main` @ `c7523677`)
+**Category:** Data integrity / instrument geometry authority
+**Why it exists:** the current Smart Guitar design rulings live in session notes, and
+`docs/SPRINTS_MAINTENANCE.md` Rule 6 forbids chat-only notes as the system of record. This entry is
+the system-of-record starting point. It records authority and disposition only — **no record file is
+amended by it.**
+
+#### Geometry package — owner ruling 2026-09-20
+
+| Quantity | Value | Disposition |
+|---|---|---|
+| Body height | **521.8 mm** | **CURRENT WORKING AUTHORITY** — current design ruling, **awaiting CAD/source verification before manufacturing freeze**. NOT CAD-verified; do not label it so without the drawing or geometry source |
+| Fretboard/body attachment | **12th fret** | CURRENT DESIGN RULING |
+| Neck angle | **1.5°–2.0°**, preferred nominal **~1.8°** | exploration band + nominal |
+| `PU_NECK` | 207.125 | **PROVISIONAL** — CAD confirmation required |
+| Neck-pickup setback | 10.0 mm | **UNSUPPORTED** — provenance required |
+| Neck-pocket projection | — | **UNGOVERNED** — must be derived from a traceable CAD/datum, **not** repository inference |
+| Body height (earlier) | 528.1 mm | **SUPERSEDED / HISTORICAL** — earlier photo-scaled derivation. Retained as evidence because it explains prior calculations; **must never re-enter manufacturing arithmetic** |
+| `neck.neck_length.body_length_mm` | 438.15 mm | **LES PAUL REFERENCE ONLY** — reference geometry, **not** Smart Guitar governing geometry |
+
+**Authority chain (the order that must hold):**
+
+```text
+CURRENT USER / DESIGN RULING
+        ↓
+521.8 mm
+        ↓
+CAD / DRAWING VERIFICATION      ← not yet done; this is the freeze gate
+        ↓
+GEOMETRY AUTHORITY
+        ↓
+CAM / CUTTING
+```
+
+A design ruling is authority over the design. It is **not** documentary confirmation, and nothing
+reaches CAM without passing CAD verification first.
+
+**Working equivalence (provisional):** `body height` ≡ `neck.neck_length.body_length_mm` for the
+Smart Guitar long-axis body dimension. **Status: provisional semantic mapping, not yet CAD-verified.**
+It is recorded because 438.15 entered the authority trail through that field while the ruling is
+expressed as a body height. **Do not harden it into schema authority.** If CAD later shows the two
+name different datums, the reconciliation must split them and **recompute all dependent geometry**.
+
+**Derived from 528.1 — marked for recomputation before reuse (not reusable as-is):** tail behind the
+bridge 204.25 mm; overall length ≈ 877 mm. Any other figure whose derivation includes 528.1 inherits
+this mark.
+
+#### Contradictions already on `main` (evidence, re-read 2026-09-20)
+
+`services/api/app/instrument_geometry/body/specs/`:
+
+- `smart_guitar_v1.json` — `cavities.neck_pocket.neck_angle_deg` = **3.5** while, in the same object,
+  `cavities.neck_pocket.op20_status` = **"READY - cut at 4.5deg, verify on first article"**. A record
+  that disagrees with itself on the angle the pocket is cut at.
+- `smart_guitar_setup_spec.json` — `smart_guitar_geometry.neck_angle_deg` **4.5**, same `op20_status`,
+  and `open_items.neck_angle_confirmation` = "RESOLVED - Cut at 4.5deg (Explorer reference)".
+- The 4.5° traces to a **+3.15° offset** that `open_items.neck_angle_analysis.solver_discrepancy`
+  itself describes as a solver-vs-Explorer discrepancy of unknown cause. That block's own sweep gates
+  **GREEN at 1.68° (10 mm bridge) through 2.5° (13 mm)** — i.e. it brackets the ruled ~1.8°. The block
+  also rests on superseded inputs: scale **628.65** (now 647.7) and join fret **19** (now 12).
+- `body.dimensions.thickness_mm` = **44.45** (1.75 in). **47.0 appears in no record** — recent
+  pocket/floor arithmetic used 47.0. At the ruled joint the floor is **17.86 mm**, not 20.41.
+- `cavities.neck_pocket.dimensions_mm` = 76.2 × 55.9 × **15.9 deep**, `y_from_top` 53.3 — against a
+  ruled joint needing ~**26.59 mm** at the shoulder.
+
+**Coupling:** neck pocket, 12th-fret attachment, body height and the ~1.8° target are one coupled
+system; they reconcile together or not at all. The `bass_chamber` constraint defect belongs inside
+this reconciliation: it depends on a neck-pocket projection that is not numerically governed, so the
+system must **not manufacture that projection from repository arithmetic** until a traceable datum
+defines it.
+
+**Cross-repo:** the neck-pocket authority findings live in `HanzoRazer/CNC-Production-Shop` branch
+`sg-authority-cleanup` @ `1dfae41` (pushed 2026-09-20, **held, unmerged**). Its central finding —
+*there is currently no evidence that a second governing neck-pocket source ever existed* — and its
+statuses for `PU_NECK` and the 10 mm setback are the source of the two dispositions above. `sg-spec`
+is **not** in the neck-pocket authority chain.
+
+**Close trigger:** every quantity above resolves to exactly one disposition backed by a CAD/drawing
+source, the two specs agree with each other and with the ruling, `op20_status` no longer names an
+angle the ruling contradicts, and the provisional `body height` ≡ `body_length_mm` equivalence is
+either CAD-confirmed or split with dependants recomputed.
+
+**First step (not started):** amend `op20_status`. It is the only item here that can destroy a body,
+and it is a safety stop, so it goes first and alone.
+
+**Namespace note:** `SG` is **not** a registered prefix in `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
+and this entry does not register one — `SG-GEOM-AUTH-001` is a finding ID inside this sprint, following
+the `MAINT-DEFER-013` precedent that one order is not a durable program. Promoting `SG` to the registry
+is an owner ruling. **M7 and M8 are deliberately skipped:** they are claimed by the unmerged branch
+`docs/recover-sprints-lutherie-math` (`1a86d883`) and are already cited under those numbers by
+`docs/audit/formula_authority_census.md`.
+
+---
+
 ## COMPLETED
 
 ### CAM Intent H7 HTTP Surface Restore (PR #46)
