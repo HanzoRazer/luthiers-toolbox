@@ -1,14 +1,17 @@
 # VEC-ROOT-001 — The eligibility block defines "body" in photograph terms, and discards the body on every plan tested
 
-**Subject:** `services/photo-vectorizer/edge_to_dxf.py`, the eligibility block at lines **941–950**,
-inside `_build_hierarchy_nodes`.
+**Subject:** `services/photo-vectorizer/edge_to_dxf.py`, the eligibility block inside
+`_build_hierarchy_nodes` — lines **941–950** as measured, **967–976 on `main`** (§0a).
 **Status:** primary finding. Not an amendment. It supersedes no order; it strikes named sections of
-two, listed in §9.
-**Evidence base:** **HEAD of `luthiers-toolbox`, working tree, 2026-09-19.** Not the
-`canonical_vectorizer_pipeline.zip` snapshot. Every line number below was read at HEAD. Two runs,
-both instrumented by runtime wrapping with no edit to any repo file.
+**three**, listed in §9.
+**Evidence base:** the working tree of `smart-guitar-cavity-geometry-1` at commit
+**`ffd155e436be89c15cdb0b83a96dc7d2cbefa251`**, 2026-09-19. Not the
+`canonical_vectorizer_pipeline.zip` snapshot. The subject file was **clean** at that commit —
+`edge_to_dxf.py` hashes to blob **`f3e7d802fefa`**, which is the pin that outlives the branch.
+Every line number below was read there. **Those line numbers do not resolve on `main` — see §0a.**
+Two runs, both instrumented by runtime wrapping with no edit to any repo file.
 
-Evidence tags: **[CODE]** read at HEAD · **[RUN]** produced by an instrumented execution ·
+Evidence tags: **[CODE]** read at the pinned commit · **[RUN]** produced by an instrumented execution ·
 **[RENDER]** confirmed by drawing the result on the source and looking · **[INFERRED]** ·
 **[NOT TESTED]**.
 
@@ -34,10 +37,51 @@ click apart in any future reading. They are not the same lane. See §10.
 
 ---
 
+## 0a. Reading the line numbers — the measured revision is behind `main`
+
+Every line number in this document was read at `ffd155e4`. **`main` carries one commit that the
+measured branch does not — `97460755` (BR-037, PR #232) — and it edits this file**, adding 74 lines
+across eight hunks. So the citations below are offset against the branch this document merges into.
+**[CODE]**
+
+The block itself is **byte-identical on both revisions**: the same five-branch ladder, the same
+`min_area_ratio=0.005` and `max_area_ratio=0.95`. Only its position moved. The finding transfers
+unchanged; the coordinates do not.
+
+| symbol | measured (`ffd155e4`) | `main` (blob `c847c043`) |
+|---|---|---|
+| `area = float(cv2.contourArea(contour))` | 930 | 956 |
+| **the eligibility ladder** | **941–950** | **967–976** |
+| `elif area_ratio < min_area_ratio` (`too_small`) | 943 | 969 |
+| `nodes = _build_hierarchy_nodes(` | 1233 | 1259 |
+| `def convert(` | 1535 | 1575 |
+| `cv2.findContours(... RETR_TREE ...)` | 1624 | 1664 |
+| `_remove_page_borders_early(` | 1632 | 1672 |
+| `_isolate_with_grouping(` | 1645 | 1685 |
+| `else:` → the `RETR_LIST` branch | 1731 | 1771 |
+| `def convert_enhanced(` | 1886 | 1926 |
+| `if mask_text:` | 1950 | 1991 |
+| `converter.convert_enhanced(` (CLI) | 2827 | 2896 |
+
+`vectorizer_phase3.py` is **identical** on both revisions (blob `84b87a58`), so every §0 and §11b
+citation into it stands as written. **[CODE]**
+
+**What BR-037 changes for §3a.** It adds a `DEGRADED` status when OCR fails inside
+`convert_enhanced`, so a failed text-mask can no longer be reported as a clean conversion. It does
+**not** change reachability: on `main`, `convert()` (1575–1925) contains no call to
+`detect_text_regions` and never sets `mask_text`, and `convert_enhanced` (1926) still has exactly
+one caller — the CLI at 2896. **§3a holds on `main`, at the remapped lines.** **[CODE]**
+
+> This document is the one that argued, in §10a, that a claim must carry its conditions. It was
+> filed with forty line citations and no revision. The correction is recorded here rather than
+> quietly applied.
+
+---
+
 ## 1. The block
 
 ```python
-# edge_to_dxf.py:930-950  [CODE]
+# edge_to_dxf.py:930-950 as measured (956-976 on main, §0a)  [CODE]
 area       = float(cv2.contourArea(contour))
 area_ratio = area / image_area
 ...
@@ -254,6 +298,22 @@ reach a consumer.
 4. Text masking alone is **not** sufficient and must not land alone: it deletes the cuatro's winner
    and promotes the **partial body** at 0.702 — a more plausible wrong answer, harder to catch by
    eye, with every panel score improved. **[INFERRED from [RUN]]**
+5. **The archtop must not regress.** §11 is the positive control and criteria 1–4 cannot see it —
+   all four are cuatro and L-00, and a gate loosened toward line art passes every one of them while
+   breaking the input class the tool was built for. Both archtop inputs are run:
+
+   | input | eligible | winner | must still hold |
+   |---|---|---|---|
+   | `_02_foreground.jpg` (control, confound removed) | **exactly 1** | s = **0.8464** | the eligible contour is the guitar — render it |
+   | `_00_original.jpg` (plank-wall confound present) | **exactly 1** | s = **0.9894** | `parent_idx` is still `None`; the wall does not become the parent |
+
+   "Exactly 1" is the criterion, not "at least 1": a change that admits the plank-wall seams or the
+   stand has broken premise B in the other direction, and the original run is what detects it. The
+   area ratio of the eligible contour (**0.0145**, three times the floor) must not be the thing a
+   fix moves the floor beneath.
+
+   This is an **acceptance** criterion, not a constructibility one — §11a still applies: passing it
+   does not make the archtop cuttable.
 
 ## 9. Sections struck by this document
 
@@ -383,7 +443,7 @@ cross-lineage observation and §0 applies**: moving code from `vectorizer_phase3
 `edge_to_dxf.py` is a deliberate merge, not a finding carried across. It would **not** solve the
 archtop, which needs intra-contour decomposition.
 
-## 13. Corpus census, 2026-09-19 — how much of this problem is self-inflicted
+## 12. Corpus census, 2026-09-19 — how much of this problem is self-inflicted
 
 Run before committing to any fix, because it changes the scope of the fix.
 
@@ -443,15 +503,31 @@ retrofit: a capability present and unreached, while months of work went at the s
 the other side. It is recorded here as scope, **not** as a proposal — see §7, this document
 proposes no fix.
 
-## 12. Reproduction
+## 13. Reproduction
 
-Instrumented runs, runtime wrapping only, no repo file edited. Scripts in the session scratchpad:
-`cuatro_stage_census.py`, `where_is_the_perimeter.py`, `whole_sheet_by_reason.py`,
-`hull_vs_area.py`, `arclen_discriminates.py`, `l00_prediction.py`.
+**The scripts are in the repository:** `docs/audit/vec-root-001-repro/` — eleven of them, with a
+README that pins the revision, maps every line citation onto `main`, and names which audit claim
+each script carries. The first draft's reproduction section listed six and named them as scratchpad files; three
+archtop scripts carrying §11 and §11a were missing, and two of the six renders it listed had no
+producer in its own list. **[CODE]**
 
-Renders (each claim above tagged **[RENDER]** rests on one of these):
-`CUATRO_scored_groups.png`, `CUATRO_stage_census.png`, `CUATRO_lower_bout_by_reason.png`,
-`CUATRO_whole_sheet_by_reason.png`, `CUATRO_the_rejected_body.png`, `L00_too_small_pile.png`.
+Every script is a runtime wrap — it replaces functions on the imported `edge_to_dxf` module at call
+time. **No repo file is edited by any run**, and the refined-extraction freeze is untouched.
 
-D-16 guard observed on both runs: source copied to scratch, original hashed before and after,
+**The inputs and the renders are not in the repository, and will not be.** They are third-party plan
+material, and the renders draw the result *on top of the plan*, reproducing it in full. Owner ruling
+**R1 / SC-A02** (2026-09-10, CUSTODY-REMED-001) holds that the private reference corpus is
+legitimate development input but **the public repository must not hold source media** — the same
+ruling under which thirteen files, including DXFs *traced from* a restricted blueprint, were removed
+from this tree ten days ago.
+
+So the honest statement of this document's evidentiary standing:
+
+> **The measurements are not independently reproducible from this repository alone.** They are
+> reproducible by anyone holding the corpus: the scripts are here, and the README pins each input
+> and each render by SHA-256, so a re-run can be compared rather than merely repeated.
+
+That is a custody consequence, not an omission, and the hashes are what stand in for the files.
+
+D-16 guard observed on every run: source copied to scratch, original hashed before and after,
 both `OK`.
