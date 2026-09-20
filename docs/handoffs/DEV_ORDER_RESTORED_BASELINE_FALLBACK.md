@@ -183,10 +183,34 @@ The permissive path returns the sheet's printed border along with everything els
 tracing has no concept of "frame" versus "instrument". That is cosmetic and cheap to fix, and
 fixing it is the whole difference between this order and the regression it addresses.
 
-**The pipeline already has a border remover, and it is the regression.**
-`_remove_page_borders_early()` runs *before* grouping — the name says it — so when the body
-contour is fragmented it removes the body along with the frame. That is the mechanism behind
-the page-border-only result.
+> **🔴 An earlier revision of this section said "the pipeline already has a border remover, and it
+> is the regression" — that `_remove_page_borders_early()` removes the body along with the frame,
+> and that this is the mechanism behind the page-border-only result. WITHDRAWN.**
+>
+> **This is the authorizing document. Acting on the withdrawn version means modifying a function
+> that was measured to have done nothing wrong, which is the exact premature border-removal change
+> this order exists to prevent.**
+
+**Instrumented 2026-09-19, production path, runtime wrapping only:**
+
+| plan | `_remove_page_borders_early` | stage that actually discards the body |
+|---|---|---|
+| Cuatro | **7,368 → 7,368 — removed nothing** | `too_small`, `edge_to_dxf.py:943` |
+| Gibson L-00 | **missed the real page border** — it reached the next gate at `area_ratio` 0.962 and was labelled `too_large`, not `page_border` | `child_contour`, `:947` |
+| **12-String** | **not instrumented** | **UNKNOWN — do not assume the cuatro's mechanism** |
+
+The stage that discards the body is the **eligibility block at `edge_to_dxf.py:941-950`**, which
+runs after border removal and before scoring. `too_small` tests `cv2.contourArea` — **enclosed**
+area — and `findContours` traces a stroke up one side and back down the other, so a contour that
+draws the whole body encloses only its own line width. On the cuatro the lower-bout perimeter is
+fully traced and entirely refused: **1,437 contours in that region, 0 eligible.** On L-00,
+rejecting the page border does not unparent what sits inside it, so the run ends with **0 eligible
+contours** and fails outright.
+
+**What this means for this order:** the sequencing below is unchanged and still correct — strip
+borders *after* extraction — but **`_remove_page_borders_early()` is not the thing to fix, and
+nothing in this order authorizes touching it.** Full evidence: `VEC-ROOT-001` §1–§2 and the
+companion recipe's Step 4, which carries the same account.
 
 `RECOVERY_BASELINE.md`'s post-stabilisation plan states the correct order:
 

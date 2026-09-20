@@ -491,7 +491,8 @@ Stated plainly so nobody reads more into the output than is there.
 | D-12, 42 of 42 | Header scan of the March corpus plus an ezdxf 1.4.2 probe |
 | D-14 identical geometry | Two runs with and without the flag: 93,379,060 bytes and 853,947 segments both |
 | D-15 | `cv2.imread` vs `PIL.open` on the same path, and on a byte-identical ASCII copy |
-| Regression window | `git log --follow` on `edge_to_dxf.py`, bounded by `86c49526` and `f49ead1d` |
+| Regression commit | **`9cc92ba9`** — 2026-04-12 15:42, *"feat(vectorizer): hierarchy-based contour isolation + debug overlay"*. Verified resolvable 2026-09-19 (`git cat-file -e`). The previously cited `f49ead1d` **does not resolve**; `9cc92ba9` is its twin by identical timestamp and subject |
+| Lower bound of the window | **`38e609bd`**, 2026-04-09 14:33 — the last commit that actually changed `edge_to_dxf.py` before the regression. The previously cited "last good state `86c49526`, 2026-04-11 01:41" is **withdrawn, not re-pointed**: that hash does not resolve, and neither commit existing at 2026-04-11 01:41 touches this file |
 | Mechanism and the April benchmark | `docs/archive/2026/status/RECOVERY_BASELINE.md`, 2026-04-13 |
 
 ---
