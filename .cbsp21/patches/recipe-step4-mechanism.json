@@ -1,0 +1,41 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "RECIPE_STEP4_MECHANISM",
+  "title": "Correct Step 4's causal claim: border removal is not what discards the body",
+  "intent": "VECTORIZER_WORKING_RECIPE.md Step 4 states that _remove_page_borders_early() 'removes the body along with the frame' and calls that 'the mechanism behind the page-border-only result'. Instrumented runs on 2026-09-19 measured the opposite: on the cuatro that function went 7,368 -> 7,368 and removed nothing, and on Gibson L-00 it missed the real page border entirely. The body is discarded one stage later, by the eligibility block at edge_to_dxf.py:941-950. The practical instruction (strip borders after extraction, geometrically) is unchanged and still correct; only its stated cause is replaced. Documentation only: one Markdown file, no code.",
+  "change_type": "docs",
+  "behavior_change": "None. One modified Markdown file under docs/handoffs/ plus this manifest. No code, configuration, workflow or test is touched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/recipe-step4-mechanism.json",
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md"
+    ],
+    "files_expected_to_change": [
+      "docs/handoffs/VECTORIZER_WORKING_RECIPE.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Replaces the final paragraph of Step 4. Keeps 'Never do this before extraction' and the geometric rule, and replaces the false causal claim with the measured one: the eligibility block at edge_to_dxf.py:941-950 discards the body, via too_small at :943 on the cuatro (cv2.contourArea measures ENCLOSED area, and a stroke-traced outline encloses only its own line width -- 1,437 lower-bout contours, 0 eligible) and via child_contour at :947 on L-00 (rejecting the page border does not unparent what sits inside it -- 0 eligible, run fails). Adds a lineage note stating the step concerns edge_to_dxf.py only and that vectorizer_phase3.py line numbers do not apply.",
+    "why_not_redundant": "The claim being corrected is live in the document this PR's parent (#385) merged. It is the one deferred item of three that actively misdirects: a reader following it goes to _remove_page_borders_early, a function measured to have done nothing wrong on either plan. The other two deferred items under-specify rather than mislead and are filed separately."
+  },
+  "verification": {
+    "commands_run": [
+      "Instrumented extract_blueprint_to_dxf(isolate_body=True) on the cuatro with _remove_page_borders_early wrapped at runtime, 2026-09-19: input 7,368 contours, output 7,368. No repo file edited.",
+      "Same instrumentation on Gibson-L0-IN.png: the page-size contour reached _build_hierarchy_nodes at area_ratio 0.962 and was labelled too_large, not page_border, so _is_page_border did not fire on it.",
+      "Per-stage census on the cuatro: 7,368 findContours -> 7,368 after border removal -> 7,332 nodes -> 3 eligible. Refusals: 7,328 too_small, 1 child_contour.",
+      "Lower-bout region on the cuatro: 1,437 contours overlapping, 0 eligible, 1,437 refused too_small. Perimeter confirmed traced by rendering every arc >=150px coloured by gate verdict.",
+      "L-00: 3,053 contours, 0 eligible, run returns 'No valid contours found in edge image'. Largest contour 1815x1365 px encloses 0.276 of the raster (55x the 0.005 floor) and is refused as child_contour."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/handoffs/VECTORIZER_WORKING_RECIPE.md",
+      "intent": "Replace Step 4's false causal claim with the measured mechanism, and mark the step's lineage so its line numbers are not read against vectorizer_phase3.py.",
+      "risk": "low",
+      "behavior_change": "None - method record. The practical instruction is unchanged; only its stated cause is corrected."
+    }
+  ]
+}

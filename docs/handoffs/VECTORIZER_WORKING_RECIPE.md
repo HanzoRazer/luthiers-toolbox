@@ -358,9 +358,38 @@ parallel to that edge.**
 | Gibson SG Custom | 6,508 of 462,053 | 1.41% | none |
 | Cuatro | 9,718 of 437,469 | 2.22% | none |
 
-**Never do this before extraction.** The pipeline already has `_remove_page_borders_early()`,
-and that function *is* the regression — it runs before grouping, so on a fragmented body it
-removes the body along with the frame. That is the mechanism behind the page-border-only result.
+**Never do this before extraction** — but not for the reason an earlier revision of this document
+gave. It claimed `_remove_page_borders_early()` "removes the body along with the frame", and that
+**is not what happens**. Corrected 2026-09-19 by instrumenting the production path:
+
+| plan | `_remove_page_borders_early` | what actually discards the body |
+|---|---|---|
+| Cuatro | **7,368 → 7,368 — removed nothing** | `too_small` at `edge_to_dxf.py:943` |
+| Gibson L-00 | **missed the real page border** (it reached the next gate at `area_ratio` 0.962 and was rejected as `too_large`, not as `page_border`) | `child_contour` at `:947` |
+
+The mechanism is the **eligibility block at `edge_to_dxf.py:941-950`**, which decides what may be a
+body before anything is scored:
+
+- **`too_small` (`:943`)** tests `cv2.contourArea(contour) / image_area < 0.005`. `contourArea` is
+  **enclosed** area, and `findContours` traces a drawn stroke up one side and back down the other —
+  so a contour that draws the entire body encloses only its own line width. On the cuatro the lower
+  bout's perimeter is **fully traced and entirely refused**: 1,437 contours in that region, **0
+  eligible**. The gate cuts the body in half at the waist, keeping the upper bout only because it
+  arrived attached to the neck.
+- **`child_contour` (`:947`)** fires when a contour has any parent. Rejecting the page border does
+  **not** unparent what sits inside it, so on L-00 two individually-correct rejections compose into
+  **0 eligible contours** and the run fails outright.
+
+**So border removal is not the thing to fix, and a reader who goes there will find a function that
+did nothing wrong on either plan.** Strip borders afterwards because it is geometrically clean and
+verifiable — the rule above loses no interior on either plan measured — not because the early pass
+is eating bodies.
+
+Full evidence, both censuses and the renders: `VEC-ROOT-001`, §1–§2.
+
+> **Lineage.** Everything in this step concerns `services/photo-vectorizer/edge_to_dxf.py`.
+> `vectorizer_phase3.py` is a separate implementation with its own contour handling and none of
+> these line numbers apply to it.
 
 ### Step 5 — set the viewport, or the file opens blank
 
