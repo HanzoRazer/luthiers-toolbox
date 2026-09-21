@@ -28,6 +28,8 @@ pytestmark = pytest.mark.allow_missing_request_id
 
 STRAT_ROUTE = "/api/cam/guitar/stratocaster/body/gcode"
 LES_PAUL_ROUTE = "/api/cam/guitar/les_paul/body/gcode"
+FLYING_V_ROUTE = "/api/cam/guitar/flying_v/body/gcode"
+NECK_ROUTE = "/api/cam/guitar/les_paul/neck/gcode"
 
 
 # -----------------------------------------------------------------------------
@@ -63,10 +65,43 @@ def test_all_four_exposed_routes_are_represented():
     }
 
 
-def test_representation_does_not_mean_blocked():
-    """Inclusion in the registry is not a blanket prohibition."""
-    blocked = {k for k, v in GENERATOR_READINESS.items() if not v.permits_emission}
-    assert blocked == {"stratocaster_body"}
+def test_every_state_stops_emission_except_the_delegation():
+    """The layer is fail-closed: only the delegation lets a request continue.
+
+    Inclusion in the registry is still not a blanket prohibition -- les_paul_body
+    passes this layer -- but passing it is a hand-off to asset authority, not an
+    authorization to manufacture.
+    """
+    permitted = {k for k, v in GENERATOR_READINESS.items() if v.permits_emission}
+    assert permitted == {"les_paul_body"}
+    assert (
+        GENERATOR_READINESS["les_paul_body"].readiness
+        is GeneratorReadiness.GOVERNED_BY_ASSET_AUTHORITY
+    )
+
+
+def test_review_required_stops_emission():
+    """REVIEW_REQUIRED cannot mean both 'evidence insufficient' and 'carry on'."""
+    for key in ("flying_v_body", "neck"):
+        record = GENERATOR_READINESS[key]
+        assert record.readiness is GeneratorReadiness.REVIEW_REQUIRED
+        assert record.permits_emission is False, (
+            f"{key} is REVIEW_REQUIRED yet permits emission; a state that permits "
+            f"emission is operationally an authorization"
+        )
+        with pytest.raises(GeneratorReadinessBlocked):
+            require_generator_readiness(key)
+
+
+def test_only_an_established_authority_may_permit_emission():
+    """No state in this registry expresses manufacturing authority."""
+    from app.cam.generator_readiness import _STOPS_EMISSION
+
+    non_stopping = set(GeneratorReadiness) - set(_STOPS_EMISSION)
+    assert non_stopping == {GeneratorReadiness.GOVERNED_BY_ASSET_AUTHORITY}, (
+        "a state other than the delegation permits emission; this layer must "
+        "never be able to authorize manufacturing on its own"
+    )
 
 
 def test_unqualified_routes_are_recorded_not_invented():
@@ -75,6 +110,7 @@ def test_unqualified_routes_are_recorded_not_invented():
         record = GENERATOR_READINESS[key]
         assert record.readiness is GeneratorReadiness.REVIEW_REQUIRED
         assert record.evidence, f"{key} must cite the evidence for its state"
+        assert record.exit_condition, f"{key} must state how it becomes qualified"
 
 
 # -----------------------------------------------------------------------------
@@ -270,3 +306,41 @@ def test_les_paul_route_still_refuses_with_asset_authority(authenticated):
     assert detail["manufacturing_authority"] == "BLOCKED"
     assert detail["disposition"] == "UNADJUDICATED"
     assert "G0" not in response.text and "M3" not in response.text
+
+
+def test_flying_v_route_refuses_while_review_required(authenticated):
+    """Ungated and unqualified must not mean "emits anyway"."""
+    response = authenticated.post(f"{FLYING_V_ROUTE}?project_id={uuid.uuid4()}")
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"]
+    assert detail["code"] == "GENERATOR_READINESS_BLOCKED"
+    assert detail["route"] == "flying_v_body"
+    assert detail["generator_readiness"] == "REVIEW_REQUIRED"
+    for token in ("G0", "G1 ", "M3", "M30", "G21", "G90"):
+        assert token not in response.text, f"G-code token {token!r} escaped"
+
+
+def test_neck_route_refuses_while_review_required(authenticated):
+    response = authenticated.post(f"{NECK_ROUTE}?project_id={uuid.uuid4()}")
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"]
+    assert detail["code"] == "GENERATOR_READINESS_BLOCKED"
+    assert detail["route"] == "neck"
+    assert detail["generator_readiness"] == "REVIEW_REQUIRED"
+    for token in ("G0", "G1 ", "M3", "M30", "G21", "G90"):
+        assert token not in response.text, f"G-code token {token!r} escaped"
+
+
+def test_every_exposed_route_now_fails_closed(authenticated):
+    """The whole CAM surface refuses: three at this layer, one at asset authority."""
+    expected = {
+        STRAT_ROUTE: "GENERATOR_READINESS_BLOCKED",
+        FLYING_V_ROUTE: "GENERATOR_READINESS_BLOCKED",
+        NECK_ROUTE: "GENERATOR_READINESS_BLOCKED",
+        LES_PAUL_ROUTE: "DXF_MANUFACTURING_AUTHORITY_BLOCKED",
+    }
+    for route, code in expected.items():
+        response = authenticated.post(f"{route}?project_id={uuid.uuid4()}")
+        assert response.status_code == 422, f"{route}: {response.text}"
+        assert response.json()["detail"]["code"] == code, route
+        assert "G0" not in response.text and "M3" not in response.text, route

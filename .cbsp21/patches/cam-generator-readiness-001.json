@@ -6,7 +6,7 @@
   "title": "feat(cam): contain the Stratocaster body route behind a generator-readiness layer",
   "intent": "Containment only. The Stratocaster body route returns 200 with manufacturing G-code while carrying five verified stock-destroying findings, and it is structurally outside the asset-authority gate merged by #380 because that gate resolves a DXF path and this route has none. Introduce the missing middle authority layer -- generator readiness -- and use it to stop the witnessed Strat emission. Repair NOTHING: ST-1..ST-7, LP-2..LP-5, Flying V depth validation and the neck defects are all explicitly out of scope for this increment.",
   "change_type": "feat",
-  "behavior_change": "POST /api/cam/guitar/stratocaster/body/gcode now returns 422 GENERATOR_READINESS_BLOCKED instead of 200 with a .nc download. The gate is the first statement in the handler, so a blocked request performs no project lookup and no design-state parsing. The other three routes are represented in the registry but not blocked: les_paul_body defers to asset authority so #380's DXF_MANUFACTURING_AUTHORITY_BLOCKED refusal reaches the client exactly as before, and flying_v_body and neck are recorded REVIEW_REQUIRED, which is a declared absence of authorization rather than a block. No DXF authority semantics are altered. No generator, geometry, toolpath or G-code content is modified.",
+  "behavior_change": "Every exposed manufacturing route now fails closed. POST /api/cam/guitar/stratocaster/body/gcode, /flying_v/body/gcode and /{model_id}/neck/gcode return 422 GENERATOR_READINESS_BLOCKED instead of a .nc download; the Strat was the witnessed emitter, Flying V and neck are refused because repository evidence is insufficient to qualify them. The gate is the first statement in each handler, so a refused request performs no project lookup and no design-state parsing. les_paul_body defers to asset authority, so #380's DXF_MANUFACTURING_AUTHORITY_BLOCKED refusal reaches the client exactly as before. No DXF authority semantics are altered. No generator, geometry, toolpath or G-code content is modified.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
@@ -23,8 +23,8 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) New module app/cam/generator_readiness.py declaring a readiness state per exposed manufacturing route, with resolve_generator_readiness() and require_generator_readiness(). States are BLOCKED, REVIEW_REQUIRED, GOVERNED_BY_ASSET_AUTHORITY and UNKNOWN. BLOCKED and UNKNOWN stop emission; a missing or renamed record resolves to UNKNOWN so it fails closed. (2) body_gcode_router.py: all four handlers call the gate as their first statement and convert GeneratorReadinessBlocked into a 422 carrying a path-free detail body, mirroring the asset layer's existing as_detail() pattern. (3) A focused test module proving the containment, the fail-closed behaviour, the non-disturbance of #380, and two audit facts that must not drift.",
-    "why": "The Strat route is fail-open today and the audit witnessed five verified S0 findings on it. The asset gate cannot reach it without distorting the substrate merged by #380, because the route presents no DXF to authorize. Source authority, generator readiness and operation preflight are three different questions and collapsing them is how this route ended up outside the first gate.",
+    "what_changed": "(1) New module app/cam/generator_readiness.py declaring a readiness state per exposed manufacturing route, with resolve_generator_readiness() and require_generator_readiness(). States are BLOCKED, REVIEW_REQUIRED, GOVERNED_BY_ASSET_AUTHORITY and UNKNOWN. Every state stops emission except the delegation: a state that permits emission would operationally be an authorization, so REVIEW_REQUIRED refuses too -- it cannot mean both 'evidence is insufficient' and 'carry on emitting'. A missing or renamed record resolves to UNKNOWN and also refuses. (2) body_gcode_router.py: all four handlers call the gate as their first statement and convert GeneratorReadinessBlocked into a 422 carrying a path-free detail body, mirroring the asset layer's existing as_detail() pattern. (3) A focused test module proving the containment, the fail-closed semantics across the whole CAM surface, the non-disturbance of #380, and two audit facts that must not drift.",
+    "why": "The Strat route is fail-open today and the audit witnessed five verified S0 findings on it. The asset gate cannot reach it without distorting the substrate merged by #380, because the route presents no DXF to authorize. Source authority, generator readiness and operation preflight are three different questions and collapsing them is how this route ended up outside the first gate. Only an explicitly established manufacturing authority may permit emission, and this layer expresses no such authority for any route.",
     "why_not_redundant": "No existing mechanism can refuse this route. require_manufacturing_authority resolves a DXF asset and has exactly one caller on main (lespaul_body_generator.py:45); the Strat sources geometry from body_outlines.json plus constants, so there is no path argument to give it. @safety_critical decorates all four routes but only disables broad exception swallowing and re-raises -- it authorizes nothing and validates no emitted motion. tests/test_body_gcode_router_smoke.py asserts only 401 on these routes and asserts the hardcoded literal cam_ready: True, which is a self-declaration rather than a probe. Nothing else would refuse a Strat body request.",
     "what_did_not_change": "instrument_geometry/dxf_authority.py is untouched. No generator, config, outline, toolpath or G-code emission code is modified. app/cam/flying_v/depth_validator.py is untouched and remains unwired -- it is evidence for a future preflight layer, not part of this increment. @safety_critical is neither removed nor redesigned, and the new layer does not depend on it."
   },
@@ -38,9 +38,13 @@
     ],
     "proofs": [
       "Strat route cannot emit: 422 GENERATOR_READINESS_BLOCKED and no G0/G1/M3/M30/G21/G90 token in the response body",
-      "Blocked route performs no project lookup -- the gate precedes _get_project_or_404",
+      "Flying V route refuses while REVIEW_REQUIRED: 422, route flying_v_body",
+      "Neck route refuses while REVIEW_REQUIRED: 422, route neck",
+      "All four exposed routes fail closed -- three at generator readiness, one at asset authority",
+      "Refused route performs no project lookup -- the gate precedes _get_project_or_404",
       "Omitting or renaming a readiness record yields UNKNOWN and still refuses",
       "No qualifying state exists in the enum; a test fails if READY/QUALIFIED/AUTHORIZED/APPROVED is ever added",
+      "The only non-stopping state is GOVERNED_BY_ASSET_AUTHORITY, asserted against _STOPS_EMISSION",
       "Les Paul route still returns DXF_MANUFACTURING_AUTHORITY_BLOCKED, not a readiness code -- readiness does not shadow #380",
       "resolve_manufacturing_authority on the Les Paul asset still reports BLOCKED",
       "generator_readiness imports no instrument_geometry/dxf_authority symbol (asserted over parsed imports, not text)",
@@ -53,19 +57,19 @@
       "path": "services/api/app/cam/generator_readiness.py",
       "intent": "The middle authority layer: may this generator emit manufacturing G-code at all?",
       "risk": "medium",
-      "behavior_change": "New refusal path for routes with no asset to authorize; contains no state that grants authorization"
+      "behavior_change": "New refusal path for routes with no asset to authorize. Contains no state that grants authorization: every state stops emission except the delegation to asset authority."
     },
     {
       "path": "services/api/app/routers/cam/guitar/body_gcode_router.py",
       "intent": "Call the readiness gate first in all four handlers and map its refusal to a 422",
       "risk": "medium",
-      "behavior_change": "Stratocaster body route now refuses; the other three are unchanged in observable behaviour"
+      "behavior_change": "Stratocaster, Flying V and neck routes now refuse with 422 GENERATOR_READINESS_BLOCKED; les_paul_body is unchanged in observable behaviour because it defers to asset authority, which still renders the #380 refusal."
     },
     {
       "path": "services/api/tests/test_generator_readiness.py",
       "intent": "Prove containment, fail-closed semantics, #380 non-disturbance, and pin two audit facts",
       "risk": "low",
-      "behavior_change": "Tests only"
+      "behavior_change": "New refusal path for routes with no asset to authorize. Contains no state that grants authorization: every state stops emission except the delegation to asset authority."
     }
   ],
   "architecture_scan": {
@@ -74,12 +78,13 @@
       "critical": 0,
       "high": 0,
       "medium": 1,
-      "low": 2
+      "low": 3
     },
     "findings": [
       "MEDIUM: this introduces a second refusal mechanism alongside asset authority. That is intentional and was ruled on -- the two answer different questions -- but the risk of drift is real. It is mitigated by keeping the layers import-independent (asserted by test), by giving readiness no state that can authorize, and by having the Les Paul route defer to the asset layer so only one mechanism ever speaks for a DXF-sourced route.",
-      "LOW: REVIEW_REQUIRED does not stop emission in this increment, so Flying V and neck behave exactly as before. This is deliberate -- the order blocked only the Strat and warned against implying all four are blocked -- but it means those two routes remain able to emit while formally unqualified. Flipping them to blocking is a one-line change to _STOPS_EMISSION and is flagged for the owner's decision.",
-      "LOW: the readiness registry is declared in code rather than in a data file. That keeps the mechanism minimal and reviewable in-diff; if readiness later needs to be edited without a deploy it should move to a governed data file, as the DXF catalog registry did."
+      "RESOLVED: an earlier revision of this patch let REVIEW_REQUIRED emit, which made it operationally an authorization and contradicted the rule that this layer cannot say yes. REVIEW_REQUIRED now refuses. The whole CAM surface fails closed and routes are reopened one at a time as evidence is established.",
+      "LOW: the readiness registry is declared in code rather than in a data file. That keeps the mechanism minimal and reviewable in-diff; if readiness later needs to be edited without a deploy it should move to a governed data file, as the DXF catalog registry did.",
+      "LOW: Flying V and neck now refuse where they previously emitted. This is a deliberate availability reduction on two routes that were never qualified for manufacturing, and it is reversible per route by recording established authority -- not by relaxing the layer."
     ]
   }
 }

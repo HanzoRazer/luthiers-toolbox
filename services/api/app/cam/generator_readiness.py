@@ -28,6 +28,13 @@ or ``QUALIFIED`` member: nothing here can authorize manufacturing. It can only
 decline to authorize, or defer to the asset layer. Granting readiness is a
 separate, evidence-backed decision that has not been made for any route.
 
+It follows that this layer is **fail-closed**: every state stops manufacturing
+G-code except ``GOVERNED_BY_ASSET_AUTHORITY``, and that one is a *delegation*
+rather than an authorization -- it says "this layer does not decide; the asset
+layer does", and the asset layer then renders its own verdict. Only an explicitly
+established manufacturing authority may permit emission, and no such authority is
+expressed here.
+
 Evidence: ``LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md``, audited read-only against
 ``origin/main`` ``c7523677``.
 """
@@ -55,7 +62,10 @@ class GeneratorReadiness(str, Enum):
     BLOCKED = "BLOCKED"
 
     #: Repository evidence is insufficient to qualify this generator. This is
-    #: explicitly NOT an authorization -- absence of a finding is not a pass.
+    #: explicitly NOT an authorization -- absence of a finding is not a pass, so
+    #: it stops emission exactly as BLOCKED does. The two differ in meaning, not
+    #: in effect: BLOCKED records witnessed defects, REVIEW_REQUIRED records
+    #: absent evidence.
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
 
     #: Emission for this route is governed upstream by the asset-authority layer
@@ -68,9 +78,17 @@ class GeneratorReadiness(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-#: States that stop emission at this layer. UNKNOWN is here so that deleting or
-#: renaming a record fails closed rather than silently opening a route.
-_STOPS_EMISSION = frozenset({GeneratorReadiness.BLOCKED, GeneratorReadiness.UNKNOWN})
+#: States that stop emission at this layer -- which is every state except the
+#: delegation. A state that permits emission is operationally a "yes", whatever
+#: the enum calls it, so REVIEW_REQUIRED stops emission too: it cannot mean both
+#: "evidence is insufficient" and "carry on emitting manufacturing G-code".
+#: UNKNOWN is here so that deleting or renaming a record fails closed rather than
+#: silently opening a route.
+_STOPS_EMISSION = frozenset({
+    GeneratorReadiness.BLOCKED,
+    GeneratorReadiness.REVIEW_REQUIRED,
+    GeneratorReadiness.UNKNOWN,
+})
 
 
 @dataclass(frozen=True)
@@ -164,7 +182,7 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "for manufacturing. It emits cavities only and no body perimeter, so it "
             "cannot sever a part; its open exposure is cavity depth and placement. A "
             "depth validator for exactly that exposure exists and is not wired into "
-            "the emission path. Recorded as unqualified, not as authorized."
+            "the emission path. Recorded as unqualified, and therefore refused."
         ),
         exit_condition=(
             "Depth and placement validated on the emission path, then a readiness "
@@ -182,7 +200,7 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "for manufacturing. Distinct from the separately tracked neck path that "
             "carries a standing rapids-at-cutting-depth finding; that path is on "
             "another router and is not governed by this record. Recorded as "
-            "unqualified, not as authorized."
+            "unqualified, and therefore refused."
         ),
         exit_condition=(
             "Surveyed for manufacturing-critical defects, then a readiness decision "
