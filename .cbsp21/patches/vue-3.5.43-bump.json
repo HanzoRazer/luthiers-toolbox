@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_3_5_43_BUMP",
+  "title": "build(deps): bump vue from 3.5.41 to 3.5.43",
+  "intent": "Dependabot patch currency for packages/client production dependency vue (Vue 3 core). No security advisory cited in the PR body.",
+  "change_type": "chore",
+  "behavior_change": "none beyond routine Vue patch release. Lockfile audited against merge-base ad26c801 by enumerating packages/client/package-lock.json `packages` entries (412 before, 412 after; added=0, removed=0). Ten entries changed version, all in the Vue 3.5.x monorepo set at the same patch: vue and @vue/compiler-core, compiler-dom, compiler-sfc, compiler-ssr, reactivity, runtime-core, runtime-dom, server-renderer, shared — each 3.5.41 -> 3.5.43. No unrelated declared dependency moved.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-3.5.43-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-3.5.43-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json: vue ^3.5.41 -> ^3.5.43. Lockfile resolves the vue package family to 3.5.43 in lockstep.",
+    "why_not_redundant": "Dependabot PR #394; per-PR manifest required (CBSP21-NOBORROW-001)."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile enumeration vs merge-base ad26c801: 412 -> 412 entries, version-changed=10 (vue 3.5.x family only), added=0, removed=0",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/vue-3.5.43-bump.json packages/client/package.json packages/client/package-lock.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "CI build-and-test, lint-build, API Tests, and Railway PR deploy passed before manifest commit"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared production dependency patch bump for vue.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": ["git diff origin/main...HEAD -- packages/client/package.json"]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved vue 3.5.43 monorepo packages.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "none - vue family 3.5.41 -> 3.5.43 only",
+      "verification": ["lockfile entry enumeration vs merge-base ad26c801"]
+    },
+    {
+      "path": ".cbsp21/patches/vue-3.5.43-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for Dependabot PR #394.",
+      "scan_targets": [".cbsp21/patches/vue-3.5.43-bump.json"],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-21-VUE-PATCH",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Patch-level Vue core bump in client package only. No API, RMOS, or production route changes in this PR.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
