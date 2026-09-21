@@ -56,12 +56,21 @@ def test_the_strat_body_generator_is_blocked():
     assert record.exit_condition, "a blocked route must state how it becomes unblocked"
 
 
-def test_all_four_exposed_routes_are_represented():
+def test_all_exposed_routes_are_represented():
+    """Every G-code route on the guitar surface has a readiness record.
+
+    Seven, not the original four: the three acoustic routes were gated on the
+    2026-09-21 owner ruling after the coverage guard was repaired and showed
+    them emitting .nc downloads outside the layer.
+    """
     assert set(GENERATOR_READINESS) == {
         "stratocaster_body",
         "les_paul_body",
         "flying_v_body",
         "neck",
+        "acoustic_body",
+        "acoustic_soundhole",
+        "acoustic_binding",
     }
 
 
@@ -347,25 +356,19 @@ def test_neck_route_refuses_while_review_required(authenticated):
         assert token not in response.text, f"G-code token {token!r} escaped"
 
 
-# Routes under the guitar prefix that emit G-code but are NOT behind generator
-# readiness. Declared explicitly so the gap is visible in the inventory rather
-# than absent from it. See test_declared_gaps_are_not_silently_gated below.
-#
-# CAM-CONTAIN-001 scoped itself to the four project-driven model routes. These
-# three take request-body parameters and call an acoustic generator directly;
-# classifying them is a behaviour change (they currently return .nc downloads)
-# and needs its own authorization, so this PR records rather than closes it.
-UNGATED_GUITAR_GCODE_ROUTES = {
-    "acoustic/{style}/body/gcode",
-    "acoustic/{style}/soundhole/gcode",
-    "acoustic/{style}/binding/gcode",
-}
+# Every G-code route under the guitar prefix is behind generator readiness.
+# The set is empty on purpose: an entry here is a declared hole in containment,
+# and there are none. test_declared_gaps_are_not_silently_gated keeps it honest.
+UNGATED_GUITAR_GCODE_ROUTES: set = set()
 
 GATED_GUITAR_GCODE_ROUTES = {
     "stratocaster/body/gcode",
     "les_paul/body/gcode",
     "flying_v/body/gcode",
     "{model_id}/neck/gcode",
+    "acoustic/{style}/body/gcode",
+    "acoustic/{style}/soundhole/gcode",
+    "acoustic/{style}/binding/gcode",
 }
 
 
@@ -412,7 +415,8 @@ def test_current_guitar_manufacturing_routes_have_readiness_records():
         "with a reason) before updating this inventory"
     )
     assert set(GENERATOR_READINESS) == {
-        "stratocaster_body", "les_paul_body", "flying_v_body", "neck"
+        "stratocaster_body", "les_paul_body", "flying_v_body", "neck",
+        "acoustic_body", "acoustic_soundhole", "acoustic_binding",
     }
 
 
@@ -427,6 +431,10 @@ def test_declared_gaps_are_not_silently_gated():
         "a declared-ungated route vanished from the surface; remove it from "
         "UNGATED_GUITAR_GCODE_ROUTES in the same change"
     )
+    assert not UNGATED_GUITAR_GCODE_ROUTES, (
+        "containment now covers every guitar G-code route; adding an entry here "
+        "reopens a hole and must be justified in the same change"
+    )
     assert GATED_GUITAR_GCODE_ROUTES.isdisjoint(UNGATED_GUITAR_GCODE_ROUTES)
     assert not (UNGATED_GUITAR_GCODE_ROUTES & set(GENERATOR_READINESS)), (
         "an acoustic route is now in the readiness registry; move it out of "
@@ -438,7 +446,10 @@ def test_status_does_not_advertise_contained_routes_cam_ready(authenticated):
     response = authenticated.get("/api/cam/guitar/status")
     assert response.status_code == 200, response.text
     endpoints = response.json()["gen4_endpoints"]
-    assert set(endpoints) == {"stratocaster", "les_paul", "flying_v", "neck"}
+    assert set(endpoints) == {
+        "stratocaster", "les_paul", "flying_v", "neck",
+        "acoustic_body", "acoustic_soundhole", "acoustic_binding",
+    }
     assert all(item["cam_ready"] is False for item in endpoints.values())
 
 

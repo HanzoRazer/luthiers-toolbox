@@ -192,6 +192,73 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md FV-1, FV-2, FV-4",
         ),
     ),
+    "acoustic_body": GeneratorReadinessRecord(
+        route="acoustic_body",
+        readiness=GeneratorReadiness.BLOCKED,
+        reason=(
+            "The emitted holding-tab geometry does not follow the requested tab "
+            "count, on a full-depth perimeter pass -- the operation that decides "
+            "whether the part stays in the blank. Measured on DREADNOUGHT at "
+            "tool 6.0mm, depth 12.0mm, stepdown 3.0mm: tab_count 2/4/6 emit 7/13/19 "
+            "lifts to the tab plane, but tab_count 8, 12, 16 and 24 all collapse to "
+            "4 lifts in a 95-line program, while the program header still advertises "
+            "the number requested -- e.g. '( Tabs: 16 x 15.0mm wide x 3.0mm tall )' "
+            "over 4 actual lifts. The route's own default is tab_count=8, so the "
+            "default request is already in the collapsed regime. Distinct from the "
+            "Stratocaster finding ST-3: here the tab lifts are real geometry, they "
+            "just do not correspond to the parameter. Recorded as unqualified, and "
+            "therefore refused."
+        ),
+        exit_condition=(
+            "Emitted tab geometry proven to track tab_count across the parameter "
+            "range by a test asserting lift events in the emitted program, then a "
+            "readiness decision recorded on evidence."
+        ),
+        evidence=(
+            "CAM-CONTAIN-001 acoustic survey 2026-09-21, reproduced against "
+            "AcousticBodyGenerator.generate_perimeter_gcode",
+        ),
+    ),
+    "acoustic_soundhole": GeneratorReadinessRecord(
+        route="acoustic_soundhole",
+        readiness=GeneratorReadiness.REVIEW_REQUIRED,
+        reason=(
+            "Route is not covered by asset authority and has no evidence qualifying "
+            "it for manufacturing. It emits no perimeter and no holding tabs, so it "
+            "cannot sever the body; its open exposure is soundhole diameter and "
+            "depth placement, which has not been surveyed. It shares a generator "
+            "with the body perimeter route, which is BLOCKED. Recorded as "
+            "unqualified, and therefore refused."
+        ),
+        exit_condition=(
+            "Surveyed for manufacturing-critical defects, then a readiness decision "
+            "recorded on evidence."
+        ),
+        evidence=(
+            "CAM-CONTAIN-001 acoustic survey 2026-09-21: no tab logic in "
+            "generate_soundhole_gcode; not previously surveyed",
+        ),
+    ),
+    "acoustic_binding": GeneratorReadinessRecord(
+        route="acoustic_binding",
+        readiness=GeneratorReadiness.REVIEW_REQUIRED,
+        reason=(
+            "Route is not covered by asset authority and has no evidence qualifying "
+            "it for manufacturing. It emits a channel rather than a perimeter and "
+            "carries no holding tabs, so it cannot sever the body; its open exposure "
+            "is channel depth and offset against a binding stock dimension, which "
+            "has not been surveyed. It shares a generator with the body perimeter "
+            "route, which is BLOCKED. Recorded as unqualified, and therefore refused."
+        ),
+        exit_condition=(
+            "Surveyed for manufacturing-critical defects, then a readiness decision "
+            "recorded on evidence."
+        ),
+        evidence=(
+            "CAM-CONTAIN-001 acoustic survey 2026-09-21: no tab logic in "
+            "generate_binding_channel_gcode; not previously surveyed",
+        ),
+    ),
     "neck": GeneratorReadinessRecord(
         route="neck",
         readiness=GeneratorReadiness.REVIEW_REQUIRED,

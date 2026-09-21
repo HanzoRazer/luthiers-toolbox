@@ -333,6 +333,24 @@ def body_gcode_status() -> dict:
                 "cam_ready": False,
                 "note": "Generator readiness REVIEW_REQUIRED; no manufacturing emission permitted"
             },
+            "acoustic_body": {
+                "endpoint": "/acoustic/{style}/body/gcode",
+                "from_project": False,
+                "cam_ready": False,
+                "note": "Generator readiness BLOCKED; emitted holding tabs do not track tab_count"
+            },
+            "acoustic_soundhole": {
+                "endpoint": "/acoustic/{style}/soundhole/gcode",
+                "from_project": False,
+                "cam_ready": False,
+                "note": "Generator readiness REVIEW_REQUIRED; no manufacturing emission permitted"
+            },
+            "acoustic_binding": {
+                "endpoint": "/acoustic/{style}/binding/gcode",
+                "from_project": False,
+                "cam_ready": False,
+                "note": "Generator readiness REVIEW_REQUIRED; no manufacturing emission permitted"
+            },
         },
         "gen4_status": "complete",
         "requires_auth": True,
