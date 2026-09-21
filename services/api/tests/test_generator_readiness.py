@@ -269,6 +269,19 @@ def authenticated(client, monkeypatch):
     app.dependency_overrides.pop(get_current_principal, None)
 
 
+def test_shared_project_lookup_helper_executes_without_missing_imports(monkeypatch):
+    """Exercise the real shared helper so router monkeypatches cannot hide import drift."""
+    from app.routers import _project_gcode_common as common
+
+    project_id = uuid.uuid4()
+    owner_id = uuid.uuid4()
+    project = type("ProjectStub", (), {"archived_at": None, "owner_id": owner_id})()
+    db = type("DbStub", (), {"get": lambda self, model, pid: project})()
+    principal = type("PrincipalStub", (), {"user_id": owner_id})()
+
+    assert common._get_project_or_404(str(project_id), principal, db) is project
+
+
 def test_strat_route_cannot_emit_gcode(authenticated):
     """The witnessed emission is stopped."""
     response = authenticated.post(f"{STRAT_ROUTE}?project_id={uuid.uuid4()}")
