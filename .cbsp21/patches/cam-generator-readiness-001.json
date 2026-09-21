@@ -25,7 +25,8 @@
       "services/api/app/routers/cam/guitar/__init__.py",
       "services/api/app/routers/cam/guitar/body_gcode_router.py",
       "services/api/app/routers/neck/gcode_router.py",
-      "services/api/tests/test_generator_readiness.py"
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_body_gcode_router_smoke.py"
     ]
   },
   "diff_articulation": {
@@ -117,10 +118,10 @@
       "behavior_change": "None -- moved verbatim; not a router module"
     },
     {
-      "path": "services/api/app/routers/cam/guitar/neck_gcode_router.py",
-      "intent": "DELETED - superseded by hosting the route in the existing neck router so no new router module is created",
+      "path": "services/api/tests/test_body_gcode_router_smoke.py",
+      "intent": "Align the existing body-router smoke test with containment: the Stratocaster route now refuses at the readiness layer before project lookup, so the smoke assertion is updated to the refusal rather than a 200.",
       "risk": "low",
-      "behavior_change": "None - the route it briefly held now lives in routers/neck/gcode_router.py at the same public path"
+      "behavior_change": "None. Test-only alignment with the gate this patch adds."
     }
   ],
   "architecture_scan": {

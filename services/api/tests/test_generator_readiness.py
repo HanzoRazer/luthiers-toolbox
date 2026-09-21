@@ -347,31 +347,91 @@ def test_neck_route_refuses_while_review_required(authenticated):
         assert token not in response.text, f"G-code token {token!r} escaped"
 
 
-def test_current_guitar_manufacturing_routes_have_readiness_records():
-    """Pin coverage so a new guitar manufacturing route cannot silently bypass readiness."""
+# Routes under the guitar prefix that emit G-code but are NOT behind generator
+# readiness. Declared explicitly so the gap is visible in the inventory rather
+# than absent from it. See test_declared_gaps_are_not_silently_gated below.
+#
+# CAM-CONTAIN-001 scoped itself to the four project-driven model routes. These
+# three take request-body parameters and call an acoustic generator directly;
+# classifying them is a behaviour change (they currently return .nc downloads)
+# and needs its own authorization, so this PR records rather than closes it.
+UNGATED_GUITAR_GCODE_ROUTES = {
+    "acoustic/{style}/body/gcode",
+    "acoustic/{style}/soundhole/gcode",
+    "acoustic/{style}/binding/gcode",
+}
+
+GATED_GUITAR_GCODE_ROUTES = {
+    "stratocaster/body/gcode",
+    "les_paul/body/gcode",
+    "flying_v/body/gcode",
+    "{model_id}/neck/gcode",
+}
+
+
+def _discover_guitar_gcode_routes() -> set:
+    """Every POST /...gcode path under the guitar prefix, as the live app serves it.
+
+    Enumerated from the OpenAPI schema rather than ``app.routes``. Starlette 0.49
+    stopped flattening included routers into ``app.routes`` -- they appear as
+    ``_IncludedRouter`` proxies with no ``.path`` -- so walking ``app.routes``
+    raised AttributeError, and merely guarding with ``hasattr`` would have made
+    this inventory silently EMPTY. The schema is the surface clients actually see.
+    """
     from app.main import app
 
     prefix = "/api/cam/guitar/"
-    discovered = {
-        route.path[len(prefix):]
-        for route in app.routes
-        if route.path.startswith(prefix)
-        and "POST" in getattr(route, "methods", set())
-        and route.path.endswith("/gcode")
+    schema = app.openapi()
+    return {
+        path[len(prefix):]
+        for path, operations in schema["paths"].items()
+        if path.startswith(prefix)
+        and "post" in operations
+        and path.endswith("/gcode")
     }
-    expected_paths = {
-        "stratocaster/body/gcode",
-        "les_paul/body/gcode",
-        "flying_v/body/gcode",
-        "{model_id}/neck/gcode",
-    }
+
+
+def test_route_discovery_is_not_vacuous():
+    """The guard below is worthless if discovery returns nothing. Prove it doesn't."""
+    discovered = _discover_guitar_gcode_routes()
+    assert discovered, (
+        "route discovery found no guitar G-code routes at all -- the enumeration "
+        "is broken, not the surface; a coverage guard that cannot see the routes "
+        "cannot fail on them"
+    )
+    assert len(discovered) >= len(GATED_GUITAR_GCODE_ROUTES)
+
+
+def test_current_guitar_manufacturing_routes_have_readiness_records():
+    """Pin coverage so a new guitar manufacturing route cannot silently bypass readiness."""
+    discovered = _discover_guitar_gcode_routes()
+    expected_paths = GATED_GUITAR_GCODE_ROUTES | UNGATED_GUITAR_GCODE_ROUTES
     assert discovered == expected_paths, (
         "guitar manufacturing route surface changed; classify every new/removed "
-        "route in generator readiness before updating this inventory"
+        "route in generator readiness (or add it to UNGATED_GUITAR_GCODE_ROUTES "
+        "with a reason) before updating this inventory"
     )
     assert set(GENERATOR_READINESS) == {
         "stratocaster_body", "les_paul_body", "flying_v_body", "neck"
     }
+
+
+def test_declared_gaps_are_not_silently_gated():
+    """The declared gaps must stay declared: absent from the registry, present in the surface.
+
+    If someone later gates an acoustic route, this fails and forces the inventory
+    to be updated in the same change -- which is the point of declaring the gap.
+    """
+    discovered = _discover_guitar_gcode_routes()
+    assert UNGATED_GUITAR_GCODE_ROUTES <= discovered, (
+        "a declared-ungated route vanished from the surface; remove it from "
+        "UNGATED_GUITAR_GCODE_ROUTES in the same change"
+    )
+    assert GATED_GUITAR_GCODE_ROUTES.isdisjoint(UNGATED_GUITAR_GCODE_ROUTES)
+    assert not (UNGATED_GUITAR_GCODE_ROUTES & set(GENERATOR_READINESS)), (
+        "an acoustic route is now in the readiness registry; move it out of "
+        "UNGATED_GUITAR_GCODE_ROUTES and into GATED_GUITAR_GCODE_ROUTES"
+    )
 
 
 def test_status_does_not_advertise_contained_routes_cam_ready(authenticated):

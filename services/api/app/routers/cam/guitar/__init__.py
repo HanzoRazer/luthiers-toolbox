@@ -23,7 +23,7 @@ GEN-4 Body G-code (project-driven):
   - /stratocaster/body/gcode - Strat body from project
   - /les_paul/body/gcode     - LP body from project
   - /flying_v/body/gcode     - Flying V from project
-  - /{model_id}/neck/gcode   - Neck G-code from project (neck_gcode_router.py)
+  - /{model_id}/neck/gcode   - Neck G-code from project (app/routers/neck/gcode_router.py)
 
 GEN-6 Acoustic CAM (/acoustic/...):
   - /acoustic/styles                    - List available acoustic styles
