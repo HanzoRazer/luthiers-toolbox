@@ -33,7 +33,8 @@ def test_body_gcode_status_endpoint_exists(client):
     # Verify structure
     strat = data["gen4_endpoints"]["stratocaster"]
     assert strat["endpoint"] == "/stratocaster/body/gcode"
-    assert strat["cam_ready"] is True
+    assert strat["cam_ready"] is False
+    assert "BLOCKED" in strat["note"]
 
 
 def test_stratocaster_body_gcode_requires_auth(client):

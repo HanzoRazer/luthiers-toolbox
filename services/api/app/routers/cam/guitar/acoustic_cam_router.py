@@ -27,6 +27,7 @@ from ....generators.acoustic_body_generator import (
 )
 
 from app.core.safety import safety_critical
+from ..._project_gcode_common import _readiness_gate
 
 router = APIRouter(tags=["Acoustic", "CAM", "GEN-6"])
 
@@ -201,6 +202,7 @@ def generate_body_perimeter(
 
     Includes holding tabs for workholding.
     """
+    _readiness_gate("acoustic_body")
     style_enum = _validate_style(style)
     generator = _create_generator(style_enum, request.scale, request.machine)
 
@@ -243,6 +245,7 @@ def generate_soundhole(
 
     Creates circular soundhole cut through guitar top.
     """
+    _readiness_gate("acoustic_soundhole")
     style_enum = _validate_style(style)
     generator = _create_generator(style_enum, request.scale, request.machine)
     generator.soundhole_diameter_mm = request.soundhole_diameter_mm
@@ -282,6 +285,7 @@ def generate_binding_channel(
 
     Creates ledge around body perimeter for binding strip.
     """
+    _readiness_gate("acoustic_binding")
     style_enum = _validate_style(style)
     generator = _create_generator(style_enum, request.scale, request.machine)
 

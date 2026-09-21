@@ -1,0 +1,168 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CAM_GENERATOR_READINESS_001_CONTAINMENT",
+  "title": "feat(cam): contain the Stratocaster body route behind a generator-readiness layer",
+  "intent": "Containment only. The Stratocaster body route returns 200 with manufacturing G-code while carrying five verified stock-destroying findings, and it is structurally outside the asset-authority gate merged by #380 because that gate resolves a DXF path and this route has none. Introduce the missing middle authority layer -- generator readiness -- and use it to stop the witnessed Strat emission. Repair NOTHING: ST-1..ST-7, LP-2..LP-5, Flying V depth validation and the neck defects are all explicitly out of scope for this increment. Review follow-up: restore missing uuid/Optional imports in the extracted shared helper, directly exercise that helper in tests, and align the status endpoint so contained/delegated routes are not advertised cam_ready=true. Final review follow-up: align the pre-existing status smoke test with the contained status contract and add a live-app route inventory guard so future guitar G-code routes cannot appear without an explicit readiness-classification decision. Owner ruling 2026-09-21: gate the acoustic routes as well. Repairing the route-coverage guard showed three acoustic G-code routes inside the contained prefix emitting .nc downloads outside the readiness layer; all three are now classified and gated, so containment covers the whole guitar G-code surface and the declared-gap set is empty. Acoustic refusal is now proven by committed tests rather than by hand: each of the three routes is asserted to refuse with GENERATOR_READINESS_BLOCKED, to return no program payload, and to run the gate before generator construction. Two open containment findings are recorded in the module docstring rather than acted on: CF-1, the neck surface is two code paths and only the gated one is a generator-less handler while the real NeckGCodeGenerator sits behind two ungated unauthenticated endpoints; CF-2, enforcement is per handler across independently registered route families, so the next increment should inventory every G-code-producing endpoint application-wide. The combined test file reached 572 lines and tripped the 500-line file-size ratchet, so it is split along the boundary the reviewer had already suggested -- policy/state model in test_generator_readiness.py (224 lines), live-route behaviour in test_generator_readiness_routes.py (363 lines). The baseline is NOT raised.",
+  "change_type": "feat",
+  "behavior_change": "YES, and wider than the original patch. In addition to the Stratocaster, Flying V and neck routes, the three acoustic routes POST /api/cam/guitar/acoustic/{style}/body/gcode, /soundhole/gcode and /binding/gcode now refuse with 422 GENERATOR_READINESS_BLOCKED where they previously returned .nc file downloads. acoustic_body is BLOCKED on a measured defect; acoustic_soundhole and acoustic_binding are REVIEW_REQUIRED as unsurveyed. The status endpoint advertises all three as cam_ready false. Les Paul behaviour is unchanged and still delegates to DXF asset authority.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cam-generator-readiness-001.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/_project_gcode_common.py",
+      "services/api/app/routers/cam/guitar/__init__.py",
+      "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/app/routers/neck/gcode_router.py",
+      "services/api/tests/test_generator_readiness.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cam-generator-readiness-001.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/_project_gcode_common.py",
+      "services/api/app/routers/cam/guitar/__init__.py",
+      "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/app/routers/neck/gcode_router.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_body_gcode_router_smoke.py",
+      "services/api/app/routers/cam/guitar/acoustic_cam_router.py",
+      "services/api/tests/test_generator_readiness_routes.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) New module app/cam/generator_readiness.py declaring a readiness state per exposed manufacturing route, with resolve_generator_readiness() and require_generator_readiness(). States are BLOCKED, REVIEW_REQUIRED, GOVERNED_BY_ASSET_AUTHORITY and UNKNOWN. Every state stops emission except the delegation: a state that permits emission would operationally be an authorization, so REVIEW_REQUIRED refuses too -- it cannot mean both 'evidence is insufficient' and 'carry on emitting'. A missing or renamed record resolves to UNKNOWN and also refuses. (2) body_gcode_router.py: the three body handlers and relocated neck handler call the gate as their first statement and convert GeneratorReadinessBlocked into a 422 carrying a path-free detail body, mirroring the asset layer's existing as_detail() pattern. (3) A focused test module proving the containment, the fail-closed semantics across the whole CAM surface, the non-disturbance of #380, and two audit facts that must not drift. (4) STRUCTURAL: the neck route moves out of body_gcode_router.py into the existing app/routers/neck/gcode_router.py, exported there as a second APIRouter named guitar_neck_router and mounted by routers/cam/guitar/__init__ so the public path /api/cam/guitar/{model_id}/neck/gcode is unchanged. The five helpers both routes need move to app/routers/_project_gcode_common.py, above both packages, so neither router package imports the other. No new router module is created; the router-file count stays at 253. 2026-09-21: the route-coverage guard was repaired (it crashed on Starlette 0.49's _IncludedRouter and would have discovered zero routes with a naive hasattr guard), which revealed seven G-code routes under the guitar prefix rather than four. On the owner ruling, the three acoustic routes are now gated: GENERATOR_READINESS gains acoustic_body (BLOCKED), acoustic_soundhole and acoustic_binding (REVIEW_REQUIRED); acoustic_cam_router calls _readiness_gate before constructing a generator in each of the three handlers; the status endpoint lists them as cam_ready false; and the test inventory moves them from the declared-gap set into the gated set, leaving UNGATED_GUITAR_GCODE_ROUTES empty with a test asserting it stays empty. Tests added: test_acoustic_route_refuses_generation (parametrised over the three routes, asserting code, route key, readiness state, reason and exit_condition), test_acoustic_refusal_emits_no_manufacturing_content (structural -- JSON refusal, no attachment, no gcode/nc key, no G-code motion line -- deliberately not a substring scan, because the acoustic_body reason quotes the offending program header as evidence), and test_acoustic_routes_refuse_before_the_generator_is_constructed (source-level: the gate precedes _create_generator in all three handlers). The seven-route non-vacuous inventory test is unchanged and retained. 2026-09-21: split tests/test_generator_readiness.py at its 'Through the live route' banner into a 224-line policy file and a 363-line route file, after the acoustic refusal tests pushed the combined file to 572 lines and debt-gates failed the 500-line ratchet. The shared route constants and the acoustic request body move to the route file; the policy file loses three imports that only the moved tests used. Same 33 tests, both files under the threshold, and app.ci.check_file_sizes passes locally. The baseline file is untouched.",
+    "why": "The Strat route is fail-open today and the audit witnessed five verified S0 findings on it. The asset gate cannot reach it without distorting the substrate merged by #380, because the route presents no DXF to authorize. Source authority, generator readiness and operation preflight are three different questions and collapsing them is how this route ended up outside the first gate. Only an explicitly established manufacturing authority may permit emission, and this layer expresses no such authority for any route.",
+    "why_not_redundant": "No existing mechanism can refuse this route. require_manufacturing_authority resolves a DXF asset and has exactly one caller on main (lespaul_body_generator.py:45); the Strat sources geometry from body_outlines.json plus constants, so there is no path argument to give it. @safety_critical decorates all four routes but only disables broad exception swallowing and re-raises -- it authorizes nothing and validates no emitted motion. tests/test_body_gcode_router_smoke.py asserts only 401 on these routes and asserts the hardcoded literal cam_ready: True, which is a self-declaration rather than a probe. Nothing else would refuse a Strat body request. The acoustic gating is not covered by any other manifest: those routes were outside CAM-CONTAIN-001's original four-route scope and outside the asset-authority substrate, so nothing else would have refused them.",
+    "what_did_not_change": "instrument_geometry/dxf_authority.py is untouched. No generator, config, outline, toolpath or G-code emission code is modified. app/cam/flying_v/depth_validator.py is untouched and remains unwired -- it is evidence for a future preflight layer, not part of this increment. @safety_critical is neither removed nor redesigned, and the new layer does not depend on it. No governance baseline, large-file count target or technical-debt ratchet was edited. The extraction preserves the neck route path, contract and fail-closed behaviour, and does not touch the separately tracked cam_workspace_router neck path that carries the standing rapids-at-cutting-depth finding.",
+    "why_structural_extraction": "Adding the containment gate pushed body_gcode_router.py from exactly 500 lines to 532 -- a NEW violation in four mechanisms (ci/file_size_gate.py, app/ci/check_file_sizes.py, test_large_files_count at 100 > target 99, and the API lanes that gate on them). The first correction extracted the neck route into a new module, which satisfied those but tripped a FIFTH: ci/router_count_gate.py, 254 > 253 router files, whose instruction is 'consolidate routers before adding new ones'. The two ratchets are not contradictory once ownership is correct: the file-size gate said the body router was too large, and the router-count gate said do not solve that by inventing another router when a neck router already exists. So the route is hosted in the EXISTING app/routers/neck/gcode_router.py and mounted by the guitar package at its unchanged public path. NO governance baseline, large-file count target, technical-debt ratchet or router-count baseline was modified."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && pytest tests/test_generator_readiness.py tests/test_lespaul_manufacturing_authority.py tests/test_body_gcode_router_smoke.py tests/test_flying_v_cam.py tests/test_technical_debt_gates.py -q --no-cov -p no:logging -> 60 passed, 1 skipped",
+      "cd services/api && pytest -q --no-cov -p no:logging  (FULL API lane)",
+      "python ci/file_size_gate.py -> OK, 108 files at or below baseline",
+      "python ci/router_count_gate.py -> OK, router files 253 = baseline",
+      "cd services/api && python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
+      "large-file count -> 99 (target <= 99)",
+      "python scripts/ci/check_cbsp21_patch_input.py",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only $(git merge-base origin/main HEAD) HEAD)",
+      "python scripts/governance/check_all.py --tier precommit",
+      "Measured the acoustic_body evidence before writing the record: AcousticBodyGenerator.generate_perimeter_gcode(DREADNOUGHT, tool 6.0, depth 12.0, stepdown 3.0) emits lifts to the tab plane Z=-9.0 counting 7/13/19 for tab_count 2/4/6, but 4 lifts in a 95-line program for tab_count 8, 12, 16 and 24, while the header still prints the requested count, e.g. '( Tabs: 16 x 15.0mm wide x 3.0mm tall )'. The route default is tab_count=8, already in the collapsed regime.",
+      "Confirmed the acoustic tab lifts are real geometry, unlike Stratocaster ST-3: Z=-9.0 appears in the emitted program. The defect is that the geometry does not track the parameter.",
+      "Confirmed generate_soundhole_gcode and generate_binding_channel_gcode contain no tab logic and emit no perimeter, so they cannot sever the body; recorded REVIEW_REQUIRED as unsurveyed rather than BLOCKED on an invented finding.",
+      "TestClient against app.main: all three acoustic routes now return 422 with detail.code GENERATOR_READINESS_BLOCKED.",
+      "pytest tests/test_generator_readiness.py -> 26 passed; with test_body_gcode_router_smoke, test_openapi, test_safety_critical_annotation_binding and test_acoustic_body_generator_smoke -> 85 passed.",
+      "pytest tests/test_generator_readiness.py -> 33 passed (26 before the acoustic refusal tests).",
+      "Confirmed the leak guard can fail: its regex detects 'G0 X0 Y0' and 'M3 S18000' and does not match prose mentioning G0 inline. A first draft of that regex was written with a literal backspace byte instead of \\b, which made it unable to match anything; caught by byte inspection and repaired.",
+      "CF-1 confirmed by inspect.getsource on both endpoints: the gated guitar neck route contains 35 gcode_lines.append calls and no NeckGCodeGenerator reference; /api/neck/gcode/generate constructs NeckGCodeGenerator; /api/neck/gcode/download delegates to it. Neither legacy endpoint calls _readiness_gate.",
+      "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK: No files exceed 500 lines (after the split; before it, tests/test_generator_readiness.py was 572 lines, +72 over threshold, which is what debt-gates failed on).",
+      "pytest on both split files -> 33 passed, the same count as the single file before the split, so no test was lost or silently deselected.",
+      "ruff --select F,E9 on both files -> clean: no undefined names after moving constants across."
+    ],
+    "proofs": [
+      "Strat route cannot emit: 422 GENERATOR_READINESS_BLOCKED and no G0/G1/M3/M30/G21/G90 token in the response body",
+      "Flying V route refuses while REVIEW_REQUIRED: 422, route flying_v_body",
+      "Neck route refuses while REVIEW_REQUIRED: 422, route neck",
+      "All four exposed routes fail closed -- three at generator readiness, one at asset authority",
+      "Refused route performs no project lookup -- the gate precedes _get_project_or_404",
+      "Omitting or renaming a readiness record yields UNKNOWN and still refuses",
+      "No qualifying state exists in the enum; a test fails if READY/QUALIFIED/AUTHORIZED/APPROVED is ever added",
+      "The only non-stopping state is GOVERNED_BY_ASSET_AUTHORITY, asserted against _STOPS_EMISSION",
+      "Les Paul route still returns DXF_MANUFACTURING_AUTHORITY_BLOCKED, not a readiness code -- readiness does not shadow #380",
+      "resolve_manufacturing_authority on the Les Paul asset still reports BLOCKED",
+      "generator_readiness imports no instrument_geometry/dxf_authority symbol (asserted over parsed imports, not text)",
+      "no Flying V depth validator symbol appears in the emission path module",
+      "Shared _get_project_or_404 executes directly with UUID parsing and Optional annotation imports present; router monkeypatches cannot hide import drift",
+      "GET /api/cam/guitar/status advertises cam_ready=false for all four contained/delegated routes",
+      "Guitar manufacturing-route inventory is enumerated from the live FastAPI app and pinned to the four readiness-classified routes, so route-surface drift fails the containment suite"
+    ],
+    "hardware": "No physical-machine execution. No G-code was sent anywhere. The standing DO-NOT-CUT order is unaffected by this change.",
+    "file_sizes": {
+      "body_gcode_router.py": "521 -> 341 lines (was exactly 500 on main; now well clear)",
+      "_gcode_common.py": "106 lines (new)",
+      "large_file_count": "99, unchanged from main; no ratchet raised"
+    },
+    "counts": {
+      "body_gcode_router.py": "521 -> 341 lines",
+      "routers/neck/gcode_router.py": "163 -> 295 lines (hosts the relocated route)",
+      "routers/_project_gcode_common.py": "106 lines (new, not a router module)",
+      "router_files": "253 = baseline, no new router module created",
+      "large_file_count": "99, unchanged",
+      "route_decorators": "1228 = baseline. The relocated route is defined inside a small factory whose local APIRouter is named 'router', which is the convention ci/router_count_gate.py relies on. An earlier revision named the object guitar_neck_router and the count read 1227: that was a FALSE NEGATIVE, not an improvement -- the route existed but had become invisible to the governance counter, which is worse than a baseline bump because nothing flags it. Note the gate is a plain substring scan over file contents, so it counts decorators written in prose too: a docstring that mentioned the decorator literal briefly inflated the count to 1229."
+    }
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/generator_readiness.py",
+      "intent": "The middle authority layer: may this generator emit manufacturing G-code at all?",
+      "risk": "medium",
+      "behavior_change": "New refusal path for routes with no asset to authorize. Contains no state that grants authorization: every state stops emission except the delegation to asset authority."
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "intent": "Call the readiness gate first in all four handlers and map its refusal to a 422",
+      "risk": "medium",
+      "behavior_change": "Stratocaster, Flying V and neck routes now refuse with 422 GENERATOR_READINESS_BLOCKED; les_paul_body is unchanged in observable behaviour because it defers to asset authority, which still renders the #380 refusal."
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness.py",
+      "intent": "Prove containment, fail-closed semantics, #380 non-disturbance, and pin two audit facts",
+      "risk": "low",
+      "behavior_change": "New refusal path for routes with no asset to authorize. Contains no state that grants authorization: every state stops emission except the delegation to asset authority."
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/__init__.py",
+      "intent": "Mount the neck router before the {model_id} catch-all so its path is unchanged",
+      "risk": "low",
+      "behavior_change": "None -- same routes served"
+    },
+    {
+      "path": "services/api/app/routers/neck/gcode_router.py",
+      "intent": "Hosts the guitar neck G-code route; a neck route belongs with neck routing",
+      "risk": "low",
+      "behavior_change": "None -- path, contract and REVIEW_REQUIRED fail-closed behaviour preserved"
+    },
+    {
+      "path": "services/api/app/routers/_project_gcode_common.py",
+      "intent": "Helpers shared by the guitar body routes and the guitar neck route",
+      "risk": "low",
+      "behavior_change": "None -- moved verbatim; not a router module"
+    },
+    {
+      "path": "services/api/tests/test_body_gcode_router_smoke.py",
+      "intent": "Align the existing body-router smoke test with containment: the Stratocaster route now refuses at the readiness layer before project lookup, so the smoke assertion is updated to the refusal rather than a 200.",
+      "risk": "low",
+      "behavior_change": "None. Test-only alignment with the gate this patch adds."
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/acoustic_cam_router.py",
+      "intent": "Gate the three acoustic G-code routes on generator readiness, owner-ruled 2026-09-21. The gate is called before the generator is constructed, matching the placement used on the model routes.",
+      "risk": "medium",
+      "behavior_change": "YES. POST /acoustic/{style}/body|soundhole|binding/gcode previously returned .nc downloads and now return 422 GENERATOR_READINESS_BLOCKED."
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness_routes.py",
+      "intent": "The live-route half of the containment suite, split out when the combined file crossed the 500-line ratchet: route refusals, the non-vacuous seven-route inventory, and the status posture. The policy half keeps the registry and state model tests.",
+      "risk": "low",
+      "behavior_change": "None. Test split; the same 33 tests run, in two files instead of one."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-20-CAM-GENERATOR-READINESS-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 4
+    },
+    "findings": [
+      "MEDIUM: this introduces a second refusal mechanism alongside asset authority. That is intentional and was ruled on -- the two answer different questions -- but the risk of drift is real. It is mitigated by keeping the layers import-independent (asserted by test), by giving readiness no state that can authorize, and by having the Les Paul route defer to the asset layer so only one mechanism ever speaks for a DXF-sourced route.",
+      "RESOLVED: an earlier revision of this patch let REVIEW_REQUIRED emit, which made it operationally an authorization and contradicted the rule that this layer cannot say yes. REVIEW_REQUIRED now refuses. The whole CAM surface fails closed and routes are reopened one at a time as evidence is established.",
+      "LOW: the readiness registry is declared in code rather than in a data file. That keeps the mechanism minimal and reviewable in-diff; if readiness later needs to be edited without a deploy it should move to a governed data file, as the DXF catalog registry did.",
+      "LOW: Flying V and neck now refuse where they previously emitted. This is a deliberate availability reduction on two routes that were never qualified for manufacturing, and it is reversible per route by recording established authority -- not by relaxing the layer.",
+      "RESOLVED: the containment gate pushed body_gcode_router.py past 500 lines, tripping four mechanisms; extracting to a NEW router module then tripped a fifth (router-count 254 > 253). Resolved by hosting the route in the existing neck router and mounting it from the guitar package. body_gcode_router.py is 341 lines, router files 253, large-file count 99, and no ratchet moved. Both gates were right: one said the file was too large, the other said do not answer that by inventing a router that already exists."
+    ]
+  }
+}
