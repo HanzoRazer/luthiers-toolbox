@@ -53,9 +53,10 @@ from .guitar_models_consolidated_router import (
 # Body G-code router (GEN-4) - project-driven CAM generation
 from .body_gcode_router import router as body_gcode_router
 
-# Neck G-code router - extracted from body_gcode_router: a neck manufacturing
-# route does not belong in a body G-code router.
-from .neck_gcode_router import router as neck_gcode_router
+# Guitar neck G-code route. Implementation lives in the neck router for structural
+# ownership (a neck route belongs with neck routing); mounted here so its public
+# path /api/cam/guitar/{model_id}/neck/gcode is unchanged.
+from ...neck.gcode_router import guitar_neck_router as neck_gcode_router
 
 # Acoustic CAM router (GEN-6) - acoustic body G-code generation
 from .acoustic_cam_router import router as acoustic_cam_router

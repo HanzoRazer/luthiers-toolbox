@@ -29,7 +29,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ....instrument_geometry.dxf_authority import ManufacturingAuthorityBlocked
-from ._gcode_common import (
+from ..._project_gcode_common import (
     _generate_timestamp,
     _get_project_or_404,
     _make_nc_response,

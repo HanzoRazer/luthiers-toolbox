@@ -1,8 +1,8 @@
-"""Shared plumbing for the project-driven guitar G-code routers.
+"""Shared plumbing for the project-driven instrument G-code routes.
 
-These helpers are used by both the body and neck manufacturing routes. They live
-here rather than in either router so that neither imports the other: a neck route
-must not depend on a body router.
+These helpers are used by both the guitar body routes (routers/cam/guitar) and the
+guitar neck route (routers/neck). They live here, above both packages, so that
+neither router package has to import the other.
 """
 
 from __future__ import annotations
@@ -14,14 +14,14 @@ from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from ....cam.generator_readiness import (
+from ..cam.generator_readiness import (
     GeneratorReadinessBlocked,
     require_generator_readiness,
 )
-from ....auth.principal import Principal
-from ....db.models.project import Project
-from ....projects.service import parse_design_state
-from ....schemas.instrument_project import InstrumentProjectData
+from ..auth.principal import Principal
+from ..db.models.project import Project
+from ..projects.service import parse_design_state
+from ..schemas.instrument_project import InstrumentProjectData
 
 
 def _readiness_gate(route_key: str) -> None:

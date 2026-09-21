@@ -212,10 +212,10 @@ def test_flying_v_depth_validator_is_not_wired_into_emission():
 
     # The package re-exports an APIRouter under this name, so import the module.
     source = ""
-    for mod_name in ("body_gcode_router", "neck_gcode_router", "_gcode_common"):
-        source += inspect.getsource(
-            importlib.import_module(f"app.routers.cam.guitar.{mod_name}")
-        )
+    for dotted in ("app.routers.cam.guitar.body_gcode_router",
+                   "app.routers.neck.gcode_router",
+                   "app.routers._project_gcode_common"):
+        source += inspect.getsource(importlib.import_module(dotted))
     for name in ("validate_all_depths", "validate_neck_pocket_depth",
                  "validate_control_cavity_depth", "depth_validator"):
         assert name not in source, (
@@ -258,8 +258,9 @@ def authenticated(client, monkeypatch):
     app.dependency_overrides[get_current_principal] = lambda: principal
     # The neck route now lives in its own module; stub both so a route that is
     # NOT blocked still gets past project lookup.
-    for name in ("body_gcode_router", "neck_gcode_router"):
-        mod = importlib.import_module(f"app.routers.cam.guitar.{name}")
+    for dotted in ("app.routers.cam.guitar.body_gcode_router",
+                   "app.routers.neck.gcode_router"):
+        mod = importlib.import_module(dotted)
         monkeypatch.setattr(mod, "_get_project_or_404", lambda *a, **k: object())
         monkeypatch.setattr(
             mod, "_parse_design_state_or_422", lambda project: _State()
