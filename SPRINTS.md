@@ -2971,18 +2971,45 @@ Systematic audit to identify code that was developed for purposes that may have 
 the system-of-record starting point. It records authority and disposition only — **no record file is
 amended by it.**
 
+**Records pinned:** every field cited below was read from `origin/main` @ `c7523677`, where
+`smart_guitar_v1.json` is blob `409a8efa1d6d` and `smart_guitar_setup_spec.json` is blob
+`8b4255573506`. **Line numbers move; the blob ids and the key paths do not** — both are given for
+every citation. This branch changes neither file.
+
+**Evidence class:** this entry is an **OBSERVATION RECORD**. Every number in it is either an owner
+ruling, a field read out of a named record, or arithmetic over those two — and arithmetic here is
+**an observation about the records, never derived geometry authority**. Nothing in this entry may
+be used as a manufacturing input. The authority chain below is what governs that, and nothing in
+this file has passed its CAD gate.
+
+> ### 🔴 SAFETY STOP — READ BEFORE ANY SMART GUITAR CUT
+>
+> **`op20_status` still reads `"READY - cut at 4.5deg, verify on first article"` in both specs, on
+> `main`, right now. This entry has NOT corrected it and does not authorize a cut.** Registering the
+> contradiction is not resolving it. Until the first step below is done and CAD-verified, **OP20 is
+> not safe to run at any angle** — the record names 4.5°, the ruling names ~1.8°, and a pocket cut
+> at the wrong one cannot be undone on a finished body.
+
 #### Geometry package — owner ruling 2026-09-20
 
 | Quantity | Value | Disposition |
 |---|---|---|
 | Body height | **521.8 mm** | **CURRENT WORKING AUTHORITY** — current design ruling, **awaiting CAD/source verification before manufacturing freeze**. NOT CAD-verified; do not label it so without the drawing or geometry source |
 | Fretboard/body attachment | **12th fret** | CURRENT DESIGN RULING |
-| Neck angle | **1.5°–2.0°**, preferred nominal **~1.8°** | exploration band + nominal |
+| Neck angle | **1.5°–2.0°**, preferred nominal **~1.8°** | exploration band + nominal — **🔴 CONFLICTS WITH THE RECORD'S OWN BAND**, see below |
 | `PU_NECK` | 207.125 | **PROVISIONAL** — CAD confirmation required |
 | Neck-pickup setback | 10.0 mm | **UNSUPPORTED** — provenance required |
 | Neck-pocket projection | — | **UNGOVERNED** — must be derived from a traceable CAD/datum, **not** repository inference |
 | Body height (earlier) | 528.1 mm | **SUPERSEDED / HISTORICAL** — earlier photo-scaled derivation. Retained as evidence because it explains prior calculations; **must never re-enter manufacturing arithmetic** |
 | `neck.neck_length.body_length_mm` | 438.15 mm | **LES PAUL REFERENCE ONLY** — reference geometry, **not** Smart Guitar governing geometry |
+
+**🔴 Unreconciled: two different owner bands are in play.** This entry states **1.5°–2.0°**.
+`smart_guitar_setup_spec.json:43` states, three times, *"CURRENT NECK ANGLE AUTHORITY: the owner
+ruling of **1.5-2.5** deg."* Both are recorded as owner rulings; they are not the same band, and
+**this entry does not resolve which is current** — that is an owner call, and picking one here would
+manufacture authority out of a reconciliation note. The ~1.8° nominal sits inside both, so it is not
+affected; the **upper bound is**, and the upper bound is what a pocket depth is cut to. Resolving
+this is part of the close trigger.
 
 **Authority chain (the order that must hold):**
 
@@ -3021,13 +3048,63 @@ this mark.
 - `smart_guitar_setup_spec.json` — `smart_guitar_geometry.neck_angle_deg` **4.5**, same `op20_status`,
   and `open_items.neck_angle_confirmation` = "RESOLVED - Cut at 4.5deg (Explorer reference)".
 - The 4.5° traces to a **+3.15° offset** that `open_items.neck_angle_analysis.solver_discrepancy`
-  itself describes as a solver-vs-Explorer discrepancy of unknown cause. That block's own sweep gates
-  **GREEN at 1.68° (10 mm bridge) through 2.5° (13 mm)** — i.e. it brackets the ruled ~1.8°. The block
-  also rests on superseded inputs: scale **628.65** (now 647.7) and join fret **19** (now 12).
-- `body.dimensions.thickness_mm` = **44.45** (1.75 in). **47.0 appears in no record** — recent
-  pocket/floor arithmetic used 47.0. At the ruled joint the floor is **17.86 mm**, not 20.41.
-- `cavities.neck_pocket.dimensions_mm` = 76.2 × 55.9 × **15.9 deep**, `y_from_top` 53.3 — against a
-  ruled joint needing ~**26.59 mm** at the shoulder.
+  itself describes as a solver-vs-Explorer discrepancy of unknown cause — *"Solver geometry model
+  differs from Gibson reality. Likely missing body angle or neck pocket depth factor. **Solver values
+  are RELATIVE, not absolute.**"*
+- **⚠️ The sweep does not support any angle, and must not be quoted as though it supported ~1.8°.**
+  Earlier drafts of this entry cited only the 10–13 mm rows (1.68°–2.50°) and concluded it
+  "brackets the ruled ~1.8°". That is a subset. The full table
+  (`open_items.neck_angle_analysis.smart_guitar_sweep.results`, nine rows) is:
+
+  | bridge mm | 8 | 10 | 11 | 12 | 13 | 14 | 16 | 19 | 21 |
+  |---|---|---|---|---|---|---|---|---|---|
+  | solver ° | 1.13 | 1.68 | 1.95 | 2.22 | 2.50 | 2.77 | **3.31** | 4.13 | 4.67 |
+  | gate | GREEN | GREEN | GREEN | GREEN | GREEN | GREEN | **GREEN** | YELLOW | YELLOW |
+
+  **The GREEN band is 1.13°–3.31°.** It contains the ruled ~1.8°, the 2.5° upper bound, *and*
+  the 3.5°-adjacent 3.31° — so it **discriminates nothing** and is evidence for no angle in
+  particular. Combined with the block's own "RELATIVE, not absolute" caveat and its superseded
+  inputs (scale **628.65**, now 647.7; join fret **19**, now ruled 12), the sweep is **not usable as
+  manufacturing evidence** and is recorded here only to explain how 4.5° entered the record.
+- **🔴 The 12th-fret ruling contradicts the join-fret fields themselves**, not just the solver
+  block. Three Smart Guitar fields carry a join fret and **not one of them is 12**:
+  `smart_guitar_v1.json:826` `neck.neck_length.body_join_fret` = **"TBD — 19 or 20, pending
+  first-article verification"** (structural — this is the one that matters);
+  `smart_guitar_setup_spec.json:58` `neck_relief.body_join_fret` = **19** with its note at :75
+  *"Bolt-on join at ~19th fret"* (a setup-measurement context, not governing geometry — but it
+  still tells a reader the join is at 19); and `open_items.neck_angle_analysis.smart_guitar_sweep`
+  `neck_joint_fret` = **19** at :171. Because `protrusion_above_body_note` defines protrusion as
+  `fret_pos(join_fret)`, **every quantity downstream of the structural field moves when this is
+  settled** — it is not a label change.
+  (`open_items.neck_angle_analysis.explorer_baseline.neck_joint_fret` = 22 at :162 is a fact about
+  the *Gibson Explorer* and is correctly unchanged — it is not a Smart Guitar field, in the same way
+  `parent_models.*.scale_mm` is not.)
+- **The scale staleness is not confined to the solver block.**
+  `smart_guitar_setup_spec.json:30` `smart_guitar_geometry.scale_mm` = **628.65** — a governing
+  field, not an analysis input — and 628.65 recurs at :75, :172 and :236.
+  `smart_guitar_v1.json:795` records **647.7** with an explicit note that 628.65 is superseded
+  (revised 2026-09-05, owner-directed). **The two specs disagree on scale length**, and the setup
+  spec carries the withdrawn figure in its primary geometry block. (`parent_models.*.scale_mm`
+  628.65/648.0 are facts about the Les Paul, Explorer and Klein and are correctly unchanged.)
+- `body.dimensions.thickness_mm` = **44.45** (1.75 in). Recent pocket/floor arithmetic used
+  **47.0**, which is not in either Smart Guitar record: `grep -n "47\.0"` over both spec files
+  returns nothing, and across `services/api/app/instrument_geometry/**/*.json` the only body-adjacent
+  hit is `cuatro_venezolano_spec.json:163 "neck_width_at_body_mm": 47.0` — a different instrument and
+  a different quantity. No field named `thickness*` equals 47.0 anywhere in the repository.
+- `cavities.neck_pocket.dimensions_mm` = 76.2 × 55.9 × **15.9 deep**, `y_from_top` 53.3.
+  **🔴 OBSERVATION, NOT A REQUIREMENT:** the frequently-quoted **26.59 mm** is
+  `neck.neck_thickness.total_stack_12th_fret_mm` — a **neck-and-fretboard stack measured at the 12th
+  fret**, sourced from the *Gibson Explorer* verified spec, with the record's own note reading
+  *"Neck-only depth … Add fretboard_thickness_mm for total stack."* **It is not a pocket-depth
+  requirement and no derivation in the record connects it to one.** The pocket is cut at the **heel**,
+  and `smart_guitar_setup_spec.json:43` says so explicitly: *"BINDING UNKNOWN: the neck-and-board
+  stack at the heel … The record carries the 1st- and 12th-fret stack figures only, so the heel
+  remains unmeasured and no neck angle can be finalised from this field."* So the correct statement
+  is the gap, not the requirement: **the record defines a 15.9 mm pocket and a 26.59 mm 12th-fret
+  stack, and governs no relationship between them.** Any floor figure computed from 26.59
+  — including **17.86 mm** (44.45 − 26.59), and the 20.41 it replaces — **inherits that ungoverned
+  premise and is an observation about the records, not a manufacturing depth.** The shoulder
+  requirement must come from a traceable datum or CAD model.
 
 **Coupling:** neck pocket, 12th-fret attachment, body height and the ~1.8° target are one coupled
 system; they reconcile together or not at all. The `bass_chamber` constraint defect belongs inside
@@ -3035,19 +3112,55 @@ this reconciliation: it depends on a neck-pocket projection that is not numerica
 system must **not manufacture that projection from repository arithmetic** until a traceable datum
 defines it.
 
-**Cross-repo:** the neck-pocket authority findings live in `HanzoRazer/CNC-Production-Shop` branch
-`sg-authority-cleanup` @ `1dfae41` (pushed 2026-09-20, **held, unmerged**). Its central finding —
-*there is currently no evidence that a second governing neck-pocket source ever existed* — and its
-statuses for `PU_NECK` and the 10 mm setback are the source of the two dispositions above. `sg-spec`
-is **not** in the neck-pocket authority chain.
+**Cross-repo (public, directly reviewable):** the neck-pocket authority findings live in
+`HanzoRazer/CNC-Production-Shop` (public) on branch `sg-authority-cleanup`, commit
+**`1dfae412a0fd2b415ede5a5855010d0b9195737f`** — *"docs(smart-guitar): close the sg-spec query
+unsent; freeze the hold state"*, authored 2026-09-08, **pushed and held unmerged as of 2026-09-20**.
+Two files, both readable at that commit:
 
-**Close trigger:** every quantity above resolves to exactly one disposition backed by a CAD/drawing
-source, the two specs agree with each other and with the ruling, `op20_status` no longer names an
-angle the ruling contradicts, and the provisional `body height` ≡ `body_length_mm` equivalence is
-either CAD-confirmed or split with dependants recomputed.
+- `docs/geometry/SG_SPEC_NECK_POCKET_FINDING_1.md`
+- `docs/geometry/SMART_GUITAR_GEOMETRY_AUTHORITY_CLEANUP_1.md`
 
-**First step (not started):** amend `op20_status`. It is the only item here that can destroy a body,
-and it is a safety stop, so it goes first and alone.
+Permalink:
+`https://github.com/HanzoRazer/CNC-Production-Shop/tree/1dfae412a0fd2b415ede5a5855010d0b9195737f/docs/geometry`
+
+Its central finding — *"No document in CNC-Production-Shop has ever named `sg-spec` in connection
+with the neck pocket"*, i.e. **there is currently no evidence that a second governing neck-pocket
+source ever existed** — and its verbatim statuses *"PU_NECK 207.125 STATUS: provisional / awaiting
+CAD confirmation"* and *"10.0 mm setback STATUS: unsupported repository ruling"* are the source of
+the two dispositions above. `sg-spec` is **not** in the neck-pocket authority chain: it was checked,
+not accused.
+
+**Close trigger** — all of these, not a subset:
+
+1. Every quantity above resolves to exactly one disposition backed by a CAD/drawing source.
+2. The two specs agree with each other and with the ruling — including **scale length**, where they
+   currently do not (628.65 vs 647.7).
+3. `op20_status` no longer names an angle the ruling contradicts, **in both specs**.
+4. The neck-angle band is settled to one figure: **1.5–2.0 or 1.5–2.5**, owner-ruled, both specs
+   updated.
+5. `body_join_fret` reads the ruled fret in both records, and **every quantity defined as
+   `fret_pos(join_fret)` is recomputed** rather than relabelled.
+6. The **heel** neck-and-board stack is measured, and the pocket-depth relationship is derived from
+   a traceable datum — not from the 12th-fret stack figure, which governs nothing here.
+7. The provisional `body height` ≡ `body_length_mm` equivalence is either CAD-confirmed or split
+   with dependants recomputed.
+
+**First step (NOT STARTED — nothing below has been done):** amend `op20_status` in both specs. It is
+the only item here that can destroy a body, so it goes **first and alone**, in its own PR, and it is
+a *safety stop*, not a reconciliation: it removes an instruction to cut at an angle the ruling
+contradicts. It does **not** decide the angle — the 1.5–2.0 / 1.5–2.5 band conflict above and the
+unmeasured heel stack both remain open afterwards.
+
+A prior pass already saw this and deliberately left it: `smart_guitar_setup_spec.json:43` carries
+*"SUPERSEDED, NOT CORRECTED HERE: open_items.neck_angle_analysis still reads status RESOLVED with
+resolution 'Cut at 4.5deg (Explorer reference)', and 4.5 deg still appears elsewhere in this file
+including op20_status … This patch deliberately does not amend them; that is a separate, authorized
+change."* **This entry is that authorization being requested, not that change being made.**
+
+**CI at the head of this PR:** 31 checks pass, 1 skipped (`trending`), 0 failures, at
+`b3a4e9f735ed889c3f2cac46ec4a1f67d6aa8ac8` — including `Core CI Summary`, `Fence Checks (Blocking)`,
+`CBSP21 Patch Manifest Gate`, `Geometry Parity` and `Governance Summary`.
 
 **Namespace note:** `SG` is **not** a registered prefix in `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
 and this entry does not register one — `SG-GEOM-AUTH-001` is a finding ID inside this sprint, following
