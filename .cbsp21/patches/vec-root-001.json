@@ -1,0 +1,95 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VEC_ROOT_001",
+  "title": "File VEC-ROOT-001: the eligibility block defines 'body' in photograph terms, with its reproduction scripts and a pinned source revision",
+  "intent": "File the primary finding from the 2026-09-19 vectorizer investigation into the repository, where it is currently untracked. It records that the eligibility block at services/photo-vectorizer/edge_to_dxf.py:941-950 as measured (967-976 on main) encodes three assumptions true of a photographed subject and false of a drawn one, and discards the body on both plans measured, by two different branches. Includes a positive control on the input class the tool was built for, and a corpus census taken before any fix is scoped. Documentation only: one new Markdown file, no code. Review pass 2026-09-20: the evidence base is pinned to commit ffd155e4 (blob f3e7d802 for edge_to_dxf.py) instead of a bare 'HEAD'; a new section 0a maps every line citation onto main, which is ahead by 97460755 (BR-037, PR #232) and shifts the eligibility block from 941-950 to 967-976; the eleven instrumented scripts move from the session scratchpad into docs/audit/vec-root-001-repro/; section 8 gains an archtop acceptance criterion so a gate loosened toward line art cannot pass unnoticed; and two numbering errors are corrected. Review pass 2: the scripts are made runnable from a fresh clone. A shared _repro.py replaces every hard-coded absolute path with repo discovery from the enclosing .git, resolves corpus inputs by logical name against --corpus-root with SHA-256 verification, verifies the imported edge_to_dxf.py against the pinned blob before anything runs, and places all working copies and renders in a temp directory that is refused if it resolves inside the checkout.",
+  "change_type": "docs",
+  "behavior_change": "None to the product. One Markdown file edited, thirteen added under docs/audit/vec-root-001-repro/ (eleven instrumented scripts, the shared _repro.py, and a README). No code, configuration, workflow or test under services/ or app/ is touched. The scripts are not imported by anything, are not collected by pytest (no test_ prefix; the helper is underscore-prefixed), and are not on any lint path. Verified behaviour-preserving: the six renders regenerated through the rewritten harness are byte-identical to the SHA-256 recorded on 2026-09-19. The document proposes NO fix -- sections 5 and 7 state this explicitly.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vec-root-001.json",
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "docs/audit/vec-root-001-repro/"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "docs/audit/vec-root-001-repro/README.md",
+      "docs/audit/vec-root-001-repro/cuatro_stage_census.py",
+      "docs/audit/vec-root-001-repro/where_is_the_perimeter.py",
+      "docs/audit/vec-root-001-repro/whole_sheet_by_reason.py",
+      "docs/audit/vec-root-001-repro/cuatro_render_groups.py",
+      "docs/audit/vec-root-001-repro/longest_rejects.py",
+      "docs/audit/vec-root-001-repro/hull_vs_area.py",
+      "docs/audit/vec-root-001-repro/arclen_discriminates.py",
+      "docs/audit/vec-root-001-repro/l00_prediction.py",
+      "docs/audit/vec-root-001-repro/archtop_control.py",
+      "docs/audit/vec-root-001-repro/archtop_render.py",
+      "docs/audit/vec-root-001-repro/archtop_neck_check.py",
+      "docs/audit/vec-root-001-repro/_repro.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds docs/audit/VEC-ROOT-001_eligibility_body_definition.md. Section 0 states the lineage boundary: everything concerns edge_to_dxf.py only, and D-13 is a vectorizer_phase3.py artifact that this document does NOT explain. Section 1 sets out the three premises the eligibility block encodes. Section 2 carries two instrumented censuses -- the cuatro dies at too_small (943), L-00 at child_contour (947). Section 3 records that rejecting a contour does not unparent what sits inside it. Section 11 is the positive control: the archtop, an AI-generated image, passes eligibility at 0.8464 on the background-removed input, confirming the premises by positive evidence rather than failure analysis alone. Section 11a records that passing is not constructibility -- the eligible contour weaves between neck edge and inlay blocks, which explains the April decision to stop. Section 12 is a corpus census run before scoping any fix. Review pass 2026-09-20 adds section 0a, the line-number map onto main, and records that the eligibility block is byte-identical on both revisions so the finding transfers while the coordinates do not; it also verifies that BR-037 does not change section 3a's reachability claim (convert() still never sets mask_text; convert_enhanced still has one caller). Section 8 gains criterion 5, the archtop baseline: exactly 1 eligible contour on both inputs, s=0.8464 and s=0.9894, parent_idx None -- the four existing criteria are cuatro and L-00 only and cannot detect an over-correction toward line art. Section 12 and 13 are swapped into reading order and the header count 'two' becomes 'three' to match section 9. The reproduction section now points at committed scripts and states plainly that the measurements are not independently reproducible from this repository alone. Review pass 2 (2026-09-20) addresses the reproducibility findings. _repro.py centralises the environment contract: REPO_ROOT walks up to the enclosing .git (--repo-root / LTB_REPO_ROOT overrides); check_pinned_source() computes the git blob id of the imported edge_to_dxf.py and reports PINNED (f3e7d802, ffd155e4), MAIN (c847c043, after BR-037, with the +26 offset spelled out) or refuses with ENVIRONMENT_MISMATCH; corpus() resolves four logical names against --corpus-root and verifies each file's SHA-256; work_dir() and out_path() return temp locations and reject any path resolving inside the repository. Two defects introduced by the first pass are fixed with it: moving the scripts into the repo had repointed SP at docs/audit/vec-root-001-repro/, so SRC pointed at an in-repo path that never exists and WORK wrote run artifacts into the checkout -- which made the README's 'no script edits any repo file' false. A wrong byte count for cuatro_ascii.png (1,406,120, taken from a different cuatro file; the SHA-256 was correct) is corrected to 1,652,751.",
+    "why_not_redundant": "The finding exists only as an untracked file in the owner's Downloads directory. The forensic audit merged in PR #385 records D-13's measurement and withdraws its attribution, but carries none of the eligibility-block analysis, neither census, the archtop control, nor the corpus census. Nothing in the repository currently records why the body is discarded. The reproduction scripts exist nowhere in the repository; without them every [RUN] and [RENDER] tag in the document rests on files in a session scratchpad that will not survive. The re-run also produces a fact the document did not have: its measurements were only ever taken on the stale branch, and are now verified against main."
+  },
+  "verification": {
+    "commands_run": [
+      "Instrumented extract_blueprint_to_dxf(isolate_body=True) on the cuatro and on Gibson-L0-IN.png, 2026-09-19, by wrapping _build_hierarchy_nodes and _score_contour_group at runtime. No repo file was edited by any run.",
+      "Cuatro per stage: 7,368 findContours -> 7,368 after border removal -> 7,332 nodes -> 3 eligible. Refusals 7,328 too_small, 1 child_contour. Lower bout: 1,437 contours, 0 eligible.",
+      "L-00: 3,053 contours, 0 eligible, run returns 'No valid contours found in edge image'. Largest contour 1815x1365 px encloses 0.276 of the raster -- 55x the 0.005 floor -- and is refused as child_contour.",
+      "Archtop control through the same path: 488 contours, 1 eligible at area_ratio 0.0145 with parent None, winner score 0.8464 on the background-removed input and 0.9894 on the original. Rendered and confirmed to be the guitar.",
+      "Every claim tagged [RENDER] rests on drawing the result onto the source image and looking, per the standing rule written after the soundhole retraction (30b8a5db).",
+      "Corpus census: 314 distinct PDFs opened read-only with PyMuPDF; 215 VECTOR, 5 MIXED, 41 RASTER, 50 EMPTY, 3 ERROR. The cuatro and L-00 are both RASTER; Carlos Jumbo 3-3 is VECTOR with 76,063 paths.",
+      "Pinned the evidence base: git status reported services/photo-vectorizer/edge_to_dxf.py clean at ffd155e436be89c15cdb0b83a96dc7d2cbefa251; git hash-object gives blob f3e7d802fefa, which equals HEAD:services/photo-vectorizer/edge_to_dxf.py.",
+      "Found the measured branch is behind main: git rev-parse origin/main:services/photo-vectorizer/edge_to_dxf.py = c847c04365d3, a different blob; git log HEAD..origin/main -- <file> names 97460755 (BR-037, PR #232), +74 lines across eight hunks.",
+      "Mapped all twelve line citations onto main by exact-line match against the main blob; diffed the eligibility ladder and confirmed it byte-identical, offset +26 (941-950 -> 967-976).",
+      "Confirmed BR-037 does not change section 3a: on main, convert() spans 1575-1925 and contains no detect_text_regions call and no mask_text assignment; grep -n convert_enhanced on the main blob returns the definition at 1926 and exactly one caller at 2896.",
+      "Confirmed vectorizer_phase3.py is blob 84b87a586360 on both revisions, so every section 0 and 11b citation into it is unaffected.",
+      "Checked custody before committing media: owner ruling R1 / SC-A02 (CUSTODY-REMED-001, commit 5fc483e4) forbids source media in this repository, which gh reports PUBLIC. The six renders draw on the source plans, so they are recorded by SHA-256 in the repro README and NOT committed.",
+      "Verified section cross-references after renumbering: every marker used (0, 0a, 1, 2, 2a, 3, 3a, 4, 5, 5a, 6, 7, 8, 9, 10, 10a, 11, 11a, 11b) resolves to a heading in the document.",
+      "Re-ran all eleven scripts 2026-09-20 from a clean invocation (py -3.11, cv2 5.0.0, numpy 2.2.6) with --corpus-root and --out-dir outside the repository. Every figure in the audit reproduced against main's blob: cuatro 7,368 -> 7,332 -> 3 eligible with 7,328 too_small and winner 0.7323 at 2.92%; lower bout 1,437 / 0; arc-length rank 5 at 6,606 px; L-00 3,053 / 0 failing 'No valid contours found' with the largest contour 1815x1365 at 0.276110 refused child_contour and the page border 0.962446 too_large; archtop 488 contours / 1 eligible at 0.014521 parent None s=0.8464, original 634 with too_small=632 child_contour=1 s=0.9894; neck corridor 13,322 points, arc 14,626, 39.2%, 3,864 vs 1,352, 569/569.",
+      "Behaviour preservation: the six cuatro and L-00 renders regenerated through the rewritten harness are byte-identical to the SHA-256 recorded on 2026-09-19 (72620a6c, 9693ddaf, 65aef5fd, 326c0ba7, 380133c2, 7e5c911b).",
+      "Ran archtop_control.py against the pinned checkout (--repo-root at the ffd155e4 working directory) and confirmed the helper reports the PINNED blob and reproduces s=0.8464 / 0.9894.",
+      "Exercised every guard: no --corpus-root exits 2 (NOT_RUN_SOURCE_ABSENT); a corpus file whose SHA-256 differs exits 3; an unrecognised edge_to_dxf.py exits 3 without running; --out-dir resolving inside the repository exits 3.",
+      "git status in the worktree was clean of run artifacts after fifteen script runs -- no instr_run, archtop_run, DXF or PNG anywhere in the checkout. The only in-checkout write is __pycache__/, covered by .gitignore:20.",
+      "ruff check --select F,E9 on docs/audit/vec-root-001-repro/ passes: no undefined names, no unused imports, no syntax errors."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "intent": "Record why the body is discarded, with the lineage boundary stated first, the source revision pinned to a blob, and the line citations mapped onto main so they remain resolvable after this merges.",
+      "risk": "low",
+      "behavior_change": "None - audit record. Section 8 gives outcome criteria any future fix must satisfy, now including the archtop baseline; it authorizes none."
+    },
+    {
+      "path": "docs/audit/vec-root-001-repro/README.md",
+      "intent": "The eleven instrumented scripts behind every [RUN] and [RENDER] tag, the shared _repro.py that makes them runnable from a fresh clone against a verified revision, and a README pinning the revision, the line-number map, and the SHA-256 of each input and render that custody keeps out of this repository.",
+      "risk": "low",
+      "behavior_change": "None. Standalone scripts under docs/; nothing imports them, pytest does not collect them, no lint path covers them. Nothing they run writes inside the checkout.",
+      "scan_targets": [
+        "docs/audit/vec-root-001-repro/_repro.py",
+        "docs/audit/vec-root-001-repro/archtop_control.py",
+        "docs/audit/vec-root-001-repro/archtop_neck_check.py",
+        "docs/audit/vec-root-001-repro/archtop_render.py",
+        "docs/audit/vec-root-001-repro/arclen_discriminates.py",
+        "docs/audit/vec-root-001-repro/cuatro_render_groups.py",
+        "docs/audit/vec-root-001-repro/cuatro_stage_census.py",
+        "docs/audit/vec-root-001-repro/hull_vs_area.py",
+        "docs/audit/vec-root-001-repro/l00_prediction.py",
+        "docs/audit/vec-root-001-repro/longest_rejects.py",
+        "docs/audit/vec-root-001-repro/where_is_the_perimeter.py",
+        "docs/audit/vec-root-001-repro/whole_sheet_by_reason.py"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/vec-root-001.json",
+      "intent": "This manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    }
+  ]
+}
