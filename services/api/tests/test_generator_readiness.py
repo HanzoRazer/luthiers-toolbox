@@ -347,6 +347,14 @@ def test_neck_route_refuses_while_review_required(authenticated):
         assert token not in response.text, f"G-code token {token!r} escaped"
 
 
+def test_status_does_not_advertise_contained_routes_cam_ready(authenticated):
+    response = authenticated.get("/api/cam/guitar/status")
+    assert response.status_code == 200, response.text
+    endpoints = response.json()["gen4_endpoints"]
+    assert set(endpoints) == {"stratocaster", "les_paul", "flying_v", "neck"}
+    assert all(item["cam_ready"] is False for item in endpoints.values())
+
+
 def test_every_exposed_route_now_fails_closed(authenticated):
     """The whole CAM surface refuses: three at this layer, one at asset authority."""
     expected = {
