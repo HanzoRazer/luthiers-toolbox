@@ -23,7 +23,7 @@ GEN-4 Body G-code (project-driven):
   - /stratocaster/body/gcode - Strat body from project
   - /les_paul/body/gcode     - LP body from project
   - /flying_v/body/gcode     - Flying V from project
-  - /{model_id}/neck/gcode   - Neck G-code from project
+  - /{model_id}/neck/gcode   - Neck G-code from project (neck_gcode_router.py)
 
 GEN-6 Acoustic CAM (/acoustic/...):
   - /acoustic/styles                    - List available acoustic styles
@@ -53,6 +53,10 @@ from .guitar_models_consolidated_router import (
 # Body G-code router (GEN-4) - project-driven CAM generation
 from .body_gcode_router import router as body_gcode_router
 
+# Neck G-code router - extracted from body_gcode_router: a neck manufacturing
+# route does not belong in a body G-code router.
+from .neck_gcode_router import router as neck_gcode_router
+
 # Acoustic CAM router (GEN-6) - acoustic body G-code generation
 from .acoustic_cam_router import router as acoustic_cam_router
 
@@ -69,6 +73,10 @@ router.include_router(models_router)
 # Mount body G-code router (GEN-4) - before registry to take precedence
 router.include_router(body_gcode_router, tags=["G-code", "GEN-4"])
 
+# Mount neck G-code router - before registry so {model_id}/neck/gcode is not
+# swallowed by the catch-all.
+router.include_router(neck_gcode_router, tags=["G-code", "Neck"])
+
 # Mount acoustic CAM router (GEN-6)
 router.include_router(acoustic_cam_router, prefix="/acoustic", tags=["Acoustic", "CAM", "GEN-6"])
 
@@ -76,4 +84,4 @@ router.include_router(acoustic_cam_router, prefix="/acoustic", tags=["Acoustic",
 # This serves CAM stubs for ANY model in the instrument registry.
 router.include_router(cam_registry_router, tags=["Registry", "CAM"])
 
-__all__ = ["router", "archtop_router", "om_router", "stratocaster_router", "flying_v_router", "body_gcode_router", "acoustic_cam_router"]
+__all__ = ["router", "archtop_router", "om_router", "stratocaster_router", "flying_v_router", "body_gcode_router", "neck_gcode_router", "acoustic_cam_router"]

@@ -12,28 +12,39 @@
     "paths_in_scope": [
       ".cbsp21/patches/cam-generator-readiness-001.json",
       "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/cam/guitar/__init__.py",
+      "services/api/app/routers/cam/guitar/_gcode_common.py",
       "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/app/routers/cam/guitar/neck_gcode_router.py",
       "services/api/tests/test_generator_readiness.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/cam-generator-readiness-001.json",
       "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/cam/guitar/__init__.py",
+      "services/api/app/routers/cam/guitar/_gcode_common.py",
       "services/api/app/routers/cam/guitar/body_gcode_router.py",
+      "services/api/app/routers/cam/guitar/neck_gcode_router.py",
       "services/api/tests/test_generator_readiness.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "(1) New module app/cam/generator_readiness.py declaring a readiness state per exposed manufacturing route, with resolve_generator_readiness() and require_generator_readiness(). States are BLOCKED, REVIEW_REQUIRED, GOVERNED_BY_ASSET_AUTHORITY and UNKNOWN. Every state stops emission except the delegation: a state that permits emission would operationally be an authorization, so REVIEW_REQUIRED refuses too -- it cannot mean both 'evidence is insufficient' and 'carry on emitting'. A missing or renamed record resolves to UNKNOWN and also refuses. (2) body_gcode_router.py: all four handlers call the gate as their first statement and convert GeneratorReadinessBlocked into a 422 carrying a path-free detail body, mirroring the asset layer's existing as_detail() pattern. (3) A focused test module proving the containment, the fail-closed semantics across the whole CAM surface, the non-disturbance of #380, and two audit facts that must not drift.",
+    "what_changed": "(1) New module app/cam/generator_readiness.py declaring a readiness state per exposed manufacturing route, with resolve_generator_readiness() and require_generator_readiness(). States are BLOCKED, REVIEW_REQUIRED, GOVERNED_BY_ASSET_AUTHORITY and UNKNOWN. Every state stops emission except the delegation: a state that permits emission would operationally be an authorization, so REVIEW_REQUIRED refuses too -- it cannot mean both 'evidence is insufficient' and 'carry on emitting'. A missing or renamed record resolves to UNKNOWN and also refuses. (2) body_gcode_router.py: all four handlers call the gate as their first statement and convert GeneratorReadinessBlocked into a 422 carrying a path-free detail body, mirroring the asset layer's existing as_detail() pattern. (3) A focused test module proving the containment, the fail-closed semantics across the whole CAM surface, the non-disturbance of #380, and two audit facts that must not drift. (4) STRUCTURAL: the neck route is extracted from body_gcode_router.py into neck_gcode_router.py, and the five helpers both routers need move to _gcode_common.py so that neither router imports the other. A neck manufacturing route does not belong in a body G-code router. Route path, request contract and manufacturing behaviour are unchanged; the readiness gate remains the first manufacturing decision and the neck route remains REVIEW_REQUIRED.",
     "why": "The Strat route is fail-open today and the audit witnessed five verified S0 findings on it. The asset gate cannot reach it without distorting the substrate merged by #380, because the route presents no DXF to authorize. Source authority, generator readiness and operation preflight are three different questions and collapsing them is how this route ended up outside the first gate. Only an explicitly established manufacturing authority may permit emission, and this layer expresses no such authority for any route.",
     "why_not_redundant": "No existing mechanism can refuse this route. require_manufacturing_authority resolves a DXF asset and has exactly one caller on main (lespaul_body_generator.py:45); the Strat sources geometry from body_outlines.json plus constants, so there is no path argument to give it. @safety_critical decorates all four routes but only disables broad exception swallowing and re-raises -- it authorizes nothing and validates no emitted motion. tests/test_body_gcode_router_smoke.py asserts only 401 on these routes and asserts the hardcoded literal cam_ready: True, which is a self-declaration rather than a probe. Nothing else would refuse a Strat body request.",
-    "what_did_not_change": "instrument_geometry/dxf_authority.py is untouched. No generator, config, outline, toolpath or G-code emission code is modified. app/cam/flying_v/depth_validator.py is untouched and remains unwired -- it is evidence for a future preflight layer, not part of this increment. @safety_critical is neither removed nor redesigned, and the new layer does not depend on it."
+    "what_did_not_change": "instrument_geometry/dxf_authority.py is untouched. No generator, config, outline, toolpath or G-code emission code is modified. app/cam/flying_v/depth_validator.py is untouched and remains unwired -- it is evidence for a future preflight layer, not part of this increment. @safety_critical is neither removed nor redesigned, and the new layer does not depend on it. No governance baseline, large-file count target or technical-debt ratchet was edited. The extraction preserves the neck route path, contract and fail-closed behaviour, and does not touch the separately tracked cam_workspace_router neck path that carries the standing rapids-at-cutting-depth finding.",
+    "why_structural_extraction": "Adding the containment gate pushed body_gcode_router.py from exactly 500 lines to 532, which was a NEW violation in four independent governance mechanisms: ci/file_size_gate.py, app/ci/check_file_sizes.py, and tests/test_technical_debt_gates.py::test_large_files_count (large-file count 100 exceeds target 99), which in turn failed API Tests, api-verify and Core CI Summary. The alternative was to raise three governance baselines to accommodate 20 lines. The gate was correct: it exposed that the file was already structurally saturated and hosting a route that does not belong to it. The boundary was fixed instead of the ratchet being weakened. NO baseline, large-file count target or technical-debt ratchet was modified."
   },
   "verification": {
     "commands_run": [
-      "cd services/api && pytest tests/test_generator_readiness.py -q --no-cov -p no:logging",
-      "cd services/api && pytest tests/test_lespaul_manufacturing_authority.py -q --no-cov -p no:logging  (regression: #380 behaviour unchanged)",
-      "cd services/api && pytest tests/test_body_gcode_router_smoke.py -q --no-cov -p no:logging  (regression: existing route smoke)",
-      "python -c 'import ast; ast.parse(open(router).read())'  (router parses)",
+      "cd services/api && pytest tests/test_generator_readiness.py tests/test_lespaul_manufacturing_authority.py tests/test_body_gcode_router_smoke.py tests/test_flying_v_cam.py -q --no-cov -p no:logging -> 53 passed, 1 skipped (identical before and after the extraction)",
+      "cd services/api && pytest tests/test_technical_debt_gates.py -q --no-cov",
+      "python ci/file_size_gate.py -> OK, 108 files at or below baseline",
+      "cd services/api && python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK: No files exceed 500 lines",
+      "large-file count in services/api/app over 500 lines -> 99 (target <= 99)",
+      "python scripts/ci/check_cbsp21_patch_input.py",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <changed>",
+      "python scripts/governance/check_all.py --tier precommit",
       "audit evidence: LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md, read-only against origin/main c7523677"
     ],
     "proofs": [
@@ -50,7 +61,13 @@
       "generator_readiness imports no instrument_geometry/dxf_authority symbol (asserted over parsed imports, not text)",
       "no Flying V depth validator symbol appears in the emission path module"
     ],
-    "hardware": "No physical-machine execution. No G-code was sent anywhere. The standing DO-NOT-CUT order is unaffected by this change."
+    "hardware": "No physical-machine execution. No G-code was sent anywhere. The standing DO-NOT-CUT order is unaffected by this change.",
+    "file_sizes": {
+      "body_gcode_router.py": "521 -> 341 lines (was exactly 500 on main; now well clear)",
+      "neck_gcode_router.py": "132 lines (new)",
+      "_gcode_common.py": "106 lines (new)",
+      "large_file_count": "99, unchanged from main; no ratchet raised"
+    }
   },
   "files": [
     {
@@ -70,6 +87,24 @@
       "intent": "Prove containment, fail-closed semantics, #380 non-disturbance, and pin two audit facts",
       "risk": "low",
       "behavior_change": "New refusal path for routes with no asset to authorize. Contains no state that grants authorization: every state stops emission except the delegation to asset authority."
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/neck_gcode_router.py",
+      "intent": "Neck G-code route in its own module; a neck route does not belong in a body router",
+      "risk": "low",
+      "behavior_change": "None -- path, contract and REVIEW_REQUIRED fail-closed behaviour preserved"
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/_gcode_common.py",
+      "intent": "Helpers shared by the body and neck routers so neither imports the other",
+      "risk": "low",
+      "behavior_change": "None -- moved verbatim"
+    },
+    {
+      "path": "services/api/app/routers/cam/guitar/__init__.py",
+      "intent": "Mount the neck router before the {model_id} catch-all so its path is unchanged",
+      "risk": "low",
+      "behavior_change": "None -- same routes served"
     }
   ],
   "architecture_scan": {
@@ -78,13 +113,14 @@
       "critical": 0,
       "high": 0,
       "medium": 1,
-      "low": 3
+      "low": 4
     },
     "findings": [
       "MEDIUM: this introduces a second refusal mechanism alongside asset authority. That is intentional and was ruled on -- the two answer different questions -- but the risk of drift is real. It is mitigated by keeping the layers import-independent (asserted by test), by giving readiness no state that can authorize, and by having the Les Paul route defer to the asset layer so only one mechanism ever speaks for a DXF-sourced route.",
       "RESOLVED: an earlier revision of this patch let REVIEW_REQUIRED emit, which made it operationally an authorization and contradicted the rule that this layer cannot say yes. REVIEW_REQUIRED now refuses. The whole CAM surface fails closed and routes are reopened one at a time as evidence is established.",
       "LOW: the readiness registry is declared in code rather than in a data file. That keeps the mechanism minimal and reviewable in-diff; if readiness later needs to be edited without a deploy it should move to a governed data file, as the DXF catalog registry did.",
-      "LOW: Flying V and neck now refuse where they previously emitted. This is a deliberate availability reduction on two routes that were never qualified for manufacturing, and it is reversible per route by recording established authority -- not by relaxing the layer."
+      "LOW: Flying V and neck now refuse where they previously emitted. This is a deliberate availability reduction on two routes that were never qualified for manufacturing, and it is reversible per route by recording established authority -- not by relaxing the layer.",
+      "RESOLVED: the containment gate initially pushed body_gcode_router.py past the 500-line limit, tripping four governance mechanisms and taking the large-file count to 100. Rather than raise three baselines, the neck route was extracted to its own module. The file is now 341 lines and the large-file count is back to 99. The governance gate did its job: it surfaced a pre-existing structural boundary problem rather than a sizing nuisance."
     ]
   }
 }
