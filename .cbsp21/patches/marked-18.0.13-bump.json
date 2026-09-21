@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MARKED_18_0_13_BUMP",
+  "title": "build(deps): bump marked from 18.0.12 to 18.0.13",
+  "intent": "Routine currency, no advisory. Dependabot patch bump of the client's Markdown renderer. The 18.0.13 release notes list seven bug fixes, all CommonMark conformance parsing corrections, plus one that is worth naming because this client renders server-supplied Markdown: 'avoid O(n^2) scanning in reflinkSearch' (markedjs/marked#4090), a quadratic-blowup hardening on reference links. No CVE or GHSA is attached to the release, so this is not filed as a security update; it is currency that happens to include a DoS-shaped fix.",
+  "change_type": "chore",
+  "behavior_change": "None to this repository's code. Lockfile audited by parsing both package-lock.json files and comparing every entry, not by reading the diff view: 412 packages before, 412 after, ZERO added, ZERO removed, and exactly ONE version change -- node_modules/marked 18.0.12 -> 18.0.13. No package kept its version while changing integrity. No transitive movement, no unrelated dependency reverted or advanced. License unchanged (MIT). marked's own API is unchanged between these two patch releases; the single call site in this repo, marked(md) in packages/client/src/views/RMOSCncJobDetailView.vue:182, needs no adjustment. Rendering output may differ in the specific CommonMark edge cases the seven fixes address (tabs in thematic breaks ending a list item, reference link label case folding, whitespace after a hard line break, HTML block start conditions ending a list item, raw tokens when closing link labels, a tab following spaces in an indented code block).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/marked-18.0.13-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/marked-18.0.13-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared range from ^18.0.12 to ^18.0.13. packages/client/package-lock.json updates the root dependency range and the node_modules/marked entry -- version, resolved URL and integrity hash. That is the complete set of changes: the lockfile comparison found no other entry differing in any field that affects resolution. Nothing incidental moved.",
+    "why_not_redundant": "Dependabot currency, and this manifest exists because Dependabot cannot author one. No existing manifest covers these paths for this change; borrowing one is what CBSP21-NOBORROW-001 refuses, and the zod 4->3 revert that rode along inside PR #296 is the reason that rule exists."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base origin/dependabot/npm_and_yarn/packages/client/marked-18.0.13 origin/main -> 576aa935f734e7f2c1bed1da6a75b8d592caa98f; all diffs taken against that merge base, not the PR view.",
+      "Lockfile audit by parsing rather than by diff: loaded both package-lock.json files with json.load and compared the full packages{} map. Result -- 412 entries before and after; ADDED: none; REMOVED: none; CHANGED: node_modules/marked 18.0.12 -> 18.0.13 only; SAME VERSION but integrity changed: none.",
+      "git diff <merge-base> <head> -- packages/client/package.json packages/client/package-lock.json -> two hunks in the lockfile (root range, marked entry) and one in package.json, consistent with the parsed audit.",
+      "Release notes read from the PR body: seven fixes, all parsing/conformance, plus markedjs/marked#4090 avoiding O(n^2) scanning in reflinkSearch. No CVE/GHSA referenced, so not a security update.",
+      "Call-site survey: grep for marked across packages/client/src returns four files, but two are the English word in comments. The only import is packages/client/src/views/RMOSCncJobDetailView.vue:135, used once at :182. packages/client/src/tools/audio_analyzer/renderers/MarkdownRenderer.vue uses v-html with a hand-rolled renderer and does NOT import marked.",
+      "CI is the build and test verification for this change; no local client build was run."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency version bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^18.0.12 -> ^18.0.13."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "None beyond the titled package. Exactly one entry changed: node_modules/marked 18.0.12 -> 18.0.13, with its resolved URL and integrity. No incidental movement, verified by comparing all 412 entries."
+    },
+    {
+      "path": ".cbsp21/patches/marked-18.0.13-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-21-MARKED-18-0-13",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [
+      {
+        "id": "MARKED-XSS-SURFACE-1",
+        "severity": "low",
+        "summary": "Pre-existing, NOT introduced by this bump: packages/client/src/views/RMOSCncJobDetailView.vue renders marked(md) into v-html at :115 with no sanitizer. marked v5+ removed its built-in sanitize option and documents that callers must sanitize output themselves. The input is job.operator_report_md from the CNC job detail API, so the exposure is stored rather than reflected. Recorded here because the survey found it; not repaired in this PR, because adding a sanitizer dependency inside a Dependabot patch bump would make the bump un-reviewable."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface changed by this PR. The lockfile moved nothing beyond the titled package, which the parsed audit in verification.commands_run establishes. The one low finding is a pre-existing sanitization gap at the single marked call site, raised for separate triage and deliberately left untouched here."
+  }
+}
