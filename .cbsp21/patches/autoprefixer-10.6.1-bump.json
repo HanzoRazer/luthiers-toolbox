@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AUTOPREFIXER_10_6_1_BUMP",
+  "title": "build(deps-dev): bump autoprefixer from 10.5.4 to 10.6.1",
+  "intent": "Dependabot minor devDependency currency for packages/client autoprefixer (PostCSS vendor-prefix plugin). No security advisory cited. Dev/build tooling only; not shipped in the client runtime bundle.",
+  "change_type": "chore",
+  "behavior_change": "none in application runtime. Lockfile audited against merge-base 576aa935 by enumerating packages/client/package-lock.json `packages` entries (412 before, 412 after; added=0, removed=0). Seven entries changed version, all in the autoprefixer/browserslist resolution chain: autoprefixer 10.5.4 -> 10.6.1; baseline-browser-mapping 2.11.15 -> 2.11.25; browserslist 4.28.8 -> 4.29.0; caniuse-lite 1.0.30001809 -> 1.0.30001810; electron-to-chromium 1.5.411 -> 1.5.431; node-releases 2.0.53 -> 2.0.56; update-browserslist-db 1.3.1 -> 1.3.3. No unrelated declared dependency moved.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/autoprefixer-10.6.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/autoprefixer-10.6.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json: autoprefixer ^10.4.27 -> ^10.6.1 (resolved 10.5.4 -> 10.6.1). Lockfile transitive browser-data packages updated as listed in behavior_change.",
+    "why_not_redundant": "Dependabot PR #392; per-PR manifest required (CBSP21-NOBORROW-001). Existing dependency manifests on main would cover these paths but belong to other PRs."
+  },
+  "verification": {
+    "commands_run": [
+      "lockfile enumeration vs merge-base 576aa935: 412 -> 412 entries, version-changed=7 (autoprefixer chain only), added=0, removed=0",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/autoprefixer-10.6.1-bump.json packages/client/package.json packages/client/package-lock.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "CI build-and-test, lint-build, and client test jobs are verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency range bump for autoprefixer.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": ["git diff origin/main...HEAD -- packages/client/package.json"]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for autoprefixer 10.6.1 and transitive browserslist data packages.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "transitive lockfile only (seven packages in autoprefixer chain; see top-level behavior_change)",
+      "verification": ["lockfile entry enumeration vs merge-base 576aa935"]
+    },
+    {
+      "path": ".cbsp21/patches/autoprefixer-10.6.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for Dependabot PR #392.",
+      "scan_targets": [".cbsp21/patches/autoprefixer-10.6.1-bump.json"],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-21-AUTOPREFIXER",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "DevDependency PostCSS plugin bump only. No production routes, RMOS, or authority model changes. Transitive browserslist/caniuse-lite movement is expected lockfile resolution.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
