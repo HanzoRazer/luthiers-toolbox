@@ -1,0 +1,72 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TYPES_NODE_26_6_1_BUMP",
+  "title": "build(deps-dev): bump @types/node from 26.4.1 to 26.6.1 in /packages/client",
+  "intent": "Routine Dependabot currency, no advisory. Types-only devDependency bump inside the existing ^26 range. Authored by hand because Dependabot cannot author a manifest and CBSP21-NOBORROW-001 makes a borrowed one invalid; that friction is the point.",
+  "change_type": "chore",
+  "behavior_change": "None at runtime. DevDependency typings only. Lockfile enumerated by parsing both package-lock.json trees to JSON and comparing every entry under `packages` (412 entries before and after, 0 added, 0 removed): exactly two versions move, both upward and both dev=true -- @types/node 26.4.1 -> 26.6.1 and its transitive undici-types 8.3.0 -> 8.9.0. NO non-dev package moved and nothing was reverted. The declared range in package.json moves ^26.4.1 -> ^26.6.1, which is inside the range already in force.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/types-node-26.6.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/types-node-26.6.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json declares @types/node ^26.6.1 (was ^26.4.1). packages/client/package-lock.json resolves @types/node 26.6.1 and undici-types 8.9.0. No other lockfile entry changed in either direction.",
+    "why_not_redundant": "Dependabot currency. The bump is already open as PR #391 and both CBSP21 gates fail there for want of a manifest of its own; this is that manifest.",
+    "what_did_not_change": "No production dependency. No source file. No build, lint or test configuration. The Node engines range stays ^20.19.0 || >=22.22.2 and is not touched by this bump."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base origin/main FETCH_HEAD -> 576aa935f734e7f2c1bed1da6a75b8d592caa98f",
+      "python - <<parse both package-lock.json trees with json.load and diff every `packages` entry>> -> 412 entries before and after, 0 added, 0 removed, exactly 2 version movements: node_modules/@types/node 26.4.1->26.6.1 dev=True and node_modules/undici-types 8.3.0->8.9.0 dev=True; non-dev packages moved: 0",
+      "python -c \"import json; json.load(open('.cbsp21/patches/types-node-26.6.1-bump.json', encoding='utf-8'))\" -> valid JSON",
+      "python scripts/ci/check_cbsp21_patch_input.py",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/types-node-26.6.1-bump.json packages/client/package.json packages/client/package-lock.json"
+    ],
+    "manual_verifications": [
+      "Lockfile was enumerated by parsing both JSON trees, NOT by reading the diff view. The truncated diff view is how PR #296 landed a supabase bump that silently reverted zod 4 to 3; the enumeration above is the check that would have caught it.",
+      "Merge-risk note recorded rather than assumed: packages/client type-check and lint are `continue-on-error: true` in .github/workflows/client_lint_build.yml (lines 42 and 46, the former annotated '400+ pre-existing type errors'), and `vite build` strips types rather than checking them. Nothing blocking in CI validates TypeScript types, so a green run on this PR is not evidence that the new typings type-check cleanly. This is a pre-existing property of the lane, not a regression introduced here.",
+      "Pre-existing and NOT introduced by this bump: packages/client declares engines ^20.19.0 || >=22.22.2 while @types/node is a ^26 line, and client_lint_build.yml provisions Node 20.x. The typings therefore describe a newer runtime than the floor the package supports. The branch was already on 26.4.1, so this bump perpetuates that mismatch rather than creating it; flagged here so it is visible rather than inherited silently."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency version bump, inside the existing ^26 range.",
+      "risk": "low",
+      "behavior_change": "None at runtime."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "None at runtime. Two dev-only upward movements: @types/node 26.4.1->26.6.1, undici-types 8.3.0->8.9.0. No other entry moved."
+    },
+    {
+      "path": ".cbsp21/patches/types-node-26.6.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-21-TYPES-NODE-26-6-1",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 2 },
+    "findings": [
+      "LOW: nothing blocking in CI validates TypeScript types for packages/client -- type-check and lint are continue-on-error and the production build strips types. A types-only bump is therefore verified by CI only insofar as tests and the build pass. Pre-existing lane property, recorded so the green result is not over-read.",
+      "LOW: @types/node is a ^26 line while packages/client engines are ^20.19.0 || >=22.22.2 and CI provisions Node 20.x. Pre-existing before this bump (the branch was already on 26.4.1); not introduced here and not corrected here."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moved nothing beyond the titled package and its one transitive dependency, both dev-only and both upward, established by parsing both lockfile trees rather than reading the diff."
+  }
+}
