@@ -347,6 +347,33 @@ def test_neck_route_refuses_while_review_required(authenticated):
         assert token not in response.text, f"G-code token {token!r} escaped"
 
 
+def test_current_guitar_manufacturing_routes_have_readiness_records():
+    """Pin coverage so a new guitar manufacturing route cannot silently bypass readiness."""
+    from app.main import app
+
+    prefix = "/api/cam/guitar/"
+    discovered = {
+        route.path[len(prefix):]
+        for route in app.routes
+        if route.path.startswith(prefix)
+        and "POST" in getattr(route, "methods", set())
+        and route.path.endswith("/gcode")
+    }
+    expected_paths = {
+        "stratocaster/body/gcode",
+        "les_paul/body/gcode",
+        "flying_v/body/gcode",
+        "{model_id}/neck/gcode",
+    }
+    assert discovered == expected_paths, (
+        "guitar manufacturing route surface changed; classify every new/removed "
+        "route in generator readiness before updating this inventory"
+    )
+    assert set(GENERATOR_READINESS) == {
+        "stratocaster_body", "les_paul_body", "flying_v_body", "neck"
+    }
+
+
 def test_status_does_not_advertise_contained_routes_cam_ready(authenticated):
     response = authenticated.get("/api/cam/guitar/status")
     assert response.status_code == 200, response.text
