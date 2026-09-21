@@ -8,7 +8,9 @@ neither router package has to import the other.
 from __future__ import annotations
 
 import io
+import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
