@@ -29,6 +29,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ....instrument_geometry.dxf_authority import ManufacturingAuthorityBlocked
+from ....cam.generator_readiness import (
+    GeneratorReadinessBlocked,
+    require_generator_readiness,
+)
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -166,6 +170,13 @@ def generate_stratocaster_body_gcode(
 
     Returns .nc file as streaming download.
     """
+
+    # Generator readiness (middle authority layer). Returning here is
+    # not an authorization; downstream asset authority may still refuse.
+    try:
+        require_generator_readiness("stratocaster_body")
+    except GeneratorReadinessBlocked as exc:
+        raise HTTPException(status_code=422, detail=exc.as_detail())
     project = _get_project_or_404(project_id, principal, db)
     design_state = _parse_design_state_or_422(project)
 
@@ -227,6 +238,13 @@ def generate_les_paul_body_gcode(
 
     Returns .nc file as streaming download.
     """
+
+    # Generator readiness (middle authority layer). Returning here is
+    # not an authorization; downstream asset authority may still refuse.
+    try:
+        require_generator_readiness("les_paul_body")
+    except GeneratorReadinessBlocked as exc:
+        raise HTTPException(status_code=422, detail=exc.as_detail())
     project = _get_project_or_404(project_id, principal, db)
     design_state = _parse_design_state_or_422(project)
 
@@ -300,6 +318,13 @@ def generate_flying_v_body_gcode(
 
     Returns .nc file as streaming download.
     """
+
+    # Generator readiness (middle authority layer). Returning here is
+    # not an authorization; downstream asset authority may still refuse.
+    try:
+        require_generator_readiness("flying_v_body")
+    except GeneratorReadinessBlocked as exc:
+        raise HTTPException(status_code=422, detail=exc.as_detail())
     project = _get_project_or_404(project_id, principal, db)
     design_state = _parse_design_state_or_422(project)
 
@@ -376,6 +401,13 @@ def generate_neck_gcode(
 
     Returns .nc file as streaming download.
     """
+
+    # Generator readiness (middle authority layer). Returning here is
+    # not an authorization; downstream asset authority may still refuse.
+    try:
+        require_generator_readiness("neck")
+    except GeneratorReadinessBlocked as exc:
+        raise HTTPException(status_code=422, detail=exc.as_detail())
     project = _get_project_or_404(project_id, principal, db)
     design_state = _parse_design_state_or_422(project)
 
