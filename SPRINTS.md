@@ -2963,74 +2963,109 @@ Systematic audit to identify code that was developed for purposes that may have 
 
 ### Sprint M9 — Smart Guitar geometry authority reconciliation (SG-GEOM-AUTH-001)
 
-**Status:** ACTIVE — step 1 (this registration) COMPLETE; reconciliation NOT started
+**Status:** ACTIVE — **TEMPORARY OBSERVATION RECORD, PENDING OWNER DECISION. IT ESTABLISHES NO
+AUTHORITY.** Step 1 (this registration) COMPLETE; reconciliation NOT started
 **last_verified:** 2026-09-20 (every record value below re-read on `origin/main` @ `c7523677`)
 **Category:** Data integrity / instrument geometry authority
-**Why it exists:** the current Smart Guitar design rulings live in session notes, and
+**Why it exists:** the current Smart Guitar design decisions live in session notes, and
 `docs/SPRINTS_MAINTENANCE.md` Rule 6 forbids chat-only notes as the system of record. This entry is
-the system-of-record starting point. It records authority and disposition only — **no record file is
-amended by it.**
+the system-of-record starting point. **It establishes no authority** — it records observations and
+their disposition, and **no record file is amended by it.**
 
 **Records pinned:** every field cited below was read from `origin/main` @ `c7523677`, where
 `smart_guitar_v1.json` is blob `409a8efa1d6d` and `smart_guitar_setup_spec.json` is blob
 `8b4255573506`. **Line numbers move; the blob ids and the key paths do not** — both are given for
 every citation. This branch changes neither file.
 
-**Evidence class:** this entry is an **OBSERVATION RECORD**. Every number in it is either an owner
-ruling, a field read out of a named record, or arithmetic over those two — and arithmetic here is
-**an observation about the records, never derived geometry authority**. Nothing in this entry may
-be used as a manufacturing input. The authority chain below is what governs that, and nothing in
-this file has passed its CAD gate.
+> ### ⛔ WHAT THIS RECORD IS, AND WHAT IT IS NOT
+>
+> **This is a temporary observation record pending owner decision. It does not establish
+> authority — not over the design, not over any parameter in it, and not over manufacturing.**
+>
+> **The design is under active revision by the owner.** The parameters below are working values
+> captured mid-revision. **They will be finalized by the owner once the CAD operation has produced
+> an acceptable model** — that is the event which settles them, and it has not happened. Until it
+> does, **every figure in Part A is provisional and may change, including the ones that currently
+> look settled.** Do not plan, cut, quote or build on any of them.
+>
+> **This record does not ask the owner to adjudicate anything yet.** Where two values conflict, the
+> conflict is logged, not resolved. Resolving it before CAD would fix a number the CAD model is
+> about to determine.
+>
+> **What this record is for:** so that when the CAD model arrives, the contradictions it has to
+> clear are already written down and traceable, instead of being rediscovered from session notes.
+> That is its whole job.
+>
+> **Before any part of this becomes operational it requires explicit owner signoff** — see
+> **Part C — Owner signoff** at the end of this entry. Unsigned, it is a reading list.
+
+**Evidence class:** every number here is either a working value stated by the owner, a field read
+out of a named record, or arithmetic over those two — and **arithmetic here is an observation about
+the records, never derived geometry authority**.
 
 > ### 🔴 SAFETY STOP — READ BEFORE ANY SMART GUITAR CUT
 >
 > **`op20_status` still reads `"READY - cut at 4.5deg, verify on first article"` in both specs, on
-> `main`, right now. This entry has NOT corrected it and does not authorize a cut.** Registering the
-> contradiction is not resolving it. Until the first step below is done and CAD-verified, **OP20 is
-> not safe to run at any angle** — the record names 4.5°, the ruling names ~1.8°, and a pocket cut
-> at the wrong one cannot be undone on a finished body.
+> `main`, right now** — `smart_guitar_v1.json:250` and `smart_guitar_setup_spec.json:52`. **This
+> entry has NOT corrected it and does not authorize a cut.** Registering a contradiction is not
+> resolving it.
+>
+> **OP20 is not safe to run at any angle.** The record says 4.5°, the owner's current working
+> figure is ~1.8°, **and the design is still being revised** — so the correct angle is not yet
+> known by anyone, including this entry. A pocket cut at the wrong one cannot be undone on a
+> finished body. The stop lifts when the CAD model is accepted and Part C is signed, not when this
+> entry merges.
 
-#### Geometry package — owner ruling 2026-09-20
+---
 
-| Quantity | Value | Disposition |
+#### PART A — WORKING VALUES (IN REVISION · NOT AUTHORITY)
+
+> **Every row below is a working value in a design the owner is actively revising. None of it is
+> authority. All of it is superseded the moment the CAD model is accepted.** The "as of" date says
+> when the value was stated, not that it still stands.
+
+| Quantity | Working value (as of 2026-09-20) | Standing |
 |---|---|---|
-| Body height | **521.8 mm** | **CURRENT WORKING AUTHORITY** — current design ruling, **awaiting CAD/source verification before manufacturing freeze**. NOT CAD-verified; do not label it so without the drawing or geometry source |
-| Fretboard/body attachment | **12th fret** | CURRENT DESIGN RULING |
-| Neck angle | **1.5°–2.0°**, preferred nominal **~1.8°** | exploration band + nominal — **🔴 CONFLICTS WITH THE RECORD'S OWN BAND**, see below |
+| Body height | **521.8 mm** | **WORKING VALUE** — the owner's current figure, **not CAD-verified and not frozen**. Do not describe it as verified, authoritative or final |
+| Fretboard/body attachment | **12th fret** | **WORKING VALUE** — current design direction, not yet in any record (see Part B) |
+| Neck angle | **1.5°–2.0°**, nominal **~1.8°** | **WORKING BAND** — **⚠️ a different band is recorded elsewhere**, see below. CAD settles this; neither band is final |
 | `PU_NECK` | 207.125 | **PROVISIONAL** — CAD confirmation required |
-| Neck-pickup setback | 10.0 mm | **UNSUPPORTED** — provenance required |
-| Neck-pocket projection | — | **UNGOVERNED** — must be derived from a traceable CAD/datum, **not** repository inference |
-| Body height (earlier) | 528.1 mm | **SUPERSEDED / HISTORICAL** — earlier photo-scaled derivation. Retained as evidence because it explains prior calculations; **must never re-enter manufacturing arithmetic** |
-| `neck.neck_length.body_length_mm` | 438.15 mm | **LES PAUL REFERENCE ONLY** — reference geometry, **not** Smart Guitar governing geometry |
+| Neck-pickup setback | 10.0 mm | **UNSUPPORTED** — no recorded provenance |
+| Neck-pocket projection | — | **UNGOVERNED** — must come from the CAD model or a traceable datum, **never** from repository arithmetic |
+| Body height (earlier) | 528.1 mm | **SUPERSEDED / HISTORICAL** — earlier photo-scaled derivation. Kept because it explains prior calculations; **must never re-enter manufacturing arithmetic** |
+| `neck.neck_length.body_length_mm` | 438.15 mm | **LES PAUL REFERENCE ONLY** — reference geometry, **not** Smart Guitar geometry |
 
-**🔴 Unreconciled: two different owner bands are in play.** This entry states **1.5°–2.0°**.
+**⚠️ Two different bands are written down.** This entry carries **1.5°–2.0°**;
 `smart_guitar_setup_spec.json:43` states, three times, *"CURRENT NECK ANGLE AUTHORITY: the owner
-ruling of **1.5-2.5** deg."* Both are recorded as owner rulings; they are not the same band, and
-**this entry does not resolve which is current** — that is an owner call, and picking one here would
-manufacture authority out of a reconciliation note. The ~1.8° nominal sits inside both, so it is not
-affected; the **upper bound is**, and the upper bound is what a pocket depth is cut to. Resolving
-this is part of the close trigger.
+ruling of **1.5-2.5** deg."* They are not the same band. **This entry does not resolve which is
+current and does not ask the owner to** — the design is in revision and the angle is one of the
+parameters CAD will settle. The ~1.8° nominal sits inside both; the **upper bound** differs, and the
+upper bound is what a pocket is cut to, which is precisely why it waits for the model rather than
+for a note. Logged here so the CAD pass has it in hand.
 
-**Authority chain (the order that must hold):**
+**The order that must hold before anything is cut:**
 
 ```text
-CURRENT USER / DESIGN RULING
+DESIGN IN REVISION  (owner)             ← where the Smart Guitar is now
         ↓
-521.8 mm
+WORKING VALUES  (Part A, this entry)    ← provisional; no authority
         ↓
-CAD / DRAWING VERIFICATION      ← not yet done; this is the freeze gate
+CAD MODEL ACCEPTED BY OWNER             ← ✗ NOT DONE. Parameters are finalized HERE.
+        ↓
+OWNER SIGNOFF  (Part C)                 ← ✗ NOT DONE
         ↓
 GEOMETRY AUTHORITY
         ↓
 CAM / CUTTING
 ```
 
-A design ruling is authority over the design. It is **not** documentary confirmation, and nothing
-reaches CAM without passing CAD verification first.
+**Two gates are open, not one.** A working value is not documentary confirmation; an accepted CAD
+model is not a signoff. Nothing reaches CAM until both are closed, and **this entry closes
+neither**.
 
 **Working equivalence (provisional):** `body height` ≡ `neck.neck_length.body_length_mm` for the
 Smart Guitar long-axis body dimension. **Status: provisional semantic mapping, not yet CAD-verified.**
-It is recorded because 438.15 entered the authority trail through that field while the ruling is
+It is recorded because 438.15 entered the trail through that field while the working value is
 expressed as a body height. **Do not harden it into schema authority.** If CAD later shows the two
 name different datums, the reconciliation must split them and **recompute all dependent geometry**.
 
@@ -3038,9 +3073,17 @@ name different datums, the reconciliation must split them and **recompute all de
 bridge 204.25 mm; overall length ≈ 877 mm. Any other figure whose derivation includes 528.1 inherits
 this mark.
 
-#### Contradictions already on `main` (evidence, re-read 2026-09-20)
+---
 
-`services/api/app/instrument_geometry/body/specs/`:
+#### PART B — CONTRADICTION LOG (EVIDENCE ONLY)
+
+> **This part records what the repository currently says. It records nothing about what is
+> correct.** Every bullet is a field quoted from a named record at a pinned blob. A contradiction
+> appearing here means the records disagree — **not** that the value in Part A is the right one, and
+> **not** that anything has been decided. Nothing here may be read as a correction, an instruction
+> or a value to build from. It is the list the CAD pass has to clear.
+
+Re-read 2026-09-20 in `services/api/app/instrument_geometry/body/specs/`:
 
 - `smart_guitar_v1.json` — `cavities.neck_pocket.neck_angle_deg` = **3.5** while, in the same object,
   `cavities.neck_pocket.op20_status` = **"READY - cut at 4.5deg, verify on first article"**. A record
@@ -3066,7 +3109,7 @@ this mark.
   particular. Combined with the block's own "RELATIVE, not absolute" caveat and its superseded
   inputs (scale **628.65**, now 647.7; join fret **19**, now ruled 12), the sweep is **not usable as
   manufacturing evidence** and is recorded here only to explain how 4.5° entered the record.
-- **🔴 The 12th-fret ruling contradicts the join-fret fields themselves**, not just the solver
+- **🔴 The 12th-fret working value contradicts the join-fret fields themselves**, not just the solver
   block. Three Smart Guitar fields carry a join fret and **not one of them is 12**:
   `smart_guitar_v1.json:826` `neck.neck_length.body_join_fret` = **"TBD — 19 or 20, pending
   first-article verification"** (structural — this is the one that matters);
@@ -3106,11 +3149,13 @@ this mark.
   premise and is an observation about the records, not a manufacturing depth.** The shoulder
   requirement must come from a traceable datum or CAD model.
 
-**Coupling:** neck pocket, 12th-fret attachment, body height and the ~1.8° target are one coupled
-system; they reconcile together or not at all. The `bass_chamber` constraint defect belongs inside
-this reconciliation: it depends on a neck-pocket projection that is not numerically governed, so the
-system must **not manufacture that projection from repository arithmetic** until a traceable datum
-defines it.
+**Coupling — and why nothing here can be settled one item at a time:** neck pocket, 12th-fret
+attachment, body height and the ~1.8° working angle are **one coupled system**. Move any of them and
+the others move. That is the structural reason this entry defers to the CAD model instead of asking
+for piecemeal decisions: **they reconcile together against a single accepted model, or not at all.**
+The `bass_chamber` constraint defect sits inside that same system — it depends on a neck-pocket
+projection nothing numerically governs, so the system must **not manufacture that projection from
+repository arithmetic** while the design is in revision.
 
 **Cross-repo (public, directly reviewable):** the neck-pocket authority findings live in
 `HanzoRazer/CNC-Production-Shop` (public) on branch `sg-authority-cleanup`, commit
@@ -3131,26 +3176,55 @@ CAD confirmation"* and *"10.0 mm setback STATUS: unsupported repository ruling"*
 the two dispositions above. `sg-spec` is **not** in the neck-pocket authority chain: it was checked,
 not accused.
 
-**Close trigger** — all of these, not a subset:
+---
 
-1. Every quantity above resolves to exactly one disposition backed by a CAD/drawing source.
-2. The two specs agree with each other and with the ruling — including **scale length**, where they
+#### PART C — WHAT MUST HAPPEN, AND WHO SIGNS
+
+**Close trigger** — all of these, not a subset, and **none of them is satisfied by this entry**:
+
+1. Every quantity in Part A resolves to exactly one value taken from the **accepted CAD model**.
+2. The two specs agree with each other and with that model — including **scale length**, where they
    currently do not (628.65 vs 647.7).
-3. `op20_status` no longer names an angle the ruling contradicts, **in both specs**.
-4. The neck-angle band is settled to one figure: **1.5–2.0 or 1.5–2.5**, owner-ruled, both specs
-   updated.
-5. `body_join_fret` reads the ruled fret in both records, and **every quantity defined as
+3. `op20_status` no longer names an angle the model contradicts, **in both specs**.
+4. The neck-angle band collapses to a single figure **from the model** — not by choosing between
+   the 1.5–2.0 and 1.5–2.5 bands on paper — and both specs are updated to it.
+5. `body_join_fret` reads the final fret in both records, and **every quantity defined as
    `fret_pos(join_fret)` is recomputed** rather than relabelled.
-6. The **heel** neck-and-board stack is measured, and the pocket-depth relationship is derived from
-   a traceable datum — not from the 12th-fret stack figure, which governs nothing here.
-7. The provisional `body height` ≡ `body_length_mm` equivalence is either CAD-confirmed or split
-   with dependants recomputed.
+6. The **heel** neck-and-board stack is measured on the model, and the pocket-depth relationship is
+   derived from it — not from the 12th-fret stack figure, which governs nothing here.
+7. The provisional `body height` ≡ `body_length_mm` equivalence is either confirmed against the
+   model or split, with dependants recomputed.
+8. **The owner has accepted a CAD model**, the parameters are finalized against it, and the signoff
+   block below is filled in.
+
+Items 1–7 are not independent questions for the owner to answer one at a time. **They are the list
+the accepted CAD model has to clear in one pass**, which is why this entry resolves none of them.
+
+##### Owner signoff — REQUIRED BEFORE ANY PART OF THIS IS OPERATIONAL
+
+**Unsigned, this entry is a reading list.** It authorizes no cut, no CAM run, no record amendment
+and no downstream calculation. Nothing in Part A may be treated as a parameter, and nothing in
+Part B as a correction, until this block is filled in and committed.
+
+```text
+CAD model accepted by owner ......... [ ]  model ref: ____________  date: __________
+Parameters finalized against it ..... [ ]  date: __________
+Part A values superseded by the model [ ]  (expected — Part A is pre-CAD)
+Owner signoff ....................... [ ]  name: ____________  date: __________
+```
+
+Until all four are checked, the correct reading of this entry is: *the Smart Guitar geometry is
+under revision, these are the numbers in play, these are the places the records disagree, and
+nothing is decided.*
 
 **First step (NOT STARTED — nothing below has been done):** amend `op20_status` in both specs. It is
 the only item here that can destroy a body, so it goes **first and alone**, in its own PR, and it is
-a *safety stop*, not a reconciliation: it removes an instruction to cut at an angle the ruling
-contradicts. It does **not** decide the angle — the 1.5–2.0 / 1.5–2.5 band conflict above and the
-unmeasured heel stack both remain open afterwards.
+a *safety stop*, not a reconciliation: it removes a standing instruction to cut at 4.5°.
+
+**It is the one step that does not wait for CAD, and the only one.** Everything else in this entry
+waits for the accepted model; a record that says READY while the design is being revised is
+dangerous *now*, and removing that instruction decides nothing about the angle. The two bands and
+the unmeasured heel stack stay open afterwards, and are meant to — CAD settles them, not this.
 
 A prior pass already saw this and deliberately left it: `smart_guitar_setup_spec.json:43` carries
 *"SUPERSEDED, NOT CORRECTED HERE: open_items.neck_angle_analysis still reads status RESOLVED with
@@ -3158,9 +3232,10 @@ resolution 'Cut at 4.5deg (Explorer reference)', and 4.5 deg still appears elsew
 including op20_status … This patch deliberately does not amend them; that is a separate, authorized
 change."* **This entry is that authorization being requested, not that change being made.**
 
-**CI at the head of this PR:** 31 checks pass, 1 skipped (`trending`), 0 failures, at
-`b3a4e9f735ed889c3f2cac46ec4a1f67d6aa8ac8` — including `Core CI Summary`, `Fence Checks (Blocking)`,
-`CBSP21 Patch Manifest Gate`, `Geometry Parity` and `Governance Summary`.
+**CI:** measured at `b3a4e9f735ed889c3f2cac46ec4a1f67d6aa8ac8` — 31 checks pass, 1 skipped
+(`trending`), 0 failures, including `Core CI Summary`, `Fence Checks (Blocking)`, `CBSP21 Patch
+Manifest Gate`, `Geometry Parity` and `Governance Summary`. Later commits on this branch re-run the
+same set; read the PR for the current head rather than trusting this line.
 
 **Namespace note:** `SG` is **not** a registered prefix in `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
 and this entry does not register one — `SG-GEOM-AUTH-001` is a finding ID inside this sprint, following
