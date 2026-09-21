@@ -37,6 +37,42 @@ expressed here.
 
 Evidence: ``LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md``, audited read-only against
 ``origin/main`` ``c7523677``.
+
+OPEN CONTAINMENT FINDINGS (recorded here, not closed by this module)
+-------------------------------------------------------------------
+
+**CF-1 -- the neck surface is two code paths, not one, and only one is gated.**
+Confirmed 2026-09-21 by reading both endpoints' sources:
+
+===========================================  ==========================  ======
+route                                        emits via                   gated
+===========================================  ==========================  ======
+``/api/cam/guitar/{model_id}/neck/gcode``    35 inline                   yes
+                                             ``gcode_lines.append``
+                                             calls in the router;
+                                             **no generator class**
+``/api/neck/gcode/generate``                 ``NeckGCodeGenerator``      no
+``/api/neck/gcode/download``                 delegates to ``/generate``  no
+===========================================  ==========================  ======
+
+They are **not the same governed generator identity**, which is the opposite of
+what the route names suggest. The ``"neck"`` record below governs a handler that
+constructs no generator, while the real ``NeckGCodeGenerator`` is reachable only
+through the two ungated endpoints -- and those answer unauthenticated. Gating
+them under the ``"neck"`` key would therefore be wrong: it would attach a record
+written about inline router code to a different implementation with different
+exposure. They need their own classification, or retirement, decided on their own
+evidence. Deliberately out of scope for CAM-CONTAIN-001.
+
+**CF-2 -- enforcement is per handler, across independently registered route
+families.** Containment closed the seven G-code routes under ``/api/cam/guitar/``
+one handler at a time, and each round of review found another that had been
+missed, because nothing structurally requires a G-code-producing endpoint to
+consult an authority layer. The application exposes roughly sixty such endpoints
+outside this prefix (probe, retract, drilling, vcarve, binding, toolpath, saw,
+vision, geometry...). The next increment should inventory every G-code-producing
+endpoint application-wide and reconcile each to a governed generator, rather than
+extending this registry prefix by prefix.
 """
 
 from __future__ import annotations

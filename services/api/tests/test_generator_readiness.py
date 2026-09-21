@@ -11,6 +11,7 @@ route in the readiness registry is marked manufacturing-ready.
 
 Read-only with respect to hardware: nothing here drives a machine.
 """
+import re
 import uuid
 
 import pytest
@@ -30,6 +31,26 @@ STRAT_ROUTE = "/api/cam/guitar/stratocaster/body/gcode"
 LES_PAUL_ROUTE = "/api/cam/guitar/les_paul/body/gcode"
 FLYING_V_ROUTE = "/api/cam/guitar/flying_v/body/gcode"
 NECK_ROUTE = "/api/cam/guitar/les_paul/neck/gcode"
+ACOUSTIC_BODY_ROUTE = "/api/cam/guitar/acoustic/dreadnought/body/gcode"
+ACOUSTIC_SOUNDHOLE_ROUTE = "/api/cam/guitar/acoustic/dreadnought/soundhole/gcode"
+ACOUSTIC_BINDING_ROUTE = "/api/cam/guitar/acoustic/dreadnought/binding/gcode"
+
+# Bodies that would otherwise produce a real program, so a refusal cannot be
+# mistaken for a validation error on missing fields.
+_ACOUSTIC_BODY_REQUEST = {
+    "scale": 1.0,
+    "machine": {},
+    "tool_diameter_mm": 6.0,
+    "total_depth_mm": 12.0,
+    "stepdown_mm": 3.0,
+    "tab_count": 8,
+    "tab_width_mm": 15.0,
+    "tab_height_mm": 3.0,
+    "soundhole_diameter_mm": 100.0,
+    "depth_mm": 3.0,
+    "channel_depth_mm": 2.0,
+    "channel_width_mm": 2.0,
+}
 
 
 # -----------------------------------------------------------------------------
@@ -451,6 +472,89 @@ def test_status_does_not_advertise_contained_routes_cam_ready(authenticated):
         "acoustic_body", "acoustic_soundhole", "acoustic_binding",
     }
     assert all(item["cam_ready"] is False for item in endpoints.values())
+
+
+@pytest.mark.parametrize(
+    "route, route_key",
+    [
+        (ACOUSTIC_BODY_ROUTE, "acoustic_body"),
+        (ACOUSTIC_SOUNDHOLE_ROUTE, "acoustic_soundhole"),
+        (ACOUSTIC_BINDING_ROUTE, "acoustic_binding"),
+    ],
+)
+def test_acoustic_route_refuses_generation(client, route, route_key):
+    """Each acoustic route refuses under the current non-READY state, and emits nothing.
+
+    These returned .nc downloads before CAM-CONTAIN-001 was widened on the
+    2026-09-21 owner ruling. The request bodies are complete, so a 422 here is
+    the readiness refusal and not a validation error on missing fields.
+    """
+    response = client.post(route, json=_ACOUSTIC_BODY_REQUEST)
+    assert response.status_code == 422, f"{route}: {response.text}"
+    detail = response.json()["detail"]
+    assert detail["code"] == "GENERATOR_READINESS_BLOCKED", route
+    assert detail["route"] == route_key, route
+    assert detail["generator_readiness"] in {"BLOCKED", "REVIEW_REQUIRED"}, route
+    assert detail["reason"] and detail["exit_condition"], route
+
+
+@pytest.mark.parametrize(
+    "route",
+    [ACOUSTIC_BODY_ROUTE, ACOUSTIC_SOUNDHOLE_ROUTE, ACOUSTIC_BINDING_ROUTE],
+)
+def test_acoustic_refusal_emits_no_manufacturing_content(client, route):
+    """No program reaches the client: no .nc download, no gcode field, no motion lines.
+
+    Deliberately NOT a substring scan of the whole body. The readiness reason for
+    acoustic_body quotes the offending program header verbatim as evidence --
+    "( Tabs: 16 x ... )" -- so a naive scan flags the explanation as a leak. The
+    check is therefore structural: the response is a JSON refusal carrying no
+    program payload, and no field of it contains a G-code motion line.
+    """
+    response = client.post(route, json=_ACOUSTIC_BODY_REQUEST)
+    assert response.status_code == 422
+
+    # Not a file download
+    assert "attachment" not in response.headers.get("content-disposition", "")
+    assert response.headers["content-type"].startswith("application/json")
+
+    payload = response.json()
+    assert set(payload) == {"detail"}, f"{route}: unexpected top-level keys {sorted(payload)}"
+    assert "gcode" not in payload["detail"]
+    assert "nc" not in payload["detail"]
+
+    # No emitted program: a G-code line starts with a motion/spindle word at line start.
+    program_line = re.compile(r"^\s*(G0|G1|G2|G3|G17|G20|G21|G90|M3|M5|M30)\b", re.MULTILINE)
+    for field in ("code", "route", "generator_readiness"):
+        assert not program_line.search(str(payload["detail"].get(field, ""))), field
+    assert payload["detail"]["code"] == "GENERATOR_READINESS_BLOCKED"
+
+
+def test_acoustic_routes_refuse_before_the_generator_is_constructed():
+    """The gate is the first statement, so no generator is built for a refused request.
+
+    Placement matters: constructing the generator is where parameters are
+    interpreted, and a refused request must not get that far.
+    """
+    import importlib
+    import inspect
+
+    # NB: ``from app.routers.cam.guitar import acoustic_cam_router`` binds the
+    # re-exported APIRouter, not the module -- the package __init__ shadows it.
+    mod = importlib.import_module("app.routers.cam.guitar.acoustic_cam_router")
+
+    for fn_name, key in (
+        ("generate_body_perimeter", "acoustic_body"),
+        ("generate_soundhole", "acoustic_soundhole"),
+        ("generate_binding_channel", "acoustic_binding"),
+    ):
+        fn = getattr(mod, fn_name)
+        src = inspect.getsource(getattr(fn, "_original_func", fn))
+        gate_at = src.index(f'_readiness_gate("{key}")')
+        make_at = src.index("_create_generator(")
+        assert gate_at < make_at, (
+            f"{fn_name}: readiness gate must precede generator construction"
+        )
 
 
 def test_every_exposed_route_now_fails_closed(authenticated):
