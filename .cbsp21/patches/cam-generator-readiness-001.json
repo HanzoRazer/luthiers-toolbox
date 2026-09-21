@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "CAM_GENERATOR_READINESS_001_CONTAINMENT",
   "title": "feat(cam): contain the Stratocaster body route behind a generator-readiness layer",
-  "intent": "Containment only. The Stratocaster body route returns 200 with manufacturing G-code while carrying five verified stock-destroying findings, and it is structurally outside the asset-authority gate merged by #380 because that gate resolves a DXF path and this route has none. Introduce the missing middle authority layer -- generator readiness -- and use it to stop the witnessed Strat emission. Repair NOTHING: ST-1..ST-7, LP-2..LP-5, Flying V depth validation and the neck defects are all explicitly out of scope for this increment. Review follow-up: restore missing uuid/Optional imports in the extracted shared helper, directly exercise that helper in tests, and align the status endpoint so contained/delegated routes are not advertised cam_ready=true.",
+  "intent": "Containment only. The Stratocaster body route returns 200 with manufacturing G-code while carrying five verified stock-destroying findings, and it is structurally outside the asset-authority gate merged by #380 because that gate resolves a DXF path and this route has none. Introduce the missing middle authority layer -- generator readiness -- and use it to stop the witnessed Strat emission. Repair NOTHING: ST-1..ST-7, LP-2..LP-5, Flying V depth validation and the neck defects are all explicitly out of scope for this increment. Review follow-up: restore missing uuid/Optional imports in the extracted shared helper, directly exercise that helper in tests, and align the status endpoint so contained/delegated routes are not advertised cam_ready=true. Final review follow-up: align the pre-existing status smoke test with the contained status contract and add a live-app route inventory guard so future guitar G-code routes cannot appear without an explicit readiness-classification decision.",
   "change_type": "feat",
   "behavior_change": "Every exposed manufacturing route now fails closed. POST /api/cam/guitar/stratocaster/body/gcode, /flying_v/body/gcode and /{model_id}/neck/gcode return 422 GENERATOR_READINESS_BLOCKED instead of a .nc download; the Strat was the witnessed emitter, Flying V and neck are refused because repository evidence is insufficient to qualify them. The gate is the first statement in each handler, so a refused request performs no project lookup and no design-state parsing. les_paul_body defers to asset authority, so #380's DXF_MANUFACTURING_AUTHORITY_BLOCKED refusal reaches the client exactly as before. No DXF authority semantics are altered. No generator, geometry, toolpath or G-code content is modified.",
   "risk_level": "medium",
@@ -61,7 +61,8 @@
       "generator_readiness imports no instrument_geometry/dxf_authority symbol (asserted over parsed imports, not text)",
       "no Flying V depth validator symbol appears in the emission path module",
       "Shared _get_project_or_404 executes directly with UUID parsing and Optional annotation imports present; router monkeypatches cannot hide import drift",
-      "GET /api/cam/guitar/status advertises cam_ready=false for all four contained/delegated routes"
+      "GET /api/cam/guitar/status advertises cam_ready=false for all four contained/delegated routes",
+      "Guitar manufacturing-route inventory is enumerated from the live FastAPI app and pinned to the four readiness-classified routes, so route-surface drift fails the containment suite"
     ],
     "hardware": "No physical-machine execution. No G-code was sent anywhere. The standing DO-NOT-CUT order is unaffected by this change.",
     "file_sizes": {
