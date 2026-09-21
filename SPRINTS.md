@@ -2965,7 +2965,8 @@ Systematic audit to identify code that was developed for purposes that may have 
 
 **Status:** ACTIVE — **TEMPORARY OBSERVATION RECORD, PENDING OWNER DECISION. IT ESTABLISHES NO
 AUTHORITY.** Step 1 (this registration) COMPLETE; reconciliation NOT started
-**last_verified:** 2026-09-20 (every record value below re-read on `origin/main` @ `c7523677`)
+**last_verified:** 2026-09-21 (values re-read at the pinned blobs below; both blobs unchanged on
+current `main`)
 **Category:** Data integrity / pre-CAD geometry evidence
 **Why it exists:** the current Smart Guitar design decisions live in session notes, and
 `docs/SPRINTS_MAINTENANCE.md` Rule 6 forbids chat-only notes as the system of record. This entry is
@@ -2993,7 +2994,7 @@ specs in `services/api/app/instrument_geometry/body/specs/` at commit
 **Line numbers move; the blob ids and the key paths do not** — both are given for every citation.
 This branch changes neither file.
 
-> ### ⛔ WHAT THIS RECORD IS, AND WHAT IT IS NOT
+> **⛔ WHAT THIS RECORD IS, AND WHAT IT IS NOT**
 >
 > **This is a temporary observation record pending owner decision. It does not establish
 > authority — not over the design, not over any parameter in it, and not over manufacturing.**
@@ -3043,7 +3044,7 @@ What that means precisely, because the distinction is the whole point of this se
 This is disclosed rather than papered over: the alternative was to imply the repository proves
 something it does not.
 
-> ### 🔴 SAFETY STOP — READ BEFORE ANY SMART GUITAR CUT
+> **🔴 SAFETY STOP — READ BEFORE ANY SMART GUITAR CUT**
 >
 > **`op20_status` still reads `"READY - cut at 4.5deg, verify on first article"` in both specs, on
 > `main`, right now** — `smart_guitar_v1.json:250` and `smart_guitar_setup_spec.json:52`. **This
