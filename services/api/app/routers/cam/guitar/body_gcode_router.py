@@ -312,24 +312,26 @@ def body_gcode_status() -> dict:
             "stratocaster": {
                 "endpoint": "/stratocaster/body/gcode",
                 "from_project": True,
-                "cam_ready": True,
+                "cam_ready": False,
+                "note": "Generator readiness BLOCKED; no manufacturing emission permitted",
             },
             "les_paul": {
                 "endpoint": "/les_paul/body/gcode",
                 "from_project": True,
-                "cam_ready": True,
+                "cam_ready": False,
+                "note": "Delegates to DXF asset authority; currently blocked there",
             },
             "flying_v": {
                 "endpoint": "/flying_v/body/gcode",
                 "from_project": False,  # Uses existing toolpath generators
-                "cam_ready": True,
-                "note": "Uses existing Flying V toolpath generators"
+                "cam_ready": False,
+                "note": "Generator readiness REVIEW_REQUIRED; no manufacturing emission permitted"
             },
             "neck": {
                 "endpoint": "/{model_id}/neck/gcode",
                 "from_project": True,
-                "cam_ready": True,
-                "note": "Works for any model_id"
+                "cam_ready": False,
+                "note": "Generator readiness REVIEW_REQUIRED; no manufacturing emission permitted"
             },
         },
         "gen4_status": "complete",
