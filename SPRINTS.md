@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-08-19
+Last updated: 2026-09-20
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -2961,12 +2961,12 @@ Systematic audit to identify code that was developed for purposes that may have 
 
 ---
 
-### Sprint M9 — Smart Guitar geometry authority reconciliation (SG-GEOM-AUTH-001)
+### Sprint M9 — Smart Guitar pre-CAD geometry observation record (SG-GEOM-AUTH-001)
 
 **Status:** ACTIVE — **TEMPORARY OBSERVATION RECORD, PENDING OWNER DECISION. IT ESTABLISHES NO
 AUTHORITY.** Step 1 (this registration) COMPLETE; reconciliation NOT started
 **last_verified:** 2026-09-20 (every record value below re-read on `origin/main` @ `c7523677`)
-**Category:** Data integrity / instrument geometry authority
+**Category:** Data integrity / pre-CAD geometry evidence
 **Why it exists:** the current Smart Guitar design decisions live in session notes, and
 `docs/SPRINTS_MAINTENANCE.md` Rule 6 forbids chat-only notes as the system of record. This entry is
 the system-of-record starting point. **It establishes no authority** — it records observations and
@@ -3002,6 +3002,13 @@ every citation. This branch changes neither file.
 **Evidence class:** every number here is either a working value stated by the owner, a field read
 out of a named record, or arithmetic over those two — and **arithmetic here is an observation about
 the records, never derived geometry authority**.
+
+**Owner-source provenance:** the owner-originated Part A values (including 521.8 mm body height,
+12th-fret attachment, the 1.5°–2.0° working band / ~1.8° nominal, and PU_NECK 207.125) are
+**owner-stated working values from the 2026-09-20 design session**. No repository-native decision
+record preserving those statements has been identified, so the preserved-source state is
+**OWNER STATEMENT — SOURCE NOT YET REPOSITORY-PRESERVED**. They remain provisional and acquire no
+additional authority from being registered here.
 
 > ### 🔴 SAFETY STOP — READ BEFORE ANY SMART GUITAR CUT
 >
@@ -3232,10 +3239,10 @@ resolution 'Cut at 4.5deg (Explorer reference)', and 4.5 deg still appears elsew
 including op20_status … This patch deliberately does not amend them; that is a separate, authorized
 change."* **This entry is that authorization being requested, not that change being made.**
 
-**CI:** measured at `b3a4e9f735ed889c3f2cac46ec4a1f67d6aa8ac8` — 31 checks pass, 1 skipped
-(`trending`), 0 failures, including `Core CI Summary`, `Fence Checks (Blocking)`, `CBSP21 Patch
-Manifest Gate`, `Geometry Parity` and `Governance Summary`. Later commits on this branch re-run the
-same set; read the PR for the current head rather than trusting this line.
+**Historical CI evidence:** at `b3a4e9f735ed889c3f2cac46ec4a1f67d6aa8ac8`, 31 checks passed,
+1 skipped (`trending`), 0 failed. **This is historical evidence, not a claim about the current
+head.** GitHub branch-protection/check status on the final PR head is the merge-time authority; do
+not infer current-head verification from this line.
 
 **Namespace note:** `SG` is **not** a registered prefix in `docs/governance/SPRINT_NAMESPACE_STANDARD.md`
 and this entry does not register one — `SG-GEOM-AUTH-001` is a finding ID inside this sprint, following
