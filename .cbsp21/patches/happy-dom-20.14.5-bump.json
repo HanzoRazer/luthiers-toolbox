@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HAPPY_DOM_20_14_5_BUMP",
+  "title": "build(deps-dev): bump happy-dom from 20.14.3 to 20.14.5",
+  "intent": "Routine currency, no advisory. Two patch releases of the client's test DOM. 20.14.4 fixes 'End comments at the first comment end tag when it overlaps a comment start tag' (capricorn86/happy-dom#2407); 20.14.5 fixes 'Preserve character references in comment data' (#2409). No CVE or GHSA is attached to either release.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped code: happy-dom is a devDependency (dev: true in the lockfile) and is not bundled by vite build. It is NOT inert here, though, and this field says so rather than waving the bump through as a dev-only no-op. packages/client/vitest.config.ts:9 sets environment: \"happy-dom\", so this package IS the DOM every client Vitest test runs against. Both fixes are HTML-comment parsing, and Vue emits comment nodes as v-if/v-else anchors and as fragment markers, so a comment-parsing change in the test DOM is capable of moving component-test outcomes. It did not: the Client Lint & Build job runs 'Run tests (Vitest)' -> npm test -> vitest run, and lint-build passes on this head. That job is the verification for this bump, not an assumption about dev dependencies being safe. Lockfile audited by parsing both package-lock.json files and comparing every entry against the merge base, not by reading the diff view: 412 packages before, 412 after, ZERO added, ZERO removed, exactly ONE version change -- node_modules/happy-dom 20.14.3 -> 20.14.5. No package kept its version while changing integrity. License unchanged (MIT).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/happy-dom-20.14.5-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/happy-dom-20.14.5-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared devDependency range from ^20.14.3 to ^20.14.5. packages/client/package-lock.json updates the root devDependency range and the node_modules/happy-dom entry -- version, resolved URL and integrity hash. That is the complete set: the parsed lockfile comparison found no other entry differing in any resolution-affecting field. Nothing incidental moved.",
+    "why_not_redundant": "Dependabot currency, and this manifest exists because Dependabot cannot author one. No existing manifest covers these paths for this change; borrowing one is what CBSP21-NOBORROW-001 refuses, and the zod 4->3 revert that rode along inside PR #296 is why that rule exists."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base origin/dependabot/npm_and_yarn/packages/client/happy-dom-20.14.5 origin/main -> 576aa935f734e7f2c1bed1da6a75b8d592caa98f; all diffs taken against that merge base, not the PR view.",
+      "Lockfile audit by parsing rather than by diff: loaded both package-lock.json files with json.load and compared the full packages{} map. Result -- 412 entries before and after; ADDED: none; REMOVED: none; CHANGED: node_modules/happy-dom 20.14.3 -> 20.14.5 only; SAME VERSION but integrity changed: none. Entry carries dev: true and license MIT.",
+      "Consumer check read from the PR ref, not from a local working tree: git show <branch>:packages/client/vitest.config.ts -> line 9 'environment: \"happy-dom\"', and git show <branch>:packages/client/package.json -> happy-dom ^20.14.5 in devDependencies with no jsdom present. (An earlier read of the session's own stale checkout showed jsdom and no happy-dom; that checkout is months behind main and its answer was discarded.)",
+      "CI exercises it: .github/workflows/client_lint_build.yml contains a 'Run tests (Vitest)' step running npm test, which resolves to vitest run under the happy-dom environment. The lint-build check passes on head cbe812b6, so the whole client suite ran against 20.14.5.",
+      "Release notes read from the PR body: two patch releases, both HTML-comment parsing fixes (#2407, #2409). No CVE/GHSA referenced, so not a security update."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency version bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^20.14.3 -> ^20.14.5."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "None beyond the titled package. Exactly one entry changed: node_modules/happy-dom 20.14.3 -> 20.14.5, with its resolved URL and integrity. No incidental movement, verified by comparing all 412 entries."
+    },
+    {
+      "path": ".cbsp21/patches/happy-dom-20.14.5-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-21-HAPPY-DOM-20-14-5",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-only dependency bump; no production surface and no architectural surface. The lockfile moved nothing beyond the titled package, which the parsed audit in verification.commands_run establishes. Noted for whoever merges: PR #390 (marked 18.0.13) branches from the same merge base 576aa935 and edits the same two client files, so these two PRs will textually conflict in package.json and package-lock.json. Whichever merges second needs a rebase -- for a Dependabot branch, '@dependabot rebase' -- and the rebased lockfile should be re-audited rather than assumed unchanged."
+  }
+}
