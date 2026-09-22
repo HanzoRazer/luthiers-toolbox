@@ -59,8 +59,8 @@ must be traced before it can be ranked at all.
 ### P2 — live defect or consequential fragmentation, actionable
 | # | Item | Census ref | CC | LR | CS | AA | EQ | RD | Rationale |
 |---|------|-----------|----|----|----|----|----|----|-----------|
-| 4 | **`L_eff` units defect** | row 20 (MAINT-DEFER-004) | M | H | **H** | L | H | M | Dimensionally wrong length term on a live acoustic calc; bounded; stale second impl to retire alongside. Already tagged. |
-| 5 | **rayleigh_ritz "fallback to scipy" unbacked** | row 19 (MAINT-DEFER-010) | M | H | M | M | H | L | Diagonal approximation behind a false fallback comment → silently wrong modal result + misleading claim. Already tagged. |
+| 4 | **`L_eff` units defect** | row 20 (MAINT-DEFER-016) | M | H | **H** | L | H | M | Dimensionally wrong length term on a live acoustic calc; bounded; stale second impl to retire alongside. Already tagged. |
+| 5 | **rayleigh_ritz "fallback to scipy" unbacked** | row 19 (MAINT-DEFER-014) | M | H | M | M | H | L | Diagonal approximation behind a false fallback comment → silently wrong modal result + misleading claim. Already tagged. |
 | 6 | **`api_v1/fret_math` nut_width latent units bug + two fret surfaces** | rows 29, 30 | M | H | M | H | H | M | `distance_from_nut − nut_width_mm` corrupts every fret if a real value is passed (default-safe today). Cheap to neutralize; also resolves which of two live fret endpoints is canonical. |
 | 7 | **Blueprint contour classifier — uncited bands/confidences** | rows 35, 34 (dup rule ×3 loci) | M | H | M | M | H | M | Standard metrics → authoritative classification via magic bands + author-assigned confidences; the soundhole rule is duplicated byte-identical across 3 loci / 2 services. |
 | 8 | **Compound-radius divergence** | row 11 | M | H | M | **H** | M | M | Two live interpolation conventions give **different radius at a given fret** (playability). Needs a small numeric verification before the fix decision (EQ=M). |

@@ -326,8 +326,12 @@ is **orphaned dead code** (the third dead-but-domain module, after
 
 ## Section 5 — `acoustic_physics` (2026-08-21, RECONCILIATION pass)
 
-Reconciles the formula-catalog acoustic rows with the `LUTHERIE_MATH` drift audit
-(M7 / DOC-DRIFT-001), MAINT-DEFER-004, and §1 into one row per authority issue.
+Reconciles the formula-catalog acoustic rows with the `LUTHERIE_MATH` drift audit,
+MAINT-DEFER-016, and §1 into one row per authority issue. (The drift audit was
+previously cited here as “M7 / DOC-DRIFT-001”. Neither identifier resolves: `DOC-DRIFT-001`
+appears nowhere else in the repository, and no `M7` entry exists in `SPRINTS.md` — M7 and
+M8 are reserved by the unmerged branch `docs/recover-sprints-lutherie-math` (`1a86d883`).
+The audit is therefore named descriptively rather than by a dangling ID.)
 Physics is separated from calibration (`CalibrationBasis`), and intentionally different
 resonator topologies are recorded as `VALID_ALTERNATE_MODEL`.
 
@@ -336,9 +340,9 @@ resonator topologies are recorded as `VALID_ALTERNATE_MODEL`.
 | **Helmholtz air resonance** | `soundhole_calc.py` (canonical) **AND** `soundhole_physics.py` (parallel copy) — *both* define it | `FUNDAMENTAL_PHYSICS` — `f=(c/2π)√(A/(V·L_eff))`, faithful | rigid-wall Helmholtz | — | **`fragmented`** — 2 live modules (calc: 10 importers + router; physics: 5 importers, no router) | LIVE, tested |
 | Calibration constants `PMF / GAMMA / K0` | `soundhole_calc.py:93,94,366` **AND** `soundhole_physics.py:33,34,43` — **duplicated, identical values** | corrections to standard physics | — | `K0=1.7` literature-derived (classical flanged end-correction); `GAMMA=0.02`, `PMF=0.92` **multi-instrument fit** (Martin OM/D-28/J-45) | **`DUPLICATE_EQUIVALENT` + `MODEL_AUTHORITY`** — two owners of one calibration → drift risk | LIVE |
 | Port neck length / perimeter correction | `soundhole_calc.py compute_port_neck_length` (+ physics copy) | `STANDARD_ENGINEERING_RELATION` (end-correction) | flanged opening | `GAMMA` multi-instrument | canonical (dup in physics) | LIVE, tested |
-| Body volume + `L_eff` | `acoustic_body_volume.py:145/:220` **vs** `soundhole_extended.py:145 volume_from_dimensions` | elliptical `EMPIRICAL_MODEL` | — | `VOLUME_FACTOR=1.83` multi-instrument fit | **`DUPLICATE` + `UNITS_DEFECT`** — `acoustic_body_volume` L_eff is dimensionally wrong (**= MAINT-DEFER-004**); a stale second impl | LIVE (legacy) |
+| Body volume + `L_eff` | `acoustic_body_volume.py:145/:220` **vs** `soundhole_extended.py:145 volume_from_dimensions` | elliptical `EMPIRICAL_MODEL` | — | `VOLUME_FACTOR=1.83` multi-instrument fit | **`DUPLICATE` + `UNITS_DEFECT`** — `acoustic_body_volume` L_eff is dimensionally wrong (**= MAINT-DEFER-016**); a stale second impl | LIVE (legacy) |
 | Plate modal frequency | `plate_design/thickness_calculator.py:70` | `STANDARD_ENGINEERING_RELATION` (Hearmon orthotropic plate) | **simply_supported** (η=1.0; →1.2-1.35 in-box) | η / γ transfer, `CALIBRATED` | single canonical | LIVE |
-| Rayleigh-Ritz stiffness/mass + eigensolve | `plate_design/rayleigh_ritz.py:297/414` (matrices, `leggauss` quadrature) + **`:613` eigensolver "fallback"** | matrices `STANDARD` & faithful; **fallback path `CUSTOM_HEURISTIC`** | plate BC | — | **`MODEL_AUTHORITY` / unbacked claim** — `# Fallback to scipy if available` but no scipy import; runs `np.diag(K)/np.diag(M)` + `np.eye()` (diagonal approx, discards coupling) = **MAINT-DEFER-010 instance** | LIVE, partial tests |
+| Rayleigh-Ritz stiffness/mass + eigensolve | `plate_design/rayleigh_ritz.py:297/414` (matrices, `leggauss` quadrature) + **`:613` eigensolver "fallback"** | matrices `STANDARD` & faithful; **fallback path `CUSTOM_HEURISTIC`** | plate BC | — | **`MODEL_AUTHORITY` / unbacked claim** — `# Fallback to scipy if available` but no scipy import; runs `np.diag(K)/np.diag(M)` + `np.eye()` (diagonal approx, discards coupling) = **MAINT-DEFER-014 instance** | LIVE, partial tests |
 | Alpha / Beta / Gamma params | `plate_design/alpha_beta.py:171/385/453` | `STANDARD` / `CALIBRATED` plate coefficients | plate | cited_general | single canonical | LIVE, tested |
 | Logarithmic spiral (centerline + P:A) | `soundhole/spiral_geometry.py:114/179` | `LUTHIERY_DOMAIN_MODEL` (Williams 2019) | — | cited_specific | single canonical | LIVE, tested — **clean** |
 | Two-cavity / coupled resonator | `soundhole_resonator.py:176` (+ coupled eigenfreq) | `STANDARD` (coupled resonators) | **two-cavity** (Selmer/Maccaferri) vs single Helmholtz | — | **`VALID_ALTERNATE_MODEL`** — a *different resonator topology*, not a conflict | LIVE, tested |
@@ -353,8 +357,8 @@ The catalog vs LUTHERIE_MATH citing different files was a symptom of this split.
 **physics/calibration separation worked cleanly**: Helmholtz / port / modal are faithful
 standard physics; the tuning lives in `K0` (literature), `GAMMA`/`PMF`/`1.83`
 (multi-instrument fit), and `STIFFNESS_K=0.798` (unknown-basis house constant).
-Prior findings reconciled into single rows: **MAINT-DEFER-004** (body-volume `L_eff`
-units), **MAINT-DEFER-010** (rayleigh_ritz unbacked scipy fallback — confirmed live).
+Prior findings reconciled into single rows: **MAINT-DEFER-016** (body-volume `L_eff`
+units), **MAINT-DEFER-014** (rayleigh_ritz unbacked scipy fallback — confirmed live).
 `VALID_ALTERNATE_MODEL` earned its keep on the **two-cavity resonator** (a different
 topology, correctly *not* flagged). No net-new defect class emerged — as expected for a
 reconciliation pass.
@@ -691,8 +695,8 @@ filtering, confidence, fallback, silent loss).
   opposite of silent truncation.
 - **Interpretive-decision authority debt is all already censused** (cross-ref, not duplicated):
   vectorizer confidence/threshold assignment → §9 (rows 34-36); rayleigh_ritz "fallback to scipy"
-  unbacked claim → §19 (MAINT-DEFER-010); `L_eff` units defect + stale second impl → §20
-  (MAINT-DEFER-004); wood dataset severed provenance / unsourced values → §7 (rows 25-26).
+  unbacked claim → §19 (MAINT-DEFER-014); `L_eff` units defect + stale second impl → §20
+  (MAINT-DEFER-016); wood dataset severed provenance / unsourced values → §7 (rows 25-26).
 - Verdict: `data_processing` mechanics are **clean**; its authority debt is a re-view of
   already-mapped findings, not new territory.
 
@@ -730,8 +734,8 @@ matrix below.
 | — | Top deflection, side bending, lignin Tg, saddle force, section props | `STANDARD` / `EMPIRICAL` | `VALID_REUSE` / single-canonical; explicit BCs; **no defect** (lignin Tg is a cited exemplar) | — | LIVE |
 | 17 | Soundhole acoustic stack (Helmholtz) | `FUNDAMENTAL_PHYSICS` | **`fragmented`** — `soundhole_calc` (canonical, router) vs `soundhole_physics` (parallel copy, no router); both define it | software + model | LIVE |
 | 18 | Acoustic calibration constants (`K0`/`GAMMA`/`PMF`/`1.83`/`STIFFNESS_K`) | `CALIBRATED_MODEL` | `MODEL_AUTHORITY` — mixed CalibrationBasis (K0 literature; γ/PMF/1.83 multi-instrument; **0.798 unknown**); PMF/γ/K0 **duplicated** across calc+physics | model (constant) | LIVE |
-| 19 | Rayleigh-Ritz eigensolve fallback | `STANDARD` + `CUSTOM_HEURISTIC` | `MODEL_AUTHORITY` / **unbacked claim** — diagonal approx behind a false "fallback to scipy" (**MAINT-DEFER-010**) | model + software | LIVE |
-| 20 | Body volume / `L_eff` | `EMPIRICAL` + `CALIBRATED` | `DUPLICATE` + `UNITS_DEFECT` (**MAINT-DEFER-004**); stale second impl | model | LIVE |
+| 19 | Rayleigh-Ritz eigensolve fallback | `STANDARD` + `CUSTOM_HEURISTIC` | `MODEL_AUTHORITY` / **unbacked claim** — diagonal approx behind a false "fallback to scipy" (**MAINT-DEFER-014**) | model + software | LIVE |
+| 20 | Body volume / `L_eff` | `EMPIRICAL` + `CALIBRATED` | `DUPLICATE` + `UNITS_DEFECT` (**MAINT-DEFER-016**); stale second impl | model | LIVE |
 | — | Two-cavity resonator, log-spiral, plate modal, port length, string tension | `STANDARD` / `LUTHIERY_DOMAIN_MODEL` | `VALID_ALTERNATE_MODEL` (two-cavity) / `VALID_REUSE` / single-canonical — **no defect** | — | LIVE |
 | 21 | Body-detection scorers — **three live in-repo loci** on three front-end-called endpoints: (a) `blueprint-import/vectorizer_phase3.py:1891 score_body_candidate` (→ `/api/blueprint/vectorize`), (b) `services/api/app/services/contour_scoring.py score_contours` (→ `/api/blueprint/clean`, imported by `blueprint_clean.py:45`), (c) `photo-vectorizer/contour_plausibility.py:61 body_ownership_score` (→ `/api/vectorizer/extract`) | `CUSTOM_HEURISTIC` | `UNKNOWN_ORIGIN` | selection/ranking + gate | **`MODEL_AUTHORITY` / fragmented (live, in-repo)** — three uncited "which contour is the body" impls, all live in-repo, all reached by `blueprint-reader.html`. *Not* migrated residue | model | LIVE |
 | 22 | Vectorizer ownership gate — **layered, two uncited thresholds**: orchestrator `ownership_threshold=0.60` (`photo_orchestrator.py:400`) over deep `EXPORT_BLOCK_THRESHOLD=0.30` (`photo_vectorizer_v2.py:2777`) | `CUSTOM_HEURISTIC` | `UNKNOWN_ORIGIN` | **AUTHORITATIVE — gates export** | **`MODEL_AUTHORITY`** — live canonical in-repo gate reached by front-end `/api/vectorizer/extract`; two uncited thresholds at different layers. *Not* residue | software | LIVE |
@@ -840,7 +844,7 @@ secondary noted in the disposition column. Row numbers refer to the summary tabl
 |--------------------|----------------------|------------------|
 | **VALID / LEAVE ALONE** | Standard/`VALID_REUSE` rows 13, 14, 22b, 24, 27, 28, 33, 39, 40, 41, 42, 43; the `—` alternate-model rows (top-deflection, side-bending, lignin Tg, saddle force, section props, two-cavity resonator, log-spiral, plate modal, port length, string tension); electronics (§10b) | The large majority. Fundamental physics, standard engineering/musical relations, legitimate alternate models, and good-hygiene exemplars. **No action is the correct disposition.** |
 | **LIVE AUTHORITY FRAGMENTATION** | 11 (compound radius), 15 (Sitka `E_L` 11.0 vs 9.5), 17 (soundhole stack calc‖physics), 25 (MOE ≥4 authorities), 29 (two fret-position surfaces), 34 (soundhole classifier rule ×3 loci); nut-slot-depth (§2), chipload & tool-deflection (§1/§4); **44 (string-course lateral geometry, §11 — 2026-08-23 amendment)** | Multiple **live** implementations of one quantity/decision. Genuine competition confirmed by consumer/liveness traces. The candidate set for any future "single-authority" decision. |
-| **LIVE DEFECT** | 19 (rayleigh_ritz unbacked fallback, MAINT-DEFER-010), 20 (`L_eff` units, MAINT-DEFER-004), 30 (`api_v1/fret_math` `nut_width` units, latent), §1 rim-speed units, §2/§17 nut-slot `+crown/2` (GREEN band unreachable) | Concrete implementation defect on a live path (units/datum/fallback). Bounded and specific. Several already have MAINT-DEFER IDs. |
+| **LIVE DEFECT** | 19 (rayleigh_ritz unbacked fallback, MAINT-DEFER-014), 20 (`L_eff` units, MAINT-DEFER-016), 30 (`api_v1/fret_math` `nut_width` units, latent), §1 rim-speed units, §2/§17 nut-slot `+crown/2` (GREEN band unreachable) | Concrete implementation defect on a live path (units/datum/fallback). Bounded and specific. Several already have MAINT-DEFER IDs. |
 | **UNVALIDATED AUTHORITY** | 18 (acoustic consts; `0.798` unknown), 21 (body scorers, uncited weights), 22 (export gate, 0.60/0.30 uncited), 35 (blueprint classifier confidences), 36 (coin scale weights), §2 row 10 (saddle-comp/PMF/γ calibration undocumented) | Heuristic/threshold/weight with **consequential consumer authority** (gates export, sets scale, drives classification) but **inadequate `ValidationBasis` (`UNKNOWN_ORIGIN`)**. The "produces product decisions without a basis" family. |
 | **DEAD-BUT-RELEVANT** | 32 (`nut_compensation_physics` — the "sounder" nut-slot model; `saddle_compensation_calc` predictive physics) | Orphaned (0 importers) but containing potentially **superior/useful** work. Preserve; do not delete blind. |
 | **STALE / SUPERSEDED / MIGRATED** | 16 (fan brace, orphaned), 23 (vectorizer Loop-3 `FeedbackSystem`), 38 (heavy DSP → `tap_tone_pi`), Tier A vectorizer archaeology → `vectorizer-sandbox` (clean relocation), deprecated shims still router-wired (`nut_comp_calc`, `headstock_break_angle`) | Lifecycle explains the apparent duplication. Not competing authority. The §6 correction lives here: the relocation is clean; the runtime is in-repo canonical. |
