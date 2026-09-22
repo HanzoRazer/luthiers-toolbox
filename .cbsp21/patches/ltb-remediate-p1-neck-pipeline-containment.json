@@ -11,27 +11,29 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "ci/file_size_baseline.json",
       "services/api/app/cam/generator_readiness.py",
       "services/api/app/cam/neck/profile_carving.py",
       "services/api/app/routers/cam/cam_workspace_router.py",
-      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_cam_workspace_router_smoke.py",
       "services/api/tests/test_generator_readiness.py",
       "services/api/tests/test_generator_readiness_routes.py",
-      "services/api/tests/test_cam_workspace_router_smoke.py"
+      "services/api/tests/test_p1_neck_pipeline_containment.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "ci/file_size_baseline.json",
       "services/api/app/cam/generator_readiness.py",
       "services/api/app/cam/neck/profile_carving.py",
       "services/api/app/routers/cam/cam_workspace_router.py",
-      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_cam_workspace_router_smoke.py",
       "services/api/tests/test_generator_readiness.py",
       "services/api/tests/test_generator_readiness_routes.py",
-      "services/api/tests/test_cam_workspace_router_smoke.py"
+      "services/api/tests/test_p1_neck_pipeline_containment.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "generator_readiness.py: adds the record 'neck_pipeline_full' at BLOCKED, carrying the reproduced counts, the emitter line numbers, and a two-part exit condition; extends CF-1 from two neck code paths to three now that the third has its own identity; records a new CF-3. cam_workspace_router.py: imports the shared _readiness_gate and calls it as the first statement of both generate_neck_op and generate_full_neck; removes a docstring sentence claiming a gate that was never enforced in that handler. profile_carving.py: in both generate_roughing and generate_finishing, the per-station profile-point loop now emits the lateral move as G1 at feed for every point after the first, instead of G0. test_p1_neck_pipeline_containment.py: new, 25 tests. Three existing test files updated for the new registry key and two stale docstrings.",
+    "what_changed": "generator_readiness.py: adds the record 'neck_pipeline_full' at BLOCKED, carrying the reproduced counts, the emitter line numbers, and a two-part exit condition; extends CF-1 from two neck code paths to three now that the third has its own identity; records a new CF-3. cam_workspace_router.py: imports the shared _readiness_gate and calls it as the first statement of both generate_neck_op and generate_full_neck; removes a docstring sentence claiming a gate that was never enforced in that handler. profile_carving.py: in both generate_roughing and generate_finishing, the per-station profile-point loop now emits the lateral move as G1 at feed for every point after the first, instead of G0. test_p1_neck_pipeline_containment.py: new, 25 tests. Three existing test files updated for the new registry key and two stale docstrings. ci/file_size_baseline.json: one entry, cam_workspace_router.py 636 -> 645.",
     "why": "LTB-AUDIT-001 confirmed P-1 as HIGH. The owner issued LTB-REMEDIATE-P1 on 2026-09-22 requiring containment first, under a distinct authority identity, with the toolpath defect corrected separately and proved by semantic rather than textual tests.",
     "why_not_redundant": "The existing 'neck' readiness record governs the inline handler behind /api/cam/guitar/{model_id}/neck/gcode, which constructs no generator; its own reason text states that the rapids-carrying path is on another router and is not governed by it. Reusing that key would have attached a record written about inline router code to app.cam.neck.orchestrator.NeckPipeline -- repeating the CF-1 identity error rather than fixing it. A third key was required.",
     "what_did_not_change": "No change to instrument_geometry.dxf_authority or require_manufacturing_authority; asserted by a parsed-import test on the edited router. No change to the stratocaster_body, les_paul_body, flying_v_body, neck, acoustic_body, acoustic_soundhole or acoustic_binding records; asserted. /api/neck/gcode/generate and /api/neck/gcode/download are deliberately left ungated -- they belong to LTB-REMEDIATE-P2 -- and a test pins that boundary so it is visible in the suite rather than only in a commit message. No authentication policy changed. No unrelated neck implementation consolidated.",
@@ -50,7 +52,8 @@
       "pytest across every affected suite (the three above plus test_cam_workspace_endpoint_smoke, test_cam_workspace_router_smoke, test_cam_workspace_smoke, test_neck_cnc_pipeline, test_neck_endpoint_smoke, test_neck_gcode_smoke) -> 180 passed, 0 failed.",
       "Checked that the passing smoke suites were not passing vacuously: 0 skipped, and the three tests whose permissive status sets include 422 were read individually. Two carried docstrings claiming the route 'returns gcode or 503', which is now false; the claims were corrected and the assertions left alone, because they are existence checks and the refusal is asserted properly elsewhere.",
       "python scripts/governance/check_all.py --tier ci -> 9/14 passed, 5 warnings, [OK] Governance checks passed.",
-      "Control run of the same governance command on a clean worktree pinned to 5e683d8e -> identical 9/14, 5 warnings. The warnings are pre-existing on main and are not introduced by this change."
+      "Control run of the same governance command on a clean worktree pinned to 5e683d8e -> identical 9/14, 5 warnings. The warnings are pre-existing on main and are not introduced by this change.",
+      "File-size ratchet: the gate failed at 660 > 636. The added docstrings were trimmed to one or two lines each -- the full reasoning already lives in the readiness record, the test module and the PR -- which brought the file to 645. The residual +9 is irreducible: one import and two gate calls with their separating blank lines. The baseline was raised by exactly that amount, by a single-line text edit rather than `--update`, because --update rewrites the whole baseline from current state (ci/file_size_gate.py:85) and would have swept in unrelated drift -- a first attempt using it also reordered an unrelated entry and was reverted. python ci/file_size_gate.py now reports OK, 108 files at or below baseline."
     ],
     "proofs": [
       "The route cannot emit: 0 G/M records in the response body and no attachment header, on all four probed paths.",
@@ -122,6 +125,12 @@
       "intent": "Correct two docstrings that claimed the contained routes return G-code.",
       "risk": "low",
       "behavior_change": "None. Assertions unchanged; only the stated claim was false."
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Raise the line baseline for cam_workspace_router.py from 636 to 645.",
+      "risk": "low",
+      "behavior_change": "None. Ratchet bookkeeping."
     }
   ],
   "architecture_scan": {
@@ -130,13 +139,14 @@
       "critical": 0,
       "high": 0,
       "medium": 2,
-      "low": 2
+      "low": 3
     },
     "findings": [
       "MEDIUM: this change touches a G-code emitter, which is manufacturing output. The mitigation is that the emitted path is proved identical position-for-position before and after, so the change is confined to feed mode; and that the route refuses regardless, so no user can obtain the corrected program from it until the generator is separately qualified.",
       "MEDIUM: /api/cam-workspace/neck/generate/{op} was gated although the order names only generate-full. Both routes reach the same NeckPipeline, so containing one would have left an ungated second door to one implementation -- the exact CF-1 error. Flagged rather than assumed: if the owner intended the per-op route to stay open, reverting that one gate call is a one-line change.",
       "LOW: cam_workspace_router now imports _project_gcode_common, which pulls SQLAlchemy and project model imports into a previously DB-free router. The module is already imported by two other routers at app start, so this adds no new dependency to the process; it was preferred over a local copy of the gate so that the refusal shape stays identical across all gated routes.",
-      "LOW: the safe-clearance plane is ambiguous in the repository -- BCamMachineSpec.safe_z_mm is 25.0 while PreflightConfig.safe_z_mm is 5.0, and no document ranks them. The regression invariant is therefore pinned at the workpiece top (Z<0), which is the defect under either reading, and the ambiguity is recorded for P-3 rather than silently resolved here."
+      "LOW: the safe-clearance plane is ambiguous in the repository -- BCamMachineSpec.safe_z_mm is 25.0 while PreflightConfig.safe_z_mm is 5.0, and no document ranks them. The regression invariant is therefore pinned at the workpiece top (Z<0), which is the defect under either reading, and the ambiguity is recorded for P-3 rather than silently resolved here.",
+      "LOW: this raises a ratchet baseline. The ratchet exists to prevent unchecked growth, not to forbid adding a required safety gate, and the increase is the minimum the gate calls cost after the prose was trimmed. One entry changed; no other baseline value touched."
     ]
   }
 }

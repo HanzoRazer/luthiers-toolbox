@@ -516,13 +516,7 @@ async def generate_neck_op(op: str, req: GenerateRequest):
     YELLOW gate → 200 OK with gcode + warnings.
     GREEN gate → 200 OK, clean.
 
-    Contained by LTB-REMEDIATE-P1 under the SAME identity as
-    ``/neck/generate-full``: both reach ``NeckPipeline``, so this route returns
-    the same generator's program in ``GenerateResponse.gcode``. Gating only the
-    download route would have left an ungated second door to one implementation
-    -- the identity error recorded as CF-1, repeated. The op-validity check
-    stays after the gate: a contained route must not disclose which op names it
-    accepts.
+    Contained by LTB-REMEDIATE-P1 under ``neck_pipeline_full``.
     """
     _readiness_gate("neck_pipeline_full")
 
@@ -610,17 +604,8 @@ async def generate_full_neck(req: GenerateRequest):
     Generate complete 4-op neck program for final download.
     Called only from Step 5 (summary). Returns .nc file as plain text.
 
-    Contained by LTB-REMEDIATE-P1: generator readiness is consulted before any
-    other work, so no program-bearing payload can be produced while
-    ``neck_pipeline_full`` is non-emitting. The gate precedes the availability
-    check deliberately -- an import failure must not be able to mask the
-    refusal with a 503, and the refusal must not depend on import state.
-
-    The docstring previously claimed "Gate must be GREEN or YELLOW for all ops
-    -- any RED blocks". That claim was never enforced here: unlike
-    ``generate_neck_op``, this handler evaluates no gate and runs no preflight.
-    The sentence is removed rather than left standing, because a governance
-    claim with no enforcement behind it is the defect P-3 is about.
+    Contained by LTB-REMEDIATE-P1. An unenforced "Gate must be GREEN or YELLOW"
+    claim was removed: this handler evaluates no gate and no preflight.
     """
     _readiness_gate("neck_pipeline_full")
 
