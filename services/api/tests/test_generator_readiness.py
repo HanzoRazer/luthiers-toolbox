@@ -53,12 +53,18 @@ def test_all_exposed_routes_are_represented():
     Seven, not the original four: the three acoustic routes were gated on the
     2026-09-21 owner ruling after the coverage guard was repaired and showed
     them emitting .nc downloads outside the layer.
+
+    Eight since LTB-REMEDIATE-P1 (2026-09-22): ``neck_pipeline_full`` contains
+    the cam-workspace neck routes, which reach ``NeckPipeline`` -- a third neck
+    implementation, distinct from the inline handler ``neck`` describes and from
+    the ``NeckGCodeGenerator`` still ungated behind ``/api/neck/gcode/*``.
     """
     assert set(GENERATOR_READINESS) == {
         "stratocaster_body",
         "les_paul_body",
         "flying_v_body",
         "neck",
+        "neck_pipeline_full",
         "acoustic_body",
         "acoustic_soundhole",
         "acoustic_binding",
