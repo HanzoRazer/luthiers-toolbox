@@ -9,8 +9,10 @@ Two separate things are proved here, and they are deliberately not conflated:
 
 * **Containment** -- the route refuses before it constructs a generator, and the
   refusal names the identity, state, reason and exit condition.
-* **Correction** -- the emitter no longer produces the unsafe motion, and the
-  path geometry is unchanged by the fix.
+* **Correction** -- the emitter no longer produces the unsafe motion. Ordered
+  tool positions and motion-block count are unchanged; 720 moves are
+  intentionally changed from rapid to controlled-feed motion. Motion semantics,
+  speed and cycle time change by design; the tool visits the same places.
 
 Correcting the motion does **not** qualify the generator. ``neck_pipeline_full``
 stays non-emitting until a readiness decision is recorded on evidence.
@@ -49,6 +51,12 @@ WORKPIECE_TOP_MM = 0.0
 _WORD = re.compile(r"([A-Za-z])\s*(-?\d+(?:\.\d+)?)")
 _MOTION = {0: "G0", 1: "G1", 2: "G2", 3: "G3"}
 _GM_RECORD = re.compile(r"(?m)^\s*[GM]\d")
+#: The program declares its own operations, e.g. "( OP40: Neck Profile Rough )".
+#: Scoping assertions by that header is more honest than guessing which moves the
+#: profile passes emitted -- the other operations emit X-only feed moves too.
+_OP_HEADER = re.compile(r"\(\s*(OP\d+):")
+#: The two operations LTB-REMEDIATE-P1 changed.
+PROFILE_OPS = ("OP40", "OP45")
 
 
 def parse_motion(program: str) -> list[dict]:
@@ -58,9 +66,13 @@ def parse_motion(program: str) -> list[dict]:
     following ``G1 Z-5.495`` is a rapid *at Z=-5.495*. This returns the resolved
     position for every block that carries an axis word.
     """
-    state = {"motion": None, "X": None, "Y": None, "Z": None}
+    state = {"motion": None, "X": None, "Y": None, "Z": None, "F": None}
     blocks: list[dict] = []
+    operation = None
     for number, raw in enumerate(program.splitlines(), 1):
+        header = _OP_HEADER.search(raw)
+        if header:
+            operation = header.group(1)
         line = re.sub(r"\([^)]*\)", "", raw.split(";")[0]).strip()
         if not line:
             continue
@@ -69,6 +81,7 @@ def parse_motion(program: str) -> list[dict]:
             continue
         axes: dict[str, float] = {}
         motion_here = None
+        feed_here = None
         for letter, value in words:
             upper = letter.upper()
             if upper == "G":
@@ -77,8 +90,12 @@ def parse_motion(program: str) -> list[dict]:
                     motion_here = _MOTION[code]
             elif upper in ("X", "Y", "Z"):
                 axes[upper] = float(value)
+            elif upper == "F":
+                feed_here = float(value)
         if motion_here is not None:
             state["motion"] = motion_here
+        if feed_here is not None:
+            state["F"] = feed_here
         for axis, value in axes.items():
             state[axis] = value
         if axes and state["motion"] is not None:
@@ -86,7 +103,11 @@ def parse_motion(program: str) -> list[dict]:
                 "line": number,
                 "motion": state["motion"],
                 "X": state["X"], "Y": state["Y"], "Z": state["Z"],
+                "F": state["F"],
                 "z_explicit": "Z" in axes,
+                "f_explicit": feed_here is not None,
+                "axes": sorted(axes),
+                "operation": operation,
                 "text": raw.strip(),
             })
     return blocks
@@ -202,6 +223,82 @@ def test_the_correction_changed_feed_mode_and_not_path_geometry():
     assert engaged, "the program must still cut below the surface"
     assert all(b["motion"] != "G0" for b in engaged)
     assert any(b["motion"] == "G1" for b in engaged)
+
+
+def test_no_feed_move_executes_before_a_feed_is_established():
+    """A G1 with no F in effect runs at whatever the control last held.
+
+    That is a real hazard on a shared machine, and it is the first thing a
+    rapid-to-feed conversion can get wrong.
+    """
+    without_feed = [
+        block for block in parse_motion(_full_program())
+        if block["motion"] == "G1" and block["F"] is None
+    ]
+
+    assert without_feed == [], (
+        f"{len(without_feed)} feed move(s) with no feed established; "
+        f"first at line {without_feed[0]['line'] if without_feed else '-'}"
+    )
+
+
+def test_converted_lateral_moves_carry_the_lateral_feed_not_the_plunge_feed():
+    """The converted moves must cut at the tool's cutting feed.
+
+    ``NeckToolSpec`` carries both ``feed_mm_min`` and ``plunge_mm_min``, and the
+    plunge rate is roughly half. A conversion that silently adopted the plunge
+    feed would be safe but wrong, and one that adopted a *higher* rate would be
+    worse than the defect it replaced. Each converted move therefore carries an
+    explicit F, and this pins which value it is.
+    """
+    from app.routers.cam.cam_workspace_router import (
+        NeckConfigIn,
+        _build_pipeline_config,
+    )
+
+    config = _build_pipeline_config(NeckConfigIn())
+    rough, finish = config.tools.get(1), config.tools.get(3)
+
+    lateral = [
+        block for block in parse_motion(_full_program())
+        if block["motion"] == "G1"
+        and block["axes"] == ["X"]
+        and block["operation"] in PROFILE_OPS
+        and block["Z"] is not None
+        and block["Z"] < WORKPIECE_TOP_MM
+    ]
+
+    assert lateral, "the profile passes must still cut laterally"
+    assert all(block["f_explicit"] for block in lateral), (
+        "every converted lateral move must state its own feed rather than inherit one"
+    )
+
+    feeds = {block["F"] for block in lateral}
+    assert feeds <= {rough.feed_mm_min, finish.feed_mm_min}
+    assert rough.plunge_mm_min not in feeds
+    assert finish.plunge_mm_min not in feeds
+
+
+def test_the_lateral_feed_is_not_faster_than_the_tool_allows():
+    """No converted move may exceed its tool's declared cutting feed."""
+    from app.routers.cam.cam_workspace_router import (
+        NeckConfigIn,
+        _build_pipeline_config,
+    )
+
+    config = _build_pipeline_config(NeckConfigIn())
+    ceiling = max(tool.feed_mm_min for tool in config.tools.values())
+
+    engaged_feeds = [
+        block["F"] for block in parse_motion(_full_program())
+        if block["motion"] == "G1"
+        and block["Z"] is not None
+        and block["Z"] < WORKPIECE_TOP_MM
+        and block["F"] is not None
+    ]
+
+    assert engaged_feeds
+    assert max(engaged_feeds) <= ceiling
 
 
 def test_the_program_still_retracts_with_rapids_above_the_surface():

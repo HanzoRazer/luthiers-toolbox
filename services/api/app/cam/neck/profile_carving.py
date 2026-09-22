@@ -302,9 +302,11 @@ class ProfileCarvingGenerator:
             # lateral move is made with the cutter already plunged to the
             # previous point's depth, which makes it a cutting move. It was
             # previously emitted as `G0`, sending the tool sideways through
-            # stock at rapid feed down to Z=-25mm. The path geometry is
-            # unchanged -- same points, same order, same depths; only the feed
-            # mode of the engaged moves is corrected.
+            # stock at rapid feed down to Z=-25mm. Ordered tool positions and
+            # motion-block count are unchanged; the engaged moves are
+            # intentionally changed from rapid to controlled feed. That is a
+            # deliberate change of motion semantics, speed and cycle time -- it
+            # is the correction, not a side effect of it.
             for i, (x, z) in enumerate(station.profile_points):
                 z_with_allowance = z + allowance
                 if i == 0:

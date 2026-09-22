@@ -343,7 +343,19 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "rapids below the workpiece top and that is itself proven able to "
             "fail on a deliberately unsafe fixture. (2) A readiness decision "
             "recorded on evidence through the governing qualification process. "
-            "Removing the unsafe rapid does NOT by itself qualify this generator."
+            "Removing the unsafe rapid does NOT by itself qualify this "
+            "generator. (3) The plunge-feed question settled: this module "
+            "plunges at the tool's LATERAL feed, not its plunge feed. "
+            "NeckToolSpec declares both, and profile_carving emits "
+            "'G1 Z<depth> F{feed_mm_min}' -- F1200 for T1 whose plunge_mm_min "
+            "is 600, F1500 for T3 whose plunge_mm_min is 500. Every sibling "
+            "emitter does the opposite (fret_slots.py:223, "
+            "truss_rod_channel.py:129 and :201, surface_carving.py:310/:379/"
+            ":422, saw_gcode_generator.py:246); profile_carving is the only "
+            "emitter in the repository that plunges at the cutting feed. Found "
+            "while correcting the rapids and deliberately NOT fixed here: it is "
+            "a second, independent motion defect and does not belong in a "
+            "containment PR."
         ),
         evidence=(
             "LTB-AUDIT-001 finding P-1 (HIGH, confirmed)",
