@@ -4,6 +4,18 @@
 Smoke tests for neck G-code generation endpoints.
 
 OM-GAP-07: Verifies neck G-code router is mounted and functional.
+
+Since LTB-REMEDIATE-P2 these routes are CONTAINED: in production both refuse
+with 422 under ``neck_gcode_generator``, asserted in
+``test_p2_neck_gcode_generator_containment.py``. The functional tests below
+therefore run behind ``neck_gcode_gate_lifted``, which lifts that one identity
+for the duration of each test only. They exist so that containment does not
+silently rot the router's preset resolution, overrides and parse fallbacks, and
+so the work is still correct on the day the generator is qualified.
+
+Passing them says the router and generator *function*. It says nothing about
+whether the program is safe to cut: it is not. See the ``neck_gcode_generator``
+readiness record.
 """
 
 import pytest
@@ -15,6 +27,33 @@ from app.main import app
 client = TestClient(app)
 
 
+@pytest.fixture
+def neck_gcode_gate_lifted(monkeypatch):
+    """Lift ONLY the ``neck_gcode_generator`` readiness gate, for one test.
+
+    Any other identity routed through this module -- the inline ``neck`` route
+    -- still meets the real gate.
+    """
+    import app.routers.neck.gcode_router as module
+
+    real_gate = module._readiness_gate
+
+    def gate(route_key):
+        if route_key != "neck_gcode_generator":
+            real_gate(route_key)
+
+    monkeypatch.setattr(module, "_readiness_gate", gate)
+
+
+def test_the_routes_are_contained_without_the_fixture():
+    """The lift is per-test. Without it, the production refusal stands."""
+    for route in ("/api/neck/gcode/generate", "/api/neck/gcode/download"):
+        response = client.post(route, json={})
+        assert response.status_code == 422
+        assert response.json()["detail"]["route"] == "neck_gcode_generator"
+
+
+@pytest.mark.usefixtures("neck_gcode_gate_lifted")
 class TestNeckGcodeEndpoints:
     """Smoke tests for neck G-code API."""
 

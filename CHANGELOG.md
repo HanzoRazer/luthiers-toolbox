@@ -85,6 +85,21 @@ below: capability removals are always listed individually, never summarised.
   Recorded after the pinned summary above (`7d134c36`); not included in its
   commit or PR counts.
 
+- **Both `NeckGCodeGenerator` routes now fail closed** (LTB-REMEDIATE-P2).
+  `POST /api/neck/gcode/generate` and `/api/neck/gcode/download` no longer emit
+  G-code; both return **`422 GENERATOR_READINESS_BLOCKED`** under the readiness
+  identity `neck_gcode_generator`, before any generator is constructed.
+
+  **This is a containment patch. It is not a qualification of the generator for
+  cutting, and it does not change the toolpath.** Both routes previously
+  answered an uncredentialed default request with a 460-record program (G20,
+  inch) carrying 146 `G0` rapids below the workpiece top, to Z=-0.8371in
+  (-21.26mm); that program is unchanged and is no longer served. No
+  `packages/client` code calls either route.
+
+  Recorded after the pinned summary above (`7d134c36`); not included in its
+  commit or PR counts.
+
 ### Added
 
 - **CAM** (82 commits) — canonical process authorization anchor; process-exclusive

@@ -57,7 +57,10 @@ def test_all_exposed_routes_are_represented():
     Eight since LTB-REMEDIATE-P1 (2026-09-22): ``neck_pipeline_full`` contains
     the cam-workspace neck routes, which reach ``NeckPipeline`` -- a third neck
     implementation, distinct from the inline handler ``neck`` describes and from
-    the ``NeckGCodeGenerator`` still ungated behind ``/api/neck/gcode/*``.
+    the ``NeckGCodeGenerator`` behind ``/api/neck/gcode/*``.
+
+    Nine since LTB-REMEDIATE-P2: ``neck_gcode_generator`` contains that
+    ``NeckGCodeGenerator``, the third neck implementation, under its own key.
     """
     assert set(GENERATOR_READINESS) == {
         "stratocaster_body",
@@ -65,6 +68,7 @@ def test_all_exposed_routes_are_represented():
         "flying_v_body",
         "neck",
         "neck_pipeline_full",
+        "neck_gcode_generator",
         "acoustic_body",
         "acoustic_soundhole",
         "acoustic_binding",
