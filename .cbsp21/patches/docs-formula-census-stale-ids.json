@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "DOCS_FORMULA_CENSUS_STALE_IDS",
+  "title": "docs(audit): correct stale MAINT-DEFER references in the formula census and recovery queue",
+  "intent": "Two audit documents cite MAINT-DEFER ids that belong to different subjects. Verified against the authoritative ledger in SPRINTS.md before editing: MAINT-DEFER-004 is 'Dependency Security / DEP-SEC-001' (SPRINTS.md:953, detail :1048), not the L_eff units defect; MAINT-DEFER-010 is 'Orphaned packages/client/src/views/cam/headstock/' (:959, detail :1308), not the Rayleigh-Ritz fallback. The correct ids are MAINT-DEFER-016, 'acoustic_body_volume.py Helmholtz L_eff applies the end-correction to the thickness term' (:965, detail :1489), and MAINT-DEFER-014, 'solve_rayleigh_ritz explicit inv(M) + silent non-scipy scipy fallback' (:963, detail :1420). Also removes a dangling 'M7 / DOC-DRIFT-001' citation. Documentation only.",
+  "change_type": "docs",
+  "behavior_change": "None. Two Markdown files under docs/audit/ and this manifest. No code, configuration, workflow, test or instrument record is touched, and no ledger entry is created, renamed or removed -- the ids being corrected TO already exist in SPRINTS.md and are unchanged by this patch.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/docs-formula-census-stale-ids.json",
+      "docs/audit/formula_authority_census.md",
+      "docs/audit/formula_recovery_queue.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/docs-formula-census-stale-ids.json",
+      "docs/audit/formula_authority_census.md",
+      "docs/audit/formula_recovery_queue.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "docs/audit/formula_authority_census.md: MAINT-DEFER-004 -> MAINT-DEFER-016 (6 occurrences, incl. one inside the rewritten Section 5 preamble), MAINT-DEFER-010 -> MAINT-DEFER-014 (5 occurrences), and the Section 5 preamble's '(M7 / DOC-DRIFT-001)' citation replaced by a descriptive naming of the LUTHERIE_MATH drift audit plus a short note recording why the identifier was dropped. docs/audit/formula_recovery_queue.md: the same two corrections on its rows 4 and 5, which mirror census rows 20 and 19 verbatim. Totals: 7 x 004->016, 6 x 010->014, 1 x DOC-DRIFT-001 removed, across two files.",
+    "why_not_redundant": "No existing manifest covers these paths. The queue file is included because it mirrors the census rows verbatim -- correcting only the census would leave the queue pointing at the same two wrong ids, which is the 'displayed lines only' failure this patch exists to avoid."
+  },
+  "verification": {
+    "commands_run": [
+      "Re-checked current main before creating any worktree: git rev-parse origin/main -> 5e683d8ec12758bbf23a90549a8b41f96f5655a5, unmoved. Work is on a FRESH detached worktree pinned to that SHA, created after the check and waited on until git status reported zero staged deletions. The earlier 85868521 checkout was not used, not read for edits, and not cleaned up.",
+      "Target ids verified against the authoritative ledger rather than assumed: grep -nE '^\\| MAINT-DEFER-(004|010|014|016) ' SPRINTS.md and grep -nE '^### MAINT-DEFER-(004|010|014|016)' SPRINTS.md. 016 and 014 match the L_eff and Rayleigh-Ritz subjects exactly; 004 and 010 are unrelated subjects.",
+      "Reference class scoped tree-wide, not per-file: grep -rn 'MAINT-DEFER-004|MAINT-DEFER-010' over *.md, *.py and *.json found docs/audit/formula_recovery_queue.md carrying the same two stale references (rows 4 and 5), which is why it is in scope.",
+      "Correct uses deliberately NOT touched: .cbsp21/patches/dep-sec-001a-tier1-remediation.json, dep-sec-001b-residual-consolidation.json, maint-defer-005-007-client-dep-hygiene.json, node-engine-floor-client.json and docs/ci/DEPENDABOT_TIER1_REMEDIATION_2026-08-10.md all cite MAINT-DEFER-004 correctly for dependency security. A blanket tree-wide replace would have corrupted them.",
+      "One stale use deliberately left in place: .cbsp21/patches/maint-defer-008-client-smoke-readiness.json lines 36 and 63 cite MAINT-DEFER-010 for the rayleigh_ritz evidence. That is a merged CBSP21 manifest -- a point-in-time record of what was believed when the PR landed -- and editing it would falsify the record rather than correct a live reference.",
+      "DOC-DRIFT-001 removal justified by search, not assumption: grep -rn 'DOC-DRIFT-001' over the whole tree returns exactly ONE occurrence, the census line being changed. grep for an M7 sprint or ledger row in SPRINTS.md returns nothing; M7 and M8 are reserved by the unmerged branch docs/recover-sprints-lutherie-math (1a86d883), recorded in the Sprint M9 namespace note. No replacement id was invented, because inventing one would repeat the defect.",
+      "Post-edit verification: zero residual MAINT-DEFER-004 or MAINT-DEFER-010 in either file; MAINT-DEFER-016 present 6 and 1 times, MAINT-DEFER-014 present 5 and 1 times, matching the pre-edit counts exactly; git status shows exactly the two intended files modified."
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/audit/formula_authority_census.md",
+      "intent": "Correct two stale MAINT-DEFER references and remove a dangling M7 / DOC-DRIFT-001 citation.",
+      "risk": "low",
+      "behavior_change": "None. Identifier corrections and one explanatory sentence; no finding, row, verdict or measurement is altered."
+    },
+    {
+      "path": "docs/audit/formula_recovery_queue.md",
+      "intent": "Apply the same two corrections to the rows that mirror the census.",
+      "risk": "low",
+      "behavior_change": "None. Identifier corrections only; priorities and scores unchanged."
+    },
+    {
+      "path": ".cbsp21/patches/docs-formula-census-stale-ids.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-22-DOCS-FORMULA-CENSUS-STALE-IDS",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation-only identifier correction; no architectural surface. No ledger entry is created or modified -- 016 and 014 already exist in SPRINTS.md and are untouched here."
+  }
+}
