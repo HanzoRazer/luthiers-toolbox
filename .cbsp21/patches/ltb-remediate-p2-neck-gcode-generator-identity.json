@@ -1,0 +1,98 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_REMEDIATE_P2_NECK_GCODE_GENERATOR_IDENTITY",
+  "title": "LTB-REMEDIATE-P2: give NeckGCodeGenerator its own governed identity and contain both of its routes",
+  "intent": "POST /api/neck/gcode/generate and /api/neck/gcode/download answered an uncredentialed default request with HTTP 200 and a 460-record G-code program, byte-identical between the two, reaching NeckGCodeGenerator around the containment established by CAM-CONTAIN-001. This gives NeckGCodeGenerator its own readiness identity, neck_gcode_generator, and places both routes behind it. It is an authority-boundary patch: it does not correct the toolpath, does not consolidate the neck implementations, and claims no functional equivalence between them.",
+  "change_type": "fix",
+  "behavior_change": "Two routes that previously returned manufacturing G-code to an uncredentialed default request now return HTTP 422 GENERATOR_READINESS_BLOCKED under neck_gcode_generator, before input parsing and before any generator is constructed. No toolpath changes. No client code calls either route. No other route, generator or authority layer changes behaviour.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-remediate-p2-neck-gcode-generator-identity.json",
+      "CHANGELOG.md",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/neck/gcode_router.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_neck_gcode_smoke.py",
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p2_neck_gcode_generator_containment.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-remediate-p2-neck-gcode-generator-identity.json",
+      "CHANGELOG.md",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/neck/gcode_router.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_neck_gcode_smoke.py",
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p2_neck_gcode_generator_containment.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "generator_readiness.py: adds neck_gcode_generator at BLOCKED with measured evidence and a two-part exit condition; updates the CF-1 table so all three neck paths show their own gate; corrects CF-3, which said all gated handlers are @safety_critical and would have become false (the two P-2 handlers are not); records a new CF-4. gcode_router.py: calls _readiness_gate('neck_gcode_generator') as the first statement of generate_neck_gcode and of download_neck_gcode. test_p2_neck_gcode_generator_containment.py: new, 19 tests. test_neck_gcode_smoke.py: its 8 functional tests now run behind a fixture that lifts only this identity for one test, plus one test proving the refusal stands without it. test_p1_neck_pipeline_containment.py: deletes test_the_neck_gcode_routes_are_left_for_p2, whose own docstring required the gating change to delete it. Two registry inventories gain the ninth key. CHANGELOG.md: one Removed -- BREAKING entry.",
+    "why": "LTB-AUDIT-001 confirmed P-2 as HIGH. The owner issued LTB-REMEDIATE-P2 on 2026-09-22, to begin from the merged P-1 head, requiring NeckGCodeGenerator to receive its own identity rather than being attached to the 'neck' record.",
+    "why_not_redundant": "The 'neck' record governs the inline handler behind /api/cam/guitar/{model_id}/neck/gcode, which constructs no generator. 'neck_pipeline_full' governs NeckPipeline. NeckGCodeGenerator is a third implementation. Attaching it to either existing key would assert an equivalence nobody has established.",
+    "what_did_not_change": "The NeckGCodeGenerator toolpath is untouched; its 146 rapids below the workpiece top are recorded as evidence, not corrected. The inline 'neck' route and its record are untouched (still 401 unauthenticated, REVIEW_REQUIRED). The neck_pipeline_full containment from P-1 is untouched. No implementations are consolidated. No authentication policy changed. The three Flying V /toolpath/* routes found ungated during reconnaissance are recorded as CF-4 and NOT gated here: they are body-cavity operations, not NeckGCodeGenerator, and outside this order.",
+    "why_structural_extraction": "Not an extraction. One registry record and two gate calls."
+  },
+  "verification": {
+    "commands_run": [
+      "Base pinned to the merged P-1 head: origin/main b9b0b9297bc283b239bfaccf3729916a07f6d311 (merge of #398), fresh worktree, zero status entries before any edit. P-1 confirmed holding on main first: its 63 readiness and containment tests pass there.",
+      "Route-to-implementation chain proved by reading source: /generate constructs app.generators.neck_headstock_generator.NeckGCodeGenerator and calls generate_full_program(); /download calls generate_neck_gcode(req) in-process, and re-raises HTTPException unchanged. At runtime the download body is byte-identical to /generate's gcode field. Both reach one implementation, so the P-2 stop condition does not apply.",
+      "All neck implementations identified before any authority was assigned, as the order's updated premise required. Every live POST route containing 'neck' was enumerated by walking the routing graph (nested routers included, not OpenAPI), then classified by RUNTIME response rather than by source text. Three emit a neck program: NeckGCodeGenerator (/api/neck/gcode/*, 460 G/M), inline code (/api/cam/guitar/{model_id}/neck/gcode, 401 unauthenticated, gated 'neck'), NeckPipeline (/api/cam-workspace/neck/*, 422, gated 'neck_pipeline_full'). The others return geometry, DXF or evaluations, 0 G/M records.",
+      "A first static classifier was discarded. It reported no G-code in /api/cam/guitar/flying_v/toolpath/neck_pocket, which returns 117 G/M records: its pattern did not match a bare 'gcode' identifier. That is why classification was redone at runtime.",
+      "Readiness state chosen on evidence, not by default. The modal parser proven in P-1 was run on /generate's program: G20; 224 rapids, 146 below the workpiece top, min Z -0.8371in (-21.26mm), 0 of the 146 carrying an explicit Z word; 0 feed moves without a feed established. A witnessed defect, so BLOCKED rather than REVIEW_REQUIRED.",
+      "Containment verified live: /generate and /download both return 422 GENERATOR_READINESS_BLOCKED, route neck_gcode_generator, 0 G/M records, no Content-Disposition. The inline route still returns 401; the P-1 route still refuses as neck_pipeline_full.",
+      "Negative control: with the router swapped back to main's (no gates), test_p2_neck_gcode_generator_containment.py gives 14 failed, 5 passed. The 5 are registry-only and guard-logic tests that correctly do not depend on the router. The gated router was then restored and verified to contain both gate calls.",
+      "The inventory guard is a function of an arbitrary router, so its own negative controls run it on synthetic routers: an added ungated POST route, a removed route, and the real routes checked against the wrong key are each reported exactly.",
+      "test_neck_gcode_smoke.py asserted that these routes emit G-code, so containment broke 8 of its tests, as intended. Its tests covered the router's preset resolution, overrides and parse fallbacks, which containment should not silently rot, so they run behind neck_gcode_gate_lifted: a fixture that lifts ONLY this identity for one test and leaves every other key on the real gate. A new test in that file proves the refusal stands without the fixture. No precedent existed -- #389's contained routes needed auth, so their smoke tests only ever asserted 401 -- so this is flagged as a judgment call.",
+      "Full affected regression set, including every test module referencing /api/neck, the cam-workspace routes or generator_readiness -> 404 passed, 0 failed, 20 xfailed.",
+      "Every debt-gates step run locally, not just the one that failed last time: check_complexity, check_file_sizes (which scans tests), check_bare_except, fence_checker_v2 and check_duplication all OK. Root ci/file_size_gate.py OK, 108 at or below baseline; no baseline was edited. governance --tier ci: 9/14, 5 warnings, identical to main.",
+      "Client impact: no packages/client code calls /api/neck/gcode/generate or /download, checked for full URLs and for fragment-built ones. The client's /api/neck calls are /export_dxf and /presets, both untouched."
+    ],
+    "proofs": [
+      "Neither route can emit: 0 G/M records and no attachment header on either.",
+      "The generator is never constructed after refusal, on either route.",
+      "Download refuses on its own: with generate_neck_gcode replaced by a function that would fail loudly if called, /download still returns 422 and the replacement is never invoked. The containment does not depend on delegation.",
+      "Both routes refuse with identical bodies, so delegation cannot produce a different refusal.",
+      "The gate precedes input parsing: an invalid style, profile and preset are refused by readiness, not defaulted.",
+      "No .nc, .tap, .gcode or .ngc file is written after refusal.",
+      "The NeckGCodeGenerator routes use ONLY neck_gcode_generator, and 'neck' appears exactly once in the module, on the inline route.",
+      "Deleting the record resolves UNKNOWN and still refuses.",
+      "The live app serves exactly the declared POST routes under /api/neck/gcode/, discovered by walking the routing graph."
+    ],
+    "hardware": "No physical-machine execution. No G-code was sent anywhere and no generated program was run. The standing DO-NOT-CUT order is unaffected. The NeckGCodeGenerator program is unchanged and is not qualified for cutting.",
+    "counts": {
+      "readiness_records": "8 before, 9 after",
+      "gated_routes_added": "2",
+      "neck_gcode_generator_rapids_below_workpiece_top": "146 of 224, min Z -0.8371in (-21.26mm), 0 with explicit Z; recorded, not corrected",
+      "new_tests": "19 in test_p2_neck_gcode_generator_containment.py, 1 in test_neck_gcode_smoke.py",
+      "regression_set": "404 passed, 0 failed, 20 xfailed"
+    }
+  },
+  "files": [
+    {"path": ".cbsp21/patches/ltb-remediate-p2-neck-gcode-generator-identity.json", "intent": "This manifest.", "risk": "low", "behavior_change": "None."},
+    {"path": "CHANGELOG.md", "intent": "Record the capability removal under Removed -- BREAKING.", "risk": "low", "behavior_change": "None. States that this is containment, not qualification, and that the toolpath is unchanged."},
+    {"path": "services/api/app/cam/generator_readiness.py", "intent": "Declare neck_gcode_generator at BLOCKED; keep CF-1 and CF-3 true; record CF-4.", "risk": "medium", "behavior_change": "Adds one record. No new state, no qualifying state; the layer stays fail-closed."},
+    {"path": "services/api/app/routers/neck/gcode_router.py", "intent": "Consult readiness first in both NeckGCodeGenerator handlers.", "risk": "medium", "behavior_change": "Both routes refuse with 422 before input parsing or generator construction."},
+    {"path": "services/api/tests/test_p2_neck_gcode_generator_containment.py", "intent": "Prove containment, identity separation, and an inventory guard that is shown able to fail.", "risk": "low", "behavior_change": "New test module, 19 tests. No production behaviour."},
+    {"path": "services/api/tests/test_neck_gcode_smoke.py", "intent": "Keep functional coverage of the router behind an explicit, per-test, single-identity gate lift.", "risk": "low", "behavior_change": "None in production. Adds one test asserting the refusal without the lift."},
+    {"path": "services/api/tests/test_p1_neck_pipeline_containment.py", "intent": "Delete the P-1 boundary pin that asserted these routes were NOT gated.", "risk": "low", "behavior_change": "None. Its own docstring required the gating change to delete it rather than leave it passing."},
+    {"path": "services/api/tests/test_generator_readiness.py", "intent": "Extend the registry inventory to the ninth record.", "risk": "low", "behavior_change": "None."},
+    {"path": "services/api/tests/test_generator_readiness_routes.py", "intent": "List the new off-surface record explicitly.", "risk": "low", "behavior_change": "None. No wildcard; a new key still has to be classified."}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-22-LTB-REMEDIATE-P2",
+    "risk_summary": {"critical": 0, "high": 1, "medium": 1, "low": 2},
+    "findings": [
+      "HIGH, recorded not fixed (CF-4): three Flying V routes -- /api/cam/guitar/flying_v/toolpath/{control_cavity,neck_pocket,pickup} -- answer an uncredentialed default request with G-code (394, 117 and 337 G/M records). The guitar-surface coverage guard in test_generator_readiness_routes.py discovers routes by path.endswith('/gcode'), so it cannot see them, and its assertion that containment covers every guitar G-code route passed while they were open. That guard was written in #389 by the same author as this PR. Outside P-2: body-cavity operations, not NeckGCodeGenerator. Needs its own order.",
+      "MEDIUM: test_neck_gcode_smoke.py lifts a safety gate inside tests. It lifts one identity, per test, via monkeypatch, and a sibling test asserts the refusal without it; but it is a new pattern with no precedent here and is flagged for the owner.",
+      "LOW: /download now meets the gate twice when it delegates -- once itself, once inside generate_neck_gcode. Refusal happens at the first, before the delegated call, so nothing is generated twice; the second gate exists so containment survives a future refactor that stops delegating.",
+      "LOW: unlike the eight routes gated before them, these two handlers are not @safety_critical, so their refusals do not produce the CF-3 CRITICAL log. CF-3 is reworded so it stays true."
+    ]
+  }
+}

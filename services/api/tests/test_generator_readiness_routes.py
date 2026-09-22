@@ -236,6 +236,8 @@ def test_current_guitar_manufacturing_routes_have_readiness_records():
     off_surface_records = {
         # LTB-REMEDIATE-P1: /api/cam-workspace/neck/generate{,-full}
         "neck_pipeline_full",
+        # LTB-REMEDIATE-P2: /api/neck/gcode/{generate,download}
+        "neck_gcode_generator",
     }
     assert set(GENERATOR_READINESS) == guitar_surface_records | off_surface_records
     assert guitar_surface_records.isdisjoint(off_surface_records)

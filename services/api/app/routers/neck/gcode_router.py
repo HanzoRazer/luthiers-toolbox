@@ -17,7 +17,12 @@ URL is unchanged** and remains under the guitar CAM prefix::
 Relocating it must not create a new router module when this one already exists.
 
 This is NOT the separately tracked neck path in ``cam_workspace_router`` that
-carries the standing rapids-at-cutting-depth finding; that one is left alone.
+carries the standing rapids-at-cutting-depth finding; that one is contained under
+its own key by LTB-REMEDIATE-P1.
+
+``/gcode/generate`` and ``/gcode/download`` are contained by LTB-REMEDIATE-P2
+under ``neck_gcode_generator``: both reach ``NeckGCodeGenerator``, a third neck
+implementation distinct from the inline handler that ``"neck"`` governs.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
@@ -63,7 +68,12 @@ def generate_neck_gcode(req: NeckGcodeRequest):
     - OP40: Neck profile rough
 
     Returns G-code with operation stats.
+
+    Contained by LTB-REMEDIATE-P2: readiness is consulted before preset
+    resolution, input parsing or generator construction.
     """
+    _readiness_gate("neck_gcode_generator")
+
     try:
         # Resolve dimensions from preset or defaults
         if req.preset and req.preset in NECK_PRESETS:
@@ -131,7 +141,13 @@ def download_neck_gcode(req: NeckGcodeRequest):
     Generate and download neck G-code as .nc file.
 
     Same parameters as /generate but returns a downloadable file.
+
+    Gated here as well as in ``generate_neck_gcode``, under the same key, so the
+    containment does not depend on this route continuing to delegate. Refusal
+    happens before the delegated call, so nothing is generated twice.
     """
+    _readiness_gate("neck_gcode_generator")
+
     try:
         result = generate_neck_gcode(req)
         style = result.headstock_style.replace("_", "-")

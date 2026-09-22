@@ -231,17 +231,3 @@ def test_containment_did_not_couple_this_router_to_the_asset_layer():
 
     offenders = {m for m in imported if "dxf_authority" in m or "instrument_geometry" in m}
     assert not offenders, f"cam_workspace_router now imports the asset layer: {offenders}"
-
-
-def test_the_neck_gcode_routes_are_left_for_p2(client):
-    """P-2's targets are deliberately NOT contained by this change.
-
-    Recorded so that the scope boundary is visible in the suite rather than only
-    in a commit message. If a later change gates them, this test should be
-    deleted by that change -- not silently left passing.
-    """
-    response = client.post("/api/neck/gcode/generate", json={})
-
-    assert response.status_code != 422 or (
-        response.json().get("detail", {}).get("code") != "GENERATOR_READINESS_BLOCKED"
-    )

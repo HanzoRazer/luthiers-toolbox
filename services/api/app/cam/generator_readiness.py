@@ -43,7 +43,7 @@ OPEN CONTAINMENT FINDINGS (recorded here, not closed by this module)
 
 **CF-1 -- the neck surface is three code paths, not one.**
 Confirmed 2026-09-21 by reading the endpoints' sources, and extended 2026-09-22
-when LTB-REMEDIATE-P1 gave the third path its own identity:
+as LTB-REMEDIATE-P1 and -P2 gave each path its own identity:
 
 ===========================================  ==========================  ======
 route                                        emits via                   gated
@@ -52,8 +52,11 @@ route                                        emits via                   gated
                                              ``gcode_lines.append``
                                              calls in the router;
                                              **no generator class**
-``/api/neck/gcode/generate``                 ``NeckGCodeGenerator``      no
-``/api/neck/gcode/download``                 delegates to ``/generate``  no
+``/api/neck/gcode/generate``                 ``NeckGCodeGenerator``,     yes
+                                             via
+                                             ``neck_gcode_generator``
+``/api/neck/gcode/download``                 delegates to ``/generate``  yes
+                                             in-process; same key
 ``/api/cam-workspace/neck/generate-full``    ``NeckPipeline``            yes
                                              (orchestrator), via
                                              ``neck_pipeline_full``
@@ -66,8 +69,8 @@ through the two ungated endpoints -- and those answer unauthenticated. Gating
 them under the ``"neck"`` key would therefore be wrong: it would attach a record
 written about inline router code to a different implementation with different
 exposure. They need their own classification, or retirement, decided on their own
-evidence. Deliberately out of scope for CAM-CONTAIN-001; they are the subject of
-LTB-REMEDIATE-P2 and remain ungated here.
+evidence. Deliberately out of scope for CAM-CONTAIN-001; contained by
+LTB-REMEDIATE-P2 under their own key ``neck_gcode_generator``.
 
 The third path, ``/api/cam-workspace/neck/generate-full``, was contained by
 LTB-REMEDIATE-P1 under its own key ``neck_pipeline_full`` for the same reason:
@@ -76,7 +79,8 @@ have repeated the identity error rather than fixed it.
 
 **CF-3 -- every routine refusal is logged as a CRITICAL failure with a
 traceback.** Observed 2026-09-22 during LTB-REMEDIATE-P1, pre-existing and
-uniform: all eight gated handlers carry ``@safety_critical``, which catches
+uniform: the eight handlers gated before LTB-REMEDIATE-P2 all carry
+``@safety_critical``, which catches
 every exception including the ``HTTPException(422)`` this layer raises, logs it
 at CRITICAL with ``exc_info=True``, and re-raises. Containment therefore works
 correctly but turns an expected, designed refusal into a critical-severity log
@@ -85,6 +89,27 @@ a real safety-critical failure now shares a severity and a shape with a routine
 "this generator is not qualified" answer. Fixing it means teaching
 ``safety_critical`` to pass through an intended refusal, which touches all
 eight routes at once and belongs in its own increment, not in a containment PR.
+
+**CF-4 -- three Flying V G-code routes are ungated and invisible to the
+guitar-surface coverage guard.** Found 2026-09-22 during LTB-REMEDIATE-P2
+reconnaissance, by runtime sweep of every POST under ``/api/cam/guitar/``:
+
+=================================================  ======  =========
+route                                              status  G/M recs
+=================================================  ======  =========
+``/api/cam/guitar/flying_v/toolpath/control_cavity``  200     394
+``/api/cam/guitar/flying_v/toolpath/neck_pocket``     200     117
+``/api/cam/guitar/flying_v/toolpath/pickup``          200     337
+=================================================  ======  =========
+
+Each answers an uncredentialed default request with a G-code program. The
+guard in ``test_generator_readiness_routes.py`` discovers routes with
+``path.endswith("/gcode")``, so a route that emits G-code under any other name
+is structurally invisible to it -- which is why its assertion that containment
+"now covers every guitar G-code route" passed while these three were open. They
+are body-cavity operations, not neck generators, and are NOT contained by P-2;
+they need their own order. This is the CF-2 risk realised: discovery by name
+convention is not discovery by behaviour.
 
 **CF-2 -- enforcement is per handler, across independently registered route
 families.** Containment closed the seven G-code routes under ``/api/cam/guitar/``
@@ -363,6 +388,39 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "below Z=0, min Z -25.000mm, 0 with an explicit Z word on the line",
             "services/api/app/cam/neck/profile_carving.py:301 (roughing), :360 "
             "(finishing) -- the two lateral-rapid emitters",
+        ),
+    ),
+    "neck_gcode_generator": GeneratorReadinessRecord(
+        route="neck_gcode_generator",
+        readiness=GeneratorReadiness.BLOCKED,
+        reason=(
+            "Witnessed defect capable of damaging stock, measured against this "
+            "exact implementation. POST /api/neck/gcode/generate answers an "
+            "uncredentialed default request with 460 G/M records (G20, inch), "
+            "and /api/neck/gcode/download returns the identical program as an "
+            ".nc attachment. Of 224 rapids, 146 are below the workpiece top, "
+            "reaching Z=-0.8371in (-21.26mm); every one inherits its Z modally "
+            "and carries no explicit Z word. Distinct identity: both routes "
+            "reach app.generators.neck_headstock_generator.NeckGCodeGenerator, "
+            "which is neither the inline router code governed by 'neck' nor "
+            "the NeckPipeline governed by 'neck_pipeline_full'. No functional "
+            "equivalence between these implementations is claimed."
+        ),
+        exit_condition=(
+            "Two separate conditions, both required. (1) The rapids below the "
+            "workpiece top corrected, proven by a semantic modal-state "
+            "regression fixture that is itself shown able to fail. This order "
+            "(LTB-REMEDIATE-P2) contains the routes and does NOT correct the "
+            "toolpath. (2) A readiness decision recorded on evidence through "
+            "the governing qualification process. Removing the unsafe rapids "
+            "does NOT by itself qualify this generator."
+        ),
+        evidence=(
+            "LTB-AUDIT-001 finding P-2 (HIGH, confirmed)",
+            "LTB-REMEDIATE-P2 measurement at main b9b0b929: 146/224 rapids "
+            "below Z=0, min Z -0.8371in, 0 with an explicit Z word",
+            "services/api/app/routers/neck/gcode_router.py: /download calls "
+            "generate_neck_gcode() in-process; response byte-identical",
         ),
     ),
     "neck": GeneratorReadinessRecord(
