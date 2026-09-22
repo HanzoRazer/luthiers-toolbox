@@ -226,10 +226,19 @@ def test_current_guitar_manufacturing_routes_have_readiness_records():
         "route in generator readiness (or add it to UNGATED_GUITAR_GCODE_ROUTES "
         "with a reason) before updating this inventory"
     )
-    assert set(GENERATOR_READINESS) == {
+    guitar_surface_records = {
         "stratocaster_body", "les_paul_body", "flying_v_body", "neck",
         "acoustic_body", "acoustic_soundhole", "acoustic_binding",
     }
+    # Records for manufacturing routes that are NOT on the /api/cam/guitar/
+    # surface this guard discovers. They are listed rather than allowed by a
+    # wildcard, so a new key still has to be classified here deliberately.
+    off_surface_records = {
+        # LTB-REMEDIATE-P1: /api/cam-workspace/neck/generate{,-full}
+        "neck_pipeline_full",
+    }
+    assert set(GENERATOR_READINESS) == guitar_surface_records | off_surface_records
+    assert guitar_surface_records.isdisjoint(off_surface_records)
 
 
 def test_declared_gaps_are_not_silently_gated():

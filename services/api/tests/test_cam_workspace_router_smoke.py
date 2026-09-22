@@ -85,9 +85,15 @@ def test_generate_single_op_endpoint_exists(client):
 
 
 def test_generate_single_op_result(client):
-    """POST /api/cam-workspace/neck/generate/truss_rod returns gcode or 503."""
+    """POST /api/cam-workspace/neck/generate/truss_rod answers without erroring.
+
+    Since LTB-REMEDIATE-P1 this route is contained and answers 422; the route's
+    refusal behaviour is asserted properly in
+    ``test_p1_neck_pipeline_containment.py``. This stays an existence smoke
+    check, but it no longer claims to return G-code, because it does not.
+    """
     resp = client.post("/api/cam-workspace/neck/generate/truss_rod", json={})
-    # 422 if validation fails with empty body, 200 if defaults accepted, 503 if unavailable
+    # 422 contained/validation, 200 if ever qualified, 503 if pipeline unavailable
     assert resp.status_code in (200, 422, 503)
 
 
@@ -102,7 +108,11 @@ def test_generate_full_endpoint_exists(client):
 
 
 def test_generate_full_result(client):
-    """POST /api/cam-workspace/neck/generate-full returns gcode or 503."""
+    """POST /api/cam-workspace/neck/generate-full answers without erroring.
+
+    Contained by LTB-REMEDIATE-P1 -- see the note on
+    ``test_generate_single_op_result`` above.
+    """
     resp = client.post("/api/cam-workspace/neck/generate-full", json={})
-    # 422 if validation fails with empty body, 200 if defaults accepted, 503 if unavailable
+    # 422 contained/validation, 200 if ever qualified, 503 if pipeline unavailable
     assert resp.status_code in (200, 422, 503)

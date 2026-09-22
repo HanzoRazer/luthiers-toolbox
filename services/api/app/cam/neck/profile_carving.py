@@ -295,10 +295,24 @@ class ProfileCarvingGenerator:
             lines.append(f"G0 Z{self.safe_z_mm:.3f}")
             lines.append(f"G0 Y{station.y_mm:.3f}")
 
-            # Cut profile points with finish allowance
-            for x, z in station.profile_points:
+            # Cut profile points with finish allowance.
+            #
+            # LTB-REMEDIATE-P1: only the FIRST lateral move of a station happens
+            # at clearance height, so only that one is a rapid. Every later
+            # lateral move is made with the cutter already plunged to the
+            # previous point's depth, which makes it a cutting move. It was
+            # previously emitted as `G0`, sending the tool sideways through
+            # stock at rapid feed down to Z=-25mm. Ordered tool positions and
+            # motion-block count are unchanged; the engaged moves are
+            # intentionally changed from rapid to controlled feed. That is a
+            # deliberate change of motion semantics, speed and cycle time -- it
+            # is the correction, not a side effect of it.
+            for i, (x, z) in enumerate(station.profile_points):
                 z_with_allowance = z + allowance
-                lines.append(f"G0 X{x:.3f}")
+                if i == 0:
+                    lines.append(f"G0 X{x:.3f}")
+                else:
+                    lines.append(f"G1 X{x:.3f} F{self.rough_tool.feed_mm_min:.0f}")
                 lines.append(f"G1 Z{z_with_allowance:.3f} F{self.rough_tool.feed_mm_min:.0f}")
 
             lines.append(f"G0 Z{self.retract_z_mm:.3f}")
@@ -356,8 +370,13 @@ class ProfileCarvingGenerator:
             lines.append(f"G0 Z{self.safe_z_mm:.3f}")
             lines.append(f"G0 Y{station.y_mm:.3f}")
 
-            for x, z in station.profile_points:
-                lines.append(f"G0 X{x:.3f}")
+            # LTB-REMEDIATE-P1: same correction as the roughing pass above --
+            # only the first lateral move is at clearance and stays a rapid.
+            for i, (x, z) in enumerate(station.profile_points):
+                if i == 0:
+                    lines.append(f"G0 X{x:.3f}")
+                else:
+                    lines.append(f"G1 X{x:.3f} F{self.finish_tool.feed_mm_min:.0f}")
                 lines.append(f"G1 Z{z:.3f} F{self.finish_tool.feed_mm_min:.0f}")
 
             lines.append(f"G0 Z{self.retract_z_mm:.3f}")

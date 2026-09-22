@@ -41,8 +41,9 @@ Evidence: ``LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md``, audited read-only against
 OPEN CONTAINMENT FINDINGS (recorded here, not closed by this module)
 -------------------------------------------------------------------
 
-**CF-1 -- the neck surface is two code paths, not one, and only one is gated.**
-Confirmed 2026-09-21 by reading both endpoints' sources:
+**CF-1 -- the neck surface is three code paths, not one.**
+Confirmed 2026-09-21 by reading the endpoints' sources, and extended 2026-09-22
+when LTB-REMEDIATE-P1 gave the third path its own identity:
 
 ===========================================  ==========================  ======
 route                                        emits via                   gated
@@ -53,6 +54,9 @@ route                                        emits via                   gated
                                              **no generator class**
 ``/api/neck/gcode/generate``                 ``NeckGCodeGenerator``      no
 ``/api/neck/gcode/download``                 delegates to ``/generate``  no
+``/api/cam-workspace/neck/generate-full``    ``NeckPipeline``            yes
+                                             (orchestrator), via
+                                             ``neck_pipeline_full``
 ===========================================  ==========================  ======
 
 They are **not the same governed generator identity**, which is the opposite of
@@ -62,7 +66,25 @@ through the two ungated endpoints -- and those answer unauthenticated. Gating
 them under the ``"neck"`` key would therefore be wrong: it would attach a record
 written about inline router code to a different implementation with different
 exposure. They need their own classification, or retirement, decided on their own
-evidence. Deliberately out of scope for CAM-CONTAIN-001.
+evidence. Deliberately out of scope for CAM-CONTAIN-001; they are the subject of
+LTB-REMEDIATE-P2 and remain ungated here.
+
+The third path, ``/api/cam-workspace/neck/generate-full``, was contained by
+LTB-REMEDIATE-P1 under its own key ``neck_pipeline_full`` for the same reason:
+it reaches ``NeckPipeline``, a third implementation, and reusing ``"neck"`` would
+have repeated the identity error rather than fixed it.
+
+**CF-3 -- every routine refusal is logged as a CRITICAL failure with a
+traceback.** Observed 2026-09-22 during LTB-REMEDIATE-P1, pre-existing and
+uniform: all eight gated handlers carry ``@safety_critical``, which catches
+every exception including the ``HTTPException(422)`` this layer raises, logs it
+at CRITICAL with ``exc_info=True``, and re-raises. Containment therefore works
+correctly but turns an expected, designed refusal into a critical-severity log
+line with a stack trace. Nothing here is broken; the cost is signal quality --
+a real safety-critical failure now shares a severity and a shape with a routine
+"this generator is not qualified" answer. Fixing it means teaching
+``safety_critical`` to pass through an intended refusal, which touches all
+eight routes at once and belongs in its own increment, not in a containment PR.
 
 **CF-2 -- enforcement is per handler, across independently registered route
 families.** Containment closed the seven G-code routes under ``/api/cam/guitar/``
@@ -293,6 +315,54 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
         evidence=(
             "CAM-CONTAIN-001 acoustic survey 2026-09-21: no tab logic in "
             "generate_binding_channel_gcode; not previously surveyed",
+        ),
+    ),
+    "neck_pipeline_full": GeneratorReadinessRecord(
+        route="neck_pipeline_full",
+        readiness=GeneratorReadiness.BLOCKED,
+        reason=(
+            "Witnessed defect capable of damaging stock, reproduced against this "
+            "exact implementation. POST /api/cam-workspace/neck/generate-full "
+            "answers an uncredentialed default request with a 28,260-byte .nc "
+            "attachment containing 1,779 G/M records, of which 702 are G0 rapids "
+            "below the workpiece top surface, reaching Z=-25.000mm. The mechanism "
+            "is in app/cam/neck/profile_carving.py: the station loop alternates "
+            "'G1 Z<depth>' with 'G0 X<next>', so every lateral stepover is taken "
+            "at rapid feed while the cutter is engaged in the material. All 702 "
+            "inherit their Z modally; none carries an explicit Z word, so a "
+            "substring search for a rapid and a negative Z on one line finds "
+            "zero. Distinct identity: this route reaches "
+            "app.cam.neck.orchestrator.NeckPipeline, which is neither the inline "
+            "router code governed by the 'neck' record nor the NeckGCodeGenerator "
+            "behind /api/neck/gcode/*."
+        ),
+        exit_condition=(
+            "Two separate conditions, both required. (1) The lateral stepover in "
+            "profile_carving.py roughing and finishing emits a feed move, proven "
+            "by a semantic modal-state regression fixture that asserts zero G0 "
+            "rapids below the workpiece top and that is itself proven able to "
+            "fail on a deliberately unsafe fixture. (2) A readiness decision "
+            "recorded on evidence through the governing qualification process. "
+            "Removing the unsafe rapid does NOT by itself qualify this "
+            "generator. (3) The plunge-feed question settled: this module "
+            "plunges at the tool's LATERAL feed, not its plunge feed. "
+            "NeckToolSpec declares both, and profile_carving emits "
+            "'G1 Z<depth> F{feed_mm_min}' -- F1200 for T1 whose plunge_mm_min "
+            "is 600, F1500 for T3 whose plunge_mm_min is 500. Every sibling "
+            "emitter does the opposite (fret_slots.py:223, "
+            "truss_rod_channel.py:129 and :201, surface_carving.py:310/:379/"
+            ":422, saw_gcode_generator.py:246); profile_carving is the only "
+            "emitter in the repository that plunges at the cutting feed. Found "
+            "while correcting the rapids and deliberately NOT fixed here: it is "
+            "a second, independent motion defect and does not belong in a "
+            "containment PR. Tracked as issue #399."
+        ),
+        evidence=(
+            "LTB-AUDIT-001 finding P-1 (HIGH, confirmed)",
+            "LTB-REMEDIATE-P1 reproduction at main 5e683d8e: 702/927 rapids "
+            "below Z=0, min Z -25.000mm, 0 with an explicit Z word on the line",
+            "services/api/app/cam/neck/profile_carving.py:301 (roughing), :360 "
+            "(finishing) -- the two lateral-rapid emitters",
         ),
     ),
     "neck": GeneratorReadinessRecord(

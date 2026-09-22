@@ -15,14 +15,14 @@ Endpoints:
 
 from __future__ import annotations
 
-import math
-from typing import Any, Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from app.core.safety import safety_critical
+from .._project_gcode_common import _readiness_gate
 
 router = APIRouter(tags=["cam-workspace"])
 
@@ -514,7 +514,11 @@ async def generate_neck_op(op: str, req: GenerateRequest):
     RED gate → HTTP 409, no gcode returned.
     YELLOW gate → 200 OK with gcode + warnings.
     GREEN gate → 200 OK, clean.
+
+    Contained by LTB-REMEDIATE-P1 under ``neck_pipeline_full``.
     """
+    _readiness_gate("neck_pipeline_full")
+
     if op not in NECK_OPERATIONS:
         raise HTTPException(422, detail=f"Unknown op {op!r}. Valid: {NECK_OPERATIONS}")
 
@@ -598,8 +602,12 @@ async def generate_full_neck(req: GenerateRequest):
     """
     Generate complete 4-op neck program for final download.
     Called only from Step 5 (summary). Returns .nc file as plain text.
-    Gate must be GREEN or YELLOW for all ops — any RED blocks.
+
+    Contained by LTB-REMEDIATE-P1. An unenforced "Gate must be GREEN or YELLOW"
+    claim was removed: this handler evaluates no gate and no preflight.
     """
+    _readiness_gate("neck_pipeline_full")
+
     if not PIPELINE_AVAILABLE:
         raise HTTPException(503, detail=f"Pipeline unavailable: {_pipeline_error}")
 

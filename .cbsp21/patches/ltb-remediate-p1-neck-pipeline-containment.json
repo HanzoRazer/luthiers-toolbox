@@ -1,0 +1,182 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_REMEDIATE_P1_NECK_PIPELINE_CONTAINMENT",
+  "title": "LTB-REMEDIATE-P1: contain the cam-workspace neck pipeline and correct its rapids-at-cutting-depth defect",
+  "intent": "POST /api/cam-workspace/neck/generate-full answered an uncredentialed default request ({}) with HTTP 200 and a 28,260-byte .nc attachment carrying 1,779 G/M records, of which 702 were G0 rapids below the workpiece top surface, reaching Z=-25.000mm. This contains the route behind a fail-closed generator-readiness decision under its own identity, and separately corrects the emitter so the unsafe motion is no longer produced. Correcting the motion does not qualify the generator: the record stays non-emitting.",
+  "change_type": "fix",
+  "behavior_change": "Two routes that previously returned manufacturing G-code to an uncredentialed default request now return HTTP 422 GENERATOR_READINESS_BLOCKED before any generator is constructed. Separately, the neck profile-carving emitter now issues engaged lateral moves as feed moves rather than rapids. Ordered tool positions and motion-block count are unchanged; 720 moves were intentionally changed from rapid to controlled-feed motion, eliminating all rapid travel below Z=0. This is a deliberate change to machine motion behaviour: 720 moves that previously executed at rapid traverse now execute at the tool's lateral cutting feed, adding an estimated 0.67 minutes of cut time. No other route, generator or authority layer changes behaviour.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "CHANGELOG.md",
+      "ci/file_size_baseline.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/cam/neck/profile_carving.py",
+      "services/api/app/routers/cam/cam_workspace_router.py",
+      "services/api/tests/test_cam_workspace_router_smoke.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p1_neck_pipeline_motion.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "CHANGELOG.md",
+      "ci/file_size_baseline.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/cam/neck/profile_carving.py",
+      "services/api/app/routers/cam/cam_workspace_router.py",
+      "services/api/tests/test_cam_workspace_router_smoke.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p1_neck_pipeline_motion.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "generator_readiness.py: adds the record 'neck_pipeline_full' at BLOCKED, carrying the reproduced counts, the emitter line numbers, and a two-part exit condition; extends CF-1 from two neck code paths to three now that the third has its own identity; records a new CF-3. cam_workspace_router.py: imports the shared _readiness_gate and calls it as the first statement of both generate_neck_op and generate_full_neck; removes a docstring sentence claiming a gate that was never enforced in that handler. profile_carving.py: in both generate_roughing and generate_finishing, the per-station profile-point loop now emits the lateral move as G1 at feed for every point after the first, instead of G0. test_p1_neck_pipeline_containment.py: new, 25 tests. Three existing test files updated for the new registry key and two stale docstrings. ci/file_size_baseline.json: one entry, cam_workspace_router.py 636 -> 644.",
+    "why": "LTB-AUDIT-001 confirmed P-1 as HIGH. The owner issued LTB-REMEDIATE-P1 on 2026-09-22 requiring containment first, under a distinct authority identity, with the toolpath defect corrected separately and proved by semantic rather than textual tests.",
+    "why_not_redundant": "The existing 'neck' readiness record governs the inline handler behind /api/cam/guitar/{model_id}/neck/gcode, which constructs no generator; its own reason text states that the rapids-carrying path is on another router and is not governed by it. Reusing that key would have attached a record written about inline router code to app.cam.neck.orchestrator.NeckPipeline -- repeating the CF-1 identity error rather than fixing it. A third key was required.",
+    "what_did_not_change": "No change to instrument_geometry.dxf_authority or require_manufacturing_authority; asserted by a parsed-import test on the edited router. No change to the stratocaster_body, les_paul_body, flying_v_body, neck, acoustic_body, acoustic_soundhole or acoustic_binding records; asserted. /api/neck/gcode/generate and /api/neck/gcode/download are deliberately left ungated -- they belong to LTB-REMEDIATE-P2 -- and a test pins that boundary so it is visible in the suite rather than only in a commit message. No authentication policy changed. No unrelated neck implementation consolidated.",
+    "why_structural_extraction": "Not an extraction. One new registry record, two gate calls, one emitter correction in two sibling loops."
+  },
+  "verification": {
+    "commands_run": [
+      "Pinned main before starting: git rev-parse origin/main -> 5e683d8ec12758bbf23a90549a8b41f96f5655a5. Work is on a fresh worktree created at that SHA and confirmed to report zero status entries before any edit.",
+      "Reproduced the defect over HTTP against the unmodified tree: POST /api/cam-workspace/neck/generate-full with body {} -> 200, 28,260 bytes, Content-Disposition attachment, 1,779 G/M records, 1,754 motion blocks, 927 rapids, 702 rapids below the workpiece top, min rapid Z -25.000mm.",
+      "Established that a textual test cannot see the defect: of the 702 violations, 0 carry an explicit Z word on their own line and a substring search for a rapid plus a negative Z on one line returns 0. All 702 inherit Z modally.",
+      "Attributed the emitter by reading source, not by inference: services/api/app/cam/neck/profile_carving.py:301 (roughing) and :360 (finishing) emit 'G0 X{x}' inside the per-station profile-point loop, immediately after a 'G1 Z' plunge.",
+      "Verified containment over HTTP after the gate: /neck/generate-full, /neck/generate/profile_rough, /neck/generate/truss_rod and /neck/generate/nonexistent_op all return 422, 1,781 bytes, 0 G/M records, no Content-Disposition, detail.code GENERATOR_READINESS_BLOCKED with route, state, reason, exit_condition and 3 evidence entries.",
+      "Verified the correction at the generator, comparing the pre-fix and post-fix programs block by block with modal state applied: rapids below the workpiece top 702 -> 0; total rapids 927 -> 207; motion blocks 1,754 -> 1,754; the ordered (X,Y,Z) position sequence is identical with zero divergence. The claim proved is therefore the narrow one: ordered tool positions and motion-block count are unchanged, and 720 moves were intentionally changed from rapid to controlled feed. Motion semantics, speed and cycle time change by design.",
+      "pytest services/api/tests/test_p1_neck_pipeline_containment.py -> 25 passed.",
+      "pytest test_generator_readiness.py test_generator_readiness_routes.py test_p1_neck_pipeline_containment.py -> 58 passed.",
+      "pytest across every affected suite (the three above plus test_cam_workspace_endpoint_smoke, test_cam_workspace_router_smoke, test_cam_workspace_smoke, test_neck_cnc_pipeline, test_neck_endpoint_smoke, test_neck_gcode_smoke) -> 180 passed, 0 failed.",
+      "Checked that the passing smoke suites were not passing vacuously: 0 skipped, and the three tests whose permissive status sets include 422 were read individually. Two carried docstrings claiming the route 'returns gcode or 503', which is now false; the claims were corrected and the assertions left alone, because they are existence checks and the refusal is asserted properly elsewhere.",
+      "python scripts/governance/check_all.py --tier ci -> 9/14 passed, 5 warnings, [OK] Governance checks passed.",
+      "Control run of the same governance command on a clean worktree pinned to 5e683d8e -> identical 9/14, 5 warnings. The warnings are pre-existing on main and are not introduced by this change.",
+      "File-size ratchet: the gate failed at 660 > 636. The added docstrings were trimmed to one or two lines each -- the full reasoning already lives in the readiness record, the test module and the PR -- which brought the file to 645. The residual +9 is irreducible: one import and two gate calls with their separating blank lines. The baseline was raised by exactly that amount, by a single-line text edit rather than `--update`, because --update rewrites the whole baseline from current state (ci/file_size_gate.py:85) and would have swept in unrelated drift -- a first attempt using it also reordered an unrelated entry and was reverted. python ci/file_size_gate.py now reports OK, 108 files at or below baseline.",
+      "Feed authority of the 720 converted moves, resolved with modal F tracking rather than assumed: every converted move carries an EXPLICIT F on its own line, so none inherits a feed. OP40 roughing uses F1200 = T1.feed_mm_min; OP45 finishing uses F1500 = T3.feed_mm_min. Neither is the plunge feed (T1 600, T3 500), so no converted move accidentally runs at plunge rate.",
+      "No G1 anywhere in the program executes before a feed is established: scanning every motion block with modal F state gives 0 G1 blocks with F unset.",
+      "Cycle-time consequence, measured not estimated: the 720 converted moves total 897.6mm of travel (448.8mm in each of OP40 and OP45) and take 0.37 + 0.30 = 0.67 minutes at their feeds. The rapid time they replace was effectively zero, so the program is roughly 40 seconds longer. That is the price of not traversing stock at rapid.",
+      "Ratchet exception validated against precedent rather than asserted: b8bc2e02 ('ci(fretboard): declare the 9 lines the slot_width correction costs') is merged on main and performs the identical procedure for the identical reason -- trim first, then declare the residual on that file's single key by hand, explicitly NOT via --update because it rebuilds all entries. The gate itself documents --update as the sanctioned path (ci/file_size_gate.py:6).",
+      "Recoverable lines checked, not assumed: an AST scan of cam_workspace_router.py found exactly two provably dead names, 'math' and 'Any', each occurring only on its own import line. Removing them recovers ONE line (Any shares a line with four live names). That was done, cutting the ratchet ask from 9 to 8. Nothing else can be recovered without refactoring: the remaining candidates are 23 redundant consecutive blank lines spread across a 644-line module, which is unrelated churn inside a containment PR.",
+      "Second review round. A second size ratchet, `python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json` (AGENTS.md:135), scans services/api/tests and failed at 522 > 500 on the new test module. Earlier local runs used only the root ci/file_size_gate.py, which scans services/api/app and did not see it. A brand-new file was not added to the baseline -- that would mint new debt -- it was split into containment (247 lines) and motion (438 lines) modules, following the precedent test_generator_readiness_routes.py set for the same reason.",
+      "`python -m app.ci.check_complexity` then flagged two of the new helpers (CC 18 and 16). Clean main reports none, so both were this change's; CI had passed only because it ran before the split. Reduced by extraction to below 15 with no behaviour change.",
+      "Added a modal-state test for every station transition, as review asked: each station must open with a rapid to clearance, position Y and the first X at clearance, contain only feed moves with a feed in effect between the first plunge and the retract, and close with a rapid retract at or above the surface; blocks between stations and around tool changes must sit at or above the surface. Its first draft failed on two segmentation errors in the test itself, confirmed against the program text (a post-loop clearance move swept into the last station; a tool-change block keyed to the previous operation's station) -- the emitter was correct.",
+      "Replaced a misnamed test. 'test_the_correction_changed_feed_mode_and_not_path_geometry' claimed to detect path changes but never compared positions. It is renamed to what it asserts (no engaged move is a rapid), and position invariance is now proved by a separate test that derives the expected toolpath independently from profile_gen.generate_stations() rather than from a snapshot of an earlier program.",
+      "Negative controls for the new tests, re-run after the parser refactor: against the pre-fix emitter (git show 5e683d8e) 5 motion tests fail including the new transition test; the position test passes there, which is correct because positions were never the defect, so a separate mutation (OP45 plunging 0.5mm deeper) was applied and it fails. The emitter was restored to HEAD and verified clean after each control.",
+      "Filed the plunge-feed defect as issue #399 and linked it from condition (3) of the neck_pipeline_full exit condition.",
+      "Client check: packages/client NeckOpPanel.vue and CamWorkspaceView.vue call both routes. Both remain fail-closed after this change -- the G-code display and the .nc download run only on res.ok -- but both report the refusal as a generic error ('Server error 422', 'Full generate failed: 422') and discard its reason. Recorded, not fixed: a frontend change is outside this order."
+    ],
+    "proofs": [
+      "The route cannot emit: 0 G/M records in the response body and no attachment header, on all four probed paths.",
+      "The generator is never constructed after refusal: NeckPipeline is monkeypatched to raise on construction, and both routes still return 422 with the patch never invoked.",
+      "Authority precedes availability: with PIPELINE_AVAILABLE forced False, the route still returns 422 GENERATOR_READINESS_BLOCKED rather than 503, so an import failure cannot mask the refusal.",
+      "The gate precedes op validation: an unknown op returns the readiness refusal and does not disclose the list of valid ops.",
+      "No artifact is written after refusal: the handler is exercised with the working directory redirected to a temporary path, and no .nc, .tap, .gcode or .ngc file appears.",
+      "Fail-closed on omission: removing the record from the registry resolves to UNKNOWN with permits_emission False, so deleting or renaming it refuses harder rather than opening the route.",
+      "Both doors are gated under one identity: the source is parsed for _readiness_gate calls and both must be neck_pipeline_full; a separate test enumerates the POST decorators on this router and requires one gate call per G-code route, so adding an ungated one fails here.",
+      "The motion detector is proved able to fail: a negative-control fixture reproducing the exact modal-inheritance shape yields exactly 2 violations at the expected depths, and a companion test shows the textual search reports that same fixture clean.",
+      "The corrected program still cuts and still retracts: engaged blocks below the surface exist and none of them is a rapid; clearance rapids still exist and all are at or above the surface.",
+      "Blast radius: the other seven readiness records are asserted unchanged, and the edited router is asserted by parsed imports not to have acquired any dependency on the asset-authority layer."
+    ],
+    "hardware": "No physical-machine execution. No G-code was sent anywhere, and no generated program was run. The standing DO-NOT-CUT order is unaffected by this change. The corrected toolpath has not been cut and is not qualified for cutting.",
+    "counts": {
+      "rapids_below_workpiece_top": "702 before, 0 after",
+      "total_rapids": "927 before, 207 after; the 720 difference became feed moves at unchanged coordinates",
+      "motion_blocks": "1754 before, 1754 after, identical ordered positions",
+      "readiness_records": "7 before, 8 after",
+      "gated_gcode_routes_on_cam_workspace_router": "0 before, 2 after",
+      "new_tests": "30 across test_p1_neck_pipeline_containment.py (19) and test_p1_neck_pipeline_motion.py (11)",
+      "converted_moves_feed": "720 total: 360 at F1200 (OP40, T1 lateral feed) and 360 at F1500 (OP45, T3 lateral feed); all explicit, none inherited, none at plunge feed",
+      "added_cut_time": "+0.67 min (~40s) across 897.6mm of converted travel"
+    }
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "intent": "This manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": "services/api/app/cam/generator_readiness.py",
+      "intent": "Declare the neck_pipeline_full identity and its BLOCKED state, with the reproduced evidence and a two-part exit condition.",
+      "risk": "medium",
+      "behavior_change": "Adds one record. Adds no new state to the enum and no qualifying state; the layer remains fail-closed. Also extends CF-1 to three neck code paths and records CF-3, both documentation."
+    },
+    {
+      "path": "services/api/app/routers/cam/cam_workspace_router.py",
+      "intent": "Consult generator readiness as the first operation of both G-code routes on this router.",
+      "risk": "medium",
+      "behavior_change": "Both routes now refuse with 422 before constructing NeckPipeline. Removes a docstring sentence that claimed a gate this handler never evaluated. Also drops two provably dead imports (math, Any)."
+    },
+    {
+      "path": "services/api/app/cam/neck/profile_carving.py",
+      "intent": "Emit engaged lateral moves as feed moves instead of rapids, in both the roughing and finishing station loops.",
+      "risk": "medium",
+      "behavior_change": "The emitted program changes 720 moves from rapid to controlled feed, a deliberate change of motion semantics, speed and cycle time. Ordered tool positions and motion-block count are unchanged, verified position by position. The generator remains non-emitting through the route regardless."
+    },
+    {
+      "path": "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "intent": "Prove containment: refusal, gate ordering, identity, blast radius.",
+      "risk": "low",
+      "behavior_change": "None. Split from a single 522-line module that crossed the services/api 500-line ratchet; motion tests moved to test_p1_neck_pipeline_motion.py."
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness.py",
+      "intent": "Extend the registry inventory to the eighth record.",
+      "risk": "low",
+      "behavior_change": "None. Assertion updated so omission still fails."
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness_routes.py",
+      "intent": "Keep the guitar-surface coverage guard exact now that the registry holds an off-surface record.",
+      "risk": "low",
+      "behavior_change": "None. The guard lists the off-surface record explicitly rather than widening to a wildcard, so a new key still has to be classified deliberately."
+    },
+    {
+      "path": "services/api/tests/test_cam_workspace_router_smoke.py",
+      "intent": "Correct two docstrings that claimed the contained routes return G-code.",
+      "risk": "low",
+      "behavior_change": "None. Assertions unchanged; only the stated claim was false."
+    },
+    {
+      "path": "ci/file_size_baseline.json",
+      "intent": "Declare the 8 residual lines the containment gate costs: 636 -> 644.",
+      "risk": "low",
+      "behavior_change": "None. Ratchet bookkeeping."
+    },
+    {
+      "path": "services/api/tests/test_p1_neck_pipeline_motion.py",
+      "intent": "Prove the emitter correction by modal state: the detector's negative controls, no rapid while engaged, feed authority, modal state at every station transition, and an independent position check against the generator's own stations.",
+      "risk": "low",
+      "behavior_change": "New test module. No production behaviour."
+    },
+    {
+      "path": "CHANGELOG.md",
+      "intent": "Record the capability removal under Removed -- BREAKING, per the file's own rule that capability removals are listed individually.",
+      "risk": "low",
+      "behavior_change": "None. States explicitly that this is a fail-closed and rapid-removal patch, not a qualification of the generator for cutting."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-22-LTB-REMEDIATE-P1",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 3
+    },
+    "findings": [
+      "MEDIUM: this change touches a G-code emitter, which is manufacturing output. The mitigation is that the emitted path is proved identical position-for-position before and after, so the change is confined to feed mode; and that the route refuses regardless, so no user can obtain the corrected program from it until the generator is separately qualified.",
+      "MEDIUM: /api/cam-workspace/neck/generate/{op} was gated although the order names only generate-full. Both routes reach the same NeckPipeline, so containing one would have left an ungated second door to one implementation -- the exact CF-1 error. Flagged rather than assumed: if the owner intended the per-op route to stay open, reverting that one gate call is a one-line change.",
+      "LOW: cam_workspace_router now imports _project_gcode_common, which pulls SQLAlchemy and project model imports into a previously DB-free router. The module is already imported by two other routers at app start, so this adds no new dependency to the process; it was preferred over a local copy of the gate so that the refusal shape stays identical across all gated routes.",
+      "LOW: the safe-clearance plane is ambiguous in the repository -- BCamMachineSpec.safe_z_mm is 25.0 while PreflightConfig.safe_z_mm is 5.0, and no document ranks them. The regression invariant is therefore pinned at the workpiece top (Z<0), which is the defect under either reading, and the ambiguity is recorded for P-3 rather than silently resolved here.",
+      "LOW: this raises a ratchet baseline. The ratchet exists to prevent unchecked growth, not to forbid adding a required safety gate, and the increase is the minimum the gate calls cost after the prose was trimmed. One entry changed; no other baseline value touched."
+    ]
+  }
+}
