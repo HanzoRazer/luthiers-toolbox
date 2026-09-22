@@ -11,6 +11,7 @@
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "CHANGELOG.md",
       "ci/file_size_baseline.json",
       "services/api/app/cam/generator_readiness.py",
       "services/api/app/cam/neck/profile_carving.py",
@@ -18,10 +19,12 @@
       "services/api/tests/test_cam_workspace_router_smoke.py",
       "services/api/tests/test_generator_readiness.py",
       "services/api/tests/test_generator_readiness_routes.py",
-      "services/api/tests/test_p1_neck_pipeline_containment.py"
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p1_neck_pipeline_motion.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/ltb-remediate-p1-neck-pipeline-containment.json",
+      "CHANGELOG.md",
       "ci/file_size_baseline.json",
       "services/api/app/cam/generator_readiness.py",
       "services/api/app/cam/neck/profile_carving.py",
@@ -29,7 +32,8 @@
       "services/api/tests/test_cam_workspace_router_smoke.py",
       "services/api/tests/test_generator_readiness.py",
       "services/api/tests/test_generator_readiness_routes.py",
-      "services/api/tests/test_p1_neck_pipeline_containment.py"
+      "services/api/tests/test_p1_neck_pipeline_containment.py",
+      "services/api/tests/test_p1_neck_pipeline_motion.py"
     ]
   },
   "diff_articulation": {
@@ -58,7 +62,14 @@
       "No G1 anywhere in the program executes before a feed is established: scanning every motion block with modal F state gives 0 G1 blocks with F unset.",
       "Cycle-time consequence, measured not estimated: the 720 converted moves total 897.6mm of travel (448.8mm in each of OP40 and OP45) and take 0.37 + 0.30 = 0.67 minutes at their feeds. The rapid time they replace was effectively zero, so the program is roughly 40 seconds longer. That is the price of not traversing stock at rapid.",
       "Ratchet exception validated against precedent rather than asserted: b8bc2e02 ('ci(fretboard): declare the 9 lines the slot_width correction costs') is merged on main and performs the identical procedure for the identical reason -- trim first, then declare the residual on that file's single key by hand, explicitly NOT via --update because it rebuilds all entries. The gate itself documents --update as the sanctioned path (ci/file_size_gate.py:6).",
-      "Recoverable lines checked, not assumed: an AST scan of cam_workspace_router.py found exactly two provably dead names, 'math' and 'Any', each occurring only on its own import line. Removing them recovers ONE line (Any shares a line with four live names). That was done, cutting the ratchet ask from 9 to 8. Nothing else can be recovered without refactoring: the remaining candidates are 23 redundant consecutive blank lines spread across a 644-line module, which is unrelated churn inside a containment PR."
+      "Recoverable lines checked, not assumed: an AST scan of cam_workspace_router.py found exactly two provably dead names, 'math' and 'Any', each occurring only on its own import line. Removing them recovers ONE line (Any shares a line with four live names). That was done, cutting the ratchet ask from 9 to 8. Nothing else can be recovered without refactoring: the remaining candidates are 23 redundant consecutive blank lines spread across a 644-line module, which is unrelated churn inside a containment PR.",
+      "Second review round. A second size ratchet, `python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json` (AGENTS.md:135), scans services/api/tests and failed at 522 > 500 on the new test module. Earlier local runs used only the root ci/file_size_gate.py, which scans services/api/app and did not see it. A brand-new file was not added to the baseline -- that would mint new debt -- it was split into containment (247 lines) and motion (438 lines) modules, following the precedent test_generator_readiness_routes.py set for the same reason.",
+      "`python -m app.ci.check_complexity` then flagged two of the new helpers (CC 18 and 16). Clean main reports none, so both were this change's; CI had passed only because it ran before the split. Reduced by extraction to below 15 with no behaviour change.",
+      "Added a modal-state test for every station transition, as review asked: each station must open with a rapid to clearance, position Y and the first X at clearance, contain only feed moves with a feed in effect between the first plunge and the retract, and close with a rapid retract at or above the surface; blocks between stations and around tool changes must sit at or above the surface. Its first draft failed on two segmentation errors in the test itself, confirmed against the program text (a post-loop clearance move swept into the last station; a tool-change block keyed to the previous operation's station) -- the emitter was correct.",
+      "Replaced a misnamed test. 'test_the_correction_changed_feed_mode_and_not_path_geometry' claimed to detect path changes but never compared positions. It is renamed to what it asserts (no engaged move is a rapid), and position invariance is now proved by a separate test that derives the expected toolpath independently from profile_gen.generate_stations() rather than from a snapshot of an earlier program.",
+      "Negative controls for the new tests, re-run after the parser refactor: against the pre-fix emitter (git show 5e683d8e) 5 motion tests fail including the new transition test; the position test passes there, which is correct because positions were never the defect, so a separate mutation (OP45 plunging 0.5mm deeper) was applied and it fails. The emitter was restored to HEAD and verified clean after each control.",
+      "Filed the plunge-feed defect as issue #399 and linked it from condition (3) of the neck_pipeline_full exit condition.",
+      "Client check: packages/client NeckOpPanel.vue and CamWorkspaceView.vue call both routes. Both remain fail-closed after this change -- the G-code display and the .nc download run only on res.ok -- but both report the refusal as a generic error ('Server error 422', 'Full generate failed: 422') and discard its reason. Recorded, not fixed: a frontend change is outside this order."
     ],
     "proofs": [
       "The route cannot emit: 0 G/M records in the response body and no attachment header, on all four probed paths.",
@@ -79,7 +90,7 @@
       "motion_blocks": "1754 before, 1754 after, identical ordered positions",
       "readiness_records": "7 before, 8 after",
       "gated_gcode_routes_on_cam_workspace_router": "0 before, 2 after",
-      "new_tests": "25 in test_p1_neck_pipeline_containment.py",
+      "new_tests": "30 across test_p1_neck_pipeline_containment.py (19) and test_p1_neck_pipeline_motion.py (11)",
       "converted_moves_feed": "720 total: 360 at F1200 (OP40, T1 lateral feed) and 360 at F1500 (OP45, T3 lateral feed); all explicit, none inherited, none at plunge feed",
       "added_cut_time": "+0.67 min (~40s) across 897.6mm of converted travel"
     }
@@ -111,9 +122,9 @@
     },
     {
       "path": "services/api/tests/test_p1_neck_pipeline_containment.py",
-      "intent": "Prove containment, prove the correction, and prove the detector can fail.",
+      "intent": "Prove containment: refusal, gate ordering, identity, blast radius.",
       "risk": "low",
-      "behavior_change": "New test file, 25 tests. No production behaviour."
+      "behavior_change": "None. Split from a single 522-line module that crossed the services/api 500-line ratchet; motion tests moved to test_p1_neck_pipeline_motion.py."
     },
     {
       "path": "services/api/tests/test_generator_readiness.py",
@@ -138,6 +149,18 @@
       "intent": "Declare the 8 residual lines the containment gate costs: 636 -> 644.",
       "risk": "low",
       "behavior_change": "None. Ratchet bookkeeping."
+    },
+    {
+      "path": "services/api/tests/test_p1_neck_pipeline_motion.py",
+      "intent": "Prove the emitter correction by modal state: the detector's negative controls, no rapid while engaged, feed authority, modal state at every station transition, and an independent position check against the generator's own stations.",
+      "risk": "low",
+      "behavior_change": "New test module. No production behaviour."
+    },
+    {
+      "path": "CHANGELOG.md",
+      "intent": "Record the capability removal under Removed -- BREAKING, per the file's own rule that capability removals are listed individually.",
+      "risk": "low",
+      "behavior_change": "None. States explicitly that this is a fail-closed and rapid-removal patch, not a qualification of the generator for cutting."
     }
   ],
   "architecture_scan": {

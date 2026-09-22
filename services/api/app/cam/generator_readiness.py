@@ -355,7 +355,7 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "emitter in the repository that plunges at the cutting feed. Found "
             "while correcting the rapids and deliberately NOT fixed here: it is "
             "a second, independent motion defect and does not belong in a "
-            "containment PR."
+            "containment PR. Tracked as issue #399."
         ),
         evidence=(
             "LTB-AUDIT-001 finding P-1 (HIGH, confirmed)",

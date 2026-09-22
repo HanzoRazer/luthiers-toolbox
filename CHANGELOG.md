@@ -67,6 +67,24 @@ below: capability removals are always listed individually, never summarised.
   Full census and the findings it surfaced but did not fix:
   `docs/audit/rmos_prod_output_census_001b.md`.
 
+- **Both cam-workspace neck G-code routes now fail closed** (LTB-REMEDIATE-P1,
+  #398). `POST /api/cam-workspace/neck/generate-full` and
+  `/api/cam-workspace/neck/generate/{op}` no longer emit G-code; both return
+  **`422 GENERATOR_READINESS_BLOCKED`** under the readiness identity
+  `neck_pipeline_full`, before any generator is constructed.
+
+  **This is a fail-closed and rapid-removal patch. It is not a qualification of
+  the neck generator for cutting.** The routes previously returned, to an
+  uncredentialed default request, a program with 702 `G0` rapids below the
+  workpiece top (to Z=-25.000mm). The emitter is also corrected -- those moves
+  are now controlled-feed motion, a deliberate change of motion semantics and
+  cycle time (+~40s) at unchanged tool positions -- but the routes stay closed:
+  the generator has an open plunge-feed defect (#399) and no readiness decision
+  on evidence.
+
+  Recorded after the pinned summary above (`7d134c36`); not included in its
+  commit or PR counts.
+
 ### Added
 
 - **CAM** (82 commits) — canonical process authorization anchor; process-exclusive
