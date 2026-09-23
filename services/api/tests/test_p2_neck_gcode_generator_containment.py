@@ -162,8 +162,19 @@ def test_download_cannot_bypass_the_containment(monkeypatch, client):
     assert called == []
 
 
-def test_the_gate_precedes_input_parsing(client):
-    """An unparseable style or profile must not be reached, let alone defaulted."""
+def test_the_gate_precedes_semantic_option_parsing(client):
+    """The gate precedes in-handler semantic parsing, after FastAPI admits the body.
+
+    ``headstock_style``, ``profile``, and ``preset`` are strings on
+    ``NeckGcodeRequest``, so this body passes Pydantic. The handler would
+    otherwise default an unknown style to paddle and an unknown profile to c.
+    Readiness runs before that parsing, so the response is the readiness
+    refusal.
+
+    Malformed JSON and schema-invalid types never enter the handler. That
+    earlier FastAPI/Pydantic boundary is a framework limit, covered in
+    ``test_p2_neck_gcode_proof.py``, and is not this gate.
+    """
     body = {"headstock_style": "not-a-style", "profile": "not-a-profile", "preset": "nope"}
     for route in BOTH:
         response = client.post(route, json=body)

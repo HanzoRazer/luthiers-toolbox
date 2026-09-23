@@ -1,0 +1,66 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_REMEDIATE_P2_NECK_GCODE_PROOF",
+  "title": "LTB-REMEDIATE-P2 proof follow-up: durable regression proof for the NeckGCodeGenerator boundary",
+  "intent": "After #400 merged at 36544a3a, close the eight accepted proof gaps. This adds tests only. It does not change production behavior, qualify NeckGCodeGenerator, or contain CF-4.",
+  "change_type": "test",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-remediate-p2-neck-gcode-proof.json",
+      "services/api/tests/test_p2_neck_gcode_proof.py",
+      "services/api/tests/test_p2_neck_gcode_generator_containment.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-remediate-p2-neck-gcode-proof.json",
+      "services/api/tests/test_p2_neck_gcode_proof.py",
+      "services/api/tests/test_p2_neck_gcode_generator_containment.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "test_p2_neck_gcode_proof.py adds AST-first gate checks with a misordered-handler negative control, a JSON and attachment program detector with G0/G1/M3 and prose/escaped-newline controls, a five-route neck census that fails when empty, missing, or extended, a handler-to-implementation-to-key inventory that fails when two implementations share a key, a schema-invalid request that documents the FastAPI/Pydantic boundary, and a negative control that the emitting 200 assertion fails without the test-only gate lift. test_p2_neck_gcode_generator_containment.py renames and rewrites the semantic-parsing test description so it no longer claims the gate precedes FastAPI validation.",
+    "why": "The #400 review accepted these eight items as proof gaps, not production defects. They are closed on the immutable merge SHA 36544a3a2b3a679b02b0865865e69c78420f5987.",
+    "why_not_redundant": "The P-2 containment suite shows refusal and a line-start G/M regex. It does not prove the gate is the first executable statement, does not read program fields out of escaped JSON, and does not map the five neck handlers to distinct implementations.",
+    "what_did_not_change": "No production file. No readiness record. No route. No gate placement. CF-4 (#401), CF-3 logging, qualification, delegation structure, GET catalogs, implementation consolidation, and P-3 are untouched.",
+    "why_structural_extraction": "Not an extraction. Test proof only."
+  },
+  "verification": {
+    "commands_run": [
+      "Base is origin/main 36544a3a2b3a679b02b0865865e69c78420f5987, the merge of #400. Merge-base equals that SHA.",
+      "AST re-check on that SHA: generate_neck_gcode and download_neck_gcode still open on _readiness_gate('neck_gcode_generator'). No production edit followed.",
+      "cd services/api && python -m pytest tests/test_p2_neck_gcode_proof.py tests/test_p2_neck_gcode_generator_containment.py tests/test_neck_gcode_smoke.py tests/test_generator_readiness.py tests/test_generator_readiness_routes.py tests/test_p1_neck_pipeline_containment.py tests/test_p1_neck_pipeline_motion.py -q --no-cov -> 110 passed."
+    ],
+    "proofs": [
+      "first_statement_gate_key returns None for a handler that delegates before the gate, and returns neck_gcode_generator when the gate is the first executable statement.",
+      "program_records reads G0, G1, and M3 from escaped JSON and from attachment bytes, and returns none from reason, evidence, detail, message, and exit_condition.",
+      "The live census equals the five declared neck program routes in both the routing graph and OpenAPI, and fails on an added, missing, or empty set.",
+      "The identity map is generate/download -> NeckGCodeGenerator -> neck_gcode_generator, inline guitar neck -> neck, NeckPipeline routes -> neck_pipeline_full. A shared-key fixture fails.",
+      "POST /api/neck/gcode/generate with scale_length as a string is a Pydantic 422, not GENERATOR_READINESS_BLOCKED. Unknown style strings that Pydantic accepts still hit the readiness gate."
+    ],
+    "hardware": "No physical-machine execution. No generated program was sent to a machine."
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_p2_neck_gcode_proof.py",
+      "intent": "Close the eight accepted P-2 proof gaps.",
+      "risk": "low",
+      "behavior_change": "None. New test module."
+    },
+    {
+      "path": "services/api/tests/test_p2_neck_gcode_generator_containment.py",
+      "intent": "State that the existing semantic-parsing test is in-handler parsing, after FastAPI has admitted the body.",
+      "risk": "low",
+      "behavior_change": "None. Docstring and test name only. The request body and assertions are unchanged."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-22-LTB-REMEDIATE-P2-PROOF",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: proof-only tests. Production handlers were re-read on 36544a3a and not modified."
+    ]
+  }
+}
