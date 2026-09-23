@@ -90,9 +90,10 @@ a real safety-critical failure now shares a severity and a shape with a routine
 ``safety_critical`` to pass through an intended refusal, which touches all
 eight routes at once and belongs in its own increment, not in a containment PR.
 
-**CF-4 -- three Flying V G-code routes are ungated and invisible to the
-guitar-surface coverage guard.** Found 2026-09-22 during LTB-REMEDIATE-P2
-reconnaissance, by runtime sweep of every POST under ``/api/cam/guitar/``:
+**CF-4 -- three Flying V toolpath routes, contained under ``flying_v_body``.**
+LTB-REMEDIATE-CF4 puts ``_readiness_gate("flying_v_body")`` first in each
+handler, before the lazy import, pickup normalization, spec load, and generator
+call. Historical pre-containment answers to an uncredentialed default request:
 
 =================================================  ======  =========
 route                                              status  G/M recs
@@ -102,14 +103,10 @@ route                                              status  G/M recs
 ``/api/cam/guitar/flying_v/toolpath/pickup``          200     337
 =================================================  ======  =========
 
-Each answers an uncredentialed default request with a G-code program. The
-guard in ``test_generator_readiness_routes.py`` discovers routes with
-``path.endswith("/gcode")``, so a route that emits G-code under any other name
-is structurally invisible to it -- which is why its assertion that containment
-"now covers every guitar G-code route" passed while these three were open. They
-are body-cavity operations, not neck generators, and are NOT contained by P-2;
-they need their own order. This is the CF-2 risk realised: discovery by name
-convention is not discovery by behaviour.
+All four Flying V emission paths reach ``app.cam.flying_v.pocket_generator``.
+The record stays ``REVIEW_REQUIRED``. This order does not qualify it and does
+not wire the depth validator. ``GET /spec`` and ``POST /validate`` are unchanged.
+``path.endswith("/gcode")`` still cannot see ``/toolpath/...``.
 
 **CF-2 -- enforcement is per handler, across independently registered route
 families.** Containment closed the seven G-code routes under ``/api/cam/guitar/``

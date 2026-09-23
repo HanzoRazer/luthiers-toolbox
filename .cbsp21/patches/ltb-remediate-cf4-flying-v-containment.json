@@ -1,0 +1,85 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_REMEDIATE_CF4_FLYING_V_CONTAINMENT",
+  "title": "LTB-REMEDIATE-CF4: contain Flying V toolpath routes before G-code generation",
+  "intent": "On base bc0ae6c8566fdc6b6f2e88513ceb217f4574e706, refuse the three unauthenticated Flying V /toolpath routes with the existing flying_v_body readiness record before generation. Do not qualify the generator, add authentication, wire the depth validator, or start the CF-2 inventory.",
+  "change_type": "fix",
+  "behavior_change": "POST /api/cam/guitar/flying_v/toolpath/control_cavity, /neck_pocket, and /pickup change from HTTP 200 with a G-code program to HTTP 422 GENERATOR_READINESS_BLOCKED while flying_v_body remains REVIEW_REQUIRED. GET /spec and POST /validate are unchanged.",
+  "risk_level": "high",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-remediate-cf4-flying-v-containment.json",
+      "services/api/app/routers/cam/guitar/flying_v_cam_router.py",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "services/api/tests/test_generator_readiness_routes.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-remediate-cf4-flying-v-containment.json",
+      "services/api/app/routers/cam/guitar/flying_v_cam_router.py",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "services/api/tests/test_generator_readiness_routes.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "The three Flying V toolpath handlers call _readiness_gate(\"flying_v_body\") as their first executable statement, before the lazy import, pickup normalization, spec load, and generator call. The readiness note records the historical 200 responses and G/M counts 394, 117, and 337, and states that the record stays REVIEW_REQUIRED. The /gcode-suffix inventory comment no longer claims to cover every guitar manufacturing route.",
+    "why": "Those three routes returned G-code to unauthenticated requests and were invisible to path.endswith(\"/gcode\") discovery. They reach the same pocket_generator as the already-gated body route, so they use the existing flying_v_body key.",
+    "why_not_redundant": "POST /api/cam/guitar/flying_v/body/gcode was already gated and authenticated. The /toolpath handlers are a separate unauthenticated surface and were still emitting.",
+    "what_did_not_change": "No READY or QUALIFIED state. No second readiness key. No authentication change. The depth validator stays unwired. GET /spec and POST /validate are unchanged. P-1, P-2, and P-3 behavior is unchanged. CF-3 logging and the CF-2 inventory are not in this patch. No physical machine execution.",
+    "why_structural_extraction": "Not an extraction. The three handlers call the existing readiness gate."
+  },
+  "verification": {
+    "commands_run": [
+      "gh issue view 401 returned state OPEN before the branch was cut.",
+      "Branch cursor/cf4-flying-v-toolpath-containment-46e5 was cut from origin/main bc0ae6c8566fdc6b6f2e88513ceb217f4574e706.",
+      "cd services/api && python3 -m pytest tests/test_cf4_flying_v_toolpath_containment.py tests/test_generator_readiness_routes.py tests/test_generator_readiness.py tests/test_flying_v_cam.py tests/test_p1_neck_pipeline_containment.py tests/test_p2_neck_gcode_generator_containment.py tests/test_p2_neck_gcode_proof.py tests/rmos/test_p3_governed_route_refusals.py -q --no-cov -> 154 passed, 1 skipped.",
+      "cd services/api && python3 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json && python3 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json && python3 -m app.ci.check_bare_except && python3 -m app.ci.check_duplication --threshold 100 && python3 -m app.ci.fence_checker_v2 && python3 -m app.ci.check_execution_class_compliance",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this patch> and python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ],
+    "proofs": [
+      "Each of the three handlers has _readiness_gate(\"flying_v_body\") as its first executable statement. A handler that normalizes pickup before the gate fails that check.",
+      "A default POST to each route returns HTTP 422 with detail.code GENERATOR_READINESS_BLOCKED, detail.route flying_v_body, and detail.generator_readiness REVIEW_REQUIRED. The three bodies are identical. No program records and no attachment.",
+      "Spies on load_flying_v_spec and the three pocket generators record zero calls. Deleting the flying_v_body record returns UNKNOWN, not a program.",
+      "The live census is exactly the three POST routes whose response model is the Flying V ToolpathResponse. A synthetic POST /toolpath/stealth with that model is discovered even though the path does not contain gcode. GET /spec and POST /validate are excluded.",
+      "flying_v_body stays REVIEW_REQUIRED. All four Flying V emission paths import app.cam.flying_v, which re-exports pocket_generator. The router does not import manufacturing-output or asset authority."
+    ],
+    "hardware": "No physical-machine execution. No generated program was sent to a machine."
+  },
+  "files": [
+    {
+      "path": "services/api/app/routers/cam/guitar/flying_v_cam_router.py",
+      "intent": "Gate the three toolpath handlers before generation.",
+      "risk": "high",
+      "behavior_change": "The three POST /toolpath routes return HTTP 422 instead of a G-code program. GET /spec and POST /validate are unchanged."
+    },
+    {
+      "path": "services/api/app/cam/generator_readiness.py",
+      "intent": "Record CF-4 containment without changing the flying_v_body decision.",
+      "risk": "low",
+      "behavior_change": "None. Docstring only. REVIEW_REQUIRED, reason, exit condition, and evidence are unchanged."
+    },
+    {
+      "path": "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "intent": "Prove gate order, refusal, census, and the boundaries this order must not cross.",
+      "risk": "low",
+      "behavior_change": "None. New test module."
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness_routes.py",
+      "intent": "Stop describing /gcode suffix discovery as every guitar manufacturing route.",
+      "risk": "low",
+      "behavior_change": "None. Comments and assertion text. The seven-route /gcode inventory is unchanged."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-23-LTB-REMEDIATE-CF4",
+    "risk_summary": {"critical": 0, "high": 1, "medium": 0, "low": 1},
+    "findings": [
+      "HIGH: three previously emitting Flying V toolpath routes now fail closed before generation. The readiness record is still REVIEW_REQUIRED, so this is containment, not qualification.",
+      "LOW: the module docstring records the historical 200/G-code counts. No registry state changed."
+    ]
+  }
+}

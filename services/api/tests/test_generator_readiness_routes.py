@@ -168,9 +168,10 @@ def test_neck_route_refuses_while_review_required(authenticated):
         assert token not in response.text, f"G-code token {token!r} escaped"
 
 
-# Every G-code route under the guitar prefix is behind generator readiness.
-# The set is empty on purpose: an entry here is a declared hole in containment,
-# and there are none. test_declared_gaps_are_not_silently_gated keeps it honest.
+# POST routes under /api/cam/guitar/ whose path ends in /gcode.
+# This inventory is suffix-limited. It does not see /toolpath/... routes.
+# Those are censused by test_cf4_flying_v_toolpath_containment.py.
+# UNGATED is empty on purpose for this suffix set only.
 UNGATED_GUITAR_GCODE_ROUTES: set = set()
 
 GATED_GUITAR_GCODE_ROUTES = {
@@ -185,8 +186,10 @@ GATED_GUITAR_GCODE_ROUTES = {
 
 
 def _discover_guitar_gcode_routes() -> set:
-    """Every POST /...gcode path under the guitar prefix, as the live app serves it.
+    """POST paths under the guitar prefix that end in ``/gcode``.
 
+    This is not every guitar manufacturing route. A path such as
+    ``/toolpath/control_cavity`` is invisible here; the Flying V census covers it.
     Enumerated from the OpenAPI schema rather than ``app.routes``. Starlette 0.49
     stopped flattening included routers into ``app.routes`` -- they appear as
     ``_IncludedRouter`` proxies with no ``.path`` -- so walking ``app.routes``
@@ -218,7 +221,7 @@ def test_route_discovery_is_not_vacuous():
 
 
 def test_current_guitar_manufacturing_routes_have_readiness_records():
-    """Pin coverage so a new guitar manufacturing route cannot silently bypass readiness."""
+    """Pin the /gcode-suffix inventory. A new path that does not end in /gcode is outside this check."""
     discovered = _discover_guitar_gcode_routes()
     expected_paths = GATED_GUITAR_GCODE_ROUTES | UNGATED_GUITAR_GCODE_ROUTES
     assert discovered == expected_paths, (
@@ -255,8 +258,10 @@ def test_declared_gaps_are_not_silently_gated():
         "UNGATED_GUITAR_GCODE_ROUTES in the same change"
     )
     assert not UNGATED_GUITAR_GCODE_ROUTES, (
-        "containment now covers every guitar G-code route; adding an entry here "
-        "reopens a hole and must be justified in the same change"
+        "the /gcode-suffix inventory has no declared gap. This does not cover "
+        "routes whose paths do not end in /gcode; the Flying V /toolpath census "
+        "is test_cf4_flying_v_toolpath_containment.py. Adding an entry here "
+        "reopens a hole in the suffix set and must be justified in the same change"
     )
     assert GATED_GUITAR_GCODE_ROUTES.isdisjoint(UNGATED_GUITAR_GCODE_ROUTES)
     assert not (UNGATED_GUITAR_GCODE_ROUTES & set(GENERATOR_READINESS)), (
