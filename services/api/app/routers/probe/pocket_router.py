@@ -13,7 +13,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from ...cam import probe_patterns
-from ...cam.probe_service import create_governed_probe_response
+from ...cam.probe_service import (
+    create_governed_probe_response,
+    require_probe_manufacturing_authority,
+)
 from ...schemas.probe_schemas import PocketProbeIn, ProbeOut
 
 router = APIRouter(tags=["probe", "pocket"])
@@ -77,8 +80,13 @@ async def download_pocket_probe(body: PocketProbeIn) -> Response:
 
 @router.post("/pocket/gcode/download_governed", response_class=Response)
 async def download_pocket_probe_governed(body: PocketProbeIn) -> Response:
-    """Download pocket probe G-code (GOVERNED lane with RMOS persistence)."""
+    """Download pocket probe G-code after manufacturing authority permits it."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="pocket_probe_gcode",
+            event_type="pocket_probe_gcode",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_pocket_probe(
             pocket_width=body.pocket_width,
             pocket_height=body.pocket_height,
@@ -92,11 +100,9 @@ async def download_pocket_probe_governed(body: PocketProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"pocket_inside_{wcs}.nc"
         return create_governed_probe_response(
-            gcode=gcode,
-            body=body,
-            tool_id="pocket_probe_gcode",
-            event_type="pocket_probe_gcode_execution",
+            gcode,
             filename=filename,
+            authority_context=authority,
         )
     except HTTPException:
         raise

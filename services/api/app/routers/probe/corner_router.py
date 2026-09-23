@@ -13,7 +13,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from ...cam import probe_patterns
-from ...cam.probe_service import create_governed_probe_response
+from ...cam.probe_service import (
+    create_governed_probe_response,
+    require_probe_manufacturing_authority,
+)
 from ...schemas.probe_schemas import CornerProbeIn, ProbeOut
 
 router = APIRouter(tags=["probe", "corner"])
@@ -70,8 +73,13 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
 
 @router.post("/corner/gcode/download_governed", response_class=Response)
 async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
-    """Download corner probe G-code (GOVERNED lane with RMOS persistence)."""
+    """Download corner probe G-code after manufacturing authority permits it."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="corner_probe_gcode",
+            event_type="corner_probe_gcode",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_corner_probe(
             pattern=body.pattern,
             approach_distance=body.approach_distance,
@@ -83,11 +91,9 @@ async def download_corner_probe_governed(body: CornerProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"corner_{body.pattern}_{wcs}.nc"
         return create_governed_probe_response(
-            gcode=gcode,
-            body=body,
-            tool_id="corner_probe_gcode",
-            event_type="corner_probe_gcode_execution",
+            gcode,
             filename=filename,
+            authority_context=authority,
         )
     except HTTPException:
         raise

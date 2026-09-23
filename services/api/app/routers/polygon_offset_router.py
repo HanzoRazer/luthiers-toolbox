@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Tuple
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
 
-# Import RMOS run artifact persistence (OPERATION lane requirement)
-from ..rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
-    create_run_id,
-    sha256_of_obj,
-    sha256_of_text,
+from ..rmos.manufacturing_output_authority import (
+    persist_authorized_manufacturing_output,
+    require_manufacturing_output_authority,
 )
 
 router = APIRouter(prefix="/cam", tags=["cam", "offset"])
@@ -145,35 +138,26 @@ def polygon_offset_nc(req: OffsetReq) -> Response:
 @router.post("/polygon_offset_governed.nc", response_class=Response)
 def polygon_offset_nc_governed(req: OffsetReq) -> Response:
     """
-    Real N.17a polygon-offset engine using pyclipper (GOVERNED lane).
+    Real N.17a polygon-offset engine (governed lane).
 
-    Same toolpath as /polygon_offset.nc but with full RMOS artifact persistence.
-    Use this endpoint for production/machine execution.
+    Authority is resolved before the program is built. An unresolved tool id
+    fails closed. The draft route ``/polygon_offset.nc`` is a separate path.
     """
-    program = generate_polygon_offset_nc_program(req)
-
-    now = datetime.now(timezone.utc).isoformat()
-    request_hash = sha256_of_obj(req.model_dump(mode="json"))
-    gcode_hash = sha256_of_text(program)
-
-    run_id = create_run_id()
-    artifact = RunArtifact(
-        run_id=run_id,
-        created_at_utc=now,
+    summary = req.model_dump(mode="json")
+    authority = require_manufacturing_output_authority(
         tool_id="cam_polygon_offset_nc",
         mode="polygon_offset",
-        event_type="polygon_offset_nc_execution",
-        status="OK",
-        decision=RunDecision(risk_level="GREEN"),
-        hashes=Hashes(
-            feasibility_sha256=request_hash,
-            gcode_sha256=gcode_hash,
-        ),
+        event_type="polygon_offset_nc",
+        request_summary=summary,
     )
-    persist_run(artifact)
+    program = generate_polygon_offset_nc_program(req)
+    gcode_hash = persist_authorized_manufacturing_output(
+        context=authority,
+        gcode_text=program,
+    )
 
     resp = Response(program, media_type="text/plain")
-    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-Run-ID"] = authority.run_id
     resp.headers["X-GCode-SHA256"] = gcode_hash
     resp.headers["X-ToolBox-Lane"] = "governed"
     return resp

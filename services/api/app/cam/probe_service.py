@@ -1,50 +1,55 @@
-# services/api/app/cam/probe_service.py
-"""Probe pattern service - extracts common governed workflow logic."""
+"""Governed probe downloads. Authority is supplied by the caller."""
 
-from datetime import datetime, timezone
-from typing import Any, Dict
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
 
 from fastapi.responses import Response
 
-from ..rmos.runs_v2 import (
-    RunArtifact, RunDecision, Hashes, persist_run, create_run_id, sha256_of_obj, sha256_of_text,
+from ..rmos.manufacturing_output_authority import (
+    ManufacturingAuthorityContext,
+    persist_authorized_manufacturing_output,
+    require_manufacturing_output_authority,
 )
+
+
+def require_probe_manufacturing_authority(
+    *,
+    tool_id: str,
+    event_type: str,
+    request_summary: Mapping[str, Any],
+) -> ManufacturingAuthorityContext:
+    """Probe-family entry to the shared authority service. Mode is probing."""
+    return require_manufacturing_output_authority(
+        tool_id=tool_id,
+        mode="probing",
+        event_type=event_type,
+        request_summary=request_summary,
+    )
 
 
 def create_governed_probe_response(
     gcode: str,
-    body: Any,
-    tool_id: str,
-    event_type: str,
+    *,
     filename: str,
+    authority_context: ManufacturingAuthorityContext,
 ) -> Response:
-    """Create a governed probe G-code download response with RMOS persistence."""
-    now = datetime.now(timezone.utc).isoformat()
-    request_hash = sha256_of_obj(body.model_dump(mode="json"))
-    gcode_hash = sha256_of_text(gcode)
+    """Persist and attach a program that authority already permitted.
 
-    run_id = create_run_id()
-    artifact = RunArtifact(
-        run_id=run_id,
-        created_at_utc=now,
-        tool_id=tool_id,
-        mode="probing",
-        event_type=event_type,
-        status="OK",
-        decision=RunDecision(risk_level="GREEN"),
-        hashes=Hashes(
-            feasibility_sha256=request_hash,
-            gcode_sha256=gcode_hash,
-        ),
+    This helper cannot evaluate feasibility or choose a risk level. Calling it
+    without an authority context is a type error, not a GREEN default.
+    """
+    gcode_hash = persist_authorized_manufacturing_output(
+        context=authority_context,
+        gcode_text=gcode,
     )
-    persist_run(artifact)
-
-    resp = Response(
+    response = Response(
         content=gcode,
         media_type="text/plain",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-    resp.headers["X-Run-ID"] = run_id
-    resp.headers["X-GCode-SHA256"] = gcode_hash
-    resp.headers["X-ToolBox-Lane"] = "governed"
-    return resp
+    response.headers["X-Run-ID"] = authority_context.run_id
+    response.headers["X-GCode-SHA256"] = gcode_hash
+    response.headers["X-ToolBox-Lane"] = "governed"
+    return response
