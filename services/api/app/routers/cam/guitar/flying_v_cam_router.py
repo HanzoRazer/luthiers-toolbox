@@ -11,6 +11,9 @@ Provides:
 
 Uses cam.flying_v.pocket_generator (parametric from gibson_flying_v_1958.json)
 and cam.flying_v.depth_validator with preflight_gate integration.
+
+The three POST /toolpath handlers call _readiness_gate("flying_v_body") before
+any in-handler parsing or generation. GET /spec and POST /validate do not.
 """
 from __future__ import annotations
 
@@ -20,6 +23,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 from app.core.safety import safety_critical
+from ..._project_gcode_common import _readiness_gate
 
 router = APIRouter(tags=["Flying V", "CAM"])
 
@@ -103,6 +107,7 @@ def generate_control_cavity_toolpath(
     variant: str = Query("original_1958", description="Spec variant"),
 ) -> ToolpathResponse:
     """Generate G-code for Flying V control cavity pocket (parametric placement from body outline)."""
+    _readiness_gate("flying_v_body")
     from app.cam.flying_v import load_flying_v_spec, generate_control_cavity_toolpath as gen
 
     spec = load_flying_v_spec(variant)
@@ -122,6 +127,7 @@ def generate_neck_pocket_toolpath(
     variant: str = Query("original_1958", description="Spec variant"),
 ) -> ToolpathResponse:
     """Generate G-code for Flying V neck pocket mortise (roughing + finishing)."""
+    _readiness_gate("flying_v_body")
     from app.cam.flying_v import load_flying_v_spec, generate_neck_pocket_toolpath as gen
 
     spec = load_flying_v_spec(variant)
@@ -142,6 +148,7 @@ def generate_pickup_toolpath(
     variant: str = Query("original_1958", description="Spec variant"),
 ) -> ToolpathResponse:
     """Generate G-code for Flying V pickup cavity pocket(s)."""
+    _readiness_gate("flying_v_body")
     from app.cam.flying_v import load_flying_v_spec, generate_pickup_cavity_toolpath as gen
 
     if pickup not in ("neck", "bridge", "both"):
