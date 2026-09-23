@@ -10,6 +10,7 @@ import re
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable
 
 _COMMAND = re.compile(r"^[GM]\d+$", re.IGNORECASE)
 _FILENAME = re.compile(r"\.(?:nc|tap|ngc|gcode)\b", re.IGNORECASE)
@@ -145,25 +146,49 @@ def _dependency_target(call: ast.Call) -> str:
     return ""
 
 
-def authentication_posture(fn: ast.AST | None) -> str:
-    """Classify known authentication dependencies, not arbitrary ``Depends``."""
+DependencyResolver = Callable[[str], ast.AST | None]
+
+
+def _dependency_posture(target: str, resolve_dependency: DependencyResolver | None) -> str:
+    if target in _OPTIONAL_AUTH_DEPENDENCIES:
+        return "optional"
+    if target in _REQUIRED_AUTH_DEPENDENCIES or target == "HTTPBearer":
+        return "required"
+    if not target:
+        return "unknown"
+    if resolve_dependency is None:
+        return "unknown"
+    helper = resolve_dependency(target)
+    if helper is None:
+        return "unknown"
+    # One layer only: direct known dependencies in the helper are inherited;
+    # its unresolved dependencies remain unknown.
+    return authentication_posture(helper)
+
+
+def authentication_posture(
+    fn: ast.AST | None,
+    resolve_dependency: DependencyResolver | None = None,
+) -> str:
+    """Classify direct auth dependencies and one resolved dependency layer.
+
+    An unresolved dependency is ``unknown`` rather than affirmative evidence of
+    no authentication.  A resolved helper with no authentication dependency is
+    ``none``.  Resolution is deliberately bounded to one layer so this census
+    remains deterministic and cannot recurse through arbitrary application code.
+    """
     if fn is None:
-        return "UNKNOWN"
+        return "unknown"
     postures: set[str] = set()
     for node in ast.walk(fn):
         if not isinstance(node, ast.Call) or call_name(node) != "Depends":
             continue
         target = _dependency_target(node)
-        if target in _OPTIONAL_AUTH_DEPENDENCIES:
-            postures.add("OPTIONAL")
-        elif target in _REQUIRED_AUTH_DEPENDENCIES or target == "HTTPBearer":
-            postures.add("REQUIRED")
-        elif any(token in target.lower() for token in ("auth", "principal", "role", "bearer")):
-            postures.add("UNKNOWN")
-    for result in ("REQUIRED", "OPTIONAL", "UNKNOWN"):
+        postures.add(_dependency_posture(target, resolve_dependency))
+    for result in ("required", "optional", "unknown"):
         if result in postures:
             return result
-    return "NONE"
+    return "none"
 
 
 def _placeholder(node: ast.AST) -> str:

@@ -67,7 +67,7 @@ ROW_FIELDS = (
 ENUMS = {
     "classification": {"CONFIRMED_EMITTER", "CONFIRMED_DELEGATE", "NON_EMITTING", "UNEXAMINED"},
     "implementation_kind": {"class", "function", "inline", "delegate", "postprocessor", "unknown"},
-    "authentication": {"NONE", "OPTIONAL", "REQUIRED", "UNKNOWN"},
+    "authentication": {"none", "optional", "required", "unknown"},
     "authority_layer": {"readiness", "manufacturing_output", "asset", "other", "none", "unknown"},
     "authority_order": {"before_generation", "after_generation", "none", "unknown"},
     "containment": {"FAIL_CLOSED", "PERMITTED_BY_AUTHORITY", "LIVE_UNGOVERNED", "UNKNOWN", "NOT_APPLICABLE"},
@@ -84,6 +84,16 @@ def _lookup(endpoint, name: str):
     if inspect.isfunction(value) or inspect.iscoroutinefunction(value):
         return value
     return None
+
+
+def _authentication_dependency(endpoint, name: str):
+    """Resolve one handler-visible dependency to its function AST."""
+    dependency = _lookup(endpoint, name)
+    if dependency is None:
+        return None
+    source = handler_source(dependency)
+    dependency_name = getattr(unwrap(dependency), "__name__", None)
+    return function_node(source, dependency_name)
 
 
 def _resolve_import(module: str | None, level: int, current: str) -> str:
@@ -448,7 +458,10 @@ def classify_route(route) -> dict | None:
         "implementation_kind": verdict["kind"] if classified else "unknown",
         "implementation_symbol": symbol if classified else None,
         "delegates_to": verdict["delegate_name"],
-        "authentication": authentication_posture(fn),
+        "authentication": authentication_posture(
+            fn,
+            lambda dependency: _authentication_dependency(route.endpoint, dependency),
+        ),
         "authority_layer": verdict["layer"],
         "authority_key": verdict["key"],
         "authority_order": verdict["order"],

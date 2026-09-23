@@ -82,13 +82,25 @@ def _readiness_gate(_key):
     return None
 
 
+def custom_authority(_req):
+    return None
+
+
+def custom_builder(req):
+    return req
+
+
 def _facts(fn):
     source = inspect.getsource(fn)
     return facts_of(function_node(source, fn.__name__), source)
 
 
-def _auth(source: str) -> str:
-    return authentication_posture(function_node(source, "handler"))
+def _auth(source: str, dependencies: dict[str, str] | None = None) -> str:
+    def resolve(name: str):
+        helper_source = (dependencies or {}).get(name)
+        return function_node(helper_source, name) if helper_source else None
+
+    return authentication_posture(function_node(source, "handler"), resolve)
 
 
 def test_path_token_alone_is_not_an_emitter_and_unexamined_is_not_safe():
@@ -168,37 +180,73 @@ def test_classification_uses_the_composed_delegation_order():
 
 def test_non_authentication_dependency_is_none():
     assert _auth(
-        "def handler(store=Depends(get_snapshot_store)):\n    return store\n"
-    ) == "NONE"
+        "def handler(store=Depends(get_snapshot_store)):\n    return store\n",
+        {"get_snapshot_store": "def get_snapshot_store():\n    return object()\n"},
+    ) == "none"
 
 
 def test_optional_principal_dependency_is_optional():
     assert _auth(
         "def handler(principal=Depends(get_optional_principal)):\n    return principal\n"
-    ) == "OPTIONAL"
+    ) == "optional"
 
 
 def test_current_principal_dependency_is_required():
     assert _auth(
         "def handler(principal=Depends(get_current_principal)):\n    return principal\n"
-    ) == "REQUIRED"
+    ) == "required"
 
 
 def test_role_dependency_factory_is_required():
     assert _auth(
         'def handler(principal=Depends(require_roles("operator"))):\n'
         "    return principal\n"
-    ) == "REQUIRED"
+    ) == "required"
 
 
 def test_unknown_authentication_dependency_is_not_optimistic():
     assert _auth(
         "def handler(principal=Depends(resolve_auth_context)):\n    return principal\n"
-    ) == "UNKNOWN"
+    ) == "unknown"
+
+
+def test_unresolved_neutral_dependency_is_unknown_not_none():
+    assert _auth(
+        "def handler(store=Depends(get_snapshot_store)):\n    return store\n"
+    ) == "unknown"
+
+
+def test_transitive_current_principal_dependency_is_required():
+    assert _auth(
+        "def handler(identity=Depends(get_operator_identity)):\n    return identity\n",
+        {
+            "get_operator_identity": (
+                "def get_operator_identity("
+                "principal=Depends(get_current_principal)):\n"
+                "    return principal\n"
+            ),
+        },
+    ) == "required"
 
 
 def test_handler_without_dependencies_has_no_authentication():
-    assert _auth("def handler(req):\n    return req\n") == "NONE"
+    assert _auth("def handler(req):\n    return req\n") == "none"
+
+
+def test_live_override_route_inherits_required_authentication():
+    assert _row("POST", "/api/rmos/runs/{run_id}/override")["authentication"] == "required"
+
+
+def test_unrecognised_authority_and_delegate_cannot_disappear_or_fail_closed():
+    def unrecognised(req):
+        custom_authority(req)
+        return custom_builder(req)
+
+    row = classify_route(_route(unrecognised, "POST", "/api/cam/custom/gcode"))
+    assert row is not None
+    assert row["classification"] == "UNEXAMINED"
+    assert row["containment"] == "UNKNOWN"
+    assert row["containment"] != "FAIL_CLOSED"
 
 
 def test_retract_tool_id_renders_the_strategy_placeholder():

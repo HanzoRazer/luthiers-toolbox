@@ -50,7 +50,7 @@
           "implementation_kind": {"enum": ["class", "function", "inline", "delegate", "postprocessor", "unknown"]},
           "implementation_symbol": {"type": ["string", "null"]},
           "delegates_to": {"type": ["string", "null"]},
-          "authentication": {"enum": ["NONE", "OPTIONAL", "REQUIRED", "UNKNOWN"]},
+          "authentication": {"enum": ["none", "optional", "required", "unknown"]},
           "authority_layer": {"enum": ["readiness", "manufacturing_output", "asset", "other", "none", "unknown"]},
           "authority_key": {"type": ["string", "null"]},
           "authority_order": {"enum": ["before_generation", "after_generation", "none", "unknown"]},
