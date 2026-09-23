@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from app.ci.manufacturing_output_classify import classify_route
-from app.ci.manufacturing_output_routes import LiveRoute
+from app.ci.manufacturing_output_walk import LiveRoute
 from _manufacturing_output_testkit import program_records, records_in_json, records_in_program_text
 
 pytestmark = pytest.mark.allow_missing_request_id

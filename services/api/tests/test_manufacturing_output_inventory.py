@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from app.ci.manufacturing_output_routes import (
+from app.ci.manufacturing_output_walk import (
     naive_walk,
     normalize_path,
     openapi_operations,

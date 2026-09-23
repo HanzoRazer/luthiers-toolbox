@@ -11,7 +11,7 @@ import re
 import textwrap
 from dataclasses import dataclass
 
-from app.ci.manufacturing_output_routes import (
+from app.ci.manufacturing_output_walk import (
     UnresolvedRoute,
     naive_walk,
     normalize_path,

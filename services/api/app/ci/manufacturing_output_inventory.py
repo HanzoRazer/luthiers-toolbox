@@ -21,7 +21,7 @@ from app.ci.manufacturing_output_classify import (
     ROW_FIELDS,
     classify_route,
 )
-from app.ci.manufacturing_output_routes import naive_walk, reconcile, walk_live
+from app.ci.manufacturing_output_walk import naive_walk, reconcile, walk_live
 
 __all__ = ["BASE_SHA", "build_document", "check_inventory", "main"]
 

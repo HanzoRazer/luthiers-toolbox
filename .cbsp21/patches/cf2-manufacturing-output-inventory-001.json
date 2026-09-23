@@ -16,7 +16,7 @@
       "services/api/app/ci/manufacturing_output_classify.py",
       "services/api/app/ci/manufacturing_output_inventory.py",
       "services/api/app/ci/manufacturing_output_inventory.schema.json",
-      "services/api/app/ci/manufacturing_output_routes.py",
+      "services/api/app/ci/manufacturing_output_walk.py",
       "services/api/governance/manufacturing_output_inventory.json",
       "services/api/governance/manufacturing_output_inventory.md",
       "services/api/tests/_manufacturing_output_testkit.py",
@@ -32,7 +32,7 @@
       "services/api/app/ci/manufacturing_output_classify.py",
       "services/api/app/ci/manufacturing_output_inventory.py",
       "services/api/app/ci/manufacturing_output_inventory.schema.json",
-      "services/api/app/ci/manufacturing_output_routes.py",
+      "services/api/app/ci/manufacturing_output_walk.py",
       "services/api/governance/manufacturing_output_inventory.json",
       "services/api/governance/manufacturing_output_inventory.md",
       "services/api/tests/_manufacturing_output_testkit.py",
@@ -96,7 +96,7 @@
       "behavior_change": "none"
     },
     {
-      "path": "services/api/app/ci/manufacturing_output_routes.py",
+      "path": "services/api/app/ci/manufacturing_output_walk.py",
       "intent": "Walk nested routers and reconcile them with OpenAPI.",
       "risk": "low",
       "behavior_change": "none"
