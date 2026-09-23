@@ -1,0 +1,181 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_REMEDIATE_P3_GOVERNED_OUTPUT_AUTHORITY",
+  "title": "LTB-REMEDIATE-P3: evaluator-backed fail-closed authority for seven governed output routes",
+  "intent": "On base 8d5a3a2a (merge of #402), make the seven remaining governed manufacturing routes consult compute_feasibility_internal and SafetyPolicy before program construction. Unresolved tool ids fail closed with HTTP 409. No new evaluators, no retract refactor, no CF-4 work.",
+  "change_type": "fix",
+  "behavior_change": "The seven governed routes change from HTTP 200 with a self-minted GREEN artifact to HTTP 409 SAFETY_BLOCKED when no qualified evaluator exists. Draft siblings are unchanged.",
+  "risk_level": "high",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-remediate-p3-governed-output-authority.json",
+      "services/api/app/rmos/manufacturing_output_authority.py",
+      "services/api/app/cam/probe_service.py",
+      "services/api/app/routers/polygon_offset_router.py",
+      "services/api/app/routers/geometry/export_router.py",
+      "services/api/app/routers/probe/boss_router.py",
+      "services/api/app/routers/probe/corner_router.py",
+      "services/api/app/routers/probe/pocket_router.py",
+      "services/api/app/routers/probe/surface_z_router.py",
+      "services/api/app/routers/probe/vise_square_router.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_p3_governed_authority_policy.py",
+      "services/api/tests/rmos/test_p3_governed_route_refusals.py",
+      "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "services/api/tests/rmos/test_manufacturing_authority_stage2.py",
+      "services/api/tests/test_polygon_offset_endpoint_smoke.py",
+      "services/api/tests/test_probe_router.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-remediate-p3-governed-output-authority.json",
+      "services/api/app/rmos/manufacturing_output_authority.py",
+      "services/api/app/cam/probe_service.py",
+      "services/api/app/routers/polygon_offset_router.py",
+      "services/api/app/routers/geometry/export_router.py",
+      "services/api/app/routers/probe/boss_router.py",
+      "services/api/app/routers/probe/corner_router.py",
+      "services/api/app/routers/probe/pocket_router.py",
+      "services/api/app/routers/probe/surface_z_router.py",
+      "services/api/app/routers/probe/vise_square_router.py",
+      "services/api/app/rmos/manufacturing_authority_registry.json",
+      "services/api/tests/rmos/test_p3_governed_authority_policy.py",
+      "services/api/tests/rmos/test_p3_governed_route_refusals.py",
+      "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "services/api/tests/rmos/test_manufacturing_authority_stage2.py",
+      "services/api/tests/test_polygon_offset_endpoint_smoke.py",
+      "services/api/tests/test_probe_router.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "A shared require_manufacturing_output_authority service calls compute_feasibility_internal, SafetyPolicy.extract_safety_decision, and SafetyPolicy.should_block before any of the seven routes build output. A block persists a BLOCKED run with no gcode_sha256 and raises HTTP 409. Permitted test fixtures persist the evaluator decision through persist_authorized_manufacturing_output. Polygon offset, geometry export, and the five probe downloads use that sequence. The audit registry rows for polygon-offset, probing, and geometry now say BLOCKED_BY_DESIGN with status NONE and evaluator null. Retract is untouched.",
+    "why": "Those seven governed routes generated a program and then constructed RunDecision(risk_level=GREEN). Persistence, hashes, simulation, and the _governed suffix were being treated as manufacturing authority.",
+    "why_not_redundant": "Retract already fails closed through _authorize_retract. These seven routes did not. The new service copies that sequence without moving the retract implementation.",
+    "what_did_not_change": "No resolve_mode prefixes. No placeholder or real evaluators. No retract source change. Draft siblings /polygon_offset.nc, /export_gcode, and the plain probe JSON and draft downloads still emit. CF-4 / #401, P-1 and P-2 readiness, authentication, and generator qualification are untouched. The registry is not read at runtime.",
+    "why_structural_extraction": "The seven handlers share one pre-generation refusal so none of them can mint a decision. Probe response construction stays a separate helper that only accepts an authority context."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main == 8d5a3a2a494bd702bbdd45dacd1f8aeedf105447, merge of #402. Branch cut from that SHA. #402 head d32119158a5fcde737c26b2b33b085ff68977f10 is an ancestor.",
+      "cd services/api && python3 -m pytest tests/rmos/test_p3_governed_authority_policy.py tests/rmos/test_p3_governed_route_refusals.py tests/rmos/test_p3_governed_route_inventory.py tests/rmos/test_manufacturing_authority_registry.py tests/rmos/test_manufacturing_authority_stage2.py tests/test_polygon_offset_endpoint_smoke.py tests/test_probe_router.py tests/test_simulation_gate.py tests/rmos/test_retract_contract_guards.py tests/rmos/test_rmos_output_route_convergence.py tests/test_p1_neck_pipeline_containment.py tests/test_p2_neck_gcode_generator_containment.py tests/test_p2_neck_gcode_proof.py -q --no-cov",
+      "cd services/api && python3 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json && python3 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json && python3 -m app.ci.check_bare_except && python3 -m app.ci.check_duplication --threshold 100 && python3 -m app.ci.fence_checker_v2 && python3 -m app.ci.check_execution_class_compliance",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this patch> passed at 100% coverage."
+    ],
+    "proofs": [
+      "Unresolved tool ids boss_probe_gcode, corner_probe_gcode, pocket_probe_gcode, surface_z_probe_gcode, vise_square_probe_gcode, geometry_export_gcode, and cam_polygon_offset_nc take the unavailable_feasibility path and SafetyPolicy blocks with HTTP 409 before generation.",
+      "Blocked responses contain no G/M program records, no attachment, and no X-GCode-SHA256. The blocked artifact has status BLOCKED and hashes.gcode_sha256 is null.",
+      "A non-autouse test fixture that returns GREEN is the only permitting path. The persisted decision risk_level and warnings match that fixture. Production requests without the fixture stay 409.",
+      "Simulation pass, simulation override, and RMOS_REQUIRE_SIMULATION disabled do not bypass a blocked authority decision. Permission without the simulation gate is still HTTP 403.",
+      "AST order rejects generation, RunDecision(GREEN), and attachment construction before the authority call. The seven target modules contain no RunDecision(risk_level='GREEN') literal.",
+      "The nine-route census matches the two retract aliases plus the seven targets and fails when empty, missing, or extended. Draft siblings are listed and are not in that population."
+    ],
+    "hardware": "No physical-machine execution. No generated program was sent to a machine."
+  },
+  "files": [
+    {
+      "path": "services/api/app/rmos/manufacturing_output_authority.py",
+      "intent": "Shared pre-generation authority service for the seven routes.",
+      "risk": "high",
+      "behavior_change": "New module. Refusal and blocked persistence only. Does not generate programs."
+    },
+    {
+      "path": "services/api/app/cam/probe_service.py",
+      "intent": "Probe authority wrapper and a response helper that cannot mint a decision.",
+      "risk": "high",
+      "behavior_change": "Governed probe downloads no longer persist RunDecision(risk_level=GREEN)."
+    },
+    {
+      "path": "services/api/app/routers/polygon_offset_router.py",
+      "intent": "Authority before generate_polygon_offset_nc_program on the governed route only.",
+      "risk": "high",
+      "behavior_change": "POST /api/cam/polygon_offset_governed.nc returns 409 until a qualified evaluator exists. Draft route unchanged."
+    },
+    {
+      "path": "services/api/app/routers/geometry/export_router.py",
+      "intent": "Keep the simulation gate and require RMOS authority before program assembly.",
+      "risk": "high",
+      "behavior_change": "POST /api/geometry/export_gcode_governed returns 409 when authority blocks, including after a simulation pass. Draft /export_gcode unchanged."
+    },
+    {
+      "path": "services/api/app/routers/probe/boss_router.py",
+      "intent": "Require probe authority before boss program generation.",
+      "risk": "high",
+      "behavior_change": "Governed boss download fails closed. Draft routes unchanged."
+    },
+    {
+      "path": "services/api/app/routers/probe/corner_router.py",
+      "intent": "Require probe authority before corner program generation.",
+      "risk": "high",
+      "behavior_change": "Governed corner download fails closed. Draft routes unchanged."
+    },
+    {
+      "path": "services/api/app/routers/probe/pocket_router.py",
+      "intent": "Require probe authority before pocket program generation.",
+      "risk": "high",
+      "behavior_change": "Governed pocket download fails closed. Draft routes unchanged."
+    },
+    {
+      "path": "services/api/app/routers/probe/surface_z_router.py",
+      "intent": "Require probe authority before surface-Z program generation.",
+      "risk": "high",
+      "behavior_change": "Governed surface-Z download fails closed. Draft routes unchanged."
+    },
+    {
+      "path": "services/api/app/routers/probe/vise_square_router.py",
+      "intent": "Require probe authority before vise-square program generation.",
+      "risk": "high",
+      "behavior_change": "Governed vise-square download fails closed. Draft routes unchanged."
+    },
+    {
+      "path": "services/api/app/rmos/manufacturing_authority_registry.json",
+      "intent": "Record the seven routes as BLOCKED_BY_DESIGN with no named evaluator. Leave retract unchanged.",
+      "risk": "low",
+      "behavior_change": "Audit document only. Not read by the authority service."
+    },
+    {
+      "path": "services/api/tests/rmos/test_p3_governed_authority_policy.py",
+      "intent": "Prove the shared service blocks RED, UNKNOWN, and a missing evaluator, and keeps the evaluator decision.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/rmos/test_p3_governed_route_refusals.py",
+      "intent": "Prove the seven routes refuse without a program, and that a test-only permitting fixture is not autouse.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "intent": "Nine-route census, authority-order guard, and self-minted GREEN scan.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/rmos/test_manufacturing_authority_stage2.py",
+      "intent": "Replace the polygon GREEN-mint witness with the fail-closed witness.",
+      "risk": "low",
+      "behavior_change": "Test expectation only."
+    },
+    {
+      "path": "services/api/tests/test_polygon_offset_endpoint_smoke.py",
+      "intent": "Governed polygon smoke now expects HTTP 409 and no program.",
+      "risk": "low",
+      "behavior_change": "Test expectation only. Draft smoke tests unchanged."
+    },
+    {
+      "path": "services/api/tests/test_probe_router.py",
+      "intent": "Governed probe downloads now expect HTTP 409.",
+      "risk": "low",
+      "behavior_change": "Test expectation only. Draft probe tests unchanged."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-23-LTB-REMEDIATE-P3",
+    "risk_summary": {"critical": 0, "high": 1, "medium": 0, "low": 1},
+    "findings": [
+      "HIGH: seven governed routes now fail closed. That is the intended behavior change. Draft siblings still emit programs.",
+      "LOW: no feasibility engine was registered. Production emission stays unavailable until a later qualification order."
+    ]
+  }
+}

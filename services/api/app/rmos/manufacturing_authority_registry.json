@@ -694,9 +694,9 @@
       "authority": {
         "status": "NONE",
         "evaluator": null,
-        "policy_boundary": "none on draft/v1; hardcoded GREEN persist on governed downloads"
+        "policy_boundary": "SafetyPolicy.should_block via require_manufacturing_output_authority; five probe tool ids are unresolved; draft siblings remain outside P-3"
       },
-      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "generation_ordering": "MIXED",
       "input_contract_status": "MIXED",
       "ungated_output_exposure": "YES",
       "routes": [
@@ -859,8 +859,8 @@
         "app.api_v1.machines"
       ],
       "persistence": {
-        "status": "FALSE_PROVENANCE",
-        "mechanism": "draft: none; governed download: persist_run RunDecision(risk_level=GREEN) without evaluator"
+        "status": "RUN_ARTIFACT",
+        "mechanism": "governed downloads: validate_and_persist BLOCKED without gcode_sha256; draft JSON and draft downloads persist nothing and remain outside P-3"
       },
       "artifact_types": [
         "gcode",
@@ -871,7 +871,7 @@
       ],
       "reachability": "MOUNTED",
       "runtime_evidence": "NOT_OBTAINED_SAFELY",
-      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
@@ -881,7 +881,7 @@
         {
           "class": "STATIC_CODE_TRACE",
           "ref": "services/api/app/routers/probe",
-          "note": "Draft JSON gcode has no feasibility call. Governed downloads mint GREEN."
+          "note": "Former defect: governed downloads generated G-code, then create_governed_probe_response minted GREEN. P-3 removed that behavior. Authority now precedes generation and fails closed. Draft JSON and draft downloads still emit."
         },
         {
           "class": "CLIENT_CALL_SITE",
@@ -889,9 +889,9 @@
           "note": "Client path /api/cam/probe/* does not match live /api/probe/*. Consumer evidence only."
         },
         {
-          "class": "INSUFFICIENT_EVIDENCE",
-          "ref": "runtime POST of probe G38 programs",
-          "note": "Withheld: machine-setup probing programs are not a side-effect-free compute POST for this audit."
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/probe/*/gcode/download_governed",
+          "note": "Default governed download is HTTP 409 SAFETY_BLOCKED with no attachment. Production emission remains unavailable until a real evaluator is separately defined, registered, and qualified."
         }
       ],
       "evidence_class": "STATIC_CODE_TRACE",
@@ -1388,9 +1388,9 @@
       "authority": {
         "status": "NONE",
         "evaluator": null,
-        "policy_boundary": "governed: _check_simulation_gate (not RMOS engine table)"
+        "policy_boundary": "simulation gate remains independent; SafetyPolicy.should_block via require_manufacturing_output_authority; tool id geometry_export_gcode is unresolved"
       },
-      "generation_ordering": "NOT_APPLICABLE",
+      "generation_ordering": "MIXED",
       "input_contract_status": "NOT_APPLICABLE",
       "ungated_output_exposure": "YES",
       "routes": [
@@ -1437,7 +1437,7 @@
       ],
       "persistence": {
         "status": "RUN_ARTIFACT",
-        "mechanism": "governed export_gcode: persist_run; draft: none"
+        "mechanism": "governed export: validate_and_persist BLOCKED without gcode_sha256 until authority permits; draft /export_gcode persists nothing and is outside P-3"
       },
       "artifact_types": [
         "gcode",
@@ -1448,7 +1448,7 @@
       ],
       "reachability": "MOUNTED",
       "runtime_evidence": "NOT_OBTAINED_SAFELY",
-      "authority_disposition": "LIVE_UNGOVERNED_OUTPUT",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
@@ -1457,8 +1457,13 @@
         },
         {
           "class": "STATIC_CODE_TRACE",
-          "ref": "services/api/app/geometry/export_router.py",
-          "note": "Wraps supplied gcode. Draft ungated. Not a manufacturing capability."
+          "ref": "services/api/app/routers/geometry/export_router.py:export_gcode_governed",
+          "note": "Former defect: the governed export checked simulation, assembled the program, then minted GREEN. P-3 requires RMOS authority in addition to the simulation gate and fails closed before assembly. Draft /export_gcode still emits. Simulation does not grant manufacturing authority."
+        },
+        {
+          "class": "RUNTIME_REQUEST_WITNESS",
+          "ref": "POST /api/geometry/export_gcode_governed",
+          "note": "A simulation pass or override without a qualified evaluator is HTTP 409 SAFETY_BLOCKED and contains no program. Production emission remains unavailable until a real evaluator is separately defined, registered, and qualified."
         }
       ],
       "evidence_class": "STATIC_CODE_TRACE",
@@ -1716,9 +1721,9 @@
       "authority": {
         "status": "NONE",
         "evaluator": null,
-        "policy_boundary": null
+        "policy_boundary": "SafetyPolicy.should_block via require_manufacturing_output_authority; tool id cam_polygon_offset_nc is unresolved"
       },
-      "generation_ordering": "GENERATION_WITHOUT_AUTHORITY",
+      "generation_ordering": "MIXED",
       "input_contract_status": "NOT_APPLICABLE",
       "ungated_output_exposure": "YES",
       "routes": [
@@ -1755,8 +1760,8 @@
         "app.cam.routers.utility.polygon_router"
       ],
       "persistence": {
-        "status": "FALSE_PROVENANCE",
-        "mechanism": "governed lane: persist_run RunDecision(GREEN) + request_hash as feasibility_sha256"
+        "status": "RUN_ARTIFACT",
+        "mechanism": "governed: validate_and_persist BLOCKED without gcode_sha256; draft /polygon_offset.nc persists nothing and is outside P-3"
       },
       "artifact_types": [
         "nc"
@@ -1767,7 +1772,7 @@
       ],
       "reachability": "RUNTIME_REACHABLE",
       "runtime_evidence": "POST_COMPUTE_WITNESS",
-      "authority_disposition": "GOVERNED_PROVENANCE_DEFECT",
+      "authority_disposition": "BLOCKED_BY_DESIGN",
       "evidence": [
         {
           "class": "MOUNTED_ROUTE_TABLE",
@@ -1777,12 +1782,12 @@
         {
           "class": "STATIC_CODE_TRACE",
           "ref": "services/api/app/routers/polygon_offset_router.py:polygon_offset_nc_governed",
-          "note": "Generate program, then mint GREEN. No compute_feasibility_internal."
+          "note": "Former defect: the governed route generated the program, then minted RunDecision(risk_level=GREEN). P-3 removed that behavior. require_manufacturing_output_authority now runs first and fails closed. Draft /polygon_offset.nc still emits and is outside this order."
         },
         {
           "class": "RUNTIME_REQUEST_WITNESS",
           "ref": "POST /api/cam/polygon_offset_governed.nc",
-          "note": "200 NC body; X-ToolBox-Lane governed does not imply an evaluator."
+          "note": "Default governed request is HTTP 409 SAFETY_BLOCKED with no program body. Production emission remains unavailable until a real evaluator is separately defined, registered, and qualified."
         }
       ],
       "evidence_class": "RUNTIME_REQUEST_WITNESS",

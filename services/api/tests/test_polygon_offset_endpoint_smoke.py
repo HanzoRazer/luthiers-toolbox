@@ -253,82 +253,28 @@ def test_polygon_offset_nc_linear_mode(client):
 # Polygon Offset Governed NC (RMOS Lane)
 # =============================================================================
 
-def test_polygon_offset_governed_returns_200(client):
-    """POST /api/cam/polygon_offset_governed.nc returns 200."""
-    response = client.post("/api/cam/polygon_offset_governed.nc", json={
+def _governed_polygon(client):
+    return client.post("/api/cam/polygon_offset_governed.nc", json={
         "polygon": SQUARE_POLYGON,
         "tool_dia": 6.0,
-        "stepover": 0.4
-    })
-    assert response.status_code == 200
-
-
-def test_polygon_offset_governed_returns_gcode(client):
-    """Governed endpoint returns G-code content."""
-    response = client.post("/api/cam/polygon_offset_governed.nc", json={
-        "polygon": SQUARE_POLYGON,
-        "tool_dia": 6.0,
-        "stepover": 0.4
+        "stepover": 0.4,
     })
 
-    content = response.text
-    assert "G" in content
+
+def test_polygon_offset_governed_fails_closed(client):
+    """Unresolved tool id refuses before a program exists."""
+    response = _governed_polygon(client)
+    assert response.status_code == 409
+    assert response.json()["detail"]["error"] == "SAFETY_BLOCKED"
+    assert "G21" not in response.text
+    assert "M30" not in response.text
 
 
-def test_polygon_offset_governed_has_run_id(client):
-    """Governed lane has X-Run-ID header."""
-    response = client.post("/api/cam/polygon_offset_governed.nc", json={
-        "polygon": SQUARE_POLYGON,
-        "tool_dia": 6.0,
-        "stepover": 0.4
-    })
-
-    assert "X-Run-ID" in response.headers
-    run_id = response.headers["X-Run-ID"]
-    assert len(run_id) > 0
-
-
-def test_polygon_offset_governed_has_gcode_hash(client):
-    """Governed lane has X-GCode-SHA256 header."""
-    response = client.post("/api/cam/polygon_offset_governed.nc", json={
-        "polygon": SQUARE_POLYGON,
-        "tool_dia": 6.0,
-        "stepover": 0.4
-    })
-
-    assert "X-GCode-SHA256" in response.headers
-    sha = response.headers["X-GCode-SHA256"]
-    assert len(sha) == 64  # SHA256 hex
-
-
-def test_polygon_offset_governed_lane_header(client):
-    """Governed lane may have X-ToolBox-Lane header (if not stripped by middleware)."""
-    response = client.post("/api/cam/polygon_offset_governed.nc", json={
-        "polygon": SQUARE_POLYGON,
-        "tool_dia": 6.0,
-        "stepover": 0.4
-    })
-
-    # Header may be stripped by middleware - check if present or skip
-    lane = response.headers.get("X-ToolBox-Lane")
-    assert lane is None or lane == "governed"
-
-
-def test_polygon_offset_governed_valid_gcode(client):
-    """Governed lane produces valid G-code with required commands."""
-    governed = client.post("/api/cam/polygon_offset_governed.nc", json={
-        "polygon": SQUARE_POLYGON,
-        "tool_dia": 6.0,
-        "stepover": 0.4
-    })
-
-    content = governed.text
-    # Governed should have same essential G-code commands as draft
-    assert "G21" in content  # mm units
-    assert "G90" in content  # absolute mode
-    assert "M3" in content   # spindle on
-    assert "M5" in content   # spindle off
-    assert "M30" in content  # program end
+def test_polygon_offset_governed_refusal_has_run_id_and_no_hash(client):
+    response = _governed_polygon(client)
+    assert response.headers.get("X-Run-ID")
+    assert response.headers.get("X-GCode-SHA256") is None
+    assert response.headers.get("X-ToolBox-Lane") == "governed"
 
 
 # =============================================================================

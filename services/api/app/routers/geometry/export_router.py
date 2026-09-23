@@ -15,44 +15,33 @@ CRITICAL SAFETY RULES:
 3. Units MUST be explicitly converted (never assume)
 """
 
-import datetime
 import logging
 import os
 
 from fastapi import APIRouter, Body, HTTPException, Response
-from datetime import timezone
 
 from app.safety import safety_critical
+
+from ...rmos.manufacturing_output_authority import (
+    persist_authorized_manufacturing_output,
+    require_manufacturing_output_authority,
+)
+from ...util.exporters import export_dxf, export_svg
+from ..geometry_schemas import (
+    ExportRequest,
+    GcodeExportIn,
+)
+from .helpers import (
+    _load_posts,
+    _metadata_comment,
+    _safe_stem,
+    _units_gcode,
+)
 
 logger = logging.getLogger(__name__)
 
 # Simulation gate enforcement (default: enabled)
 RMOS_REQUIRE_SIMULATION = os.environ.get("RMOS_REQUIRE_SIMULATION", "1").lower() in ("1", "true", "yes")
-
-from ..geometry_schemas import (
-    ExportRequest,
-    GcodeExportIn,
-)
-
-from .helpers import (
-    _load_posts,
-    _units_gcode,
-    _safe_stem,
-    _metadata_comment,
-)
-
-from ...util.exporters import export_dxf, export_svg
-
-# Import RMOS run artifact persistence (OPERATION lane requirement)
-from ...rmos.runs_v2 import (
-    RunArtifact,
-    RunDecision,
-    Hashes,
-    persist_run,
-    create_run_id,
-    sha256_of_obj,
-    sha256_of_text,
-)
 
 router = APIRouter(tags=["geometry"])
 
@@ -221,17 +210,20 @@ def export_gcode(body: GcodeExportIn) -> Response:
 @safety_critical
 def export_gcode_governed(body: GcodeExportIn) -> Response:
     """
-    Export G-code with post-processor headers/footers and metadata (GOVERNED lane).
+    Export G-code with post-processor headers/footers (governed lane).
 
-    Same functionality as /export_gcode but with full RMOS artifact persistence.
-    Use this endpoint for production/machine execution.
-    
-    SAFETY GATE: Requires simulation verification OR explicit override.
-    Set RMOS_REQUIRE_SIMULATION=0 to disable (not recommended for production).
+    Emission requires both the simulation gate and RMOS manufacturing
+    authority. Neither one substitutes for the other. An unresolved tool id
+    fails closed before the program is assembled. ``/export_gcode`` is unchanged.
     """
-    # Enforce simulation gate
     gate_result = _check_simulation_gate(body)
-    
+    authority = require_manufacturing_output_authority(
+        tool_id="geometry_export_gcode",
+        mode="geometry_export",
+        event_type="geometry_export_gcode",
+        request_summary=body.model_dump(mode="json"),
+    )
+
     posts = _load_posts()
     hdr = []
     ftr = []
@@ -252,38 +244,18 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
 
     program = "\n".join(hdr + [body.gcode.strip()] + ftr) + ("\n" if not body.gcode.endswith("\n") else "")
 
-    # Create RMOS artifact
-    now = datetime.datetime.now(timezone.utc).isoformat()
-    request_hash = sha256_of_obj(body.model_dump(mode="json"))
-    gcode_hash = sha256_of_text(program)
-
-    run_id = create_run_id()
-    
-    # Include simulation gate metadata in artifact
     simulation_meta = {
         "simulation_passed": body.simulation_passed,
         "simulation_hash": body.simulation_hash,
         "simulation_override": gate_result.get("override_used", False),
         "simulation_override_reason": body.simulation_override_reason if gate_result.get("override_used") else None,
     }
-    
-    artifact = RunArtifact(
-        run_id=run_id,
-        created_at_utc=now,
-        tool_id="geometry_export_gcode",
-        mode="geometry_export",
-        event_type="geometry_export_gcode_execution",
-        status="OK",
-        decision=RunDecision(risk_level="GREEN"),
-        hashes=Hashes(
-            feasibility_sha256=request_hash,
-            gcode_sha256=gcode_hash,
-        ),
-        meta={"simulation_gate": simulation_meta},  # Store simulation verification in meta
+    gcode_hash = persist_authorized_manufacturing_output(
+        context=authority,
+        gcode_text=program,
+        meta={"simulation_gate": simulation_meta},
     )
-    persist_run(artifact)
 
-    # Use job_name for filename if provided
     stem = _safe_stem(body.job_name, default_prefix="program")
 
     resp = Response(
@@ -291,7 +263,7 @@ def export_gcode_governed(body: GcodeExportIn) -> Response:
         media_type="text/plain",
         headers={"Content-Disposition": f'attachment; filename="{stem}.nc"'},
     )
-    resp.headers["X-Run-ID"] = run_id
+    resp.headers["X-Run-ID"] = authority.run_id
     resp.headers["X-GCode-SHA256"] = gcode_hash
     resp.headers["X-ToolBox-Lane"] = "governed"
     resp.headers["X-Simulation-Verified"] = "true" if body.simulation_passed else "override"

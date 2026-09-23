@@ -82,11 +82,15 @@ def _has_gcode(text: str) -> bool:
 
 def test_mar_009_green_persistence_is_not_governed(registry):
     by_id = _by_id(registry)
-    for cid in ("polygon-offset", "rmos-wrap"):
-        cap = by_id[cid]
-        assert cap["persistence"]["status"] == "FALSE_PROVENANCE", cid
-        assert cap["authority_disposition"] != "GOVERNED", cid
-        assert cap["authority_disposition"] == "GOVERNED_PROVENANCE_DEFECT", cid
+    wrap = by_id["rmos-wrap"]
+    assert wrap["persistence"]["status"] == "FALSE_PROVENANCE"
+    assert wrap["authority_disposition"] == "GOVERNED_PROVENANCE_DEFECT"
+
+    polygon = by_id["polygon-offset"]
+    assert polygon["authority_disposition"] == "BLOCKED_BY_DESIGN"
+    assert polygon["authority"]["status"] == "NONE"
+    assert polygon["authority"]["evaluator"] is None
+    assert polygon["persistence"]["status"] == "RUN_ARTIFACT"
 
 
 def test_mar_010_operator_pack_retrieval_is_not_governed(registry):
@@ -374,9 +378,9 @@ def test_feeds_speeds_is_advisory_json(registry, client):
     assert "feed_xy" in data or "rpm" in data or "notes" in data
 
 
-def test_polygon_offset_governed_mints_green_without_evaluator(registry, client):
+def test_polygon_offset_governed_fails_closed_without_evaluator(registry, client):
     cap = _by_id(registry)["polygon-offset"]
-    assert cap["authority_disposition"] == "GOVERNED_PROVENANCE_DEFECT"
+    assert cap["authority_disposition"] == "BLOCKED_BY_DESIGN"
     r = client.post(
         "/api/cam/polygon_offset_governed.nc",
         json={
@@ -385,11 +389,11 @@ def test_polygon_offset_governed_mints_green_without_evaluator(registry, client)
             "stepover": 0.4,
         },
     )
-    if r.status_code == 500 and "pyclipper" in r.text.lower():
-        pytest.skip("pyclipper not installed")
-    assert r.status_code == 200, r.text
+    assert r.status_code == 409, r.text
     assert r.headers.get("X-ToolBox-Lane") == "governed"
     assert r.headers.get("X-Run-ID")
+    assert r.headers.get("X-GCode-SHA256") is None
+    assert not _has_gcode(r.text)
 
 
 def test_operator_pack_and_saw_batch_are_retrieval_not_generators(registry, client):

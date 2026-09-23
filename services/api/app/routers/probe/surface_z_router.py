@@ -13,7 +13,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from ...cam import probe_patterns
-from ...cam.probe_service import create_governed_probe_response
+from ...cam.probe_service import (
+    create_governed_probe_response,
+    require_probe_manufacturing_authority,
+)
 from ...schemas.probe_schemas import SurfaceZProbeIn, ProbeOut
 
 router = APIRouter(tags=["probe", "surface_z"])
@@ -68,8 +71,13 @@ async def download_surface_z_probe(body: SurfaceZProbeIn) -> Response:
 
 @router.post("/surface_z/gcode/download_governed", response_class=Response)
 async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
-    """Download surface Z probe G-code (GOVERNED lane with RMOS persistence)."""
+    """Download surface Z probe G-code after manufacturing authority permits it."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="surface_z_probe_gcode",
+            event_type="surface_z_probe_gcode",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_surface_z_probe(
             approach_z=body.approach_z,
             probe_depth=body.probe_depth,
@@ -80,11 +88,9 @@ async def download_surface_z_probe_governed(body: SurfaceZProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"surface_z_{wcs}.nc"
         return create_governed_probe_response(
-            gcode=gcode,
-            body=body,
-            tool_id="surface_z_probe_gcode",
-            event_type="surface_z_probe_gcode_execution",
+            gcode,
             filename=filename,
+            authority_context=authority,
         )
     except HTTPException:
         raise

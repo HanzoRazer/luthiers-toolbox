@@ -124,12 +124,12 @@ class TestCornerProbing:
         assert response.status_code in (200, 404, 422, 500)
 
     def test_corner_gcode_download_governed(self, api_client, sample_corner_probe_params):
-        """POST /api/probe/corner/gcode/download_governed - Governed corner probe download."""
+        """Governed corner download fails closed without a qualified evaluator."""
         response = api_client.post(
             "/api/probe/corner/gcode/download_governed",
             json=sample_corner_probe_params
         )
-        assert response.status_code in (200, 404, 422, 500)
+        assert response.status_code == 409
 
 
 # =============================================================================
@@ -157,12 +157,12 @@ class TestBossProbing:
         assert response.status_code in (200, 404, 422, 500)
 
     def test_boss_gcode_download_governed(self, api_client, sample_boss_probe_params):
-        """POST /api/probe/boss/gcode/download_governed - Governed boss probe download."""
+        """Governed boss download fails closed without a qualified evaluator."""
         response = api_client.post(
             "/api/probe/boss/gcode/download_governed",
             json=sample_boss_probe_params
         )
-        assert response.status_code in (200, 404, 422, 500)
+        assert response.status_code == 409
 
 
 # =============================================================================
@@ -190,12 +190,12 @@ class TestSurfaceZProbing:
         assert response.status_code in (200, 404, 422, 500)
 
     def test_surface_z_gcode_download_governed(self, api_client, sample_surface_z_params):
-        """POST /api/probe/surface_z/gcode/download_governed - Governed surface Z download."""
+        """Governed surface-Z download fails closed without a qualified evaluator."""
         response = api_client.post(
             "/api/probe/surface_z/gcode/download_governed",
             json=sample_surface_z_params
         )
-        assert response.status_code in (200, 404, 422, 500)
+        assert response.status_code == 409
 
 
 # =============================================================================
@@ -223,12 +223,12 @@ class TestPocketProbing:
         assert response.status_code in (200, 404, 422, 500)
 
     def test_pocket_gcode_download_governed(self, api_client, sample_pocket_probe_params):
-        """POST /api/probe/pocket/gcode/download_governed - Governed pocket probe download."""
+        """Governed pocket download fails closed without a qualified evaluator."""
         response = api_client.post(
             "/api/probe/pocket/gcode/download_governed",
             json=sample_pocket_probe_params
         )
-        assert response.status_code in (200, 404, 422, 500)
+        assert response.status_code == 409
 
 
 # =============================================================================
@@ -256,12 +256,12 @@ class TestViseSquareProbing:
         assert response.status_code in (200, 404, 422, 500)
 
     def test_vise_square_gcode_download_governed(self, api_client, sample_vise_square_params):
-        """POST /api/probe/vise_square/gcode/download_governed - Governed vise square download."""
+        """Governed vise-square download fails closed without a qualified evaluator."""
         response = api_client.post(
             "/api/probe/vise_square/gcode/download_governed",
             json=sample_vise_square_params
         )
-        assert response.status_code in (200, 404, 422, 500)
+        assert response.status_code == 409
 
 
 # =============================================================================

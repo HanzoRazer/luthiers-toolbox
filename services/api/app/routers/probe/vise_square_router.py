@@ -13,7 +13,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from ...cam import probe_patterns
-from ...cam.probe_service import create_governed_probe_response
+from ...cam.probe_service import (
+    create_governed_probe_response,
+    require_probe_manufacturing_authority,
+)
 from ...schemas.probe_schemas import ViseSquareProbeIn, ProbeOut
 
 router = APIRouter(tags=["probe", "vise_square"])
@@ -69,8 +72,13 @@ async def download_vise_square_probe(body: ViseSquareProbeIn) -> Response:
 
 @router.post("/vise_square/gcode/download_governed", response_class=Response)
 async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Response:
-    """Download vise squareness check G-code (GOVERNED lane with RMOS persistence)."""
+    """Download vise-square probe G-code after manufacturing authority permits it."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="vise_square_probe_gcode",
+            event_type="vise_square_probe_gcode",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_vise_square_probe(
             vise_jaw_height=body.vise_jaw_height,
             probe_spacing=body.probe_spacing,
@@ -81,11 +89,9 @@ async def download_vise_square_probe_governed(body: ViseSquareProbeIn) -> Respon
         )
         filename = "vise_squareness_check.nc"
         return create_governed_probe_response(
-            gcode=gcode,
-            body=body,
-            tool_id="vise_square_probe_gcode",
-            event_type="vise_square_probe_gcode_execution",
+            gcode,
             filename=filename,
+            authority_context=authority,
         )
     except HTTPException:
         raise

@@ -13,7 +13,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
 from ...cam import probe_patterns
-from ...cam.probe_service import create_governed_probe_response
+from ...cam.probe_service import (
+    create_governed_probe_response,
+    require_probe_manufacturing_authority,
+)
 from ...schemas.probe_schemas import BossProbeIn, ProbeOut
 
 router = APIRouter(tags=["probe", "boss"])
@@ -78,8 +81,13 @@ async def download_boss_probe(body: BossProbeIn) -> Response:
 
 @router.post("/boss/gcode/download_governed", response_class=Response)
 async def download_boss_probe_governed(body: BossProbeIn) -> Response:
-    """Download boss/hole probe G-code (GOVERNED lane with RMOS persistence)."""
+    """Download boss/hole probe G-code after manufacturing authority permits it."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="boss_probe_gcode",
+            event_type="boss_probe_gcode",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_boss_probe(
             pattern=body.pattern,
             estimated_diameter=body.estimated_diameter,
@@ -94,11 +102,9 @@ async def download_boss_probe_governed(body: BossProbeIn) -> Response:
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"boss_{body.pattern}_{wcs}.nc"
         return create_governed_probe_response(
-            gcode=gcode,
-            body=body,
-            tool_id="boss_probe_gcode",
-            event_type="boss_probe_gcode_execution",
+            gcode,
             filename=filename,
+            authority_context=authority,
         )
     except HTTPException:
         raise
