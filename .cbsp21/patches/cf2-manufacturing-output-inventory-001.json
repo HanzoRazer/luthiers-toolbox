@@ -1,0 +1,154 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_CF2_INVENTORY_001",
+  "title": "LTB-CF2-INVENTORY-001: inventory manufacturing-output routes by implementation and authority",
+  "intent": "On base 1ebc49610b1690ef7d761ab598758c5db8d6193c, record every mechanically discovered manufacturing-output candidate against its live route, implementation, carrier, authentication, and authority order. Do not change route behavior, qualify a generator, or contain a newly found route.",
+  "change_type": "test",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cf2-manufacturing-output-inventory-001.json",
+      ".github/workflows/technical_debt.yml",
+      "services/api/app/ci/manufacturing_output_ast.py",
+      "services/api/app/ci/manufacturing_output_classify.py",
+      "services/api/app/ci/manufacturing_output_inventory.py",
+      "services/api/app/ci/manufacturing_output_inventory.schema.json",
+      "services/api/app/ci/manufacturing_output_routes.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/_manufacturing_output_testkit.py",
+      "services/api/tests/test_manufacturing_output_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "services/api/tests/test_p2_neck_gcode_proof.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cf2-manufacturing-output-inventory-001.json",
+      ".github/workflows/technical_debt.yml",
+      "services/api/app/ci/manufacturing_output_ast.py",
+      "services/api/app/ci/manufacturing_output_classify.py",
+      "services/api/app/ci/manufacturing_output_inventory.py",
+      "services/api/app/ci/manufacturing_output_inventory.schema.json",
+      "services/api/app/ci/manufacturing_output_routes.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/_manufacturing_output_testkit.py",
+      "services/api/tests/test_manufacturing_output_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "services/api/tests/test_p2_neck_gcode_proof.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "A CI-only inventory walks live routes, reconciles them with OpenAPI, and classifies manufacturing-output candidates by implementation, delegate, response carrier, and authority order. The declared JSON and Markdown are checked by the existing technical-debt job. P-2 and CF-4 proofs now share that walker and the program detector.",
+    "why": "Path tokens such as /gcode do not identify every emitter, and the historical 420-candidate audit is not in this repository. The post-CF-4 tree needed a source-level census before any further containment order.",
+    "why_not_redundant": "P-1 through CF-4 proved individual routes. They did not enumerate the rest of the manufacturing-output surface or keep that census from drifting.",
+    "what_did_not_change": "No production router, readiness record, or manufacturing-output policy changed. P-1, P-2, P-3, and CF-4 refusals are unchanged. No generator was qualified. No discovered route was gated. No physical machine was driven.",
+    "why_structural_extraction": "The route walker and program detector moved into one CI module and a testkit so the inventory check does not import tests and the proofs do not keep a second walker."
+  },
+  "verification": {
+    "commands_run": [
+      "Branch cursor/cf2-manufacturing-output-inventory-46e5 was cut from origin/main 1ebc49610b1690ef7d761ab598758c5db8d6193c.",
+      "cd services/api && python3 -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python3 -m pytest tests/test_manufacturing_output_inventory.py tests/test_manufacturing_output_inventory_rows.py tests/test_p2_neck_gcode_proof.py tests/test_cf4_flying_v_toolpath_containment.py tests/rmos/test_p3_governed_route_inventory.py tests/rmos/test_p3_governed_route_refusals.py -q --no-cov",
+      "cd services/api && python3 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json && python3 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json && python3 -m app.ci.check_bare_except && python3 -m app.ci.check_duplication --threshold 100 && python3 -m app.ci.fence_checker_v2 && python3 -m app.ci.check_execution_class_compliance"
+    ],
+    "proofs": [
+      "OpenAPI and the recursive live walk reconcile. A direct-child walk is smaller. WebSockets, hidden routes, and framework paths are classified rather than treated as drift.",
+      "Every discovered candidate has a row. A stale or duplicate row fails the check. UNEXAMINED notes do not call a route safe.",
+      "NeckPipeline, NeckGCodeGenerator, the inline guitar neck, Flying V pocket_generator, retract aliases, polygon, geometry export, and the five probe tool ids keep the authority keys already proved.",
+      "Draft polygon, geometry, and probe routes remain LIVE_UNGOVERNED. The inventory does not permit them."
+    ],
+    "hardware": "No physical-machine execution. No generated program was sent to a machine."
+  },
+  "files": [
+    {
+      "path": ".github/workflows/technical_debt.yml",
+      "intent": "Run the inventory check as a blocking step of the existing debt-gates job.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_ast.py",
+      "intent": "Parse handler source for program calls, authority calls, and delegates.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_classify.py",
+      "intent": "Classify candidates without calling a generator.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_inventory.py",
+      "intent": "Check the declared inventory against the live route tree.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_inventory.schema.json",
+      "intent": "Fix the row schema the checker validates.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_routes.py",
+      "intent": "Walk nested routers and reconcile them with OpenAPI.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.json",
+      "intent": "Store the declared inventory for the pinned CF-4 tree.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.md",
+      "intent": "Publish the same census in Markdown, including the non-qualification notice.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/_manufacturing_output_testkit.py",
+      "intent": "Share the walker and program detector with P-2 and CF-4 proofs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_manufacturing_output_inventory.py",
+      "intent": "Prove discovery, reconciliation, and check failures.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "intent": "Prove known identities, authority order, and the program detector.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_cf4_flying_v_toolpath_containment.py",
+      "intent": "Use the shared walker. CF-4 assertions are unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_p2_neck_gcode_proof.py",
+      "intent": "Use the shared walker and program detector. P-2 assertions are unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-23-LTB-CF2-INVENTORY-001",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: the inventory is governance input. Production routers do not import it, and it does not qualify or contain a route."
+    ]
+  }
+}
