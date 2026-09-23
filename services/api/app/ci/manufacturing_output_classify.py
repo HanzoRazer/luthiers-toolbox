@@ -12,6 +12,7 @@ import textwrap
 
 from app.ci.manufacturing_output_ast import (
     Facts,
+    authentication_posture,
     facts_of,
     function_node,
     handler_id,
@@ -66,7 +67,7 @@ ROW_FIELDS = (
 ENUMS = {
     "classification": {"CONFIRMED_EMITTER", "CONFIRMED_DELEGATE", "NON_EMITTING", "UNEXAMINED"},
     "implementation_kind": {"class", "function", "inline", "delegate", "postprocessor", "unknown"},
-    "authentication": {"dependency", "in_handler", "none", "unknown"},
+    "authentication": {"NONE", "OPTIONAL", "REQUIRED", "UNKNOWN"},
     "authority_layer": {"readiness", "manufacturing_output", "asset", "other", "none", "unknown"},
     "authority_order": {"before_generation", "after_generation", "none", "unknown"},
     "containment": {"FAIL_CLOSED", "PERMITTED_BY_AUTHORITY", "LIVE_UNGOVERNED", "UNKNOWN", "NOT_APPLICABLE"},
@@ -217,6 +218,34 @@ def authority_order(facts: Facts) -> str:
     return "after_generation"
 
 
+def delegation_edge(facts: Facts) -> tuple[int, str] | None:
+    """Return the first caller-local delegate edge without crossing scopes."""
+    return facts.delegates[0] if facts.delegates else None
+
+
+def composed_authority_order(caller: Facts, callee: Facts) -> str:
+    """Order authority across a caller -> callee edge without comparing lines.
+
+    Caller line numbers are compared only with the caller's delegate call. Callee
+    line numbers are compared only with callee generation. Either scope may
+    independently establish a pre-generation authority decision.
+    """
+    edge = delegation_edge(caller)
+    caller_order = "none"
+    if caller.authority and edge is not None:
+        caller_order = (
+            "before_generation"
+            if min(item[0] for item in caller.authority) < edge[0]
+            else "after_generation"
+        )
+    callee_order = authority_order(callee)
+    if "before_generation" in {caller_order, callee_order}:
+        return "before_generation"
+    if "after_generation" in {caller_order, callee_order}:
+        return "after_generation"
+    return "none"
+
+
 def _first_inline_line(facts: Facts) -> int:
     return min((lineno for lineno, _name, owner in facts.program if owner == "gcode_lines"), default=10**9)
 
@@ -249,14 +278,6 @@ def signal_set(route, source: str, fn) -> set[str]:
     if facts.delegates:
         signals.add("delegation")
     return signals
-
-
-def _authentication(source: str, fn) -> str:
-    if fn is None and not source:
-        return "unknown"
-    if "get_current_principal" in source or "HTTPBearer" in source or "Depends(" in source:
-        return "dependency"
-    return "none"
 
 
 def response_carrier(route, source: str) -> str:
@@ -303,20 +324,28 @@ def _note(classification: str, order: str) -> str:
 def _apply_delegate(endpoint, facts: Facts, source: str):
     """One-level callee. Retract aliases inherit the handler they call."""
     if not facts.delegates or facts.emits:
-        return facts, implementation_of(endpoint, facts, source)
+        return facts, implementation_of(endpoint, facts, source), None, None
     _lineno, name = facts.delegates[0]
     callee = _lookup(endpoint, name)
     if callee is None:
-        return facts, ("delegate", None)
+        return facts, ("delegate", None), None, None
     callee_source = handler_source(callee)
     callee_fn = function_node(callee_source, getattr(callee, "__name__", None))
     callee_facts = facts_of(callee_fn, callee_source)
-    if not callee_facts.authority:
-        callee_facts.authority = list(facts.authority)
     kind, symbol = implementation_of(callee, callee_facts, callee_source)
     if not callee_facts.emits:
-        return facts, (kind, symbol)
-    return callee_facts, ("delegate", symbol)
+        return facts, (kind, symbol), None, None
+    order = composed_authority_order(facts, callee_facts)
+    caller_edge = delegation_edge(facts)
+    caller_before = bool(
+        facts.authority
+        and caller_edge
+        and min(item[0] for item in facts.authority) < caller_edge[0]
+    )
+    effective_authority = facts.authority if caller_before else callee_facts.authority
+    if not effective_authority and facts.authority:
+        effective_authority = facts.authority
+    return callee_facts, ("delegate", symbol), order, effective_authority
 
 
 def _delegate_name(facts: Facts) -> str | None:
@@ -339,18 +368,27 @@ def _unexamined_verdict(facts: Facts, has_authority: bool, layer: str, key, high
     return "UNEXAMINED", "UNKNOWN", proof, authority_order(facts), layer, key
 
 
-def _verdict(route, facts: Facts, used: Facts, kind: str, signals: set[str]):
+def _verdict(
+    route,
+    facts: Facts,
+    used: Facts,
+    kind: str,
+    signals: set[str],
+    order_override: str | None = None,
+    authority_override: list[tuple[int, str, str | None]] | None = None,
+):
     delegate_name = _delegate_name(facts)
     classified = bool(used.emits)
     if delegate_name and classified:
         kind = "delegate"
-    has_authority = bool(used.authority)
-    layer = used.authority[0][1] if has_authority else "none"
-    key = used.authority[0][2] if has_authority else None
+    authority = authority_override if authority_override is not None else used.authority
+    has_authority = bool(authority)
+    layer = authority[0][1] if has_authority else "none"
+    key = authority[0][2] if has_authority else None
     high = len(signals) >= HIGH_SIGNAL_MIN
     proved = (route.method, route.path) in RUNTIME_PROVED
     if classified:
-        order = authority_order(used)
+        order = order_override or authority_order(used)
         classification, containment, proof, order, kind = _positive_verdict(
             kind, order, has_authority, key, high, proved, signals,
         )
@@ -386,8 +424,18 @@ def classify_route(route) -> dict | None:
     if not signals:
         return None
     facts = facts_of(fn, source)
-    used, (kind, symbol) = _apply_delegate(route.endpoint, facts, source)
-    verdict = _verdict(route, facts, used, kind, signals)
+    used, (kind, symbol), order_override, authority_override = _apply_delegate(
+        route.endpoint, facts, source,
+    )
+    verdict = _verdict(
+        route,
+        facts,
+        used,
+        kind,
+        signals,
+        order_override,
+        authority_override,
+    )
     classified = verdict["classified"]
     return {
         "method": route.method,
@@ -400,7 +448,7 @@ def classify_route(route) -> dict | None:
         "implementation_kind": verdict["kind"] if classified else "unknown",
         "implementation_symbol": symbol if classified else None,
         "delegates_to": verdict["delegate_name"],
-        "authentication": _authentication(source, fn),
+        "authentication": authentication_posture(fn),
         "authority_layer": verdict["layer"],
         "authority_key": verdict["key"],
         "authority_order": verdict["order"],

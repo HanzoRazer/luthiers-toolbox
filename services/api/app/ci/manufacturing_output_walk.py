@@ -124,8 +124,11 @@ def reconcile(live: list[LiveRoute], schema: dict) -> list[str]:
     }
     problems: list[str] = []
     for method, path in sorted(live_http - documented):
-        route = next(item for item in live if item.method == method and item.path == path)
-        if path in _FRAMEWORK_PATHS or not route.include_in_schema:
+        matches = [
+            item for item in live
+            if item.method == method and item.path == path
+        ]
+        if path in _FRAMEWORK_PATHS or all(not item.include_in_schema for item in matches):
             continue
         problems.append(f"live-only {method} {path}")
     for method, path in sorted(documented - live_http):

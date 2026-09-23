@@ -29,6 +29,13 @@ _DELEGATES = {
 }
 _CONSTRUCTORS = {"NeckPipeline", "NeckGCodeGenerator", "_create_generator"}
 _READINESS_ARG = {"_readiness_gate", "require_generator_readiness"}
+_OPTIONAL_AUTH_DEPENDENCIES = {"get_optional_principal"}
+_REQUIRED_AUTH_DEPENDENCIES = {
+    "get_current_principal",
+    "require_authenticated_principal",
+    "require_principal",
+    "require_roles",
+}
 
 
 def repo_root() -> Path:
@@ -123,6 +130,40 @@ def call_owner(call: ast.Call) -> str:
     if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
         return func.value.id
     return ""
+
+
+def _dependency_target(call: ast.Call) -> str:
+    if not call.args:
+        return ""
+    target = call.args[0]
+    if isinstance(target, ast.Call):
+        target = target.func
+    if isinstance(target, ast.Name):
+        return target.id
+    if isinstance(target, ast.Attribute):
+        return target.attr
+    return ""
+
+
+def authentication_posture(fn: ast.AST | None) -> str:
+    """Classify known authentication dependencies, not arbitrary ``Depends``."""
+    if fn is None:
+        return "UNKNOWN"
+    postures: set[str] = set()
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Call) or call_name(node) != "Depends":
+            continue
+        target = _dependency_target(node)
+        if target in _OPTIONAL_AUTH_DEPENDENCIES:
+            postures.add("OPTIONAL")
+        elif target in _REQUIRED_AUTH_DEPENDENCIES or target == "HTTPBearer":
+            postures.add("REQUIRED")
+        elif any(token in target.lower() for token in ("auth", "principal", "role", "bearer")):
+            postures.add("UNKNOWN")
+    for result in ("REQUIRED", "OPTIONAL", "UNKNOWN"):
+        if result in postures:
+            return result
+    return "NONE"
 
 
 def _placeholder(node: ast.AST) -> str:

@@ -130,10 +130,27 @@ def test_framework_and_hidden_routes_reconcile():
     extra = dict(schema)
     extra["paths"] = {**schema["paths"], "/missing": {"post": {}}}
     assert reconcile(live, extra) == ["openapi-only POST /missing"]
-    stray = live + [_Route("/stray")]
     # rebuild via walk so include_in_schema is set
     stray_live, _missed = walk_live([_Route("/stray"), _Route("/visible")])
     assert "live-only GET /stray" in reconcile(stray_live, schema)
+
+
+def test_hidden_duplicate_does_not_mask_a_visible_operation():
+    live, unresolved = walk_live([
+        _Route("/api/cam/thing", methods={"POST"}, include=False),
+        _Route("/api/cam/thing", methods={"POST"}, include=True),
+    ])
+    assert unresolved == []
+    assert reconcile(live, {"paths": {}}) == ["live-only POST /api/cam/thing"]
+
+
+def test_all_duplicates_hidden_is_an_accepted_exception():
+    live, unresolved = walk_live([
+        _Route("/api/cam/thing", methods={"POST"}, include=False),
+        _Route("/api/cam/thing", methods={"POST"}, include=False),
+    ])
+    assert unresolved == []
+    assert reconcile(live, {"paths": {}}) == []
 
 
 def test_openapi_operation_set_ignores_non_http_keys():

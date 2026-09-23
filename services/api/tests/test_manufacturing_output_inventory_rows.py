@@ -5,11 +5,18 @@ Reads the committed inventory. Does not call a generator.
 from __future__ import annotations
 
 import json
+import inspect
 from pathlib import Path
 
 import pytest
 
-from app.ci.manufacturing_output_classify import classify_route
+from app.ci.manufacturing_output_ast import facts_of, function_node
+from app.ci.manufacturing_output_classify import (
+    authentication_posture,
+    classify_route,
+    composed_authority_order,
+    delegation_edge,
+)
 from app.ci.manufacturing_output_walk import LiveRoute
 from _manufacturing_output_testkit import program_records, records_in_json, records_in_program_text
 
@@ -47,6 +54,21 @@ def _authorize_retract(**_kwargs):
     return None
 
 
+def generate_simple_retract_gcode(strategy):
+    return _build_simple_retract_gcode(strategy)
+
+
+def _caller_gate_then_delegate(strategy):
+    _authorize_retract(tool_id="retract:test")
+    return generate_simple_retract_gcode(strategy)
+
+
+def _caller_delegate_then_gate(strategy):
+    program = generate_simple_retract_gcode(strategy)
+    _authorize_retract(tool_id="retract:test")
+    return program
+
+
 def generate_neck_gcode(req):
     _readiness_gate("neck_gcode_generator")
     return NeckGCodeGenerator(req)
@@ -58,6 +80,15 @@ def NeckGCodeGenerator(req):
 
 def _readiness_gate(_key):
     return None
+
+
+def _facts(fn):
+    source = inspect.getsource(fn)
+    return facts_of(function_node(source, fn.__name__), source)
+
+
+def _auth(source: str) -> str:
+    return authentication_posture(function_node(source, "handler"))
 
 
 def test_path_token_alone_is_not_an_emitter_and_unexamined_is_not_safe():
@@ -99,6 +130,75 @@ def test_authority_after_generation_is_not_fail_closed():
     assert row["authority_order"] == "after_generation"
     assert row["containment"] == "LIVE_UNGOVERNED"
     assert row["evidence"]
+
+
+def test_delegation_edge_is_caller_local():
+    edge = delegation_edge(_facts(_caller_gate_then_delegate))
+    assert edge is not None
+    assert edge[1] == "generate_simple_retract_gcode"
+
+
+def test_composed_order_never_compares_caller_and_callee_line_numbers():
+    caller = _facts(_caller_gate_then_delegate)
+    callee = _facts(generate_simple_retract_gcode)
+    # The caller authority protects the delegate even though the callee's
+    # generation line has a smaller, unrelated local line number.
+    assert composed_authority_order(caller, callee) == "before_generation"
+
+
+def test_delegate_before_caller_authority_is_not_fail_closed():
+    caller = _facts(_caller_delegate_then_gate)
+    callee = _facts(generate_simple_retract_gcode)
+    assert composed_authority_order(caller, callee) == "after_generation"
+
+
+def test_classification_uses_the_composed_delegation_order():
+    protected = classify_route(_route(
+        _caller_gate_then_delegate, "POST", "/api/cam/retract/protected-alias",
+    ))
+    late = classify_route(_route(
+        _caller_delegate_then_gate, "POST", "/api/cam/retract/late-alias",
+    ))
+    assert protected["classification"] == "CONFIRMED_DELEGATE"
+    assert protected["authority_order"] == "before_generation"
+    assert protected["containment"] == "FAIL_CLOSED"
+    assert late["authority_order"] == "after_generation"
+    assert late["containment"] == "LIVE_UNGOVERNED"
+
+
+def test_non_authentication_dependency_is_none():
+    assert _auth(
+        "def handler(store=Depends(get_snapshot_store)):\n    return store\n"
+    ) == "NONE"
+
+
+def test_optional_principal_dependency_is_optional():
+    assert _auth(
+        "def handler(principal=Depends(get_optional_principal)):\n    return principal\n"
+    ) == "OPTIONAL"
+
+
+def test_current_principal_dependency_is_required():
+    assert _auth(
+        "def handler(principal=Depends(get_current_principal)):\n    return principal\n"
+    ) == "REQUIRED"
+
+
+def test_role_dependency_factory_is_required():
+    assert _auth(
+        'def handler(principal=Depends(require_roles("operator"))):\n'
+        "    return principal\n"
+    ) == "REQUIRED"
+
+
+def test_unknown_authentication_dependency_is_not_optimistic():
+    assert _auth(
+        "def handler(principal=Depends(resolve_auth_context)):\n    return principal\n"
+    ) == "UNKNOWN"
+
+
+def test_handler_without_dependencies_has_no_authentication():
+    assert _auth("def handler(req):\n    return req\n") == "NONE"
 
 
 def test_retract_tool_id_renders_the_strategy_placeholder():
