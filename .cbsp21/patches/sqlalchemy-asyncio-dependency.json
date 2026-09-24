@@ -1,0 +1,68 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SQLALCHEMY_ASYNCIO_DEP_001",
+  "title": "Declare SQLAlchemy asyncio runtime dependency",
+  "intent": "Declare the SQLAlchemy asyncio capability already used by app.db.pg_pool so clean installs include greenlet after SQLAlchemy 2.1.0 stopped supplying it implicitly on common platforms.",
+  "change_type": "fix",
+  "behavior_change": "Fresh API dependency installs add greenlet through SQLAlchemy's supported asyncio extra; database URLs, pooling behavior, session behavior, and application code remain unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/sqlalchemy-asyncio-dependency.json",
+      "services/api/requirements.txt",
+      "services/api/tests/test_pg_pool.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/sqlalchemy-asyncio-dependency.json",
+      "services/api/requirements.txt",
+      "services/api/tests/test_pg_pool.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Changed the existing SQLAlchemy declaration to sqlalchemy[asyncio] and added a focused test that imports greenlet and the three asyncio symbols used by the pool module.",
+    "why": "The API imports AsyncSession, async_sessionmaker, and create_async_engine. Fresh installs resolving SQLAlchemy 2.1.0 fail test collection because greenlet is no longer an implicit platform dependency; SQLAlchemy's error directs asyncio users to install the asyncio extra.",
+    "why_not_redundant": "The existing aiosqlite dependency is a database driver, not SQLAlchemy's greenlet-based asyncio adaptation runtime. Previous green CI resolved SQLAlchemy 2.0.x, which supplied greenlet implicitly on x86_64 and masked the incomplete declaration.",
+    "what_did_not_change": "No SQLAlchemy version pin, lockfile, asyncpg dependency, database configuration, pool implementation, route, schema, or production behavior changed.",
+    "why_structural_extraction": "The supported SQLAlchemy extra owns its runtime dependency and version compatibility; declaring greenlet directly would duplicate that upstream dependency contract."
+  },
+  "verification": {
+    "commands_run": [
+      "Clean Python 3.11 base install resolved sqlalchemy 2.1.0 without greenlet and reproduced the test_pg_pool.py collection error",
+      "Clean Python 3.11 patched install resolved sqlalchemy 2.1.0 with greenlet 3.5.6",
+      "python -m pytest tests/test_pg_pool.py -q --no-cov",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/sqlalchemy-asyncio-dependency.json services/api/requirements.txt services/api/tests/test_pg_pool.py",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ],
+    "proofs": [
+      "The pre-patch clean install reproduces the same missing-greenlet failure seen in Core CI.",
+      "The dependency delta is exactly greenlet; SQLAlchemy remains at 2.1.0 and no unrelated package moves.",
+      "The optional asyncpg test remains skipped when asyncpg is not installed."
+    ],
+    "hardware": "No hardware or manufacturing output involved."
+  },
+  "files": [
+    {
+      "path": "services/api/requirements.txt",
+      "intent": "Declare SQLAlchemy's supported asyncio extra for the asyncio API already in use.",
+      "risk": "low",
+      "behavior_change": "Fresh installs include greenlet."
+    },
+    {
+      "path": "services/api/tests/test_pg_pool.py",
+      "intent": "Prevent dependency declarations from again omitting the runtime required by the imported SQLAlchemy asyncio API.",
+      "risk": "low",
+      "behavior_change": "none - test only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-24-SQLALCHEMY-ASYNCIO-DEP-001",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: the unpinned SQLAlchemy declaration allowed an upstream minor release to expose a previously implicit runtime dependency. This patch declares the capability but deliberately does not introduce broader dependency pinning."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "The capability extra is the narrow upstream-supported repair. Version pinning or lockfile policy remains a separate dependency-governance decision."
+  }
+}
