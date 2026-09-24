@@ -1,20 +1,20 @@
 """Corner Probe Router - Outside/inside corner probing patterns.
 
 Provides:
-- POST /corner/gcode - Generate corner probe G-code
-- POST /corner/gcode/download - Download (DRAFT lane)
-- POST /corner/gcode/download_governed - Download (GOVERNED lane with RMOS)
+- POST /corner/gcode - Generate corner probe G-code after manufacturing authority
+- POST /corner/gcode/download - Download after manufacturing authority
+- POST /corner/gcode/download_governed - Download after manufacturing authority
 
-Total: 3 routes for corner probing.
+All three routes use tool id corner_probe_gcode. Event types stay distinct.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import Response
+from fastapi import APIRouter, HTTPException, Response
 
 from ...cam import probe_patterns
 from ...cam.probe_service import (
     create_governed_probe_response,
+    persist_authorized_probe_program,
     require_probe_manufacturing_authority,
 )
 from ...schemas.probe_schemas import CornerProbeIn, ProbeOut
@@ -23,9 +23,14 @@ router = APIRouter(tags=["probe", "corner"])
 
 
 @router.post("/corner/gcode", response_model=ProbeOut)
-async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
+async def generate_corner_probe(body: CornerProbeIn, response: Response) -> ProbeOut:
     """Generate G-code for corner probing pattern."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="corner_probe_gcode",
+            event_type="corner_probe_gcode_json",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_corner_probe(
             pattern=body.pattern,
             approach_distance=body.approach_distance,
@@ -34,9 +39,13 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
             safe_z=body.safe_z,
             work_offset=body.work_offset,
         )
+        gcode_hash = persist_authorized_probe_program(gcode, authority_context=authority)
         stats = probe_patterns.get_statistics(gcode)
         stats["pattern"] = body.pattern
         stats["work_offset"] = f"G{53 + body.work_offset}"
+        response.headers["X-ToolBox-Lane"] = "governed"
+        response.headers["X-Run-ID"] = authority.run_id
+        response.headers["X-GCode-SHA256"] = gcode_hash
         return ProbeOut(gcode=gcode, stats=stats)
     except HTTPException:
         raise
@@ -46,8 +55,13 @@ async def generate_corner_probe(body: CornerProbeIn) -> ProbeOut:
 
 @router.post("/corner/gcode/download", response_class=Response)
 async def download_corner_probe(body: CornerProbeIn) -> Response:
-    """Download corner probe G-code as .nc file (DRAFT lane)."""
+    """Download corner probe G-code as .nc file after manufacturing authority."""
     try:
+        authority = require_probe_manufacturing_authority(
+            tool_id="corner_probe_gcode",
+            event_type="corner_probe_gcode_download",
+            request_summary=body.model_dump(mode="json"),
+        )
         gcode = probe_patterns.generate_corner_probe(
             pattern=body.pattern,
             approach_distance=body.approach_distance,
@@ -58,13 +72,11 @@ async def download_corner_probe(body: CornerProbeIn) -> Response:
         )
         wcs = f"g{54 + body.work_offset - 1}"
         filename = f"corner_{body.pattern}_{wcs}.nc"
-        resp = Response(
-            content=gcode,
-            media_type="text/plain",
-            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        return create_governed_probe_response(
+            gcode,
+            filename=filename,
+            authority_context=authority,
         )
-        resp.headers["X-ToolBox-Lane"] = "draft"
-        return resp
     except HTTPException:
         raise
     except (ValueError, TypeError, ZeroDivisionError) as e:

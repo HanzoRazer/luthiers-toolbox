@@ -1,4 +1,4 @@
-"""Governed probe downloads. Authority is supplied by the caller."""
+"""Governed probe output. Authority is supplied by the caller."""
 
 from __future__ import annotations
 
@@ -26,6 +26,22 @@ def require_probe_manufacturing_authority(
         mode="probing",
         event_type=event_type,
         request_summary=request_summary,
+    )
+
+
+def persist_authorized_probe_program(
+    gcode: str,
+    *,
+    authority_context: ManufacturingAuthorityContext,
+) -> str:
+    """Persist a permitted JSON probe program under the caller's decision.
+
+    This helper cannot evaluate feasibility, create a decision, or default to
+    GREEN. The authority context is required.
+    """
+    return persist_authorized_manufacturing_output(
+        context=authority_context,
+        gcode_text=gcode,
     )
 
 

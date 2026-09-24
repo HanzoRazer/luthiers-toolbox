@@ -29,10 +29,18 @@ ORIGINAL_NINE = P3_TARGETS | RETRACT_ENFORCED
 DRAFT_SIBLINGS = {
     ("POST", "/api/cam/polygon_offset.nc"),
     ("POST", "/api/geometry/export_gcode"),
+}
+# Contained by LTB-CF2-PROBE-CONTAIN-001. These were not part of the original nine.
+PROBE_NEWLY_ENFORCED = {
+    ("POST", "/api/probe/boss/gcode"),
     ("POST", "/api/probe/boss/gcode/download"),
+    ("POST", "/api/probe/corner/gcode"),
     ("POST", "/api/probe/corner/gcode/download"),
+    ("POST", "/api/probe/pocket/gcode"),
     ("POST", "/api/probe/pocket/gcode/download"),
+    ("POST", "/api/probe/surface_z/gcode"),
     ("POST", "/api/probe/surface_z/gcode/download"),
+    ("POST", "/api/probe/vise_square/gcode"),
     ("POST", "/api/probe/vise_square/gcode/download"),
 }
 AUTHORITY_CALLS = {
@@ -50,6 +58,8 @@ OUTPUT_CALLS = {
     "_load_posts",
     "create_governed_probe_response",
     "persist_authorized_manufacturing_output",
+    "persist_authorized_probe_program",
+    "get_statistics",
     "RunDecision",
     "_build_simple_retract_gcode",
     "_build_download_retract_gcode",
@@ -263,6 +273,25 @@ def test_live_handlers_consult_authority_before_output():
         assert problems == [], key
         checked += 1
     assert checked == 9
+
+
+def test_probe_draft_routes_are_enforced_without_rewriting_p3_history():
+    """The ten routes were live in #403. This order contains them. The original nine stay nine."""
+    from app.main import app
+
+    resolved, unresolved = walk_routes(app.routes)
+    found = {(route.method, route.path) for route in resolved}
+    assert unresolved == []
+    assert PROBE_NEWLY_ENFORCED <= found
+    assert PROBE_NEWLY_ENFORCED.isdisjoint(ORIGINAL_NINE)
+    checked = 0
+    for route in resolved:
+        if (route.method, route.path) not in PROBE_NEWLY_ENFORCED:
+            continue
+        source = inspect.getsource(route.endpoint)
+        assert order_problems(source, route.endpoint.__name__) == [], route.path
+        checked += 1
+    assert checked == 10
 
 
 def test_target_modules_do_not_mint_green():
