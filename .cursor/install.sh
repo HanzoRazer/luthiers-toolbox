@@ -13,10 +13,11 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 # build-essential/libpq/sqlite: backend build + DB tooling.
 # poppler-utils + pango/cairo/gdk-pixbuf/ffi: runtime deps for pdf2image and
-# weasyprint (operator-report PDF export). python3.12-venv: ensurepip for venv.
+# weasyprint (operator-report PDF export). python3-venv follows the image's
+# default python3 minor and supplies ensurepip for that interpreter.
 sudo apt-get install -y --no-install-recommends \
   build-essential curl git jq libpq-dev sqlite3 \
-  python3.12-venv python3-dev python3-pip \
+  python3-venv python3-dev python3-pip \
   poppler-utils shared-mime-info fonts-dejavu-core \
   libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
   libcairo2 libffi-dev libjpeg-dev
@@ -35,8 +36,10 @@ cd "$REPO_ROOT/packages/client"
 # The Cloud Agent base image currently ships Node 22.14.0, below this
 # workspace's declared 22.x floor. This is an agent-only image bootstrap, so
 # install a supported Node release globally instead of bypassing the repo's
-# own guard. Pin the installer; float within Node 22 like the repo's .nvmrc and
-# CI so Cloud Agent rebuilds continue receiving security patch releases.
+# own guard. Pin the installer; float within Node 22 like
+# packages/client/.nvmrc and CI so Cloud Agent rebuilds continue receiving
+# security patch releases. The guard below rejects any resolved patch below
+# the workspace's declared engine floor.
 if ! node scripts/check-node-engine.mjs; then
   echo "==> Installing a supported Node 22 release for the Cloud Agent"
   sudo npm install --global n@10.2.0
