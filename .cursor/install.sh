@@ -32,6 +32,18 @@ deactivate
 
 echo "==> Installing Vue client dependencies (packages/client)"
 cd "$REPO_ROOT/packages/client"
+# The Cloud Agent base image currently ships Node 22.14.0, below this
+# workspace's declared 22.x floor. This is an agent-only image bootstrap, so
+# install a supported Node release globally instead of bypassing the repo's
+# own guard. Pin the installer; float within Node 22 like the repo's .nvmrc and
+# CI so Cloud Agent rebuilds continue receiving security patch releases.
+if ! node scripts/check-node-engine.mjs; then
+  echo "==> Installing a supported Node 22 release for the Cloud Agent"
+  sudo npm install --global n@10.2.0
+  sudo n 22
+  hash -r
+fi
+npm run check:node
 npm ci
 
 echo "==> Preparing local config and data directories"
