@@ -6,6 +6,17 @@ from unittest.mock import patch, AsyncMock
 from app.db.pg_pool import create_engine, get_db
 
 
+def test_sqlalchemy_asyncio_runtime_is_installed():
+    """The declared SQLAlchemy asyncio capability includes its greenlet runtime."""
+    import greenlet
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+    assert greenlet.__version__
+    assert AsyncSession is not None
+    assert async_sessionmaker is not None
+    assert create_async_engine is not None
+
+
 class TestCreateEngine:
     """Tests for engine creation."""
 

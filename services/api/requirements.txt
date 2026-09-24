@@ -3,7 +3,7 @@ uvicorn[standard]
 pydantic
 jinja2
 python-multipart
-sqlalchemy
+sqlalchemy[asyncio]  # AsyncSession/create_async_engine require greenlet from this extra
 aiosqlite>=0.19.0
 sqlite-utils
 alembic>=1.13.0
