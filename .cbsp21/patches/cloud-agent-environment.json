@@ -31,7 +31,7 @@
     "commands_run": [
       "bash -n .cursor/install.sh",
       "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/cloud-agent-environment.json .cursor/environment.json .cursor/install.sh",
-      "python scripts/ci/check_cbsp21_patch_input.py --base 41b8b71a9d922f45442f0208da897d6122146f9e --head HEAD",
+      "python scripts/ci/check_cbsp21_patch_input.py --base fb052a4ae9bd9d34ab25bf3106f924f79cb74bae --head HEAD",
       "cd packages/client && npm run check:node"
     ],
     "proofs": [
