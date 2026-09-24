@@ -16,7 +16,11 @@ import textwrap
 
 import pytest
 
-from test_p2_neck_gcode_proof import first_statement_gate_key, program_records
+from _manufacturing_output_testkit import (
+    first_statement_gate_key,
+    program_records,
+    walk_routes,
+)
 
 pytestmark = pytest.mark.allow_missing_request_id
 
@@ -41,56 +45,17 @@ HANDLERS = (
     "generate_pickup_toolpath",
 )
 
-_CONVERTER_PREFIX = "{file_path:"
-
-
 def _router():
     return importlib.import_module("app.routers.cam.guitar.flying_v_cam_router")
 
 
-def _normalize(path: str) -> str:
-    while _CONVERTER_PREFIX in path:
-        start = path.index(_CONVERTER_PREFIX)
-        end = path.index("}", start)
-        name = path[start + len(_CONVERTER_PREFIX):end]
-        path = path[:start] + "{" + name + "}" + path[end + 1:]
-    return path
-
-
-def _walk(routes, prefix: str = ""):
-    """(method, path, response_model) for every HTTP route under nested routers."""
-    found = []
-    for route in routes:
-        if type(route).__name__ == "_IncludedRouter":
-            context = getattr(route, "include_context", None)
-            original = getattr(route, "original_router", None)
-            if original is None:
-                continue
-            child = prefix + (getattr(context, "prefix", "") or "")
-            found.extend(_walk(original.routes, child))
-            continue
-        path = getattr(route, "path", None)
-        if path is None:
-            nested = getattr(route, "routes", None)
-            if nested:
-                found.extend(_walk(nested, prefix))
-            continue
-        methods = getattr(route, "methods", None) or set()
-        model = getattr(route, "response_model", None)
-        full = _normalize(prefix + path)
-        for method in methods:
-            if method in {"HEAD", "OPTIONS"}:
-                continue
-            found.append((method, full, model))
-    return found
-
-
 def _toolpath_posts(routes, prefix: str = "") -> set[tuple[str, str]]:
     model = _router().ToolpathResponse
+    resolved, _unresolved = walk_routes(routes, prefix)
     return {
-        (method, path)
-        for method, path, response_model in _walk(routes, prefix)
-        if method == "POST" and response_model is model
+        (route.method, route.path)
+        for route in resolved
+        if route.method == "POST" and route.response_model is model
     }
 
 

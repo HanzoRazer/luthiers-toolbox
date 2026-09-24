@@ -37,6 +37,9 @@ jobs:
       - name: File size check (ratchet mode)
         run: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json
 
+      - name: Manufacturing output inventory
+        run: python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check
+
       - name: Bare except check
         run: python -m app.ci.check_bare_except
 

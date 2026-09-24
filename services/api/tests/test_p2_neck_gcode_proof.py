@@ -11,13 +11,23 @@ from __future__ import annotations
 
 import ast
 import inspect
-import json
 import re
 import textwrap
 from collections import defaultdict
 from dataclasses import dataclass
 
 import pytest
+
+from _manufacturing_output_testkit import (
+    UnresolvedRoute,
+    find_function as _find_function,
+    first_statement_gate_key,
+    normalize_path as _normalize_path,
+    program_records,
+    records_in_json,
+    records_in_program_text,
+    walk_routes,
+)
 
 pytestmark = pytest.mark.allow_missing_request_id
 
@@ -35,18 +45,6 @@ DECLARED_NECK_PROGRAM_ROUTES = {
     ("POST", "/api/cam-workspace/neck/generate/{op}"),
 }
 
-_CONVERTER = re.compile(r"\{([^{}:]+):[^{}]+\}")
-_COMMAND = re.compile(r"[GM]\d+", re.IGNORECASE)
-_LINE_NUMBER = re.compile(r"N\d+", re.IGNORECASE)
-_COMMENT = re.compile(r"\([^)]*\)")
-_PROSE_KEYS = {"reason", "evidence", "detail", "message", "exit_condition"}
-_PROGRAM_KEYS = {"gcode"}
-
-
-def _normalize_path(path: str) -> str:
-    return _CONVERTER.sub(r"{\1}", path)
-
-
 def _is_neck_program_route(path: str, methods: set) -> bool:
     """Routes this census accounts for. Not every URL that mentions a neck."""
     if "POST" not in methods:
@@ -59,46 +57,6 @@ def _is_neck_program_route(path: str, methods: set) -> bool:
 # -----------------------------------------------------------------------------
 # Gate order (AST)
 # -----------------------------------------------------------------------------
-
-def _first_executable(fn: ast.AST):
-    body = list(getattr(fn, "body", []))
-    if (
-        body
-        and isinstance(body[0], ast.Expr)
-        and isinstance(body[0].value, ast.Constant)
-        and isinstance(body[0].value.value, str)
-    ):
-        body = body[1:]
-    return body[0] if body else None
-
-
-def _find_function(tree: ast.AST, name: str):
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
-            return node
-    return None
-
-
-def first_statement_gate_key(source: str, fn_name: str) -> str | None:
-    """Readiness key if that call is the function's first executable statement.
-
-    A gate later in the body does not count. Docstrings are not executable.
-    """
-    fn = _find_function(ast.parse(textwrap.dedent(source)), fn_name)
-    if fn is None:
-        return None
-    stmt = _first_executable(fn)
-    if not isinstance(stmt, ast.Expr) or not isinstance(stmt.value, ast.Call):
-        return None
-    call = stmt.value
-    func = call.func
-    if not isinstance(func, ast.Name) or func.id != "_readiness_gate":
-        return None
-    if len(call.args) != 1 or not isinstance(call.args[0], ast.Constant):
-        return None
-    value = call.args[0].value
-    return value if isinstance(value, str) else None
-
 
 def test_p2_handlers_open_on_the_readiness_gate():
     import app.routers.neck.gcode_router as module
@@ -133,47 +91,6 @@ def test_a_misordered_handler_fails_the_guard():
 # -----------------------------------------------------------------------------
 # Program detector
 # -----------------------------------------------------------------------------
-
-def command_token(line: str) -> str | None:
-    """First G/M command token on a line. Prose and N-words are not commands."""
-    stripped = _COMMENT.sub(" ", line).strip()
-    if not stripped or stripped.startswith(";"):
-        return None
-    for token in stripped.split():
-        if _LINE_NUMBER.fullmatch(token):
-            continue
-        match = _COMMAND.fullmatch(token)
-        if match:
-            return match.group(0).upper()
-        return None
-    return None
-
-
-def records_in_program_text(text: str) -> list[str]:
-    return [token for line in text.splitlines() if (token := command_token(line))]
-
-
-def records_in_json(node, key: str | None = None) -> list[str]:
-    """Program records in program-bearing fields. Prose keys are not entered."""
-    found: list[str] = []
-    if isinstance(node, dict):
-        for child_key, child in node.items():
-            if child_key in _PROSE_KEYS:
-                continue
-            found.extend(records_in_json(child, child_key))
-    elif isinstance(node, list):
-        for child in node:
-            found.extend(records_in_json(child, key))
-    elif isinstance(node, str) and key in _PROGRAM_KEYS:
-        found.extend(records_in_program_text(node))
-    return found
-
-
-def program_records(content_type: str, body: bytes) -> list[str]:
-    if "json" in content_type.lower():
-        return records_in_json(json.loads(body.decode()))
-    return records_in_program_text(body.decode())
-
 
 def test_detector_recognizes_g0_g1_and_m3():
     text = "G0 X0 Y0\nG1 Z-1.0 F10\nM3\n"
@@ -229,47 +146,6 @@ def test_schema_invalid_body_never_enters_the_handler(client):
 # -----------------------------------------------------------------------------
 # Census
 # -----------------------------------------------------------------------------
-
-@dataclass(frozen=True)
-class ResolvedRoute:
-    method: str
-    path: str
-    endpoint: object
-
-
-@dataclass(frozen=True)
-class UnresolvedRoute:
-    type_name: str
-    prefix: str
-
-
-def walk_routes(routes, prefix: str = ""):
-    """Resolved routes plus route objects the walker could not classify."""
-    resolved: list[ResolvedRoute] = []
-    unresolved: list[UnresolvedRoute] = []
-    for route in routes:
-        if type(route).__name__ == "_IncludedRouter":
-            context = getattr(route, "include_context", None)
-            original = getattr(route, "original_router", None)
-            if original is None:
-                unresolved.append(UnresolvedRoute("_IncludedRouter", prefix))
-                continue
-            child_prefix = prefix + (getattr(context, "prefix", "") or "")
-            child_resolved, child_unresolved = walk_routes(original.routes, child_prefix)
-            resolved.extend(child_resolved)
-            unresolved.extend(child_unresolved)
-            continue
-        path = getattr(route, "path", None)
-        if path is None:
-            unresolved.append(UnresolvedRoute(type(route).__name__, prefix))
-            continue
-        methods = getattr(route, "methods", None) or {"GET"}
-        full = _normalize_path(prefix + path)
-        endpoint = getattr(route, "endpoint", None)
-        for method in methods:
-            resolved.append(ResolvedRoute(method, full, endpoint))
-    return resolved, unresolved
-
 
 def neck_program_routes(routes) -> tuple[set[tuple[str, str]], list[UnresolvedRoute]]:
     resolved, unresolved = walk_routes(routes)
