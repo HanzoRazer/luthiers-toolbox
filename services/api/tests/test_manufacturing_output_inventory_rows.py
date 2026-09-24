@@ -349,7 +349,8 @@ def test_probe_downloads_use_distinct_tool_ids():
         assert row["authority_key"] == key
         assert row["containment"] == "FAIL_CLOSED"
         assert "probe_patterns" in row["implementation_symbol"]
-    assert _row("POST", "/api/probe/boss/gcode")["containment"] == "LIVE_UNGOVERNED"
+    assert _row("POST", "/api/probe/boss/gcode")["containment"] == "FAIL_CLOSED"
+    assert _row("POST", "/api/probe/boss/gcode")["authority_key"] == "boss_probe_gcode"
     assert len({_row("POST", path)["authority_key"] for path in PROBE_KEYS}) == 5
 
 
@@ -448,4 +449,5 @@ def test_inventory_does_not_permit_and_keeps_drafts_ungoverned():
     # 60
     rows = _document()["rows"]
     assert all(row["containment"] != "PERMITTED_BY_AUTHORITY" for row in rows)
-    assert _row("POST", "/api/probe/boss/gcode/download")["containment"] == "LIVE_UNGOVERNED"
+    assert _row("POST", "/api/probe/boss/gcode/download")["containment"] == "FAIL_CLOSED"
+    assert _row("POST", "/api/probe/boss/gcode/download")["authority_key"] == "boss_probe_gcode"

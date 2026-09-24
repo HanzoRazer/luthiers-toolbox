@@ -20,7 +20,7 @@ from _manufacturing_output_testkit import walk_routes
 
 pytestmark = pytest.mark.allow_missing_request_id
 
-PINNED = "1ebc49610b1690ef7d761ab598758c5db8d6193c"
+PINNED = "cf3f1c131fbee4586d82780b865eb1d09af8a350"
 INVENTORY = Path(__file__).resolve().parents[1] / "governance" / "manufacturing_output_inventory.json"
 REPORT = Path(__file__).resolve().parents[1] / "governance" / "manufacturing_output_inventory.md"
 

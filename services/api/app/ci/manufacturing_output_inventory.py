@@ -131,7 +131,7 @@ def _snapshot_problems(document: dict, discovered: list[dict]) -> list[str]:
     fresh = build_document(discovered)
     problems: list[str] = []
     if document.get("base_sha") != BASE_SHA:
-        problems.append("base_sha is not the pinned CF-4 merge")
+        problems.append("base_sha is not the pinned base")
     if document.get("current") != fresh["current"]:
         problems.append(f"current counts drifted: {document.get('current')} != {fresh['current']}")
     if document.get("reconciliation") != fresh["reconciliation"]:

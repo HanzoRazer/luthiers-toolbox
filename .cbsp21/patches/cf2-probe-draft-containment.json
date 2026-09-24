@@ -1,0 +1,169 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_CF2_PROBE_CONTAIN_001",
+  "title": "LTB-CF2-PROBE-CONTAIN-001: fail-closed authority on ten draft probe emitters",
+  "intent": "On base cf3f1c131fbee4586d82780b865eb1d09af8a350, the ten live probe JSON and draft-download routes consult the five existing probe tool ids before generation. Production stays HTTP 409 SAFETY_BLOCKED. No generator is qualified.",
+  "change_type": "fix",
+  "behavior_change": "Ten probe routes change from live G-code emission to HTTP 409 SAFETY_BLOCKED before generation. The five download_governed routes keep their existing tool ids and event types.",
+  "risk_level": "high",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cf2-probe-draft-containment.json",
+      "services/api/app/cam/probe_service.py",
+      "services/api/app/ci/manufacturing_output_classify.py",
+      "services/api/app/ci/manufacturing_output_inventory.py",
+      "services/api/app/routers/probe/boss_router.py",
+      "services/api/app/routers/probe/corner_router.py",
+      "services/api/app/routers/probe/pocket_router.py",
+      "services/api/app/routers/probe/surface_z_router.py",
+      "services/api/app/routers/probe/vise_square_router.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "services/api/tests/test_probe_router.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cf2-probe-draft-containment.json",
+      "services/api/app/cam/probe_service.py",
+      "services/api/app/ci/manufacturing_output_classify.py",
+      "services/api/app/ci/manufacturing_output_inventory.py",
+      "services/api/app/routers/probe/boss_router.py",
+      "services/api/app/routers/probe/corner_router.py",
+      "services/api/app/routers/probe/pocket_router.py",
+      "services/api/app/routers/probe/surface_z_router.py",
+      "services/api/app/routers/probe/vise_square_router.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory.py",
+      "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "services/api/tests/test_probe_router.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Each probe family keeps one tool id. JSON uses event type {tool_id}_json and historical download uses {tool_id}_download. download_governed keeps its current event type. Permitted JSON responses keep ProbeOut and add governed headers. Permitted downloads use the existing governed attachment helper.",
+    "why": "LTB-CF2-INVENTORY-001 found these ten routes emitting machine instructions with no authority call.",
+    "why_not_redundant": "P-3 gated only the five download_governed routes and left the JSON and draft-download siblings emitting. This order contains those siblings without a new tool id or evaluator.",
+    "what_did_not_change": "No generator, geometry, or G-code text changed. No engine or resolve_mode was added. Polygon, geometry, rosette, and the other live-ungoverned families are untouched. No physical machine executes a program. Issue 401 stays open.",
+    "why_structural_extraction": "persist_authorized_probe_program delegates to the existing persist helper so the JSON carrier records the same decision the download carrier already records."
+  },
+  "verification": {
+    "commands_run": [
+      "Branch cursor/cf2-probe-draft-containment-46e5 was cut from origin/main cf3f1c131fbee4586d82780b865eb1d09af8a350.",
+      "cd services/api && python3 -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python3 -m pytest tests/rmos/test_cf2_probe_output_containment.py tests/rmos/test_p3_governed_route_inventory.py tests/rmos/test_p3_governed_route_refusals.py tests/test_probe_router.py tests/test_manufacturing_output_inventory.py tests/test_manufacturing_output_inventory_rows.py -q --no-cov -> 126 passed.",
+      "cd services/api && python3 -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json && python3 -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json && python3 -m app.ci.check_bare_except && python3 -m app.ci.check_duplication --threshold 100 && python3 -m app.ci.fence_checker_v2 && python3 -m app.ci.check_execution_class_compliance"
+    ],
+    "proofs": [
+      "Fifteen probe-output routes share the five existing tool ids. The ten new carriers refuse before generate_* with HTTP 409, lane governed, a run id, and no program hash.",
+      "A non-autouse fixture permits only those five tool ids. JSON keeps ProbeOut and persists that decision. Download returns a governed attachment. Other tool ids stay blocked.",
+      "Inventory moves exactly those ten rows to FAIL_CLOSED. Candidates stay 239. Fail-closed 25 to 35. Live-ungoverned 25 to 15. Polygon and geometry drafts stay live-ungoverned."
+    ],
+    "hardware": "No physical-machine execution. No generated program was sent to a machine."
+  },
+  "files": [
+    {
+      "path": "services/api/app/cam/probe_service.py",
+      "intent": "Persist a permitted JSON probe program under the caller's decision.",
+      "risk": "high",
+      "behavior_change": "Adds persist_authorized_probe_program. It does not evaluate feasibility or mint GREEN."
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_classify.py",
+      "intent": "Pin the inventory base to the #406 merge SHA.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/ci/manufacturing_output_inventory.py",
+      "intent": "Name the pinned-base check without calling it the CF-4 merge.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/routers/probe/boss_router.py",
+      "intent": "Gate boss JSON and draft download on boss_probe_gcode before generation.",
+      "risk": "high",
+      "behavior_change": "Both routes return HTTP 409 SAFETY_BLOCKED by default."
+    },
+    {
+      "path": "services/api/app/routers/probe/corner_router.py",
+      "intent": "Gate corner JSON and draft download on corner_probe_gcode before generation.",
+      "risk": "high",
+      "behavior_change": "Both routes return HTTP 409 SAFETY_BLOCKED by default."
+    },
+    {
+      "path": "services/api/app/routers/probe/pocket_router.py",
+      "intent": "Gate pocket JSON and draft download on pocket_probe_gcode before generation.",
+      "risk": "high",
+      "behavior_change": "Both routes return HTTP 409 SAFETY_BLOCKED by default."
+    },
+    {
+      "path": "services/api/app/routers/probe/surface_z_router.py",
+      "intent": "Gate surface-Z JSON and draft download on surface_z_probe_gcode before generation.",
+      "risk": "high",
+      "behavior_change": "Both routes return HTTP 409 SAFETY_BLOCKED by default."
+    },
+    {
+      "path": "services/api/app/routers/probe/vise_square_router.py",
+      "intent": "Gate vise-square JSON and draft download on vise_square_probe_gcode before generation.",
+      "risk": "high",
+      "behavior_change": "Both routes return HTTP 409 SAFETY_BLOCKED by default."
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.json",
+      "intent": "Record the ten probe rows as fail-closed.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.md",
+      "intent": "Publish the regenerated census.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "intent": "Prove the fifteen-route census, default 409, and test-only permit path.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_p3_governed_route_inventory.py",
+      "intent": "Move the ten routes into the enforced set without rewriting the original nine.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_manufacturing_output_inventory.py",
+      "intent": "Pin inventory tests to the #406 merge SHA.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_manufacturing_output_inventory_rows.py",
+      "intent": "Expect the boss JSON and download rows to be fail-closed.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_probe_router.py",
+      "intent": "Replace permissive production assertions with exact 409 refusals.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-24-LTB-CF2-PROBE-CONTAIN-001",
+    "risk_summary": {"critical": 0, "high": 1, "medium": 0, "low": 0},
+    "findings": [
+      "HIGH: ten previously live probe routes now fail closed. Production still has no permitting evaluator for these tool ids."
+    ]
+  }
+}

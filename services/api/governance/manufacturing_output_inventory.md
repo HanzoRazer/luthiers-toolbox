@@ -2,7 +2,7 @@
 
 Inventory coverage is not manufacturing qualification. `UNEXAMINED` does not mean safe. A listed authority key does not prove that enforcement occurs before generation.
 
-Pinned base SHA: `1ebc49610b1690ef7d761ab598758c5db8d6193c`
+Pinned base SHA: `cf3f1c131fbee4586d82780b865eb1d09af8a350`
 
 - OpenAPI paths: 1078
 - Live route operations: 1157
@@ -11,26 +11,21 @@ Pinned base SHA: `1ebc49610b1690ef7d761ab598758c5db8d6193c`
 - Delegates: 3
 - Non-emitting: 0
 - Unexamined: 189
-- Fail-closed: 25
+- Fail-closed: 35
 - Permitted by authority: 0
-- Live-ungoverned: 25
+- Live-ungoverned: 15
 - Unknown containment: 189
 - Not applicable: 0
 
 ## Authority layers
 
-- `manufacturing_output`: 11
-- `none`: 25
+- `manufacturing_output`: 21
+- `none`: 15
 - `readiness`: 14
 - `unknown`: 189
 
 ## Live-ungoverned families
 
-- `app.cam.probe_patterns.generate_boss_probe`: 2
-- `app.cam.probe_patterns.generate_corner_probe`: 2
-- `app.cam.probe_patterns.generate_pocket_probe`: 2
-- `app.cam.probe_patterns.generate_surface_z_probe`: 2
-- `app.cam.probe_patterns.generate_vise_square_probe`: 2
 - `app.cam.rosette.cnc.cnc_gcode_exporter.generate_gcode_from_toolpaths`: 2
 - `inline`: 2
 - `app.art_studio._inlay_gcode_addon.generate_inlay_gcode`: 1
