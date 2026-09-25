@@ -21,7 +21,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Added psycopg[binary] for SQLAlchemy's postgresql+psycopg dialect and a focused subprocess smoke test that imports app.db.session with that production URL shape without opening a database connection.",
+    "what_changed": "Added psycopg[binary] within major version 3 for SQLAlchemy's postgresql+psycopg dialect and a focused subprocess smoke test that imports app.db.session with that production URL shape without opening a database connection. The subprocess uses an explicit API working directory and bounded timeout.",
     "why": "The reliable-elegance Railway backend repeatedly crashes during auth_router import because app.db.session constructs the production engine with postgresql+psycopg while clean installs contain only psycopg2-binary.",
     "why_not_redundant": "psycopg2-binary provides the psycopg2 module used directly by app.core.rmos_db; it does not provide the psycopg module selected by SQLAlchemy's psycopg dialect. Both declarations have live consumers.",
     "what_did_not_change": "No driver replacement, database URL rewrite, SQLAlchemy pin, connection attempt, pool implementation, route, schema, migration, or production configuration changed.",
@@ -37,7 +37,8 @@
     "proofs": [
       "The production URL explicitly selects SQLAlchemy's psycopg v3 dialect.",
       "The legacy RMOS store still imports psycopg2 directly, so its existing dependency remains intact.",
-      "The regression test constructs the same engine class used at API startup but never connects to PostgreSQL."
+      "The regression test constructs the same engine class used at API startup but never connects to PostgreSQL.",
+      "The subprocess import is independent of the pytest caller's working directory and cannot hang the suite indefinitely."
     ],
     "hardware": "No hardware or manufacturing output involved."
   },
@@ -46,7 +47,7 @@
       "path": "services/api/requirements.txt",
       "intent": "Declare the psycopg v3 driver selected by the production SQLAlchemy URL.",
       "risk": "low",
-      "behavior_change": "Fresh installs include psycopg v3 and its binary distribution."
+      "behavior_change": "Fresh installs include psycopg v3 and its binary distribution without floating into a future incompatible major."
     },
     {
       "path": "services/api/tests/test_db_session_driver.py",

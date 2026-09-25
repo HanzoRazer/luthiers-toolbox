@@ -8,7 +8,7 @@ aiosqlite>=0.19.0
 sqlite-utils
 alembic>=1.13.0
 psycopg2-binary>=2.9.0  # Postgres driver (optional, for production)
-psycopg[binary]>=3.1.0  # SQLAlchemy postgresql+psycopg driver used by production DATABASE_URL
+psycopg[binary]>=3.1.0,<4.0  # SQLAlchemy postgresql+psycopg driver used by production DATABASE_URL
 httpx>=0.24.0
 
 # CAM Core & Geometry (Phase 1 - Foundation)

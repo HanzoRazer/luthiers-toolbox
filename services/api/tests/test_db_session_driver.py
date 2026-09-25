@@ -1,8 +1,12 @@
 """Dependency contract tests for the synchronous production database session."""
 
 import os
+from pathlib import Path
 import subprocess
 import sys
+
+
+API_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_production_psycopg_url_imports_session_without_connecting():
@@ -19,10 +23,12 @@ def test_production_psycopg_url_imports_session_without_connecting():
                 "assert engine.dialect.driver == 'psycopg'"
             ),
         ],
+        cwd=API_ROOT,
         env=env,
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
 
     assert result.returncode == 0, result.stderr
