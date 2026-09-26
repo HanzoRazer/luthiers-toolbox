@@ -1,0 +1,108 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CF2_ROSETTE_OUTPUT_CONTAINMENT_001",
+  "title": "Contain the Rosette /export-cnc manufacturing emitter behind RMOS authority (Phase A)",
+  "intent": "Resolve the shared manufacturing-output authority before any Rosette /export-cnc generation, persist the exact authorized G-code, and emit governed headers. Containment and authority convergence only \u2014 not Rosette qualification, new machining physics, or a route redesign.",
+  "change_type": "fix",
+  "behavior_change": "POST /api/rmos/rosette/export-cnc now resolves compute_rosette_feasibility (via require_manufacturing_output_authority) before segmentation, slices, CNC export, G-code, or job-id creation. A blocking decision (RED/UNKNOWN/ERROR) returns HTTP 409 SAFETY_BLOCKED with no program and a single BLOCKED audit artifact; a permitted decision persists the exact returned G-code once and stamps X-Run-ID, X-ToolBox-Lane: governed, and X-GCode-SHA256. Impossible geometry is rejected before authority as a handled non-authority error. /rosette/design is unchanged in Phase A.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cf2-rosette-output-containment.json",
+      "services/api/app/rmos/rosette_cam_router.py",
+      "services/api/app/rmos/rosette_output_authority.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cf2-rosette-output-containment.json",
+      "services/api/app/rmos/rosette_cam_router.py",
+      "services/api/app/rmos/rosette_output_authority.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added the pure helpers _rosette_ring_feasibility_summary (single-ring geometry derivation, raising ValueError for impossible geometry) and _set_governed_output_headers in a new module app/rmos/rosette_output_authority.py (a narrow extraction required by the 500-line file-size ratchet), and wired require_manufacturing_output_authority + persist_authorized_manufacturing_output into export_rosette_cnc before any generation. Added tests/rmos/test_cf2_rosette_output_containment.py (REX-01..14). Regenerated the manufacturing-output inventory JSON/MD so /api/rmos/rosette/export-cnc moves LIVE_UNGOVERNED -> FAIL_CLOSED. Updated the probe containment test's live-ungoverned count 15 -> 14.",
+    "why": "POST /api/rmos/rosette/export-cnc was a CONFIRMED_EMITTER / LIVE_UNGOVERNED / authority_layer=none route: it generated CNC G-code with no server-side authority. This converges it onto the existing RMOS manufacturing-output authority so blocking decisions cannot emit a program and permitted decisions are persisted under the exact decision that authorized them.",
+    "why_not_redundant": "No authority previously gated this route; the route's internal export_bundle.safety_decision is an advisory field, not the RMOS manufacturing-output authority, and did not fail closed before generation. The shared authority service (require/persist) already exists but was not called by this route. This adds the missing pre-generation gate and the audit persistence, changing only this one emitter.",
+    "what_did_not_change": "No machining physics, geometry algorithms, G-code generators, feasibility rules/thresholds/risk mappings, authentication, response JSON fields (beyond the intentional 409 refusal path and governed headers), persistence stores/schemas, or /rosette/design behavior. The shared classifier app/ci/manufacturing_output_classify.py was NOT modified.",
+    "why_structural_extraction": "The feasibility-summary and header helpers were extracted into app/rmos/rosette_output_authority.py because adding them inline pushed rosette_cam_router.py past the 500-line file-size ratchet; the order explicitly permits a narrow extraction in that case. The route still uses compute_rosette_feasibility only through the shared require_manufacturing_output_authority, not by calling the evaluator directly."
+  },
+  "order_deviations": {
+    "tool_id": "The order's Decision #5.2 froze tool_id=\"rosette\" (bare). Reproduced evidence: resolve_mode(\"rosette\") -> \"unknown\" -> no engine -> UNKNOWN -> always 409, so the bare id can never reach compute_rosette_feasibility. Corrected to tool_id=\"rosette:export_cnc\" (mode=\"rosette\"), matching the profiling:gcode precedent, so the real evaluator is reached (natural YELLOW permit observed).",
+    "containment_disposition": "The order's Decision #5.12 / \u00a78 / REX-14 required containment=PERMITTED_BY_AUTHORITY and authority_key=rosette. Reproduced evidence: the static classifier _containment never emits PERMITTED_BY_AUTHORITY (it is a dead enum value; governed-before-generation-with-key classifies as FAIL_CLOSED), and --check forbids hand-editing generated row facts. Per owner true-A ruling, the row is FAIL_CLOSED with authority_key=rosette:export_cnc and the shared classifier is left unmodified. FAIL_CLOSED is the static containment label (authority runs before generation and blocks when unavailable/blocking); it does not mean every request is refused \u2014 the real evaluator still returns a non-blocking YELLOW. Decision #5.12 and the earlier exact-allowlist probe-assertion ruling are superseded by this classifier-contract evidence; the PERMITTED_BY_AUTHORITY set remains empty and the probe global no-permitted assertion is unchanged."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python -m pytest tests/rmos/test_cf2_rosette_output_containment.py -q --no-cov",
+      "cd services/api && python -m pytest tests/test_rosette_cnc_export_endpoint_smoke.py tests/test_rmos_rosette_cnc_smoke.py tests/test_rmos_endpoint_smoke.py tests/rmos/test_cf2_probe_output_containment.py tests/rmos/test_manufacturing_authority_stage2.py tests/rmos/test_rmos_feasibility_authority.py -q --no-cov"
+    ],
+    "proofs": [
+      "Authority precedes all generation and persistence (AST source-order test REX-05; a misordered fixture fails).",
+      "Blocked request returns 409 SAFETY_BLOCKED with no program, governed lane, X-Run-ID, no X-GCode-SHA256, and exactly one BLOCKED artifact with no gcode hash and no OK artifact (REX-06/07/08).",
+      "Permitted request (real YELLOW) returns the existing JSON contract, calls each of the four export-stage generators exactly once, and X-GCode-SHA256 == sha256(returned gcode) == persisted artifact hash, with run ids matching (REX-09/10).",
+      "Persisted OK artifact carries the authority context's risk (YELLOW, not a synthesized GREEN), tool_id rosette:export_cnc, mode rosette, event_type rosette_export_cnc_execution (REX-11).",
+      "Evaluator request contains exactly the derived facts (outer/inner diameter, ring_count=1, material_id, rpm) and no invented depth/tool-diameter/pattern (REX-04); impossible inner geometry never reaches authority (REX-03).",
+      "Inventory moves only /api/rmos/rosette/export-cnc to FAIL_CLOSED; /rosette/design stays LIVE_UNGOVERNED; live-ungoverned total is 14; PERMITTED_BY_AUTHORITY set is empty (REX-14).",
+      "Existing GRBL/FANUC/material/spindle/alignment/safety/runtime/default-payload smoke contract remains green (REX-13 and tests/test_rosette_cnc_export_endpoint_smoke.py)."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output. G-code is generated in tests only and never sent to a controller."
+  },
+  "files": [
+    {
+      "path": "services/api/app/rmos/rosette_cam_router.py",
+      "intent": "Wire manufacturing-output authority before generation on /export-cnc using the extracted helpers.",
+      "risk": "medium",
+      "behavior_change": "Blocking authority -> 409 with no program; permitted authority -> persisted program and governed headers. No change to generators or /rosette/design."
+    },
+    {
+      "path": "services/api/app/rmos/rosette_output_authority.py",
+      "intent": "New module holding the pure single-ring feasibility-summary and governed-header helpers, extracted to satisfy the file-size ratchet.",
+      "risk": "low",
+      "behavior_change": "No behavior change; pure helpers with no persistence, evaluator, response, or generator calls."
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "intent": "Own the census, derivation, ordering, refusal, permitted-execution, persistence, hash, decision-preservation, isolation, contract, and inventory-delta proofs (REX-01..14).",
+      "risk": "low",
+      "behavior_change": "New tests only."
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "intent": "Update the exact live-ungoverned count assertion 15 -> 14 to reflect the regenerated inventory.",
+      "risk": "low",
+      "behavior_change": "Assertion count only. No probe FAIL_CLOSED or no-permitted assertion weakened."
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.json",
+      "intent": "Regenerated inventory: /api/rmos/rosette/export-cnc becomes FAIL_CLOSED / manufacturing_output / rosette:export_cnc / before_generation.",
+      "risk": "low",
+      "behavior_change": "Generated route facts for one row; no runtime behavior."
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.md",
+      "intent": "Regenerated Markdown mirror of the inventory JSON (fail-closed 35->36, live-ungoverned 15->14).",
+      "risk": "low",
+      "behavior_change": "Documentation regeneration only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-24-CF2-ROSETTE-OUTPUT-CONTAINMENT-001",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 1, "low": 4},
+    "findings": [
+      "MEDIUM: this change adds a fail-closed authority gate to a live manufacturing-output emitter. Risk concentrates in summary truthfulness, authority-before-generation ordering, and hash identity, all covered by direct tests (REX-04/05/10/11). No _experimental/ files are touched."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Containment only. The shared feasibility classifier and evaluator are unchanged; the route uses the real named evaluator through the shared authority. /rosette/design is deferred to Phase B behind a separate owner GO."
+  }
+}
