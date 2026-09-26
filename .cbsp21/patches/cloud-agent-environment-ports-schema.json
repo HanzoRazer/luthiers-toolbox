@@ -1,0 +1,62 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLOUD_AGENT_ENVIRONMENT_PORTS_SCHEMA_001",
+  "title": "fix(cursor): drop the unparseable ports field from the cloud agent environment",
+  "intent": "Correct a defect merged in PR #408 (CLOUD_AGENT_ENVIRONMENT_001). Cursor rejects .cursor/environment.json because `ports` is declared as a list of bare integers, which its current parser does not accept, so no Cloud Agent can start. Remove the field rather than guess at an undocumented object shape.",
+  "change_type": "fix",
+  "behavior_change": "Cursor Cloud Agent environments can be created again. No effect on the repository's own build, tests, CI or runtime: .cursor/environment.json is consumed only by Cursor's cloud agent tooling. The two terminal definitions are unchanged, so the api terminal still binds 127.0.0.1:8010 and the client terminal still runs the Vite dev server; only the declarative `ports` hint is gone, and Cursor detects listening ports and offers forwarding without it.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cloud-agent-environment-ports-schema.json",
+      ".cursor/environment.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cloud-agent-environment-ports-schema.json",
+      ".cursor/environment.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Removed `\"ports\": [8010, 5173]` and the now-trailing comma after the `terminals` array. Two lines become one; nothing else in the file is touched.",
+    "why_removal_rather_than_a_reshape": "The failing value is a list of integers and the parser wants something else. Reshaping would mean guessing an object schema that Cursor's current documentation does not specify, so a guess could fail the same way with a less obvious error. Cursor detects listening ports at runtime and offers forwarding through the agent UI, so the field is not required for the api (8010) or client (5173) terminals to be reachable.",
+    "why_not_redundant": "No other change removes this field. It was introduced by PR #408, merged as 7911dd3e, and is present on origin/main.",
+    "what_did_not_change": "`name`, `user`, `install`, and both `terminals` entries are byte-identical, verified by parsing the file before and after and comparing every remaining key and value. .cursor/install.sh is untouched. No application code, dependency, workflow or governance artifact is involved."
+  },
+  "verification": {
+    "commands_run": [
+      "git show origin/main:.cursor/environment.json -> confirmed `\"ports\": [8010, 5173]` present on main at 7911dd3e",
+      "gh pr view 408 -> MERGED 2026-09-26, merge commit 7911dd3e (the defect is on main, not in an open PR)",
+      "python json.load before and after -> both parse; `ports` present before, absent after",
+      "key/value comparison of every remaining field -> identical; terminals ['api', 'client'] preserved",
+      "git diff -> two lines removed, one added, single file",
+      "python scripts/ci/check_cbsp21_patch_input.py",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <merge-base diff>"
+    ],
+    "not_verified_locally": "Whether Cursor's parser accepts the corrected file cannot be checked from this repository; it is confirmed only by a Cloud Agent environment build succeeding after merge. The claim that the integer list is the rejected construct comes from the reported Cursor error, not from anything observable here."
+  },
+  "files": [
+    {
+      "path": ".cursor/environment.json",
+      "intent": "Remove the field Cursor's parser rejects.",
+      "risk": "low",
+      "behavior_change": "Cloud agent environments build again; port forwarding falls back to Cursor's automatic detection."
+    },
+    {
+      "path": ".cbsp21/patches/cloud-agent-environment-ports-schema.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-26-CLOUD-AGENT-PORTS-SCHEMA",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 1 },
+    "findings": [
+      "LOW: .cursor/environment.json is consumed by an external tool whose schema this repository cannot validate in CI, so a malformed field passes every gate here and only fails when a Cloud Agent is started. That is how the defect in PR #408 reached main with all checks green. Nothing in this patch changes that exposure."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Single-field removal from an external tool's configuration file. No repository build, test, CI or runtime surface is affected."
+  }
+}
