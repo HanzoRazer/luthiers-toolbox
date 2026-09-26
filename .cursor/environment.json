@@ -1,0 +1,16 @@
+{
+  "name": "Production Shop (luthiers-toolbox)",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "api",
+      "command": "cd services/api && source .venv/bin/activate && export ART_STUDIO_DB_PATH=/tmp/art_studio.db RMOS_RUNS_DIR=\"$PWD/../../data/runs\" RMOS_RUNS_V2_ENABLED=true PYTHONPATH=\"$PWD:$PWD/../..\" && uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload"
+    },
+    {
+      "name": "client",
+      "command": "cd packages/client && npm run dev"
+    }
+  ],
+  "ports": [8010, 5173]
+}

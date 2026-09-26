@@ -1,0 +1,68 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLOUD_AGENT_ENVIRONMENT_001",
+  "title": "Cloud Agent development environment bootstrap",
+  "intent": "Add a reproducible Cloud Agent bootstrap and persistent API/client terminals while enforcing the client workspace's declared Node engine floor.",
+  "change_type": "chore",
+  "behavior_change": "Cloud Agent setup installs backend and client dependencies, prepares local runtime directories, and starts the API and Vite development servers. The Python venv package follows the image's default python3 minor. If the base image's Node does not satisfy packages/client/package.json, the agent-only bootstrap installs the current Node 22 release before npm ci.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cloud-agent-environment.json",
+      ".cursor/environment.json",
+      ".cursor/install.sh"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cloud-agent-environment.json",
+      ".cursor/environment.json",
+      ".cursor/install.sh"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added the Cloud Agent environment definition, an idempotent dependency bootstrap, a default-python-compatible venv package, an explicit Node engine-floor check with pinned agent-only installer remediation, and this owned CBSP21 declaration.",
+    "why": "Fresh Cloud Agents had no repository-managed way to install or boot the backend and client. The current base image also provides Node 22.14.0, below the client workspace's declared supported 22.x floor.",
+    "why_not_redundant": "No .cursor environment definition exists on the base branch. Existing Docker and GitHub Actions Node guards do not configure or validate the separate Cloud Agent image.",
+    "what_did_not_change": "No application source, API contract, production deployment configuration, dependency manifest, lockfile, database schema, or manufacturing behavior changed.",
+    "why_structural_extraction": "The bootstrap remains in .cursor/install.sh and reads the existing package.json engine authority through scripts/check-node-engine.mjs rather than duplicating semver logic."
+  },
+  "verification": {
+    "commands_run": [
+      "bash -n .cursor/install.sh",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/cloud-agent-environment.json .cursor/environment.json .cursor/install.sh",
+      "python scripts/ci/check_cbsp21_patch_input.py --base fb052a4ae9bd9d34ab25bf3106f924f79cb74bae --head HEAD",
+      "cd packages/client && npm run check:node"
+    ],
+    "proofs": [
+      "The manifest owns every file in the PR.",
+      "The install script intentionally floats within Node 22 like packages/client/.nvmrc and CI, then validates the resolved runtime against packages/client/package.json before npm ci.",
+      "The python3-venv package follows the Cloud Agent image's default python3 minor instead of assuming Python 3.12.",
+      "The existing environment commands bind the API to the Vite proxy target on port 8010 and expose Vite on port 5173."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": ".cursor/environment.json",
+      "intent": "Define Cloud Agent installation, persistent backend/client terminals, and forwarded development ports.",
+      "risk": "low",
+      "behavior_change": "Fresh Cloud Agents can boot the API on 8010 and Vite client on 5173."
+    },
+    {
+      "path": ".cursor/install.sh",
+      "intent": "Install system, backend, and client dependencies and prepare local runtime directories using a supported Node release.",
+      "risk": "low",
+      "behavior_change": "Cloud Agent images install venv support for their default python3 minor. Images below the declared Node floor install the current Node 22 patch release, then must pass npm run check:node before npm ci."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-24-CLOUD-AGENT-ENVIRONMENT-001",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: the agent-only bootstrap uses a pinned installer to install the current Node 22 patch release globally when the base image is below the repository's declared engine floor; the major-line float matches packages/client/.nvmrc and CI, and the package.json engine guard rejects unsupported resolutions. This does not alter production hosts or application dependencies."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "The global Node installation is confined to the disposable Cloud Agent image. Floating within Node 22 is intentional repository policy for security patch uptake; npm run check:node remains the fail-closed runtime validation."
+  }
+}
