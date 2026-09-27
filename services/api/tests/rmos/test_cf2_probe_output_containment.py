@@ -356,4 +356,6 @@ def test_inventory_moves_only_the_ten_probe_rows():
     assert rows[("POST", "/api/cam/polygon_offset.nc")]["containment"] == "LIVE_UNGOVERNED"
     assert rows[("POST", "/api/geometry/export_gcode")]["containment"] == "LIVE_UNGOVERNED"
     ungoverned = [row for row in rows.values() if row["containment"] == "LIVE_UNGOVERNED"]
-    assert len(ungoverned) == 15
+    # CF2-ROSETTE-OUTPUT-CONTAINMENT-001 (Phase A) moved
+    # POST /api/rmos/rosette/export-cnc from LIVE_UNGOVERNED to FAIL_CLOSED: 15 -> 14.
+    assert len(ungoverned) == 14

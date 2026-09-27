@@ -11,25 +11,25 @@ Pinned base SHA: `cf3f1c131fbee4586d82780b865eb1d09af8a350`
 - Delegates: 3
 - Non-emitting: 0
 - Unexamined: 189
-- Fail-closed: 35
+- Fail-closed: 36
 - Permitted by authority: 0
-- Live-ungoverned: 15
+- Live-ungoverned: 14
 - Unknown containment: 189
 - Not applicable: 0
 
 ## Authority layers
 
-- `manufacturing_output`: 21
-- `none`: 15
+- `manufacturing_output`: 22
+- `none`: 14
 - `readiness`: 14
 - `unknown`: 189
 
 ## Live-ungoverned families
 
-- `app.cam.rosette.cnc.cnc_gcode_exporter.generate_gcode_from_toolpaths`: 2
 - `inline`: 2
 - `app.art_studio._inlay_gcode_addon.generate_inlay_gcode`: 1
 - `app.calculators.fret_slots_cam.generate_fret_slot_toolpaths`: 1
+- `app.cam.rosette.cnc.cnc_gcode_exporter.generate_gcode_from_toolpaths`: 1
 - `app.rmos.api_contracts.generate_toolpaths_for_design`: 1
 - `app.routers.geometry.bundle_router.export_bundle`: 1
 - `app.routers.geometry.bundle_router.export_bundle_multi`: 1

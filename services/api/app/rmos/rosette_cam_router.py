@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 from dataclasses import asdict
 
 # Geometry-related exceptions (rosette tile/slice logic may use Shapely downstream)
@@ -37,7 +37,15 @@ from ..cam.rosette.cnc import (
     generate_gcode_from_toolpaths,
 )
 from ..services.art_jobs_store import get_art_job, _load_jobs
-
+from .manufacturing_output_authority import (
+    persist_authorized_manufacturing_output,
+    require_manufacturing_output_authority,
+)
+from .rosette_output_authority import (
+    ROSETTE_MODE,
+    _rosette_ring_feasibility_summary,
+    _set_governed_output_headers,
+)
 
 router = APIRouter(tags=["rmos", "rosette", "cam"])
 
@@ -294,8 +302,17 @@ def preview_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
 
 
 @router.post("/rosette/export-cnc")
-def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
-    """Export rosette to CNC-ready G-code format."""
+def export_rosette_cnc(
+    payload: Dict[str, Any] = None, response: Response = None
+) -> Dict[str, Any]:
+    """Export rosette to CNC-ready G-code format.
+
+    Manufacturing-output authority is resolved before any segmentation, slice
+    generation, CNC export, G-code generation, or job-id creation. A blocking
+    decision raises HTTP 409 (propagated unchanged) with no program. Parsing and
+    pure summary derivation may precede authority; a geometry error there is a
+    handled non-authority failure.
+    """
     if payload is None:
         payload = {}
 
@@ -304,6 +321,18 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
         from datetime import datetime
 
         ring = _parse_ring_config(payload.get("ring", payload))
+
+        # Authority before any manufacturing generation. The summary is derived
+        # from the normalized ring; impossible geometry raises ValueError here
+        # (a handled non-authority failure) rather than reaching authority.
+        summary = _rosette_ring_feasibility_summary(ring, payload)
+        authority = require_manufacturing_output_authority(
+            tool_id="rosette:export_cnc",
+            mode=ROSETTE_MODE,
+            event_type="rosette_export_cnc",
+            request_summary=summary,
+        )
+
         tile_count_override = payload.get("tile_count")
 
         segmentation = compute_tile_segmentation(ring, tile_count_override)
@@ -356,6 +385,14 @@ def export_rosette_cnc(payload: Dict[str, Any] = None) -> Dict[str, Any]:
         gcode = generate_gcode_from_toolpaths(export_bundle.toolpaths, post_config)
 
         job_id = f"JOB-ROSETTE-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+
+        gcode_hash = persist_authorized_manufacturing_output(
+            context=authority,
+            gcode_text=gcode,
+            meta={"job_id": job_id, "ring_id": ring.ring_id},
+        )
+        if response is not None:
+            _set_governed_output_headers(response, authority, gcode_hash)
 
         return {
             "ok": True,
