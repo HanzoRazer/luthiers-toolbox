@@ -11,6 +11,5 @@
       "name": "client",
       "command": "cd packages/client && npm run dev"
     }
-  ],
-  "ports": [8010, 5173]
+  ]
 }
