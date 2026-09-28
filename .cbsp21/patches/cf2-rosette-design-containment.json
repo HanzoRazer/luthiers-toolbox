@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CF2_ROSETTE_DESIGN_CONTAINMENT_003R",
+  "title": "Contain the Rosette /design multi-ring emitter behind RMOS authority (CF2 Phase B)",
+  "intent": "Move POST /api/rmos/rosette/design from LIVE_UNGOVERNED to fail-closed manufacturing-output containment: resolve authority exactly once for the complete design, before the ring loop and all generation, and persist the single combined program. Containment only \u2014 not qualification, not new physics, not a route redesign. Depends on Phase A (/export-cnc, merged as 2bd9102a).",
+  "change_type": "fix",
+  "review_follow_up": {
+    "finding": "Authority summaries previously lowercased the requested material verbatim while CNC generation silently fell back to hardwood for missing, blank, or unsupported values.",
+    "correction": "A single _canonical_rosette_material helper now returns the canonical material_id and MaterialType together. Both /design and /export-cnc summaries and generators use it, preserving the established hardwood fallback while making the recorded authority fact truthful.",
+    "tests": "Supported, null, and unsupported values are covered; route tests prove both generators receive hardwood for an unsupported request and both persisted request_summary objects record material_id=hardwood.",
+    "scope_clarification": "This review correction supersedes earlier statements below that /export-cnc is untouched. Its response contract, generation result, and fallback are unchanged; only authority-summary consistency is corrected."
+  },
+  "behavior_change": "POST /api/rmos/rosette/design now derives one complete-design feasibility summary and resolves compute_rosette_feasibility (via require_manufacturing_output_authority, tool_id=rosette:design) once, before any segmentation/slice/CNC-export/G-code/job-id work. A blocking decision (RED/UNKNOWN/ERROR) returns HTTP 409 SAFETY_BLOCKED with no ring output and exactly one BLOCKED audit artifact; a permitted decision generates every ring as before, persists the single combined_gcode once, and stamps X-Run-ID / X-ToolBox-Lane: governed / X-GCode-SHA256. The missing/empty-rings early return is preserved and creates no authority or persistence artifact. Existing response fields and ring order are unchanged except for governed headers. /export-cnc is untouched.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cf2-rosette-design-containment.json",
+      "services/api/app/rmos/rosette_cam_router.py",
+      "services/api/app/rmos/rosette_output_authority.py",
+      "services/api/tests/rmos/test_cf2_rosette_design_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cf2-rosette-design-containment.json",
+      "services/api/app/rmos/rosette_cam_router.py",
+      "services/api/app/rmos/rosette_output_authority.py",
+      "services/api/tests/rmos/test_cf2_rosette_design_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added _rosette_design_feasibility_summary (pure complete-design aggregation) to rosette_output_authority.py and generalized the module docstring. Wired require_manufacturing_output_authority(tool_id=rosette:design) into design_rosette once before the loop; injected Response; preserved the empty-rings early return; persisted combined_gcode once with meta={ring_count, ring_ids, job_ids}; set governed headers. Added tests/rmos/test_cf2_rosette_design_containment.py (RDS-01..38 + pattern regressions). Updated Phase A REX-14 to recognize /design's transition (keeping /export-cnc governed). Updated the probe live-ungoverned count 14->13. Regenerated the inventory JSON/MD so /design moves LIVE_UNGOVERNED -> FAIL_CLOSED.",
+    "why": "POST /api/rmos/rosette/design was CONFIRMED_EMITTER / LIVE_UNGOVERNED: it generated per-ring and combined G-code with no server-side authority and no governed persistence. This converges it onto the existing RMOS manufacturing-output authority so a blocked design emits no ring output and a permitted design is persisted once under the exact authorizing decision.",
+    "why_not_redundant": "No prior change gates /design. Phase A governed only /export-cnc. The shared authority/persistence services exist but /design did not call them. This adds the missing single pre-loop gate and the single combined-program persistence.",
+    "what_did_not_change": "No machining physics, geometry algorithms, G-code generators, feasibility rules/thresholds/risk mappings, authentication, shared authority-service semantics, or /export-cnc behavior. The shared classifier app/ci/manufacturing_output_classify.py was NOT modified. Response body fields and ring order are unchanged except governed headers.",
+    "why_structural_extraction": "The complete-design summary helper lives alongside the single-ring helper in rosette_output_authority.py (no new module). The route uses compute_rosette_feasibility only through the shared require_manufacturing_output_authority."
+  },
+  "pattern_disposition": {
+    "summary": "Owner ruling (A): pattern affects the emitted program via tile-count parity but the evaluator does not consume pattern_type; include a truthful pattern_type plus pattern_types diagnostic, do not claim the evaluator assessed pattern.",
+    "pattern_affects_emitted_program": "YES \u2014 reproduced: identical geometry across patterns yields tile_count 32 (checkerboard/spanish_wave/herringbone; force_even) vs 31 (radial/solid), producing different G-code (sha a1bb57ec\u2026 vs bed40711\u2026). /design passes the ring dict (carrying pattern) into compute_tile_segmentation.",
+    "evaluator_consumes_pattern_type": "NO \u2014 reproduced: feasibility_scorer.score_design_feasibility never references pattern_type; compute_rosette_feasibility returns identical YELLOW/81.82 for omitted/checkerboard/mixed/radial.",
+    "authority_basis": "geometry (outer/inner diameter), ring_count, material, and RPM.",
+    "summary_representation": "pattern_type = the single normalized pattern when uniform, else 'mixed'; pattern_types = sorted unique normalized patterns (an ignored extra field retained in the persisted request_summary as diagnostics).",
+    "future_work": "Closing evaluator pattern-awareness (scoring on tile pattern) is separate future work; not repaired in this increment."
+  },
+  "verification": {
+    "commands_run": [
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python -m pytest tests/rmos/test_cf2_rosette_design_containment.py -q --no-cov",
+      "cd services/api && python -m pytest tests/rmos/test_cf2_rosette_output_containment.py tests/rmos/test_cf2_probe_output_containment.py tests/test_rosette_cnc_export_endpoint_smoke.py tests/test_rmos_rosette_cnc_smoke.py tests/test_rmos_endpoint_smoke.py tests/rmos/test_manufacturing_authority_stage2.py tests/rmos/test_rmos_feasibility_authority.py -q --no-cov"
+    ],
+    "proofs": [
+      "Authority runs exactly once, outside and before the ring loop and all generation/persistence (AST tests RDS-11/13; misordered fixture RDS-14; runtime once RDS-12/25).",
+      "Blocked design (RED/UNKNOWN/ERROR) -> 409 SAFETY_BLOCKED, no generator, no partial/first-ring program, exactly one BLOCKED artifact, no gcode hash, governed refusal headers without X-GCode-SHA256 (RDS-15..22).",
+      "Permitted multi-ring design generates each ring once, persists exactly one OK artifact, and X-GCode-SHA256 == sha256(combined_gcode) == persisted hash, with matching run ids and real YELLOW preserved (RDS-23..31).",
+      "Artifact meta lists every ring_id and job_id; persisted request_summary retains pattern_type and pattern_types (RDS-32, pattern regression).",
+      "Summary aggregates the complete design (max outer / min inner, exact ring_count, route-level material/RPM) with no invented depth/tool-diameter/feed/petal (RDS-02..07); invalid geometry fails before authority (RDS-08).",
+      "Inventory: /design LIVE_UNGOVERNED -> FAIL_CLOSED (rosette:design, before_generation); /export-cnc unchanged; live-ungoverned 14->13; permitted-by-authority 0; probe census unchanged (RDS-33..38).",
+      "Pattern affects emitted program (tile parity) but not evaluator risk (pattern regressions)."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output. G-code is generated in tests only and never sent to a controller."
+  },
+  "files": [
+    {"path": "services/api/app/rmos/rosette_cam_router.py", "intent": "Authority once before the /design loop; persist combined_gcode once; governed headers; preserve empty-rings return.", "risk": "medium", "behavior_change": "Blocking -> 409 no output; permitted -> persisted combined program + governed headers. /export-cnc untouched."},
+    {"path": "services/api/app/rmos/rosette_output_authority.py", "intent": "Add pure complete-design summary helper; generalize module docstring.", "risk": "low", "behavior_change": "No behavior change; pure helper."},
+    {"path": "services/api/tests/rmos/test_cf2_rosette_design_containment.py", "intent": "Focused /design containment suite (RDS-01..38 + pattern regressions).", "risk": "low", "behavior_change": "New tests only."},
+    {"path": "services/api/tests/rmos/test_cf2_rosette_output_containment.py", "intent": "Update REX-14 to recognize /design transition; /export-cnc contracts preserved.", "risk": "low", "behavior_change": "Assertion update only; no Phase A contract weakened."},
+    {"path": "services/api/tests/rmos/test_cf2_probe_output_containment.py", "intent": "Update the exact live-ungoverned count 14->13.", "risk": "low", "behavior_change": "Count assertion only; probe invariants preserved."},
+    {"path": "services/api/governance/manufacturing_output_inventory.json", "intent": "Regenerated: /design -> FAIL_CLOSED / manufacturing_output / rosette:design / before_generation.", "risk": "low", "behavior_change": "Generated route facts for one row."},
+    {"path": "services/api/governance/manufacturing_output_inventory.md", "intent": "Regenerated Markdown mirror (fail-closed 36->37, live-ungoverned 14->13).", "risk": "low", "behavior_change": "Documentation regeneration only."}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-28-CF2-ROSETTE-DESIGN-CONTAINMENT-003R",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 1, "low": 4},
+    "findings": [
+      "MEDIUM: adds a fail-closed authority gate to a live multi-ring manufacturing emitter. Risk concentrates in single-evaluation cardinality, authority-before-loop ordering, partial-output prevention, and combined-hash identity, all covered by direct tests. No _experimental/ files touched.",
+      "LOW: pattern affects the emitted program via tile-count parity but the manufacturing-output evaluator does not consume pattern_type; disclosed as a documented limitation (pattern_type/pattern_types are truthful but decision-neutral), not repaired here."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Containment only. Shared classifier and evaluator unchanged; /export-cnc unchanged; evaluator pattern-awareness deferred to future work."
+  }
+}

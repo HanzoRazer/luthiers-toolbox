@@ -48,6 +48,7 @@ GENERATOR_NAMES = (
 )
 
 VALID_BODY = {
+    "material": "unsupported-test-material",
     "ring": {
         "ring_id": 1,
         "radius_mm": 50.0,
@@ -137,12 +138,14 @@ def rosette_permit(monkeypatch):
 
 def _count_generators(monkeypatch) -> dict[str, int]:
     counts = {name: 0 for name in GENERATOR_NAMES}
+    counts["materials"] = []
     for name in GENERATOR_NAMES:
         real = getattr(rcr, name)
 
         def make(real_fn, key):
             def wrapped(*args, **kwargs):
                 counts[key] += 1
+                if key == "build_ring_cnc_export": counts["materials"].append(kwargs["material"].value)
                 return real_fn(*args, **kwargs)
 
             return wrapped
@@ -228,6 +231,8 @@ def test_rex02_summary_derivation_exact_and_omits_invented_facts():
         "tool_id",
     ):
         assert absent not in summary
+    fallback_id, fallback_material = rcr._canonical_rosette_material("metal")
+    assert (fallback_id, fallback_material.value) == ("hardwood", "hardwood")
 
 
 # REX-03 invalid inner geometry
@@ -395,6 +400,7 @@ def test_rex09_permitted_execution_calls_each_stage_once(client, memory_store, m
     assert body["gcode"]
     assert body["job_id"].startswith("JOB-ROSETTE-")
     assert all(counts[name] == 1 for name in GENERATOR_NAMES), counts
+    assert counts["materials"] == ["hardwood"]
 
 
 def test_rex10_hash_identity_and_governed_headers(client, memory_store):
@@ -409,6 +415,7 @@ def test_rex10_hash_identity_and_governed_headers(client, memory_store):
     assert len(ok) == 1
     assert ok[0].hashes.gcode_sha256 == digest
     assert ok[0].run_id == run_id
+    assert ok[0].request_summary["material_id"] == "hardwood"
 
 
 def test_rex11_persisted_decision_is_the_authority_decision(client, memory_store):
@@ -479,10 +486,11 @@ def test_rex14_inventory_delta_moves_only_export_cnc():
     assert export_row["authority_key"] == EXPORT_TOOL_ID
     assert export_row["authority_order"] == "before_generation"
 
-    # /design stays live-ungoverned in Phase A.
-    assert rows[("POST", DESIGN_PATH)]["containment"] == "LIVE_UNGOVERNED"
+    # Phase B (CF2-ROSETTE-DESIGN-CONTAINMENT-003R) moved /design to FAIL_CLOSED;
+    # /export-cnc (asserted above) remains governed. Live-ungoverned 14 -> 13.
+    assert rows[("POST", DESIGN_PATH)]["containment"] == "FAIL_CLOSED"
 
     ungoverned = [r for r in document["rows"] if r["containment"] == "LIVE_UNGOVERNED"]
-    assert len(ungoverned) == 14
+    assert len(ungoverned) == 13
     # true-A: the PERMITTED_BY_AUTHORITY set remains empty.
     assert all(r["containment"] != "PERMITTED_BY_AUTHORITY" for r in document["rows"])

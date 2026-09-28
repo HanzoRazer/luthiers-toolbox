@@ -29,7 +29,6 @@ from ..cam.rosette.tile_segmentation import (
 )
 from ..cam.rosette.rosette_cnc_wiring import build_ring_cnc_export
 from ..cam.rosette.cnc import (
-    MaterialType,
     JigAlignment,
     MachineEnvelope,
     MachineProfile,
@@ -43,6 +42,8 @@ from .manufacturing_output_authority import (
 )
 from .rosette_output_authority import (
     ROSETTE_MODE,
+    _canonical_rosette_material,
+    _rosette_design_feasibility_summary,
     _rosette_ring_feasibility_summary,
     _set_governed_output_headers,
 )
@@ -128,12 +129,16 @@ def _design_rings_from_payload(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 @router.post("/rosette/design")
-def design_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
+def design_rosette(
+    payload: Dict[str, Any] = None, response: Response = None
+) -> Dict[str, Any]:
     """
     Multi-ring rosette design (GAP-NEW-1).
 
-    Accepts soundhole_diameter_mm and rings[]; runs segment-ring + generate-slices
-    + export-cnc for each ring; returns combined segmentation and G-code for all rings.
+    Runs segment-ring + generate-slices + export-cnc per ring and returns combined
+    segmentation and G-code. Manufacturing-output authority is resolved once before
+    the ring loop: a block raises 409 with no ring output; a permit persists one
+    ``combined_gcode``. The missing-rings early return creates no artifact.
     """
     if payload is None:
         payload = {}
@@ -150,13 +155,16 @@ def design_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
                 "job_ids": [],
             }
 
-        material_str = (payload.get("material") or "hardwood").lower()
-        material_map = {
-            "hardwood": MaterialType.HARDWOOD,
-            "softwood": MaterialType.SOFTWOOD,
-            "composite": MaterialType.COMPOSITE,
-        }
-        material = material_map.get(material_str, MaterialType.HARDWOOD)
+        # Authority once for the complete design, before any generation.
+        summary = _rosette_design_feasibility_summary(ring_dicts, payload)
+        authority = require_manufacturing_output_authority(
+            tool_id="rosette:design",
+            mode=ROSETTE_MODE,
+            event_type="rosette_design",
+            request_summary=summary,
+        )
+
+        _, material = _canonical_rosette_material(payload.get("material"))
 
         jig_alignment = JigAlignment(
             origin_x_mm=float(payload.get("origin_x_mm", 0.0)),
@@ -220,6 +228,20 @@ def design_rosette(payload: Dict[str, Any] = None) -> Dict[str, Any]:
             combined_lines.append("")
 
         combined_gcode = "\n".join(combined_lines).strip() if combined_lines else None
+
+        # Persist exactly one authorized program (the combined program), never
+        # one per ring, so a later-ring failure leaves no partial success record.
+        gcode_hash = persist_authorized_manufacturing_output(
+            context=authority,
+            gcode_text=combined_gcode,
+            meta={
+                "ring_count": len(ring_dicts),
+                "ring_ids": [rd["ring_id"] for rd in ring_dicts],
+                "job_ids": job_ids,
+            },
+        )
+        if response is not None:
+            _set_governed_output_headers(response, authority, gcode_hash)
 
         return {
             "ok": True,
@@ -338,13 +360,7 @@ def export_rosette_cnc(
         segmentation = compute_tile_segmentation(ring, tile_count_override)
         slice_batch = generate_slices_for_ring(ring, segmentation)
 
-        material_str = payload.get("material", "hardwood").lower()
-        material_map = {
-            "hardwood": MaterialType.HARDWOOD,
-            "softwood": MaterialType.SOFTWOOD,
-            "composite": MaterialType.COMPOSITE,
-        }
-        material = material_map.get(material_str, MaterialType.HARDWOOD)
+        _, material = _canonical_rosette_material(payload.get("material"))
 
         jig_alignment = JigAlignment(
             origin_x_mm=float(payload.get("origin_x_mm", 0.0)),
