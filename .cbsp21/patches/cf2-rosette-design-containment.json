@@ -6,6 +6,12 @@
   "title": "Contain the Rosette /design multi-ring emitter behind RMOS authority (CF2 Phase B)",
   "intent": "Move POST /api/rmos/rosette/design from LIVE_UNGOVERNED to fail-closed manufacturing-output containment: resolve authority exactly once for the complete design, before the ring loop and all generation, and persist the single combined program. Containment only \u2014 not qualification, not new physics, not a route redesign. Depends on Phase A (/export-cnc, merged as 2bd9102a).",
   "change_type": "fix",
+  "review_follow_up": {
+    "finding": "Authority summaries previously lowercased the requested material verbatim while CNC generation silently fell back to hardwood for missing, blank, or unsupported values.",
+    "correction": "A single _canonical_rosette_material helper now returns the canonical material_id and MaterialType together. Both /design and /export-cnc summaries and generators use it, preserving the established hardwood fallback while making the recorded authority fact truthful.",
+    "tests": "Supported, null, and unsupported values are covered; route tests prove both generators receive hardwood for an unsupported request and both persisted request_summary objects record material_id=hardwood.",
+    "scope_clarification": "This review correction supersedes earlier statements below that /export-cnc is untouched. Its response contract, generation result, and fallback are unchanged; only authority-summary consistency is corrected."
+  },
   "behavior_change": "POST /api/rmos/rosette/design now derives one complete-design feasibility summary and resolves compute_rosette_feasibility (via require_manufacturing_output_authority, tool_id=rosette:design) once, before any segmentation/slice/CNC-export/G-code/job-id work. A blocking decision (RED/UNKNOWN/ERROR) returns HTTP 409 SAFETY_BLOCKED with no ring output and exactly one BLOCKED audit artifact; a permitted decision generates every ring as before, persists the single combined_gcode once, and stamps X-Run-ID / X-ToolBox-Lane: governed / X-GCode-SHA256. The missing/empty-rings early return is preserved and creates no authority or persistence artifact. Existing response fields and ring order are unchanged except for governed headers. /export-cnc is untouched.",
   "risk_level": "medium",
   "scope": {

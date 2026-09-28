@@ -13,6 +13,7 @@ from typing import Any, Dict, List
 
 from fastapi import Response
 
+from ..cam.rosette.cnc import MaterialType
 from ..cam.rosette.models import RosetteRingConfig
 from .manufacturing_output_authority import ManufacturingAuthorityContext
 
@@ -24,6 +25,24 @@ from .manufacturing_output_authority import ManufacturingAuthorityContext
 # ``profiling:gcode``); a bare ``rosette`` resolves to mode "unknown" and could
 # never reach compute_rosette_feasibility.
 ROSETTE_MODE = "rosette"
+
+_ROSETTE_MATERIALS = {
+    "hardwood": MaterialType.HARDWOOD,
+    "softwood": MaterialType.SOFTWOOD,
+    "composite": MaterialType.COMPOSITE,
+}
+
+
+def _canonical_rosette_material(value: Any) -> tuple[str, MaterialType]:
+    """Return the material id and enum that Rosette generation will use.
+
+    Preserve the routes' established fallback: missing, blank, or unsupported
+    material values generate as hardwood. Returning both representations from
+    one function keeps authority summaries and CNC generation identical.
+    """
+    requested = str(value or "hardwood").strip().lower()
+    canonical = requested if requested in _ROSETTE_MATERIALS else "hardwood"
+    return canonical, _ROSETTE_MATERIALS[canonical]
 
 
 def _rosette_ring_feasibility_summary(
@@ -60,7 +79,7 @@ def _rosette_ring_feasibility_summary(
         "outer_diameter_mm": outer_diameter_mm,
         "inner_diameter_mm": inner_diameter_mm,
         "ring_count": 1,
-        "material_id": str(payload.get("material", "hardwood")).lower(),
+        "material_id": _canonical_rosette_material(payload.get("material"))[0],
         "rpm": int(payload.get("spindle_rpm", 12000)),
     }
 
@@ -132,7 +151,7 @@ def _rosette_design_feasibility_summary(
         "outer_diameter_mm": outer_diameter_mm,
         "inner_diameter_mm": inner_diameter_mm,
         "ring_count": len(ring_dicts),
-        "material_id": str(payload.get("material", "hardwood")).lower(),
+        "material_id": _canonical_rosette_material(payload.get("material"))[0],
         "rpm": int(payload.get("spindle_rpm", 12000)),
         "pattern_type": pattern_type,
         "pattern_types": unique_patterns,

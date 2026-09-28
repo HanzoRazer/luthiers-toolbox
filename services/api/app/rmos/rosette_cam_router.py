@@ -29,7 +29,6 @@ from ..cam.rosette.tile_segmentation import (
 )
 from ..cam.rosette.rosette_cnc_wiring import build_ring_cnc_export
 from ..cam.rosette.cnc import (
-    MaterialType,
     JigAlignment,
     MachineEnvelope,
     MachineProfile,
@@ -43,6 +42,7 @@ from .manufacturing_output_authority import (
 )
 from .rosette_output_authority import (
     ROSETTE_MODE,
+    _canonical_rosette_material,
     _rosette_design_feasibility_summary,
     _rosette_ring_feasibility_summary,
     _set_governed_output_headers,
@@ -164,13 +164,7 @@ def design_rosette(
             request_summary=summary,
         )
 
-        material_str = (payload.get("material") or "hardwood").lower()
-        material_map = {
-            "hardwood": MaterialType.HARDWOOD,
-            "softwood": MaterialType.SOFTWOOD,
-            "composite": MaterialType.COMPOSITE,
-        }
-        material = material_map.get(material_str, MaterialType.HARDWOOD)
+        _, material = _canonical_rosette_material(payload.get("material"))
 
         jig_alignment = JigAlignment(
             origin_x_mm=float(payload.get("origin_x_mm", 0.0)),
@@ -366,13 +360,7 @@ def export_rosette_cnc(
         segmentation = compute_tile_segmentation(ring, tile_count_override)
         slice_batch = generate_slices_for_ring(ring, segmentation)
 
-        material_str = payload.get("material", "hardwood").lower()
-        material_map = {
-            "hardwood": MaterialType.HARDWOOD,
-            "softwood": MaterialType.SOFTWOOD,
-            "composite": MaterialType.COMPOSITE,
-        }
-        material = material_map.get(material_str, MaterialType.HARDWOOD)
+        _, material = _canonical_rosette_material(payload.get("material"))
 
         jig_alignment = JigAlignment(
             origin_x_mm=float(payload.get("origin_x_mm", 0.0)),

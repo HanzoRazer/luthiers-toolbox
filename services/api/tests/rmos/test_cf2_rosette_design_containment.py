@@ -46,6 +46,7 @@ GENERATOR_NAMES = (
 # Two-ring design; both rings default checkerboard unless overridden.
 VALID_BODY = {
     "soundhole_diameter_mm": 85.0,
+    "material": "unsupported-test-material",
     "rings": [
         {"width_mm": 5.0, "pattern": "checkerboard"},
         {"width_mm": 6.0, "pattern": "checkerboard"},
@@ -105,12 +106,14 @@ def _force_decision(monkeypatch, risk):
 
 def _count_generators(monkeypatch) -> dict:
     counts = {n: 0 for n in GENERATOR_NAMES}
+    counts["materials"] = []
     for name in GENERATOR_NAMES:
         real = getattr(rcr, name)
 
         def make(real_fn, key):
             def wrapped(*a, **k):
                 counts[key] += 1
+                if key == "build_ring_cnc_export": counts["materials"].append(k["material"].value)
                 return real_fn(*a, **k)
 
             return wrapped
@@ -200,11 +203,12 @@ def test_rds04_05_outer_inner_from_complete_design():
     assert s["outer_diameter_mm"] > outers[0]  # ring 1 alone would understate it
 
 
-def test_rds06_material_rpm_match_generation():
-    rings = rcr._design_rings_from_payload({**VALID_BODY, "material": "Softwood", "spindle_rpm": 15000})
-    s = design_summary(rings, {**VALID_BODY, "material": "Softwood", "spindle_rpm": 15000})
-    assert s["material_id"] == "softwood"
-    assert s["rpm"] == 15000
+@pytest.mark.parametrize("raw, expected", [("Softwood", "softwood"), (None, "hardwood"), ("metal", "hardwood")])
+def test_rds06_material_rpm_match_generation(raw, expected):
+    payload = {**VALID_BODY, "material": raw, "spindle_rpm": 15000}
+    material_id, material = rcr._canonical_rosette_material(raw)
+    assert (material_id, material.value) == (expected, expected)
+    assert design_summary(rcr._design_rings_from_payload(payload), payload)["material_id"] == expected
 
 
 def test_rds07_no_invented_fields():
@@ -355,6 +359,7 @@ def test_rds23_24_permitted_multiring_generates_each_ring(client, memory_store, 
     assert body["ok"] is True and body["combined_gcode"]
     assert body["ring_count"] == 2
     assert all(counts[n] == 2 for n in GENERATOR_NAMES), counts  # once per ring
+    assert counts["materials"] == ["hardwood", "hardwood"]
 
 
 def test_rds26_response_shape_and_order_intact(client, memory_store):
@@ -376,6 +381,7 @@ def test_rds27_30_single_ok_artifact_hash_and_runid(client, memory_store):
     assert len(ok) == 1
     assert ok[0].hashes.gcode_sha256 == digest
     assert ok[0].run_id == r.headers.get("X-Run-ID")
+    assert ok[0].request_summary["material_id"] == "hardwood"
 
 
 def test_rds31_persisted_decision_is_real_not_synthesized(client, memory_store):
