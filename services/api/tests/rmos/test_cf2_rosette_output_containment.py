@@ -479,10 +479,11 @@ def test_rex14_inventory_delta_moves_only_export_cnc():
     assert export_row["authority_key"] == EXPORT_TOOL_ID
     assert export_row["authority_order"] == "before_generation"
 
-    # /design stays live-ungoverned in Phase A.
-    assert rows[("POST", DESIGN_PATH)]["containment"] == "LIVE_UNGOVERNED"
+    # Phase B (CF2-ROSETTE-DESIGN-CONTAINMENT-003R) moved /design to FAIL_CLOSED;
+    # /export-cnc (asserted above) remains governed. Live-ungoverned 14 -> 13.
+    assert rows[("POST", DESIGN_PATH)]["containment"] == "FAIL_CLOSED"
 
     ungoverned = [r for r in document["rows"] if r["containment"] == "LIVE_UNGOVERNED"]
-    assert len(ungoverned) == 14
+    assert len(ungoverned) == 13
     # true-A: the PERMITTED_BY_AUTHORITY set remains empty.
     assert all(r["containment"] != "PERMITTED_BY_AUTHORITY" for r in document["rows"])
