@@ -239,7 +239,7 @@ def design_rosette(
         # one per ring, so a later-ring failure leaves no partial success record.
         gcode_hash = persist_authorized_manufacturing_output(
             context=authority,
-            gcode_text=combined_gcode or "",
+            gcode_text=combined_gcode,
             meta={
                 "ring_count": len(ring_dicts),
                 "ring_ids": [rd["ring_id"] for rd in ring_dicts],

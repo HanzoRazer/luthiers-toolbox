@@ -149,8 +149,26 @@ def _count_authority(monkeypatch) -> dict:
 
 # ---- Summary and validation (RDS-01..10) ----
 
-def test_rds01_empty_rings_preserve_response_no_artifact(client, memory_store):
-    r = client.post(DESIGN_PATH, json={})
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"rings": []},
+        {"rings": None},
+        {"rings": "not-a-list"},
+        {"rings": [None]},
+    ],
+)
+def test_rds01_empty_or_invalid_design_is_artifact_free(
+    client, memory_store, monkeypatch, payload
+):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("authority or persistence reached on empty/invalid design")
+
+    monkeypatch.setattr(rcr, "require_manufacturing_output_authority", forbidden)
+    monkeypatch.setattr(rcr, "persist_authorized_manufacturing_output", forbidden)
+
+    r = client.post(DESIGN_PATH, json=payload)
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["ok"] is False and body["combined_gcode"] is None
@@ -306,6 +324,12 @@ def test_rds17_19_no_generator_no_partial_on_block(client, monkeypatch):
 
 def test_rds20_22_blocked_persistence_and_headers(client, memory_store, monkeypatch):
     _force_decision(monkeypatch, "RED")
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("successful persistence reached on blocked design")
+
+    monkeypatch.setattr(rcr, "persist_authorized_manufacturing_output", forbidden)
+
     r = client.post(DESIGN_PATH, json=VALID_BODY)
     assert r.status_code == 409
     assert len(memory_store.saved) == 1
