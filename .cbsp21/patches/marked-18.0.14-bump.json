@@ -1,0 +1,77 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MARKED_18_0_14_BUMP",
+  "title": "build(deps): bump marked from 18.0.13 to 18.0.14",
+  "intent": "Routine currency, no advisory. Dependabot patch bump of the client's Markdown renderer. The 18.0.14 release notes list six bug fixes, all CommonMark/GFM parsing corrections: indented lines in setext heading text (#4095), decoding numeric character references in text (#4076), keeping text after an empty nested blockquote (#4101), preserving internal tabs in list item content (#4086), stripping whitespace when normalizing link reference labels (#4091), and GFM protocol autolinks (#4067). No CVE or GHSA is attached to either version (GitHub advisory query: 0 for marked@18.0.13 and 0 for marked@18.0.14), so this is not a security update.",
+  "change_type": "chore",
+  "behavior_change": "None to this repository's code. Lockfile audited by parsing both package-lock.json files and comparing every entry, not by reading the diff view: 412 packages before, 412 after, ZERO added, ZERO removed, and exactly ONE package version change -- node_modules/marked 18.0.13 -> 18.0.14 (its own dependencies unchanged) -- plus the root entry's declared range ^18.0.13 -> ^18.0.14. No package kept its version while changing integrity. License unchanged (MIT). marked's API is unchanged between these patch releases; the single call site, marked(md) in packages/client/src/views/RMOSCncJobDetailView.vue:182, needs no adjustment, and that view is referenced by nothing else in packages/client/src, so it is unreachable from the running client. Rendering output may differ only in the edge cases the six fixes address; one of them, GFM protocol autolinks (#4067), means bare http(s)/www text in rendered Markdown can now become <a> links.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/marked-18.0.14-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/marked-18.0.14-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared range from ^18.0.13 to ^18.0.14. packages/client/package-lock.json updates the root dependency range and the node_modules/marked entry -- version, resolved URL and integrity hash. That is the complete set of changes: the lockfile comparison found no other entry differing in any field that affects resolution. Nothing incidental moved.",
+    "why_not_redundant": "Dependabot currency, and this manifest exists because Dependabot cannot author one. No existing manifest covers these paths for this change; borrowing one is what CBSP21-NOBORROW-001 refuses, and the zod 4->3 revert that rode along inside PR #296 is the reason that rule exists."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base d967e548 origin/main -> 7f039283d6afeff53bf551264ef265cdda2632cf, which IS current origin/main; all diffs taken against that merge base, not the PR view. Worktree created from the explicit headRefOid d967e548 (not FETCH_HEAD).",
+      "Lockfile audit by parsing rather than by diff (C:/tmp/_bump_audit.py): loaded both package-lock.json files and compared the full packages{} map. Result -- 412 entries before and after; ADDED: none; REMOVED: none; CHANGED: <root> declared range and node_modules/marked 18.0.13 -> 18.0.14 (deps_unchanged=true) only.",
+      "Supply chain for node_modules/marked@18.0.14: tarball integrity matches the lockfile; resolved from registry.npmjs.org; published 2026-09-22 via npm OIDC trusted publishing from GitHub Actions; no install hooks; maintainer list unchanged.",
+      "GitHub advisory query: 0 advisories for marked@18.0.13, 0 for marked@18.0.14.",
+      "git merge-tree of the PR head onto origin/main: clean, 412 lock entries, no sibling dependency reverted.",
+      "git diff 7f039283 d967e548 --stat -> packages/client/package.json (1 line) and packages/client/package-lock.json (4 lines), consistent with the parsed audit.",
+      "Call-site survey: the only import of marked is packages/client/src/views/RMOSCncJobDetailView.vue:135, used once at :182; grep for RMOSCncJobDetailView across packages/client/src finds no other reference (orphan view). MarkdownRenderer.vue mentions marked only in a comment.",
+      "CI is the build and test verification for this change; no local client build was run."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency version bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^18.0.13 -> ^18.0.14."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "None beyond the titled package. Exactly one package entry changed: node_modules/marked 18.0.13 -> 18.0.14, with its resolved URL and integrity, plus the root range. No incidental movement, verified by comparing all 412 entries."
+    },
+    {
+      "path": ".cbsp21/patches/marked-18.0.14-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-29-MARKED-18-0-14",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "MARKED-XSS-SURFACE-1",
+        "severity": "low",
+        "summary": "Pre-existing, NOT introduced by this bump: packages/client/src/views/RMOSCncJobDetailView.vue renders marked(md) into v-html at :115 with no sanitizer. marked v5+ removed its built-in sanitize option and documents that callers must sanitize output themselves. The input is job.operator_report_md from the CNC job detail API, so the exposure is stored rather than reflected. Recorded here because the survey found it; not repaired in this PR, because adding a sanitizer dependency inside a Dependabot patch bump would make the bump un-reviewable. Still present at 18.0.14; the view remains unreachable (no route or import references it). Note the 18.0.14 GFM autolink fix (#4067) slightly widens what the renderer emits as <a> tags, which is relevant only if this view is ever routed without a sanitizer."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface changed by this PR. The lockfile moved nothing beyond the titled package, which the parsed audit in verification.commands_run establishes. The one low finding is a pre-existing sanitization gap at the single marked call site, raised for separate triage and deliberately left untouched here."
+  }
+}
