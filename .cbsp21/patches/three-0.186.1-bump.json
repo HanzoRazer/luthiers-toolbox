@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "THREE_0_186_1_BUMP",
+  "title": "build(deps): bump three from 0.185.1 to 0.186.1",
+  "intent": "Routine Dependabot currency, no advisory. three 0.185.1 -> 0.186.1 (r186) in packages/client. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit and the r186 migration-guide check recorded in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none expected in the shipped app. Lockfile audited against merge base 5258d4c6 (= origin/main at audit time) by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 node_modules entry changed: three 0.185.1 -> 0.186.1 (forward), changing only version, resolved and integrity; three has no dependencies of its own. Zero packages added, zero removed, no other entry touched. The root entry differs in one key, dependencies.three ^0.185.1 -> ^0.186.1. Consumers: two files import three. components/cam/ToolpathCanvas3D.vue is LIVE (main.ts -> router/index.ts -> views/DxfToGcodeView.vue -> ToolpathPlayer.vue -> ToolpathCanvas3D.vue, by import-graph walk); components/cam/CamBackplot3D.vue is unreachable from main.ts. r186 Migration Guide (185 -> 186) items checked against client source: Object3D.dispose() added (client has no Object3D subclasses, so no super.dispose() obligation); BufferGeometryUtils.toTrianglesDrawMode, SimplifyModifier, Source->TextureSource, Sky/SkyMesh up uniform, GTAONode, LightProbeGrid, PCFSoftShadowMap, DotScreenNode/RGBShiftNode -> 0 uses each. Release note #33939 (disposed geometry deletes its own attributes): every geometry in both files is created per object in function scope and never reused after dispose(). Runtime export surface of build/three.core.js: 3 exports added (LightShadow, RenderObjectRefreshType, TextureSource), 0 removed; every THREE.* symbol the client uses is present; examples/jsm/controls/OrbitControls.js still exists at the imported path. Known lag, not fixed here: devDependency @types/three stays at ^0.185.4 (0.186.0 is published); the used API surface is unchanged, so this is a follow-up bump, not a defect of this PR.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/three-0.186.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/three-0.186.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for three from ^0.185.1 to ^0.186.1 -- one line, no other dependency touched. package-lock.json resolves it: three 0.185.1 -> 0.186.1. No incidental version movement; the added, removed and non-three changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; borrowing another dependency manifest that happens to cover these two files is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 2bdc3423 reported that the PR declares no manifest of its own -- the gates were correct",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 5258d4c6: entries 412 -> 412, version-changed=1 (three 0.185.1 -> 0.186.1), added=0, removed=0, non-three touched = NONE",
+      "supply-chain: npm registry integrity for three@0.186.1 equals the lockfile integrity; resolved from registry.npmjs.org; publisher mrdoob (listed maintainer); no install-time hooks; published 2026-09-24T14:42Z",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=three@0.185.1 and @0.186.1 -> 0 and 0",
+      "npm pack three@0.185.1 and three@0.186.1: build/three.core.js export lists diffed -> +3 / -0; all client-used THREE.* symbols present; OrbitControls path present",
+      "r186 release notes and Migration Guide 185 -> 186 read; each listed break searched in packages/client/src -> 0 uses",
+      "consumer trace: import-graph walk from src/main.ts (static + dynamic imports) -> ToolpathCanvas3D.vue reachable via DxfToGcodeView; CamBackplot3D.vue unreachable",
+      "merge onto current origin/main 5258d4c6: git merge-tree clean; merged lockfile 412 entries; no sibling reversions",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/three-0.186.1-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "CI (lint-build, build-and-test, Containers Build + Smoke, proxy-parity) passed on head 2bdc3423 and is the build/test verification; no WebGL render test exists, so the 3D viewer's visual output is not machine-verified"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^0.185.1 -> ^0.186.1.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - three 0.185.1 -> 0.186.1 forward; no incidental movement, additions or removals; integrity matches the npm registry",
+      "verification": [
+        "lockfile entry enumeration -> non-three touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/three-0.186.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/three-0.186.1-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-29-THREE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moved nothing beyond three -- enumerated, not assumed. three renders the live DXF-to-G-code toolpath preview (display only; it does not produce G-code).",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
