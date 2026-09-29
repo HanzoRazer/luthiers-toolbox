@@ -1,0 +1,67 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "KONVA_10_7_0_BUMP",
+  "title": "build(deps): bump konva from 10.3.2 to 10.7.0",
+  "intent": "Routine dependency currency, no security advisory. Adopt Konva 10.7.0 bug fixes while preserving the existing client integration.",
+  "change_type": "chore",
+  "behavior_change": "Only Konva moves from 10.3.2 to 10.7.0 in the manifest and lockfile. No unrelated direct or transitive package version changes occur. Upstream 10.6/10.7 changes improve pointer, bounds, serialization, path, image, text, and rendering behavior; the repository uses basic Stage/Layer/Path/Circle/Rect/Ellipse APIs and does not call the removed Stage.bufferCanvas or three-argument drawScene API.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/konva-10.7.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/konva-10.7.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Bumped the direct konva declaration and the single resolved node_modules/konva lock entry from 10.3.2 to 10.7.0. No other package version or integrity entry moved.",
+    "why_not_redundant": "Dependabot routine-currency update. The repository currently resolves 10.3.2 and has no other open Konva bump."
+  },
+  "verification": {
+    "commands_run": [
+      "git diff origin/main...HEAD -- packages/client/package.json packages/client/package-lock.json",
+      "rg -n 'Konva|from \\\"konva\\\"|from '\"'\"'konva'\"'\"'' packages/client/src",
+      "cd packages/client && npm ci",
+      "cd packages/client && npm run check:node && npm run build",
+      "cd packages/client && npm run type-check  # existing repository-wide failures; identical Konva-related failures reproduced on 10.3.2 and 10.7.0",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/konva-10.7.0-bump.json packages/client/package.json packages/client/package-lock.json",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declare Konva 10.7.0-compatible dependency range.",
+      "risk": "low",
+      "behavior_change": "Konva resolves to 10.7.0 instead of 10.3.2."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Pin Konva 10.7.0 tarball and integrity metadata.",
+      "risk": "low",
+      "behavior_change": "Only the Konva lock entry changes."
+    },
+    {
+      "path": ".cbsp21/patches/konva-10.7.0-bump.json",
+      "intent": "Provide the PR-owned CBSP21 dependency-bump manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-29-KONVA-10-7-0",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: client canvas dependency update. Repository usage avoids removed internal APIs; the production build covers public API compatibility. The full type-check has pre-existing failures, but the Konva-related diagnostics are identical on 10.3.2 and 10.7.0. Interactive and pixel-level rendering remain residual smoke-test risk."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Single-package client dependency bump with no application-code or architecture change."
+  }
+}
