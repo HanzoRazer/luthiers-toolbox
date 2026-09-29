@@ -1,0 +1,91 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ZOD_4_6_5_BUMP",
+  "title": "build(deps): bump zod from 4.6.2 to 4.6.5",
+  "intent": "Routine Dependabot currency, no advisory. zod 4.6.2 -> 4.6.5 in packages/client -- three patch releases, a FORWARD move within zod 4 (the opposite direction to PR #296's silent 4 -> 3 revert). 4.6.3 removes the standalone z.properties() schema added in 4.6.0 (z.instanceof().properties() and .check(z.properties()) unchanged); 4.6.4 adds z.currencyCode() and reimplements z.url() rejection with URL.canParse(); 4.6.5 keys the z.instanceof().properties() shape off the instance type, plus docs. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001); the payload of that friction is the lockfile audit in behavior_change.",
+  "change_type": "chore",
+  "behavior_change": "none in the shipped app. Lockfile audited against merge base 7f039283 (= origin/main at audit time) by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count is 412 before and 412 after. Exactly 1 node_modules entry changed: zod 4.6.2 -> 4.6.5 (forward), changing only version, resolved and integrity; its own dependency map is unchanged. Zero packages added, zero removed, no other entry touched. The root entry differs in one key, dependencies.zod ^4.6.2 -> ^4.6.5. Consumer analysis: zod has exactly one importer in packages/client/src, cam/compare/compare_types.ts, and it is unreachable from src/main.ts in a static+dynamic import-graph walk, so no shipped code path validates with zod today. Independently, that file uses none of the APIs these releases change (.properties(), z.url(), z.instanceof, z.currencyCode -> 0 uses), so the bump would be behaviour-neutral even if that module were mounted.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/zod-4.6.5-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/zod-4.6.5-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the single declared range for zod from ^4.6.2 to ^4.6.5 -- one line, no other dependency touched. package-lock.json resolves it: zod 4.6.2 -> 4.6.5. No incidental version movement; the added, removed and non-zod changed sets are all empty.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; the prior zod-4.6.2-bump manifest and other dependency manifests would each cover these two files, and borrowing one is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 634f108c reported that the PR declares no manifest of its own -- the gates were correct",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base 7f039283: entries 412 -> 412, version-changed=1 (zod 4.6.2 -> 4.6.5, forward), added=0, removed=0, non-zod touched = NONE",
+      "supply-chain: npm registry integrity for zod@4.6.5 equals the lockfile integrity; resolved from registry.npmjs.org; publisher 'GitHub Actions' via npm OIDC trusted publishing; no install-time hooks; published 2026-09-13T23:25Z",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=zod@4.6.2 and @4.6.5 -> 0 and 0",
+      "release notes v4.6.3, v4.6.4, v4.6.5 read; changed APIs .properties(), z.url(), z.instanceof, z.currencyCode -> 0 uses in the sole importer",
+      "consumer trace: sole importer cam/compare/compare_types.ts; unreachable from src/main.ts by import-graph walk",
+      "merge onto current origin/main 7f039283: git merge-tree clean; merged lockfile 412 entries; no sibling reversions",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/zod-4.6.5-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS",
+      "CI (lint-build, build-and-test) is the build/test verification for this bump"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^4.6.2 -> ^4.6.5.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - zod 4.6.2 -> 4.6.5 forward; no incidental movement, additions or removals; integrity matches the npm registry",
+      "verification": [
+        "lockfile entry enumeration -> non-zod touched = NONE"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/zod-4.6.5-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/zod-4.6.5-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-29-ZOD",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. zod is the package PR #296 silently reverted, so direction was checked first: this is a forward move within zod 4. The lockfile moved nothing beyond zod -- enumerated, not assumed.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
