@@ -55,11 +55,29 @@ class RmosToolpathPlan(BaseModel):
 # ======================
 
 class RmosContext(BaseModel):
-    """Manufacturing environment snapshot"""
+    """Manufacturing environment snapshot.
+
+    The machine/process facts below are consumed by the Saw feasibility path
+    (``feasibility_scorer`` -> ``SawEngine.check_feasibility`` conversions).
+    ``_score_via_scorer`` already forwarded them, but they were previously
+    undeclared here; under pydantic v2's default ``extra='ignore'`` they were
+    silently dropped, so the Saw evaluator scored on hardcoded conversion
+    defaults regardless of the truthful request. They are optional (``None``)
+    so router/rosette scoring is unaffected; the Saw feasibility path guards on
+    their presence and returns UNKNOWN rather than scoring on defaults when a
+    safety-critical fact is missing.
+    """
     material_id: Optional[str] = Field(None, description="Material database ID")
     tool_id: Optional[str] = Field(None, description="Tool database ID")
     machine_profile_id: Optional[str] = Field(None, description="Machine profile ID")
     use_shapely_geometry: bool = Field(True, description="Use Shapely vs ML geometry engine")
+    # Machine/process facts (consumed by the Saw scorer path; optional for other modes).
+    machine_id: Optional[str] = Field(None, description="Machine database ID")
+    rpm: Optional[float] = Field(None, description="Spindle/blade RPM (C-axis)")
+    feed_rate_mm_min: Optional[float] = Field(None, description="Feed rate (mm/min)")
+    spindle_power_watts: Optional[float] = Field(None, description="Available spindle/machine power (W)")
+    tool_diameter_mm: Optional[float] = Field(None, description="Tool/blade diameter (mm)")
+    tooth_count: Optional[int] = Field(None, description="Blade tooth count")
 
 
 # Lazy import stub for RosetteParamSpec to prevent circular dependencies

@@ -81,25 +81,54 @@ def _convert_to_saw_context(
 ) -> SawContext:
     """
     Convert RMOS context to Saw Lab context.
-    
-    Maps RMOS fields to saw-specific parameters.
+
+    Maps RMOS process facts to saw-specific parameters. When a fact is present
+    on the context it is used verbatim; blade diameter and tooth count fall back
+    to the tool_id parse, and RPM / feed rate / machine power fall back to the
+    prior conversion defaults. The feasibility path guards these facts to
+    presence before reaching this converter (see ``compute_saw_feasibility``),
+    so the fallbacks are exercised only by the ungoverned toolpath-generation
+    path, whose behaviour this increment does not change.
     """
-    # Parse tool ID for blade parameters
+    # Parse tool ID for blade parameters (kerf source; diameter/tooth fallback).
     blade_params = _parse_saw_tool_id(rmos_ctx.tool_id)
-    
-    # Stock thickness from design or default
+
+    blade_diameter = (
+        rmos_ctx.tool_diameter_mm
+        if rmos_ctx.tool_diameter_mm is not None
+        else blade_params["blade_diameter_mm"]
+    )
+    tooth_count = (
+        rmos_ctx.tooth_count
+        if rmos_ctx.tooth_count is not None
+        else blade_params["tooth_count"]
+    )
+    max_rpm = int(rmos_ctx.rpm) if rmos_ctx.rpm is not None else 5000
+    feed_rate = (
+        rmos_ctx.feed_rate_mm_min
+        if rmos_ctx.feed_rate_mm_min is not None
+        else 3000.0
+    )
+    machine_power_kw = (
+        rmos_ctx.spindle_power_watts / 1000.0
+        if rmos_ctx.spindle_power_watts is not None
+        else 3.0
+    )
+
+    # Stock thickness from design or default.
     stock_thickness = getattr(design, "stock_thickness_mm", 25.0)
     if not stock_thickness:
         stock_thickness = 25.0
-    
+
     return SawContext(
-        blade_diameter_mm=blade_params["blade_diameter_mm"],
+        blade_diameter_mm=blade_diameter,
         blade_kerf_mm=blade_params["blade_kerf_mm"],
-        tooth_count=blade_params["tooth_count"],
-        max_rpm=5000,  # Default CNC saw RPM
+        tooth_count=tooth_count,
+        max_rpm=max_rpm,
         material_id=rmos_ctx.material_id,
         stock_thickness_mm=stock_thickness,
-        feed_rate_mm_per_min=3000.0,  # Default feed
+        feed_rate_mm_per_min=feed_rate,
+        machine_power_kw=machine_power_kw,
         use_dust_collection=True,
     )
 
@@ -110,8 +139,12 @@ def _convert_to_saw_design(design: RosetteParamSpec) -> SawDesign:
     
     Maps rosette parameters to saw-specific cut parameters.
     """
-    # Use outer diameter as cut length
-    cut_length = getattr(design, "outer_diameter_mm", 300.0)
+    # Prefer an explicit saw cut length when the caller supplies one; fall back
+    # to the ring outer diameter for legacy rosette-shaped designs. Cut length
+    # feeds only the time estimate, not any safety score.
+    cut_length = getattr(design, "cut_length_mm", None)
+    if not cut_length:
+        cut_length = getattr(design, "outer_diameter_mm", 300.0)
     if not cut_length:
         cut_length = 300.0
     

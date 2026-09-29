@@ -404,7 +404,21 @@ def test_tc20_saw_and_rosette_real_feasibility_still_evaluate():
     )
 
     saw = compute_saw_feasibility(
-        req={"tool_id": "saw:thin_140", "material_id": "hardwood"}, context="test"
+        req={
+            "tool_id": "saw:thin_140",
+            "material_id": "hardwood",
+            # Safety-critical process facts the repaired evaluator now requires
+            # (RMOS-CONVERGE-001A saw plumbing). Ordinary 10" 24T bench-saw
+            # numbers; the point of this witness is that the saw lane reaches
+            # the saw calculators, not the specific verdict.
+            "rpm": 3450,
+            "feed_rate_mm_min": 3000.0,
+            "tool_diameter_mm": 254.0,
+            "tooth_count": 24,
+            "stock_thickness_mm": 25.0,
+            "spindle_power_watts": 3000.0,
+        },
+        context="test",
     )
     rosette = compute_rosette_feasibility(
         req={"tool_id": "rosette:default", "material_id": "spruce"}, context="test"

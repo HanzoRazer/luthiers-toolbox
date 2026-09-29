@@ -54,6 +54,21 @@ SANE_ADAPTIVE = {
     "loops": [{"pts": [[0, 0], [100, 0], [100, 60], [0, 60]]}],
 }
 
+# A saw request carrying every safety-critical process fact the evaluator now
+# requires (RMOS-CONVERGE-001A saw plumbing repair). Values are ordinary bench
+# saw numbers (10" 24T blade at 3450 RPM); their verdict is not asserted here -
+# these witnesses only need to reach the evaluator, which refuses to score when
+# a safety-critical fact is absent.
+SANE_SAW = {
+    "rpm": 3450,
+    "feed_rate_mm_min": 3000.0,
+    "tool_diameter_mm": 254.0,
+    "tooth_count": 24,
+    "stock_thickness_mm": 25.0,
+    "spindle_power_watts": 3000.0,
+}
+
+
 # Same plan with a physically impossible stepover: rule F002 fires RED.
 def _red_adaptive() -> dict:
     req = dict(SANE_ADAPTIVE)
@@ -277,6 +292,10 @@ def test_tc09_evaluator_exception_is_error_and_blocks(monkeypatch):
     It must not become YELLOW merely to keep manufacturing running: an
     engine that could not run has not established that the cut is
     survivable.
+
+    The saw request carries the safety-critical process facts so the guard
+    passes and the (monkeypatched) evaluator is actually reached - otherwise
+    the missing-fact guard would short-circuit to UNKNOWN before the raise.
     """
     import app.rmos.feasibility_scorer as scorer
 
@@ -285,7 +304,7 @@ def test_tc09_evaluator_exception_is_error_and_blocks(monkeypatch):
 
     monkeypatch.setattr(scorer, "score_design_feasibility", _boom)
 
-    result = _compute("saw:default")
+    result = _compute("saw:default", **SANE_SAW)
 
     assert _risk(result) == "ERROR"
     assert _blocks(result) is True

@@ -1,0 +1,81 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CF2_SAW_EVALUATOR_PLUMBING_006",
+  "title": "Repair canonical Saw feasibility evaluator plumbing so truthful process facts reach the calculators",
+  "intent": "Fix a manufacturing-authority defect in the canonical Saw feasibility path: the process facts a caller supplies (RPM, feed rate, tool/blade diameter, tooth count, stock thickness, machine power) were dropped before reaching the Saw calculators, so the evaluator scored on hardcoded conversion defaults regardless of the request. Extend the request/context path so those facts are delivered, guard the safety-critical facts to presence (missing -> UNKNOWN, out-of-range -> ERROR), and prove input-sensitivity with tests. Plumbing only: no thresholds, formulas, or favourable defaults are changed; neither Saw route is contained; SawLabService.check_feasibility and the compare route are untouched; the manufacturing-output inventory stays at 13.",
+  "change_type": "fix",
+  "behavior_change": "saw_feasibility_facts",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cf2-saw-evaluator-plumbing-006.json",
+      "services/api/app/rmos/api_contracts.py",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/api/saw_feasibility.py",
+      "services/api/app/toolpath/saw_engine.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_saw_evaluator_plumbing.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cf2-saw-evaluator-plumbing-006.json",
+      "services/api/app/rmos/api_contracts.py",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/api/saw_feasibility.py",
+      "services/api/app/toolpath/saw_engine.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_saw_evaluator_plumbing.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "RmosContext gained the machine/process fields _score_via_scorer already forwarded (machine_id, rpm, feed_rate_mm_min, spindle_power_watts, tool_diameter_mm, tooth_count) so pydantic v2 no longer silently drops them; _score_via_scorer now also forwards tooth_count. ScorerDesignSpec gained cut_length_mm. compute_saw_feasibility was extracted from rmos_feasibility_router.py into a new saw_feasibility.py (mirroring the existing profiling_feasibility.py extraction) so the added plumbing does not push the router past the 500-line file-size gate; the router imports it and registers it in _PRODUCTION_FEASIBILITY_ENGINES unchanged. compute_saw_feasibility gained a _SAW_REQUIRED_KEYS presence guard (missing -> UNKNOWN) and passes stock_thickness_mm/cut_length_mm from the request without friendly defaults. The router's _ENGINE_FAILURES now includes pydantic ValidationError so an out-of-range fact fails closed to ERROR instead of escaping as a 500. saw_engine._convert_to_saw_context reads the delivered facts (RPM/feed/diameter/tooth/power) instead of hardcoding max_rpm=5000 / feed=3000, falling back to prior defaults only on the ungoverned toolpath-generation path; _convert_to_saw_design prefers an explicit cut length. TC-09 and TC-20 witnesses now supply the required facts to reach the evaluator; a new test_saw_evaluator_plumbing.py proves facts reach the calculators, sensitivity, missing->UNKNOWN, out-of-range->ERROR, an unsafe rim-overspeed block, and documents the out-of-scope formula availability boundary.",
+    "why": "A feasibility lane that cannot see its own process facts is not evaluating the cut it was asked about; it produced a constant verdict regardless of RPM/feed/power. This is the authority defect Order 006 authorized repairing as a bounded, separate increment.",
+    "why_not_redundant": "No prior change declares the RmosContext process fields or the compute_saw_feasibility missing-fact guard. Before this patch _score_via_scorer forwarded rpm/feed/power/diameter into a model that did not declare them, so pydantic v2's extra='ignore' dropped them and _convert_to_saw_context hardcoded 5000 RPM / 3000 mm-min. This patch is the first to close that gap and to fail closed on missing/out-of-range safety-critical facts.",
+    "what_did_not_change": "No calculator formula, threshold, weight, or favourable default was changed. Neither Saw route is contained. SawLabService.check_feasibility, the saw_compare route, and all G-code/geometry/generators are untouched. The manufacturing-output inventory is not regenerated and remains at 13 live-ungoverned rows with both Rosette rows FAIL_CLOSED. rosette/adaptive/profiling feasibility paths are unaffected (their RmosContext usage is unchanged and the new fields are optional).",
+    "why_structural_extraction": "compute_saw_feasibility moved into app/rmos/api/saw_feasibility.py. The router sat exactly at the 500-line file-size cap, so the added guard/fields would breach it; the profiling adapter was extracted from the same module for the same reason. The move is mechanical: the router imports the function and registers it unchanged, and the shared _score_via_scorer / ScorerDesignSpec (still router-owned, used by rosette too) are imported lazily to avoid an import cycle."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main  # 52d9054d",
+      "test \"$(git merge-base HEAD origin/main)\" = \"$(git rev-parse origin/main)\"  # base is current",
+      "cd services/api && python -m pytest tests/rmos/test_saw_evaluator_plumbing.py -q --no-cov",
+      "cd services/api && python -m pytest tests/rmos/test_rmos_feasibility_authority.py tests/rmos/test_rmos_governed_cam_path.py app/tests/rmos/test_saw_safety_gate.py -q --no-cov",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json",
+      "cd services/api && python -m app.ci.check_bare_except",
+      "cd services/api && python -m app.ci.check_execution_class_compliance",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ],
+    "proofs": [
+      "Base SHA 52d9054d; merge-base equals origin/main tip (branch cut from current main).",
+      "New plumbing suite: 10 passed. Facts reach the calculators (rim_speed/bite_load/cutting_force metadata echoes the request); rim_speed/bite_load/power_ratio move when RPM/diameter/feed/power change; each omitted required fact yields UNKNOWN(ENGINE_UNAVAILABLE) naming the fact; rpm=50000 yields ERROR(ENGINE_ERROR); a 600mm blade at 9000 RPM blocks RED via rim overspeed.",
+      "TC-09 (evaluator-raises -> ERROR) and TC-20 (saw lane reaches saw calculators, differentiated from rosette) preserved by supplying the now-required facts; full affected suite 48 passed / 3 skipped.",
+      "Availability boundary: a 9,600-point in-range sweep produced zero GREEN/YELLOW verdicts. The block is driven by heat and deflection inheriting the calculator bundle's specific_cutting_energy default of 30 J/mm^3 (~1000x the physical value), a formula/units defect out of scope for this plumbing repair and reported for a follow-up increment; test_ordinary_job_still_blocks_pending_out_of_scope_formula_fix pins it.",
+      "Manufacturing-output inventory --check passes unchanged; live-ungoverned=13; both Rosette rows FAIL_CLOSED (neither Saw route contained).",
+      "Governance ratchets (file-size, bare-except, execution-class) pass from services/api."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output produced. Feasibility-evaluation plumbing and tests only."
+  },
+  "files": [
+    {"path": "services/api/app/rmos/api_contracts.py", "intent": "Declare the machine/process fields on RmosContext that _score_via_scorer already forwarded, so they are no longer dropped by pydantic v2.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/rmos/api/rmos_feasibility_router.py", "intent": "Forward tooth_count; add cut_length_mm to ScorerDesignSpec; include ValidationError in _ENGINE_FAILURES so out-of-range facts fail closed to ERROR; import compute_saw_feasibility from the extracted saw_feasibility module and register it unchanged.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/rmos/api/saw_feasibility.py", "intent": "New home for compute_saw_feasibility and _SAW_REQUIRED_KEYS: missing-fact UNKNOWN guard, truthful design population, lazy import of the router-owned scorer adapter. Extracted to keep the router under the 500-line gate (mirrors profiling_feasibility.py).", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/toolpath/saw_engine.py", "intent": "Consume the delivered RPM/feed/diameter/tooth/power facts in _convert_to_saw_context instead of hardcoded defaults; prefer explicit cut length in _convert_to_saw_design; keep prior defaults only for the ungoverned toolpath-generation path.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/tests/rmos/test_rmos_feasibility_authority.py", "intent": "Supply the now-required saw facts so TC-09 still reaches the (monkeypatched) evaluator and yields ERROR.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_rmos_governed_cam_path.py", "intent": "Supply the now-required saw facts so TC-20's saw lane reaches the saw calculators and stays differentiated from rosette.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_saw_evaluator_plumbing.py", "intent": "New witnesses: facts reach calculators, sensitivity, missing->UNKNOWN, out-of-range->ERROR, unsafe rim-overspeed block, and the documented out-of-scope formula availability boundary.", "risk": "low", "behavior_change": "none"}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-26-CF2-SAW-EVALUATOR-PLUMBING-006",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 1, "low": 0},
+    "findings": [
+      "MEDIUM: edits the shared canonical feasibility path (RmosContext, _ENGINE_FAILURES, compute_saw_feasibility) and the saw conversion. Blast radius contained by making the new RmosContext fields optional (rosette/adaptive/profiling unchanged), guarding only the saw path, and preserving the ungoverned toolpath-generation fallback. Verified by the full affected suite and the manufacturing-output inventory --check (inventory unchanged at 13)."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Plumbing-only authority repair. No formula/threshold/default recalibration; no route containment; no inventory change. The residual ordinary-job RED is a separate, out-of-scope formula/units defect, reported for a follow-up increment."
+  }
+}
