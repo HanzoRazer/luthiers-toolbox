@@ -1,0 +1,85 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_CONSOLIDATION_RESUME_OPTIONS_004",
+  "title": "Post-CF2 consolidation reconnaissance: candidate ledger, CF2 remainder, options + recommendation (evidence-only)",
+  "intent": "Close CF2 Rosette 003R administratively and return to the consolidation program. Produce an evidence-only audit: baseline, January provenance, a focused candidate ledger (JSON+MD), the 13 remaining LIVE_UNGOVERNED CF2 rows, three mutually-exclusive options, and one bounded recommended next increment. No production behavior changes and no implementation is authorized.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/consolidation-resume-options-004.json",
+      "docs/investigations/consolidation-resume-options_2026-09-29/README.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/BASELINE.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/JANUARY_PROVENANCE.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.json",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CF2_REMAINDER.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/OPTIONS.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/RECOMMENDATION.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/test_consolidation_ledger.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/consolidation-resume-options-004.json",
+      "docs/investigations/consolidation-resume-options_2026-09-29/README.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/BASELINE.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/JANUARY_PROVENANCE.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.json",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/CF2_REMAINDER.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/OPTIONS.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/RECOMMENDATION.md",
+      "docs/investigations/consolidation-resume-options_2026-09-29/test_consolidation_ledger.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added a new evidence-only investigation directory docs/investigations/consolidation-resume-options_2026-09-29/ (README, BASELINE, JANUARY_PROVENANCE, CANDIDATE_LEDGER.json+.md, CF2_REMAINDER, OPTIONS, RECOMMENDATION, and a ledger-validation test) plus this owned CBSP21 manifest.",
+    "why": "The consolidation program needs an adjudicated, runtime-evidenced view of unfinished/dormant/duplicate work and a bounded next increment, following the repository's docs/investigations/<topic>_<date> convention.",
+    "why_not_redundant": "No prior investigation covers the post-#418 consolidation resume or adjudicates the 13 remaining LIVE_UNGOVERNED rows against runtime signals with A/B/C options.",
+    "what_did_not_change": "No production application code, routes, UI/stores, generators, geometry, scoring, G-code, dependencies, or inventory. No files deleted or retired. The manufacturing-output inventory is only read, not regenerated.",
+    "why_structural_extraction": "n/a (documentation/evidence only)."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main  # 5258d4c6...",
+      "git merge-base --is-ancestor ded5f6af... origin/main  # #418 head merged",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "python -m pytest docs/investigations/consolidation-resume-options_2026-09-29/test_consolidation_ledger.py -q --no-cov",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "git diff --name-only origin/main...HEAD  # evidence files only, no production paths"
+    ],
+    "proofs": [
+      "Base SHA 5258d4c6; #418 merged with head ded5f6af (CRO-001/002).",
+      "Inventory --check passes unchanged; both Rosette rows FAIL_CLOSED; live-ungoverned=13; permitted=0 (CRO-003/004/005/013).",
+      "Open-PR overlap completed: 5 Dependabot client-dep PRs, none touch the evidence files (CRO-006).",
+      "Ledger JSON and MD carry identical candidate IDs; every candidate has one valid disposition + provenance + evidence; DEAD_CONFIRMED and DUPLICATE_SUPERSEDED carry exclusion/survivor evidence (CRO-007..011).",
+      "All 13 live-ungoverned rows appear once in CF2_REMAINDER.md (CRO-012); January candidates distinguished from descendants (CRO-014).",
+      "Options A/B/C mutually exclusive; recommendation is one bounded increment (CRO-015/016).",
+      "Diff contains only evidence files; no production files (CRO-017)."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output. Documentation/evidence only."
+  },
+  "files": [
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/README.md", "intent": "Purpose, boundaries, classification model, file index.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/BASELINE.md", "intent": "Post-003R baseline SHAs, inventory, overlap.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/JANUARY_PROVENANCE.md", "intent": "January archaeology (churn vs first-introduction).", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.json", "intent": "Canonical machine-readable candidate ledger.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/CANDIDATE_LEDGER.md", "intent": "Human-readable mirror generated from the JSON.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/CF2_REMAINDER.md", "intent": "All 13 remaining LIVE_UNGOVERNED rows, grouped.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/OPTIONS.md", "intent": "Three mutually-exclusive program options.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/RECOMMENDATION.md", "intent": "One bounded recommended next increment.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/consolidation-resume-options_2026-09-29/test_consolidation_ledger.py", "intent": "Ledger parity + disposition vocabulary + CF2 accounting validation (CRO-007..016).", "risk": "low", "behavior_change": "none"}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-09-29-LTB-CONSOLIDATION-RESUME-004",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: evidence-only documentation increment under docs/investigations/. No production surface touched; the included pytest validator lives in the investigation directory, not a production package."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "No production behavior change; no deletions; inventory read-only. Recommendation requires a separate authorized dev order."
+  }
+}
