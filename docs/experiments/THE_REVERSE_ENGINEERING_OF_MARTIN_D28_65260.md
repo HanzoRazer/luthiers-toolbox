@@ -1,5 +1,190 @@
 # The Reverse Engineering of the Martin D-28 #65260
 
+> **STATUS.** The **Corrected Rerun 002 (Arnold side-height authority)** section
+> immediately below is the current result. The original first run is
+> **SUPERSEDED**: it used `4.4375 in` as the waist *side height* (that value is a
+> separate drawing "DEEP" / assembled-depth annotation, comparison-only) and
+> assumed a waist station of `10.5 in`. Rerun 002 uses the Arnold side height
+> `4.220 in` applied at the **geometrically derived** waist station. The first
+> run is retained verbatim further down as historical evidence. No production,
+> spec, or authority file is modified by either run.
+
+<!-- RERUN002_START -->
+## Corrected Rerun 002 — Arnold Side Height Authority
+
+- Repository SHA tested: `69d6f522a05456f600d42a1211e914145b78fe56`
+- Convergence log: `docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_CONVERGENCE.csv`
+- Summary: `docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_SUMMARY.csv`
+
+### Experimental authority rule (read first)
+
+Only the declared inputs govern the solve. The hard waist constraint is the
+John Arnold **side height 4.22 in**; the drawing annotation
+**4.4375 in DEEP** is a separate assembled-depth measurement used for
+comparison only and is never used as side height. The waist station is derived
+from the outline geometry, not assumed. Repo values are read only for mapping,
+provenance, comparison, validation, and inconsistency detection. No production,
+spec, or authority file is modified.
+
+### Active experimental inputs
+
+```text
+ACTIVE EXPERIMENTAL INPUTS (Rerun 002 — Arnold side-height authority)
+  waist_side_height_in   = 4.22  (HARD constraint)
+  waist_station          = GEOMETRICALLY DERIVED (not 10.5)
+  drawing_DEEP_in        = 4.4375  (COMPARISON ONLY — not side height)
+  S_shoulder_in @0.0     = 3.75
+  B_butt_in @30.4375   = 4.72
+  M_top_in / N_back_in   = 0.0 / 0.0
+  R_bounds_ft            = (8.0, 50.0)
+  L_bounds_in            = (12.0, 40.0)
+  Arnold side heights (in; developed station -> side height):
+         0.0 -> 3.7500
+         3.0 -> 3.7400
+         6.0 -> 3.8950
+         9.0 -> 4.0850
+        12.0 -> 4.2400
+        15.0 -> 4.3500
+        18.0 -> 4.4550
+        21.0 -> 4.5650
+        24.0 -> 4.6400
+        27.0 -> 4.6700
+     30.4375 -> 4.7200
+    WAIST    -> 4.2200  (@derived station)
+  mapping geometry (repo, mapping-only, NOT a solve input):
+    lower_bout_width_in = 15.625
+    upper_bout_width_in = 11.5
+    waist_width_in = 11.0
+    waist_y_norm = 0.44
+    outline_authority = BodyContourSolver two-arc outline (parametric)
+    station_mapping = absolute developed arc length from neck
+```
+
+### Geometric waist derivation
+
+- Geometric waist point (@ nominal L = 20 in): (x = 5.500 in, y = 8.800 in from tail).
+- Derived developed neck-to-waist station `s_waist` (@ L = 20 in): **14.298 in**.
+- Legacy assumed waist station: 10.5 in.
+- Difference (derived − legacy, @ L = 20): **+3.798 in**. The 10.5 in figure was never source-measured; it was inferred from lying between stations 9 and 12.
+- Outline half-perimeter (neck→tail) @ L = 20 in: 31.281 in.
+- Mapping: each Arnold station maps to the perimeter point at that **absolute**
+  developed arc length from the neck; `D` is the Euclidean in-plane distance from
+  the spherical high point to the mapped point (never the station).
+
+### A. Corrected waist-constrained nested solve (H_waist = 4.220 in)
+
+| R (in) | R (ft) | L (in) | P (in) | s_waist (in) | val RMSE (in) | max|resid| (in) | admissible | bound |
+|---:|---:|---:|---:|---:|---:|---:|:--:|:--:|
+| 96.0 | 8.00 | n/a | n/a | n/a | n/a | n/a | n/a | True |
+| 132.0 | 11.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 168.0 | 14.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 204.0 | 17.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 240.0 | 20.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 276.0 | 23.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 312.0 | 26.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 348.0 | 29.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 384.0 | 32.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 420.0 | 35.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 456.0 | 38.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 492.0 | 41.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 528.0 | 44.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 564.0 | 47.00 | n/a | n/a | n/a | n/a | n/a | n/a | False |
+| 600.0 | 50.00 | n/a | n/a | n/a | n/a | n/a | n/a | True |
+
+- **No admissible root at any R.** The model's minimum achievable waist side height over the (L, R) search box is **4.2978 in** (at L = 12.0 in, R = 50.0 ft), which is above the **4.22 in** target. The 4.220 in constraint at the geometric waist (developed s ≈ 14.3 in) is therefore unsatisfiable — the bracketing grid scan (logged in the convergence CSV) shows the waist residual never changes sign.
+
+
+### B. Full least-squares cross-check (L, R)
+
+| L0 | R0 | L (in) | R (in/ft) | P (in) | RMSE (in) | admissible | bound | flags |
+|---:|---:|---:|---:|---:|---:|:--:|:--:|---|
+| 20 | 180 | 19.939 | 600.0/50.00 | -19.182 | 0.0548 | False | True | P<0 (high point beyond tail); bound |
+| 18 | 300 | 19.939 | 600.0/50.00 | -19.182 | 0.0548 | False | True | P<0 (high point beyond tail); bound |
+| 22 | 120 | 19.939 | 600.0/50.00 | -19.182 | 0.0548 | False | True | P<0 (high point beyond tail); bound |
+| 16 | 500 | 19.939 | 600.0/50.00 | -19.182 | 0.0548 | False | True | P<0 (high point beyond tail); bound |
+| 30 | 250 | 19.939 | 600.0/50.00 | -19.182 | 0.0548 | False | True | P<0 (high point beyond tail); bound |
+
+### C. Anchor / leave-one-out identifiability
+
+| anchor | L (in) | R (in/ft) | P (in) | RMSE others (in) | admissible |
+|---|---:|---:|---:|---:|:--:|
+| 3.0 | 12.658 | 96.0/8.00 | -0.990 | 0.0469 | False |
+| 6.0 | 12.931 | 96.0/8.00 | -0.699 | 0.0483 | False |
+| 9.0 | 20.283 | 552.0/46.00 | -16.222 | 0.0399 | False |
+| 12.0 | 20.011 | 576.0/48.00 | -17.878 | 0.0404 | False |
+| 15.0 | 22.836 | 600.0/50.00 | -14.040 | 0.0486 | False |
+| 18.0 | 19.540 | 480.0/40.00 | -14.023 | 0.0425 | False |
+| 21.0 | 19.728 | 600.0/50.00 | -19.598 | 0.0414 | False |
+| 24.0 | 20.965 | 600.0/50.00 | -17.243 | 0.0400 | False |
+| 27.0 | 23.024 | 504.0/42.00 | -9.697 | 0.0497 | False |
+| WAIST | n/a | n/a | n/a | n/a | n/a |
+
+- Recovered L spread: 12.66 .. 23.02 in (range 10.37 in).
+
+### D. First run (superseded) vs Rerun 002
+
+| quantity | first run (superseded) | Rerun 002 |
+|---|---|---|
+| waist side height | 4.4375 in (DEEP mis-used) | 4.22 in (Arnold side height) |
+| waist station | 10.5 in (assumed) | 14.30 in (derived @L=20) |
+| recovered L* | 20.29 in | no admissible solution |
+| recovered R* | 8.0 ft (bound) | n/a |
+| P* | 5.59 in | n/a |
+| validation RMSE | 0.1897 in | n/a |
+| disposition | UNDERDETERMINED | INSUFFICIENT_GEOMETRY_AUTHORITY |
+
+The first run appeared to 'support 20 in' only because it imposed the wrong
+(higher) 4.4375 in value at an assumed 10.5 in station. With the correct 4.220 in
+side height at the geometrically derived waist, that apparent support disappears.
+
+### E. Drawing-depth reconciliation (side height vs DEEP)
+
+- Drawing waist DEEP = 4.4375 in; Arnold waist side height = 4.22 in; difference = **0.2175 in** (5.5245 mm).
+- The inverse side-height solve is NOT forced to explain this offset. The spec
+  side profile excludes top/back thickness (M=N=0), and the repo records no
+  #65260 top/back plate thickness that provenance-links to 0.2175 in, so the
+  offset is left as an **unresolved datum/measurement-method difference**
+  (assembled 'DEEP' depth vs bare side height) — a hypothesis, not a conclusion.
+
+### STOP condition encountered
+
+- Hard waist constraint 4.22 in is unsatisfiable with physically admissible geometry: the model's minimum achievable waist side height over the search box is 4.2978 in > 4.22 in. The geometric waist (developed s=14.30 in from the outline authority) cannot be reconciled with the Arnold 4.220 in reading under the spherical-back model.
+- Per the rerun order, this is reported rather than resolved by inventing
+  geometry or by treating the developed station as `D`.
+
+### Disposition
+
+**INSUFFICIENT_GEOMETRY_AUTHORITY**
+
+- Analysis A found no admissible root at any R: the model's minimum achievable waist side height (4.2978 in) exceeds the 4.220 in target, so the hard constraint at the geometric waist cannot be met.
+- The geometric waist location comes from the parametric outline authority (BodyContourSolver, waist_y_norm=0.44); its developed station (~14.3 in) disagrees with where the 4.220 in reading sits in Arnold's monotonic series (~10.5 in), so the constraint and the outline cannot be reconciled.
+- Every unconstrained least-squares solution is physically inadmissible (P<0) and/or radius-bound-pinned, so B offers no admissible cross-check either.
+
+### Inconsistency audit
+
+| field / value | experimental | conflicting repo/source | difference | source | effect | class | disposition |
+|---|---|---|---|---|---|---|---|
+| waist side height | 4.22 in (Arnold side height) | repo side_profile_raw['10.5']=4.22 in (same number, labelled waist) | 0.000 in (value agrees; label/station differ) | Arnold correspondence vs martin_d28_1937.json | hard constraint value confirmed; applied at derived station not 10.5 | `EXPERIMENTAL_OVERRIDE` | use 4.220 as side height; repo unchanged |
+| 4.4375 in DEEP drawing value | comparison-only (assembled depth) | first run used it as side height; Δ vs side height = +0.2175 in | +0.2175 in | Arnold drawing annotation vs Arnold correspondence | excluded from the side-height solve (see reconciliation, section E) | `SOURCE_CONFLICT` | treat 0.2175 in as unresolved datum/method difference (hypothesis only) |
+| waist developed station | derived s_waist=14.298 in (@L=20) | legacy assumed 10.5 in | +3.798 in | outline geometry vs first-run assumption | moves the hard-constraint location toward the tail vs the legacy guess | `DERIVATION_MISMATCH` | use geometrically derived station; 10.5 was never source-measured |
+| 30.4375 in | developed side-strip span (Arnold bottom-end station) | repo total_length=30.4375 in; outline half-perimeter@L=20=31.28 in | +0.84 in vs half-perimeter | repo dimensions.total_length; derived outline | governs absolute arc-length mapping; 'body length' reading falsified previously | `UNIT_OR_DATUM_AMBIGUITY` | read 30.4375 in as developed side span, not centerline body length |
+| Arnold 12-pt profile vs spherical-back model | 12 side-height points | single-radius spherical back | n/a | Arnold correspondence vs Sevy/Doolin model | residual pattern + non-identifiability indicate limited model fit | `UNRESOLVED` | report as-is; do not force the model to match |
+| plan-view outline authority | not declared | BodyContourSolver parametric outline; waist_y_norm=0.44 family default | model dependence | body_contour_solver FAMILY_DEFAULTS | derived s_waist and D mapping depend on the parametric outline shape | `UNRESOLVED` | replace with a measured #65260 perimeter if one becomes available |
+| martin_d28_1937.py module | n/a | single line; early # comment swallows all code (exports nothing) | code vs data-bearing .json | services/api/app/instrument_geometry/specs/martin_d28_1937.py | none (observations sourced from the rerun order / .json) | `REPO_CONFLICT` | flag for owner; not fixed here |
+
+Classes: `EXPERIMENTAL_OVERRIDE`, `REPO_CONFLICT`, `SOURCE_CONFLICT`, `DERIVATION_MISMATCH`, `UNIT_OR_DATUM_AMBIGUITY`, `UNRESOLVED`.
+
+<!-- RERUN002_END -->
+
+---
+
+# SUPERSEDED — First run (historical evidence)
+
+> Superseded by Corrected Rerun 002 above. Retained verbatim. This first run used
+> waist side height = `4.4375 in` and an assumed waist station = `10.5 in`; both
+> are corrected in Rerun 002 (`4.220 in` side height at the derived geometric
+> waist). Kept only as a record of the earlier (incorrect) conflation.
+
 Isolated inverse-geometry experiment. Evidence gathering only — no production,
 authority, or spec change is made or implied by this document.
 
