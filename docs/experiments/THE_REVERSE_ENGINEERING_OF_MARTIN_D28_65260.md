@@ -7,72 +7,137 @@
 > assumed a waist station of `10.5 in`. Rerun 002 uses the Arnold side height
 > `4.220 in` applied at the **geometrically derived** waist station. The first
 > run is retained verbatim further down as historical evidence. **Rerun 003
-> (Arnold outline authority) was STOPPED** at Step 1 — the raw #65260 drawing is
-> not in the checkout — with disposition `INSUFFICIENT_GEOMETRY_AUTHORITY`; see
-> the Rerun 003 section directly below. No production, spec, or authority file is
-> modified by any run.
+> (Arnold outline authority) has since been COMPLETED** using the verified traced
+> CAD reconstruction of the Arnold #65260 drawing — see the Rerun 003 section
+> directly below; its disposition is `SPHERICAL_MODEL_MISMATCH`. No production,
+> spec, or authority file is modified by any run.
 
-## Corrected Rerun 003 — Arnold Outline Authority — STOPPED
+<!-- RERUN003_START -->
+## Corrected Rerun 003 — Arnold Outline Authority
 
-**Disposition: `INSUFFICIENT_GEOMETRY_AUTHORITY` (STOP at Step 1, before building any outline).**
+- Repository SHA tested: `f69284cfef9f1931674f5230e8a53b69e4b15dcf`
+- Outline authority: **Arnold-derived CAD tracing** `ACOUSTIC BODY.pdf` (verified traced reconstruction of the John Arnold #65260 drawing, confirmed by JD).
+- Primary historical source (provenance): John Arnold 1937 D-28 #65260 drawing (`1937 D-28.pdf`). Neither PDF is committed (public repo; copyrighted); see the provenance manifest `D28_65260_RERUN_003_PROVENANCE.json`.
+- Extracted geometry: `D28_65260_ARNOLD_OUTLINE.csv`; convergence `D28_65260_SIDE_INVERSE_RERUN_003_CONVERGENCE.csv`; summary `D28_65260_SIDE_INVERSE_RERUN_003_SUMMARY.csv`.
 
-Rerun 003 requires replacing the parametric dreadnought outline authority with a
-half-outline reconstructed from the **actual John Arnold #65260 plan-view
-drawing**. That raw drawing is **not present in the repository checkout**, and the
-order forbids inventing an outline or substituting the generic dreadnought plan.
-The experiment therefore stops before Step 1: no outline, no arc-length
-integration, no Analysis A/B/C, and no Rerun 003 result CSVs were produced (none
-could be produced without fabricating geometry).
+### Source classification
 
-### Missing source (STOP condition)
+| item | classification |
+|---|---|
+| John Arnold #65260 drawing | `SOURCE_MEASURED` (primary historical) |
+| ACOUSTIC BODY.pdf outline / soundhole / dims | `DRAWING_DERIVED` (verified tracing) |
+| Arnold side-height series (0..30.4375) | `SOURCE_MEASURED` (correspondence) |
+| waist 4.220 in | `SOURCE_MEASURED` (validation, not anchor) |
+| 4.4375 in DEEP | `HYPOTHESIS` (comparison only) |
+| body length L=20 (A1 fixed) | `DRAWING_DERIVED` calibration |
+| geometric waist / bout maxima / s_waist | `CALCULATED` (from perimeter) |
+| generic dreadnought similitude | `PROPORTIONAL_ESTIMATE` (not used here) |
 
-- **Required and missing:** the John Arnold 1937 Martin D-28 #65260 plan-view /
-  bracing drawing — as a raster image, PDF, DXF/DWG/SVG, or extracted plan-view
-  coordinate set with scale/calibration.
-- A full-checkout search found **no** file referencing `65260`, `arnold`,
-  `martin_d28`, or a D-28 plan-view outline (no image/PDF/DXF/DWG/SVG, no
-  coordinate/trace data). The only `65260`-named files are this experiment's own
-  Rerun 002 outputs.
-- **Corroborating repo audit:** `docs/audit/spec_data_verification_2026-04-27.md`
-  records Martin D-28 1937 source = "John Arnold technical drawings",
-  "**No Arnold files located in audit**", classification **UNVERIFIABLE-NO-SOURCE**.
-- The only dreadnought outline asset,
-  `services/api/app/instrument_geometry/body/dxf/acoustic/dreadnought_body.dxf`,
-  is the **generic** dreadnought plan (no #65260/Arnold provenance) and is
-  explicitly disallowed here as #65260 outline authority.
+### Outline extraction + calibration authority table
 
-### Source-authority classification (what is / isn't available)
+| quantity | Arnold-drawing-derived (extracted) | repo value | difference | used for Rerun 003 |
+|---|---:|---:|---:|---|
+| body length | 19.99 in | 20.0 in | -0.01 in | A1 fixed L; A2 floats |
+| upper bout | 11.64 in | 11.5 in | +0.14 in | outline shape |
+| lower bout | 15.72 in | 15.625 in | +0.09 in | outline shape |
+| soundhole Ø (datum A) | 3.99 in | 4.0 in | -0.01 in | datum cross-check |
+| geometric waist width | 10.82 in | 11.0 in | -0.18 in | CALCULATED output |
 
-| quantity | Arnold drawing (extracted) | repo value | authority classification | used for Rerun 003 |
-|---|---|---|---|---|
-| plan-view half-outline | UNAVAILABLE | none (parametric only) | DRAWING_DERIVED (required) | none — STOP |
-| body length | UNAVAILABLE | 20.0 in | source-claimed / UNRESOLVED | none |
-| upper bout width | UNAVAILABLE | 11.5 in | source-claimed / UNRESOLVED | none |
-| lower bout width | UNAVAILABLE | 15.625 in | source-claimed / UNRESOLVED | none |
-| waist width | UNAVAILABLE | 11.0 in | source-claimed / UNRESOLVED | none |
-| side-height series (0..30.4375 in) | n/a (correspondence, not the drawing) | matches repo raw | SOURCE_MEASURED (correspondence) | not used (no outline to map onto) |
-| waist side height | n/a | 4.220 in | SOURCE_MEASURED | not used (no outline) |
-| 4.4375 in DEEP | n/a | — | HYPOTHESIS / comparison-only | not used |
+- Datum A (soundhole center): y_from_neck = 5.896 in, y_from_tail = 14.094 in (extracted directly from the Ø4.0 circle).
+- Symmetry: symmetric_by_construction; **CAD symmetry discrepancy = 0 by construction** (NOT evidence the physical 1937 instrument was symmetric).
 
-### What this resolves
+### Geometric waist (derived output)
 
-- It does **not** answer the Rerun 002 question — "did the parametric outline
-  misplace the waist, or is the single-radius spherical-back model itself
-  incompatible with the Arnold side-height series?" — because that requires an
-  authoritative #65260 outline that does not exist in the checkout.
-- Rerun 002's disposition (`INSUFFICIENT_GEOMETRY_AUTHORITY`) therefore stands,
-  and Rerun 003 confirms the geometry-authority gap is the binding blocker. Which
-  of the two Rerun 002 hypotheses is correct remains **UNRESOLVED**.
+- Geometric waist: width 10.818 in at y = 6.523 in (y/L = 0.326); developed station **s_waist = 9.277 in**.
+- Developed neck→tail half-perimeter: 26.728 in (Arnold bottom-end station = 30.4375 in).
+- Rerun 002 parametric waist station was 14.298 in; **shift = -5.021 in** with the real outline.
 
-### To unblock Rerun 003
+### Integration convergence (developed side length)
 
-Add the raw #65260 source to the checkout — the drawing (image/PDF/DXF) or an
-extracted plan-view coordinate set with a documented scale/calibration — then
-re-issue this order. Until then, no faithful Arnold-outline reconstruction is
-possible.
+| resolution (pts) | half-perimeter (in) |
+|---:|---:|
+| 1993 | 26.7283 |
+| 3986 | 26.7282 |
+| 7972 | 26.7282 |
 
-Rerun 002 result files (`docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_*.csv`)
-and the first run are preserved unchanged.
+### A. Anchor-constrained solves (hard anchor 12.000 in → 4.240 in; also 9 & 15)
+
+| anchor (in→in) | A1 fixed-L: R (ft) / P (in) / RMSE | A2 float-L: L (in) / R (ft) / P (in) / RMSE | admissible |
+|---|---|---|:--:|
+| 12.0→4.24 | no root | 21.87 / 35.00 / -7.67 / 0.0281 | False |
+| 9.0→4.085 | no root | 22.05 / 34.00 / -6.90 / 0.0282 | False |
+| 15.0→4.35 | no root | 21.95 / 33.00 / -6.50 / 0.0270 | False |
+
+- Waist-height floor over the (L,R) box (A1, extracted outline): 4.1156 in (target validation 4.220 in).
+
+### Validation at the primary-anchor solution (station 12 → 4.240)
+
+| station (in) | measured H (in) | predicted H (in) | residual (in) | D (in) | role |
+|---:|---:|---:|---:|---:|---|
+| 0.0 | 3.7500 | 3.7439 | -0.0061 | 29.625 | S bc |
+| 3.0 | 3.7400 | 3.7437 | +0.0037 | 29.628 | validation |
+| 6.0 | 3.8950 | 3.9038 | +0.0088 | 27.270 | validation |
+| 9.0 | 4.0850 | 4.0860 | +0.0010 | 24.308 | validation |
+| 12.0 | 4.2400 | 4.2400 | -0.0000 | 21.488 | ANCHOR |
+| 15.0 | 4.3500 | 4.3464 | -0.0036 | 19.298 | validation |
+| 18.0 | 4.4550 | 4.4368 | -0.0182 | 17.221 | validation |
+| 21.0 | 4.5650 | 4.5310 | -0.0340 | 14.750 | validation |
+| 24.0 | 4.6400 | 4.6200 | -0.0200 | 11.952 | validation |
+| 27.0 | 4.6700 | 4.6854 | +0.0154 | 9.373 | validation |
+| 30.4375 | 4.7200 | 4.7098 | -0.0102 | 8.211 | B bc |
+| waist@10.15 | 4.2200 | 4.1504 | -0.0696 | 23.171 | validation |
+
+### B. Full least squares
+
+| variant | L (in) | R (in/ft) | P (in) | RMSE (in) | admissible | flags |
+|---|---:|---:|---:|---:|:--:|---|
+| B_A2_floatL | 21.365 | 446.1/37.18 | -9.545 | 0.0126 | False | P<0 |
+| B_A1_fixedL | 19.990 | 600.0/50.00 | -19.081 | 0.0301 | False | P<0 |
+
+### C. Identifiability (anchor clustering + perturbation)
+
+- A2 recovered L across anchors 9/12/15: 21.87..22.05 in (range 0.18); R 33.00..35.00 ft.
+- Perturbation (outline scale ±0.5%, heights ±0.01 in) recovered R (fixed-L, primary anchor):
+  - scale+0.5%: R = no root
+  - scale-0.5%: R = no root
+  - h+0.01: R = 47.3 ft, P=-17.51 in
+  - h-0.01: R = no root
+
+### D. Rerun 002 (parametric) vs Rerun 003 (Arnold outline)
+
+| quantity | Rerun 002 (parametric) | Rerun 003 (Arnold outline) |
+|---|---|---|
+| outline authority | BodyContourSolver parametric | Arnold-derived CAD tracing |
+| waist y/L | 0.44 (assumed) | 0.326 (derived) |
+| derived waist station | 14.30 in | 9.28 in |
+| half-perimeter | 31.28 in | 26.73 in |
+| hard anchor | waist 4.4375 then 4.220 | station 12.000 → 4.240 |
+| disposition | INSUFFICIENT_GEOMETRY_AUTHORITY | SPHERICAL_MODEL_MISMATCH |
+
+### Inconsistency audit
+
+| field | value / conflict | class | disposition |
+|---|---|---|---|
+| waist side height 4.220 vs 4.4375 DEEP | Δ = +0.2175 in | `SOURCE_CONFLICT` | 4.220 = validation; DEEP comparison-only |
+| derived waist station vs Rerun 002 | 9.28 in vs 14.30 in (shift -5.02) | `DERIVATION_MISMATCH` | use Arnold-outline value; parametric was wrong |
+| developed half-perimeter vs Arnold span | 26.73 in vs 30.4375 in | `UNIT_OR_DATUM_AMBIGUITY` | plan-view developed length < Arnold stated span; stations >26.7 in clamp to tail; possibly Arnold measured along the domed side |
+| waist width | 10.82 in (CALCULATED) vs repo 11.0 in | `DERIVATION_MISMATCH` | outline is authority; repo value not used |
+| upper/lower bout | 11.64 / 15.72 in (extracted) vs repo 11.5 / 15.625, label 11.7 / 15.7 | `DRAWING_DERIVED` | drawing/label used, deltas reported |
+| admissible single-radius spherical fit | none (best fits require P<0) | `UNRESOLVED` | model-level defect; not a geometry-authority gap |
+| CAD symmetry | 0 by construction | `DRAWING_DERIVED` | not evidence the real instrument is symmetric |
+| martin_d28_1937.py | single-line module exports nothing | `REPO_CONFLICT` | flagged, not fixed |
+
+### Disposition
+
+**SPHERICAL_MODEL_MISMATCH**
+
+- All anchor solutions are physically inadmissible (P<0/P>L) or radius-bound-pinned.
+
+Interpretation: replacing the parametric outline with the Arnold-derived tracing **removed the Rerun 002 non-identifiability** — the 9/12/15 in hard anchors now converge tightly (L≈22 in, R≈34 ft, RMSE≈0.028 in). But that converged fit is **physically inadmissible** (spherical high point outside the body, P<0) and needs a near-flat ~34 ft back at L≈22 in, not 20 in. So the outline authority is now sufficient and the residual failure is the **single-radius spherical-back model itself**, not the geometry. The proportional generic-dreadnought similitude study (Rerun 004) is the appropriate next experiment.
+
+<!-- RERUN003_END -->
+
+---
 
 <!-- RERUN002_START -->
 ## Corrected Rerun 002 — Arnold Side Height Authority
