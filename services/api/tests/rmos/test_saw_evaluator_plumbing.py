@@ -229,11 +229,26 @@ def test_ordinary_job_still_blocks_pending_out_of_scope_formula_fix():
     """
     Documents the availability boundary this increment deliberately does NOT
     cross. With the facts now correctly delivered, an ordinary cut still blocks
-    RED because the heat and deflection calculators inherit the bundle's
-    30 J/mm^3 specific-cutting-energy default (~1000x the physical value). That
-    is a formula/units defect, out of scope for a plumbing repair. This test
-    pins the current behaviour and its cause; when the formula defect is fixed
-    in a later increment, the ``xfail`` will flip to XPASS and flag the change.
+    RED, and the cause is two calculator-model defects that live in the formula
+    layer this plumbing increment is not allowed to change:
+
+    1. Specific cutting energy. The heat/deflection/cutting_force calculators
+       use a hardcoded 30 J/mm^3 (MaterialProperties defaults to 30, "hardwood
+       ~40") and the bundle never passes material. The repository's own
+       governed material DB - app/data_registry/system/materials/
+       wood_species.json - lists specific_cutting_energy_j_per_mm3 at
+       0.22-0.87 J/mm^3 per species, ~35-140x lower. Worse,
+       MaterialProperties.specific_cutting_energy_j_per_mm3 is bounded ge=5.0,
+       so the model rejects the repo's own truthful values outright: the fact
+       cannot even be wired in without recalibrating the model's bounds,
+       default, and the formulas tuned around them.
+    2. Deflection. Even with a truthful ~0.35 J/mm^3 forced in (physics only),
+       deflection still scores ~20 (<30) because its effective-width term
+       collapses the blade's second moment of area - an independent defect.
+
+    Both are out of scope for a plumbing repair. This test pins the current
+    behaviour and its cause; when the formula/units defects are fixed in a
+    later increment it will fail here and flag the change for re-baselining.
     """
     result = _saw()
     calc = result["safety"]["details"]["calculator_results"]
