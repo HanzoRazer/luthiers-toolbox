@@ -6,8 +6,73 @@
 > separate drawing "DEEP" / assembled-depth annotation, comparison-only) and
 > assumed a waist station of `10.5 in`. Rerun 002 uses the Arnold side height
 > `4.220 in` applied at the **geometrically derived** waist station. The first
-> run is retained verbatim further down as historical evidence. No production,
-> spec, or authority file is modified by either run.
+> run is retained verbatim further down as historical evidence. **Rerun 003
+> (Arnold outline authority) was STOPPED** at Step 1 — the raw #65260 drawing is
+> not in the checkout — with disposition `INSUFFICIENT_GEOMETRY_AUTHORITY`; see
+> the Rerun 003 section directly below. No production, spec, or authority file is
+> modified by any run.
+
+## Corrected Rerun 003 — Arnold Outline Authority — STOPPED
+
+**Disposition: `INSUFFICIENT_GEOMETRY_AUTHORITY` (STOP at Step 1, before building any outline).**
+
+Rerun 003 requires replacing the parametric dreadnought outline authority with a
+half-outline reconstructed from the **actual John Arnold #65260 plan-view
+drawing**. That raw drawing is **not present in the repository checkout**, and the
+order forbids inventing an outline or substituting the generic dreadnought plan.
+The experiment therefore stops before Step 1: no outline, no arc-length
+integration, no Analysis A/B/C, and no Rerun 003 result CSVs were produced (none
+could be produced without fabricating geometry).
+
+### Missing source (STOP condition)
+
+- **Required and missing:** the John Arnold 1937 Martin D-28 #65260 plan-view /
+  bracing drawing — as a raster image, PDF, DXF/DWG/SVG, or extracted plan-view
+  coordinate set with scale/calibration.
+- A full-checkout search found **no** file referencing `65260`, `arnold`,
+  `martin_d28`, or a D-28 plan-view outline (no image/PDF/DXF/DWG/SVG, no
+  coordinate/trace data). The only `65260`-named files are this experiment's own
+  Rerun 002 outputs.
+- **Corroborating repo audit:** `docs/audit/spec_data_verification_2026-04-27.md`
+  records Martin D-28 1937 source = "John Arnold technical drawings",
+  "**No Arnold files located in audit**", classification **UNVERIFIABLE-NO-SOURCE**.
+- The only dreadnought outline asset,
+  `services/api/app/instrument_geometry/body/dxf/acoustic/dreadnought_body.dxf`,
+  is the **generic** dreadnought plan (no #65260/Arnold provenance) and is
+  explicitly disallowed here as #65260 outline authority.
+
+### Source-authority classification (what is / isn't available)
+
+| quantity | Arnold drawing (extracted) | repo value | authority classification | used for Rerun 003 |
+|---|---|---|---|---|
+| plan-view half-outline | UNAVAILABLE | none (parametric only) | DRAWING_DERIVED (required) | none — STOP |
+| body length | UNAVAILABLE | 20.0 in | source-claimed / UNRESOLVED | none |
+| upper bout width | UNAVAILABLE | 11.5 in | source-claimed / UNRESOLVED | none |
+| lower bout width | UNAVAILABLE | 15.625 in | source-claimed / UNRESOLVED | none |
+| waist width | UNAVAILABLE | 11.0 in | source-claimed / UNRESOLVED | none |
+| side-height series (0..30.4375 in) | n/a (correspondence, not the drawing) | matches repo raw | SOURCE_MEASURED (correspondence) | not used (no outline to map onto) |
+| waist side height | n/a | 4.220 in | SOURCE_MEASURED | not used (no outline) |
+| 4.4375 in DEEP | n/a | — | HYPOTHESIS / comparison-only | not used |
+
+### What this resolves
+
+- It does **not** answer the Rerun 002 question — "did the parametric outline
+  misplace the waist, or is the single-radius spherical-back model itself
+  incompatible with the Arnold side-height series?" — because that requires an
+  authoritative #65260 outline that does not exist in the checkout.
+- Rerun 002's disposition (`INSUFFICIENT_GEOMETRY_AUTHORITY`) therefore stands,
+  and Rerun 003 confirms the geometry-authority gap is the binding blocker. Which
+  of the two Rerun 002 hypotheses is correct remains **UNRESOLVED**.
+
+### To unblock Rerun 003
+
+Add the raw #65260 source to the checkout — the drawing (image/PDF/DXF) or an
+extracted plan-view coordinate set with a documented scale/calibration — then
+re-issue this order. Until then, no faithful Arnold-outline reconstruction is
+possible.
+
+Rerun 002 result files (`docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_*.csv`)
+and the first run are preserved unchanged.
 
 <!-- RERUN002_START -->
 ## Corrected Rerun 002 — Arnold Side Height Authority
