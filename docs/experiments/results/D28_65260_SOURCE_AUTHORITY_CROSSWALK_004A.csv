@@ -1,0 +1,19 @@
+quantity,value,unit,current_repo_representation,original_source_support,later_source_support,classification,active_in_004A,notes
+side height @ station 0.0,3.75,in,side_profile_raw[0.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 3.0,3.74,in,side_profile_raw[3.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 6.0,3.895,in,side_profile_raw[6.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 9.0,4.085,in,side_profile_raw[9.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 12.0,4.24,in,side_profile_raw[12.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 15.0,4.35,in,side_profile_raw[15.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 18.0,4.455,in,side_profile_raw[18.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 21.0,4.565,in,side_profile_raw[21.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 24.0,4.64,in,side_profile_raw[24.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+side height @ station 27.0,4.67,in,side_profile_raw[27.0],yes,-,SOURCE_MEASURED,yes,Arnold numeric station
+waist side height,4.22,in,side_profile_raw[10.5],yes (height),-,SOURCE_MEASURED,validation@geometric waist,no source numeric station
+bottom side height,4.72,in,side_profile_raw[30.4375],yes (height),-,SOURCE_MEASURED,validation@geometric tail / B boundary,no source numeric station
+waist station 10.5,10.5,in,key in side_profile_raw,no,repo,LEGACY_REPO_ASSIGNMENT,no,excluded from active solve
+bottom station 30.4375,30.4375,in,key + total_length,no,repo/subsequent,LEGACY_REPO_ASSIGNMENT / SUBSEQUENT_SOURCE,no,not used as span/normalization
+body length,20.0,in,dimensions.body_length,drawing,-,DRAWING_DERIVED,A1 fixed L,CAD-labelled
+CAD-traced waist position,9.277,in (developed),-,-,-,VERIFIED_TRACED_RECONSTRUCTION / CALCULATED,yes,geometric min-width; y/L=0.326
+CAD-traced plan half-perimeter,26.728,in,-,-,-,VERIFIED_TRACED_RECONSTRUCTION / CALCULATED,yes,station 27 exceeds this -> OUT_OF_DOMAIN
+4.4375 DEEP,4.4375,in,notes,drawing annotation,-,DRAWING_DERIVED,comparison only,"assembled depth, not side height"

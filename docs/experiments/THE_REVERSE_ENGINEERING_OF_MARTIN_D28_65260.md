@@ -10,10 +10,97 @@
 > (Arnold outline authority) has since been COMPLETED** using the verified traced
 > CAD reconstruction of the Arnold #65260 drawing — see the Rerun 003 section
 > directly below; its disposition is `SPHERICAL_MODEL_MISMATCH`. No production,
-> spec, or authority file is modified by any run. A follow-on **Rerun 003A
+> spec, or authority file is modified by any run. **Run 004A** (original
+> side-measurement authority cleanup) is recorded at the top; it removes the
+> unsupported 10.5/30.4375 station assignments from the active solve and concludes
+> `SINGLE_RADIUS_MODEL_MISMATCH_PERSISTS` (Run 004B authorized). A follow-on **Rerun 003A
 > station-datum audit** is recorded above the Rerun 003 section; it concludes
 > `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
 > as **STRENGTHENED**.
+
+<!-- RERUN004A_START -->
+## Run 004A — Original Side-Measurement Authority Cleanup
+
+- Repository SHA tested: `4638db2db9e5216e8121f28663afa280433fccb2`
+- Corrects the experimental source model before the 004B similitude study. Reuses the Rerun 003 Arnold/JD traced outline and Sevy/Doolin equations unchanged; no historical value, outline, or production/spec/authority file is modified; neither PDF is vendored.
+- Artifacts: `D28_65260_SIDE_HEIGHT_AUTHORITY_004A.json`, `D28_65260_SOURCE_AUTHORITY_CROSSWALK_004A.csv`, `D28_65260_SIDE_AUTHORITY_004A_CONVERGENCE.csv`, `D28_65260_SIDE_AUTHORITY_004A_SUMMARY.csv`.
+
+### Source correction
+
+1. The production repo representation conflates measured heights with inferred station coordinates: waist 4.220 in with station **10.5 in**, and bottom 4.720 in with station **30.4375 in**.
+2. Arnold's original numeric-station series establishes only the stations **0,3,6,9,12,15,18,21,24,27** (heights unchanged).
+3. The numeric heights themselves remain valid (`SOURCE_MEASURED`).
+4. **10.5 and 30.4375 are preserved as `LEGACY_REPO_ASSIGNMENT` evidence but excluded from the active 004A solve** (no 30.4375 span, no normalization, no 10.5 waist station).
+5. Waist (4.220) and bottom (4.720) are now **geometric validation points** — waist at the minimum-width point, bottom at the tail endpoint.
+
+### Active mapping (literal plan-view developed arc; no clamping)
+
+| Arnold station (in) | in-domain? | status |
+|---:|:--:|---|
+| 0 | True | OK |
+| 3 | True | OK |
+| 6 | True | OK |
+| 9 | True | OK |
+| 12 | True | OK |
+| 15 | True | OK |
+| 18 | True | OK |
+| 21 | True | OK |
+| 24 | True | OK |
+| 27 | False | OUT_OF_DOMAIN |
+
+- Plan-view half-perimeter = 26.728 in; **station 27 in is OUT_OF_DOMAIN** (27 > 26.73), reported not clamped. Stations 0–24 map normally.
+- Geometric waist developed station = 9.277 in (y/L=0.326); geometric tail at y=19.99 in.
+
+### Multi-anchor inverse (source-supported anchors 9 / 12 / 15 only)
+
+| anchor (in→in) | L (in) | R (ft) | P (in) | numeric RMSE | max resid | waist resid | bottom resid | admissible | bound |
+|---|---:|---:|---:|---:|---:|---:|---:|:--:|:--:|
+| 9.0→4.085 | 21.20 | 43.00 | -12.98 | 0.0105 | 0.0152 | -0.0893 | -0.0078 | False | False |
+| 12.0→4.24 | 21.16 | 40.00 | -11.39 | 0.0098 | 0.0171 | -0.0848 | -0.0084 | False | False |
+| 15.0→4.35 | 21.19 | 39.00 | -10.80 | 0.0098 | 0.0171 | -0.0828 | -0.0086 | False | False |
+
+### Global least-squares (numeric stations 0–24 in-domain)
+
+- L = 21.20 in, R = 39.60 ft, P = -11.11 in, numeric RMSE = 0.0088 in, max resid = 0.0166 in; waist resid = -0.0838 in, bottom resid = -0.0085 in; admissible = False, bound = False.
+
+### Comparison — Rerun 003 / 003A / Run 004A
+
+| aspect | Rerun 003 | Rerun 003A | Run 004A |
+|---|---|---|---|
+| active station count | 11 (0..30.4375) | 11 (+normalized test) | 10 (0..27) |
+| 10.5 active | no (geometric waist) | no | no |
+| 30.4375 active | yes (B boundary/clamp) | yes (normalized endpoint) | **no** |
+| waist treatment | geometric | geometric | geometric validation |
+| bottom treatment | station 30.4375 (B) | station 30.4375 | **geometric tail (B)** |
+| best L (anchor 12) | ~21.9 in | ~22.0 / ~12 (norm) | 21.16 in |
+| best R (anchor 12) | ~35 ft | ~34 / ~9 (norm) | 40.00 ft |
+| P (anchor 12) | <0 | <0 | -11.39 in |
+| physical admissibility | inadmissible (P<0) | inadmissible (P<0) | inadmissible (P<0) |
+| disposition | SPHERICAL_MODEL_MISMATCH | STRENGTHENED | see conclusion |
+
+### Run 004A conclusion
+
+**`SINGLE_RADIUS_MODEL_MISMATCH_PERSISTS`**
+
+- Every anchor fit on the cleaned source still requires P<0 (anchors L~21.2-21.2 in, all inadmissible); global LS P<0 as well. Removing 10.5/30.4375 did not change this.
+- Station 27 in is OUT_OF_DOMAIN (27 > plan half-perimeter 26.73 in); the developed-length shortfall persists independent of the legacy stations.
+
+Note: the Rerun 003A normalized-30.4375 mapping is **not** used in the active 004A solve (the source does not establish 30.4375 as a terminal station); it is retained only as historical robustness evidence.
+
+### Next-step gate
+
+- Run 004A shows the single-radius spherical mismatch persists after source cleanup, so **RUN 004B — PROPORTIONAL DREADNOUGHT SIMILITUDE is AUTHORIZED** as the next experiment (not implemented here). 004B will normalize the generic dreadnought plan's body/side relationships, scale them onto the verified #65260 geometry, validate against the cleaned Arnold side-height dataset, and back-check against the measured #65260 bracing layout.
+
+### Classification ledger
+
+- `SOURCE_MEASURED`: Arnold numeric heights 0–27; waist 4.220; bottom 4.720.
+- `LEGACY_REPO_ASSIGNMENT`: waist station 10.5; bottom station 30.4375 (excluded from solve).
+- `CALCULATED`: geometric waist station, half-perimeter, inverse (L,R,P).
+- `UNRESOLVED`: relation of 10.5/30.4375 to the original series; developed-span convention.
+
+<!-- RERUN004A_END -->
+
+---
 
 <!-- RERUN003A_START -->
 ## Rerun 003A — Arnold Station Datum Audit
