@@ -1,0 +1,6 @@
+model,source_support,geometric_admissibility,total_mapped_span_in,best_L_in,best_R_ft,P_in,rmse_in,max_resid_in,waist_resid_in,physical_admissibility,final_audit_status
+A_literal_plan_arc,weak,inadmissible (P<0),26.728,21.95,33.00,-6.50,0.0270,0.0639,-0.0639,False,DATUM_DEFINITION_UNRESOLVED
+longitudinal,rejected,rejected,n/a,,,,,,,rejected,DATUM_DEFINITION_UNRESOLVED
+normalized_endpoint,none,inadmissible (P<0),26.728,12.58,9.00,-2.00,0.0308,0.0545,-0.0446,False,DATUM_DEFINITION_UNRESOLVED
+3d_rim,none,n/a,26.753,,,,,,,n/a,DATUM_DEFINITION_UNRESOLVED
+proportional_sidestrip,none,n/a,26.728,,,,,,,n/a,DATUM_DEFINITION_UNRESOLVED

@@ -10,7 +10,104 @@
 > (Arnold outline authority) has since been COMPLETED** using the verified traced
 > CAD reconstruction of the Arnold #65260 drawing — see the Rerun 003 section
 > directly below; its disposition is `SPHERICAL_MODEL_MISMATCH`. No production,
-> spec, or authority file is modified by any run.
+> spec, or authority file is modified by any run. A follow-on **Rerun 003A
+> station-datum audit** is recorded above the Rerun 003 section; it concludes
+> `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
+> as **STRENGTHENED**.
+
+<!-- RERUN003A_START -->
+## Rerun 003A — Arnold Station Datum Audit
+
+- Repository SHA tested: `bdd45d4cc2ec07fb07af9acdc9e7a14e09447e88`
+- Coordinate/datum audit of Arnold's "distance from neck end" station system, using the Rerun 003 Arnold-derived outline unchanged. No historical value or outline was modified; neither PDF is vendored.
+- Audit CSV: `D28_65260_STATION_DATUM_AUDIT_003A.csv`; summary `D28_65260_STATION_DATUM_AUDIT_003A_SUMMARY.csv`.
+
+### Step 1 — Source-wording evidence (SOURCE FACT vs interpretation)
+
+| source | wording | supports | does NOT support | confidence |
+|---|---|---|---|---|
+| John Arnold correspondence (email header) | "Distance from neck end, side width" | distance measured from the neck end; values are side widths | does NOT specify plan-view vs developed vs 3D vs longitudinal | high (verbatim) |
+| Rerun 002 order (Ross) restatement | "developed distance from neck end (in)" | developed-side-strip interpretation | "developed" is an added interpretation, not Arnold's word | interpretation, not source |
+| 1937 D-28.pdf (Arnold drawing) | plan view + side-profile strip; 'DEEP' depth annotations; no station-path definition | side depths exist as drawn dimensions | no annotation defines how 'distance from neck end' was measured | medium (hand-drawn scan) |
+| ACOUSTIC BODY.pdf (JD tracing) | 20.0 / 11.7 / 15.7 / Ø4.0 dimensions; datum A = soundhole | plan-view geometry + calibration | carries no side-station coordinate definition | high (CAD) |
+
+**SOURCE FACT:** Arnold's verbatim coordinate label is "Distance from neck end". The qualifier "developed" is a downstream interpretation (Rerun 002 order), not Arnold's word. No source names the measuring-path convention.
+
+### Step 2 — Reference geometry (Rerun 003, unchanged)
+
+- Body length 19.99 in; geometric waist y=6.52 in (y/L=0.326), developed waist station 9.28 in; plan-view half-perimeter **S_CAD = 26.728 in**; Arnold stated span **S_Arnold = 30.4375 in**.
+- Discrepancy: **3.7092 in (13.9%)**.
+
+### Steps 3/5 — Station mapping (CALCULATION): literal (A) vs normalized (C)
+
+| Arnold s (in) | u | A: s_CAD / status | A: (x,y) | C: s_CAD | C: (x,y) | side H |
+|---:|---:|---|---|---:|---|---:|
+| 0.0000 | 0.000 | 0.00 / OK | (2.06,0.00) | 0.00 | (2.06,0.00) | 3.750 |
+| 3.0000 | 0.099 | 3.00 / OK | (4.99,0.48) | 2.63 | (4.67,0.29) | 3.740 |
+| 6.0000 | 0.197 | 6.00 / OK | (5.82,3.28) | 5.27 | (5.79,2.55) | 3.895 |
+| 9.0000 | 0.296 | 9.00 / OK | (5.42,6.25) | 7.90 | (5.58,5.16) | 4.085 |
+| 12.0000 | 0.394 | 12.00 / OK | (6.02,9.16) | 10.54 | (5.55,7.77) | 4.240 |
+| 15.0000 | 0.493 | 15.00 / OK | (7.25,11.89) | 13.17 | (6.52,10.22) | 4.350 |
+| 18.0000 | 0.591 | 18.00 / OK | (7.86,14.81) | 15.81 | (7.52,12.65) | 4.455 |
+| 21.0000 | 0.690 | 21.00 / OK | (7.38,17.75) | 18.44 | (7.84,15.25) | 4.565 |
+| 24.0000 | 0.789 | 24.00 / OK | (5.40,19.81) | 21.08 | (7.36,17.82) | 4.640 |
+| 27.0000 | 0.887 | 27.00 / OUT_OF_DOMAIN | (2.68,19.99) | 23.71 | (5.68,19.75) | 4.670 |
+| 30.4375 | 1.000 | 30.44 / OUT_OF_DOMAIN | (2.68,19.99) | 26.73 | (2.68,19.99) | 4.720 |
+
+- Model A first OUT_OF_DOMAIN station: 27.0 in and 30.4375 in exceed S_CAD=26.73 in (reported OUT_OF_DOMAIN, not silently clamped).
+
+### Step 4 — Model B (longitudinal): REJECTED INTERPRETATION
+
+- A literal longitudinal reading is dimensionally impossible: the station span 30.4375 in exceeds the body length 19.99 in. No source-supported unit/datum transform closes this. Rejected (body not stretched to fit).
+
+### Step 6 — Model D (3D developed rim): REJECTED as the span explanation
+
+- Plan-view arc = 26.728 in; 3D rim = 26.753 in; increase 0.024 in (0.09%).
+- This explains only **0.7%** of the 3.709 in gap. Side-height variation cannot lengthen the rim from 26.73 to 30.44 in. (A dome-following path D2 was not asserted — no source defines such a measurement path.)
+
+### Steps 7 — Model E (proportional side-strip)
+
+- Scale k = 30.4375 / 26.728 = **1.1388** (13.9% elongation). Mathematically identical to the normalized endpoint map (C). A 13.9% elongation is not produced by any physical side-following path (the 3D rim adds only 0.09%), and no source supports such a convention.
+
+### Steps 8 — Station spacing
+
+- Arnold's 0,3,6,...,27 increments are uniform 3-in steps with a final 3.4375-in interval to 30.4375. Uniform spacing is consistent with marks laid on a flexible rule/side strip but is NOT itself proof of any single convention (observation vs interpretation kept distinct).
+
+### Step 9 — Spherical inverse under each admissible datum (anchors 9/12/15)
+
+| model | anchor | L (in) | R (ft) | P (in) | RMSE (in) | max resid | waist resid | admissible | bound |
+|---|---:|---:|---:|---:|---:|---:|---:|:--:|:--:|
+| A_literal | 9.0 | 22.05 | 34.00 | -6.90 | 0.0282 | 0.0657 | -0.0657 | False | False |
+| A_literal | 12.0 | 21.87 | 35.00 | -7.67 | 0.0281 | 0.0696 | -0.0696 | False | False |
+| A_literal | 15.0 | 21.95 | 33.00 | -6.50 | 0.0270 | 0.0639 | -0.0639 | False | False |
+| C_normalized | 9.0 | 12.58 | 9.00 | -2.00 | 0.0308 | 0.0545 | -0.0446 | False | False |
+| C_normalized | 12.0 | 12.23 | 9.00 | -2.41 | 0.0319 | 0.0556 | -0.0503 | False | False |
+| C_normalized | 15.0 | 12.44 | 9.00 | -2.16 | 0.0312 | 0.0550 | -0.0469 | False | False |
+
+### Step 10 / 15 — Audit conclusion and parent disposition
+
+**Station-datum audit conclusion: `DATUM_DEFINITION_UNRESOLVED`.**
+
+- Model B (longitudinal) dimensionally rejected: Arnold span 30.4375 in > 20 in body length.
+- Model D (3D rim) rejected: rim path adds only 0.024 in (0.09%), explaining 0.7% of the 3.709 in gap.
+- Models A (literal) and C/E (normalized/proportional) both yield inadmissible spherical fits (P<0) — literal at R~34 ft / L~22 in, normalized collapsing to L~12 in (near the lower bound) / R~9 ft. Inadmissibility is robust to the datum choice.
+- Source wording ('Distance from neck end') does not name the measuring-path convention; 'developed' is a downstream qualifier, not Arnold's word.
+
+**Parent inverse disposition (Rerun 003 `SPHERICAL_MODEL_MISMATCH`): `STRENGTHENED`.**
+
+Reasoning: the source cannot name the datum convention (UNRESOLVED), but every defensible coordinate model was tested and none yields an admissible single-radius spherical fit — literal (L~22 in, R~34 ft) and normalized (L~12 in, R~9 ft) both require P<0, longitudinal is dimensionally impossible, and the 3D rim / proportional paths cannot physically produce the 13.9% span elongation. Because the inadmissibility is **robust to the datum choice**, the datum ambiguity does not rescue the spherical model; the mismatch is strengthened rather than merely provisional. No new parent disposition vocabulary is introduced.
+
+### Classification ledger
+
+- `SOURCE FACT`: Arnold wrote "Distance from neck end, side width"; waist has no numeric station.
+- `CALCULATION`: S_CAD=26.73 in; 3D rim=26.75 in; k=1.139; inverse (L,R,P) per model.
+- `HYPOTHESIS`: normalized/proportional station coordinate (tested, not asserted as Arnold's).
+- `REJECTED INTERPRETATION`: longitudinal (dimensional); 3D rim as span explanation (0.09%).
+- `UNRESOLVED`: the physical measuring-path convention behind the 30.4375-in span.
+
+<!-- RERUN003A_END -->
+
+---
 
 <!-- RERUN003_START -->
 ## Corrected Rerun 003 — Arnold Outline Authority
