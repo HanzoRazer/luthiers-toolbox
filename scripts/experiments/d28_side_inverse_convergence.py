@@ -286,7 +286,7 @@ class ConvergenceLogger:
     def write_csv(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=CSV_FIELDS)
+            w = csv.DictWriter(fh, fieldnames=CSV_FIELDS, lineterminator="\n")
             w.writeheader()
             w.writerows(self.rows)
 
@@ -770,7 +770,7 @@ def write_summary_csv(rr: RunResult, path: str) -> None:
     rows = summary_rows(rr)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

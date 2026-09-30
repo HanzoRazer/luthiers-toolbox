@@ -12,7 +12,7 @@
 <!-- RERUN002_START -->
 ## Corrected Rerun 002 — Arnold Side Height Authority
 
-- Repository SHA tested: `69d6f522a05456f600d42a1211e914145b78fe56`
+- Repository SHA tested: `c77fec5e834cbad6fc239767455a2ad201cc419b`
 - Convergence log: `docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_CONVERGENCE.csv`
 - Summary: `docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_SUMMARY.csv`
 
