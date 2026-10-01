@@ -22,6 +22,76 @@
 > `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
 > as **STRENGTHENED**.
 
+## Failure / Pivot Ledger
+
+Each run below produced a mathematical result that was recorded exactly as
+computed, then evaluated against the physical admissibility of the model being
+tested. "Failures" are model/interpretation mismatches, not calculation errors —
+every pivot preserves the prior numeric result as evidence.
+
+| Run | Mathematical outcome | Engineering interpretation | Pivot |
+|---|---|---|---|
+| 001 | underdetermined / unstable | source/datum model insufficient | correct source interpretation |
+| 002 | no admissible root | generic outline assumption suspect | use Arnold/JD outline |
+| 003 | tighter fit, P<0 | sphere still incompatible | audit station datum |
+| 003A | datum alternatives still P<0 | station interpretation alone does not rescue sphere | clean source authority |
+| 004A | RMSE ~0.009, P≈-11 | strong numerical fit with inadmissible physical parameter | abandon governing sphere |
+| 004B | admissible generic transfer, poor residuals | generic dreadnought shape not #65260 shape | make Arnold measurements primary |
+| 004C | exact source fit, smooth admissible profile | constrained developed-side reconstruction supported | continue from source-driven geometry |
+
+> **Traceability.** The ledger cells are summaries; the exact figures live in the
+> per-run sections and their committed CSVs. Run 004A: global fit L ≈ 21.20 in,
+> R ≈ 39.6 ft, **P ≈ -11.11 in**, numeric **RMSE ≈ 0.0088 in**
+> (`D28_65260_SIDE_AUTHORITY_004A_SUMMARY.csv`,
+> `D28_65260_SIDE_AUTHORITY_004A_CONVERGENCE.csv`). Run 004B: interior
+> numeric-station **RMSE ≈ 0.0872 in**, max |resid| ≈ 0.1437 in
+> (`D28_65260_RERUN_004B_ANALYSIS.csv`, `D28_65260_RERUN_004B_SUMMARY.csv`).
+> Run 004C diagnostic sphere: **R ≈ 40.7 ft, P ≈ -13.66 in, RMSE ≈ 0.065 in**
+> (`D28_65260_RERUN_004C_ANALYSIS.csv`, `D28_65260_RERUN_004C_SUMMARY.csv`).
+
+## Engineering Interpretation Principle
+
+This principle is standing policy for the entire #65260 reconstruction program.
+It governs how every run's result is recorded and judged.
+
+Do not alter, clamp, reject, or "correct" a mathematical result merely because it
+falls outside the intuitive or expected physical geometry. The solver result must
+first be recorded exactly as produced. Only after the mathematical result is
+preserved should the result be evaluated against the physical admissibility
+requirements of the model being tested. **"Physically inadmissible" is a property
+of the tested model interpretation, not of the mathematics itself.** An
+out-of-body derived point is not, by itself, proof of a bad calculation.
+Engineering and mechanics contain many legitimate cases in which derived geometric
+quantities lie outside the material body. Therefore the correct sequence is:
+
+1. preserve the equations;
+2. preserve the source measurements;
+3. preserve the datum assumptions;
+4. report the unconstrained mathematical result;
+5. report numerical residuals independently;
+6. then evaluate whether the resulting parameters satisfy the physical requirements
+   of the particular model.
+
+For the D-28 reconstruction, the Sevy/single-radius experiments produced negative
+high-point parameter P values while often producing comparatively small numerical
+residuals. Examples: Run 004A global fit: L ≈ 21.20 in, R ≈ 39.6 ft, P ≈ -11.11 in,
+numeric RMSE ≈ 0.0088 in. Run 004C diagnostic sphere fit: R ≈ 40.7 ft, P ≈ -13.66
+in, RMSE ≈ 0.065 in. These results must not be rewritten as though the solver
+"failed to calculate a radius." The calculations returned mathematical solutions.
+The engineering finding is that the particular single-radius physical model
+requires a geometric high-point location outside the admissible region of the
+instrument. That distinction is central to the experiment. The negative P result
+is therefore retained as evidence, not corrected data. A model that numerically
+approaches the measurements only by moving a required physical parameter outside
+its admissible domain is evidence of model mismatch, not an instruction to modify
+the measurements or force the parameter back inside the body.
+
+This same principle applies throughout the reconstruction program: **source data
+must not be altered to make the model look physically expected.** If mathematics
+and physical expectation disagree, record both and investigate the governing
+assumptions. Do not make the mathematics say what the investigator expected it to
+say.
+
 <!-- RERUN004C_START -->
 ## Run 004C — Constrained Developed-Side Reconstruction
 
@@ -68,6 +138,12 @@
 - Single-radius sphere fitted to the reconstructed profile: R ≈ 40.7 ft, P ≈ -13.66 in, RMSE 0.0648 in (confirms the spherical model remains inadmissible; the constrained profile does not rely on it).
 - poly3: RMSE 0.0246 in.
 - poly4: RMSE 0.0187 in.
+
+### Mathematical Result vs Physical Interpretation
+
+- The single-radius spherical experiments (Run 003 onward) returned genuine mathematical solutions, not calculation failures. Run 004A's global fit reached a small numerical residual (RMSE ≈ 0.0088 in) while placing the required high point at P ≈ -11.11 in; the 004C diagnostic sphere above reaches R ≈ 40.7 ft at RMSE ≈ 0.065 in with P ≈ -13.66 in. In every case the math converged — it is the *tested single-radius model interpretation* that is physically inadmissible, because it demands a high point outside the body (P < 0). Physical inadmissibility is a property of that model interpretation, not of the mathematics itself.
+- The negative-P solutions were not discarded because they looked wrong; they were preserved because they showed exactly how the assumed model had to distort itself to satisfy the measurements. 004C's constrained developed-side reconstruction fits the same Arnold measurements with no high point required.
+- See the program-level **Engineering Interpretation Principle** (top of this document) for the full statement: preserve the equations, measurements, and datum assumptions; report the unconstrained result and its residuals first; only then evaluate physical admissibility. Source data is never altered to make a model look physically expected.
 
 ### Bracing / Datum A (independent, qualitative)
 

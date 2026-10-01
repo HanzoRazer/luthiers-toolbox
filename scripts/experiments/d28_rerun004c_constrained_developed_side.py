@@ -483,6 +483,25 @@ def build_section(R) -> str:
         if k in R["diag"]:
             w(f"- {k}: RMSE {R['diag'][k]['rmse']:.4f} in.")
     w("")
+    w("### Mathematical Result vs Physical Interpretation")
+    w("")
+    w("- The single-radius spherical experiments (Run 003 onward) returned genuine "
+      "mathematical solutions, not calculation failures. Run 004A's global fit reached a "
+      "small numerical residual (RMSE ≈ 0.0088 in) while placing the required high point at "
+      "P ≈ -11.11 in; the 004C diagnostic sphere above reaches R ≈ 40.7 ft at RMSE ≈ 0.065 in "
+      "with P ≈ -13.66 in. In every case the math converged — it is the *tested single-radius "
+      "model interpretation* that is physically inadmissible, because it demands a high point "
+      "outside the body (P < 0). Physical inadmissibility is a property of that model "
+      "interpretation, not of the mathematics itself.")
+    w("- The negative-P solutions were not discarded because they looked wrong; they were "
+      "preserved because they showed exactly how the assumed model had to distort itself to "
+      "satisfy the measurements. 004C's constrained developed-side reconstruction fits the same "
+      "Arnold measurements with no high point required.")
+    w("- See the program-level **Engineering Interpretation Principle** (top of this document) "
+      "for the full statement: preserve the equations, measurements, and datum assumptions; "
+      "report the unconstrained result and its residuals first; only then evaluate physical "
+      "admissibility. Source data is never altered to make a model look physically expected.")
+    w("")
     w("### Bracing / Datum A (independent, qualitative)")
     w("")
     w("- The developed-side reconstruction changes no plan-view geometry; it remains compatible with "
