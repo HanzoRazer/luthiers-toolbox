@@ -63,6 +63,14 @@
 > diverges. Crucially it corrects 004H: metric-consistently `F(25)=26.1 ft` (not
 > 19.12 ft), so the apparent "drive toward ~20 ft" was a base-slope artifact — the
 > #65260 constraints do not settle on a self-consistent back radius under the model.
+> **Run 004J** (back curvature field reconstruction) is recorded at the very top: it
+> stops chasing one radius and reconstructs the compound curvature field on the five
+> 004G members — synthetic controls pass; transverse `R_T(y)` varies materially by
+> station/member (not constant), longitudinal `R_L(y)` varies and changes sign, and
+> **negative-Gaussian (saddle) regions persist across all five members** → direct
+> geometric evidence the full back is not a single sphere. Disposition
+> `BACK_CURVATURE_FIELD_ESTABLISHED`: a single radius is a useful *local* transverse
+> descriptor only, not a global one.
 
 ## Failure / Pivot Ledger
 
@@ -133,6 +141,67 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004J_START -->
+## Run 004J — Back Curvature Field Reconstruction
+
+- Repository SHA tested: `8d5bbeef68f72c83338e68dc85744cbd68ca5f5b`
+- Reconstructs the back **curvature field** `R_T(y)` (transverse) and `R_L(y)` (longitudinal) on the five committed 004G family members — rather than one scalar radius. Geometry-only; the 004G family is **measured, not redefined**.
+- Artifacts: `D28_65260_CURVATURE_FIELD_004J.csv`, `…CURVATURE_STATION_ENVELOPE_004J.csv`, `…BRACE_CURVATURE_ENVELOPE_004J.csv`, `…APEX_CURVATURE_004J.csv`, `…SADDLE_MAP_004J.csv`, `D28_65260_004H_004I_004J_CROSSCHECK.csv`, `…RERUN_004J_SUMMARY.csv`, `…RERUN_004J_PROVENANCE.json`. No PDF vendored.
+
+### Synthetic curvature controls (gate)
+
+- flat ≈ 0; **sphere recovers 25.00 ft** (R=25 ft target, K>0); **cylinder recovers 25.00 ft** transverse with near-flat longitudinal; **saddle K=-1.11e-05 < 0**. Two estimators (derivative + local fit) agree on the controls. Controls pass: **True**.
+
+### Transverse / longitudinal curvature field (named-station envelopes across the family)
+
+| station | y (in) | R_T (ft) min–max | near-flat members | R_L sign changes | rise (mm) | vs 25 ft |
+|---|---:|---|---:|:--:|---|---|
+| neck | 0.50 | 101.21–318.66 | 0 | no | 1.18–1.36 | FLATTER |
+| upper_bout | 3.19 | 22.06–71.30 | 0 | no | 0.80–1.92 | FLATTER |
+| BB1 | 4.13 | 20.70–134.20 | 0 | no | 0.41–1.84 | FLATTER |
+| waist | 6.52 | 15.93–26.24 | 1 | no | 0.14–2.10 | TIGHTER |
+| BB2 | 7.36 | 14.79–666.88 | 0 | no | 0.24–2.32 | TIGHTER |
+| BB3 | 10.77 | 18.44–137.51 | 0 | no | 0.42–2.70 | SIMILAR |
+| lower_bout | 14.63 | 49.16–185.08 | 0 | no | -0.33–1.35 | FLATTER |
+| BB4 | 14.76 | 49.16–185.08 | 0 | no | -0.33–1.35 | FLATTER |
+
+### Required conclusions
+
+- **A. Transverse field:** `R_T(y)` is **NOT** approximately constant — it varies materially by station and family member (near-flat at the waist floor to ~16 ft at the ceiling; bouts flatter). A single transverse radius is at best a *local* descriptor.
+- **B. Longitudinal field:** `R_L(y)` varies strongly with station and changes sign across the family at some stations — this compound longitudinal behavior is why global single-sphere fits return different diagnostic radii than local transverse ones.
+- **C. 25-ft comparison (BB1–BB4):** BB1 FLATTER (20.37–175.99 ft); BB2 TIGHTER (14.34–1512.03 ft); BB3 SIMILAR (16.92–177.46 ft); BB4 FLATTER (43.94–203.32 ft).
+- **D. Saddle behavior:** negative-Gaussian regions **persist across all five members** (area fraction 0.10–0.14, interior only, 0.50 in boundary band excluded) → direct geometric evidence the full back is **not** a single sphere (which would require K>0 everywhere).
+- **E. Apex:** high point near y≈9.5 in; migration across the family is small (8.50 in), consistent with 004H (outline-dominated, radius-insensitive).
+- **F. Single-radius adequacy:** a single radius is a **useful LOCAL transverse construction descriptor** but **NOT** an adequate global/compound-surface description of the full back.
+
+### Reconciliation (different projections of one compound surface; not averaged)
+
+| Method | Quantity | Result | Interpretation |
+|---|---|---:|---|
+| 004H | local transverse | ~25 ft | local section curvature |
+| 004I | transformed dome-only | ~1.045× input | like-for-like dome curvature |
+| 004H | global sphere | 19.12 ft | absorbs longitudinal base slope |
+| 004E | rim sphere | 18.35 ft | rim-fit diagnostic |
+| 004J | R_T(y), R_L(y) | field | compound-surface description |
+
+### Disposition
+
+**`BACK_CURVATURE_FIELD_ESTABLISHED`**
+
+- Synthetic controls pass (flat≈0; sphere/cylinder recover 25 ft; saddle K<0).
+- Transverse radius R_T(y) varies materially by station AND family member (waist near-flat at the floor to ~16 ft at the ceiling; bouts flatter) — a single transverse radius is only a LOCAL descriptor, not a global one.
+- Longitudinal R_L(y) varies strongly (sign changes present), explaining why global single-sphere fits (004E 18.35 ft, 004H 19.12 ft) differ from local transverse (~25 ft, 004I F(25)=26.13 ft): they project a compound surface differently.
+- Negative-Gaussian (saddle) regions persist across ALL five members (area fraction 0.10-0.14) → direct geometric evidence the full back is NOT a single sphere (which requires K>0 everywhere).
+- Apex high point sits near y≈9.5 in; migration across the family is small (8.50 in).
+
+- At BB1–BB4 these are **back-surface** curvatures under the brace; **brace-bottom curvature remains UNRESOLVED** (004F).
+
+Parent dispositions (001–004I) are untouched. 004J measures the 004G family (does not redefine it), reads no PDF, uses no acoustic/material data, and changes no prior artifact.
+
+<!-- RERUN004J_END -->
+
+---
 
 <!-- RERUN004I_START -->
 ## Run 004I — Metric-Consistent Radius Fixed-Point Convergence

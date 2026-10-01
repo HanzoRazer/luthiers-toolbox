@@ -1,0 +1,9 @@
+station,y_in,kind,RT_min_ft,RT_max_ft,RT_near_flat_members,RL_sign_changes_across_family,rise_min_mm,rise_max_mm,K_min,K_max,estimator_agree_max,relative_to_25ft
+neck,0.500,boundary_inset,101.21,318.66,0,False,1.180,1.360,-2.586e-06,-8.650e-07,11.988,FLATTER
+upper_bout,3.191,landmark,22.06,71.30,0,False,0.801,1.923,1.817e-06,9.914e-06,0.635,FLATTER
+BB1,4.133,brace,20.70,134.20,0,False,0.414,1.836,2.066e-06,1.886e-05,0.518,FLATTER
+waist,6.523,landmark,15.93,26.24,1,False,0.143,2.101,-2.121e-07,3.797e-05,0.104,TIGHTER
+BB2,7.362,brace,14.79,666.88,0,False,0.239,2.324,6.529e-07,4.077e-05,3.634,TIGHTER
+BB3,10.772,brace,18.44,137.51,0,False,0.416,2.695,2.186e-06,2.628e-05,0.222,SIMILAR
+lower_bout,14.631,landmark,49.16,185.08,0,False,-0.330,1.354,-1.468e-06,8.302e-06,0.183,FLATTER
+BB4,14.758,brace,49.16,185.08,0,False,-0.330,1.354,-1.468e-06,8.302e-06,0.183,FLATTER

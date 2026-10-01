@@ -1,0 +1,5 @@
+brace_id,y_from_neck_in,position_uncertainty_in,surface_RT_min_ft,surface_RT_max_ft,surface_rise_min_mm,surface_rise_max_mm,relative_to_25ft,brace_bottom_curvature_known,note
+BB1,4.133,0.40,20.37,175.99,0.346,1.878,FLATTER,false,back-SURFACE curvature under brace; brace-bottom curvature UNRESOLVED (004F)
+BB2,7.362,0.40,14.34,1512.03,0.199,2.488,TIGHTER,false,back-SURFACE curvature under brace; brace-bottom curvature UNRESOLVED (004F)
+BB3,10.772,0.40,16.92,177.46,0.344,2.759,SIMILAR,false,back-SURFACE curvature under brace; brace-bottom curvature UNRESOLVED (004F)
+BB4,14.758,0.40,43.94,203.32,-0.344,1.507,FLATTER,false,back-SURFACE curvature under brace; brace-bottom curvature UNRESOLVED (004F)
