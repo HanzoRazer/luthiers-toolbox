@@ -56,6 +56,13 @@
 > *flatter* and move the apex *aft*; B4 lands inside the 004G rise band and at the
 > 004G volume. Disposition `PROPORTIONAL_SENSITIVITY_TRANSFORM_SUPPORTED`; all
 > transformed radii are `CALCULATED_DIAGNOSTIC` (no historical radius claimed).
+> **Run 004I** (metric-consistent radius fixed-point convergence) is recorded at
+> the very top: a like-for-like dome-radius operator is first validated
+> (`E[B0(R)]≈R` across 12–30 ft), then `F(R)=E[B4(R)]` is found to exceed R
+> everywhere (no sign change) → `RADIUS_FIXED_POINT_NOT_FOUND`; direct iteration
+> diverges. Crucially it corrects 004H: metric-consistently `F(25)=26.1 ft` (not
+> 19.12 ft), so the apparent "drive toward ~20 ft" was a base-slope artifact — the
+> #65260 constraints do not settle on a self-consistent back radius under the model.
 
 ## Failure / Pivot Ledger
 
@@ -126,6 +133,64 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004I_START -->
+## Run 004I — Metric-Consistent Radius Fixed-Point Convergence
+
+- Repository SHA tested: `1a4bd64bcc8a89654df50a2d6e18866d3a8a7625`
+- Tests whether a controlled reference built at radius R, after the known #65260 outline/side transform, returns that same radius under a **like-for-like** curvature operator — i.e. whether `F(R)=R` has a fixed point. The operator acts on the **dome component** (base/side slope removed), fixing the 004H metric mismatch (25 ft transverse vs 19.12 ft base-slope-contaminated global).
+- Artifacts: `D28_65260_RADIUS_OPERATOR_004I.json`, `…RADIUS_SWEEP_004I.csv`, `D28_65260_FIXED_POINT_004I.json`, `…RADIUS_ITERATION_TRACE_004I.csv`, `…FIXED_POINT_GEOMETRY_004I.csv`, `…RADIUS_VOLUME_SENSITIVITY_004I.csv`, `…RADIUS_APEX_SENSITIVITY_004I.csv`, `D28_65260_004E_004G_004H_004I_CROSSCHECK.csv`, `…RERUN_004I_SUMMARY.csv`, `…RERUN_004I_PROVENANCE.json`. No PDF vendored.
+
+### Gate 0 — metric-consistent operator validated on B0 (frozen before B4)
+
+- `E[B0(R)] ≈ R` across the 12–30 ft sweep: max |error| = **0.0000 ft** (< 0.1 ft), mean error -0.0000 ft, systematic bias: False. The operator fits a sphere to the transferred reference-sphere dome (absolute dome, not raw back z), so it recovers the construction radius by design.
+
+### Radius map F(R) = E[B4(R)] over the sweep
+
+| R_in (ft) | E[B0] (ft) | ctrl err | F(R) (ft) | g=F−R (ft) | rise (mm) | vol (L) | apex Y (in) | 004G rise | 004G vol |
+|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| 12 | 12.00 | -0.000 | 12.54 | +0.539 | 5.39 | 19.093 | 14.62 | ABOVE | ABOVE |
+| 15 | 15.00 | -0.000 | 15.67 | +0.675 | 4.31 | 19.011 | 14.62 | ABOVE | ABOVE |
+| 18 | 18.00 | +0.000 | 18.81 | +0.810 | 3.59 | 18.957 | 14.62 | ABOVE | ABOVE |
+| 20 | 20.00 | -0.000 | 20.90 | +0.900 | 3.23 | 18.930 | 14.62 | ABOVE | ABOVE |
+| 22 | 22.00 | -0.000 | 22.99 | +0.990 | 2.94 | 18.908 | 14.62 | ABOVE | ABOVE |
+| 25 | 25.00 | +0.000 | 26.13 | +1.125 | 2.58 | 18.881 | 14.62 | INSIDE | ABOVE |
+| 30 | 30.00 | -0.000 | 31.35 | +1.350 | 2.15 | 18.849 | 14.62 | INSIDE | ABOVE |
+
+### Fixed point
+
+- **No sign change in g(R) over 12–30 ft** (g ∈ [+0.54, +1.35] ft, strictly positive) → **no fixed point**. `dF/dR ≈ 1.045` (> 1): direct iteration diverges upward from every seed (15/20/25/30 ft). The 25 ft trial is **not** preserved; the geometry does not settle on a self-consistent radius in the tested range.
+
+### Reconciliation with 004H (essential)
+
+- Metric-consistent **F(25) = 26.13 ft** (`METRIC_CONSISTENT_DOME_RADIUS`, base slope removed) vs the 004H **19.12 ft** (`GLOBAL_SPHERE_DIAGNOSTIC_WITH_BASE_SLOPE`). They differ because the 004H global sphere absorbed the longitudinal side-depth slope, pulling the apparent radius *tighter*; the dome-only operator shows the #65260 outline actually makes the dome *flatter* (~4.5% at 25 ft). **The earlier apparent 'drive toward ~20 ft' was a base-slope artifact.**
+
+### Cross-check vs 004E / 004G / 004H (unlike definitions — not averaged)
+
+- 004E rim-sphere ≈ 18.35 ft, 004H global ≈ 19.12 ft, 004I metric-consistent F(25) ≈ 26.13 ft — each measures a **different** geometric quantity (rim sphere / base-slope-contaminated global / dome-only), and all share 004D/004C boundary data. They are reported side-by-side with definitions, **not averaged**, and comparisons fail closed where the definitions differ.
+- 004G cross-check at the 25 ft trial: rise 2.58 mm (INSIDE [1.61, 2.80] mm), volume 18.881 L (ABOVE [18.439, 18.603] L). No 004G member promoted.
+
+### Sensitivity
+
+- `dV/dR` and `dy_apex/dR` are reported across the sweep (`…RADIUS_VOLUME_SENSITIVITY_004I.csv`, `…RADIUS_APEX_SENSITIVITY_004I.csv`). Apex longitudinal location is dominated by the outline (near-flat `dy_apex/dR`), consistent with 004H; body volume varies only weakly with R, so body-volume evidence is a comparatively weak radius discriminator here.
+
+### Disposition
+
+**`RADIUS_FIXED_POINT_NOT_FOUND`**
+
+- Gate 0 PASSED: metric-consistent operator recovers each construction radius (max |E[B0]-R| = 0.000 ft over 12-30 ft).
+- F(R) = E[B4(R)] exceeds R across the entire 12-30 ft sweep (g=F-R ∈ [+0.54, +1.35] ft, no sign change) → NO fixed point. The #65260 outline flattens the transferred dome ~4.5% at 25 ft.
+- dF/dR ≈ 1.045 (>1) → direct iteration DIVERGES upward from every seed; the 25 ft trial is not preserved and the geometry does not settle on a radius.
+- Reconciliation: metric-consistent F(25) = 26.13 ft (dome only) vs the 004H global diagnostic 19.12 ft (base-slope-contaminated). The earlier apparent 'drive toward ~20 ft' was a base-slope artifact; removing it, #65260 does NOT drive toward 20 ft.
+- Result is model-dependent (relative to the declared generic reference planform). All recovered radii are CALCULATED_DIAGNOSTIC; no historical radius is claimed.
+
+> The #65260 constraints do not exhibit a self-consistent curvature fixed point in 12–30 ft under the stated proportional model. The result is model-dependent and is not a historical back-radius measurement.
+
+Parent dispositions (001–004H) are untouched. 004I claims no historical radius, reads no PDF, and changes no prior artifact.
+
+<!-- RERUN004I_END -->
+
+---
 
 <!-- RERUN004H_START -->
 ## Run 004H — Proportional Radius / Volume Sensitivity Transform

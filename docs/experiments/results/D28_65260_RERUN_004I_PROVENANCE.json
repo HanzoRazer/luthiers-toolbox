@@ -1,0 +1,54 @@
+{
+  "experiment": "D28_RUN_004I_RADIUS_FIXED_POINT_CONVERGENCE",
+  "parent_commit": "1a4bd64bcc8a89654df50a2d6e18866d3a8a7625",
+  "script": "scripts/experiments/d28_rerun004i_radius_fixed_point_convergence.py",
+  "command": "python scripts/experiments/d28_rerun004i_radius_fixed_point_convergence.py --write",
+  "parameters": {
+    "sweep_ft": [
+      12,
+      15,
+      18,
+      20,
+      22,
+      25,
+      30
+    ],
+    "grid_u": 161,
+    "grid_v": 121,
+    "gate0_tol_ft": 0.1,
+    "fp_resid_tol_ft": 0.01,
+    "iter_eps_ft": 0.01,
+    "iter_max": 25,
+    "iter_seeds_ft": [
+      15,
+      20,
+      25,
+      30
+    ]
+  },
+  "input_hashes": {
+    "D28_65260_ARNOLD_OUTLINE.csv": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a",
+    "D28_65260_REGISTERED_RIM_004D.csv": "6a5444fa433d4b79f94f6b5b95b6b86409fa4b00a3abcd3ba1de0da28a40cfcf",
+    "D28_65260_GENONE_SIDE_CONTOUR_004B.csv": "d14d0aef2367e8da5c23290ef57b6995e1b7c306884c8d5be0c168d2507eda09",
+    "D28_65260_BACK_BRACE_POSITIONS_004F.csv": "4313ca75ac471b92bf00e718591a0661c1b1b16f8e4dd7915cb0abd551424c97",
+    "D28_65260_RERUN_004G_SUMMARY.csv": "c52ae0cb6d3e0b9e9398303bc773fe867359e229b7d9e37ca26b43c64d26cf13",
+    "D28_65260_PROPORTIONAL_TRANSFORMS_004H.csv": "97f247c83ede7be84a98cae97cf9a42a230dc7983cd40437185476ed56bcae02"
+  },
+  "output_paths": [
+    "D28_65260_RADIUS_OPERATOR_004I.json",
+    "D28_65260_RADIUS_SWEEP_004I.csv",
+    "D28_65260_FIXED_POINT_004I.json",
+    "D28_65260_RADIUS_ITERATION_TRACE_004I.csv",
+    "D28_65260_FIXED_POINT_GEOMETRY_004I.csv",
+    "D28_65260_RADIUS_VOLUME_SENSITIVITY_004I.csv",
+    "D28_65260_RADIUS_APEX_SENSITIVITY_004I.csv",
+    "D28_65260_004E_004G_004H_004I_CROSSCHECK.csv",
+    "D28_65260_RERUN_004I_SUMMARY.csv",
+    "D28_65260_RERUN_004I_PROVENANCE.json"
+  ],
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "RADIUS_FIXED_POINT_NOT_FOUND"
+}

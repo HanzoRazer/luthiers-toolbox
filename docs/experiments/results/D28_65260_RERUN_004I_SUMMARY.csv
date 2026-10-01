@@ -1,0 +1,2 @@
+disposition,gate0_pass,gate0_max_abs_err_ft,sweep_ft,g_min_ft,g_max_ft,sign_change,root_exists,root_count,R_star_ft,dFdR_near_25,iteration_from_25_diverges,F_at_25_metric_consistent_ft,H004_global_diagnostic_ft,E004_rim_sphere_diagnostic_ft,B4_25ft_rise_mm,B4_25ft_volume_L,non_claim,final_disposition
+RADIUS_FIXED_POINT_NOT_FOUND,True,0.00000,12 15 18 20 22 25 30,+0.5393,+1.3505,False,False,0,none,1.0450,True,26.125,19.12,18.35,2.585,18.8814,model-dependent; recovered radii CALCULATED_DIAGNOSTIC; no historical radius claimed,RADIUS_FIXED_POINT_NOT_FOUND

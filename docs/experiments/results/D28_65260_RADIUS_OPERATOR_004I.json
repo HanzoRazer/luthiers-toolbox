@@ -1,0 +1,58 @@
+{
+  "experiment": "D28_RUN_004I_RADIUS_OPERATOR",
+  "z_base_definition": "longitudinal rim-depth baseline base(u) (side profile); transferred by the #65260 side authority, carried for volume/apex only",
+  "dome_component_definition": "d(x,y) = reference sphere of radius R expressed in normalized (u,v), transferred onto the case planform; rim-relative rise = d - d(v=\u00b11)",
+  "radius_estimator": "best-fit sphere to the transferred ABSOLUTE dome point cloud {(x,y,d)}",
+  "fitting_domain": "normalized grid u\u2208[0,1] (161), v\u2208[-1,1] (121); physical via x=v\u00b7w(u), y=u\u00b7L",
+  "operates_on": "DOME component (NOT raw absolute back z with longitudinal body-depth slope)",
+  "tolerance_ft": 0.1,
+  "B0_validation": {
+    "rows": [
+      {
+        "R_ft": 12,
+        "E_B0_ft": 11.999999999985889,
+        "err_ft": -1.411137873219559e-11
+      },
+      {
+        "R_ft": 15,
+        "E_B0_ft": 14.999999999879563,
+        "err_ft": -1.2043699371133698e-10
+      },
+      {
+        "R_ft": 18,
+        "E_B0_ft": 18.00000000006974,
+        "err_ft": 6.973976951485383e-11
+      },
+      {
+        "R_ft": 20,
+        "E_B0_ft": 19.99999999988339,
+        "err_ft": -1.1661072107926884e-10
+      },
+      {
+        "R_ft": 22,
+        "E_B0_ft": 21.999999999999815,
+        "err_ft": -1.8474111129762605e-13
+      },
+      {
+        "R_ft": 25,
+        "E_B0_ft": 25.000000000001716,
+        "err_ft": 1.715960706860642e-12
+      },
+      {
+        "R_ft": 30,
+        "E_B0_ft": 29.999999999909548,
+        "err_ft": -9.045209026226075e-11
+      }
+    ],
+    "max_abs_err_ft": 0.0,
+    "pass": true,
+    "systematic_bias": false,
+    "mean_err_ft": -0.0
+  },
+  "frozen_before_B4": true,
+  "non_claims": [
+    "E recovers the construction radius on B0 by design; it is validated, not tuned to #65260.",
+    "Recovered radii are CALCULATED_DIAGNOSTIC, not SOURCE_MEASURED or HISTORICAL_BACK_RADIUS.",
+    "The reference planform is MODEL_REFERENCE_GEOMETRY; results are model-dependent."
+  ]
+}

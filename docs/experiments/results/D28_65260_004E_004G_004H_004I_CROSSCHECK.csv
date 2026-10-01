@@ -1,0 +1,5 @@
+source,radius_definition,value_ft,method,dependency,comparability
+004E,single best-fit sphere to the registered rim,18.35,sphere fit to rim boundary,004D rim,"DIFFERENT_DEFINITION (rim sphere, not dome operator)"
+004H,global sphere to raw transformed back z,19.12,global sphere incl. longitudinal base slope,004D/004C,GLOBAL_SPHERE_DIAGNOSTIC_WITH_BASE_SLOPE
+004I,metric-consistent dome radius F(25) (base slope removed),26.13,sphere fit to transferred dome component,004D outline + reference model,METRIC_CONSISTENT_DOME_RADIUS
+004I_fixed_point,self-consistent F(R*)=R*,none,fixed-point of the metric-consistent map over 12-30 ft,004D outline + reference model,NONE — no fixed point exists; metrics above are NOT averaged (unlike definitions)
