@@ -13,10 +13,83 @@
 > spec, or authority file is modified by any run. **Run 004A** (original
 > side-measurement authority cleanup) is recorded at the top; it removes the
 > unsupported 10.5/30.4375 station assignments from the active solve and concludes
-> `SINGLE_RADIUS_MODEL_MISMATCH_PERSISTS` (Run 004B authorized). A follow-on **Rerun 003A
+> `SINGLE_RADIUS_MODEL_MISMATCH_PERSISTS`. **Run 004B** (proportional dreadnought
+> similitude from the GenOne Sheet 05 side-contour template) is recorded at the
+> very top: the shape transfer is admissible by construction (no high point) but
+> does not reproduce #65260's side profile tightly —
+> `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`. A follow-on **Rerun 003A
 > station-datum audit** is recorded above the Rerun 003 section; it concludes
 > `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
 > as **STRENGTHENED**.
+
+<!-- RERUN004B_START -->
+## Run 004B — Proportional Dreadnought Similitude
+
+- Repository SHA tested: `37875e24049be25ba9b3a33f9f777900a654d39f`
+- Replaces the falsified single-radius spherical model with a **pure normalized side-depth shape transfer** from the **GenOne Sheet 05 Dreadnought Side Contour Template** (a real drawn template, not BodyContourSolver/Sevy). No spherical high point governs the model, so a P<0 result is impossible by construction.
+- Neither PDF is vendored; extracted geometry + SHA-256/provenance committed (`D28_65260_GENONE_SIDE_CONTOUR_004B.csv`, `D28_65260_RERUN_004B_PROVENANCE.json`, `D28_65260_RERUN_004B_ANALYSIS.csv`, `D28_65260_RERUN_004B_SUMMARY.csv`).
+
+### Reference extraction (GenOne Sheet 05)
+
+- Side-contour template extracted on a 1 in = 72.03 pt station grid (stations 1=tail .. 31.0=neck); 30.0 per-station depths.
+- Total depth (incl. plates): neck = 3.642 in, tail = 4.629 in (drawing end dims 3 3/4 / 4 3/4 in).
+- **Plate thickness** is NOT numerically dimensioned in the GenOne set (Sheet 02: "Top Thickness Varies"); not assumed. The endpoint rescale to Arnold's side-only heights subsumes a constant plate offset (normalized shape is invariant to it); any plate-thickness variation is unquantified and flagged. Repo 25-ft spherical contour used only as a comparison diagnostic.
+
+### Known-answer round-trip fixture
+
+- extract → normalize → denormalize: RMSE = 0.00000 in, max = 0.00000 in (identity, numerical precision).
+- interpolation round-trip (4× resolution): max = 0.00714 in (≤ 0.010 in tolerance: PASS).
+
+### Transfer onto #65260 (endpoints 3.750 neck / 4.720 bottom)
+
+`H(u) = 3.750 + f_GenOne(u)·(4.720 − 3.750)`, u = developed fraction (0 neck .. 1 tail); Arnold station u = station / 30.4375.
+
+| Arnold station (in) | u | measured H (in) | predicted H (in) | residual (in) |
+|---:|---:|---:|---:|---:|
+| 0 | 0.000 | 3.7500 | 3.7500 | +0.0000 |
+| 3 | 0.099 | 3.7400 | 3.8616 | +0.1216 |
+| 6 | 0.197 | 3.8950 | 3.9084 | +0.0134 |
+| 9 | 0.296 | 4.0850 | 4.1530 | +0.0680 |
+| 12 | 0.394 | 4.2400 | 4.3690 | +0.1290 |
+| 15 | 0.493 | 4.3500 | 4.4937 | +0.1437 |
+| 18 | 0.591 | 4.4550 | 4.5569 | +0.1019 |
+| 21 | 0.690 | 4.5650 | 4.5614 | -0.0036 |
+| 24 | 0.789 | 4.6400 | 4.6067 | -0.0333 |
+| 27 | 0.887 | 4.6700 | 4.6729 | +0.0029 |
+| waist @u=0.347 | 0.347 | 4.2200 | 4.2751 | +0.0551 |
+| bottom @u=1.000 | 1.000 | 4.7200 | 4.7200 | +0.0000 |
+
+- Interior numeric-station **RMSE = 0.0872 in**, max |resid| = 0.1437 in; waist residual +0.0551 in.
+
+### Diagnostic (not governing): equivalent single-radius sphere
+
+- A sphere fitted to the transferred heights would need R ≈ 22.5 ft, P ≈ -3.08 in — reported only to compare with the falsified model; the shape transfer itself uses no high point.
+
+### H1 — datum reconciliation (promoted)
+
+- GenOne **30 11/32 in = 30.34375** (developed side-template length: tail-block center → head/neck end).
+- Arnold **30 7/16 in = 30.4375** (developed 'distance from neck end'; datum per 003A).
+- Difference = **0.09375 in (3/32 in, 0.31%)**.
+- Classification: **`SOURCE_SUPPORTED_ANALOGY`** — Both quantities are developed side lengths of a dreadnought measured between the head/neck and tail block ends. The 3/32 in (0.31%) difference is consistent with minor endpoint-convention or build differences, not a different measurement type. Note the separate, still-open tension: the ACOUSTIC-BODY-traced #65260 plan-view half-perimeter (26.73 in, Rerun 003) is ~3.6 in shorter than both developed side lengths, which remains UNRESOLVED.
+- H1 was NOT used to tune the fit; it guided only the side-length-convention investigation.
+
+### Bracing / Datum A compatibility (qualitative)
+
+- The shape transfer changes only the side-height profile; it does not alter the #65260 plan outline, soundhole Datum A, or the X-brace/back-brace plan layout. The reconstructed side geometry remains compatible with the measured #65260 brace positions and Datum A relationships (no plan-view geometry changed). Brace cross-section depths are NOT compared to back-arch rise (unrelated quantities).
+
+### Disposition
+
+**`PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`**
+
+- Model is admissible by construction (pure shape transfer; no high point / no P<0).
+- Interior numeric-station RMSE = 0.0872 in, max |resid| = 0.1437 in; waist residual = +0.0551 in.
+- Transferred generic-dreadnought shape does not reproduce the Arnold side-height sequence within acceptable residuals.
+
+Parent `SPHERICAL_MODEL_MISMATCH` is untouched. Classification ledger: GenOne template = `DRAWING_DERIVED`; transferred heights/residuals/round-trip = `CALCULATED`; H1 analogy = `SOURCE_SUPPORTED_ANALOGY`; #65260↔developed-span reconciliation (26.73 vs 30.4) = `UNRESOLVED`.
+
+<!-- RERUN004B_END -->
+
+---
 
 <!-- RERUN004A_START -->
 ## Run 004A — Original Side-Measurement Authority Cleanup
