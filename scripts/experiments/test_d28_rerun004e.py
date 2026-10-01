@@ -47,9 +47,12 @@ def _sha(path):
     return h.hexdigest()
 
 
-def _run_write():
+def _run_write(outdir):
+    """Hermetic --write: output is redirected to `outdir` (and <outdir>/REPORT.md)
+    via D28_EXP_OUTDIR so committed artifacts are never touched."""
+    env = dict(os.environ, D28_EXP_OUTDIR=str(outdir))
     subprocess.run([sys.executable, _SCRIPT, "--write"], cwd=_REPO, check=True,
-                   capture_output=True)
+                   capture_output=True, env=env)
 
 
 # --- Source preservation (1-4) ----------------------------------------------
@@ -303,25 +306,22 @@ _E4_FILES = [
 ]
 
 
-def test_39_write_byte_identical():
-    _run_write()
-    first = {f: _sha(os.path.join(_RESULTS, f)) for f in _E4_FILES}
-    _run_write()
-    second = {f: _sha(os.path.join(_RESULTS, f)) for f in _E4_FILES}
-    assert first == second
+def test_39_write_byte_identical(tmp_path):
+    d1, d2 = tmp_path / "a", tmp_path / "b"
+    _run_write(d1)
+    _run_write(d2)
+    for f in _E4_FILES:
+        assert _sha(os.path.join(d1, f)) == _sha(os.path.join(d2, f))
 
 
-def test_40_no_prior_artifact_drift():
-    watched = [
-        "D28_65260_REGISTERED_RIM_004D.csv",
-        "D28_65260_RERUN_004D_SUMMARY.csv",
-        "D28_65260_RERUN_004C_SUMMARY.csv",
-        "D28_65260_ARNOLD_OUTLINE.csv",
-    ]
-    before = {f: _sha(os.path.join(_RESULTS, f)) for f in watched}
-    _run_write()
-    after = {f: _sha(os.path.join(_RESULTS, f)) for f in watched}
-    assert before == after
+def test_40_write_does_not_dirty_committed_tree(tmp_path):
+    # Anti-drift regression guard: a hermetic --write must leave every tracked
+    # docs/experiments/ file byte-unchanged (the git-SHA provenance defect).
+    _run_write(tmp_path / "out")
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain", "--", "docs/experiments/"],
+        cwd=_REPO, check=True, capture_output=True, text=True).stdout.strip()
+    assert dirty == "", f"committed docs/experiments/ dirtied by --write:\n{dirty}"
 
 
 def test_41_selected_candidate_reproducible():
@@ -331,16 +331,14 @@ def test_41_selected_candidate_reproducible():
     assert a["disp"] == b["disp"]
 
 
-def test_42_report_section_survives_regen():
-    doc = os.path.join(_REPO, "docs", "experiments",
-                       "THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md")
+def test_42_report_section_survives_regen(tmp_path):
+    d1, d2 = tmp_path / "a", tmp_path / "b"
 
-    def section():
-        with open(doc) as fh:
+    def section(d):
+        with open(os.path.join(d, "REPORT.md")) as fh:
             t = fh.read()
         return t[t.index(M._S):t.index(M._E) + len(M._E)]
-    _run_write()
-    a = section()
-    _run_write()
-    b = section()
+    _run_write(d1)
+    _run_write(d2)
+    a, b = section(d1), section(d2)
     assert a == b and "RERUN004E" in a

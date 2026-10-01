@@ -57,11 +57,17 @@ from scipy.signal import find_peaks
 
 _HERE = os.path.dirname(__file__)
 _REPO_ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
+# Input dir is always the real committed results (read-only). Output dir and the
+# report doc are overridable (env) so the test suite can run --write hermetically
+# into a tmp dir without dirtying committed artifacts. See _OUTDIR/_DOC below.
 _RESULTS = os.path.join(_REPO_ROOT, "docs", "experiments", "results")
-_DOC = os.path.join(_REPO_ROOT, "docs", "experiments",
-                    "THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md")
+_DEFAULT_DOC = os.path.join(_REPO_ROOT, "docs", "experiments",
+                            "THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md")
+_OUTDIR = os.environ.get("D28_EXP_OUTDIR") or _RESULTS
+_DOC = os.environ.get("D28_EXP_DOC") or (
+    _DEFAULT_DOC if _OUTDIR == _RESULTS else os.path.join(_OUTDIR, "REPORT.md"))
 
-# --- Inputs (all committed, read-only) ---------------------------------------
+# --- Inputs (all committed, read-only; always from the real results dir) -----
 OUTLINE_CSV = os.path.join(_RESULTS, "D28_65260_ARNOLD_OUTLINE.csv")
 EXTRACTION_JSON = os.path.join(_RESULTS, "D28_65260_RERUN_003_EXTRACTION.json")
 AUTH_004C_JSON = os.path.join(_RESULTS, "D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json")
@@ -69,14 +75,14 @@ PROFILE_004C_CSV = os.path.join(_RESULTS, "D28_65260_CONSTRAINED_SIDE_PROFILE_00
 LANDMARK_004C_CSV = os.path.join(_RESULTS, "D28_65260_LANDMARK_RECONSTRUCTION_004C.csv")
 SUMMARY_004C_CSV = os.path.join(_RESULTS, "D28_65260_RERUN_004C_SUMMARY.csv")
 
-# --- Outputs (004D only) -----------------------------------------------------
-AUTHORITY_JSON = os.path.join(_RESULTS, "D28_65260_REGISTRATION_AUTHORITY_004D.json")
-ANCHORS_CSV = os.path.join(_RESULTS, "D28_65260_REGISTRATION_ANCHORS_004D.csv")
-MAPPING_CSV = os.path.join(_RESULTS, "D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv")
-RIM_CSV = os.path.join(_RESULTS, "D28_65260_REGISTERED_RIM_004D.csv")
-ANALYSIS_CSV = os.path.join(_RESULTS, "D28_65260_RERUN_004D_ANALYSIS.csv")
-SUMMARY_CSV = os.path.join(_RESULTS, "D28_65260_RERUN_004D_SUMMARY.csv")
-PROVENANCE_JSON = os.path.join(_RESULTS, "D28_65260_RERUN_004D_PROVENANCE.json")
+# --- Outputs (004D only; _OUTDIR == _RESULTS unless overridden for tests) -----
+AUTHORITY_JSON = os.path.join(_OUTDIR, "D28_65260_REGISTRATION_AUTHORITY_004D.json")
+ANCHORS_CSV = os.path.join(_OUTDIR, "D28_65260_REGISTRATION_ANCHORS_004D.csv")
+MAPPING_CSV = os.path.join(_OUTDIR, "D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv")
+RIM_CSV = os.path.join(_OUTDIR, "D28_65260_REGISTERED_RIM_004D.csv")
+ANALYSIS_CSV = os.path.join(_OUTDIR, "D28_65260_RERUN_004D_ANALYSIS.csv")
+SUMMARY_CSV = os.path.join(_OUTDIR, "D28_65260_RERUN_004D_SUMMARY.csv")
+PROVENANCE_JSON = os.path.join(_OUTDIR, "D28_65260_RERUN_004D_PROVENANCE.json")
 
 _S, _E = "<!-- RERUN004D_START -->", "<!-- RERUN004D_END -->"
 
@@ -570,7 +576,7 @@ def run_all() -> Dict:
 # =============================================================================
 
 def _wr_csv(path: str, fields: List[str], rows: List[Dict]) -> None:
-    os.makedirs(_RESULTS, exist_ok=True)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
@@ -909,14 +915,20 @@ def build_section(R: Dict) -> str:
 
 
 def splice_doc(section: str) -> None:
-    with open(_DOC) as fh:
-        text = fh.read()
+    text = ""
+    if os.path.exists(_DOC):
+        with open(_DOC) as fh:
+            text = fh.read()
     block = f"{_S}\n{section}\n{_E}"
     if _S in text and _E in text:
         text = text[:text.index(_S)] + block + text[text.index(_E) + len(_E):]
-    else:
+    elif "<!-- RERUN004C_START -->" in text:
         marker = "<!-- RERUN004C_START -->"
         text = text[:text.index(marker)] + block + "\n\n---\n\n" + text[text.index(marker):]
+    else:
+        # override/fresh doc (tests): write the section block standalone
+        os.makedirs(os.path.dirname(_DOC), exist_ok=True)
+        text = (text + "\n\n" if text else "") + block + "\n"
     with open(_DOC, "w") as fh:
         fh.write(text)
 
@@ -925,6 +937,7 @@ def main() -> None:
     R = run_all()
     section = build_section(R)
     if "--write" in sys.argv:
+        os.makedirs(_OUTDIR, exist_ok=True)
         write_authority(R)
         write_anchors(R)
         write_mapping(R)

@@ -337,45 +337,40 @@ _D4_FILES = [
 ]
 
 
-def _run_write():
+def _run_write(outdir):
+    """Hermetic --write: output is redirected to `outdir` (and <outdir>/REPORT.md)
+    via D28_EXP_OUTDIR so committed artifacts are never touched."""
+    env = dict(os.environ, D28_EXP_OUTDIR=str(outdir))
     subprocess.run([sys.executable, _SCRIPT, "--write"], cwd=_REPO, check=True,
-                   capture_output=True)
+                   capture_output=True, env=env)
 
 
-def test_40_write_is_byte_identical():
-    _run_write()
-    first = {f: _sha(os.path.join(_RESULTS, f)) for f in _D4_FILES}
-    _run_write()
-    second = {f: _sha(os.path.join(_RESULTS, f)) for f in _D4_FILES}
-    assert first == second
+def test_40_write_is_byte_identical(tmp_path):
+    d1, d2 = tmp_path / "a", tmp_path / "b"
+    _run_write(d1)
+    _run_write(d2)
+    for f in _D4_FILES:
+        assert _sha(os.path.join(d1, f)) == _sha(os.path.join(d2, f))
 
 
-def test_41_doc_section_identical_across_writes():
-    doc = os.path.join(_REPO, "docs", "experiments",
-                       "THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md")
+def test_41_doc_section_identical_across_writes(tmp_path):
+    d1, d2 = tmp_path / "a", tmp_path / "b"
 
-    def section():
-        with open(doc) as fh:
+    def section(d):
+        with open(os.path.join(d, "REPORT.md")) as fh:
             t = fh.read()
         return t[t.index(M._S):t.index(M._E) + len(M._E)]
-    _run_write()
-    a = section()
-    _run_write()
-    b = section()
+    _run_write(d1)
+    _run_write(d2)
+    a, b = section(d1), section(d2)
     assert a == b and "RERUN004D" in a
 
 
-def test_42_no_non004d_result_drift():
-    watched = [
-        "D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
-        "D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv",
-        "D28_65260_LANDMARK_RECONSTRUCTION_004C.csv",
-        "D28_65260_RERUN_004C_SUMMARY.csv",
-        "D28_65260_RERUN_004B_SUMMARY.csv",
-        "D28_65260_ARNOLD_OUTLINE.csv",
-        "D28_65260_SIDE_INVERSE_RERUN_003_SUMMARY.csv",
-    ]
-    before = {f: _sha(os.path.join(_RESULTS, f)) for f in watched}
-    _run_write()
-    after = {f: _sha(os.path.join(_RESULTS, f)) for f in watched}
-    assert before == after
+def test_42_write_does_not_dirty_committed_tree(tmp_path):
+    # Anti-drift regression guard: a hermetic --write must leave every tracked
+    # docs/experiments/ file byte-unchanged (the git-SHA provenance defect).
+    _run_write(tmp_path / "out")
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain", "--", "docs/experiments/"],
+        cwd=_REPO, check=True, capture_output=True, text=True).stdout.strip()
+    assert dirty == "", f"committed docs/experiments/ dirtied by --write:\n{dirty}"
