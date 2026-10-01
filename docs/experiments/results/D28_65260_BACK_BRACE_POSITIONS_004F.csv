@@ -1,0 +1,5 @@
+brace_id,y_from_neck_in,uncertainty_in,center_px_z4,width_in,depth_in,spec_region_crosscheck,position_class,dims_class
+BB1,4.133,0.40,5405,0.320,0.615,upper bout,DRAWING_DERIVED,SOURCE_MEASURED
+BB2,7.362,0.40,4480,0.320,0.615,above waist,DRAWING_DERIVED,SOURCE_MEASURED
+BB3,10.772,0.40,3503,0.755,0.385,below waist,DRAWING_DERIVED,SOURCE_MEASURED
+BB4,14.758,0.40,2361,0.760,0.375,lower bout,DRAWING_DERIVED,SOURCE_MEASURED

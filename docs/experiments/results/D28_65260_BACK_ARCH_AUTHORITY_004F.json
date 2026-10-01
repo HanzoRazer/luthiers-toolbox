@@ -1,0 +1,144 @@
+{
+  "experiment": "D28_RUN_004F_BACK_ARCH_AUTHORITY_RECOVERY",
+  "governing_question": "Is there enough #65260-specific interior authority to distinguish among the admissible back-surface families from 004E?",
+  "answer": "BACK_ARCH_AUTHORITY_PARTIAL",
+  "sources": {
+    "arnold_drawing": {
+      "name": "1937_D-28_fb03.pdf",
+      "sha256": "d6e7a994b19b5590b6706541e5ff35f8a574361e42a578812da2b0b689d4d75d",
+      "role": "PRIMARY #65260 interior source",
+      "vendored": false
+    },
+    "jd_acoustic_body_reconstruction": {
+      "name": "ACOUSTIC_BODY (A0001)",
+      "sha256": "de56210225695e645f3a1e3a61c3e490fd80967ebe301079e78f14d44bf46647",
+      "role": "TOP-PLAN authority only; NO back-arch authority",
+      "vendored": false
+    },
+    "genone_a003": {
+      "role": "generic (non-#65260) reference only; not used as authority"
+    }
+  },
+  "recovered_authority": {
+    "back_brace_cross_sections": "SOURCE_MEASURED (Arnold table)",
+    "back_brace_longitudinal_positions": "DRAWING_DERIVED (raster-calibrated, \u00b10.4 in)",
+    "back_brace_scallop_annotations": "SOURCE_MEASURED (profile values; NOT arch rise)"
+  },
+  "back_brace_cross_sections_in": {
+    "BB1": {
+      "width_in": 0.32,
+      "depth_in": 0.615
+    },
+    "BB2": {
+      "width_in": 0.32,
+      "depth_in": 0.615
+    },
+    "BB3": {
+      "width_in": 0.755,
+      "depth_in": 0.385
+    },
+    "BB4": {
+      "width_in": 0.76,
+      "depth_in": 0.375
+    }
+  },
+  "back_brace_cross_sections_class": "SOURCE_MEASURED",
+  "back_brace_longitudinal_positions": [
+    {
+      "brace_id": "BB1",
+      "y_from_neck_in": 4.133,
+      "uncertainty_in": 0.4,
+      "class": "DRAWING_DERIVED"
+    },
+    {
+      "brace_id": "BB2",
+      "y_from_neck_in": 7.362,
+      "uncertainty_in": 0.4,
+      "class": "DRAWING_DERIVED"
+    },
+    {
+      "brace_id": "BB3",
+      "y_from_neck_in": 10.772,
+      "uncertainty_in": 0.4,
+      "class": "DRAWING_DERIVED"
+    },
+    {
+      "brace_id": "BB4",
+      "y_from_neck_in": 14.758,
+      "uncertainty_in": 0.4,
+      "class": "DRAWING_DERIVED"
+    }
+  ],
+  "scallop_profile_annotations_in": [
+    0.255,
+    0.515,
+    0.545,
+    0.55,
+    0.625,
+    0.63
+  ],
+  "scallop_profile_note": "preserved as source-observed brace-profile values; NOT reinterpreted as back-arch rise; per-brace assignment not resolved from the raster scan",
+  "absent_interior_arch_datums": [
+    "explicit back radius / spherical-dish notation",
+    "back dome-rise / arch-height dimension",
+    "back-brace side cross-section (brace-bottom curvature)",
+    "centerline back-depth / arch datum"
+  ],
+  "calibration": {
+    "method": "soundhole \u00d84.0 in = scale+origin anchor on the raster scan",
+    "px_per_in": 286.5,
+    "render_zoom": 4,
+    "soundhole_center_px": 4900.0,
+    "soundhole_y_from_neck_in": 5.896,
+    "cross_source_assumption": "soundhole longitudinal position taken from the Run 003 datum-A extraction (JD trace); absorbed in the stated uncertainty",
+    "scale_validation": "BB3/BB4 drawn bar widths match table widths (.755/.760) within ~3%",
+    "position_uncertainty_in": 0.4
+  },
+  "spec_discrepancies": [
+    {
+      "brace_id": "BB1",
+      "field": "depth_in",
+      "arnold_drawing_in": 0.615,
+      "legacy_repo_in": 0.45,
+      "delta_in": 0.165,
+      "authority": "SOURCE_MEASURED (Arnold drawing) corrects LEGACY_REPO_ASSIGNMENT",
+      "action": "recorded only; production spec NOT edited; 004E NOT altered"
+    },
+    {
+      "brace_id": "BB2",
+      "field": "depth_in",
+      "arnold_drawing_in": 0.615,
+      "legacy_repo_in": 0.45,
+      "delta_in": 0.165,
+      "authority": "SOURCE_MEASURED (Arnold drawing) corrects LEGACY_REPO_ASSIGNMENT",
+      "action": "recorded only; production spec NOT edited; 004E NOT altered"
+    },
+    {
+      "brace_id": "BB3",
+      "field": "width_in",
+      "arnold_drawing_in": 0.755,
+      "legacy_repo_in": 0.735,
+      "delta_in": 0.02,
+      "authority": "SOURCE_MEASURED (Arnold drawing) corrects LEGACY_REPO_ASSIGNMENT",
+      "action": "recorded only; production spec NOT edited; 004E NOT altered"
+    }
+  ],
+  "e004_admissible_family": {
+    "tps_center_rise_mm": 1.61,
+    "sphere_center_rise_mm": 2.743,
+    "sphere_R_ft": 18.35,
+    "interior_divergence_mm": 2.616,
+    "lower_bout_rise_mm": -0.323,
+    "family_center_rise_mm_range": [
+      1.61,
+      2.743
+    ],
+    "parent_disposition": "BACK_SURFACE_MODEL_NONUNIQUE"
+  },
+  "constraints": [
+    "no new back surface generated (004F is authority recovery only)",
+    "production spec NOT edited (read-only); 004E NOT retroactively altered",
+    "no PDF vendored (geometry/measurements + SHA-256 + provenance only)"
+  ],
+  "disposition": "BACK_ARCH_AUTHORITY_PARTIAL"
+}

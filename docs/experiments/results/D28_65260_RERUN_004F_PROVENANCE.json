@@ -1,0 +1,38 @@
+{
+  "experiment": "D28_RUN_004F_BACK_ARCH_AUTHORITY_RECOVERY",
+  "parent_commit": "c637f3f5b2e21ac4b4f168af2f5d5176b56219bd",
+  "script": "scripts/experiments/d28_rerun004f_back_arch_authority_recovery.py",
+  "command": "python scripts/experiments/d28_rerun004f_back_arch_authority_recovery.py --write",
+  "sources_not_vendored": [
+    {
+      "name": "1937_D-28_fb03.pdf",
+      "sha256": "d6e7a994b19b5590b6706541e5ff35f8a574361e42a578812da2b0b689d4d75d",
+      "role": "PRIMARY #65260 interior source (raster scan)"
+    },
+    {
+      "name": "ACOUSTIC_BODY (A0001)",
+      "sha256": "de56210225695e645f3a1e3a61c3e490fd80967ebe301079e78f14d44bf46647",
+      "role": "TOP-PLAN reconstruction (no back authority)"
+    }
+  ],
+  "committed_inputs": [
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004E_SUMMARY.csv"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_CANDIDATES_004E.csv"
+    }
+  ],
+  "output_paths": [
+    "D28_65260_BACK_ARCH_AUTHORITY_004F.json",
+    "D28_65260_BACK_BRACE_POSITIONS_004F.csv",
+    "D28_65260_RERUN_004F_SUMMARY.csv",
+    "D28_65260_RERUN_004F_PROVENANCE.json"
+  ],
+  "pdf_vendored": false,
+  "runtime_pdf_access": false,
+  "no_new_surface_generated": true,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "disposition": "BACK_ARCH_AUTHORITY_PARTIAL"
+}

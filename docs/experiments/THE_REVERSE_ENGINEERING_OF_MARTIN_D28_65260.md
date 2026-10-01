@@ -33,6 +33,14 @@
 > ~0.07 in and a boundary-exact smooth surface fits exactly, but they diverge ~2.6 mm
 > in the interior, so the back arch is under-determined by the rim alone (no measured
 > arch authority; GenOne 4–6 mm reference-only; brace depths are not dome rise).
+> **Run 004F** (back-arch authority recovery) is recorded at the very top: auditing
+> the John Arnold `#65260` drawing recovers new #65260-specific back-brace
+> cross-sections (`SOURCE_MEASURED`) and longitudinal positions (`DRAWING_DERIVED`,
+> ±0.4 in), but finds **no direct interior-arch datum** (no radius, dome-rise,
+> brace-bottom curvature, or centerline arch) — disposition
+> `BACK_ARCH_AUTHORITY_PARTIAL`: interior structural authority increases but the
+> arch magnitude is not constrained, so the 004E admissible family is preserved
+> (bounded), not collapsed. No new surface generated.
 
 ## Failure / Pivot Ledger
 
@@ -103,6 +111,62 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004F_START -->
+## Run 004F — Back-Arch Authority Recovery
+
+- Repository SHA tested: `c637f3f5b2e21ac4b4f168af2f5d5176b56219bd`
+- Purpose: **not** to generate another back surface, but to determine whether the source record holds enough #65260-specific **interior** evidence to reduce the 004E back-arch non-uniqueness (~2.6 mm interior divergence among admissible surfaces).
+- Primary source audited: the **John Arnold** construction drawing `1937 D-28 #65260` (raster scan, SHA-256 `d6e7a994b19b5590…`, **not vendored**). The JD `ACOUSTIC BODY` reconstruction is a **top-plan trace only** (no back-arch authority); GenOne/A003 are generic (non-#65260) references.
+- Artifacts: `D28_65260_BACK_ARCH_AUTHORITY_004F.json`, `D28_65260_BACK_BRACE_POSITIONS_004F.csv`, `D28_65260_RERUN_004F_SUMMARY.csv`, `D28_65260_RERUN_004F_PROVENANCE.json`. No PDF vendored; no new surface generated.
+
+### Recovered #65260-specific interior authority
+
+- **Back-brace cross-section dimensions** (`SOURCE_MEASURED`, Arnold table): BB1 0.320×0.615, BB2 0.320×0.615, BB3 0.755×0.385, BB4 0.760×0.375 in (width×depth).
+- **Back-brace longitudinal positions** (`DRAWING_DERIVED`, raster-calibrated via the Ø4.0 in soundhole at 286.5 px/in, ±0.4 in; scale cross-validated by BB3/BB4 drawn widths matching the table):
+
+| brace | y from neck (in) | ± (in) | width×depth (in) | spec region (cross-check) |
+|---|---:|---:|---|---|
+| BB1 | 4.13 | 0.4 | 0.320×0.615 | upper bout |
+| BB2 | 7.36 | 0.4 | 0.320×0.615 | above waist |
+| BB3 | 10.77 | 0.4 | 0.755×0.385 | below waist |
+| BB4 | 14.76 | 0.4 | 0.760×0.375 | lower bout |
+
+- **Scallop/profile annotations** observed near the braces are preserved as source values and are **not** reinterpreted as back-arch rise (per-brace assignment is not resolved from the raster scan).
+
+### Legacy-spec corrections (recorded, not applied)
+
+- The Arnold drawing corrects the production-spec back-brace values: **BB1 depth** 0.45→0.615 in; **BB2 depth** 0.45→0.615 in; **BB3 width** 0.735→0.755 in. Recorded as `SOURCE_MEASURED` correcting `LEGACY_REPO_ASSIGNMENT`; the production spec is **not** edited and Run 004E is **not** retroactively altered.
+
+### Interior-arch datums searched for and NOT found
+
+- explicit back radius / spherical-dish notation: **absent** on all #65260 sources.
+- back dome-rise / arch-height dimension: **absent** on all #65260 sources.
+- back-brace side cross-section (brace-bottom curvature): **absent** on all #65260 sources.
+- centerline back-depth / arch datum: **absent** on all #65260 sources.
+
+### Effect on the 004E non-uniqueness
+
+- 004E admissible back-arch family (center-rise envelope): **~[1.61, 2.74] mm** (TPS 1.61 mm … 18.4 ft sphere 2.74 mm); interior divergence ~2.62 mm. This family is **preserved (bounded), not collapsed**.
+
+### Mathematical result vs physical interpretation
+
+> The recovered back-brace positions and cross-sections **increase interior structural authority but do not directly constrain the back-arch magnitude** unless brace-bottom curvature or another interior geometric datum is available. The brace positions do **not** "solve" or "determine" the back arch. Absent a direct interior-arch datum, the admissible arch remains a bounded family rather than a unique historical reconstruction. See the program-level **Engineering Interpretation Principle** at the top of this document.
+
+### Disposition
+
+**`BACK_ARCH_AUTHORITY_PARTIAL`**
+
+- Recovered #65260-specific back authority: BB1-BB4 cross-section dimensions (SOURCE_MEASURED) and longitudinal positions (DRAWING_DERIVED, ±0.4 in).
+- No direct interior-arch datum found on any #65260 source: explicit back radius / spherical-dish notation; back dome-rise / arch-height dimension; back-brace side cross-section (brace-bottom curvature); centerline back-depth / arch datum.
+- The recovered brace positions INCREASE interior structural authority but do NOT directly constrain arch magnitude unless brace-bottom curvature or another interior geometric datum is available.
+- The 004E admissible back-arch family is preserved (bounded), not collapsed: center-rise envelope ~[1.61, 2.74] mm across candidates; interior divergence ~2.62 mm. No new back surface generated.
+
+Parent dispositions (001–004E) are untouched. 004F generates no back surface, edits no production/spec file, and alters no prior run.
+
+<!-- RERUN004F_END -->
+
+---
 
 <!-- RERUN004E_START -->
 ## Run 004E — Back Surface Reconstruction from Registered Rim
