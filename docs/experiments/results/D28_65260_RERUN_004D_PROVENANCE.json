@@ -1,0 +1,52 @@
+{
+  "experiment": "D28_RUN_004D_DEVELOPED_PLAN_REGISTRATION",
+  "parent_commit": "98bc68e26d33ac0ffaa14f0aa5e2619e08d83ef4",
+  "script": "scripts/experiments/d28_rerun004d_developed_plan_registration.py",
+  "command": "python scripts/experiments/d28_rerun004d_developed_plan_registration.py --write",
+  "source_artifacts": [
+    {
+      "path": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "role": "PLAN_OUTLINE_XY_AUTHORITY",
+      "classification": "VERIFIED_DRAWING_DERIVED",
+      "sha256": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
+      "role": "DEVELOPED_SIDE_HEIGHT_AUTHORITY",
+      "classification": "CALCULATED_004C",
+      "sha256": "2c8f51cc9c48c2de10e17620b436cfb200ee47283108edf4b62eca5bfb8b150f"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv",
+      "role": "DEVELOPED_SIDE_PROFILE_REFERENCE",
+      "classification": "CALCULATED_004C",
+      "sha256": "2f792076a619bc88bd73ec8bbbb5e79683c6366d10cb5289c0359843df408cb9"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_LANDMARK_RECONSTRUCTION_004C.csv",
+      "role": "GENONE_LONGITUDINAL_LANDMARK_PRIOR",
+      "classification": "PROPORTIONAL_PRIOR",
+      "sha256": "7de9bf250354f631333dd1df6fbdb43264cf6a07c48885eea4ac1ba3531d91a8"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_003_EXTRACTION.json",
+      "role": "OUTLINE_EXTRACTION_METADATA",
+      "classification": "VERIFIED_DRAWING_DERIVED",
+      "sha256": "41ba53ed9ba96132db24f2d0fedc31da7c8dc73a669b16cc0379f468b15edf19"
+    }
+  ],
+  "output_paths": [
+    "D28_65260_REGISTRATION_AUTHORITY_004D.json",
+    "D28_65260_REGISTRATION_ANCHORS_004D.csv",
+    "D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv",
+    "D28_65260_REGISTERED_RIM_004D.csv",
+    "D28_65260_RERUN_004D_ANALYSIS.csv",
+    "D28_65260_RERUN_004D_SUMMARY.csv",
+    "D28_65260_RERUN_004D_PROVENANCE.json"
+  ],
+  "pdf_vendored": false,
+  "no_prior_file_modifications": true,
+  "no_production_changes": true,
+  "no_sphere_fit_governs_registration": true,
+  "disposition": "DEVELOPED_PLAN_REGISTRATION_SUPPORTED"
+}

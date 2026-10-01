@@ -1,0 +1,6 @@
+anchor_name,developed_station_in,developed_fraction,plan_x_in,plan_y_in,plan_arc_in,plan_fraction,plan_fraction_smoothed_diag,anchor_class,source,hard_constraint,uncertainty_note,included_in_fit
+neck,0.0000,0.00000,3.0858,0.0000,0.0000,0.00000,0.00000,SOURCE_MEASURED,developed endpoint (004C) ↔ outline neck endpoint,True,exact endpoint,True
+upper_bout,7.9449,0.26102,5.8204,3.1912,4.9729,0.20310,0.22132,PROPORTIONAL_PRIOR,developed station = GenOne proportional prior (004C); plan position VERIFIED_DRAWING_DERIVED,False,"developed coordinate is GenOne prior, not Arnold-measured",False
+waist,11.5521,0.37953,5.4089,6.5228,8.4041,0.34324,0.34709,CALCULATED_004C,developed station = 004C reconstructed (H=4.220); plan waist VERIFIED_DRAWING_DERIVED,True,004C-reconstructed developed waist; outline waist is a single minimum,True
+lower_bout,19.9532,0.65555,7.8575,14.6312,17.1852,0.70188,0.66691,PROPORTIONAL_PRIOR,developed station = GenOne proportional prior (004C); plan position VERIFIED_DRAWING_DERIVED,False,"developed coordinate is GenOne prior, not Arnold-measured",False
+tail,30.4375,1.00000,4.3904,19.9900,24.4847,1.00000,1.00000,SOURCE_MEASURED,developed endpoint (004C) ↔ outline tail endpoint,True,exact endpoint,True

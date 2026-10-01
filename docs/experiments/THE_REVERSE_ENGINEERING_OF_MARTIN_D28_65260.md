@@ -20,7 +20,13 @@
 > `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`. **Run 004C** (constrained developed-side reconstruction) is recorded at the very top: Arnold's measurements define the side geometry (GenOne gives only landmark priors), 30.4375 in is the active developed coordinate, and the result is `CONSTRAINED_DEVELOPED_RECONSTRUCTION_SUPPORTED`. A follow-on **Rerun 003A
 > station-datum audit** is recorded above the Rerun 003 section; it concludes
 > `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
-> as **STRENGTHENED**.
+> as **STRENGTHENED**. **Run 004D** (developed-side / plan-outline registration) is
+> recorded at the very top: it registers the 004C developed coordinate onto the
+> verified Arnold/JD plan outline to produce the first defensible 3D rim edge
+> `R(s)=(x,y,H(s))`, with disposition
+> `DEVELOPED_PLAN_REGISTRATION_SUPPORTED`. No sphere fit, no Sevy high point; the
+> developed length 30.4375 in and the plan half-perimeter remain distinct
+> quantities (never forced equal).
 
 ## Failure / Pivot Ledger
 
@@ -91,6 +97,86 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004D_START -->
+## Run 004D — Developed-Side / Plan-Outline Registration
+
+- Repository SHA tested: `98bc68e26d33ac0ffaa14f0aa5e2619e08d83ef4`
+- Registers the **004C source-constrained developed-side coordinate** `s ∈ [0, 30.4375 in]` onto the **verified Arnold/JD plan outline**, producing the first defensible 3D rim edge `R(s) = (x(s), y(s), H(s))` for #65260. XY comes from the Arnold/JD outline; Z = H(s) is the **unchanged** 004C side height.
+- This is a **registration** problem (`s → p → (x,y)`), not a radius fit. No sphere fit, no Sevy high point governs it.
+- Artifacts: `D28_65260_REGISTRATION_AUTHORITY_004D.json`, `D28_65260_REGISTRATION_ANCHORS_004D.csv`, `D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv`, `D28_65260_REGISTERED_RIM_004D.csv`, `D28_65260_RERUN_004D_ANALYSIS.csv`, `D28_65260_RERUN_004D_SUMMARY.csv`, `D28_65260_RERUN_004D_PROVENANCE.json`. No PDF vendored.
+
+### Why 004D exists
+
+- 004C established a source-constrained side-height function `H(s)` but did not determine **where** each developed station lies around the plan-view perimeter.
+- A manufacturable rim needs both the position around the body **and** the side height at that position. 004D combines those two independently established datasets.
+
+### Two lengths are retained, never forced equal
+
+- Developed side length **S = 30.4375 in** (004C authority).
+- Plan one-side perimeter (**raw** outline, working): **A = 24.4847 in**.
+- Plan one-side perimeter (**smoothed**, legacy diagnostic ≈ 26.73 in): **26.7283 in** — inflated by a boxcar `mode='same'` endpoint artifact in the 003/004C helper (neck half-width 3.086→2.064 in); retained as a diagnostic only.
+- These are **different geometric quantities**. No solver path forces `S = A`. The registration is a normalized monotone transform `p = g(u)`, `u = s/S`, `p = a/A`, with `g(0)=0`, `g(1)=1`; the global average `A/S = 0.8044`.
+
+### What GenOne contributes (and does not)
+
+- Contributes **only** proportional longitudinal landmark priors for the upper/lower bout developed stations (not directly recoverable from Arnold's numeric side-height series). Reused from the committed 004C landmark artifact.
+- Does **not** contribute side-height authority, outline authority, brace authority, or any forced developed-length scaling.
+
+### Anchors
+
+| anchor | dev station s (in) | dev u | plan frac (raw) | plan XY (in) | class | hard |
+|---|---:|---:|---:|---|---|:--:|
+| neck | 0.0000 | 0.0000 | 0.0000 | (3.086, 0.000) | `SOURCE_MEASURED` | yes |
+| upper_bout | 7.9449 | 0.2610 | 0.2031 | (5.820, 3.191) | `PROPORTIONAL_PRIOR` | prior |
+| waist | 11.5521 | 0.3795 | 0.3432 | (5.409, 6.523) | `CALCULATED_004C` | yes |
+| lower_bout | 19.9532 | 0.6555 | 0.7019 | (7.857, 14.631) | `PROPORTIONAL_PRIOR` | prior |
+| tail | 30.4375 | 1.0000 | 1.0000 | (4.390, 19.990) | `SOURCE_MEASURED` | yes |
+
+- Hard anchors drive the selected mapping: **neck, waist (s=11.552 in, 004C-reconstructed), tail**. Upper/lower bout developed stations are **GenOne proportional priors** — reported and used only in an alternate prior-informed candidate; removing them cannot move the hard anchors.
+
+### Candidate mappings (all evaluated; results preserved before judging)
+
+| candidate | anchors | monotonic | endpoint exact | max anchor resid | min dp/du | max dp/du | max stretch | admissible |
+|---|---:|:--:|:--:|---:|---:|---:|---:|:--:|
+| piecewise-linear (hard) | 3 | yes | yes | 0.0e+00 | 0.904 | 1.058 | 1.058 | yes |
+| monotone PCHIP (hard) | 3 | yes | yes | 0.0e+00 | 0.846 | 1.154 | 1.154 | yes |
+| cubic Hermite (hard, fail-closed) | 3 | yes | yes | 0.0e+00 | 0.885 | 1.090 | 1.090 | yes |
+| piecewise-linear (+priors) | 5 | yes | yes | 0.0e+00 | 0.778 | 1.299 | 1.299 | yes |
+| monotone PCHIP (+priors) | 5 | yes | yes | 1.1e-16 | 0.500 | 1.389 | 1.389 | yes |
+
+- **Selected primary mapping: `monotone_pchip`** on the hard anchors.
+- Max |fraction| difference between the hard-only and prior-informed PCHIP mappings: **0.0806** (the GenOne priors nudge the bout regions but do not redefine the hard-anchor skeleton).
+
+### Registration distortion (local stretch ratio r = dp/du)
+
+- `r = 1` means the local plan-perimeter rate matches the global average `A/S = 0.8044`; `r > 1` locally more plan distance per developed inch, `r < 1` less. Neither is an error by itself.
+- Observed over the selected mapping: max local stretch **1.154**, max local compression **1.182**.
+
+### Mathematical result vs physical interpretation
+
+> The registration solution is reported before it is judged. The mapping, derivatives, residuals, and anchor behavior are preserved first; only then is physical admissibility assessed. A local stretch or compression factor that appears unintuitive is not corrected merely because of expectation. "Physically inadmissible" is a property of the tested model interpretation, not of the mathematics itself.
+
+- All candidate mapping behavior (including any rejected candidate) is retained in `D28_65260_RERUN_004D_ANALYSIS.csv`. See the program-level **Engineering Interpretation Principle** at the top of this document.
+
+### Registered rim
+
+- `248` deterministic rim points over `s ∈ [0, 30.4375]`; XY interpolated on the raw Arnold/JD outline, Z = 004C H(s) (exact at every source station).
+- Endpoint closure: neck XY = (3.086, 0.000) in, tail XY = (4.390, 19.990) in — the real outline endpoints.
+
+### Disposition
+
+**`DEVELOPED_PLAN_REGISTRATION_SUPPORTED`**
+
+- Monotone registration through hard anchors (neck/waist/tail); anchor residual 0.00e+00.
+- Registered rim continuous (248 points); XY from Arnold/JD raw outline, Z from 004C (unchanged).
+- Local stretch ∈ [0.846, 1.154] about the global average A/S = 0.804; no reversal, finite positive derivative.
+
+Parent dispositions (001–004C) are untouched. 004D introduces no sphere fit, no Sevy high point, and transfers no GenOne side-height curve.
+
+<!-- RERUN004D_END -->
+
+---
 
 <!-- RERUN004C_START -->
 ## Run 004C — Constrained Developed-Side Reconstruction
