@@ -1,0 +1,5 @@
+brace_id,y_from_neck_in,position_uncertainty_in,surface_rise_center_mm,transverse_equiv_radius_ft,rise_window_min_mm,rise_window_max_mm,radius_window_min_ft,radius_window_max_ft,brace_bottom_curvature
+BB1,4.133,0.40,1.392,25.00,1.374,1.422,24.99,25.00,UNRESOLVED (004F) — surface-under-brace != brace-bottom radius
+BB2,7.362,0.40,1.261,25.00,1.247,1.300,25.00,25.00,UNRESOLVED (004F) — surface-under-brace != brace-bottom radius
+BB3,10.772,0.40,1.942,25.00,1.808,2.068,25.00,25.00,UNRESOLVED (004F) — surface-under-brace != brace-bottom radius
+BB4,14.758,0.40,2.617,25.00,2.604,2.617,25.00,25.00,UNRESOLVED (004F) — surface-under-brace != brace-bottom radius

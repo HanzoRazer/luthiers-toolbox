@@ -1,0 +1,51 @@
+{
+  "name": "Geometry B \u2014 controlled model reference back",
+  "authority_classification": "MODEL_REFERENCE_GEOMETRY",
+  "reference_radius": {
+    "value_in": 300.0,
+    "value_ft": 25.0,
+    "classification": "MODEL_ASSUMPTION_CONTROLLED_REFERENCE",
+    "basis": "25 ft is a conventional reference modeling value; KNOWN BY CONSTRUCTION, NOT a GenOne/#65260 historical measurement"
+  },
+  "planform_w_ref": {
+    "classification": "MODEL_REFERENCE_GEOMETRY (declared synthetic generic dreadnought)",
+    "u_knots": [
+      0.0,
+      0.08,
+      0.16,
+      0.25,
+      0.33,
+      0.45,
+      0.6,
+      0.73,
+      0.85,
+      0.95,
+      1.0
+    ],
+    "halfwidth_in": [
+      3.05,
+      4.8,
+      5.75,
+      5.55,
+      5.385,
+      6.0,
+      7.2,
+      7.8125,
+      7.35,
+      5.7,
+      4.4
+    ],
+    "length_in": 20.0
+  },
+  "side_profile_base_ref": {
+    "source": "committed GenOne generic side contour (D28_65260_GENONE_SIDE_CONTOUR_004B.csv)",
+    "classification": "SOURCE_SUPPORTED_ANALOGY"
+  },
+  "surface_model": "z(x,y) = base(u) + [sqrt(R^2-x^2-(y-y_c)^2) - sqrt(R^2-w(u)^2-(y-y_c)^2)]",
+  "normalized_coords": {
+    "u": "y/L",
+    "v": "x/w(u) in [-1,1]"
+  },
+  "non_claim": "Geometry B establishes NOTHING about the historical #65260 back. It is a controlled reference whose radius and volume are known by construction so that #65260's measured outline/side-profile can be substituted and their effect measured. 004H does not assert #65260 used a 25-ft dish or a spherical back.",
+  "if_source_radius_found": "preserved separately as source evidence; the controlled 25-ft baseline is NOT silently replaced during the run"
+}

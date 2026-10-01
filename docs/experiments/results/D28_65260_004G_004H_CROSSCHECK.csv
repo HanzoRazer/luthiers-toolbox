@@ -1,0 +1,5 @@
+quantity,004g_low,004g_high,004h_combined,relation,comparison_valid,reason
+dome_rise_mm,1.610,2.800,2.617,inside,True,same relative-rise definition (dome rise above local rim)
+body_volume_L,18.439,18.604,18.610,above,True,same FLAT_TOP_GEOMETRIC_REFERENCE convention over the #65260 planform; NOTE both share 004D/004C boundary data (not independent)
+apex_y_in_vs_004g_members,1.000,9.500,14.750,above,True,apex compared to 004G member apex spread; no member selected/averaged
+equivalent_radius_ft,,,19.12,no_comparable_004g_global_radius,False,"VOLUME_CONVENTION_MISMATCH n/a; 004G reports no single global sphere radius, and both derive from shared boundary data -> not independent historical proof"

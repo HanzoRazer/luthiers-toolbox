@@ -48,7 +48,14 @@
 > top dome unresolved), fixes the Ø4.0 in soundhole area with an unsolved
 > Helmholtz bridge, and preserves the MB Torrefied Adirondack distribution as an
 > external pin-referenced material prior with zero geometry influence —
-> disposition `BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED`.
+> disposition `BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED`. **Run 004H** (proportional
+> radius/volume sensitivity transform) is recorded at the very top: a controlled
+> 25-ft reference back (`MODEL_REFERENCE_GEOMETRY`) is validated by uniform
+> similitude (R∝k, V∝k³), then #65260's measured outline and side profile are
+> substituted to measure direction/magnitude — both push the equivalent radius
+> *flatter* and move the apex *aft*; B4 lands inside the 004G rise band and at the
+> 004G volume. Disposition `PROPORTIONAL_SENSITIVITY_TRANSFORM_SUPPORTED`; all
+> transformed radii are `CALCULATED_DIAGNOSTIC` (no historical radius claimed).
 
 ## Failure / Pivot Ledger
 
@@ -119,6 +126,78 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004H_START -->
+## Run 004H — Proportional Radius / Volume Sensitivity Transform
+
+- Repository SHA tested: `466072604b7f984ef19f55888bedd16f9eb339da`
+- A **sensitivity/decomposition** experiment: starting from a **controlled** model-reference back (`Geometry B` = 25 ft spherical dish over a declared generic dreadnought planform), it measures how the independently known #65260 **plan contour** (004D) and **developed-side profile** (004C/004D) perturb equivalent radius, dome rise, apex, and body volume. **It does NOT recover a historical #65260 radius.**
+- `Geometry B` is `MODEL_REFERENCE_GEOMETRY`; the 25 ft radius is `MODEL_ASSUMPTION_CONTROLLED_REFERENCE` (known by construction). All transformed radii are `CALCULATED_DIAGNOSTIC`.
+- Artifacts: `D28_65260_REFERENCE_GEOMETRY_004H.json`, `…PROPORTIONAL_TRANSFORMS_004H.csv`, `…RADIUS_SENSITIVITY_004H.csv`, `…APEX_MIGRATION_004H.csv`, `…VOLUME_SENSITIVITY_004H.csv`, `…BRACE_SECTION_SENSITIVITY_004H.csv`, `D28_65260_004G_004H_CROSSCHECK.csv`, `…RERUN_004H_SUMMARY.csv`, `…RERUN_004H_PROVENANCE.json`. No PDF vendored.
+
+### Transform-machinery controls (must pass before interpreting nonuniform cases)
+
+- B0 **transverse** (radius-dish) radius = **25.00 ft** — reproduces the 25 ft construction value (the imposed curvature). The B0 **global** best-fit sphere is **13.99 ft** (a separate diagnostic that also absorbs the longitudinal base slope; shallow-dome fits are ill-conditioned, so it is not used as a control).
+- B1 pure similitude (k=0.99950): R₁/R₀ = **0.99950** ≈ k; V₁/V₀ = **0.99849** ≈ k³ = 0.99849. Independent arbitrary-k check (k=1.5): V ratio 3.3750 ≈ 3.3750, R ratio 1.5000 ≈ 1.5. **Machinery validated.**
+
+### Sensitivity decomposition
+
+| Case | Outline | Side profile | Equiv R (ft) | Rise (mm) | Apex Y (in) | Volume (L) | Sphere RMSE (in) |
+|---|---|---|---:|---:|---:|---:|---:|
+| B0 | reference | reference | 13.99 | 2.583 | 14.50 | 17.712 | 0.0495 |
+| B1 | scaled | scaled | 13.98 | 2.582 | 14.49 | 17.685 | 0.0495 |
+| B2 | #65260 | reference | 15.50 | 2.617 | 14.75 | 18.264 | 0.0505 |
+| B3 | reference | #65260 | 17.79 | 2.583 | 14.50 | 18.049 | 0.0220 |
+| B4 | #65260 | #65260 | 19.12 | 2.617 | 14.75 | 18.610 | 0.0192 |
+
+- Directional thresholds (declared): radius <1.0%, apex <0.1 in, volume <0.25% → NEGLIGIBLE. Radius sign: larger = FLATTER; apex sign: +y = AFT.
+
+### Required conclusions
+
+- **A. Outline** → equivalent radius **FLATTER** (+10.83%).
+- **B. Side profile** → equivalent radius **FLATTER** (+27.17%).
+- **C. Interaction** → combined FLATTER (+36.70%); volume interaction (ΔV_comb − ΔV_out − ΔV_side) = +9.1 cm³ (materially interacts).
+- **D. Apex** → combined transform moves the high point Δy = +0.250 in (AFT); outline Δy = +0.250, side Δy = +0.000 in. (Outline redistributes width → moves the dome apex; the additive side profile shifts depth/volume, not the dome-apex location.)
+
+### Comparison against 004G (independent; shared boundary data noted)
+
+| quantity | 004G low | 004G high | 004H B4 | relation | comparison valid |
+|---|---:|---:|---:|---|:--:|
+| dome_rise_mm | 1.610 | 2.800 | 2.617 | inside | True |
+| body_volume_L | 18.439 | 18.604 | 18.610 | above | True |
+| apex_y_in_vs_004g_members | 1.000 | 9.500 | 14.750 | above | True |
+| equivalent_radius_ft |  |  | 19.12 | no_comparable_004g_global_radius | False |
+
+- Volume uses the same `FLAT_TOP_GEOMETRIC_REFERENCE` convention as 004G. The equivalent-radius comparison is marked invalid: 004G reports no single global sphere radius, and both diagnostics ultimately share 004D/004C boundary data — **agreement would not be independent historical proof.**
+
+### Brace-station sensitivity (B4; ±0.4 in windows)
+
+| brace | y (in) | surface rise (mm) | transverse equiv R (ft) |
+|---|---:|---:|---:|
+| BB1 | 4.13 | 1.392 | 25.0 |
+| BB2 | 7.36 | 1.261 | 25.0 |
+| BB3 | 10.77 | 1.942 | 25.0 |
+| BB4 | 14.76 | 2.617 | 25.0 |
+
+- Brace-bottom curvature remains **UNRESOLVED** (004F); the surface-under-brace radius is not the brace-bottom radius.
+
+### Disposition
+
+**`PROPORTIONAL_SENSITIVITY_TRANSFORM_SUPPORTED`**
+
+- Controls pass: B0 transverse R=25.00 ft (≈25 ft); B1 R1/R0=0.99950≈k=0.99950; V1/V0=0.99849≈k^3=0.99849; arbitrary k=1.5: V ratio 3.3750≈3.3750.
+- Outline effect on equivalent radius: FLATTER (+10.83%); side-profile: FLATTER (+27.17%); combined: FLATTER (+36.70%).
+- Apex migration (B0→B4): Δy=+0.250 in (AFT); outline Δy=+0.250, side Δy=+0.000.
+- Volume Δ (B4−B0) +898.7 cm^3; interaction +9.1 cm^3.
+- All transformed radii are CALCULATED_DIAGNOSTIC; Geometry B is MODEL_REFERENCE_GEOMETRY (25 ft known by construction). No historical #65260 radius claimed.
+
+> The proportional transform quantifies how known #65260 geometry perturbs a controlled reference model. It does not establish that #65260 was built on the reference radius or that its historical back was spherical.
+
+Parent dispositions (001–004G) are untouched. 004H promotes no historical radius, reads no PDF, and changes no prior artifact.
+
+<!-- RERUN004H_END -->
+
+---
 
 <!-- RERUN004G_START -->
 ## Run 004G — Bounded Back-Surface Family + Body-Volume Envelope
