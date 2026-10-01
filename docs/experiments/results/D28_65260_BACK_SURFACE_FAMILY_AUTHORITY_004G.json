@@ -1,0 +1,95 @@
+{
+  "experiment": "D28_RUN_004G_BOUNDED_BACK_SURFACE_AND_BODY_VOLUME_FAMILY",
+  "disposition": "BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED",
+  "family_model": "z(x,y;alpha) = z_TPS(x,y) + alpha*Phi(x,y)",
+  "phi": {
+    "form": "(1 - (x/hw(y))^2) * sin(pi*y/L), peak-normalized to 1",
+    "zero_on_rim": true,
+    "deterministic": true
+  },
+  "fixed_inputs": {
+    "rim": "D28_65260_REGISTERED_RIM_004D.csv (exact boundary)",
+    "z_TPS_floor": "004E boundary-exact minimal surface (reused)",
+    "brace_positions": "D28_65260_BACK_BRACE_POSITIONS_004F.csv (\u00b10.4 in)",
+    "e004_candidate_envelope": "D28_65260_BACK_SURFACE_CANDIDATES_004E.csv"
+  },
+  "interior_rise_envelope_mm": {
+    "floor": 1.61,
+    "ceiling": 2.8,
+    "basis": "004E rim-fitting candidates (TPS floor .. best-fit sphere/compound)"
+  },
+  "genone_reference_mm": {
+    "range": [
+      4.0,
+      6.0
+    ],
+    "role": "REFERENCE_ONLY (above the evidence envelope; NOT a bound, NOT a target)"
+  },
+  "members": [
+    {
+      "name": "floor",
+      "alpha_in": 0.0,
+      "max_rise_mm": 1.61,
+      "volume_L": 18.4389,
+      "saddle": true,
+      "rim_exact": true
+    },
+    {
+      "name": "q25",
+      "alpha_in": 0.05513,
+      "max_rise_mm": 1.907,
+      "volume_L": 18.5393,
+      "saddle": true,
+      "rim_exact": true
+    },
+    {
+      "name": "mid",
+      "alpha_in": 0.06688,
+      "max_rise_mm": 2.205,
+      "volume_L": 18.5607,
+      "saddle": true,
+      "rim_exact": true
+    },
+    {
+      "name": "q75",
+      "alpha_in": 0.07863,
+      "max_rise_mm": 2.502,
+      "volume_L": 18.5821,
+      "saddle": true,
+      "rim_exact": true
+    },
+    {
+      "name": "ceiling",
+      "alpha_in": 0.09037,
+      "max_rise_mm": 2.8,
+      "volume_L": 18.6035,
+      "saddle": true,
+      "rim_exact": true
+    }
+  ],
+  "lower_bout_reflex_preserved": true,
+  "no_member_promoted_to_the_back": true,
+  "body_volume_top_assumption": {
+    "case_A": "flat-top plane z=0 (GEOMETRIC_REFERENCE_ONLY)",
+    "case_B": "top dome UNRESOLVED (no #65260 top radius; not invented)"
+  },
+  "soundhole_area_in2": 12.566371,
+  "mb_prior": {
+    "classification": "EXTERNAL_EMPIRICAL_PRIOR_TORREFIED_ADIRONDACK",
+    "subset": "Torrefied Adirondack",
+    "n": 21,
+    "corpus_pin": "mb-sound/v1.0.0",
+    "canonical_repository": "HanzoRazer/luthier-acoustics-data",
+    "provenance_class": "EXTERNAL_REFERENCE",
+    "payload_duplicated": false,
+    "geometry_influence": "NONE",
+    "governance": "DATA-MIG-002: consumed by pin, never by copy; carried as a distribution summary pointer, not a toolbox data authority"
+  },
+  "engineering_interpretation": [
+    "Body volume is a global integral constraint and may later eliminate members of the admissible back-surface family when independent acoustic evidence is introduced. Volume does not, by itself, establish a unique historical radius. Radius remains a derived diagnostic unless the governing surface family is independently justified.",
+    "MB Torrefied Adirondack measurements provide an empirical material-response distribution for future model calibration and validation. They do not constrain 004G geometry and are not evidence that #65260 used material with identical treatment or properties."
+  ],
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false
+}

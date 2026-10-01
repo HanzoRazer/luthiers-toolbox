@@ -40,7 +40,15 @@
 > brace-bottom curvature, or centerline arch) — disposition
 > `BACK_ARCH_AUTHORITY_PARTIAL`: interior structural authority increases but the
 > arch magnitude is not constrained, so the 004E admissible family is preserved
-> (bounded), not collapsed. No new surface generated.
+> (bounded), not collapsed. No new surface generated. **Run 004G** (bounded
+> back-surface family + body-volume envelope) is recorded at the very top: it
+> formalizes the surviving admissible family as a rim-exact `z = z_TPS + α·Φ`
+> set spanning ~1.61–2.80 mm interior rise (five members, no member promoted),
+> reports the geometric body-volume envelope (~18.44–18.60 L, flat-top reference,
+> top dome unresolved), fixes the Ø4.0 in soundhole area with an unsolved
+> Helmholtz bridge, and preserves the MB Torrefied Adirondack distribution as an
+> external pin-referenced material prior with zero geometry influence —
+> disposition `BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED`.
 
 ## Failure / Pivot Ledger
 
@@ -111,6 +119,73 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004G_START -->
+## Run 004G — Bounded Back-Surface Family + Body-Volume Envelope
+
+- Repository SHA tested: `3631e16077cb179143e403f552b9832604711b4a`
+- Formalizes the admissible #65260 back-surface family surviving 004F, quantifies the geometric **body-volume envelope**, carries the Ø4.0 in soundhole with an unsolved Helmholtz bridge, and preserves the MB Torrefied Adirondack distribution as an external material prior. **No historical radius is claimed; no family member is promoted to 'the back.'**
+- Rim-exact family: `z(x,y;α) = z_TPS(x,y) + α·Φ(x,y)`, with `z_TPS` the 004E boundary-exact floor and `Φ = (1 − (x/hw(y))²)·sin(πy/L)` (peak-normalized) **exactly zero on the entire rim** → every member meets the 004D rim exactly.
+- Artifacts: `D28_65260_BACK_SURFACE_FAMILY_AUTHORITY_004G.json`, `…_FAMILY_ENVELOPE_004G.csv`, `…_FAMILY_MEMBERS_004G.csv`, `…_FAMILY_BRACE_SAMPLING_004G.csv`, `D28_65260_BODY_VOLUME_ENVELOPE_004G.csv`, `D28_65260_SOUNDHOLE_VOLUME_BRIDGE_004G.json`, `D28_65260_MB_TORREFIED_ADIRONDACK_PRIOR_004G.csv`, `…_RERUN_004G_SUMMARY.csv`, `…_RERUN_004G_PROVENANCE.json`. No PDF vendored.
+
+### Bounded back-surface family (5 members, intentionally non-unique)
+
+| member | α (in) | max rise (mm) | apex (x,y in) | body volume (L) | saddle | rim-exact |
+|---|---:|---:|---|---:|:--:|:--:|
+| floor | 0.0000 | 1.61 | (-0.11, 1.00) | 18.439 | yes | yes |
+| q25 | 0.0551 | 1.91 | (-0.11, 9.50) | 18.539 | yes | yes |
+| mid | 0.0669 | 2.21 | (-0.11, 9.50) | 18.561 | yes | yes |
+| q75 | 0.0786 | 2.50 | (-0.11, 9.50) | 18.582 | yes | yes |
+| ceiling | 0.0904 | 2.80 | (-0.11, 9.50) | 18.603 | yes | yes |
+
+- Interior-rise envelope **[1.61, 2.80] mm** (TPS floor → best-fit-sphere/compound ceiling). The GenOne 4–6 mm reference lies **above** this evidence envelope and is recorded reference-only (not a bound/target). The TPS floor's slight lower-bout reflex is preserved (not clamped).
+
+### Body-volume envelope (geometric reference only)
+
+- Flat-top reference (top plane z=0, `GEOMETRIC_REFERENCE_ONLY`): body volume spans **[18.439, 18.603] L** across the family (Δ = 0.165 L); volume increases monotonically with α by construction (`V = V₀ + α·∬Φ`, Φ≥0).
+- Back-arch contribution spans [36.9, 201.5] cm³. **Case B** (top dome) is **UNRESOLVED** — no #65260-source-supported top radius exists and none is invented. This is **not** an acoustically validated cavity volume.
+- Grid-refinement sensitivity (STEP 0.25→0.125 in) on the floor volume: rel. Δ = 2.43e-03.
+
+### Per-brace envelopes (BB1–BB4; ±0.4 in positional uncertainty)
+
+| station | y (in) | surface rise (mm) min–max | transverse radius (ft) min–max |
+|---|---:|---|---|
+| BB1 | 4.13 | 0.41–1.84 | 19.2–88.8 |
+| BB2 | 7.36 | 0.24–2.32 | 13.8–154.9 |
+| BB3 | 10.77 | 0.42–2.70 | 17.9–112.6 |
+| BB4 | 14.76 | -0.33–1.35 | 51.4–7101.4 |
+
+- These are the **back-surface** curvature/rise envelopes **under** each brace across the family; the brace-bottom curvature itself remains **unknown** (004F).
+
+### Soundhole / Helmholtz bridge (fixed geometry; not solved)
+
+- Ø4.0 in soundhole → area **A = 12.5664 in²** (fixed). Bridge recorded: `f_H = (c/2π)·√(A/(V·L_eff))`, inverse `V = A·c²/((2π f_H)²·L_eff)`. **Not solved** — no guessed A0, no guessed L_eff.
+
+### MB Torrefied Adirondack prior (external, pin-referenced)
+
+- Carried as `EXTERNAL_EMPIRICAL_PRIOR_TORREFIED_ADIRONDACK` (subset n=21) **by reference to the pinned corpus** `mb-sound/v1.0.0` — per-specimen payload is **not duplicated** into the repo (DATA-MIG-002 / `no_local_copy`). The population envelope (density, resonance, E, Q, time-constant, radiation-coefficient, thickness) is preserved as a distribution summary. **Zero influence on 004G geometry.**
+
+### Engineering interpretation
+
+> Body volume is a global integral constraint and may later eliminate members of the admissible back-surface family when independent acoustic evidence is introduced. Volume does not, by itself, establish a unique historical radius. Radius remains a derived diagnostic unless the governing surface family is independently justified.
+>
+> MB Torrefied Adirondack measurements provide an empirical material-response distribution for future model calibration and validation. They do not constrain 004G geometry and are not evidence that #65260 used material with identical treatment or properties.
+
+### Disposition
+
+**`BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED`**
+
+- Rim-exact family z = z_TPS + alpha*Phi over interior-rise envelope [1.61, 2.80] mm (5 members: floor/25/mid/75/ceiling); every member meets the 004D rim exactly (Phi=0 on perimeter).
+- Geometric body-volume envelope (flat-top reference, GEOMETRIC_REFERENCE_ONLY): [18.439, 18.603] L; arch contribution spans [36.9, 201.5] cm^3.
+- Soundhole area fixed at Ø4.0 in = 12.5664 in^2; Helmholtz/inverse-volume bridge documented but NOT solved (no A0, no L_eff).
+- MB Torrefied Adirondack distribution preserved as EXTERNAL_EMPIRICAL_PRIOR by pin-reference (no payload duplicated; zero influence on 004G geometry).
+- No family member promoted to 'the back'; no historical radius claimed; family intentionally non-unique.
+
+Parent dispositions (001–004F) are untouched. 004G promotes no single surface, claims no historical radius, fabricates no top dome or A0, and changes no geometry from the MB prior.
+
+<!-- RERUN004G_END -->
+
+---
 
 <!-- RERUN004F_START -->
 ## Run 004F — Back-Arch Authority Recovery
