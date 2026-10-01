@@ -40,7 +40,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from typing import Any, Callable, Dict, Optional
 
 from app.safety import safety_critical
@@ -204,12 +204,32 @@ class ScorerDesignSpec(BaseModel):
     cut_length_mm: Optional[float] = None
 
 
+class SawScorerDesignSpec(BaseModel):
+    """Explicit Saw cut-design facts consumed by the Saw calculators (via
+    ``SawEngine._convert_to_saw_design``).
+
+    Distinct from the rosette-shaped ``ScorerDesignSpec``: it carries no Rosette
+    geometry (no ``outer_diameter_mm``/``ring_count``/``pattern_type``), so the Saw
+    path can no longer be satisfied by Rosette aliases. All fields are required (no
+    silent defaults) and bounds mirror ``saw_lab.models.SawDesign`` so an invalid
+    value fails closed as a blocking ERROR rather than scoring on a default.
+    """
+
+    cut_length_mm: float = Field(ge=10.0, le=3000.0)
+    cut_type: str
+    miter_angle_deg: float = Field(ge=-60.0, le=60.0)
+    bevel_angle_deg: float = Field(ge=-45.0, le=45.0)
+    dado_width_mm: float = Field(ge=0.0, le=50.0)
+    dado_depth_mm: float = Field(ge=0.0, le=75.0)
+    repeat_count: int = Field(ge=1, le=100)
+
+
 def _score_via_scorer(
     *,
     mode: str,
     tool_id: str,
     context: Optional[str],
-    design: ScorerDesignSpec,
+    design: "ScorerDesignSpec | SawScorerDesignSpec",
     req: Dict[str, Any],
     default_material: str,
 ) -> Dict[str, Any]:
@@ -225,12 +245,23 @@ def _score_via_scorer(
     rmos_ctx = RmosContext(
         tool_id=tool_id,
         material_id=req.get("material_id", default_material),
-        machine_id=req.get("machine_id"),
+        machine_profile_id=req.get("machine_profile_id"),
         rpm=req.get("rpm"),
         feed_rate_mm_min=req.get("feed_rate_mm_min"),
         spindle_power_watts=req.get("spindle_power_watts"),
         tool_diameter_mm=req.get("tool_diameter_mm"),
         tooth_count=req.get("tooth_count"),
+        # Explicit Saw process facts (additive; None for non-saw modes, which do not
+        # read them, so rosette/router scoring is unaffected). The Saw canonical path
+        # guards their presence in ``compute_saw_feasibility`` before scoring.
+        blade_diameter_mm=req.get("blade_diameter_mm"),
+        blade_kerf_mm=req.get("blade_kerf_mm"),
+        blade_thickness_mm=req.get("blade_thickness_mm"),
+        arbor_size_mm=req.get("arbor_size_mm"),
+        stock_thickness_mm=req.get("stock_thickness_mm"),
+        machine_power_kw=req.get("machine_power_kw"),
+        blade_youngs_modulus_gpa=req.get("blade_youngs_modulus_gpa"),
+        use_dust_collection=req.get("use_dust_collection"),
     )
 
     result = score_design_feasibility(design, rmos_ctx)

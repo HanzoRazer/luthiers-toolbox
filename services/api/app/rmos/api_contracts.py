@@ -72,12 +72,22 @@ class RmosContext(BaseModel):
     machine_profile_id: Optional[str] = Field(None, description="Machine profile ID")
     use_shapely_geometry: bool = Field(True, description="Use Shapely vs ML geometry engine")
     # Machine/process facts (consumed by the Saw scorer path; optional for other modes).
-    machine_id: Optional[str] = Field(None, description="Machine database ID")
+    # Additive and optional so router/rosette scoring is unaffected; the Saw feasibility
+    # path guards on presence and returns UNKNOWN rather than scoring on a default when a
+    # safety-critical fact is absent. Bounds mirror ``saw_lab.models.SawContext``.
     rpm: Optional[float] = Field(None, description="Spindle/blade RPM (C-axis)")
     feed_rate_mm_min: Optional[float] = Field(None, description="Feed rate (mm/min)")
-    spindle_power_watts: Optional[float] = Field(None, description="Available spindle/machine power (W)")
-    tool_diameter_mm: Optional[float] = Field(None, description="Tool/blade diameter (mm)")
+    spindle_power_watts: Optional[float] = Field(None, description="Available spindle/machine power (W); legacy alias, convert once to kW")
+    tool_diameter_mm: Optional[float] = Field(None, description="Tool/blade diameter (mm); legacy alias of blade_diameter_mm")
     tooth_count: Optional[int] = Field(None, description="Blade tooth count")
+    blade_diameter_mm: Optional[float] = Field(None, ge=100.0, le=600.0, description="Saw blade diameter (mm)")
+    blade_kerf_mm: Optional[float] = Field(None, ge=1.0, le=10.0, description="Saw blade kerf (mm)")
+    blade_thickness_mm: Optional[float] = Field(None, ge=0.5, le=8.0, description="Saw blade plate thickness (mm)")
+    arbor_size_mm: Optional[float] = Field(None, ge=10.0, le=50.0, description="Saw arbor diameter (mm)")
+    stock_thickness_mm: Optional[float] = Field(None, ge=1.0, le=150.0, description="Stock thickness (mm)")
+    machine_power_kw: Optional[float] = Field(None, ge=0.5, le=20.0, description="Available machine power (kW)")
+    blade_youngs_modulus_gpa: Optional[float] = Field(None, ge=100.0, le=250.0, description="Blade material Young's modulus (GPa)")
+    use_dust_collection: Optional[bool] = Field(None, description="Dust collection engaged")
 
 
 # Lazy import stub for RosetteParamSpec to prevent circular dependencies

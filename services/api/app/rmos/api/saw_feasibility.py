@@ -17,25 +17,77 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
+from pydantic import ValidationError
+
 from ..feasibility_authority import error_feasibility, unavailable_feasibility
 
 logger = logging.getLogger(__name__)
 
-# The safety-critical process facts every Saw calculator reads: rim speed and
-# blade dynamics need diameter and RPM; bite load and heat need feed rate, RPM
-# and tooth count; cutting force and deflection need feed rate, diameter, RPM,
-# stock thickness and machine power. If any is absent the request does not
-# describe a real cut, so the evaluator returns UNKNOWN rather than scoring on a
-# hardcoded conversion default. These are request keys (the contract a caller
-# supplies), not the SawContext field names.
-_SAW_REQUIRED_KEYS = (
-    "rpm",
-    "feed_rate_mm_min",
-    "tool_diameter_mm",
-    "tooth_count",
-    "stock_thickness_mm",
-    "spindle_power_watts",
+# Every field the seven Saw calculators read (saw_lab/calculators/*.py), expressed
+# as request keys the caller supplies. If any is absent the request does not describe
+# a real cut, so the evaluator returns a blocking UNKNOWN rather than scoring on a
+# hardcoded conversion default. These are deliberately the full calculator-consumed
+# contract, not a subset (see SAC-041). Explicit zero is a value, not "missing"
+# (Frozen #7); out-of-range values fail model validation as a blocking ERROR.
+_SAW_REQUIRED_NUMERIC = (
+    "blade_diameter_mm", "blade_kerf_mm", "blade_thickness_mm", "tooth_count",
+    "rpm", "arbor_size_mm", "stock_thickness_mm", "feed_rate_mm_min",
+    "blade_youngs_modulus_gpa",
+    # explicit Saw design facts the kickback / cutting-force / deflection / heat
+    # calculators consume (miter/bevel/cut_type and dado width/depth):
+    "cut_length_mm", "miter_angle_deg", "bevel_angle_deg", "dado_width_mm",
+    "dado_depth_mm", "repeat_count",
 )
+_SAW_REQUIRED_STR = ("material_id", "cut_type")
+_SAW_REQUIRED_BOOL = ("use_dust_collection",)
+
+
+def _is_number(v: Any) -> bool:
+    """A real numeric fact — not a bool masquerading as a number (SAC-011)."""
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _validate_and_normalize(req: Dict[str, Any]) -> tuple:
+    """Partition the required Saw facts into (normalized_req, missing, invalid).
+
+    Machine power may arrive as ``machine_power_kw`` or as ``spindle_power_watts``
+    (converted to kW exactly once, SAC-005). Missing = key absent or ``None``;
+    invalid = present but wrong type (non-numeric, boolean-for-number, empty string).
+    Range violations are left to model validation (blocking ERROR), not defaulted.
+    """
+    r = dict(req)
+    missing: list = []
+    invalid: list = []
+    # Machine power: one canonical kW input, or one documented watts->kW conversion.
+    if r.get("machine_power_kw") is None:
+        watts = r.get("spindle_power_watts")
+        if watts is None:
+            missing.append("machine_power_kw")
+        elif not _is_number(watts):
+            invalid.append("spindle_power_watts")
+        else:
+            r["machine_power_kw"] = float(watts) / 1000.0  # single documented conversion
+    elif not _is_number(r["machine_power_kw"]):
+        invalid.append("machine_power_kw")
+    for k in _SAW_REQUIRED_NUMERIC:
+        v = r.get(k)
+        if v is None:
+            missing.append(k)
+        elif not _is_number(v):
+            invalid.append(k)
+    for k in _SAW_REQUIRED_STR:
+        v = r.get(k)
+        if v is None:
+            missing.append(k)
+        elif not isinstance(v, str) or not v.strip():
+            invalid.append(k)
+    for k in _SAW_REQUIRED_BOOL:
+        v = r.get(k)
+        if v is None:
+            missing.append(k)
+        elif not isinstance(v, bool):
+            invalid.append(k)
+    return r, missing, invalid
 
 
 def compute_saw_feasibility(
@@ -58,42 +110,52 @@ def compute_saw_feasibility(
     # avoid an import cycle with the module that registers this engine.
     from .rmos_feasibility_router import (
         _ENGINE_FAILURES,
-        ScorerDesignSpec,
+        SawScorerDesignSpec,
         _score_via_scorer,
     )
 
     tool_id = str(tool_id or req.get("tool_id") or "saw:unknown")
 
-    missing = [k for k in _SAW_REQUIRED_KEYS if req.get(k) is None]
+    r, missing, invalid = _validate_and_normalize(req)
     if missing:
         return unavailable_feasibility(
             mode=mode,
             tool_id=tool_id,
             context=context,
-            detail=f"saw process facts absent: {', '.join(missing)}",
+            detail=f"saw process facts absent: {', '.join(sorted(missing))}",
+        )
+    if invalid:
+        # Present-but-not-a-truthful-number (non-numeric, boolean-for-number, empty
+        # string) is a blocking ERROR, never a default-scored verdict.
+        return error_feasibility(
+            mode=mode,
+            tool_id=tool_id,
+            context=context,
+            detail=f"saw process facts invalid (non-numeric / boolean / empty): {', '.join(sorted(invalid))}",
         )
 
     try:
-        design = ScorerDesignSpec(
-            outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
-            inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
-            ring_count=req.get("ring_count", 1),
-            pattern_type=req.get("pattern_type", "crosscut"),
-            depth_mm=req.get("depth_mm"),
-            # Guarded present above; passed through without a friendly default.
-            stock_thickness_mm=req.get("stock_thickness_mm"),
-            # Cut length feeds only the time estimate, not any safety score, so
-            # it is not gated; plumbed truthfully when the caller supplies it.
-            cut_length_mm=req.get("cut_length_mm"),
+        # Explicit Saw design facts — NO Rosette aliases. Out-of-range values fail
+        # here (ValidationError) and become a blocking ERROR below.
+        design = SawScorerDesignSpec(
+            cut_length_mm=r["cut_length_mm"],
+            cut_type=r["cut_type"],
+            miter_angle_deg=r["miter_angle_deg"],
+            bevel_angle_deg=r["bevel_angle_deg"],
+            dado_width_mm=r["dado_width_mm"],
+            dado_depth_mm=r["dado_depth_mm"],
+            repeat_count=int(r["repeat_count"]),
         )
         return _score_via_scorer(
             mode=mode,
             tool_id=tool_id,
             context=context,
             design=design,
-            req=req,
-            default_material="hardwood",
+            req=r,
+            # material_id is guarded present above; this sentinel is never used but
+            # must not be a plausible real material (SAC-013 guards substitution).
+            default_material="__require_explicit_material__",
         )
-    except _ENGINE_FAILURES as e:
+    except (ValidationError,) + tuple(_ENGINE_FAILURES) as e:
         logger.error("Saw feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
         return error_feasibility(mode=mode, tool_id=tool_id, context=context, error=e)

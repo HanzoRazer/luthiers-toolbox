@@ -1,0 +1,83 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SAW_AUTHORITY_CONTEXT_006",
+  "title": "Repair the canonical Saw feasibility path so it evaluates the submitted Saw process facts instead of silently scoring against hardcoded defaults",
+  "intent": "Fix the manufacturing-authority defect that made the canonical Saw feasibility path return a constant catastrophic RED/49.4 for every job. compute_saw_feasibility supplied Saw facts that RmosContext did not declare (pydantic v2 extra='ignore' discarded them); SawEngine then substituted conversion defaults (blade_diameter 254mm, max_rpm 5000, feed 3000, machine_power 3kW) and Rosette-geometry aliases (outer_diameter->cut_length, ring_count->repeat_count, pattern_type->cut_type), so the calculators scored a fabricated cut. This increment carries every calculator-consumed fact explicitly: RmosContext gains the Saw process fields, a new SawScorerDesignSpec carries the Saw design facts, the canonical SawEngine converters map 1:1 with NO fallback constants / NO tool_id parsing / NO Rosette aliases (the legacy default-driven converters are isolated for the ungoverned toolpath route only), and compute_saw_feasibility guards every required fact (missing -> UNKNOWN, invalid/out-of-range -> ERROR). Transport and adaptation only: no calculator formula, weight, threshold, or risk boundary changes; neither Saw route is contained; SawLabService.check_feasibility and the compare route are untouched; the manufacturing-output inventory stays at 13 LIVE_UNGOVERNED.",
+  "change_type": "fix",
+  "behavior_change": "saw_feasibility_facts",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/saw-authority-context-006.json",
+      "services/api/app/rmos/api_contracts.py",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/api/saw_feasibility.py",
+      "services/api/app/toolpath/saw_engine.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_saw_authority_context.py",
+      "services/api/tests/rmos/test_saw_evaluator_plumbing.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/saw-authority-context-006.json",
+      "services/api/app/rmos/api_contracts.py",
+      "services/api/app/rmos/api/rmos_feasibility_router.py",
+      "services/api/app/rmos/api/saw_feasibility.py",
+      "services/api/app/toolpath/saw_engine.py",
+      "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+      "services/api/tests/rmos/test_rmos_governed_cam_path.py",
+      "services/api/tests/rmos/test_saw_authority_context.py",
+      "services/api/tests/rmos/test_saw_evaluator_plumbing.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "RmosContext gained the explicit Saw process fields the calculators consume (blade_diameter_mm, blade_kerf_mm, blade_thickness_mm, arbor_size_mm, stock_thickness_mm, machine_power_kw, blade_youngs_modulus_gpa, use_dust_collection; rpm/feed_rate_mm_min/tooth_count were already present), with bounds mirroring saw_lab.models.SawContext; the undeclared machine_id field is removed in favour of the pre-existing machine_profile_id. A new SawScorerDesignSpec (router) carries the explicit Saw design facts (cut_length_mm, cut_type, miter_angle_deg, bevel_angle_deg, dado_width_mm, dado_depth_mm, repeat_count) with bounds mirroring SawDesign; it is distinct from the rosette-shaped ScorerDesignSpec and carries no Rosette geometry. _score_via_scorer now additively forwards all Saw context fields and machine_profile_id (None for non-saw modes, which do not read them). saw_engine gained strict canonical converters _convert_to_saw_context(ctx) and _convert_to_saw_design(design) that map 1:1 with NO fallback constants, NO tool_id parsing, and NO Rosette aliases; the prior default/alias converters are retained verbatim as _convert_to_saw_context_legacy/_convert_to_saw_design_legacy used ONLY by the ungoverned toolpath-generation route (SawEngine.generate_toolpaths / plan_saw_toolpaths), whose behaviour is unchanged. compute_saw_feasibility now validates the full calculator-consumed contract (12 context facts + the consumed design facts), distinguishing missing (-> UNKNOWN) from invalid (non-numeric, boolean-for-number, empty string -> ERROR), converts spindle_power_watts -> machine_power_kw exactly once, and constructs SawScorerDesignSpec (out-of-range -> ValidationError -> ERROR). The superseded test_saw_evaluator_plumbing.py is removed and replaced by test_saw_authority_context.py; TC-09 and TC-20 fixtures are upgraded to the complete, truthful Saw request.",
+    "why": "A feasibility lane that cannot see its own process facts is not evaluating the cut it was asked about; it produced a constant RED/49.4 regardless of RPM/feed/power/blade. Order 006 authorized repairing this transport/adaptation defect, carrying every calculator-consumed fact explicitly and failing closed when a safety-relevant fact is absent or invalid.",
+    "why_not_redundant": "The predecessor increment (open PR #420, cf2-saw-evaluator-plumbing-006) only declared a subset of the fields, still guarded 6 request keys, and left SawEngine's default-driven converters and Rosette-geometry aliases in the canonical path. This increment supersedes it: the full calculator contract is guarded, the canonical converters are strict (default-free, alias-free, no tool_id parsing), the Saw design flows through an explicit SawScorerDesignSpec, and structural AST tests pin the absence of fallback constants / Rosette aliases.",
+    "what_did_not_change": "No calculator formula, threshold, weight, material coefficient, or favourable default was changed. Neither Saw route is contained. SawLabService.check_feasibility, the saw_compare route, and all G-code/geometry/generators are untouched. The manufacturing-output inventory is not regenerated and remains at 13 LIVE_UNGOVERNED. Rosette/adaptive/profiling feasibility paths are unaffected (the new RmosContext fields are optional and unread by those modes; _score_via_scorer additions are None for them). The legacy toolpath-generation conversion is preserved verbatim behind *_legacy helpers.",
+    "representative_cases": "PERMITTED (GREEN/YELLOW) WITNESS IS A DOCUMENTED STOP, NOT FABRICATED: with the frozen calculators the deflection and heat calculators flag RED for every in-range ordinary setup (an independent 2,880-combination sweep found a best aggregate of 69.8, still RED; consistent with PR #420's 9,600-point finding). The RED is driven by the calculator bundle's specific_cutting_energy default of 30 J/mm^3 cascading into cutting-force overload, excessive deflection, and critical heat - a formula/units defect explicitly OUT OF SCOPE for this transport repair (006 forbids changing formulas/thresholds and forbids tuning physics to satisfy SAC-025). test_sac025_no_honest_permit_is_a_documented_stop pins the limitation. BLOCKED witnesses pass with the real evaluator: a deliberately unsafe fixture (18000 mm/min feed on 100mm stock, 0.5 kW, 9000 rpm) -> RED; each omitted required fact -> UNKNOWN naming the fact; invalid (negative/over-range/boolean) -> ERROR; the old minimal {tool_id, material_id} and Rosette-geometry-only requests -> UNKNOWN; distinct inputs no longer collapse to 49.4 (scores span ~27-70)."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main  # 52d9054d",
+      "test \"$(git merge-base HEAD origin/main)\" = \"$(git rev-parse origin/main)\"  # base is current main",
+      "cd services/api && python -m pytest tests/rmos/test_saw_authority_context.py -q --no-cov  # 38 passed",
+      "cd services/api && python -m pytest tests/rmos/test_rmos_feasibility_authority.py tests/rmos/test_rmos_governed_cam_path.py tests/rmos/test_cf2_rosette_design_containment.py tests/rmos/test_cf2_rosette_output_containment.py -q --no-cov  # 126 passed, 3 skipped",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check  # OK, inventory byte-unchanged",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "git diff --check"
+    ],
+    "proofs": [
+      "Base SHA 52d9054d; merge-base equals origin/main tip (branch cut from current main).",
+      "test_saw_authority_context.py: 38 passed. The complete request scores a CALCULATED verdict via feasibility_scorer with all seven calculators (bite_load, blade_dynamics, cutting_force, deflection, heat, kickback, rim_speed); submitted RPM/feed/tooth/power are echoed in calculator metadata (bite_load_mm, available_power_w, rim_speed) and move those values when changed; distinct inputs produce >=3 distinct scores and never 49.4.",
+      "Completeness/validation: each omitted required context/design fact -> UNKNOWN; negative/over-range -> ERROR; boolean-for-numeric (rpm=True) -> ERROR; the old minimal {tool_id, material_id} request and a Rosette-geometry-only request -> UNKNOWN; watts->kW is a single documented conversion.",
+      "Structural: AST tests prove the canonical converters contain no fallback numeric constants (SAC-039) and access none of outer_diameter_mm/ring_count/pattern_type/inner_diameter_mm (SAC-040); every ctx.*/design.* field read by saw_lab/calculators/*.py is representable in RmosContext / SawScorerDesignSpec (SAC-041).",
+      "TC-09 (evaluator raises -> ERROR) and TC-20 (saw lane reaches the saw calculators, differentiated from rosette) preserved by upgrading their fixtures to the complete truthful request. Rosette containment suites unchanged: 126 passed / 3 skipped across the affected rmos suites.",
+      "SAC-025 permitted witness is a documented STOP: no honest in-range ordinary fixture permits GREEN/YELLOW under the frozen calculators (deflection/heat RED-driven by the out-of-scope 30 J/mm^3 specific_cutting_energy default). Physics/thresholds were NOT tuned.",
+      "Manufacturing-output inventory --check passes; governance/manufacturing_output_inventory.json byte-unchanged; 13 LIVE_UNGOVERNED; neither Saw route contained."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output produced. Feasibility-evaluation transport/adaptation and tests only."
+  },
+  "files": [
+    {"path": "services/api/app/rmos/api_contracts.py", "intent": "Declare the explicit Saw process fields on RmosContext (bounds mirroring SawContext); remove the undeclared machine_id in favour of machine_profile_id.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/rmos/api/rmos_feasibility_router.py", "intent": "Add SawScorerDesignSpec (explicit Saw design facts, no Rosette geometry); forward all Saw context fields + machine_profile_id additively in _score_via_scorer; broaden the scorer-adapter design type.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/rmos/api/saw_feasibility.py", "intent": "Full calculator-consumed completeness contract: missing -> UNKNOWN, invalid/boolean/out-of-range -> ERROR; single watts->kW conversion; construct explicit SawScorerDesignSpec; no favourable defaults.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/app/toolpath/saw_engine.py", "intent": "Strict canonical _convert_to_saw_context/_convert_to_saw_design (1:1, no defaults, no tool_id parse, no Rosette aliases); isolate the prior default/alias converters as *_legacy used only by the ungoverned toolpath route.", "risk": "medium", "behavior_change": "saw_feasibility_facts"},
+    {"path": "services/api/tests/rmos/test_rmos_feasibility_authority.py", "intent": "Upgrade SANE_SAW to the complete truthful fixture so TC-09 reaches the (monkeypatched) evaluator and yields ERROR.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_rmos_governed_cam_path.py", "intent": "Upgrade TC-20's saw request to the complete truthful fixture so the saw lane reaches the calculators and stays differentiated from rosette.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_saw_authority_context.py", "intent": "New SAC witnesses: transport, completeness (missing vs invalid, old-minimal, Rosette-only), sensitivity via calculator metadata, seven-calculator + unsafe-RED real-evaluator witnesses, AST structural safeguards, calculator-field contract, rosette regression, and the documented SAC-025 stop.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_saw_evaluator_plumbing.py", "intent": "Removed; superseded by test_saw_authority_context.py.", "risk": "low", "behavior_change": "none"}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-01-SAW-AUTHORITY-CONTEXT-006",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 1, "low": 0},
+    "findings": [
+      "MEDIUM: edits the shared canonical feasibility path (RmosContext, _score_via_scorer, SawScorerDesignSpec) and the saw conversion. Blast radius contained: the new RmosContext fields are optional and unread by non-saw modes; _score_via_scorer additions are None for them; the saw canonical converters are default-free and the legacy toolpath converters are preserved verbatim behind *_legacy. Verified by the affected rmos suites (126 passed/3 skipped), the AST structural tests, and the manufacturing-output inventory --check (unchanged at 13 LIVE_UNGOVERNED)."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Transport/adaptation authority repair only. No formula/threshold/weight/material-coefficient/default recalibration; no route containment; no inventory change. The residual ordinary-job RED is the out-of-scope specific_cutting_energy (30 J/mm^3) formula/units defect in the frozen calculators, reported for a separate increment; SAC-025 is a documented stop, not a tuned pass."
+  }
+}

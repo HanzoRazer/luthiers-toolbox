@@ -13,7 +13,7 @@ Usage in RMOS:
 """
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Protocol, runtime_checkable
 
 from ..rmos.api_contracts import RmosContext, RmosToolpathPlan, RmosFeasibilityResult
 from ..saw_lab import (
@@ -75,20 +75,16 @@ def _parse_saw_tool_id(tool_id: str) -> Dict[str, Any]:
     return defaults
 
 
-def _convert_to_saw_context(
+def _convert_to_saw_context_legacy(
     rmos_ctx: RmosContext,
     design: RosetteParamSpec
 ) -> SawContext:
-    """
-    Convert RMOS context to Saw Lab context.
+    """LEGACY, non-authoritative conversion — tool_id parse + conversion defaults.
 
-    Maps RMOS process facts to saw-specific parameters. When a fact is present
-    on the context it is used verbatim; blade diameter and tooth count fall back
-    to the tool_id parse, and RPM / feed rate / machine power fall back to the
-    prior conversion defaults. The feasibility path guards these facts to
-    presence before reaching this converter (see ``compute_saw_feasibility``),
-    so the fallbacks are exercised only by the ungoverned toolpath-generation
-    path, whose behaviour this increment does not change.
+    Retained ONLY for the ungoverned toolpath-generation path (``generate_toolpaths`` /
+    the 2.1 planner), whose behaviour this increment does not change. The canonical
+    feasibility path must NOT use this; it uses the strict, default-free
+    ``_convert_to_saw_context`` below. See SAC-039.
     """
     # Parse tool ID for blade parameters (kerf source; diameter/tooth fallback).
     blade_params = _parse_saw_tool_id(rmos_ctx.tool_id)
@@ -133,11 +129,11 @@ def _convert_to_saw_context(
     )
 
 
-def _convert_to_saw_design(design: RosetteParamSpec) -> SawDesign:
-    """
-    Convert rosette design to saw cut design.
-    
-    Maps rosette parameters to saw-specific cut parameters.
+def _convert_to_saw_design_legacy(design: RosetteParamSpec) -> SawDesign:
+    """LEGACY, non-authoritative Rosette→Saw design conversion (outer_diameter→cut_length,
+    ring_count→repeat_count, pattern_type→cut_type). Retained ONLY for the ungoverned
+    toolpath route. The canonical feasibility path uses the strict
+    ``_convert_to_saw_design`` below, which reads explicit Saw design fields. See SAC-040.
     """
     # Prefer an explicit saw cut length when the caller supplies one; fall back
     # to the ring outer diameter for legacy rosette-shaped designs. Cut length
@@ -166,6 +162,60 @@ def _convert_to_saw_design(design: RosetteParamSpec) -> SawDesign:
     )
 
 
+@runtime_checkable
+class _SawDesignFacts(Protocol):
+    """Explicit Saw design facts the canonical path requires (e.g. SawScorerDesignSpec)."""
+    cut_length_mm: float
+    cut_type: str
+    miter_angle_deg: float
+    bevel_angle_deg: float
+    dado_width_mm: float
+    dado_depth_mm: float
+    repeat_count: int
+
+
+def _convert_to_saw_context(rmos_ctx: RmosContext) -> SawContext:
+    """CANONICAL, authoritative conversion for the feasibility path.
+
+    Explicit 1:1 mapping of the submitted process facts to ``SawContext`` with NO
+    fallback constants and NO ``tool_id`` parsing. Completeness is guarded upstream
+    (``compute_saw_feasibility``); if a required fact is nonetheless absent it arrives
+    as ``None`` and ``SawContext`` validation rejects it (blocking ERROR) rather than a
+    hardcoded default being substituted. See SAC-039/041.
+    """
+    return SawContext(
+        material_id=rmos_ctx.material_id,
+        blade_diameter_mm=rmos_ctx.blade_diameter_mm,
+        blade_kerf_mm=rmos_ctx.blade_kerf_mm,
+        blade_thickness_mm=rmos_ctx.blade_thickness_mm,
+        tooth_count=rmos_ctx.tooth_count,
+        max_rpm=int(rmos_ctx.rpm) if rmos_ctx.rpm is not None else None,  # type: ignore[arg-type]
+        arbor_size_mm=rmos_ctx.arbor_size_mm,
+        stock_thickness_mm=rmos_ctx.stock_thickness_mm,
+        feed_rate_mm_per_min=rmos_ctx.feed_rate_mm_min,
+        machine_power_kw=rmos_ctx.machine_power_kw,
+        blade_youngs_modulus_gpa=rmos_ctx.blade_youngs_modulus_gpa,
+        use_dust_collection=rmos_ctx.use_dust_collection,
+    )
+
+
+def _convert_to_saw_design(design: _SawDesignFacts) -> SawDesign:
+    """CANONICAL, authoritative Saw design conversion for the feasibility path.
+
+    Explicit mapping of the submitted Saw design facts — NO Rosette aliases
+    (outer_diameter/ring_count/pattern_type). See SAC-040.
+    """
+    return SawDesign(
+        cut_length_mm=design.cut_length_mm,
+        cut_type=design.cut_type,
+        miter_angle_deg=design.miter_angle_deg,
+        bevel_angle_deg=design.bevel_angle_deg,
+        dado_width_mm=design.dado_width_mm,
+        dado_depth_mm=design.dado_depth_mm,
+        repeat_count=design.repeat_count,
+    )
+
+
 class SawEngine:
     """
     RMOS-facing interface for Saw Lab operations.
@@ -188,8 +238,8 @@ class SawEngine:
         Converts RMOS types to Saw Lab types, runs calculators,
         then converts result back to RMOS format.
         """
-        # Convert to saw-specific types
-        saw_ctx = _convert_to_saw_context(ctx, design)
+        # Convert to saw-specific types (canonical, default-free mapping)
+        saw_ctx = _convert_to_saw_context(ctx)
         saw_design = _convert_to_saw_design(design)
         
         # Get saw feasibility result
@@ -228,9 +278,9 @@ class SawEngine:
         Converts RMOS types to Saw Lab types, generates toolpaths,
         then converts result back to RMOS format.
         """
-        # Convert to saw-specific types
-        saw_ctx = _convert_to_saw_context(ctx, design)
-        saw_design = _convert_to_saw_design(design)
+        # Convert to saw-specific types (legacy toolpath route; behaviour unchanged)
+        saw_ctx = _convert_to_saw_context_legacy(ctx, design)
+        saw_design = _convert_to_saw_design_legacy(design)
         
         # Generate saw toolpaths
         saw_plan = self._saw_service.generate_toolpaths(saw_design, saw_ctx)

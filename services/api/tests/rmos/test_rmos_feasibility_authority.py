@@ -59,13 +59,29 @@ SANE_ADAPTIVE = {
 # saw numbers (10" 24T blade at 3450 RPM); their verdict is not asserted here -
 # these witnesses only need to reach the evaluator, which refuses to score when
 # a safety-critical fact is absent.
+# Complete, truthful Saw request: every fact the seven calculators consume
+# (SAW-AUTHORITY-CONTEXT-006). Ordinary 10" 24T bench-saw numbers, all within
+# saw_lab.models bounds; constructed for authority testing, not a production setup.
 SANE_SAW = {
-    "rpm": 3450,
-    "feed_rate_mm_min": 3000.0,
-    "tool_diameter_mm": 254.0,
+    "material_id": "hardwood",
+    "blade_diameter_mm": 254.0,
+    "blade_kerf_mm": 3.0,
+    "blade_thickness_mm": 2.5,
     "tooth_count": 24,
+    "rpm": 3450,
+    "arbor_size_mm": 25.4,
     "stock_thickness_mm": 25.0,
+    "feed_rate_mm_min": 3000.0,
     "spindle_power_watts": 3000.0,
+    "blade_youngs_modulus_gpa": 200.0,
+    "use_dust_collection": True,
+    "cut_length_mm": 300.0,
+    "cut_type": "crosscut",
+    "miter_angle_deg": 0.0,
+    "bevel_angle_deg": 0.0,
+    "dado_width_mm": 0.0,
+    "dado_depth_mm": 0.0,
+    "repeat_count": 1,
 }
 
 
