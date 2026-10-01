@@ -1,0 +1,5 @@
+brace_id,y_in,width_in,depth_in,position_source,local_surface_curvature,implied_brace_radius_ft,common_radius_compatible,status,note
+BB1,,0.3200,0.4500,spec_qualitative,,,QUALITATIVE_ONLY,QUALITATIVE_ONLY,"region 'upper bout'; exact longitudinal position not available -> position not invented; brace depth is a cross-section dimension, NOT dome rise"
+BB2,,0.3200,0.4500,spec_qualitative,,,QUALITATIVE_ONLY,QUALITATIVE_ONLY,"region 'above waist'; exact longitudinal position not available -> position not invented; brace depth is a cross-section dimension, NOT dome rise"
+BB3,,0.7350,0.3850,spec_qualitative,,,QUALITATIVE_ONLY,QUALITATIVE_ONLY,"region 'below waist'; exact longitudinal position not available -> position not invented; brace depth is a cross-section dimension, NOT dome rise"
+BB4,,0.7600,0.3750,spec_qualitative,,,QUALITATIVE_ONLY,QUALITATIVE_ONLY,"region 'lower bout'; exact longitudinal position not available -> position not invented; brace depth is a cross-section dimension, NOT dome rise"

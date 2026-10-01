@@ -1,0 +1,116 @@
+{
+  "experiment": "D28_RUN_004E_BACK_SURFACE_RECONSTRUCTION",
+  "rim_source": "D28_65260_REGISTERED_RIM_004D.csv (immutable boundary)",
+  "coordinate_system": {
+    "x": "transverse (in)",
+    "y": "longitudinal neck->tail (in)",
+    "z": "vertical depth = 004C side height (in)",
+    "rise_definition": "h(x,y) = z_b - z_rim_local(y)"
+  },
+  "source_classifications": {
+    "registered_rim_004D": "VERIFIED_REGISTERED (004D)",
+    "arnold_outline": "VERIFIED_DRAWING_DERIVED",
+    "004C_side_heights": "CALCULATED_004C",
+    "back_brace_dims": "DRAWING_DERIVED (cross-section only; positions qualitative)",
+    "genone_arch_4_6mm": "REFERENCE_GEOMETRY (comparison only; not a fit target)"
+  },
+  "brace_evidence": [
+    {
+      "brace_id": "BB1",
+      "width_in": 0.32,
+      "depth_in": 0.45,
+      "region": "upper bout"
+    },
+    {
+      "brace_id": "BB2",
+      "width_in": 0.32,
+      "depth_in": 0.45,
+      "region": "above waist"
+    },
+    {
+      "brace_id": "BB3",
+      "width_in": 0.735,
+      "depth_in": 0.385,
+      "region": "below waist"
+    },
+    {
+      "brace_id": "BB4",
+      "width_in": 0.76,
+      "depth_in": 0.375,
+      "region": "lower bout"
+    }
+  ],
+  "reference_only_genone": {
+    "source": "GenOne dreadnought construction (REFERENCE_GEOMETRY)",
+    "arch_mm_range": [
+      4.0,
+      6.0
+    ],
+    "role": "REFERENCE_ONLY \u2014 never a fit target"
+  },
+  "candidate_models": [
+    {
+      "name": "single_sphere",
+      "type": "sphere",
+      "role": "diagnostic"
+    },
+    {
+      "name": "fixed_radius_sweep",
+      "type": "fixed_sphere",
+      "radii_ft": [
+        12,
+        15,
+        18,
+        20,
+        25,
+        30
+      ],
+      "role": "diagnostic (not historical)"
+    },
+    {
+      "name": "compound_paraboloid",
+      "type": "elliptic_paraboloid",
+      "role": "candidate"
+    },
+    {
+      "name": "constrained_tps",
+      "type": "thin_plate_spline",
+      "role": "selected primary (boundary-exact, minimal assumptions)"
+    }
+  ],
+  "tolerances": {
+    "rim_exact_in": 0.01,
+    "rim_nearfit_in": 0.05,
+    "nonunique_divergence_mm": 1.0,
+    "grid_step_in": 0.25
+  },
+  "excluded_assumptions": [
+    "no historical radius assumed (15/25/30/35 ft not claimed)",
+    "no clamped radius / moved center / forced in-body apex",
+    "GenOne arch not used as a fit target",
+    "brace depth not equated to dome rise",
+    "back-brace longitudinal positions not invented (QUALITATIVE_ONLY)"
+  ],
+  "diagnostic_single_sphere": {
+    "R_ft": 18.350214293746873,
+    "center": [
+      -0.0010274118108132958,
+      21.376933262445792,
+      -215.40714630594172
+    ],
+    "apex": [
+      -0.0010274118108132958,
+      21.376933262445792,
+      4.795425219020757
+    ],
+    "rim_rmse_in": 0.026328002606037713,
+    "rim_max_in": 0.07102962634772236
+  },
+  "provenance_sha256": {
+    "D28_65260_REGISTERED_RIM_004D.csv": "6a5444fa433d4b79f94f6b5b95b6b86409fa4b00a3abcd3ba1de0da28a40cfcf",
+    "D28_65260_ARNOLD_OUTLINE.csv": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a",
+    "D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json": "2c8f51cc9c48c2de10e17620b436cfb200ee47283108edf4b62eca5bfb8b150f"
+  },
+  "no_prior_file_modifications": true,
+  "no_production_changes": true
+}

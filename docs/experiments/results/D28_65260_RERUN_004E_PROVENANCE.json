@@ -1,0 +1,50 @@
+{
+  "experiment": "D28_RUN_004E_BACK_SURFACE_RECONSTRUCTION",
+  "parent_commit": "fe7548ba5a96fb254d44871114b43d64041747de",
+  "script": "scripts/experiments/d28_rerun004e_back_surface_reconstruction.py",
+  "command": "python scripts/experiments/d28_rerun004e_back_surface_reconstruction.py --write",
+  "source_artifacts": [
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTERED_RIM_004D.csv",
+      "role": "IMMUTABLE_RIM_BOUNDARY",
+      "sha256": "6a5444fa433d4b79f94f6b5b95b6b86409fa4b00a3abcd3ba1de0da28a40cfcf"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTRATION_AUTHORITY_004D.json",
+      "role": "RIM_PROVENANCE",
+      "sha256": "4ff744c374d441c56180edce21527aee9f02be2e68efd842ade92a7d2e72d6ab"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "role": "BODY_DOMAIN_OUTLINE",
+      "sha256": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
+      "role": "SIDE_HEIGHT_AUTHORITY",
+      "sha256": "2c8f51cc9c48c2de10e17620b436cfb200ee47283108edf4b62eca5bfb8b150f"
+    }
+  ],
+  "model_definitions": {
+    "single_sphere": "least_squares (cx,cy,cz,R); no clamping",
+    "fixed_radius_sweep": "radii [12,15,18,20,25,30] ft; fit (cy,cz), cx=0",
+    "compound_paraboloid": "z=z0 + x^2/(2Rt) + (y-y0)^2/(2Rl)",
+    "constrained_tps": "RBFInterpolator thin_plate_spline, smoothing=0 (boundary-exact)"
+  },
+  "grid_step_in": 0.25,
+  "deterministic_seed": "none (no stochastic component)",
+  "output_paths": [
+    "D28_65260_BACK_SURFACE_AUTHORITY_004E.json",
+    "D28_65260_BACK_SURFACE_CANDIDATES_004E.csv",
+    "D28_65260_BACK_SURFACE_004E.csv",
+    "D28_65260_BACK_CENTERLINE_004E.csv",
+    "D28_65260_BACK_SECTIONS_004E.csv",
+    "D28_65260_BACK_BRACE_COMPATIBILITY_004E.csv",
+    "D28_65260_RERUN_004E_SUMMARY.csv",
+    "D28_65260_RERUN_004E_PROVENANCE.json"
+  ],
+  "pdf_vendored": false,
+  "no_prior_file_modifications": true,
+  "no_production_changes": true,
+  "disposition": "BACK_SURFACE_MODEL_NONUNIQUE"
+}

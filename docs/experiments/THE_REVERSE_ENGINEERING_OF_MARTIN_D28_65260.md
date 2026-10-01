@@ -26,7 +26,13 @@
 > `R(s)=(x,y,H(s))`, with disposition
 > `DEVELOPED_PLAN_REGISTRATION_SUPPORTED`. No sphere fit, no Sevy high point; the
 > developed length 30.4375 in and the plan half-perimeter remain distinct
-> quantities (never forced equal).
+> quantities (never forced equal). **Run 004E** (back surface reconstruction from
+> the registered rim) is recorded at the very top: it spans the immutable 004D rim
+> with candidate sphere / fixed-radius / compound / constrained-smooth surfaces and
+> concludes `BACK_SURFACE_MODEL_NONUNIQUE` — a single ≈18.4 ft cap fits the rim to
+> ~0.07 in and a boundary-exact smooth surface fits exactly, but they diverge ~2.6 mm
+> in the interior, so the back arch is under-determined by the rim alone (no measured
+> arch authority; GenOne 4–6 mm reference-only; brace depths are not dome rise).
 
 ## Failure / Pivot Ledger
 
@@ -97,6 +103,76 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004E_START -->
+## Run 004E — Back Surface Reconstruction from Registered Rim
+
+- Repository SHA tested: `fe7548ba5a96fb254d44871114b43d64041747de`
+- Reconstructs a #65260 **back surface** `z_b = F(x,y)` spanning the **immutable 004D registered rim** as fixed boundary geometry. The rim, 004C side heights, and the Arnold/JD outline are read-only; no historical radius is assumed.
+- Candidate families (all preserved): **single sphere**, **fixed-radius diagnostic sweep** (12/15/18/20/25/30 ft), **compound elliptic paraboloid**, and **constrained thin-plate-spline** (boundary-exact). Selected primary = the constrained TPS.
+- Artifacts: `D28_65260_BACK_SURFACE_AUTHORITY_004E.json`, `D28_65260_BACK_SURFACE_CANDIDATES_004E.csv`, `D28_65260_BACK_SURFACE_004E.csv`, `D28_65260_BACK_CENTERLINE_004E.csv`, `D28_65260_BACK_SECTIONS_004E.csv`, `D28_65260_BACK_BRACE_COMPATIBILITY_004E.csv`, `D28_65260_RERUN_004E_SUMMARY.csv`, `D28_65260_RERUN_004E_PROVENANCE.json`. No PDF vendored.
+
+### Why 004E exists
+
+- 004D fixed **where** the rim is in 3D. 004E asks **what back surface can span that rim** without changing any evidence. A manufacturable back needs a continuous surface meeting the full rim; the arch between rim edges is the open question.
+
+### Coordinate system & rise definition
+
+- `x` transverse (body symmetric about x=0), `y` longitudinal (neck 0 → tail 19.990 in), `z` vertical depth = 004C side height. Rim z ∈ [3.740, 4.720] in (non-planar). Back rise `h(x,y) = z_b − z_rim_local(y)`; rim-local varies longitudinally and is not treated as a flat datum.
+
+### Candidate comparison (results recorded before interpretation)
+
+| model | rim RMSE (in) | rim max (in) | key params | center rise (mm) | admissible |
+|---|---:|---:|---|---:|:--:|
+| single sphere | 0.0263 | 0.0710 | R≈18.4 ft, center≈(-0.0,21.4,-215.4) | 2.74 | no |
+| best fixed radius (18 ft) | 0.0264 | 0.0707 | diagnostic only | 2.84 | no |
+| compound paraboloid | 0.0610 | 0.1099 | R_long≈1062.2 ft, R_trans≈14.9 ft | 2.78 | no |
+| **constrained TPS (selected)** | 0.0000 | 0.0000 | boundary-exact, 555 rim pts | 1.61 | yes |
+
+- A single **≈18.4 ft** spherical cap spans the rim to within **0.0710 in** (RMSE 0.0263) — a strong diagnostic, but NOT promoted to historical authority (no source evidence fixes a radius for #65260).
+- Interior divergence between the sphere and the boundary-exact TPS reaches **0.1030 in (2.62 mm)** — the back **arch magnitude is under-determined by the rim alone**.
+
+### Mathematical result vs physical interpretation
+
+> A mathematically valid result is preserved before it is judged physically admissible. No fitted radius was clamped, no curvature center moved, no apex forced inside the body, no saddle rejected on sight. The sphere's apex and center are recorded verbatim even where they lie outside the body. "Physically inadmissible" is a property of the tested model interpretation, not of the mathematics itself. See the program-level **Engineering Interpretation Principle** at the top of this document.
+
+### Centerline (selected surface)
+
+- Max centerline rise above local rim: **0.0634 in (1.61 mm)**.
+
+| landmark | y (in) | z_back (in) | rim z (in) | rise (mm) |
+|---|---:|---:|---:|---:|
+| upper_bout | 3.191 | 3.9909 | 3.9586 | 0.82 |
+| waist | 6.523 | 4.2257 | 4.2200 | 0.15 |
+| lower_bout | 14.631 | 4.5894 | 4.6021 | -0.32 |
+| tail | 19.990 | 4.7200 | 4.7200 | 0.00 |
+
+### Transverse sections & curvature
+
+- Sections at upper-bout / waist / lower-bout exported (`D28_65260_BACK_SECTIONS_004E.csv`); symmetry reported per section, local circular-arc radius fitted (not forced).
+- Gaussian curvature over the interior ∈ [-4.34e-04, 5.74e-05]; saddle (negative Gaussian) present: **True** — recorded, not auto-rejected.
+
+### Back-brace consistency (QUALITATIVE_ONLY)
+
+- BB1–BB4 cross-section dimensions preserved; exact longitudinal positions are NOT available in any source, so positions are **not invented** and the check is `QUALITATIVE_ONLY`. Brace depth is a cross-section dimension and is **not** compared to dome rise.
+
+### GenOne 4–6 mm (reference-only)
+
+- Selected-surface lower-bout center rise: **-0.32 mm** → **below** the GenOne 4–6 mm reference envelope. The reference range was NOT used as a fit target.
+
+### Disposition
+
+**`BACK_SURFACE_MODEL_NONUNIQUE`**
+
+- Materially different surfaces span the same rim: sphere (R≈18.4 ft, rim max 0.0710 in) vs boundary-exact TPS differ by up to 0.1030 in (2.62 mm) in the interior — above the 1.0 mm band.
+- The interior back arch is UNDER-DETERMINED by the rim alone: no measured arch authority exists (GenOne 4-6 mm is reference-only; brace depths are not dome rise).
+- Reported primary = boundary-exact TPS (minimal added assumption); its lower-bout center rise is -0.32 mm (below the GenOne 4-6 mm reference). The near-fitting ≈18.4 ft sphere is a strong diagnostic, NOT promoted to historical authority.
+
+Parent dispositions (001–004D) are untouched. 004E alters no rim point, no 004C side height, and no production/spec file.
+
+<!-- RERUN004E_END -->
+
+---
 
 <!-- RERUN004D_START -->
 ## Run 004D — Developed-Side / Plan-Outline Registration
