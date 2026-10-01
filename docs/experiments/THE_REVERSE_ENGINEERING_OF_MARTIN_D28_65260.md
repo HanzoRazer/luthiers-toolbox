@@ -17,10 +17,75 @@
 > similitude from the GenOne Sheet 05 side-contour template) is recorded at the
 > very top: the shape transfer is admissible by construction (no high point) but
 > does not reproduce #65260's side profile tightly —
-> `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`. A follow-on **Rerun 003A
+> `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`. **Run 004C** (constrained developed-side reconstruction) is recorded at the very top: Arnold's measurements define the side geometry (GenOne gives only landmark priors), 30.4375 in is the active developed coordinate, and the result is `CONSTRAINED_DEVELOPED_RECONSTRUCTION_SUPPORTED`. A follow-on **Rerun 003A
 > station-datum audit** is recorded above the Rerun 003 section; it concludes
 > `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
 > as **STRENGTHENED**.
+
+<!-- RERUN004C_START -->
+## Run 004C — Constrained Developed-Side Reconstruction
+
+- Repository SHA tested: `c5799c46af9830d87aaae645221ea9f8ce0fcd59`
+- Reverses the 004B hierarchy: **Arnold's measured side heights are the primary hard constraints**; the GenOne plan contributes **longitudinal landmark priors only** (no depth values). The developed side length **30.4375 in is the active coordinate authority** (not inferred from the plan perimeter); **station 27 in is in-domain**. No Sevy high point.
+- Artifacts: `D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json`, `D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv`, `D28_65260_LANDMARK_RECONSTRUCTION_004C.csv`, `D28_65260_DEEP_INTERPRETATION_004C.csv`, `D28_65260_RERUN_004C_ANALYSIS.csv`, `D28_65260_RERUN_004C_SUMMARY.csv`. No PDF vendored.
+
+### Why 004C follows 004B
+
+- 004B showed a generic full-shape transfer does not fit #65260's side profile.
+- 004C reverses the hierarchy: Arnold measurements define the geometry; GenOne contributes only proportional landmark priors; 30.4375 in is an active developed-side authority; 27 in is valid/in-domain; 26.73 in is a different (plan-view) quantity; 4 7/16 DEEP is assembled depth, not raw side height.
+
+### Constrained reconstruction (PCHIP through all Arnold points)
+
+- All 11 source points reproduced exactly (max error 0.00e+00 in). Shape-preserving PCHIP (handles the 3.750→3.740 dip; no global monotonicity forced); overshoot = 0.0000 in; curvature max = 0.0653; slope ∈ [-0.0100, 0.0691].
+
+### Waist placement (Arnold-constrained + GenOne prior)
+
+- GenOne proportional waist prior → s = **11.16 in** (GenOne waist center u=0.367).
+- Arnold-constrained solve H(s)=4.220 → s = **11.55 in** (between stations 9 and 12).
+- Profile at the GenOne prior predicts H=4.2015 in → waist residual **-0.0185 in**. The GenOne prior and the Arnold-interpolated waist agree within a fraction of an inch; the waist is placeable without contradiction.
+
+### Landmark back-check (GenOne prior → #65260 developed station)
+
+| landmark | GenOne station | u (neck=0) | prior s (in) | reconstructed s (in) |
+|---|---:|---:|---:|---:|
+| head | 31.37 | 0.000 | 0.00 | — |
+| upper_bout | 23.52 | 0.261 | 7.94 | — |
+| waist | 20.34 | 0.367 | 11.16 | 11.55 |
+| lower_bout | 11.66 | 0.656 | 19.95 | — |
+| tail | 1.31 | 1.000 | 30.44 | 30.44 |
+
+### Developed length vs plan half-perimeter (different quantities)
+
+- Developed side length **30.4375 in** (004C authority) vs plan-view half-perimeter **26.73 in** (diagnostic): difference 3.71 in (13.9%). These are treated as different geometric quantities; 26.73 does NOT constrain station placement in 004C.
+
+### GenOne analogy & 4 7/16 DEEP
+
+- GenOne 30 11/32 (30.34375) vs Arnold 30 7/16 (30.4375): diff 0.09375 in → `SOURCE_SUPPORTED_ANALOGY` (supports a ~30.4-in developed side).
+- 4 7/16 DEEP (4.4375) − waist side height (4.22) = **0.2175 in (5.525 mm)** → `SOURCE_CORROBORATED_INTERPRETATION` (top+back plate contribution per GenOne construction convention; exact split unresolved; #65260 plate thicknesses not invented).
+
+### Diagnostic fits (not governing)
+
+- Single-radius sphere fitted to the reconstructed profile: R ≈ 40.7 ft, P ≈ -13.66 in, RMSE 0.0648 in (confirms the spherical model remains inadmissible; the constrained profile does not rely on it).
+- poly3: RMSE 0.0246 in.
+- poly4: RMSE 0.0187 in.
+
+### Bracing / Datum A (independent, qualitative)
+
+- The developed-side reconstruction changes no plan-view geometry; it remains compatible with soundhole Datum A, the X-brace (49°+49°=98°, lower 110°), page-2 brace dimensions, and BB1–BB4 longitudinal placement. Brace cross-section depths are not compared to side depth.
+
+### Disposition
+
+**`CONSTRAINED_DEVELOPED_RECONSTRUCTION_SUPPORTED`**
+
+- All source points reproduced exactly (max err 0.00e+00 in); no overshoot (0.0000 in).
+- Waist placeable at s=11.55 in (H=4.220 between stations 9 and 12); GenOne proportional prior s=11.16 in; profile at the prior predicts 4.2015 in (residual -0.0185 in).
+- Developed coordinate 30.4375 in internally coherent; station 27 in-domain; no Sevy high point / single-radius condition required.
+
+Parent dispositions `SPHERICAL_MODEL_MISMATCH` and `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT` are untouched.
+
+<!-- RERUN004C_END -->
+
+---
 
 <!-- RERUN004B_START -->
 ## Run 004B — Proportional Dreadnought Similitude

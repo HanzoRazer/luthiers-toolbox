@@ -1,0 +1,6 @@
+landmark,genone_station,u,prior_s65260_in,reconstructed_s_in,delta_in,status
+head,31.366,0.00000,0.0000,,,SOURCE_SUPPORTED_ANALOGY prior
+upper_bout,23.522,0.26102,7.9449,,,SOURCE_SUPPORTED_ANALOGY prior
+waist,20.342,0.36681,11.1649,11.5521,+0.3872,reconstructed vs prior
+lower_bout,11.665,0.65555,19.9532,,,SOURCE_SUPPORTED_ANALOGY prior
+tail,1.313,1.00000,30.4375,30.4375,+0.0000,reconstructed vs prior

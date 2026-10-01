@@ -1,0 +1,4 @@
+quantity,value_in,value_mm,classification,note
+waist raw side height,4.2200,107.188,SOURCE_MEASURED,Arnold waist
+assembled DEEP (4 7/16),4.4375,112.712,SOURCE_CORROBORATED_INTERPRETATION,"assembled body depth, not side height"
+difference (DEEP - side),0.2175,5.5245,CALCULATED,top+back plate contribution; exact split unresolved; plates not invented
