@@ -215,6 +215,19 @@ def _canonical_conversion_src():
     return inspect.getsource(se._convert_to_saw_context) + inspect.getsource(se._convert_to_saw_design)
 
 
+def _canonical_calls_and_attrs(tree):
+    calls = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Call):
+            func = n.func
+            if isinstance(func, ast.Name):
+                calls.append(func.id)
+            elif isinstance(func, ast.Attribute):
+                calls.append(func.attr)
+    attrs = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)}
+    return calls, attrs
+
+
 def test_sac039_canonical_conversion_has_no_fallback_numeric_constants():
     tree = ast.parse(_canonical_conversion_src())
     nums = [n.value for n in ast.walk(tree)
@@ -222,6 +235,12 @@ def test_sac039_canonical_conversion_has_no_fallback_numeric_constants():
             and not isinstance(n.value, bool)]
     # the strict canonical converters contain no hardcoded blade/machine constants
     assert nums == [], f"fallback numeric constants leaked into canonical conversion: {nums}"
+    calls, attrs = _canonical_calls_and_attrs(tree)
+    # no int() truncation, no getattr(..., default), no tool_id process parsing
+    assert "int" not in calls, calls
+    assert "getattr" not in calls, calls
+    assert "_parse_saw_tool_id" not in calls, calls
+    assert "tool_id" not in attrs
 
 
 def test_sac040_canonical_conversion_has_no_rosette_aliases():
@@ -263,3 +282,108 @@ def test_sac031_032_rosette_needs_no_saw_fields_and_still_evaluates():
     r = compute_rosette_feasibility(req={"tool_id": "rosette:default", "material_id": "spruce"}, context="test")
     assert r["mode"] == "rosette"
     assert r["safety"]["risk_level"] in ("GREEN", "YELLOW", "RED")  # unchanged behaviour
+
+
+# --- Contract completeness the 006 order requires ---------------------------
+
+def _calc(req, name):
+    return _safety(req)["details"]["calculator_results"][name]
+
+
+def test_submitted_facts_reach_every_calculator_unchanged():
+    """Realistic facts are the values the calculators use, not a substituted cut."""
+    req = dict(COMPLETE_SAW_REQUEST, rpm=3450.0, feed_rate_mm_min=3000.5)
+    s = _safety(req)
+    assert s["risk_level"] in ("GREEN", "YELLOW", "RED")
+    rim = _calc(req, "rim_speed")
+    bite = _calc(req, "bite_load")
+    force = _calc(req, "cutting_force")
+    deflect = _calc(req, "deflection")
+    kick = _calc(req, "kickback")
+    heat = _calc(req, "heat")
+    assert rim["current_rpm"] == 3450
+    assert rim["blade_diameter_mm"] == req["blade_diameter_mm"]
+    assert bite["current_feed_mm_per_min"] == 3000.5
+    assert bite["tooth_count"] == req["tooth_count"]
+    assert bite["rpm"] == 3450
+    # 3.0 kW arrives; the calculator applies its motor-efficiency coefficient (0.85).
+    assert force["available_power_w"] == 2550.0
+    assert deflect["blade_thickness_mm"] == req["blade_thickness_mm"]
+    assert deflect["youngs_modulus_gpa"] == req["blade_youngs_modulus_gpa"]
+    assert kick["cut_type"] == req["cut_type"]
+    assert kick["miter_angle_deg"] == req["miter_angle_deg"]
+    assert kick["bevel_angle_deg"] == req["bevel_angle_deg"]
+    assert heat["dust_collection_active"] is True
+
+
+def test_nonintegral_integer_facts_are_blocking_errors_and_do_not_score():
+    """int() truncation is a substituted fact. Fractional rpm / teeth / repeats fail closed."""
+    from unittest.mock import patch
+    from app.saw_lab.calculators import FeasibilityCalculatorBundle
+
+    calls = {"n": 0}
+    real = FeasibilityCalculatorBundle.evaluate
+
+    def counting(self, design, ctx):
+        calls["n"] += 1
+        return real(self, design, ctx)
+
+    with patch.object(FeasibilityCalculatorBundle, "evaluate", counting):
+        rpm = _safety(dict(COMPLETE_SAW_REQUEST, rpm=3450.7))
+        teeth = _safety(dict(COMPLETE_SAW_REQUEST, tooth_count=24.5))
+        repeats = _safety(dict(COMPLETE_SAW_REQUEST, repeat_count=2.9))
+        missing = _safety({k: v for k, v in COMPLETE_SAW_REQUEST.items() if k != "blade_kerf_mm"})
+        boolean = _safety(dict(COMPLETE_SAW_REQUEST, feed_rate_mm_min=True))
+    assert calls["n"] == 0
+    assert rpm["risk_level"] == "ERROR" and "rpm" in rpm["block_reason"]
+    assert teeth["risk_level"] == "ERROR" and "tooth_count" in teeth["block_reason"]
+    assert repeats["risk_level"] == "ERROR" and "repeat_count" in repeats["block_reason"]
+    assert missing["risk_level"] == "UNKNOWN"
+    assert boolean["risk_level"] == "ERROR"
+
+
+def test_blade_diameter_kerf_and_stock_change_the_relevant_calculation():
+    dia_a = _calc(dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=200.0), "rim_speed")["rim_speed_m_s"]
+    dia_b = _calc(dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=400.0), "rim_speed")["rim_speed_m_s"]
+    kerf_a = _calc(dict(COMPLETE_SAW_REQUEST, blade_kerf_mm=2.0), "cutting_force")["cutting_power_w"]
+    kerf_b = _calc(dict(COMPLETE_SAW_REQUEST, blade_kerf_mm=6.0), "cutting_force")["cutting_power_w"]
+    stock_a = _calc(dict(COMPLETE_SAW_REQUEST, stock_thickness_mm=10.0), "kickback")["blade_exposure_mm"]
+    stock_b = _calc(dict(COMPLETE_SAW_REQUEST, stock_thickness_mm=80.0), "kickback")["blade_exposure_mm"]
+    assert dia_a != dia_b and kerf_a != kerf_b and stock_a != stock_b
+
+
+def test_cut_length_and_repeat_count_change_estimated_time():
+    short = _safety(dict(COMPLETE_SAW_REQUEST, cut_length_mm=100.0))["details"]["estimated_cut_time_seconds"]
+    long = _safety(dict(COMPLETE_SAW_REQUEST, cut_length_mm=1500.0))["details"]["estimated_cut_time_seconds"]
+    once = _safety(dict(COMPLETE_SAW_REQUEST, repeat_count=1))["details"]["estimated_cut_time_seconds"]
+    many = _safety(dict(COMPLETE_SAW_REQUEST, repeat_count=8))["details"]["estimated_cut_time_seconds"]
+    assert short != long and once != many
+
+
+def test_rosette_only_fields_do_not_change_a_complete_saw_result():
+    base = _run(COMPLETE_SAW_REQUEST)
+    aliased = _run(dict(
+        COMPLETE_SAW_REQUEST,
+        outer_diameter_mm=80.0,
+        inner_diameter_mm=10.0,
+        ring_count=12,
+        pattern_type="herringbone",
+        tool_diameter_mm=50.0,
+    ))
+    assert aliased["safety"]["score"] == base["safety"]["score"]
+    assert aliased["safety"]["risk_level"] == base["safety"]["risk_level"]
+    assert aliased["safety"]["details"]["calculator_results"] == base["safety"]["details"]["calculator_results"]
+
+
+def test_tool_id_suffix_cannot_change_blade_or_process_parameters():
+    base = _safety(COMPLETE_SAW_REQUEST)
+    parsed = _safety(dict(COMPLETE_SAW_REQUEST, tool_id="saw:10_80_1.5"))
+    other = _safety(dict(COMPLETE_SAW_REQUEST, tool_id="saw:6_24_3.2"))
+    assert parsed["score"] == other["score"] == base["score"]
+    assert parsed["details"]["calculator_results"]["rim_speed"]["blade_diameter_mm"] == 254.0
+    assert parsed["details"]["calculator_results"]["bite_load"]["tooth_count"] == 24
+    assert parsed["details"]["calculator_results"]["bite_load"]["current_feed_mm_per_min"] == 3000.0
+
+
+def test_repeated_requests_produce_identical_decisions():
+    assert _run(COMPLETE_SAW_REQUEST) == _run(dict(COMPLETE_SAW_REQUEST))
