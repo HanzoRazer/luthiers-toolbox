@@ -148,3 +148,26 @@ grepping workflows for path arguments will miss it entirely.
 3.14. A local red on the wrong interpreter is a claim about your environment, not
 about the code — check the toolchain against `services/api/requirements.txt` before
 reporting a failure.
+
+## Cursor Cloud specific instructions
+
+Cloud Agents boot from `.cursor/environment.json`. `bash .cursor/install.sh` installs
+system libraries, the `services/api/.venv` (system Python 3.12, which satisfies
+`requires-python >=3.11,<3.14`), and the Vue client. `bash .cursor/start.sh` starts
+the dev servers and is safe to rerun.
+
+- API: `http://127.0.0.1:8010` (Vite proxies `/api` and `/ws` to this port, not 8000).
+  Logs: `/tmp/luthiers-api.log`. Health: `GET /api/health`.
+- Client: `http://127.0.0.1:5173`. Logs: `/tmp/luthiers-client.log`.
+- Node must satisfy `packages/client` `engines.node` (`^20.19.0 || >=22.22.2`).
+  The image `node` earlier on `PATH` can be older. Install publishes Node 22.22.2
+  at `/usr/local/lib/nodejs/bin` and prepends it for login shells. For a
+  non-login shell, run `export PATH="/usr/local/lib/nodejs/bin:$PATH"` before
+  `npm`.
+- `sg-spec` in `services/api/requirements.txt` clones from a public git URL.
+  `SG_SPEC_TOKEN` is for private Docker image builds, not this local install.
+- Dev auth is `AUTH_MODE=header` (set by the start script). Supabase keys are
+  not required to boot or to call the curated v1 calculators.
+- Representative product check: `POST /api/v1/frets/positions` with
+  `{"scale_length_mm": 648, "fret_count": 22}`, then open
+  `http://127.0.0.1:5173/calculators`.

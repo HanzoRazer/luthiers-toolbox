@@ -3,66 +3,77 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "CLOUD_AGENT_ENVIRONMENT_001",
-  "title": "Cloud Agent development environment bootstrap",
-  "intent": "Add a reproducible Cloud Agent bootstrap and persistent API/client terminals while enforcing the client workspace's declared Node engine floor.",
+  "title": "chore(env): boot the Cloud Agent API and client from start",
+  "intent": "The committed Cloud Agent config listed API and client processes under terminals and had no start script. Terminals are ignored unless start is also set, so a fresh agent never booted the dev servers. This patch keeps install idempotent, adds the OpenCV/WeasyPrint libraries the API image already installs, publishes a Node that satisfies the client engine floor, and starts the API on port 8010 (the Vite proxy target) plus the Vue dev server from start.",
   "change_type": "chore",
-  "behavior_change": "Cloud Agent setup installs backend and client dependencies, prepares local runtime directories, and starts the API and Vite development servers. The Python venv package follows the image's default python3 minor. If the base image's Node does not satisfy packages/client/package.json, the agent-only bootstrap installs the current Node 22 release before npm ci.",
+  "behavior_change": "Cloud Agent boot now starts the API on port 8010 and the Vite client on port 5173 from .cursor/start.sh. Application routes, schemas, and manufacturing behavior are unchanged.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
-      ".cbsp21/patches/cloud-agent-environment.json",
-      ".cursor/environment.json",
-      ".cursor/install.sh"
+      ".cursor/",
+      "AGENTS.md"
     ],
     "files_expected_to_change": [
-      ".cbsp21/patches/cloud-agent-environment.json",
       ".cursor/environment.json",
-      ".cursor/install.sh"
+      ".cursor/install.sh",
+      ".cursor/start.sh",
+      "AGENTS.md"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Added the Cloud Agent environment definition, an idempotent dependency bootstrap, a default-python-compatible venv package, an explicit Node engine-floor check with pinned agent-only installer remediation, and this owned CBSP21 declaration.",
-    "why": "Fresh Cloud Agents had no repository-managed way to install or boot the backend and client. The current base image also provides Node 22.14.0, below the client workspace's declared supported 22.x floor.",
-    "why_not_redundant": "No .cursor environment definition exists on the base branch. Existing Docker and GitHub Actions Node guards do not configure or validate the separate Cloud Agent image.",
-    "what_did_not_change": "No application source, API contract, production deployment configuration, dependency manifest, lockfile, database schema, or manufacturing behavior changed.",
-    "why_structural_extraction": "The bootstrap remains in .cursor/install.sh and reads the existing package.json engine authority through scripts/check-node-engine.mjs rather than duplicating semver logic."
+    "what_changed": ".cursor/environment.json drops the terminals entries and sets start to bash .cursor/start.sh. .cursor/install.sh adds libgl, libglib, libxcb, and libpangoft2, and publishes Node 22.22.2 on /usr/local/lib/nodejs/bin via /etc/profile.d so login shells do not pick an older node earlier on PATH. New .cursor/start.sh launches uvicorn on 127.0.0.1:8010 and vite on 127.0.0.1:5173 in tmux, and skips a server that is already healthy. AGENTS.md records the ports, the Node PATH, and that sg-spec clones from a public git URL for this install.",
+    "why_not_redundant": "No other file in the repo starts these two dev servers on agent boot. The previous terminals block never ran, because start was absent. README and the Makefile start the API on port 8000, which the Vite dev proxy does not use."
   },
   "verification": {
     "commands_run": [
-      "bash -n .cursor/install.sh",
-      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/cloud-agent-environment.json .cursor/environment.json .cursor/install.sh",
-      "python scripts/ci/check_cbsp21_patch_input.py --base fb052a4ae9bd9d34ab25bf3106f924f79cb74bae --head HEAD",
-      "cd packages/client && npm run check:node"
-    ],
-    "proofs": [
-      "The manifest owns every file in the PR.",
-      "The install script intentionally floats within Node 22 like packages/client/.nvmrc and CI, then validates the resolved runtime against packages/client/package.json before npm ci.",
-      "The python3-venv package follows the Cloud Agent image's default python3 minor instead of assuming Python 3.12.",
-      "The existing environment commands bind the API to the Vite proxy target on port 8010 and expose Vite on port 5173."
-    ],
-    "hardware": "No physical-machine execution and no manufacturing output."
+      "bash .cursor/install.sh -> EXIT 0 (first run)",
+      "bash .cursor/install.sh -> EXIT 0 (second run, idempotent)",
+      "bash -l .cursor/start.sh -> API ready :8010, client ready :5173, EXIT 0",
+      "bash -l .cursor/start.sh -> both already listening, EXIT 0",
+      "GET /api/health -> status ok, router_count 143, router_errors {}",
+      "POST /api/v1/frets/positions {scale_length_mm:648,fret_count:22} -> ok, fret 12 at 324.0 mm",
+      "POST via http://127.0.0.1:5173/api/v1/frets/positions -> ok, 22 frets",
+      "cd services/api && .venv/bin/python -m pytest tests/test_golden_fret_positions.py -q --no-cov -> 10 passed",
+      "cd packages/client && npm test -- src/testing/__tests__/nodeEngineFloor.spec.ts -> 6 passed",
+      "bash -lc 'node --version' -> v22.22.2 from /usr/local/lib/nodejs/bin/node",
+      "Calculator hub at http://127.0.0.1:5173/calculators: String Tension Calculator updates total tension across Light, Medium, and Heavy gauge presets"
+    ]
   },
   "files": [
     {
       "path": ".cursor/environment.json",
-      "intent": "Define Cloud Agent installation, persistent backend/client terminals, and forwarded development ports.",
+      "intent": "Boot the dev servers from start instead of an ignored terminals list.",
+      "scan_targets": [".cursor/environment.json"],
       "risk": "low",
-      "behavior_change": "Fresh Cloud Agents can boot the API on 8010 and Vite client on 5173."
+      "behavior_change": "none"
     },
     {
       "path": ".cursor/install.sh",
-      "intent": "Install system, backend, and client dependencies and prepare local runtime directories using a supported Node release.",
+      "intent": "Install the API image's native libraries and publish a Node that meets the client engine floor.",
+      "scan_targets": [".cursor/install.sh"],
       "risk": "low",
-      "behavior_change": "Cloud Agent images install venv support for their default python3 minor. Images below the declared Node floor install the current Node 22 patch release, then must pass npm run check:node before npm ci."
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cursor/start.sh",
+      "intent": "Start the API on 8010 and the Vue client on 5173, skipping listeners that are already healthy.",
+      "scan_targets": [".cursor/start.sh"],
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "AGENTS.md",
+      "intent": "Record the Cloud Agent ports, Node PATH, and that this install does not need SG_SPEC_TOKEN.",
+      "scan_targets": ["AGENTS.md"],
+      "risk": "low",
+      "behavior_change": "none"
     }
   ],
   "architecture_scan": {
-    "scan_id": "AS-2026-09-24-CLOUD-AGENT-ENVIRONMENT-001",
-    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
-    "findings": [
-      "LOW: the agent-only bootstrap uses a pinned installer to install the current Node 22 patch release globally when the base image is below the repository's declared engine floor; the major-line float matches packages/client/.nvmrc and CI, and the package.json engine guard rejects unsupported resolutions. This does not alter production hosts or application dependencies."
-    ],
+    "scan_id": "AS-2026-10-02-CLOUD-AGENT-ENV",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
     "acknowledged": true,
-    "acknowledgement_notes": "The global Node installation is confined to the disposable Cloud Agent image. Floating within Node 22 is intentional repository policy for security patch uptake; npm run check:node remains the fail-closed runtime validation."
+    "acknowledgement_notes": "Cloud Agent install/start scripts and AGENTS.md only. No application, schema, or _experimental/ paths."
   }
 }
