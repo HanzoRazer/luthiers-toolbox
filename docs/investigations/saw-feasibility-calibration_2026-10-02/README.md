@@ -1,6 +1,6 @@
 # Saw feasibility calibration — why complete requests stay RED
 
-**Order:** SAW-FEASIBILITY-CALIBRATION-007. **Base:** `ea320c844a5df62954d732602bf4371c4228d3ae` (current `origin/main` at investigation time, merge of PR #421).
+**Order:** SAW-FEASIBILITY-CALIBRATION-007. **Base:** `ea320c844a5df62954d732602bf4371c4228d3ae` (current `origin/main` at investigation time, merge of PR #421). **Evidence commit:** `e25c83bcfe2f6396f885520b7359afd56310252f` on `cursor/saw-feasibility-calibration-007`. The branch head after the manifest's recorded CBSP21 run is the tip of that branch; it is not copied into `evidence.json`, because the generator must stay byte-stable.
 
 This increment is evidence and adjudication. It does not change production formulas, thresholds, routes, persistence, or the manufacturing-output inventory. It does not authorize a merge or Saw-route containment.
 

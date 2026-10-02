@@ -53,14 +53,17 @@
       "cd services/api && .venv/bin/python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json  # OK",
       "cd services/api && .venv/bin/python -m app.ci.check_bare_except  # OK",
       "cd services/api && .venv/bin/python -m app.ci.fence_checker_v2  # Passed 2, Failed 0",
-      "cd services/api && .venv/bin/python -m app.ci.check_duplication --threshold 100  # OK, 0 clone groups"
+      "cd services/api && .venv/bin/python -m app.ci.check_duplication --threshold 100  # OK, 0 clone groups",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)  # PASS coverage 100%",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD  # PASS",
+      "services/api/.venv/bin/python -m pytest scripts/ci/ -k cbsp21 -q  # 36 passed, 61 deselected"
     ],
     "proofs": [
       "Base ea320c844a5df62954d732602bf4371c4228d3ae contains merge e06b3075 (PR #420, 2026-10-01) and merge 9f15a220 (PR #422, 2026-10-02). No open pull request overlapped the Saw evaluator, calculators, profiles, blades, or this evidence set.",
       "CASE-B observed RED 56.2 via feasibility_scorer. Weighted sum matches. Heat score 15 is the first <30 gate; deflection 20 and cutting_force 10 also force RED. Rim speed 45.88 m/s, bite 0.03623 mm/tooth, and blade dynamics margin 0.6185 score 100. kc metadata is 30.0 on every sensitivity row. Cutting power 112500 W against 2550 W available.",
       "CASE-A status is not_assembled. Sample blades, MACHINE_PRESETS, wood_species specific-cutting-energy estimates (0.22-1.08, rejected by MaterialProperties ge=5), and bandsaw records were inspected and not combined into a fake job. CASE-D stays RED 34.3. All 26 SENSITIVITY.csv data rows are RED and marked not approved.",
       "Repeat count 1 versus 8 leaves calculator scores unchanged and moves cut time from 11.0 s to 88.0 s. Boundary RPM, feed, diameter, and tooth count are echoed rather than replaced by 5000 or 3000.",
-      "Evidence tests: 25 passed, including byte-identical regeneration. Focused Saw/RMOS regressions: 150 passed, 3 skipped. Inventory check OK with 13 LIVE_UNGOVERNED. Execution-class, complexity, file-size, bare-except, fence, and duplication gates passed. No production calculator was monkeypatched."
+      "Evidence tests: 25 passed, including byte-identical regeneration. Focused Saw/RMOS regressions: 150 passed, 3 skipped. Inventory check OK with 13 LIVE_UNGOVERNED. Execution-class, complexity, file-size, bare-except, fence, and duplication gates passed. CBSP21 coverage 100%, patch-input PASS, ownership tests 36 passed. No production calculator was monkeypatched."
     ],
     "hardware": "No physical-machine execution and no manufacturing output produced. Read-only evaluation of the existing feasibility function, plus tests and notes."
   },
