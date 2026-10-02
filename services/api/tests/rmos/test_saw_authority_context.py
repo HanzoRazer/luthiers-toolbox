@@ -103,40 +103,55 @@ def test_sac008_009_each_missing_fact_blocks_unknown_and_is_named(field):
     r.pop(field, None)
     s = _safety(r)
     assert s["risk_level"] == "UNKNOWN"           # blocking, never a plausible verdict
+    assert s["score"] is None                     # calculators did not run
+    assert field in (s["block_reason"] or "")     # the absent fact is named
 
 
 def test_sac008_missing_power_blocks():
     r = copy.deepcopy(COMPLETE_SAW_REQUEST); r.pop("machine_power_kw", None)
-    assert _safety(r)["risk_level"] == "UNKNOWN"
+    s = _safety(r)
+    assert s["risk_level"] == "UNKNOWN"
+    assert s["score"] is None
+    assert "machine_power_kw" in (s["block_reason"] or "")
 
 
 def test_sac010_invalid_negative_does_not_default():
     r = dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=-254.0)  # out of ge=100 bound
-    assert _safety(r)["risk_level"] == "ERROR"    # fails model validation, not defaulted
+    s = _safety(r)
+    assert s["risk_level"] == "ERROR"    # fails model validation, not defaulted
+    assert s["score"] is None            # calculators did not run
 
 
 def test_sac011_boolean_rejected_for_numeric_field():
     r = dict(COMPLETE_SAW_REQUEST, rpm=True)      # bool masquerading as a number
-    assert _safety(r)["risk_level"] == "ERROR"
+    s = _safety(r)
+    assert s["risk_level"] == "ERROR"
+    assert s["score"] is None
 
 
 def test_sac012_out_of_range_fails_explicitly():
     r = dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=5000.0)  # over le=600
-    assert _safety(r)["risk_level"] == "ERROR"
+    s = _safety(r)
+    assert s["risk_level"] == "ERROR"
+    assert s["score"] is None
 
 
 def test_sac014_malformed_tool_id_supplies_no_hidden_blade_defaults():
     # tool_id carries no process facts; a structured-looking id must not satisfy
     # the contract on its own.
     r = {"tool_id": "saw:10_24_3.0", "material_id": "hardwood"}
-    assert _safety(r)["risk_level"] == "UNKNOWN"
+    s = _safety(r)
+    assert s["risk_level"] == "UNKNOWN"
+    assert s["score"] is None
 
 
 def test_sac015_rosette_geometry_alone_cannot_satisfy_saw_contract():
     r = {"tool_id": "saw:x", "material_id": "hardwood",
          "outer_diameter_mm": 300.0, "inner_diameter_mm": 20.0, "ring_count": 3,
          "pattern_type": "radial"}
-    assert _safety(r)["risk_level"] == "UNKNOWN"  # Rosette fields are not Saw facts
+    s = _safety(r)
+    assert s["risk_level"] == "UNKNOWN"  # Rosette fields are not Saw facts
+    assert s["score"] is None
 
 
 # --- Sensitivity (SAC-016..024) ---------------------------------------------
@@ -334,12 +349,16 @@ def test_nonintegral_integer_facts_are_blocking_errors_and_do_not_score():
         repeats = _safety(dict(COMPLETE_SAW_REQUEST, repeat_count=2.9))
         missing = _safety({k: v for k, v in COMPLETE_SAW_REQUEST.items() if k != "blade_kerf_mm"})
         boolean = _safety(dict(COMPLETE_SAW_REQUEST, feed_rate_mm_min=True))
+        negative = _safety(dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=-254.0))
+        over = _safety(dict(COMPLETE_SAW_REQUEST, blade_diameter_mm=5000.0))
     assert calls["n"] == 0
-    assert rpm["risk_level"] == "ERROR" and "rpm" in rpm["block_reason"]
-    assert teeth["risk_level"] == "ERROR" and "tooth_count" in teeth["block_reason"]
-    assert repeats["risk_level"] == "ERROR" and "repeat_count" in repeats["block_reason"]
-    assert missing["risk_level"] == "UNKNOWN"
-    assert boolean["risk_level"] == "ERROR"
+    assert rpm["risk_level"] == "ERROR" and rpm["score"] is None and "rpm" in rpm["block_reason"]
+    assert teeth["risk_level"] == "ERROR" and teeth["score"] is None and "tooth_count" in teeth["block_reason"]
+    assert repeats["risk_level"] == "ERROR" and repeats["score"] is None and "repeat_count" in repeats["block_reason"]
+    assert missing["risk_level"] == "UNKNOWN" and missing["score"] is None
+    assert boolean["risk_level"] == "ERROR" and boolean["score"] is None
+    assert negative["risk_level"] == "ERROR" and negative["score"] is None
+    assert over["risk_level"] == "ERROR" and over["score"] is None
 
 
 def test_blade_diameter_kerf_and_stock_change_the_relevant_calculation():
