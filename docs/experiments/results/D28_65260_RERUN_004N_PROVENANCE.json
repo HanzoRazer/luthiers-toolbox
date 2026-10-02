@@ -1,0 +1,36 @@
+{
+  "experiment": "D28_RUN_004N_CORRECTED_BACK_SURFACE_FAMILY",
+  "parent_commit": "b448a8e77c3d9b38373d466c5b27f8c0463bd38c",
+  "script": "scripts/experiments/d28_rerun004n_corrected_back_surface_family.py",
+  "command": "python scripts/experiments/d28_rerun004n_corrected_back_surface_family.py --write",
+  "committed_inputs": [
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTERED_RIM_004M.csv",
+      "role": "CORRECTED_RIM_BOUNDARY",
+      "sha256": "8f063737abfd6f69304f98d1cd3265c33f69c383b237ab7c8dc092d4f0ef8da7"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_BRACE_POSITIONS_004F.csv",
+      "role": "BRACE_POSITIONS",
+      "sha256": "4313ca75ac471b92bf00e718591a0661c1b1b16f8e4dd7915cb0abd551424c97"
+    }
+  ],
+  "reuses_004eg_modules": "004E (z_TPS, grid, curvature) + 004G (family/Phi/volume) driven from the corrected 004M rim",
+  "boundary_residual": "GENUINE (e_i = z_surface - z_rim); replaces the 004G forced-zero",
+  "output_paths": [
+    "D28_65260_BACK_SURFACE_FAMILY_004N.csv",
+    "D28_65260_BACK_SURFACE_AUTHORITY_004N.json",
+    "D28_65260_BACK_BOUNDARY_RESIDUAL_004N.csv",
+    "D28_65260_BACK_BRACE_SAMPLING_004N.csv",
+    "D28_65260_BODY_VOLUME_ENVELOPE_004N.csv",
+    "D28_65260_RERUN_004N_SUMMARY.csv",
+    "D28_65260_RERUN_004N_PROVENANCE.json"
+  ],
+  "no_new_single_surface_promoted": true,
+  "distinguishes_extracted_from_constructed": true,
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "CORRECTED_BOUNDED_BACK_SURFACE_FAMILY_CONSTRUCTED"
+}

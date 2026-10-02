@@ -147,6 +147,45 @@ and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
 
+<!-- RERUN004N_START -->
+## Run 004N — Corrected Back Surface Family
+
+- Repository SHA tested: `b448a8e77c3d9b38373d466c5b27f8c0463bd38c`
+- Rebuilds the bounded back-surface family from the **corrected 004M rim**, classifies the interior as **CONSTRUCTED** (not a recovered historical back), and replaces the 004G forced-zero boundary check with a **genuine rim-boundary residual**.
+- Artifacts: `D28_65260_BACK_SURFACE_FAMILY_004N.csv`, `D28_65260_BACK_SURFACE_AUTHORITY_004N.json`, `D28_65260_BACK_BOUNDARY_RESIDUAL_004N.csv`, `D28_65260_BACK_BRACE_SAMPLING_004N.csv`, `D28_65260_BODY_VOLUME_ENVELOPE_004N.csv`, `D28_65260_RERUN_004N_SUMMARY.csv`, `D28_65260_RERUN_004N_PROVENANCE.json`. No PDF vendored.
+
+### Genuine rim-boundary residual (replaces the 004G forced zero)
+
+- `e_i = z_surface(x_i, y_i) - z_rim(x_i, y_i)` evaluated at 455 actual rim-boundary samples, for **every** member.
+- Max |e| across the family = **1.93e-07 in** (tolerance 0.001 in) → **PASS**. The boundary-exact TPS and the zero-on-rim Φ are confirmed by evaluation, not asserted by multiplying by zero.
+
+### Constructed back-surface family (5 members)
+
+| member | α (in) | max rise (mm) | body volume (L) | saddle | boundary max|e| (in) | class |
+|---|---:|---:|---:|:--:|---:|---|
+| floor | 0.0000 | 1.64 | 18.441 | yes | 2.3e-13 | `CONSTRUCTED_ADMISSIBLE_SURFACE` |
+| q25 | 0.0549 | 1.91 | 18.541 | yes | 1.2e-07 | `CONSTRUCTED_ADMISSIBLE_SURFACE` |
+| mid | 0.0667 | 2.21 | 18.562 | yes | 1.4e-07 | `CONSTRUCTED_ADMISSIBLE_SURFACE` |
+| q75 | 0.0784 | 2.50 | 18.583 | yes | 1.7e-07 | `CONSTRUCTED_ADMISSIBLE_SURFACE` |
+| ceiling | 0.0902 | 2.80 | 18.605 | yes | 1.9e-07 | `CONSTRUCTED_ADMISSIBLE_SURFACE` |
+
+- Interior-rise envelope **[1.64, 2.80] mm**; body volume **[18.441, 18.605] L** (flat-top reference, `GEOMETRIC_REFERENCE_ONLY`; top dome UNRESOLVED).
+
+### Disposition
+
+**`CORRECTED_BOUNDED_BACK_SURFACE_FAMILY_CONSTRUCTED`**
+
+- Bounded CONSTRUCTED back-surface family on the CORRECTED 004M rim: z = z_TPS + alpha*Phi over interior rise [1.64, 2.80] mm (5 members).
+- GENUINE rim-boundary residual (replaces the 004G forced zero): max |e| = 1.93e-07 in across all members (tol 0.001 in) — the boundary-exact TPS and the zero-on-rim Phi are confirmed by evaluation, not asserted.
+- Geometric body-volume envelope (flat-top reference, GEOMETRIC_REFERENCE_ONLY): [18.441, 18.605] L.
+- Every member is CONSTRUCTED_ADMISSIBLE_SURFACE — NOT a measured/recovered historical back. No member promoted; no historical radius claimed; family intentionally non-unique.
+
+Runs 001–004J (incl. 004G) are untouched. 004N promotes no single surface, claims no historical radius, and labels every member CONSTRUCTED_ADMISSIBLE_SURFACE.
+
+<!-- RERUN004N_END -->
+
+---
+
 <!-- RERUN004M_START -->
 ## Run 004M — Side-Height Station Registration
 
