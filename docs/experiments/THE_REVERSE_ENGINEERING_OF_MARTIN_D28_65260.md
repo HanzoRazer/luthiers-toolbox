@@ -147,6 +147,51 @@ and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
 
+<!-- RERUN004L_START -->
+## Run 004L — Developed Rim Reconstruction
+
+- Repository SHA tested: `ddc6ba2d6457b4fc22dcb571c0695585109a7cd7`
+- Determines the actual developed **one-side rim** distance for #65260 from the committed source-derived plan outline, **not** from 30.4375 in (the internal block-to-block dimension, 004K). The developed rim is the side ribbon unrolled flat = the one-side plan-perimeter arc length.
+- Artifacts: `D28_65260_DEVELOPED_RIM_004L.csv`, `D28_65260_RIM_ARCLENGTH_004L.csv`, `D28_65260_RIM_LANDMARKS_004L.csv`, `D28_65260_RERUN_004L_SUMMARY.csv`, `D28_65260_RERUN_004L_PROVENANCE.json`. Input: `D28_65260_ARNOLD_OUTLINE.csv` (not retraced). No PDF vendored.
+
+### Independent developed-rim derivation
+
+- **Raw polyline arc length `S = 24.4847 in`** (working developed-rim authority), from `ds_i = √((Δx)²+(Δy)²)`, `S = Σ ds_i` over 1993 outline points.
+- Smoothed diagnostic `26.7283 in` (boxcar `mode='same'`) is inflated by **2.2436 in (9.16%)** by an endpoint artifact — `DIAGNOSTIC_ONLY`, never authority. (This is the legacy ≈26.73 in value.)
+
+### CAD body-length cross-check (gate)
+
+- Traced outline longitudinal extent **19.9900 in** vs CAD outside body length **20.21875 in**: Δ = 0.2288 in (**1.13%**), tolerance **2.5%** → **RECONCILED**. No silent rescaling.
+
+### Three distinct lengths
+
+- developed rim `24.4847 in` ≠ internal block-to-block `30.4375 in` ≠ CAD outside `20.21875 in` — no equality asserted (Decision 3).
+
+### Outline landmarks (plan geometry; waist radius not used)
+
+| landmark | y (in) | half-width (in) | plan arc raw (in) | developed fraction |
+|---|---:|---:|---:|---:|
+| neck | 0.000 | 3.086 | 0.000 | 0.0000 |
+| upper_bout | 3.191 | 5.820 | 4.973 | 0.2031 |
+| waist | 6.523 | 5.409 | 8.404 | 0.3432 |
+| lower_bout | 14.631 | 7.857 | 17.185 | 0.7019 |
+| tail | 19.990 | 4.390 | 24.485 | 1.0000 |
+
+### Disposition
+
+**`DEVELOPED_RIM_RECONSTRUCTED`**
+
+- Developed one-side rim length = raw polyline arc length **24.4847 in**, derived independently from the committed Arnold/JD outline (1993 points) — NOT 30.4375 in.
+- Legacy boxcar-smoothed value 26.7283 in is inflated by 2.2436 in (9.16%) via a mode='same' endpoint artifact; retained as DIAGNOSTIC_ONLY, never authority.
+- CAD body-length cross-check PASSED: traced extent 19.9900 in vs CAD 20.21875 in = 1.13% (<= 2.5%).
+- Three lengths remain distinct: developed rim 24.4847 != internal block-to-block 30.4375 != CAD outside 20.21875.
+
+Runs 001–004J are untouched. 004L retraces no PDF, derives the rim independently of 30.4375, and changes no prior artifact or production file.
+
+<!-- RERUN004L_END -->
+
+---
+
 <!-- RERUN004K_START -->
 ## Run 004K — Source Datum Reconciliation
 

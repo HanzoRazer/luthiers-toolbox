@@ -1,0 +1,6 @@
+quantity,value_in,method,classification,note
+developed_rim_length_raw,24.48469,raw polyline Euclidean arc length of the one-side plan outline,DEVELOPED_RIM_AUTHORITY (working),the side ribbon unrolled flat = one-side plan perimeter; independent of 30.4375
+developed_rim_length_smoothed_diag,26.72830,arc length of boxcar(mode='same')-smoothed half-width (003/004C legacy),DIAGNOSTIC_ONLY (endpoint-artifact inflated),inflated by 2.2436 in vs raw; NOT authority
+outline_longitudinal_extent,19.98996,y[-1] of the committed Arnold/JD outline (neck y=0 to tail),DRAWING_DERIVED,traced body length; cross-checked against CAD outside body length
+cad_outside_body_length,20.21875,004K source datum (20 7/32 in),SOURCE_CAD_CONFIRMED,cross-check target for the traced extent
+internal_block_to_block,30.43750,004K source datum (30 7/16 in),SOURCE_PLAN_CORROBORATED,REFERENCE ONLY — NOT the developed rim; never equated to it

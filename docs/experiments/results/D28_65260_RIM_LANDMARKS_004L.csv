@@ -1,0 +1,6 @@
+landmark,y_in,half_width_in,plan_arc_raw_in,developed_fraction_raw,plan_arc_smoothed_diag_in,developed_fraction_smoothed_diag,basis
+neck,0.00000,3.08580,0.00000,0.000000,0.00000,0.000000,plan outline geometry (waist = half-width minimum); waist RADIUS not used
+upper_bout,3.19117,5.82037,4.97294,0.203104,5.91537,0.221315,plan outline geometry (waist = half-width minimum); waist RADIUS not used
+waist,6.52283,5.40893,8.40410,0.343239,9.27701,0.347086,plan outline geometry (waist = half-width minimum); waist RADIUS not used
+lower_bout,14.63121,7.85750,17.18525,0.701877,17.82525,0.666905,plan outline geometry (waist = half-width minimum); waist RADIUS not used
+tail,19.98996,4.39037,24.48469,1.000000,26.72830,1.000000,plan outline geometry (waist = half-width minimum); waist RADIUS not used
