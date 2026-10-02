@@ -200,6 +200,20 @@ def test_23_superseded_csv_disposition(tmp_path):
     assert rows and all(r["disposition"] == "SUPERSEDED_BY_DATUM_RECONCILIATION" for r in rows)
 
 
+def test_24_committed_report_header_has_no_stale_current_status():
+    report = os.path.join(_REPO, "docs", "experiments",
+                          "THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md")
+    text = open(report, encoding="utf-8").read()
+    header = text[:text.index("## Failure / Pivot Ledger")]
+    low = header.lower()
+    assert "> **status.**" not in low
+    assert "corrected rerun 002" not in low
+    assert "30.4375 in is the active developed coordinate" not in low
+    assert "back_curvature_field_established" not in low
+    assert "constructed admissible back family" in low
+    assert "exact physical endpoints and measurement path remain **unresolved**" in low
+
+
 # --- 4. Provenance / reproducibility -----------------------------------------
 
 def test_30_parent_ancestry():
