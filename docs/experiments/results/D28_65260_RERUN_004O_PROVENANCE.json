@@ -1,0 +1,32 @@
+{
+  "experiment": "D28_RUN_004O_CORRECTED_CURVATURE_AND_SENSITIVITY",
+  "parent_commit": "c8a7dbf1feaa5eafa5d5219eaca0adfd3634e649",
+  "script": "scripts/experiments/d28_rerun004o_curvature_volume_sensitivity.py",
+  "command": "python scripts/experiments/d28_rerun004o_curvature_volume_sensitivity.py --write",
+  "reuses": "004J curvature estimators applied to the 004N constructed family (004M rim)",
+  "committed_inputs": [
+    "docs/experiments/results/D28_65260_REGISTERED_RIM_004M.csv",
+    "docs/experiments/results/D28_65260_RERUN_004G_SUMMARY.csv (pre/post old values)",
+    "docs/experiments/results/D28_65260_RERUN_004J_SUMMARY.csv (pre/post old values)",
+    "docs/experiments/results/D28_65260_RERUN_004L_SUMMARY.csv",
+    "docs/experiments/results/D28_65260_RERUN_004M_SUMMARY.csv"
+  ],
+  "output_paths": [
+    "D28_65260_CURVATURE_FIELD_004O.csv",
+    "D28_65260_CURVATURE_STATION_ENVELOPE_004O.csv",
+    "D28_65260_APEX_MIGRATION_004O.csv",
+    "D28_65260_SADDLE_MAP_004O.csv",
+    "D28_65260_RADIUS_VOLUME_SENSITIVITY_004O.csv",
+    "D28_65260_PRE_POST_DATUM_RECONCILIATION.csv",
+    "D28_65260_CURVATURE_AUTHORITY_004O.json",
+    "D28_65260_RERUN_004O_SUMMARY.csv",
+    "D28_65260_RERUN_004O_PROVENANCE.json"
+  ],
+  "no_historical_curvature_claim": true,
+  "distinguishes_extracted_from_constructed": true,
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "CORRECTED_CONSTRUCTED_FAMILY_CURVATURE_CHARACTERIZED"
+}

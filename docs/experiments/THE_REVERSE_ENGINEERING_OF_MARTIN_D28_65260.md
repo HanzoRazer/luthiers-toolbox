@@ -147,6 +147,56 @@ and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
 
+<!-- RERUN004O_START -->
+## Run 004O — Corrected Curvature and Sensitivity Characterization
+
+- Repository SHA tested: `c8a7dbf1feaa5eafa5d5219eaca0adfd3634e649`
+- Re-runs the 004H/004I/004J diagnostics against the **corrected** geometry (004N constructed family on the 004M rim), **without** converting them into historical claims, and corrects three 004J overstatements (RL sign-change conflation, apex-migration 'small', historical saddle claim).
+- Artifacts: `D28_65260_CURVATURE_FIELD_004O.csv`, `…CURVATURE_STATION_ENVELOPE_004O.csv`, `…APEX_MIGRATION_004O.csv`, `…SADDLE_MAP_004O.csv`, `…RADIUS_VOLUME_SENSITIVITY_004O.csv`, `D28_65260_PRE_POST_DATUM_RECONCILIATION.csv`, `…CURVATURE_AUTHORITY_004O.json`, `…RERUN_004O_SUMMARY.csv`, `…RERUN_004O_PROVENANCE.json`. No PDF vendored.
+
+### RL sign-change (two DISTINCT metrics — not conflated)
+
+- `RL_sign_changes_any_station` (sign differs across the family at a named station): **False**.
+- `RL_sign_changes_anywhere_in_field` (R_L changes sign along y within a member centerline): **True**.
+
+### Apex migration (honest)
+
+- Floor→ceiling apex migration = **8.50 in (42.5% of body length)** — **MATERIAL, not small**. The floor member is **qualitatively distinct (reflex-dominated high point)**.
+- Bulged-member-only migration (α>0) = **0.25 in (1.3%)**.
+
+### Saddle (constructed family only)
+
+- **Each member of the constructed family contains saddle regions** (area fraction 0.10–0.14). This is a property of the **constructed** family — it is **not** a claim that the historical #65260 back contained saddles.
+
+### Pre/post datum-reconciliation comparison
+
+| quantity | old | new | Δ | reason |
+|---|---|---|---|---|
+| `body_longitudinal_length_interpretation` | 004C: 30.438 | 004K/004L: 20.219 | -10.219 | 30.4375 reinterpreted as internal block-to-block; body length is CAD 20.21875 in |
+| `developed_rim_length_in` | 004C/004D: 30.438 | 004L: 24.485 | -5.953 | developed rim derived independently as the one-side plan-perimeter arc length |
+| `waist_plan_arc_in` | 004D: 8.404 | 004M: 8.404 | 0.000 | waist from outline half-width minimum (unchanged); radius not used |
+| `body_volume_floor_L` | 004G: 18.439 | 004N: 18.441 | 0.002 | constructed family on corrected rim; geometry stable (rim moved < 0.05 mm) |
+| `body_volume_ceiling_L` | 004G: 18.604 | 004N: 18.605 | 0.001 | constructed family on corrected rim; geometry stable |
+| `equivalent_sphere_rim_ft` | 004E: 18.350 | 004O: 18.198 | -0.152 | CALCULATED_DIAGNOSTIC rim sphere on the corrected boundary (no historical claim) |
+| `apex_migration_floor_to_ceiling_in` | 004J: 8.500 | 004O: 8.500 | 0.000 | same magnitude; 004J mislabelled it 'small' — it is ~43% of body length |
+| `waist_RT_ft_median` | 004J: 21.085 | 004O: 21.134 | 0.049 | local transverse radius at waist; LOCAL descriptor only |
+
+### Disposition
+
+**`CORRECTED_CONSTRUCTED_FAMILY_CURVATURE_CHARACTERIZED`**
+
+- Curvature re-characterized on the CORRECTED 004N constructed family (NOT a recovered historical field). Synthetic controls (flat/sphere/cylinder/saddle) pass.
+- RL sign-change (two separate metrics): any-named-station across family = False; anywhere-along-centerline within a member = True. These are NOT conflated.
+- Apex migration floor→ceiling = 8.50 in (42.5% of body length) — MATERIAL, not small; the FLOOR member is qualitatively distinct (reflex-dominated high point). Bulged-member-only migration = 0.25 in (1.3%).
+- Saddle regions are present in EACH member of the CONSTRUCTED family (area fraction 0.10-0.14); this is a property of the constructed family, NOT a claim about the historical #65260 back.
+- Equivalent single radii (rim sphere ~18.2 ft) are CALCULATED_DIAGNOSTIC projections of a compound constructed surface — no unique historical radius is claimed.
+
+Runs 001–004J are untouched. 004O characterizes the CONSTRUCTED family (does not recover a historical field), claims no unique historical radius, reads no PDF, and changes no prior artifact or production file.
+
+<!-- RERUN004O_END -->
+
+---
+
 <!-- RERUN004N_START -->
 ## Run 004N — Corrected Back Surface Family
 

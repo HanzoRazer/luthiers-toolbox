@@ -1,0 +1,6 @@
+member,alpha_in,max_rise_mm,body_volume_L,waist_transverse_R_ft,equivalent_rim_sphere_ft,class
+floor,0.00000,1.638,18.4406,INF,18.20,CALCULATED_DIAGNOSTIC (no historical radius claimed)
+q25,0.05491,1.907,18.5406,26.31,18.20,CALCULATED_DIAGNOSTIC (no historical radius claimed)
+mid,0.06667,2.205,18.5620,21.63,18.20,CALCULATED_DIAGNOSTIC (no historical radius claimed)
+q75,0.07842,2.502,18.5834,18.36,18.20,CALCULATED_DIAGNOSTIC (no historical radius claimed)
+ceiling,0.09017,2.800,18.6047,15.95,18.20,CALCULATED_DIAGNOSTIC (no historical radius claimed)

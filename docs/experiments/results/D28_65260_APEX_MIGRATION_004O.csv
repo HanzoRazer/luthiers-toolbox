@@ -1,0 +1,8 @@
+member,apex_x_in,apex_y_in,apex_y_fraction_of_body,max_rise_mm,rl_sign_changes_in_centerline,classification
+floor,-0.113,1.000,0.0500,1.638,2,CONSTRUCTED_ADMISSIBLE_SURFACE
+q25,-0.113,9.250,0.4627,1.907,2,CONSTRUCTED_ADMISSIBLE_SURFACE
+mid,-0.113,9.500,0.4752,2.205,2,CONSTRUCTED_ADMISSIBLE_SURFACE
+q75,-0.113,9.500,0.4752,2.502,2,CONSTRUCTED_ADMISSIBLE_SURFACE
+ceiling,-0.113,9.500,0.4752,2.800,2,CONSTRUCTED_ADMISSIBLE_SURFACE
+FLOOR_TO_CEILING_MIGRATION,,8.500,0.4252,,,42.5% of body length — MATERIAL (not small); floor qualitatively distinct
+BULGED_MEMBERS_ONLY_MIGRATION,,0.250,0.0125,,,1.3% of body length (alpha>0 members)
