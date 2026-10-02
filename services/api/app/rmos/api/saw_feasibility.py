@@ -38,6 +38,11 @@ _SAW_REQUIRED_NUMERIC = (
     "cut_length_mm", "miter_angle_deg", "bevel_angle_deg", "dado_width_mm",
     "dado_depth_mm", "repeat_count",
 )
+# Downstream models store these as ints (SawContext.max_rpm / tooth_count,
+# SawDesign.repeat_count). A non-integral float is not that fact; truncating it
+# with int() would score a substituted value. Integral floats (3450.0) are the
+# same value and stay valid.
+_SAW_INTEGRAL = frozenset({"rpm", "tooth_count", "repeat_count"})
 _SAW_REQUIRED_STR = ("material_id", "cut_type")
 _SAW_REQUIRED_BOOL = ("use_dust_collection",)
 
@@ -47,46 +52,76 @@ def _is_number(v: Any) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
-def _validate_and_normalize(req: Dict[str, Any]) -> tuple:
-    """Partition the required Saw facts into (normalized_req, missing, invalid).
+def _record(missing: list, invalid: list, key: str, kind: Optional[str]) -> None:
+    if kind == "missing":
+        missing.append(key)
+    elif kind == "invalid":
+        invalid.append(key)
 
-    Machine power may arrive as ``machine_power_kw`` or as ``spindle_power_watts``
-    (converted to kW exactly once, SAC-005). Missing = key absent or ``None``;
-    invalid = present but wrong type (non-numeric, boolean-for-number, empty string).
-    Range violations are left to model validation (blocking ERROR), not defaulted.
+
+def _number_kind(key: str, value: Any) -> Optional[str]:
+    """'missing' / 'invalid' / None (acceptable).
+
+    A non-integral float for an integer fact (rpm, tooth_count, repeat_count)
+    is invalid: truncating 3450.7 to 3450 would score a substituted value.
     """
-    r = dict(req)
-    missing: list = []
-    invalid: list = []
-    # Machine power: one canonical kW input, or one documented watts->kW conversion.
-    if r.get("machine_power_kw") is None:
-        watts = r.get("spindle_power_watts")
+    if value is None:
+        return "missing"
+    if not _is_number(value):
+        return "invalid"
+    if key in _SAW_INTEGRAL and not float(value).is_integer():
+        return "invalid"
+    return None
+
+
+def _text_kind(value: Any) -> Optional[str]:
+    if value is None:
+        return "missing"
+    if not isinstance(value, str) or not value.strip():
+        return "invalid"
+    return None
+
+
+def _bool_kind(value: Any) -> Optional[str]:
+    if value is None:
+        return "missing"
+    if not isinstance(value, bool):
+        return "invalid"
+    return None
+
+
+def _normalize_machine_power(req: Dict[str, Any], missing: list, invalid: list) -> None:
+    """One canonical kW input, or one documented watts->kW conversion (SAC-005)."""
+    if req.get("machine_power_kw") is None:
+        watts = req.get("spindle_power_watts")
         if watts is None:
             missing.append("machine_power_kw")
         elif not _is_number(watts):
             invalid.append("spindle_power_watts")
         else:
-            r["machine_power_kw"] = float(watts) / 1000.0  # single documented conversion
-    elif not _is_number(r["machine_power_kw"]):
+            req["machine_power_kw"] = float(watts) / 1000.0
+    elif not _is_number(req["machine_power_kw"]):
         invalid.append("machine_power_kw")
-    for k in _SAW_REQUIRED_NUMERIC:
-        v = r.get(k)
-        if v is None:
-            missing.append(k)
-        elif not _is_number(v):
-            invalid.append(k)
-    for k in _SAW_REQUIRED_STR:
-        v = r.get(k)
-        if v is None:
-            missing.append(k)
-        elif not isinstance(v, str) or not v.strip():
-            invalid.append(k)
-    for k in _SAW_REQUIRED_BOOL:
-        v = r.get(k)
-        if v is None:
-            missing.append(k)
-        elif not isinstance(v, bool):
-            invalid.append(k)
+
+
+def _validate_and_normalize(req: Dict[str, Any]) -> tuple:
+    """Partition the required Saw facts into (normalized_req, missing, invalid).
+
+    Missing = key absent or ``None``. Invalid = present but wrong type
+    (non-numeric, boolean-for-number, empty string, or a non-integral value
+    for an integer fact). Range violations are left to model validation
+    (blocking ERROR), not defaulted.
+    """
+    r = dict(req)
+    missing: list = []
+    invalid: list = []
+    _normalize_machine_power(r, missing, invalid)
+    for key in _SAW_REQUIRED_NUMERIC:
+        _record(missing, invalid, key, _number_kind(key, r.get(key)))
+    for key in _SAW_REQUIRED_STR:
+        _record(missing, invalid, key, _text_kind(r.get(key)))
+    for key in _SAW_REQUIRED_BOOL:
+        _record(missing, invalid, key, _bool_kind(r.get(key)))
     return r, missing, invalid
 
 
@@ -131,7 +166,7 @@ def compute_saw_feasibility(
             mode=mode,
             tool_id=tool_id,
             context=context,
-            detail=f"saw process facts invalid (non-numeric / boolean / empty): {', '.join(sorted(invalid))}",
+            detail=f"saw process facts invalid (non-numeric / boolean / empty / non-integral): {', '.join(sorted(invalid))}",
         )
 
     try:
@@ -144,7 +179,7 @@ def compute_saw_feasibility(
             bevel_angle_deg=r["bevel_angle_deg"],
             dado_width_mm=r["dado_width_mm"],
             dado_depth_mm=r["dado_depth_mm"],
-            repeat_count=int(r["repeat_count"]),
+            repeat_count=r["repeat_count"],
         )
         return _score_via_scorer(
             mode=mode,

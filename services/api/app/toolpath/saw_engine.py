@@ -189,7 +189,10 @@ def _convert_to_saw_context(rmos_ctx: RmosContext) -> SawContext:
         blade_kerf_mm=rmos_ctx.blade_kerf_mm,
         blade_thickness_mm=rmos_ctx.blade_thickness_mm,
         tooth_count=rmos_ctx.tooth_count,
-        max_rpm=int(rmos_ctx.rpm) if rmos_ctx.rpm is not None else None,  # type: ignore[arg-type]
+        # Pass RPM through. SawContext.max_rpm is an int: an integral value
+        # (3450, 3450.0) is accepted unchanged; a fractional RPM is rejected
+        # (ValidationError -> blocking ERROR) rather than truncated.
+        max_rpm=rmos_ctx.rpm,  # type: ignore[arg-type]
         arbor_size_mm=rmos_ctx.arbor_size_mm,
         stock_thickness_mm=rmos_ctx.stock_thickness_mm,
         feed_rate_mm_per_min=rmos_ctx.feed_rate_mm_min,
