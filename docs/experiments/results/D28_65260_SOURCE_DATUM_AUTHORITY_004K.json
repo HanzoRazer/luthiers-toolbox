@@ -1,0 +1,90 @@
+{
+  "experiment": "D28_RUN_004K_SOURCE_DATUM_RECONCILIATION",
+  "disposition": "SOURCE_DATUM_RECONCILED",
+  "outside_body_profile_length_in": 20.21875,
+  "internal_headblock_tailblock_length_in": 30.4375,
+  "waist_radius_in": 4.4375,
+  "waist_side_height_in": 4.22,
+  "developed_rim_length_in": null,
+  "datums": [
+    {
+      "name": "outside_body_profile_length",
+      "value_in": 20.21875,
+      "unit": "in",
+      "meaning": "Outside longitudinal body-profile length reported by CAD (neck end to tail end).",
+      "classification": "SOURCE_CAD_CONFIRMED",
+      "source": "Arnold #65260 CAD reconstruction (20 7/32 in annotation)",
+      "participates_in_geometry": true,
+      "prior_interpretation": null,
+      "axis": "longitudinal_outside",
+      "notes": "Cross-check target for the extracted-outline longitudinal extent (004L)."
+    },
+    {
+      "name": "internal_headblock_tailblock_length",
+      "value_in": 30.4375,
+      "unit": "in",
+      "meaning": "Internal body/cavity length from tail block to head block; also the extent of the Arnold side-height station axis (bottom station = 30.4375). NOT the developed rim length.",
+      "classification": "SOURCE_PLAN_CORROBORATED",
+      "source": "Arnold #65260 drawing (30 7/16 in) + generic-plan corroboration",
+      "participates_in_geometry": true,
+      "prior_interpretation": "004C/004D: developed side / rim length (DEV_SIDE_LEN = 30.4375)",
+      "axis": "longitudinal_internal_station",
+      "notes": "Exact physical endpoints (head-block vs tail-block faces, and whether measured along the centerline or the internal cavity) are NOT uniquely fixed by the source; endpoint convention is PRESERVED AS UNRESOLVED. The value exceeds the outside body length (20.21875 in) and the developed one-side rim (004L), so it cannot be a straight neck-to-tail longitudinal span; it is retained as a labelled block-to-block / station-axis quantity, never equated to the other two lengths."
+    },
+    {
+      "name": "waist_radius",
+      "value_in": 4.4375,
+      "unit": "in",
+      "meaning": "Waist radius (plan-view geometry).",
+      "classification": "SOURCE_CAD_CONFIRMED",
+      "source": "Arnold #65260 source annotation (4 7/16 in) + CAD confirmation",
+      "participates_in_geometry": true,
+      "prior_interpretation": "004C: assembled body depth ('DEEP', 4.4375 in)",
+      "axis": "plan_radius",
+      "notes": "A plan-geometry radius. NOT used to infer the longitudinal waist position (Decision 4); plan-view waist placement comes from outline geometry."
+    },
+    {
+      "name": "waist_side_height",
+      "value_in": 4.22,
+      "unit": "in",
+      "meaning": "Arnold measured side height at the waist (side-depth axis).",
+      "classification": "SOURCE_MEASURED",
+      "source": "Arnold #65260 drawing (measured side height 4.220 in)",
+      "participates_in_geometry": true,
+      "prior_interpretation": null,
+      "axis": "side_depth",
+      "notes": "A side-depth measurement. Dimensionally a length but on a different geometric axis than the waist radius; the two are unrelated (Decision 4)."
+    },
+    {
+      "name": "developed_rim_length",
+      "value_in": null,
+      "unit": "in",
+      "meaning": "Developed one-side rim distance (the side ribbon unrolled flat = one-side plan perimeter arc length). DERIVED INDEPENDENTLY in 004L; intentionally NULL here.",
+      "classification": "DEFERRED_TO_004L",
+      "source": "Independently derived from the extracted Arnold/JD plan contour (004L).",
+      "participates_in_geometry": true,
+      "prior_interpretation": "004C/004D: proxied by 30.4375 in (the internal block-to-block value)",
+      "axis": "developed_arc",
+      "notes": "Must NOT be inferred merely because a nearby dimension (30.4375 or 20.21875) exists on Arnold/GenOne; it is a distinct quantity requiring a geometric derivation (Decision 3)."
+    }
+  ],
+  "independence_invariants": {
+    "outside_ne_internal": true,
+    "outside_axis": "longitudinal_outside",
+    "internal_axis": "longitudinal_internal_station",
+    "internal_ne_developed_semantic": true,
+    "developed_value_deferred": true,
+    "radius_ne_sideheight_numeric": true,
+    "radius_axis": "plan_radius",
+    "sideheight_axis": "side_depth",
+    "radius_ne_sideheight_semantic": true,
+    "waist_radius_not_depth": true
+  },
+  "endpoints_unresolved": {
+    "internal_headblock_tailblock_length": "Head-block/tail-block face endpoints and the measurement path for 30.4375 in are not uniquely fixed by the source; preserved as UNRESOLVED (stop condition if a downstream run requires them)."
+  },
+  "preserved_prior_runs": "001-004J retained verbatim; dependent geometry = SUPERSEDED_BY_DATUM_RECONCILIATION",
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false
+}

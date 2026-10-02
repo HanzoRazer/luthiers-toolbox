@@ -1,5 +1,10 @@
 # The Reverse Engineering of the Martin D-28 #65260
 
+<!-- GOVERNING_STATE_004K_START -->
+> **Current governing state (004K source-datum reconciliation).** Source-datum reconciliation has superseded the previous interpretation of `30 7/16 in` (30.4375) as the developed-side length and `4 7/16 in` (4.4375) as the assembled body depth. `30.4375 in` is the internal head-block/tail-block dimension (and the side-height station-axis extent); `4.4375 in` is the waist radius; `4.220 in` is the Arnold waist side height; `20.21875 in` is the CAD outside body-profile length; the developed one-side rim length is derived independently in 004L. The corrected geometry chain begins at **004K** and continues 004L→004M→004N→004O. Runs **004C–004J remain preserved as historical experiment evidence** but their downstream geometry is **not current authority**. A unique historical back surface/radius remains **unresolved**.
+<!-- GOVERNING_STATE_004K_END -->
+
+
 > **STATUS.** The **Corrected Rerun 002 (Arnold side-height authority)** section
 > immediately below is the current result. The original first run is
 > **SUPERSEDED**: it used `4.4375 in` as the waist *side height* (that value is a
@@ -141,6 +146,57 @@ must not be altered to make the model look physically expected.** If mathematics
 and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
+
+<!-- RERUN004K_START -->
+## Run 004K — Source Datum Reconciliation
+
+- Repository SHA tested: `069c96d7d3d5862c5f4b9a1e613adb46e624f10e`
+- Establishes the **corrected meaning, classification, provenance, and independence** of the major Arnold/CAD #65260 dimensions **before** any geometry is recalculated. No rim, back surface, or curvature is reconstructed in this run.
+- Artifacts: `D28_65260_SOURCE_DATUM_AUTHORITY_004K.json`, `D28_65260_DIMENSION_RECONCILIATION_004K.csv`, `D28_65260_SUPERSEDED_INTERPRETATIONS_004K.csv`, `D28_65260_RERUN_004K_SUMMARY.csv`, `D28_65260_RERUN_004K_PROVENANCE.json`. No PDF vendored.
+
+### Corrected source dimensions
+
+| dimension | value | corrected meaning | axis | class | prior (superseded) |
+|---|---:|---|---|---|---|
+| `outside_body_profile_length` | 20.21875 in | Outside longitudinal body-profile length reported by CAD (neck end to tail end). | `longitudinal_outside` | `SOURCE_CAD_CONFIRMED` | — |
+| `internal_headblock_tailblock_length` | 30.43750 in | Internal body/cavity length from tail block to head block; also the extent of the Arnold side-height station axis (bottom station = 30. | `longitudinal_internal_station` | `SOURCE_PLAN_CORROBORATED` | 004C/004D: developed side / rim length (DEV_SIDE_LEN = 30.4375) |
+| `waist_radius` | 4.43750 in | Waist radius (plan-view geometry). | `plan_radius` | `SOURCE_CAD_CONFIRMED` | 004C: assembled body depth ('DEEP', 4.4375 in) |
+| `waist_side_height` | 4.22000 in | Arnold measured side height at the waist (side-depth axis). | `side_depth` | `SOURCE_MEASURED` | — |
+| `developed_rim_length` | — (004L) | Developed one-side rim distance (the side ribbon unrolled flat = one-side plan perimeter arc length). | `developed_arc` | `DEFERRED_TO_004L` | 004C/004D: proxied by 30.4375 in (the internal block-to-block value) |
+
+### Independence invariants (required)
+
+- outside body length (`20.21875`) ≠ internal block-to-block (`30.4375`): **True**.
+- internal block-to-block ≠ developed rim length (distinct axes `longitudinal_internal_station` vs `internal_axis→developed_arc`; developed value deferred to 004L): **True**.
+- waist radius (`4.4375`, `plan_radius`) ≠ waist side height (`4.22`, `side_depth`) — semantic independence: **True**.
+
+### Superseded interpretations (preserved as history, not rewritten)
+
+| locus | prior interpretation | corrected | superseded in |
+|---|---|---|---|
+| interpretation | 30.4375 in == developed side / rim length | 30.4375 in == internal head-block/tail-block length (station-axis extent) | 004K |
+| interpretation | 4.4375 in == assembled body depth (DEEP) | 4.4375 in == waist radius (plan geometry) | 004K |
+| interpretation | 4.4375 - 4.220 == top + back plate thickness | DELETED — 4.4375 (plan radius) and 4.220 (side height) are unrelated axes | 004K |
+| 004C | 30.4375 classified as developed-side boundary | internal block-to-block / side-height station axis extent | 004K |
+| 004C | 4.4375 classified as assembled DEEP (depth) | waist radius (plan geometry) | 004K |
+| 004C | 0.2175 in (4.4375 - 4.220) interpreted as plate contribution | no such quantity — the subtraction is between unrelated axes | 004K |
+| 004D | u = s / 30.4375 developed-fraction normalization | normalized station fraction on the internal block-to-block axis; the developed rim arc length is a separate quantity (004L) | 004K |
+| 004D | 30.4375-to-plan registration treated as developed-to-plan with an A/S 'local stretch ratio' distortion narrative | landmark-anchored (neck/waist/tail) station→plan registration; the A/S ratio is not a developed-to-plan stretch and the distortion narrative is withdrawn (004M) | 004K |
+
+### Disposition
+
+**`SOURCE_DATUM_RECONCILED`**
+
+- Three longitudinal/arc lengths kept strictly distinct: outside body profile (20.21875 in), internal block-to-block (30.4375 in), and developed one-side rim (derived independently in 004L; NULL here).
+- Waist radius (4.4375 in, plan geometry) and waist side height (4.220 in, side depth) are UNRELATED axes; the former plate-thickness inference (4.4375 - 4.220) is deleted.
+- 30.4375 in is relabelled from 'developed side length' to the internal head-block/tail-block dimension; its exact physical endpoints are preserved as UNRESOLVED.
+- Runs 001–004J are preserved verbatim; their dependent downstream geometry is marked SUPERSEDED_BY_DATUM_RECONCILIATION, not rewritten.
+
+Runs 001–004J are untouched. 004K reconstructs no geometry, reads no PDF, and changes no prior artifact or production file.
+
+<!-- RERUN004K_END -->
+
+---
 
 <!-- RERUN004J_START -->
 ## Run 004J — Back Curvature Field Reconstruction
