@@ -1,81 +1,11 @@
 # The Reverse Engineering of the Martin D-28 #65260
 
 <!-- GOVERNING_STATE_004K_START -->
-> **Current governing state (004K source-datum reconciliation).** Source-datum reconciliation has superseded the previous interpretation of `30 7/16 in` (30.4375) as the developed-side length and `4 7/16 in` (4.4375) as the assembled body depth. `30.4375 in` is the internal head-block/tail-block dimension (and the side-height station-axis extent); `4.4375 in` is the waist radius; `4.220 in` is the Arnold waist side height; `20.21875 in` is the CAD outside body-profile length; the developed one-side rim length is derived independently in 004L. The corrected geometry chain begins at **004K** and continues 004L→004M→004N→004O. Runs **004C–004J remain preserved as historical experiment evidence** but their downstream geometry is **not current authority**. A unique historical back surface/radius remains **unresolved**.
+> **Current governing state (004K datum reconciliation through 004O).** Source-datum reconciliation supersedes the former interpretation of `30 7/16 in` (30.4375) as developed side length and `4 7/16 in` (4.4375) as assembled body depth. `30.4375 in` is retained as the source/corroborated internal block-to-block / side-height station-axis quantity; its exact physical endpoints and measurement path remain **UNRESOLVED**. `4.4375 in` is the waist radius; `4.220 in` is the Arnold waist side height; `20.21875 in` is the CAD outside body-profile length; and 004L independently derives the one-side developed rim as about 24.485 in. The corrected chain is **004K→004L→004M→004N→004O**. Runs **004C–004J remain preserved as historical experiment evidence** but their superseded interpretations are not current authority. 004N/004O characterize a **constructed admissible back family**, not a recovered historical back. A unique historical back surface/radius remains **unresolved**.
 <!-- GOVERNING_STATE_004K_END -->
 
 
-> **STATUS.** The **Corrected Rerun 002 (Arnold side-height authority)** section
-> immediately below is the current result. The original first run is
-> **SUPERSEDED**: it used `4.4375 in` as the waist *side height* (that value is a
-> separate drawing "DEEP" / assembled-depth annotation, comparison-only) and
-> assumed a waist station of `10.5 in`. Rerun 002 uses the Arnold side height
-> `4.220 in` applied at the **geometrically derived** waist station. The first
-> run is retained verbatim further down as historical evidence. **Rerun 003
-> (Arnold outline authority) has since been COMPLETED** using the verified traced
-> CAD reconstruction of the Arnold #65260 drawing — see the Rerun 003 section
-> directly below; its disposition is `SPHERICAL_MODEL_MISMATCH`. No production,
-> spec, or authority file is modified by any run. **Run 004A** (original
-> side-measurement authority cleanup) is recorded at the top; it removes the
-> unsupported 10.5/30.4375 station assignments from the active solve and concludes
-> `SINGLE_RADIUS_MODEL_MISMATCH_PERSISTS`. **Run 004B** (proportional dreadnought
-> similitude from the GenOne Sheet 05 side-contour template) is recorded at the
-> very top: the shape transfer is admissible by construction (no high point) but
-> does not reproduce #65260's side profile tightly —
-> `PROPORTIONAL_SIMILITUDE_DOES_NOT_SUPPORT_FIT`. **Run 004C** (constrained developed-side reconstruction) is recorded at the very top: Arnold's measurements define the side geometry (GenOne gives only landmark priors), 30.4375 in is the active developed coordinate, and the result is `CONSTRAINED_DEVELOPED_RECONSTRUCTION_SUPPORTED`. A follow-on **Rerun 003A
-> station-datum audit** is recorded above the Rerun 003 section; it concludes
-> `DATUM_DEFINITION_UNRESOLVED` and marks Rerun 003's `SPHERICAL_MODEL_MISMATCH`
-> as **STRENGTHENED**. **Run 004D** (developed-side / plan-outline registration) is
-> recorded at the very top: it registers the 004C developed coordinate onto the
-> verified Arnold/JD plan outline to produce the first defensible 3D rim edge
-> `R(s)=(x,y,H(s))`, with disposition
-> `DEVELOPED_PLAN_REGISTRATION_SUPPORTED`. No sphere fit, no Sevy high point; the
-> developed length 30.4375 in and the plan half-perimeter remain distinct
-> quantities (never forced equal). **Run 004E** (back surface reconstruction from
-> the registered rim) is recorded at the very top: it spans the immutable 004D rim
-> with candidate sphere / fixed-radius / compound / constrained-smooth surfaces and
-> concludes `BACK_SURFACE_MODEL_NONUNIQUE` — a single ≈18.4 ft cap fits the rim to
-> ~0.07 in and a boundary-exact smooth surface fits exactly, but they diverge ~2.6 mm
-> in the interior, so the back arch is under-determined by the rim alone (no measured
-> arch authority; GenOne 4–6 mm reference-only; brace depths are not dome rise).
-> **Run 004F** (back-arch authority recovery) is recorded at the very top: auditing
-> the John Arnold `#65260` drawing recovers new #65260-specific back-brace
-> cross-sections (`SOURCE_MEASURED`) and longitudinal positions (`DRAWING_DERIVED`,
-> ±0.4 in), but finds **no direct interior-arch datum** (no radius, dome-rise,
-> brace-bottom curvature, or centerline arch) — disposition
-> `BACK_ARCH_AUTHORITY_PARTIAL`: interior structural authority increases but the
-> arch magnitude is not constrained, so the 004E admissible family is preserved
-> (bounded), not collapsed. No new surface generated. **Run 004G** (bounded
-> back-surface family + body-volume envelope) is recorded at the very top: it
-> formalizes the surviving admissible family as a rim-exact `z = z_TPS + α·Φ`
-> set spanning ~1.61–2.80 mm interior rise (five members, no member promoted),
-> reports the geometric body-volume envelope (~18.44–18.60 L, flat-top reference,
-> top dome unresolved), fixes the Ø4.0 in soundhole area with an unsolved
-> Helmholtz bridge, and preserves the MB Torrefied Adirondack distribution as an
-> external pin-referenced material prior with zero geometry influence —
-> disposition `BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED`. **Run 004H** (proportional
-> radius/volume sensitivity transform) is recorded at the very top: a controlled
-> 25-ft reference back (`MODEL_REFERENCE_GEOMETRY`) is validated by uniform
-> similitude (R∝k, V∝k³), then #65260's measured outline and side profile are
-> substituted to measure direction/magnitude — both push the equivalent radius
-> *flatter* and move the apex *aft*; B4 lands inside the 004G rise band and at the
-> 004G volume. Disposition `PROPORTIONAL_SENSITIVITY_TRANSFORM_SUPPORTED`; all
-> transformed radii are `CALCULATED_DIAGNOSTIC` (no historical radius claimed).
-> **Run 004I** (metric-consistent radius fixed-point convergence) is recorded at
-> the very top: a like-for-like dome-radius operator is first validated
-> (`E[B0(R)]≈R` across 12–30 ft), then `F(R)=E[B4(R)]` is found to exceed R
-> everywhere (no sign change) → `RADIUS_FIXED_POINT_NOT_FOUND`; direct iteration
-> diverges. Crucially it corrects 004H: metric-consistently `F(25)=26.1 ft` (not
-> 19.12 ft), so the apparent "drive toward ~20 ft" was a base-slope artifact — the
-> #65260 constraints do not settle on a self-consistent back radius under the model.
-> **Run 004J** (back curvature field reconstruction) is recorded at the very top: it
-> stops chasing one radius and reconstructs the compound curvature field on the five
-> 004G members — synthetic controls pass; transverse `R_T(y)` varies materially by
-> station/member (not constant), longitudinal `R_L(y)` varies and changes sign, and
-> **negative-Gaussian (saddle) regions persist across all five members** → direct
-> geometric evidence the full back is not a single sphere. Disposition
-> `BACK_CURVATURE_FIELD_ESTABLISHED`: a single radius is a useful *local* transverse
-> descriptor only, not a global one.
+> **Historical run-status note.** Runs 001–004J below are preserved as the audit trail of the experiment, including interpretations later superseded by 004K–004O. They are not the current governing interpretation. In particular, historical references to `4.4375 in` as assembled depth, `30.4375 in` as the developed-side coordinate, `R_L` sign change as a single unqualified claim, `8.5 in` apex migration as "small," or `BACK_CURVATURE_FIELD_ESTABLISHED` are retained only inside their original run records and are superseded by the governing state above and the corrective 004K–004O sections.
 
 ## Failure / Pivot Ledger
 
