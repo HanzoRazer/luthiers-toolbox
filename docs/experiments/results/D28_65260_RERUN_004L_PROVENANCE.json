@@ -1,0 +1,30 @@
+{
+  "experiment": "D28_RUN_004L_DEVELOPED_RIM_RECONSTRUCTION",
+  "parent_commit": "ddc6ba2d6457b4fc22dcb571c0695585109a7cd7",
+  "script": "scripts/experiments/d28_rerun004l_developed_rim_reconstruction.py",
+  "command": "python scripts/experiments/d28_rerun004l_developed_rim_reconstruction.py --write",
+  "source_artifacts": [
+    {
+      "path": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "role": "PLAN_OUTLINE_XY_AUTHORITY (not retraced)",
+      "classification": "VERIFIED_DRAWING_DERIVED",
+      "sha256": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a"
+    }
+  ],
+  "reuses_004k_datums": "developed rim derived independently; 30.4375 used only as a labelled reference, never as the developed length",
+  "arclength_method": "raw Euclidean polyline cumulative arc length; smoothed value is diagnostic only",
+  "cad_body_length_tolerance_pct": 2.5,
+  "output_paths": [
+    "D28_65260_DEVELOPED_RIM_004L.csv",
+    "D28_65260_RIM_ARCLENGTH_004L.csv",
+    "D28_65260_RIM_LANDMARKS_004L.csv",
+    "D28_65260_RERUN_004L_SUMMARY.csv",
+    "D28_65260_RERUN_004L_PROVENANCE.json"
+  ],
+  "distinguishes_extracted_from_constructed": true,
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "DEVELOPED_RIM_RECONSTRUCTED"
+}

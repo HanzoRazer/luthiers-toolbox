@@ -1,0 +1,2 @@
+disposition,outside_body_profile_length_in,internal_headblock_tailblock_length_in,waist_radius_in,waist_side_height_in,developed_rim_length_in,outside_ne_internal,internal_ne_developed_semantic,radius_ne_sideheight_semantic,waist_radius_not_depth,all_invariants_hold,n_superseded_records,prior_runs_preserved,final_disposition
+SOURCE_DATUM_RECONCILED,20.21875,30.43750,4.43750,4.22000,NULL (derived in 004L),True,True,True,True,True,8,001-004J (verbatim),SOURCE_DATUM_RECONCILED

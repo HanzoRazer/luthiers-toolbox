@@ -1,0 +1,7 @@
+method,quantity,result,interpretation
+004H,local transverse (dish),~25 ft,local transverse section curvature of the controlled reference
+004I,transformed dome-only,~1.045x input,like-for-like dome curvature; outline flattens ~4.5%
+004I,F(25) metric-consistent,26.13 ft,dome-only radius after #65260 outline transfer (base slope removed)
+004H,global sphere,19.12 ft,absorbs longitudinal base slope -> tighter apparent radius
+004E,rim sphere,18.35 ft,rim-fit diagnostic
+004J,"R_T(y), R_L(y) field",BB1 R_T 20.37-175.99 ft; R_L varies/sign-changes,compound-surface description; single radius not globally adequate

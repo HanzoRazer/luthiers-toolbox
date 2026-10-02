@@ -1,0 +1,1110 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "D28_65260_EXPERIMENT_ARCHIVE_004O",
+  "title": "experiment: reverse-engineering Martin D-28 #65260 back through datum reconciliation 004O",
+  "intent": "Declare the isolated D-28 #65260 reverse-engineering experiment archive, including the 004K-004O datum-reconciliation chain, generated experiment artifacts, and regression tests. The change is intentionally confined to experiment scripts and experiment documentation/results and carries no production geometry or manufacturing authority.",
+  "change_type": "experiment",
+  "behavior_change": "Experiment-only behavior changes: adds and extends deterministic reverse-engineering calculations, generated experiment artifacts, and their tests under scripts/experiments and docs/experiments. No production runtime, CAM route, catalog geometry, manufacturing authority, or canonical specification changes.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/experiments",
+      "docs/experiments"
+    ],
+    "files_expected_to_change": [
+      "docs/experiments/D28_SIDE_INVERSE_CONVERGENCE_DEV_ORDER.md",
+      "docs/experiments/D28_SIDE_INVERSE_RERUN_002.md",
+      "docs/experiments/THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md",
+      "docs/experiments/results/D28_65260_004E_004G_004H_004I_CROSSCHECK.csv",
+      "docs/experiments/results/D28_65260_004G_004H_CROSSCHECK.csv",
+      "docs/experiments/results/D28_65260_004H_004I_004J_CROSSCHECK.csv",
+      "docs/experiments/results/D28_65260_APEX_CURVATURE_004J.csv",
+      "docs/experiments/results/D28_65260_APEX_MIGRATION_004H.csv",
+      "docs/experiments/results/D28_65260_APEX_MIGRATION_004O.csv",
+      "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "docs/experiments/results/D28_65260_BACK_ARCH_AUTHORITY_004F.json",
+      "docs/experiments/results/D28_65260_BACK_BOUNDARY_RESIDUAL_004N.csv",
+      "docs/experiments/results/D28_65260_BACK_BRACE_COMPATIBILITY_004E.csv",
+      "docs/experiments/results/D28_65260_BACK_BRACE_POSITIONS_004F.csv",
+      "docs/experiments/results/D28_65260_BACK_BRACE_SAMPLING_004N.csv",
+      "docs/experiments/results/D28_65260_BACK_CENTERLINE_004E.csv",
+      "docs/experiments/results/D28_65260_BACK_FAMILY_BRACE_SAMPLING_004G.csv",
+      "docs/experiments/results/D28_65260_BACK_FAMILY_MEMBERS_004G.csv",
+      "docs/experiments/results/D28_65260_BACK_SECTIONS_004E.csv",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_004E.csv",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_AUTHORITY_004E.json",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_AUTHORITY_004N.json",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_CANDIDATES_004E.csv",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_004N.csv",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_AUTHORITY_004G.json",
+      "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_ENVELOPE_004G.csv",
+      "docs/experiments/results/D28_65260_BODY_VOLUME_ENVELOPE_004G.csv",
+      "docs/experiments/results/D28_65260_BODY_VOLUME_ENVELOPE_004N.csv",
+      "docs/experiments/results/D28_65260_BRACE_CURVATURE_ENVELOPE_004J.csv",
+      "docs/experiments/results/D28_65260_BRACE_SECTION_SENSITIVITY_004H.csv",
+      "docs/experiments/results/D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv",
+      "docs/experiments/results/D28_65260_CURVATURE_AUTHORITY_004O.json",
+      "docs/experiments/results/D28_65260_CURVATURE_FIELD_004J.csv",
+      "docs/experiments/results/D28_65260_CURVATURE_FIELD_004O.csv",
+      "docs/experiments/results/D28_65260_CURVATURE_STATION_ENVELOPE_004J.csv",
+      "docs/experiments/results/D28_65260_CURVATURE_STATION_ENVELOPE_004O.csv",
+      "docs/experiments/results/D28_65260_DEEP_INTERPRETATION_004C.csv",
+      "docs/experiments/results/D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv",
+      "docs/experiments/results/D28_65260_DEVELOPED_RIM_004L.csv",
+      "docs/experiments/results/D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
+      "docs/experiments/results/D28_65260_DIMENSION_RECONCILIATION_004K.csv",
+      "docs/experiments/results/D28_65260_FIXED_POINT_004I.json",
+      "docs/experiments/results/D28_65260_FIXED_POINT_GEOMETRY_004I.csv",
+      "docs/experiments/results/D28_65260_GENONE_SIDE_CONTOUR_004B.csv",
+      "docs/experiments/results/D28_65260_LANDMARK_RECONSTRUCTION_004C.csv",
+      "docs/experiments/results/D28_65260_MB_TORREFIED_ADIRONDACK_PRIOR_004G.csv",
+      "docs/experiments/results/D28_65260_PRE_POST_DATUM_RECONCILIATION.csv",
+      "docs/experiments/results/D28_65260_PROPORTIONAL_TRANSFORMS_004H.csv",
+      "docs/experiments/results/D28_65260_RADIUS_APEX_SENSITIVITY_004I.csv",
+      "docs/experiments/results/D28_65260_RADIUS_ITERATION_TRACE_004I.csv",
+      "docs/experiments/results/D28_65260_RADIUS_OPERATOR_004I.json",
+      "docs/experiments/results/D28_65260_RADIUS_SENSITIVITY_004H.csv",
+      "docs/experiments/results/D28_65260_RADIUS_SWEEP_004I.csv",
+      "docs/experiments/results/D28_65260_RADIUS_VOLUME_SENSITIVITY_004I.csv",
+      "docs/experiments/results/D28_65260_RADIUS_VOLUME_SENSITIVITY_004O.csv",
+      "docs/experiments/results/D28_65260_REFERENCE_GEOMETRY_004H.json",
+      "docs/experiments/results/D28_65260_REGISTERED_RIM_004D.csv",
+      "docs/experiments/results/D28_65260_REGISTERED_RIM_004M.csv",
+      "docs/experiments/results/D28_65260_REGISTRATION_ANCHORS_004D.csv",
+      "docs/experiments/results/D28_65260_REGISTRATION_AUTHORITY_004D.json",
+      "docs/experiments/results/D28_65260_RERUN_003_EXTRACTION.json",
+      "docs/experiments/results/D28_65260_RERUN_003_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004B_ANALYSIS.csv",
+      "docs/experiments/results/D28_65260_RERUN_004B_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004B_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004C_ANALYSIS.csv",
+      "docs/experiments/results/D28_65260_RERUN_004C_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004C_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004D_ANALYSIS.csv",
+      "docs/experiments/results/D28_65260_RERUN_004D_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004D_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004E_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004E_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004F_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004F_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004G_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004G_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004H_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004H_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004I_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004I_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004J_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004J_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004K_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004K_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004L_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004L_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004M_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004M_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004N_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004N_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RERUN_004O_PROVENANCE.json",
+      "docs/experiments/results/D28_65260_RERUN_004O_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_RIM_ARCLENGTH_004L.csv",
+      "docs/experiments/results/D28_65260_RIM_LANDMARKS_004L.csv",
+      "docs/experiments/results/D28_65260_SADDLE_MAP_004J.csv",
+      "docs/experiments/results/D28_65260_SADDLE_MAP_004O.csv",
+      "docs/experiments/results/D28_65260_SIDE_AUTHORITY_004A_CONVERGENCE.csv",
+      "docs/experiments/results/D28_65260_SIDE_AUTHORITY_004A_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_SIDE_HEIGHT_AUTHORITY_004A.json",
+      "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_CONVERGENCE.csv",
+      "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_003_CONVERGENCE.csv",
+      "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_003_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_SIDE_PLAN_REGISTRATION_004M.csv",
+      "docs/experiments/results/D28_65260_SIDE_PROFILE_004M.csv",
+      "docs/experiments/results/D28_65260_SIDE_STATION_AUTHORITY_004M.json",
+      "docs/experiments/results/D28_65260_SOUNDHOLE_VOLUME_BRIDGE_004G.json",
+      "docs/experiments/results/D28_65260_SOURCE_AUTHORITY_CROSSWALK_004A.csv",
+      "docs/experiments/results/D28_65260_SOURCE_DATUM_AUTHORITY_004K.json",
+      "docs/experiments/results/D28_65260_STATION_DATUM_AUDIT_003A.csv",
+      "docs/experiments/results/D28_65260_STATION_DATUM_AUDIT_003A_SUMMARY.csv",
+      "docs/experiments/results/D28_65260_SUPERSEDED_INTERPRETATIONS_004K.csv",
+      "docs/experiments/results/D28_65260_VOLUME_SENSITIVITY_004H.csv",
+      "scripts/experiments/d28_geometry_authority.py",
+      "scripts/experiments/d28_rerun003_extract.py",
+      "scripts/experiments/d28_rerun003a_station_datum_audit.py",
+      "scripts/experiments/d28_rerun004a_source_authority_cleanup.py",
+      "scripts/experiments/d28_rerun004b_proportional_similitude.py",
+      "scripts/experiments/d28_rerun004c_constrained_developed_side.py",
+      "scripts/experiments/d28_rerun004d_developed_plan_registration.py",
+      "scripts/experiments/d28_rerun004e_back_surface_reconstruction.py",
+      "scripts/experiments/d28_rerun004f_back_arch_authority_recovery.py",
+      "scripts/experiments/d28_rerun004g_bounded_back_surface_family.py",
+      "scripts/experiments/d28_rerun004h_proportional_radius_volume_sensitivity.py",
+      "scripts/experiments/d28_rerun004i_radius_fixed_point_convergence.py",
+      "scripts/experiments/d28_rerun004j_back_curvature_field_reconstruction.py",
+      "scripts/experiments/d28_rerun004k_source_datum_reconciliation.py",
+      "scripts/experiments/d28_rerun004l_developed_rim_reconstruction.py",
+      "scripts/experiments/d28_rerun004m_side_profile_registration.py",
+      "scripts/experiments/d28_rerun004n_corrected_back_surface_family.py",
+      "scripts/experiments/d28_rerun004o_curvature_volume_sensitivity.py",
+      "scripts/experiments/d28_side_inverse_convergence.py",
+      "scripts/experiments/d28_side_inverse_rerun003.py",
+      "scripts/experiments/test_d28_rerun003.py",
+      "scripts/experiments/test_d28_rerun003a.py",
+      "scripts/experiments/test_d28_rerun004a.py",
+      "scripts/experiments/test_d28_rerun004b.py",
+      "scripts/experiments/test_d28_rerun004c.py",
+      "scripts/experiments/test_d28_rerun004d.py",
+      "scripts/experiments/test_d28_rerun004e.py",
+      "scripts/experiments/test_d28_rerun004f.py",
+      "scripts/experiments/test_d28_rerun004g.py",
+      "scripts/experiments/test_d28_rerun004h.py",
+      "scripts/experiments/test_d28_rerun004i.py",
+      "scripts/experiments/test_d28_rerun004j.py",
+      "scripts/experiments/test_d28_rerun004k.py",
+      "scripts/experiments/test_d28_rerun004l.py",
+      "scripts/experiments/test_d28_rerun004m.py",
+      "scripts/experiments/test_d28_rerun004n.py",
+      "scripts/experiments/test_d28_rerun004o.py",
+      "scripts/experiments/test_d28_side_inverse_convergence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Runs 001-004J are preserved as the historical chain; runs 004K-004O reconcile source datums, independently derive the developed rim, re-register side heights, rebuild the constructed back-surface family with a genuine boundary residual, and correct curvature/sensitivity interpretation. The PR also carries deterministic result CSV/JSON artifacts and experiment-only tests.",
+    "why_not_redundant": "The reconciliation corrects previously conflated source dimensions and replaces interpretive and validation defects that remain visible in the preserved historical runs. The new runs are therefore a superseding experiment record, not duplicate copies of existing calculations."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api/.venv/bin/python -m pytest scripts/experiments/ -q --no-cov -> 470 passed (reported by experiment branch before CBSP21 manifest addition)",
+      "GitHub Core CI (Consolidated) -> success on head 153c80de",
+      "GitHub API Verify (Contracts + Fences) -> success on head 153c80de",
+      "GitHub Unified Governance -> success on head 153c80de",
+      "GitHub Geometry Parity (Patch K) -> success on head 153c80de"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/experiments/D28_SIDE_INVERSE_CONVERGENCE_DEV_ORDER.md",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/D28_SIDE_INVERSE_RERUN_002.md",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/THE_REVERSE_ENGINEERING_OF_MARTIN_D28_65260.md",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_004E_004G_004H_004I_CROSSCHECK.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_004G_004H_CROSSCHECK.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_004H_004I_004J_CROSSCHECK.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_APEX_CURVATURE_004J.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_APEX_MIGRATION_004H.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_APEX_MIGRATION_004O.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_ARCH_AUTHORITY_004F.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_BOUNDARY_RESIDUAL_004N.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_BRACE_COMPATIBILITY_004E.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_BRACE_POSITIONS_004F.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_BRACE_SAMPLING_004N.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_CENTERLINE_004E.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_FAMILY_BRACE_SAMPLING_004G.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_FAMILY_MEMBERS_004G.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SECTIONS_004E.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_004E.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_AUTHORITY_004E.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_AUTHORITY_004N.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_CANDIDATES_004E.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_004N.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_AUTHORITY_004G.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BACK_SURFACE_FAMILY_ENVELOPE_004G.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BODY_VOLUME_ENVELOPE_004G.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BODY_VOLUME_ENVELOPE_004N.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BRACE_CURVATURE_ENVELOPE_004J.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_BRACE_SECTION_SENSITIVITY_004H.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CURVATURE_AUTHORITY_004O.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CURVATURE_FIELD_004J.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CURVATURE_FIELD_004O.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CURVATURE_STATION_ENVELOPE_004J.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_CURVATURE_STATION_ENVELOPE_004O.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEEP_INTERPRETATION_004C.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_PLAN_MAPPING_004D.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_RIM_004L.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_DIMENSION_RECONCILIATION_004K.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_FIXED_POINT_004I.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_FIXED_POINT_GEOMETRY_004I.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_GENONE_SIDE_CONTOUR_004B.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_LANDMARK_RECONSTRUCTION_004C.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_MB_TORREFIED_ADIRONDACK_PRIOR_004G.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_PRE_POST_DATUM_RECONCILIATION.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_PROPORTIONAL_TRANSFORMS_004H.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_APEX_SENSITIVITY_004I.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_ITERATION_TRACE_004I.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_OPERATOR_004I.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_SENSITIVITY_004H.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_SWEEP_004I.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_VOLUME_SENSITIVITY_004I.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RADIUS_VOLUME_SENSITIVITY_004O.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REFERENCE_GEOMETRY_004H.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTERED_RIM_004D.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTERED_RIM_004M.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTRATION_ANCHORS_004D.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_REGISTRATION_AUTHORITY_004D.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_003_EXTRACTION.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_003_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004B_ANALYSIS.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004B_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004B_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004C_ANALYSIS.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004C_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004C_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004D_ANALYSIS.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004D_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004D_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004E_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004E_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004F_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004F_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004G_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004G_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004H_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004H_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004I_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004I_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004J_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004J_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004K_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004K_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004L_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004L_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004M_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004M_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004N_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004N_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004O_PROVENANCE.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RERUN_004O_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RIM_ARCLENGTH_004L.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_RIM_LANDMARKS_004L.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SADDLE_MAP_004J.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SADDLE_MAP_004O.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_AUTHORITY_004A_CONVERGENCE.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_AUTHORITY_004A_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_HEIGHT_AUTHORITY_004A.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_CONVERGENCE.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_002_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_003_CONVERGENCE.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_INVERSE_RERUN_003_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_PLAN_REGISTRATION_004M.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_PROFILE_004M.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SIDE_STATION_AUTHORITY_004M.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SOUNDHOLE_VOLUME_BRIDGE_004G.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SOURCE_AUTHORITY_CROSSWALK_004A.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SOURCE_DATUM_AUTHORITY_004K.json",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_STATION_DATUM_AUDIT_003A.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_STATION_DATUM_AUDIT_003A_SUMMARY.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_SUPERSEDED_INTERPRETATIONS_004K.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_VOLUME_SENSITIVITY_004H.csv",
+      "intent": "Experiment documentation or generated/reconciled result artifact for the D-28 #65260 run chain.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/experiments/d28_geometry_authority.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun003_extract.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun003a_station_datum_audit.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004a_source_authority_cleanup.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004b_proportional_similitude.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004c_constrained_developed_side.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004d_developed_plan_registration.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004e_back_surface_reconstruction.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004f_back_arch_authority_recovery.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004g_bounded_back_surface_family.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004h_proportional_radius_volume_sensitivity.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004i_radius_fixed_point_convergence.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004j_back_curvature_field_reconstruction.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004k_source_datum_reconciliation.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004l_developed_rim_reconstruction.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004m_side_profile_registration.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004n_corrected_back_surface_family.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_rerun004o_curvature_volume_sensitivity.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_side_inverse_convergence.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/d28_side_inverse_rerun003.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun003.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun003a.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004a.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004b.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004c.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004d.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004e.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004f.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004g.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004h.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004i.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004j.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004k.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004l.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004m.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004n.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_rerun004o.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    },
+    {
+      "path": "scripts/experiments/test_d28_side_inverse_convergence.py",
+      "intent": "Experiment-only reverse-engineering calculation or regression test for the D-28 #65260 run chain.",
+      "risk": "medium",
+      "behavior_change": "Changes experiment-only calculations/tests; no production runtime behavior."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-02-D28-65260-004O",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Large numerical experiment archive with interpretive risk, but diff is intentionally isolated to scripts/experiments and docs/experiments; production paths are outside declared scope."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "experiment": "D28_RUN_004D_DEVELOPED_PLAN_REGISTRATION",
+  "developed_side_length_in": 30.4375,
+  "outline_source_artifact": "D28_65260_ARNOLD_OUTLINE.csv",
+  "plan_half_perimeter_raw_in": 24.4847,
+  "plan_half_perimeter_smoothed_in": 26.7283,
+  "plan_half_perimeter_note": "Raw one-side outline arc length is the working plan coordinate. The smoothed value (~26.73 in, documented in Runs 003/004C) is inflated by a boxcar mode='same' endpoint artifact and is retained as a diagnostic only. 30.4375 in (developed) and the plan half-perimeter are DIFFERENT geometric quantities; none is forced equal.",
+  "mapping_method_primary": "monotone_pchip",
+  "mapping_candidates": [
+    "piecewise_linear",
+    "monotone_pchip",
+    "constrained_cubic_hermite(fail-closed)"
+  ],
+  "interpolation_method_z": "PCHIP through 004C source points (unchanged)",
+  "interpolation_method_xy": "linear interpolation on raw outline arc length",
+  "tolerances": {
+    "anchor_residual_in": 1e-09,
+    "overshoot": 1e-09,
+    "waist_bracket_in": [
+      9.0,
+      12.0
+    ]
+  },
+  "hard_anchors": [
+    "neck",
+    "waist",
+    "tail"
+  ],
+  "prior_only_anchors": [
+    "upper_bout",
+    "lower_bout"
+  ],
+  "rejected_anchors": [],
+  "landmark_classifications": {
+    "neck": "SOURCE_MEASURED",
+    "upper_bout": "PROPORTIONAL_PRIOR",
+    "waist": "CALCULATED_004C",
+    "lower_bout": "PROPORTIONAL_PRIOR",
+    "tail": "SOURCE_MEASURED"
+  },
+  "waist_developed_station_in": 11.5521,
+  "provenance_sha256": {
+    "D28_65260_ARNOLD_OUTLINE.csv": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a",
+    "D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json": "2c8f51cc9c48c2de10e17620b436cfb200ee47283108edf4b62eca5bfb8b150f",
+    "D28_65260_CONSTRAINED_SIDE_PROFILE_004C.csv": "2f792076a619bc88bd73ec8bbbb5e79683c6366d10cb5289c0359843df408cb9",
+    "D28_65260_LANDMARK_RECONSTRUCTION_004C.csv": "7de9bf250354f631333dd1df6fbdb43264cf6a07c48885eea4ac1ba3531d91a8"
+  },
+  "no_prior_file_modifications": true,
+  "no_production_changes": true,
+  "no_sphere_fit": true,
+  "no_sevy_high_point": true
+}

@@ -1,0 +1,25 @@
+{
+  "experiment": "D28_RUN_004B_PROPORTIONAL_SIMILITUDE",
+  "note": "Source PDFs NOT committed (public repo; copyrighted plan). Only extracted geometry + checksums + provenance committed.",
+  "sources": [
+    {
+      "filename": "05 dreadnoughtplan_5.pdf (GenOne Luthier Supply, Dreadnought Guitar Plan, Sheet 05)",
+      "role": "GENERIC_DREADNOUGHT_SIDE_CONTOUR_REFERENCE",
+      "publisher": "GenOne Luthier Supply",
+      "sha256": "56de88f9a1a96e50ed0001c6319dd1b609b93747ac343cb2bcf582f7614c2784",
+      "page_count": 1,
+      "classification": "DRAWING_DERIVED",
+      "notes": "Dreadnought Side Contour Template; 1 in / 25.4 mm station grid; end depths 4 3/4 / 3 3/4 in (incl plates); length 30 11/32 in; back arch R 3657.6 mm."
+    }
+  ],
+  "plate_thickness": "NOT numerically dimensioned in the GenOne set (Sheet 02: 'Top Thickness Varies'). Not assumed. Endpoint rescale to Arnold side-only heights subsumes a constant plate offset.",
+  "repo_spherical_default_role": "comparison diagnostic only (NOT the 004B reference)",
+  "calibration": {
+    "pt_per_inch": 72.03,
+    "station1_x_pt": 2279.46,
+    "y_top_pt": 131.1199,
+    "z_neck_total_in": 3.64172,
+    "z_tail_total_in": 4.62919,
+    "n_stations": 30.0
+  }
+}

@@ -1,0 +1,12 @@
+quantity,value,note
+radius_reported_ft,25.0000,no root in range; 25 ft trial reported
+F_at_reported_ft,26.1252,
+dome_rise_mm,2.585,
+apex_x_in,0.000,
+apex_y_in,14.618,
+apex_y_fraction,0.7313,
+volume_L,18.8814,FLAT_TOP_GEOMETRIC_REFERENCE
+BB1_rise_mm,1.362,"transverse R≈25.7 ft (surface, not brace-bottom)"
+BB2_rise_mm,1.273,"transverse R≈25.0 ft (surface, not brace-bottom)"
+BB3_rise_mm,1.910,"transverse R≈25.5 ft (surface, not brace-bottom)"
+BB4_rise_mm,2.583,"transverse R≈25.3 ft (surface, not brace-bottom)"

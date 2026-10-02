@@ -1,0 +1,17 @@
+{
+  "gate0_pass": true,
+  "root_exists": false,
+  "root_count": 0,
+  "brackets": [],
+  "roots_ft": [],
+  "derivative_Fprime_at_25": 1.0450390566783696,
+  "g_min_ft": 0.5393419334388998,
+  "g_max_ft": 1.3504607056062383,
+  "experiment": "D28_RUN_004I_FIXED_POINT",
+  "search_interval_ft": [
+    12,
+    30
+  ],
+  "F_at_25_ft": 26.1252,
+  "disposition": "RADIUS_FIXED_POINT_NOT_FOUND"
+}

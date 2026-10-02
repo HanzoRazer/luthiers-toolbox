@@ -1,0 +1,14 @@
+{
+  "experiment": "D28_RUN_004C_CONSTRAINED_DEVELOPED_SIDE",
+  "sources": [
+    {
+      "filename": "05 dreadnoughtplan_5.pdf (GenOne Sheet 05)",
+      "role": "LONGITUDINAL_LANDMARK_PRIOR_ONLY",
+      "sha256": "56de88f9a1a96e50ed0001c6319dd1b609b93747ac343cb2bcf582f7614c2784",
+      "classification": "SOURCE_SUPPORTED_ANALOGY",
+      "note": "only head/UB/waist/LB/tail station proportions used; no side-height depth transferred"
+    }
+  ],
+  "pdf_vendored": false,
+  "bodycontoursolver_spherical": "comparison only, not authority"
+}

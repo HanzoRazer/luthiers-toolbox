@@ -1,0 +1,11 @@
+case,volume_in3,volume_cm3,volume_L,delta_vs_B0_cm3,pct_vs_B0,top_reference
+B0,1080.836,17711.72,17.7117,+0.000,+0.000,FLAT_TOP_GEOMETRIC_REFERENCE
+B1,1079.209,17685.06,17.6851,-26.660,-0.151,FLAT_TOP_GEOMETRIC_REFERENCE
+B2,1114.543,18264.09,18.2641,+552.360,+3.119,FLAT_TOP_GEOMETRIC_REFERENCE
+B3,1101.418,18049.01,18.0490,+337.290,+1.904,FLAT_TOP_GEOMETRIC_REFERENCE
+B4,1135.679,18610.45,18.6104,+898.722,+5.074,FLAT_TOP_GEOMETRIC_REFERENCE
+DECOMP_outline,,+552.360,,+552.360,,ΔV attributable to outline substitution
+DECOMP_side,,+337.290,,+337.290,,ΔV attributable to side-profile substitution
+DECOMP_combined,,+898.722,,+898.722,,ΔV combined
+DECOMP_interaction,,+9.072,,+9.072,,ΔV_combined − ΔV_outline − ΔV_side (superposition residual)
+GRID_REFINEMENT,1138.490,,,,rel_delta=2.47e-03,B4 @ step 0.125 vs 0.25 in

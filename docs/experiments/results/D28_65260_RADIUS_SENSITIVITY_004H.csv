@@ -1,0 +1,6 @@
+case,global_equiv_radius_ft,pct_change_vs_B0,sphere_rmse_in,sphere_max_resid_in,sphere_center,apex_inside_planform,centerline_R_long_median_ft,class
+B0,13.988,+0.000,0.04951,0.16064,"(-0.00,19.37,-163.2)",True,3.9,CALCULATED_DIAGNOSTIC
+B1,13.981,-0.050,0.04948,0.16056,"(-0.00,19.36,-163.1)",True,3.9,CALCULATED_DIAGNOSTIC
+B2,15.504,+10.834,0.05047,0.16320,"(0.00,20.35,-181.3)",False,3.9,CALCULATED_DIAGNOSTIC
+B3,17.789,+27.172,0.02203,0.05727,"(0.00,21.37,-208.7)",False,9.2,CALCULATED_DIAGNOSTIC
+B4,19.121,+36.698,0.01915,0.05014,"(-0.00,22.26,-224.6)",False,11.3,CALCULATED_DIAGNOSTIC

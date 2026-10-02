@@ -1,0 +1,32 @@
+{
+  "experiment": "D28_RUN_004G_BOUNDED_BACK_SURFACE_AND_BODY_VOLUME_FAMILY",
+  "parent_commit": "3631e16077cb179143e403f552b9832604711b4a",
+  "script": "scripts/experiments/d28_rerun004g_bounded_back_surface_family.py",
+  "command": "python scripts/experiments/d28_rerun004g_bounded_back_surface_family.py --write",
+  "committed_inputs": [
+    "docs/experiments/results/D28_65260_REGISTERED_RIM_004D.csv",
+    "docs/experiments/results/D28_65260_RERUN_004E_SUMMARY.csv",
+    "docs/experiments/results/D28_65260_BACK_SURFACE_CANDIDATES_004E.csv",
+    "docs/experiments/results/D28_65260_BACK_BRACE_POSITIONS_004F.csv",
+    "docs/reference/mb-sound/CORPUS_DEPENDENCY.json (pin reference)"
+  ],
+  "reuses_004e_module": "d28_rerun004e_back_surface_reconstruction.py (z_TPS, grid, curvature)",
+  "output_paths": [
+    "D28_65260_BACK_SURFACE_FAMILY_AUTHORITY_004G.json",
+    "D28_65260_BACK_SURFACE_FAMILY_ENVELOPE_004G.csv",
+    "D28_65260_BACK_FAMILY_MEMBERS_004G.csv",
+    "D28_65260_BACK_FAMILY_BRACE_SAMPLING_004G.csv",
+    "D28_65260_BODY_VOLUME_ENVELOPE_004G.csv",
+    "D28_65260_SOUNDHOLE_VOLUME_BRIDGE_004G.json",
+    "D28_65260_MB_TORREFIED_ADIRONDACK_PRIOR_004G.csv",
+    "D28_65260_RERUN_004G_SUMMARY.csv",
+    "D28_65260_RERUN_004G_PROVENANCE.json"
+  ],
+  "mb_payload_duplicated": false,
+  "mb_influence_on_geometry": "NONE",
+  "no_new_single_surface_promoted": true,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "BOUNDED_BACK_SURFACE_FAMILY_ESTABLISHED"
+}

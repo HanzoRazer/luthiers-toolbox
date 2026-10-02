@@ -1,0 +1,9 @@
+station,y_in,kind,RT_min_ft,RT_max_ft,RL_sign_changes_across_family,K_min,K_max,relative_to_25ft
+neck,0.500,boundary_inset,100.57,310.88,False,-2.651e-06,-9.022e-07,FLATTER
+upper_bout,3.191,landmark,21.90,69.30,False,1.777e-06,9.685e-06,FLATTER
+BB1,4.133,brace,20.61,128.74,False,2.112e-06,1.868e-05,FLATTER
+waist,6.523,landmark,15.95,26.31,False,-1.916e-07,3.779e-05,TIGHTER
+BB2,7.362,brace,14.82,661.98,False,6.567e-07,4.061e-05,TIGHTER
+BB3,10.772,brace,18.51,139.51,False,2.171e-06,2.628e-05,SIMILAR
+lower_bout,14.631,landmark,50.33,171.92,False,-1.609e-06,8.202e-06,FLATTER
+BB4,14.758,brace,50.33,171.92,False,-1.609e-06,8.202e-06,FLATTER

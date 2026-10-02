@@ -1,0 +1,6 @@
+member,alpha_in,max_abs_boundary_error_in,boundary_rmse_in,number_of_boundary_samples,phi_on_boundary_max,tolerance_in,pass,method
+floor,0.00000,2.300e-13,7.711e-14,455,2.135e-06,1.0e-03,True,"e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at the actual rim boundary (replaces the 004G forced-zero placeholder)"
+q25,0.05491,1.172e-07,1.619e-08,455,2.135e-06,1.0e-03,True,"e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at the actual rim boundary (replaces the 004G forced-zero placeholder)"
+mid,0.06667,1.423e-07,1.966e-08,455,2.135e-06,1.0e-03,True,"e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at the actual rim boundary (replaces the 004G forced-zero placeholder)"
+q75,0.07842,1.674e-07,2.313e-08,455,2.135e-06,1.0e-03,True,"e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at the actual rim boundary (replaces the 004G forced-zero placeholder)"
+ceiling,0.09017,1.925e-07,2.659e-08,455,2.135e-06,1.0e-03,True,"e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at the actual rim boundary (replaces the 004G forced-zero placeholder)"

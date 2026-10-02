@@ -1,0 +1,2 @@
+outline_authority,geometric_waist_y_in,geometric_waist_width_in,derived_waist_developed_station_in,derived_half_perimeter_in,fixedL_best_R_in,normalized_best_L_in,normalized_best_R_in,P_in,rmse_in,max_resid_in,min_achievable_waist_height_in,physical_admissibility,identifiability,rerun002_waist_station_in,rerun003_waist_station_in,waist_station_shift_in,final_disposition
+Arnold-derived CAD tracing (ACOUSTIC BODY.pdf),6.523,10.818,9.277,26.728,,21.869,420.00,-7.670,0.0281,0.0696,4.1156,False,anchors cluster,14.298,9.277,-5.021,SPHERICAL_MODEL_MISMATCH

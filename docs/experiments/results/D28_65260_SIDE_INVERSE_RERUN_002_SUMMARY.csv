@@ -1,0 +1,2 @@
+best_fit_R_in,best_fit_R_ft,best_fit_L_in,high_point_P_in,derived_waist_station_in,legacy_waist_station_in,validation_rmse_in,validation_max_abs_resid_in,physically_admissible,A_optimum_on_bound,identifiability,final_disposition
+,,,,14.298,10.500,,,,,non-clustering (L spans 12.66..23.02 in),INSUFFICIENT_GEOMETRY_AUTHORITY

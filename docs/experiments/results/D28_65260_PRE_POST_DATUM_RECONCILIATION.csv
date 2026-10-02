@@ -1,0 +1,9 @@
+quantity,old_run,old_value,new_run,new_value,delta,delta_percent,reason_changed
+body_longitudinal_length_interpretation,004C,30.4375,004K/004L,20.2188,-10.2188,-33.57,30.4375 reinterpreted as internal block-to-block; body length is CAD 20.21875 in
+developed_rim_length_in,004C/004D,30.4375,004L,24.4847,-5.9528,-19.56,developed rim derived independently as the one-side plan-perimeter arc length
+waist_plan_arc_in,004D,8.4041,004M,8.4041,0.0000,0.00,waist from outline half-width minimum (unchanged); radius not used
+body_volume_floor_L,004G,18.4389,004N,18.4406,0.0017,0.01,constructed family on corrected rim; geometry stable (rim moved < 0.05 mm)
+body_volume_ceiling_L,004G,18.6035,004N,18.6047,0.0012,0.01,constructed family on corrected rim; geometry stable
+equivalent_sphere_rim_ft,004E,18.3500,004O,18.1985,-0.1515,-0.83,CALCULATED_DIAGNOSTIC rim sphere on the corrected boundary (no historical claim)
+apex_migration_floor_to_ceiling_in,004J,8.5000,004O,8.5000,0.0000,0.00,same magnitude; 004J mislabelled it 'small' — it is ~43% of body length
+waist_RT_ft_median,004J,21.0850,004O,21.1342,0.0492,0.23,local transverse radius at waist; LOCAL descriptor only

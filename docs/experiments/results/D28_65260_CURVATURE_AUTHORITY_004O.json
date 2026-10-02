@@ -1,0 +1,33 @@
+{
+  "experiment": "D28_RUN_004O_CORRECTED_CURVATURE_AND_SENSITIVITY",
+  "disposition": "CORRECTED_CONSTRUCTED_FAMILY_CURVATURE_CHARACTERIZED",
+  "geometry_source": "004N constructed family on the 004M corrected rim",
+  "controls_pass": true,
+  "rl_sign_change": {
+    "any_named_station_across_family": false,
+    "anywhere_along_centerline_within_member": true,
+    "note": "two DISTINCT metrics; not conflated (004J defect corrected)"
+  },
+  "apex_migration": {
+    "floor_to_ceiling_in": 8.5,
+    "floor_to_ceiling_pct_of_body": 42.52,
+    "bulged_members_only_in": 0.25,
+    "bulged_members_only_pct_of_body": 1.25,
+    "floor_qualitatively_distinct": true,
+    "material_not_small": true,
+    "note": "an 8.5-in-scale shift is MATERIAL; the 004J 'small' description is corrected"
+  },
+  "saddle": {
+    "framing": "EACH member of the CONSTRUCTED family contains saddle regions",
+    "not_a_historical_claim": "the historical #65260 back is NOT asserted to contain saddles",
+    "persists_across_family": true
+  },
+  "equivalent_radii": {
+    "rim_sphere_ft": 18.2,
+    "class": "CALCULATED_DIAGNOSTIC (compound-surface projection; no historical radius)"
+  },
+  "disposition_vocabulary": "CORRECTED_CONSTRUCTED_FAMILY_CURVATURE_CHARACTERIZED (NOT BACK_CURVATURE_FIELD_ESTABLISHED)",
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false
+}

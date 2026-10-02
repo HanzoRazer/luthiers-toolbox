@@ -1,0 +1,23 @@
+section,key,station_in,u,measured_in,predicted_in,residual_in,value,notes
+transfer,station_0,0.0000,0.00000,3.7500,3.7500,+0.00000,,endpoint
+transfer,station_3,3.0000,0.09856,3.7400,3.8616,+0.12157,,validation
+transfer,station_6,6.0000,0.19713,3.8950,3.9084,+0.01338,,validation
+transfer,station_9,9.0000,0.29569,4.0850,4.1530,+0.06796,,validation
+transfer,station_12,12.0000,0.39425,4.2400,4.3690,+0.12898,,validation
+transfer,station_15,15.0000,0.49281,4.3500,4.4937,+0.14372,,validation
+transfer,station_18,18.0000,0.59138,4.4550,4.5569,+0.10193,,validation
+transfer,station_21,21.0000,0.68994,4.5650,4.5614,-0.00365,,validation
+transfer,station_24,24.0000,0.78850,4.6400,4.6067,-0.03329,,validation
+transfer,station_27,27.0000,0.88706,4.6700,4.6729,+0.00291,,validation
+validation,waist,,0.34709,4.2200,4.2751,+0.05511,,geometric position
+validation,bottom,,1.00000,4.7200,4.7200,+0.00000,,geometric position
+metric,rmse_in,,,,,,0.08717,
+metric,maxabs_in,,,,,,0.14372,
+metric,roundtrip_rmse_in,,,,,,0.00000,
+metric,roundtrip_max_in,,,,,,0.00000,
+metric,interp_max_in,,,,,,0.00714,
+metric,diag_equiv_R_ft,,,,,,22.50254,
+metric,diag_equiv_P_in,,,,,,-3.08368,
+metric,H1_genone_len_in,,,,,,30.34375,
+metric,H1_arnold_span_in,,,,,,30.43750,
+metric,H1_diff_in,,,,,,0.09375,

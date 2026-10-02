@@ -1,0 +1,37 @@
+{
+  "experiment": "D28_RUN_004M_SIDE_HEIGHT_STATION_REGISTRATION",
+  "parent_commit": "45fc4545c4a745a141d8f829269b5cc612e21974",
+  "script": "scripts/experiments/d28_rerun004m_side_profile_registration.py",
+  "command": "python scripts/experiments/d28_rerun004m_side_profile_registration.py --write",
+  "source_artifacts": [
+    {
+      "path": "docs/experiments/results/D28_65260_DEVELOPED_SIDE_AUTHORITY_004C.json",
+      "role": "SIDE_HEIGHT_VALUES (read, not re-measured; station axis relabelled internal block-to-block)",
+      "classification": "CALCULATED_004C",
+      "sha256": "2c8f51cc9c48c2de10e17620b436cfb200ee47283108edf4b62eca5bfb8b150f"
+    },
+    {
+      "path": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+      "role": "PLAN_OUTLINE_XY_AUTHORITY (developed rim via 004L)",
+      "classification": "VERIFIED_DRAWING_DERIVED",
+      "sha256": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a"
+    }
+  ],
+  "developed_rim_source": "004L raw one-side plan-perimeter arc length (24.485 in)",
+  "registration_method": "monotone PCHIP landmark anchors (neck/waist/tail); station numbers NOT used as arc positions; waist radius NOT used",
+  "station_datum": "internal block-to-block axis; exact convention UNRESOLVED (not manufactured)",
+  "output_paths": [
+    "D28_65260_SIDE_STATION_AUTHORITY_004M.json",
+    "D28_65260_SIDE_PROFILE_004M.csv",
+    "D28_65260_SIDE_PLAN_REGISTRATION_004M.csv",
+    "D28_65260_REGISTERED_RIM_004M.csv",
+    "D28_65260_RERUN_004M_SUMMARY.csv",
+    "D28_65260_RERUN_004M_PROVENANCE.json"
+  ],
+  "distinguishes_extracted_from_constructed": true,
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "SIDE_HEIGHT_REGISTRATION_SUPPORTED"
+}

@@ -1,0 +1,20 @@
+{
+  "experiment": "D28_RUN_004K_SOURCE_DATUM_RECONCILIATION",
+  "parent_commit": "069c96d7d3d5862c5f4b9a1e613adb46e624f10e",
+  "script": "scripts/experiments/d28_rerun004k_source_datum_reconciliation.py",
+  "command": "python scripts/experiments/d28_rerun004k_source_datum_reconciliation.py --write",
+  "inputs": "none (datum authority is established from reconciled source dimensions; no geometry recomputed, no committed artifact consumed)",
+  "output_paths": [
+    "D28_65260_SOURCE_DATUM_AUTHORITY_004K.json",
+    "D28_65260_DIMENSION_RECONCILIATION_004K.csv",
+    "D28_65260_SUPERSEDED_INTERPRETATIONS_004K.csv",
+    "D28_65260_RERUN_004K_SUMMARY.csv",
+    "D28_65260_RERUN_004K_PROVENANCE.json"
+  ],
+  "distinguishes_extracted_from_constructed": true,
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "SOURCE_DATUM_RECONCILED"
+}

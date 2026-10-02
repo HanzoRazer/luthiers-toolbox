@@ -1,0 +1,50 @@
+{
+  "experiment": "D28_RUN_004M_SIDE_HEIGHT_STATION_REGISTRATION",
+  "disposition": "SIDE_HEIGHT_REGISTRATION_SUPPORTED",
+  "developed_rim_length_in": 24.48469,
+  "developed_arc_mapping": "IDENTITY (developed rim = one-side plan-perimeter arc length)",
+  "z_registration": "landmark-anchored (neck/waist/tail by side-height value)",
+  "station_axis": {
+    "role": "internal_block_to_block_longitudinal_axis (bottom station = 30.4375); exact endpoint/station convention PRESERVED AS UNRESOLVED",
+    "total_extent_in": 30.4375,
+    "equals_internal_block_to_block": true,
+    "developed_arc_assumption": "REJECTED (max station exceeds developed rim)",
+    "exact_endpoint_convention": "UNRESOLVED (preserved; not manufactured)"
+  },
+  "internal_axis_to_developed_arc_ratio": 1.24312,
+  "stretch_ratio_narrative": "WITHDRAWN (004D A/S was not a developed-to-plan stretch)",
+  "landmark_anchors": [
+    {
+      "name": "neck",
+      "station_in": 0.0,
+      "plan_arc_in": 0.0,
+      "class": "SOURCE_MEASURED"
+    },
+    {
+      "name": "waist",
+      "station_in": 11.55209,
+      "plan_arc_in": 8.4041,
+      "class": "CALCULATED_004C_HEIGHT + OUTLINE_WAIST"
+    },
+    {
+      "name": "tail",
+      "station_in": 30.4375,
+      "plan_arc_in": 24.48469,
+      "class": "SOURCE_MEASURED"
+    }
+  ],
+  "waist_placement": "OUTLINE half-width minimum (waist RADIUS 4.4375 in NOT used)",
+  "side_height_values": "unchanged 004C Arnold measurements (read, not re-measured)",
+  "rim_point_count": 198,
+  "checks": {
+    "neck_exact": true,
+    "waist_exact": true,
+    "tail_exact": true,
+    "y_monotone": true,
+    "station_monotone": true,
+    "continuous": true
+  },
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false
+}

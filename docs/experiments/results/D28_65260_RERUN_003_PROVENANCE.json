@@ -1,0 +1,68 @@
+{
+  "experiment": "D28_SIDE_INVERSE_RERUN_003",
+  "note": "Source PDFs are NOT committed (public repo; copyrighted drawing). Only extracted geometry, checksums, and provenance are committed.",
+  "sources": [
+    {
+      "filename": "1937 D-28.pdf",
+      "role": "PRIMARY_HISTORICAL_SOURCE",
+      "author": "John Arnold",
+      "description": "1937 Martin D-28 serial #65260 hand-drawn construction drawing (rotated scan, PaperPort)",
+      "repository_copy": false,
+      "sha256": "d6e7a994b19b5590b6706541e5ff35f8a574361e42a578812da2b0b689d4d75d",
+      "page_count": 1,
+      "classification": "PRIMARY_HISTORICAL_SOURCE"
+    },
+    {
+      "filename": "ACOUSTIC BODY.pdf",
+      "role": "DRAWING_DERIVED_GEOMETRY_SOURCE",
+      "draftsman": "JD",
+      "description": "CAD 'ACOUSTIC BODY' layout; verified traced reconstruction of the John Arnold #65260 drawing (confirmed by JD). Datum A = soundhole.",
+      "repository_copy": false,
+      "sha256": "de56210225695e645f3a1e3a61c3e490fd80967ebe301079e78f14d44bf46647",
+      "page_count": 2,
+      "classification": "DRAWING_DERIVED_GEOMETRY_SOURCE"
+    }
+  ],
+  "extracted_geometry": "docs/experiments/results/D28_65260_ARNOLD_OUTLINE.csv",
+  "calibration": {
+    "dpi": 400,
+    "in_per_px": 0.010035122930255895,
+    "sheet_scale": "1:4 (labelled)",
+    "body_length_cal_in": 20.0,
+    "extracted_body_height_in": 19.989964877069745,
+    "extracted_max_width_in": 15.725037631710988,
+    "cross_check": {
+      "upper_bout_extracted_in": 11.64074259909684,
+      "upper_bout_label_in": 11.7,
+      "lower_bout_extracted_in": 15.715002508780731,
+      "lower_bout_label_in": 15.7,
+      "soundhole_dia_extracted_in": 3.993978926241846,
+      "soundhole_dia_label_in": 4.0
+    },
+    "datum_A_soundhole": {
+      "y_from_neck_in": 5.895634721525338,
+      "y_from_tail_in": 14.094330155544407
+    },
+    "symmetry_mode": "symmetric_by_construction",
+    "symmetry_discrepancy_in": 0.0
+  },
+  "landmarks": {
+    "upper_bout": {
+      "y_from_neck_in": 3.2012042147516304,
+      "half_width_in": 5.82037129954842,
+      "full_width_in": 11.64074259909684
+    },
+    "waist": {
+      "y_from_neck_in": 6.522829904666332,
+      "half_width_in": 5.408931259407928,
+      "full_width_in": 10.817862518815856,
+      "y_norm": 0.3263052208835341,
+      "shape": "single_minimum"
+    },
+    "lower_bout": {
+      "y_from_neck_in": 14.661314601103863,
+      "half_width_in": 7.857501254390366,
+      "full_width_in": 15.715002508780731
+    }
+  }
+}

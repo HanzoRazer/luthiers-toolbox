@@ -1,0 +1,7 @@
+member,neg_K_area_fraction,K_min,K_max,interpretation,NOT_a_claim_about
+floor,0.1380,-4.619e-04,5.734e-05,constructed family member contains saddle regions,the historical #65260 back
+q25,0.1039,-4.678e-04,8.145e-05,constructed family member contains saddle regions,the historical #65260 back
+mid,0.1031,-4.704e-04,8.750e-05,constructed family member contains saddle regions,the historical #65260 back
+q75,0.1036,-4.843e-04,9.573e-05,constructed family member contains saddle regions,the historical #65260 back
+ceiling,0.1075,-5.012e-04,1.038e-04,constructed family member contains saddle regions,the historical #65260 back
+FAMILY,,,,EACH member of the constructed family contains saddle regions (persists=True),the historical #65260 back contained saddle regions

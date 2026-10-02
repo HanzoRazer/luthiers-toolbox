@@ -1,0 +1,38 @@
+{
+  "experiment": "D28_RUN_004J_BACK_CURVATURE_FIELD_RECONSTRUCTION",
+  "parent_commit": "8d5bbeef68f72c83338e68dc85744cbd68ca5f5b",
+  "script": "scripts/experiments/d28_rerun004j_back_curvature_field_reconstruction.py",
+  "command": "python scripts/experiments/d28_rerun004j_back_curvature_field_reconstruction.py --write",
+  "grid_spacing_in": 0.25,
+  "derivative_method": "numpy.gradient central differences on the 004G grid",
+  "fit_window_half_in": 1.0,
+  "curvature_thresholds": {
+    "near_flat_R_ft": 2000.0,
+    "gaussian_noise_floor_1_per_in2": 1e-05,
+    "boundary_erode_cells": 2,
+    "similar_pct_of_25ft": 5.0
+  },
+  "reuses_004g_module": "d28_rerun004g_bounded_back_surface_family.py (family surfaces)",
+  "input_hashes": {
+    "D28_65260_REGISTRATION_ANCHORS_004D.csv": "2205b36242c4d2bd20444c8c852ab4766217d33101b2223e8b348a1c0e7c2e18",
+    "D28_65260_BACK_BRACE_POSITIONS_004F.csv": "4313ca75ac471b92bf00e718591a0661c1b1b16f8e4dd7915cb0abd551424c97",
+    "D28_65260_BACK_FAMILY_MEMBERS_004G.csv": "a61c1cc3882b95a31a1e4794fca28d108af3703e3d638c4a86dff0ec696b0c9f",
+    "D28_65260_REGISTERED_RIM_004D.csv": "6a5444fa433d4b79f94f6b5b95b6b86409fa4b00a3abcd3ba1de0da28a40cfcf",
+    "D28_65260_ARNOLD_OUTLINE.csv": "0cb53c0dc41de4db82c554af937a603b4a097a1b86c4ddf1b1165d0f367c731a"
+  },
+  "output_paths": [
+    "D28_65260_CURVATURE_FIELD_004J.csv",
+    "D28_65260_CURVATURE_STATION_ENVELOPE_004J.csv",
+    "D28_65260_BRACE_CURVATURE_ENVELOPE_004J.csv",
+    "D28_65260_APEX_CURVATURE_004J.csv",
+    "D28_65260_SADDLE_MAP_004J.csv",
+    "D28_65260_004H_004I_004J_CROSSCHECK.csv",
+    "D28_65260_RERUN_004J_SUMMARY.csv",
+    "D28_65260_RERUN_004J_PROVENANCE.json"
+  ],
+  "runtime_pdf_access": false,
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false,
+  "disposition": "BACK_CURVATURE_FIELD_ESTABLISHED"
+}

@@ -1,0 +1,6 @@
+method,anchor_count,monotonic,endpoint_exact,waist_exact,max_anchor_residual,min_dp_ds,max_dp_ds,max_stretch_ratio,max_compression_ratio,smoothness_metric,admissible,notes
+hard_linear,3,True,True,True,0.00e+00,0.72750,0.85148,1.05850,1.10574,154.12943,True,exact anchors; derivative discontinuous at anchors
+hard_pchip,3,True,True,True,0.00e+00,0.68044,0.92841,1.15413,1.18221,0.37560,True,"shape-preserving; no overshoot beyond [0,1]"
+hard_hermite,3,True,True,True,0.00e+00,0.71181,0.87712,1.09037,1.13011,0.61601,True,FD-slope Hermite; monotonicity verified on dense grid
+prior_linear,5,True,True,True,0.00e+00,0.62593,1.04524,1.29936,1.28517,433.86232,True,exact anchors; derivative discontinuous at anchors
+prior_pchip,5,True,True,True,1.11e-16,0.40222,1.11695,1.38851,1.99994,6.51069,True,"shape-preserving; no overshoot beyond [0,1]"

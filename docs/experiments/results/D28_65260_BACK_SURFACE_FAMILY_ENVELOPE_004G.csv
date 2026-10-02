@@ -1,0 +1,6 @@
+station,y_from_neck_in,position_uncertainty_in,rise_min_mm,rise_max_mm,transverse_radius_min_ft,transverse_radius_max_ft,class
+BB1,4.133,0.40,0.414,1.836,19.19,88.82,"FAMILY_ENVELOPE (bounded, non-unique)"
+BB2,7.362,0.40,0.239,2.324,13.78,154.92,"FAMILY_ENVELOPE (bounded, non-unique)"
+BB3,10.772,0.40,0.416,2.695,17.91,112.65,"FAMILY_ENVELOPE (bounded, non-unique)"
+BB4,14.758,0.40,-0.330,1.354,51.36,7101.43,"FAMILY_ENVELOPE (bounded, non-unique)"
+BODY_center_apex,1.000,,1.610,2.800,,,FAMILY_ENVELOPE (max interior rise)

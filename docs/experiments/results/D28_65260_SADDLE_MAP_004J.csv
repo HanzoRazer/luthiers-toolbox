@@ -1,0 +1,7 @@
+member,interior_cells,neg_K_cells,neg_K_area_fraction,K_min,K_max,boundary_band_excluded,noise_floor_1_per_in2
+floor,3638,496,0.1363,-4.340e-04,5.735e-05,2 cells (0.50 in),1.0e-05
+q25,3638,358,0.0984,-4.438e-04,1.116e-04,2 cells (0.50 in),1.0e-05
+mid,3638,362,0.0995,-4.590e-04,1.221e-04,2 cells (0.50 in),1.0e-05
+q75,3638,365,0.1003,-4.748e-04,1.321e-04,2 cells (0.50 in),1.0e-05
+ceiling,3638,375,0.1031,-4.910e-04,1.415e-04,2 cells (0.50 in),1.0e-05
+ALL_MEMBERS,,,,,,saddle_persists_across_family=True,

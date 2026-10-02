@@ -1,0 +1,75 @@
+{
+  "experiment": "D28_RUN_004N_CORRECTED_BACK_SURFACE_FAMILY",
+  "disposition": "CORRECTED_BOUNDED_BACK_SURFACE_FAMILY_CONSTRUCTED",
+  "rim_source": "D28_65260_REGISTERED_RIM_004M.csv (corrected developed-arc rim, 004M)",
+  "family_model": "z(x,y;alpha) = z_TPS(x,y) + alpha*Phi(x,y)",
+  "interior_classification": "CONSTRUCTED_ADMISSIBLE_SURFACE (NOT a measured/recovered back)",
+  "boundary_residual": {
+    "method": "e_i = z_member(x_i,y_i) - z_rim(x_i,y_i) at actual rim boundary samples",
+    "replaces": "004G forced-zero placeholder (interior Phi multiplied by zero)",
+    "tolerance_in": 0.001,
+    "max_abs_in_across_family": 1.9250262894843218e-07,
+    "all_members_pass": true,
+    "n_boundary_samples": 455
+  },
+  "interior_rise_envelope_mm": {
+    "floor": 1.61,
+    "ceiling": 2.8
+  },
+  "members": [
+    {
+      "name": "floor",
+      "alpha_in": 0.0,
+      "max_rise_mm": 1.638,
+      "volume_L": 18.4406,
+      "saddle": true,
+      "boundary_max_abs_in": 2.3003821070233244e-13,
+      "classification": "CONSTRUCTED_ADMISSIBLE_SURFACE"
+    },
+    {
+      "name": "q25",
+      "alpha_in": 0.05491,
+      "max_rise_mm": 1.907,
+      "volume_L": 18.5406,
+      "saddle": true,
+      "boundary_max_abs_in": 1.1723548087871904e-07,
+      "classification": "CONSTRUCTED_ADMISSIBLE_SURFACE"
+    },
+    {
+      "name": "mid",
+      "alpha_in": 0.06667,
+      "max_rise_mm": 2.205,
+      "volume_L": 18.562,
+      "saddle": true,
+      "boundary_max_abs_in": 1.4233692002818543e-07,
+      "classification": "CONSTRUCTED_ADMISSIBLE_SURFACE"
+    },
+    {
+      "name": "q75",
+      "alpha_in": 0.07842,
+      "max_rise_mm": 2.502,
+      "volume_L": 18.5834,
+      "saddle": true,
+      "boundary_max_abs_in": 1.6741977493239801e-07,
+      "classification": "CONSTRUCTED_ADMISSIBLE_SURFACE"
+    },
+    {
+      "name": "ceiling",
+      "alpha_in": 0.09017,
+      "max_rise_mm": 2.8,
+      "volume_L": 18.6047,
+      "saddle": true,
+      "boundary_max_abs_in": 1.9250262894843218e-07,
+      "classification": "CONSTRUCTED_ADMISSIBLE_SURFACE"
+    }
+  ],
+  "no_member_promoted_to_the_back": true,
+  "no_historical_radius_claimed": true,
+  "body_volume_top_assumption": {
+    "case_A": "flat-top plane z=0 (GEOMETRIC_REFERENCE_ONLY)",
+    "case_B": "top dome UNRESOLVED (not invented)"
+  },
+  "no_production_changes": true,
+  "no_prior_run_alteration": true,
+  "pdf_vendored": false
+}

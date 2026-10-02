@@ -1,0 +1,21 @@
+{
+  "soundhole_diameter_in": 4.0,
+  "soundhole_area_in2": 12.566371,
+  "soundhole_area_m2": 0.00810732,
+  "class": "FIXED_GEOMETRY (\u00d84.0 in, from the Arnold drawing / JD trace)",
+  "helmholtz_bridge": {
+    "forward_f_H": "f_H = (c / (2*pi)) * sqrt(A / (V * L_eff))",
+    "inverse_V": "V = (A * c^2) / ((2*pi*f_H)^2 * L_eff)",
+    "symbols": {
+      "A": "soundhole area (m^2)",
+      "V": "cavity air volume (m^3)",
+      "L_eff": "effective soundhole length (m)",
+      "c": "speed of sound (m/s)",
+      "f_H": "Helmholtz / A0 air-mode frequency (Hz)"
+    }
+  },
+  "not_solved": true,
+  "no_guessed_A0": true,
+  "no_guessed_L_eff": true,
+  "statement": "Body volume becomes an INDEPENDENT global discriminator once a measured air mode (A0) and a defensible L_eff are introduced; it can then reject members of the admissible back-surface family. 004G solves no Helmholtz frequency."
+}
