@@ -404,7 +404,19 @@ def test_tc20_saw_and_rosette_real_feasibility_still_evaluate():
     )
 
     saw = compute_saw_feasibility(
-        req={"tool_id": "saw:thin_140", "material_id": "hardwood"}, context="test"
+        # Complete, truthful Saw request (SAW-AUTHORITY-CONTEXT-006): every fact the
+        # seven calculators consume; the witness is that the saw lane reaches them.
+        req={
+            "tool_id": "saw:thin_140", "material_id": "hardwood",
+            "blade_diameter_mm": 254.0, "blade_kerf_mm": 3.0, "blade_thickness_mm": 2.5,
+            "tooth_count": 24, "rpm": 3450, "arbor_size_mm": 25.4,
+            "stock_thickness_mm": 25.0, "feed_rate_mm_min": 3000.0,
+            "spindle_power_watts": 3000.0, "blade_youngs_modulus_gpa": 200.0,
+            "use_dust_collection": True, "cut_length_mm": 300.0, "cut_type": "crosscut",
+            "miter_angle_deg": 0.0, "bevel_angle_deg": 0.0, "dado_width_mm": 0.0,
+            "dado_depth_mm": 0.0, "repeat_count": 1,
+        },
+        context="test",
     )
     rosette = compute_rosette_feasibility(
         req={"tool_id": "rosette:default", "material_id": "spruce"}, context="test"

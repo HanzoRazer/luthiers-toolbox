@@ -54,6 +54,37 @@ SANE_ADAPTIVE = {
     "loops": [{"pts": [[0, 0], [100, 0], [100, 60], [0, 60]]}],
 }
 
+# A saw request carrying every safety-critical process fact the evaluator now
+# requires (RMOS-CONVERGE-001A saw plumbing repair). Values are ordinary bench
+# saw numbers (10" 24T blade at 3450 RPM); their verdict is not asserted here -
+# these witnesses only need to reach the evaluator, which refuses to score when
+# a safety-critical fact is absent.
+# Complete, truthful Saw request: every fact the seven calculators consume
+# (SAW-AUTHORITY-CONTEXT-006). Ordinary 10" 24T bench-saw numbers, all within
+# saw_lab.models bounds; constructed for authority testing, not a production setup.
+SANE_SAW = {
+    "material_id": "hardwood",
+    "blade_diameter_mm": 254.0,
+    "blade_kerf_mm": 3.0,
+    "blade_thickness_mm": 2.5,
+    "tooth_count": 24,
+    "rpm": 3450,
+    "arbor_size_mm": 25.4,
+    "stock_thickness_mm": 25.0,
+    "feed_rate_mm_min": 3000.0,
+    "spindle_power_watts": 3000.0,
+    "blade_youngs_modulus_gpa": 200.0,
+    "use_dust_collection": True,
+    "cut_length_mm": 300.0,
+    "cut_type": "crosscut",
+    "miter_angle_deg": 0.0,
+    "bevel_angle_deg": 0.0,
+    "dado_width_mm": 0.0,
+    "dado_depth_mm": 0.0,
+    "repeat_count": 1,
+}
+
+
 # Same plan with a physically impossible stepover: rule F002 fires RED.
 def _red_adaptive() -> dict:
     req = dict(SANE_ADAPTIVE)
@@ -277,6 +308,10 @@ def test_tc09_evaluator_exception_is_error_and_blocks(monkeypatch):
     It must not become YELLOW merely to keep manufacturing running: an
     engine that could not run has not established that the cut is
     survivable.
+
+    The saw request carries the safety-critical process facts so the guard
+    passes and the (monkeypatched) evaluator is actually reached - otherwise
+    the missing-fact guard would short-circuit to UNKNOWN before the raise.
     """
     import app.rmos.feasibility_scorer as scorer
 
@@ -285,7 +320,7 @@ def test_tc09_evaluator_exception_is_error_and_blocks(monkeypatch):
 
     monkeypatch.setattr(scorer, "score_design_feasibility", _boom)
 
-    result = _compute("saw:default")
+    result = _compute("saw:default", **SANE_SAW)
 
     assert _risk(result) == "ERROR"
     assert _blocks(result) is True

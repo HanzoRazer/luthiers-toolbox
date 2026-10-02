@@ -40,7 +40,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError
 from typing import Any, Callable, Dict, Optional
 
 from app.safety import safety_critical
@@ -51,6 +51,7 @@ from ..feasibility_authority import (
     unavailable_feasibility,
 )
 from .profiling_feasibility import compute_profiling_feasibility
+from .saw_feasibility import compute_saw_feasibility
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,11 @@ router = APIRouter()
 
 # Exceptions an adapter/engine may raise that mean "could not evaluate".
 # They are reported as ERROR (blocking), never downgraded to keep
-# manufacturing running.
+# manufacturing running. ``ValidationError`` is included because a truthful
+# fact outside a model's declared bounds (e.g. an RPM the SawContext rejects)
+# means the evaluator could not run on that input - it must fail closed, not
+# escape as an unhandled 500. In pydantic v2 ValidationError is not a
+# ValueError subclass, so it must be named explicitly.
 _ENGINE_FAILURES = (
     ImportError,
     ValueError,
@@ -67,6 +72,7 @@ _ENGINE_FAILURES = (
     KeyError,
     ZeroDivisionError,
     OSError,
+    ValidationError,
 )
 
 
@@ -194,6 +200,28 @@ class ScorerDesignSpec(BaseModel):
     depth_mm: Optional[float] = None
     stock_thickness_mm: Optional[float] = None
     petal_count: Optional[int] = None
+    # Saw cut length (mm), consumed by the Saw conversion; None for rosette/router.
+    cut_length_mm: Optional[float] = None
+
+
+class SawScorerDesignSpec(BaseModel):
+    """Explicit Saw cut-design facts consumed by the Saw calculators (via
+    ``SawEngine._convert_to_saw_design``).
+
+    Distinct from the rosette-shaped ``ScorerDesignSpec``: it carries no Rosette
+    geometry (no ``outer_diameter_mm``/``ring_count``/``pattern_type``), so the Saw
+    path can no longer be satisfied by Rosette aliases. All fields are required (no
+    silent defaults) and bounds mirror ``saw_lab.models.SawDesign`` so an invalid
+    value fails closed as a blocking ERROR rather than scoring on a default.
+    """
+
+    cut_length_mm: float = Field(ge=10.0, le=3000.0)
+    cut_type: str
+    miter_angle_deg: float = Field(ge=-60.0, le=60.0)
+    bevel_angle_deg: float = Field(ge=-45.0, le=45.0)
+    dado_width_mm: float = Field(ge=0.0, le=50.0)
+    dado_depth_mm: float = Field(ge=0.0, le=75.0)
+    repeat_count: int = Field(ge=1, le=100)
 
 
 def _score_via_scorer(
@@ -201,7 +229,7 @@ def _score_via_scorer(
     mode: str,
     tool_id: str,
     context: Optional[str],
-    design: ScorerDesignSpec,
+    design: "ScorerDesignSpec | SawScorerDesignSpec",
     req: Dict[str, Any],
     default_material: str,
 ) -> Dict[str, Any]:
@@ -217,11 +245,23 @@ def _score_via_scorer(
     rmos_ctx = RmosContext(
         tool_id=tool_id,
         material_id=req.get("material_id", default_material),
-        machine_id=req.get("machine_id"),
+        machine_profile_id=req.get("machine_profile_id"),
         rpm=req.get("rpm"),
         feed_rate_mm_min=req.get("feed_rate_mm_min"),
         spindle_power_watts=req.get("spindle_power_watts"),
         tool_diameter_mm=req.get("tool_diameter_mm"),
+        tooth_count=req.get("tooth_count"),
+        # Explicit Saw process facts (additive; None for non-saw modes, which do not
+        # read them, so rosette/router scoring is unaffected). The Saw canonical path
+        # guards their presence in ``compute_saw_feasibility`` before scoring.
+        blade_diameter_mm=req.get("blade_diameter_mm"),
+        blade_kerf_mm=req.get("blade_kerf_mm"),
+        blade_thickness_mm=req.get("blade_thickness_mm"),
+        arbor_size_mm=req.get("arbor_size_mm"),
+        stock_thickness_mm=req.get("stock_thickness_mm"),
+        machine_power_kw=req.get("machine_power_kw"),
+        blade_youngs_modulus_gpa=req.get("blade_youngs_modulus_gpa"),
+        use_dust_collection=req.get("use_dust_collection"),
     )
 
     result = score_design_feasibility(design, rmos_ctx)
@@ -255,55 +295,6 @@ def _score_via_scorer(
             },
         },
     }
-
-
-# -----------------------------
-# Saw feasibility
-# -----------------------------
-
-def compute_saw_feasibility(
-    *,
-    mode: str = "saw",
-    tool_id: Optional[str] = None,
-    req: Dict[str, Any],
-    context: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Saw feasibility engine using CNC Saw Labs calculators via SawEngine.
-
-    Output shape:
-      {
-        "mode": "saw",
-        "tool_id": "...",
-        "safety": { "risk_level": ..., "score": ..., "block_reason": ..., "warnings": [...], "details": {...} },
-      }
-
-    An evaluation failure is reported as blocking ERROR. It is not
-    downgraded to YELLOW: an engine that could not run has not established
-    that the cut is survivable.
-    """
-    tool_id = str(tool_id or req.get("tool_id") or "saw:unknown")
-
-    try:
-        design = ScorerDesignSpec(
-            outer_diameter_mm=req.get("outer_diameter_mm", 100.0),
-            inner_diameter_mm=req.get("inner_diameter_mm", 20.0),
-            ring_count=req.get("ring_count", 1),
-            pattern_type=req.get("pattern_type", "crosscut"),
-            depth_mm=req.get("depth_mm"),
-            stock_thickness_mm=req.get("stock_thickness_mm", 25.0),
-        )
-        return _score_via_scorer(
-            mode=mode,
-            tool_id=tool_id,
-            context=context,
-            design=design,
-            req=req,
-            default_material="hardwood",
-        )
-    except _ENGINE_FAILURES as e:
-        logger.error("Saw feasibility engine error for tool %s: %s", tool_id, e, exc_info=True)
-        return error_feasibility(mode=mode, tool_id=tool_id, context=context, error=e)
 
 
 # -----------------------------
