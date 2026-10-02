@@ -406,16 +406,17 @@ def build_section(R: Dict) -> str:
 
 def build_governing_state() -> str:
     return (
-        "> **Current governing state (004K source-datum reconciliation).** Source-datum "
-        "reconciliation has superseded the previous interpretation of `30 7/16 in` (30.4375) as the "
-        "developed-side length and `4 7/16 in` (4.4375) as the assembled body depth. `30.4375 in` is "
-        "the internal head-block/tail-block dimension (and the side-height station-axis extent); "
-        "`4.4375 in` is the waist radius; `4.220 in` is the Arnold waist side height; `20.21875 in` is "
-        "the CAD outside body-profile length; the developed one-side rim length is derived "
-        "independently in 004L. The corrected geometry chain begins at **004K** and continues "
-        "004L→004M→004N→004O. Runs **004C–004J remain preserved as historical experiment evidence** "
-        "but their downstream geometry is **not current authority**. A unique historical back "
-        "surface/radius remains **unresolved**."
+        "> **Current governing state (004K datum reconciliation through 004O).** Source-datum "
+        "reconciliation supersedes the former interpretation of `30 7/16 in` (30.4375) as developed "
+        "side length and `4 7/16 in` (4.4375) as assembled body depth. `30.4375 in` is retained as "
+        "the source/corroborated internal block-to-block / side-height station-axis quantity; its exact "
+        "physical endpoints and measurement path remain **UNRESOLVED**. `4.4375 in` is the waist "
+        "radius; `4.220 in` is the Arnold waist side height; `20.21875 in` is the CAD outside "
+        "body-profile length; and 004L independently derives the one-side developed rim as about "
+        "24.485 in. The corrected chain is **004K→004L→004M→004N→004O**. Runs **004C–004J remain "
+        "preserved as historical experiment evidence** but their superseded interpretations are not "
+        "current authority. 004N/004O characterize a **constructed admissible back family**, not a "
+        "recovered historical back. A unique historical back surface/radius remains **unresolved**."
     )
 
 
