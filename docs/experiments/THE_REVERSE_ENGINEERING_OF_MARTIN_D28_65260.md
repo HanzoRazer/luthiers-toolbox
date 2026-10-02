@@ -147,6 +147,49 @@ and physical expectation disagree, record both and investigate the governing
 assumptions. Do not make the mathematics say what the investigator expected it to
 say.
 
+<!-- RERUN004M_START -->
+## Run 004M — Side-Height Station Registration
+
+- Repository SHA tested: `45fc4545c4a745a141d8f829269b5cc612e21974`
+- Corrected successor to 004C + 004D. Re-registers Arnold's measured side heights onto the **corrected** developed rim coordinate (004L, `24.4847 in`), producing a 3D rim `R(s*) = (x(s*), y(s*), H(s*))`. XY from the Arnold/JD outline at plan-perimeter arc length (**identity** developed-arc mapping — no stretch/compression); Z = Arnold side height by **landmark** registration.
+- Artifacts: `D28_65260_SIDE_STATION_AUTHORITY_004M.json`, `D28_65260_SIDE_PROFILE_004M.csv`, `D28_65260_SIDE_PLAN_REGISTRATION_004M.csv`, `D28_65260_REGISTERED_RIM_004M.csv`, `D28_65260_RERUN_004M_SUMMARY.csv`, `D28_65260_RERUN_004M_PROVENANCE.json`. No PDF vendored.
+
+### What the 0/3/…/30.4375 side stations represent (datum)
+
+- The maximum side-height station (**30.4375 in**) **exceeds** the developed one-side rim (**24.4847 in**), which **rejects** the old 004C/004D assumption that the marks are developed-arc stations.
+- They are stationed on the **internal block-to-block axis** (bottom station = 30.4375 in). The exact endpoint/station convention is **PRESERVED AS UNRESOLVED** — not manufactured to obtain a smooth profile.
+- Internal-axis / developed-arc ratio = **1.2431** (relabelled; the 004D developed-to-plan "local stretch ratio" distortion narrative is **withdrawn**).
+
+### Landmark registration (three physical anchors)
+
+| anchor | station (in) | plan arc (in) | side height (in) | basis |
+|---|---:|---:|---:|---|
+| neck | 0.000 | 0.000 | 3.750 | outline neck endpoint |
+| waist | 11.552 | 8.404 | 4.220 | outline half-width minimum (radius NOT used) |
+| tail | 30.438 | 24.485 | 4.720 | outline tail endpoint |
+
+- Waist plan position comes from **outline geometry** (half-width minimum at plan-arc 8.404 in), **not** from the waist radius (4.4375 in) — Decision 4. The waist side height 4.22 in is exact there.
+
+### Corrected 3D rim
+
+- `198` points over `s* ∈ [0, 24.4847]`; neck/tail side heights exact at the outline endpoints; rim continuous and monotone in y and station.
+
+### Disposition
+
+**`SIDE_HEIGHT_REGISTRATION_SUPPORTED`**
+
+- Corrected 3D rim R(s*) over s* ∈ [0, 24.4847 in] (198 points); XY from the Arnold/JD outline at plan-perimeter arc length (identity developed-arc mapping — no stretch/compression), Z = Arnold side height by landmark registration.
+- Side-height stations REJECTED as developed-arc (max station 30.4375 in > developed rim 24.4847 in); treated as the internal block-to-block axis, exact convention PRESERVED AS UNRESOLVED.
+- Waist placed from OUTLINE geometry (half-width minimum at plan-arc 8.404 in), NOT from the waist radius 4.4375 in; waist height 4.22 in exact there.
+- Internal-axis / developed-arc ratio = 1.2431 (RELABELLED; the 004D developed-to-plan 'stretch ratio' narrative is withdrawn).
+- Neck/tail side heights exact at the outline endpoints; rim continuous and monotone in y.
+
+Runs 001–004J are untouched. 004M re-measures no side heights, reads no PDF, and changes no prior artifact or production file. The exact side-station datum convention remains an open question (preserved, not invented).
+
+<!-- RERUN004M_END -->
+
+---
+
 <!-- RERUN004L_START -->
 ## Run 004L — Developed Rim Reconstruction
 

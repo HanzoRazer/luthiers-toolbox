@@ -1,0 +1,12 @@
+station_in,side_height_in,axis,class
+0.00000,3.75000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+3.00000,3.74000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+6.00000,3.89500,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+9.00000,4.08500,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+12.00000,4.24000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+15.00000,4.35000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+18.00000,4.45500,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+21.00000,4.56500,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+24.00000,4.64000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+27.00000,4.67000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold)
+30.43750,4.72000,internal_block_to_block_station_axis,SOURCE_MEASURED (Arnold bottom landmark)
