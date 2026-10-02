@@ -19,8 +19,10 @@ sudo apt-get install -y --no-install-recommends \
   build-essential curl git jq libpq-dev sqlite3 \
   python3-venv python3-dev python3-pip \
   poppler-utils shared-mime-info fonts-dejavu-core \
-  libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
-  libcairo2 libffi-dev libjpeg-dev
+  libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
+  libgdk-pixbuf-2.0-0 libcairo2 libffi-dev libjpeg-dev \
+  libgl1 libglib2.0-0 \
+  libxcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0
 
 echo "==> Installing Python backend dependencies (services/api)"
 cd "$REPO_ROOT/services/api"
@@ -74,6 +76,25 @@ select_supported_node() {
 }
 
 select_supported_node
+# Publish that Node where login shells find it ahead of the image default.
+# /exec-daemon/node (currently 22.14.0) is earlier on PATH than /usr/local/bin
+# and is below packages/client engines.node. A profile.d prepend is what
+# `bash -l` (install/start) actually honors.
+publish_supported_node() {
+  local node_bin
+  node_bin="$(dirname "$(command -v node)")"
+  sudo mkdir -p /usr/local/lib/nodejs/bin
+  sudo ln -sfn "$node_bin/node" /usr/local/lib/nodejs/bin/node
+  sudo ln -sfn "$node_bin/npm" /usr/local/lib/nodejs/bin/npm
+  sudo ln -sfn "$node_bin/npx" /usr/local/lib/nodejs/bin/npx
+  sudo tee /etc/profile.d/luthiers-node.sh >/dev/null <<'EOF'
+# Prefer the Node that satisfies packages/client "engines.node".
+export PATH="/usr/local/lib/nodejs/bin:${PATH}"
+EOF
+  sudo chmod 644 /etc/profile.d/luthiers-node.sh
+  export PATH="/usr/local/lib/nodejs/bin:${PATH}"
+}
+publish_supported_node
 # 4. Refresh the shell's command hash table so the resolved node/npm are used.
 hash -r
 # 5. Prove the resolved runtime is supported.
