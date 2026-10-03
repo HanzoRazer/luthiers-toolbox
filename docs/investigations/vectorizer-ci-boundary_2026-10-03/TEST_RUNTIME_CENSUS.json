@@ -1,0 +1,293 @@
+{
+  "schema": "vectorizer_ci_boundary_census_v1",
+  "order": "VECTORIZER-CI-BOUNDARY-001",
+  "base_sha": "aaf38e4a0437b20d2ad4191f06cb7368a348f9c7",
+  "environments": {
+    "ci": {
+      "source": "Core CI run 37135089404, job API Tests (ubuntu-latest, Python 3.11), on the base commit; EasyOCR not installed (log: 'EasyOCR not available')",
+      "peak_memory": "not reported"
+    },
+    "local": {
+      "source": "Windows 11, Python 3.11.9, EasyOCR 1.7.2; unmodified detached checkout of the base; one test per pytest process; uncommitted call-through probe (no mocks) recording EdgeToDXFResult fields and PeakWorkingSetSize",
+      "peak_memory": "process PeakWorkingSetSize, MB"
+    }
+  },
+  "large_count_observation": {
+    "value": 266359,
+    "contours": 743,
+    "producer_tests": [
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_with_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_without_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction"
+    ],
+    "producer_summary": "the committed Melody Maker PDF, converted by `BlueprintOrchestrator.process_file` (`CleanupMode.ENHANCED`, which reaches `EdgeToDXF.convert_enhanced`) in three tests of `tests/test_text_masking_regression.py` — four conversions per default-CI run, each writing 266,359 `LINE` entities from 743 contours.",
+    "explanation": "Reproduced locally to the entity on the unmasked run (266,359; 684,712 edge pixels; 40,373,932 bytes). The local masked run writes 223,427 because EasyOCR is installed locally and masks text; on CI EasyOCR is absent, masking silently does nothing, and both CI conversions write 266,359 (finding F-3). Counts are identical across every repeat on both platforms; output size varies by at most 1 byte between local runs. The ellipse test is not the producer: it writes 1,116."
+  },
+  "tests": [
+    {
+      "id": "T-01",
+      "test_id": "tests/test_text_masking.py::TestTextDetectionFailureIsNotSilent::test_convert_marks_result_degraded_when_ocr_fails",
+      "source_fixture": "400x300 ellipse PNG drawn in the test",
+      "fixture_origin": "generated",
+      "calls": "EdgeToDXF.convert_enhanced ×1",
+      "entity_count": {
+        "ci": 1116,
+        "local": 1116
+      },
+      "time_s": {
+        "ci": 1.7,
+        "local": 2.9
+      },
+      "peak_mb_local": 139.0,
+      "output_bytes_local": 154710,
+      "default_ci_before": true,
+      "after": "default CI, unchanged call + ceiling",
+      "disposition": "CLEARED — bounded contract test. 1,116 entities, 628 edge pixels, DEGRADED, DXF emitted; identical on 3 local runs and CI. Ceiling `line_count <= 5_000` added; no converter cap"
+    },
+    {
+      "id": "T-02",
+      "test_id": "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_with_text_masking",
+      "source_fixture": "docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf",
+      "fixture_origin": "committed",
+      "calls": "process_file ×1",
+      "entity_count": {
+        "ci": 266359,
+        "local": 223427
+      },
+      "time_s": {
+        "ci": 287.9,
+        "local": 614.0
+      },
+      "peak_mb_local": 4503.4,
+      "output_bytes_local": 33828427,
+      "default_ci_before": true,
+      "after": "dedicated lane (vectorizer_regression)",
+      "disposition": "PRODUCER. Moved out of default CI; now reads the shared masked conversion. Assertion `result.ok or result.stage != \"error\"` kept"
+    },
+    {
+      "id": "T-03",
+      "test_id": "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_without_text_masking",
+      "source_fixture": "docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf",
+      "fixture_origin": "committed",
+      "calls": "process_file ×1",
+      "entity_count": {
+        "ci": 266359,
+        "local": 266359
+      },
+      "time_s": {
+        "ci": 285.4,
+        "local": 655.0
+      },
+      "peak_mb_local": 4717.4,
+      "output_bytes_local": 40373932,
+      "default_ci_before": true,
+      "after": "dedicated lane (vectorizer_regression)",
+      "disposition": "PRODUCER. Moved out of default CI; now reads the shared unmasked conversion. Has no assertion (prints only), as before"
+    },
+    {
+      "id": "T-04",
+      "test_id": "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_with_text_masking",
+      "source_fixture": "services/api/app/instrument_geometry/reference_dxf/cuatro/cuatro puertoriqueño.pdf",
+      "fixture_origin": "absent (not committed)",
+      "calls": "none — skipped",
+      "entity_count": {
+        "ci": null,
+        "local": null
+      },
+      "time_s": {
+        "ci": 0.0,
+        "local": 0.0
+      },
+      "peak_mb_local": 111.0,
+      "output_bytes_local": null,
+      "default_ci_before": true,
+      "after": "dedicated lane (vectorizer_regression), always skipped",
+      "disposition": "STRUCTURALLY SKIPPED — PDF absent. Collected by the dedicated lane and reported there as NOT COVERED; provides no Cuatro coverage"
+    },
+    {
+      "id": "T-05",
+      "test_id": "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_without_text_masking",
+      "source_fixture": "services/api/app/instrument_geometry/reference_dxf/cuatro/cuatro puertoriqueño.pdf",
+      "fixture_origin": "absent (not committed)",
+      "calls": "none — skipped",
+      "entity_count": {
+        "ci": null,
+        "local": null
+      },
+      "time_s": {
+        "ci": 0.0,
+        "local": 0.0
+      },
+      "peak_mb_local": 111.0,
+      "output_bytes_local": null,
+      "default_ci_before": true,
+      "after": "dedicated lane (vectorizer_regression), always skipped",
+      "disposition": "STRUCTURALLY SKIPPED — PDF absent. Collected by the dedicated lane and reported there as NOT COVERED; provides no Cuatro coverage"
+    },
+    {
+      "id": "T-06",
+      "test_id": "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction",
+      "source_fixture": "docs/archive/instrument_references/gibson_melody_maker/gibson_melody_maker_blueprint.pdf",
+      "fixture_origin": "committed",
+      "calls": "process_file ×2",
+      "entity_count": {
+        "ci": 266359,
+        "local": "223,427 + 266,359"
+      },
+      "time_s": {
+        "ci": 575.1,
+        "local": 1343.0
+      },
+      "peak_mb_local": 8831.1,
+      "output_bytes_local": null,
+      "default_ci_before": true,
+      "after": "dedicated lane (vectorizer_regression)",
+      "disposition": "PRODUCER, and its assertion cannot fail (F-2): it printed `With text masking: 0` / `Without text masking: 0` and passed. Moved; now reuses both shared conversions instead of repeating them. Assertion kept as is"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-1",
+      "finding": "The default-CI delay is the Melody Maker conversions: 1,148 s of the 1,562 s spanned by test-start timestamps in the Core CI log (73%); next-slowest test 13.4 s. API Verify ran them again (1578.54 s)",
+      "action": "separated (marker + dedicated workflow); duplicate conversions removed"
+    },
+    {
+      "id": "F-2",
+      "finding": "`test_entity_count_reduction` reads `result.entity_count`; `BlueprintResult` has no such attribute (it is `result.dxf.entity_count`), so both counts are 0 and `0 <= 0 + 1000` always passes",
+      "action": "recorded; assertion preserved by ruling"
+    },
+    {
+      "id": "F-3",
+      "finding": "Without EasyOCR, `detect_text_regions` returns `[]`, so `mask_text=True` does no masking and reports SUCCESS; on CI the 'with masking' test is identical to the unmasked one",
+      "action": "recorded; production behaviour not changed"
+    },
+    {
+      "id": "F-4",
+      "finding": "Peak working set about 4.7 GB per conversion and 8.8 GB with both results held (T-06); the shared fixture holds both too",
+      "action": "recorded; dedicated lane only"
+    },
+    {
+      "id": "F-5",
+      "finding": "`VECTORIZER_COMPONENT_LIFECYCLE.md` records `CleanupMode.ENHANCED` as SANDBOX; `VECTORIZER_CANONICAL_PATHS.md` records `enhanced` as PRODUCTION",
+      "action": "recorded; not reconciled"
+    },
+    {
+      "id": "F-6",
+      "finding": "VEC-ROOT-001 §5a states `body_lexicon.md` was never committed; it was committed in vectorizer-sandbox on 2026-09-15",
+      "action": "recorded; merged audit not edited"
+    },
+    {
+      "id": "F-7",
+      "finding": "The two 128,997-entity Cuatro DXFs are not read by any default-CI test beyond millisecond path enumeration and are unrelated to the delay",
+      "action": "none; both retained, ROLE_UNRESOLVED"
+    }
+  ],
+  "default_ci": {
+    "expression_before": "none (`pytest -q`; `pytest.ini` deselects nothing)",
+    "expression_after": "not vectorizer_regression",
+    "excluded": [
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_with_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_without_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_with_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_without_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction"
+    ],
+    "dedicated": [
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_with_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_melody_maker_without_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_with_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingRegression::test_cuatro_without_text_masking",
+      "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction"
+    ]
+  },
+  "cuatro": {
+    "introduced_in": "8d91c4c7ecefe5a275341bc5edf1ebe03569d017",
+    "manufacturing_authority": "none",
+    "regeneration_authority_in_repo": "none",
+    "paths": [
+      {
+        "path": "services/api/app/instrument_geometry/reference_dxf/cuatro/simple_extract/cuatro_puertoriqueño_simple.dxf",
+        "bytes": 16264730,
+        "sha256": "41e62ec08c1c748681f43d05c1abab305978b5cce6ef1278a6ddc36be639613a",
+        "line_count": 128997,
+        "role": "ROLE_UNRESOLVED",
+        "candidate_roles": [
+          "benchmark witness",
+          "plan-package artifact"
+        ]
+      },
+      {
+        "path": "services/api/app/instrument_geometry/reference_dxf/cuatro/Cuatro_DXF_Simple_Package/cuatro_puertoriqueño_simple.dxf",
+        "bytes": 16264730,
+        "sha256": "41e62ec08c1c748681f43d05c1abab305978b5cce6ef1278a6ddc36be639613a",
+        "line_count": 128997,
+        "role": "ROLE_UNRESOLVED",
+        "candidate_roles": [
+          "benchmark witness",
+          "plan-package artifact"
+        ]
+      }
+    ]
+  },
+  "changed_files": [
+    ".cbsp21/patches/vectorizer-ci-boundary-001.json",
+    ".github/workflows/core_ci.yml",
+    ".github/workflows/vectorizer-regression.yml",
+    "Makefile",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/ADJUDICATION.md",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/CI_REACHABILITY.md",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/CUATRO_PROVENANCE.md",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/README.md",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/SANDBOX_BOUNDARY.md",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.json",
+    "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.md",
+    "scripts/ci/vectorizer_regression_summary.py",
+    "scripts/investigations/generate_vectorizer_ci_boundary.py",
+    "services/api/pytest.ini",
+    "services/api/tests/test_text_masking.py",
+    "services/api/tests/test_text_masking_regression.py",
+    "services/api/tests/vectorizer/__init__.py",
+    "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+  ],
+  "next_adjudication": "vectorizer recovery versus retirement using the reconciled benchmark evidence",
+  "after_change_local": {
+    "source": "One `pytest -m vectorizer_regression --no-cov` run on the changed branch (same Windows host, EasyOCR installed), with the same call-through probe; compared with the five baseline runs above. Melody Maker PDF sha256 `096735132e72e7d508d150f87005ae96f4f93192bdc8553d4bbcacf4866c9aca` (151,492 bytes). Default-CI time after the change is measured by this PR's own CI run, not here.",
+    "rows": [
+      {
+        "measure": "Melody Maker conversions",
+        "before": 4,
+        "after": 2
+      },
+      {
+        "measure": "Sum of test durations, s",
+        "before": 2612.0,
+        "after": 1334.5
+      },
+      {
+        "measure": "Masked conversion, LINE entities",
+        "before": 223427,
+        "after": 223427
+      },
+      {
+        "measure": "Unmasked conversion, LINE entities",
+        "before": 266359,
+        "after": 266359
+      },
+      {
+        "measure": "test_entity_count_reduction, s",
+        "before": 1343.0,
+        "after": 0.0
+      },
+      {
+        "measure": "Peak working set, MB (largest single process)",
+        "before": 8831.1,
+        "after": 5788.7
+      },
+      {
+        "measure": "Tests passed / skipped",
+        "before": "3 / 2",
+        "after": "3 / 2"
+      }
+    ]
+  }
+}

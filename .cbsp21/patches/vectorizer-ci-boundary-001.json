@@ -1,0 +1,220 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_CI_BOUNDARY_001",
+  "title": "Move the real-plan vectorizer regressions out of default API CI, with evidence",
+  "intent": "Test, workflow and evidence only. Measured which test produced the ~266k-entity DXF workload in default API CI (the committed Melody Maker PDF, four conversions per run, about 19 of the 26.7 minutes of Core CI pytest, repeated by API Verify), cleared the OCR-failure ellipse test (1,116 entities), recorded the two byte-identical 128,997-entity Cuatro DXFs as ROLE_UNRESOLVED, and moved the five real-plan tests to a dedicated non-required workflow.",
+  "change_type": "test/ci/evidence-only",
+  "behavior_change": "No runtime behaviour change. No vectorizer algorithm, threshold, output, fixture, DXF, inventory or authority file changes. CI selection changes: default API pytest deselects the five tests marked vectorizer_regression; a new optional workflow runs them.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vectorizer-ci-boundary-001.json",
+      ".github/workflows/core_ci.yml",
+      ".github/workflows/vectorizer-regression.yml",
+      "Makefile",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/ADJUDICATION.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/CI_REACHABILITY.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/CUATRO_PROVENANCE.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/README.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/SANDBOX_BOUNDARY.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.json",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.md",
+      "scripts/ci/vectorizer_regression_summary.py",
+      "scripts/investigations/generate_vectorizer_ci_boundary.py",
+      "services/api/pytest.ini",
+      "services/api/tests/test_text_masking.py",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/__init__.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vectorizer-ci-boundary-001.json",
+      ".github/workflows/core_ci.yml",
+      ".github/workflows/vectorizer-regression.yml",
+      "Makefile",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/ADJUDICATION.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/CI_REACHABILITY.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/CUATRO_PROVENANCE.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/README.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/SANDBOX_BOUNDARY.md",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.json",
+      "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.md",
+      "scripts/ci/vectorizer_regression_summary.py",
+      "scripts/investigations/generate_vectorizer_ci_boundary.py",
+      "services/api/pytest.ini",
+      "services/api/tests/test_text_masking.py",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/__init__.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "A vectorizer_regression marker on tests/test_text_masking_regression.py; default-CI commands exclude only that marker; a module-scoped fixture halves the Melody Maker conversions; a ceiling assertion on the ellipse contract test; a dedicated workflow; an evidence bundle with machine-readable census and integrity tests.",
+    "why": "Default API CI spent 1,148 of 1,562 measured seconds on three Melody Maker tests that exercise CleanupMode.ENHANCED (registered SANDBOX in VECTORIZER_COMPONENT_LIFECYCLE.md), and one of them cannot fail. API Verify ran them again.",
+    "why_not_redundant": "No existing marker, workflow or record separates these tests. VEC-ROOT-001 and the unmerged c8ad3ae4 harness cover different criteria and are cited, not duplicated.",
+    "what_did_not_change": "services/photo-vectorizer/, services/api/app/, every DXF, the manufacturing inventory, pytest addopts, and the four other @slow router tests (0.1 s total), which stay in default CI. Both Cuatro DXFs are kept, unmoved and unmodified."
+  },
+  "verification": {
+    "commands_run": [
+      "Preconditions: origin/main == aaf38e4a0437b20d2ad4191f06cb7368a348f9c7 (PR #424 merged); 0 open PRs; both Cuatro DXFs 16,264,730 bytes, sha256 41e62ec0..., 128,997 LINE by ezdxf and by raw R12 token count.",
+      "A1: pytest tests/test_text_masking.py::TestTextDetectionFailureIsNotSilent::test_convert_marks_result_degraded_when_ocr_fails --no-cov, 3 runs with an uncommitted call-through probe -> 1,116 LINE, 628 edge px, 154,710 bytes, DEGRADED, out.dxf exists; identical each run; CI log: 1,116.",
+      "A2: each @slow case in tests/test_text_masking_regression.py run alone, one pytest process each, on an unmodified detached checkout of the base -> unmasked Melody Maker 266,359 LINE (matches CI), masked 223,427 locally (EasyOCR installed; CI has none, so CI masked = 266,359); Cuatro cases skip (PDF absent).",
+      "A2: Core CI run 37135089404 log: every 'Created N LINE entities' line attributed to its test -> only the ellipse test (1,116) and the three Melody Maker tests (266,359 x4).",
+      "A3: core_ci.yml, api_verify.yml (make api-verify), api_tests.yml, dxf_validation*.yml read; API Verify run 37135089420 ran the same three tests.",
+      "After: pytest -m vectorizer_regression --no-cov on the branch -> 3 passed, 2 skipped (Cuatro), exactly 2 Melody Maker conversions (223,427 and 266,359).",
+      "pytest --collect-only: tests/ 9460 -> 9455 with -m 'not vectorizer_regression' (5 deselected); tests/ app/tests/ 9787 -> 9782 (5 deselected).",
+      "pytest tests/test_text_masking.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py --no-cov -> 27 passed.",
+      "Mutation check: reverting the core_ci expression and appending to the census Markdown each make the matching evidence test fail; both restored.",
+      "python scripts/investigations/generate_vectorizer_ci_boundary.py --check -> OK.",
+      "python scripts/governance/check_all.py --tier ci (PYTHONIOENCODING=utf-8) -> all blocking PASS; 4 non-blocking WARN identical on the base commit.",
+      "python -m app.ci.check_complexity / check_file_sizes / manufacturing_output_inventory --check / check_bare_except / fence_checker_v2 / check_duplication --threshold 100 / check_all_fences -> all exit 0.",
+      "git diff --check -> clean."
+    ],
+    "proofs": [
+      "The ~266k producer is the committed Melody Maker PDF path, not the ellipse test (census T-01..T-06).",
+      "Default CI deselects exactly the five tests of tests/test_text_masking_regression.py; the dedicated workflow selects exactly those five.",
+      "No file under services/photo-vectorizer/ or services/api/app/, and no DXF, is changed (evidence test test_no_production_vectorizer_or_authority_file_changed)."
+    ],
+    "hardware": "No machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/vectorizer-ci-boundary-001.json",
+      "intent": "Per-PR CBSP21 manifest for this increment.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Default API pytest excludes only the vectorizer_regression marker.",
+      "risk": "low",
+      "behavior_change": "Core CI API Tests no longer runs the five real-plan vectorizer regression tests"
+    },
+    {
+      "path": ".github/workflows/vectorizer-regression.yml",
+      "intent": "New non-required lane: workflow_dispatch + path triggers, no schedule, 45 min timeout, uploads metrics.",
+      "risk": "low",
+      "behavior_change": "new optional check on vectorizer-path PRs"
+    },
+    {
+      "path": "Makefile",
+      "intent": "api-test uses API_TEST_MARKERS ?= not vectorizer_regression (overridable).",
+      "risk": "low",
+      "behavior_change": "make api-test / api-verify deselect the five tests unless API_TEST_MARKERS is overridden"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/ADJUDICATION.md",
+      "intent": "Evidence: ADJUDICATION.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/CI_REACHABILITY.md",
+      "intent": "Evidence: CI_REACHABILITY.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/CUATRO_PROVENANCE.md",
+      "intent": "Evidence: CUATRO_PROVENANCE.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/README.md",
+      "intent": "Evidence: README.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/SANDBOX_BOUNDARY.md",
+      "intent": "Evidence: SANDBOX_BOUNDARY.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.json",
+      "intent": "Evidence: TEST_RUNTIME_CENSUS.json",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-ci-boundary_2026-10-03/TEST_RUNTIME_CENSUS.md",
+      "intent": "Evidence: TEST_RUNTIME_CENSUS.md",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/ci/vectorizer_regression_summary.py",
+      "intent": "Summarize the dedicated run; report skipped tests as NOT COVERED.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/generate_vectorizer_ci_boundary.py",
+      "intent": "Render the census Markdown from its JSON; --check for staleness.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/pytest.ini",
+      "intent": "Register the vectorizer_regression marker (strict markers). addopts unchanged.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_text_masking.py",
+      "intent": "Add one ceiling assertion (line_count <= 5_000) to the OCR-failure contract test; conversion unchanged, no max_entities.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_text_masking_regression.py",
+      "intent": "Module marker; module-scoped fixture sharing one masked and one unmasked Melody Maker conversion (4 conversions -> 2); optional metrics file. All assertions and prints kept.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/vectorizer/__init__.py",
+      "intent": "Test package marker.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "intent": "Evidence-integrity tests for the bundle, the CI selection and the Cuatro files.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-03-VECTORIZER-CI-BOUNDARY-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 2
+    },
+    "findings": [
+      {
+        "id": "VCB-F2",
+        "severity": "medium",
+        "summary": "Pre-existing: test_entity_count_reduction reads a non-existent attribute and compares 0 <= 0 + 1000; it cannot fail. Preserved by ruling; raised for its own order."
+      },
+      {
+        "id": "VCB-F3",
+        "severity": "low",
+        "summary": "Pre-existing: without EasyOCR, mask_text=True does no masking and reports SUCCESS, so the masked CI test equals the unmasked one. Not changed."
+      },
+      {
+        "id": "VCB-F4",
+        "severity": "low",
+        "summary": "The dedicated lane holds two Melody Maker results; local peak working set 8.8 GB with both held. Optional lane only."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test, CI and documentation only. The findings are pre-existing and recorded in ADJUDICATION.md; none is fixed here. Next adjudication named, not executed: vectorizer recovery versus retirement using the reconciled benchmark evidence."
+  }
+}

@@ -1,0 +1,78 @@
+name: Vectorizer Regression
+
+# VECTORIZER-CI-BOUNDARY-001. Runs the real-plan vectorizer regressions that
+# default API CI excludes (pytest marker `vectorizer_regression`).
+# Not a required check. No schedule by ruling: there is no response owner
+# for an unattended ~10-minute run yet.
+# Evidence: docs/investigations/vectorizer-ci-boundary_2026-10-03/
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "services/photo-vectorizer/**"
+      - "services/api/app/services/blueprint_*.py"
+      - "services/api/tests/test_text_masking_regression.py"
+      - "services/api/pytest.ini"
+      - "docs/archive/instrument_references/gibson_melody_maker/**"
+      - "services/api/app/instrument_geometry/reference_dxf/cuatro/*.pdf"
+      - "scripts/ci/vectorizer_regression_summary.py"
+      - ".github/workflows/vectorizer-regression.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/photo-vectorizer/**"
+      - "services/api/app/services/blueprint_*.py"
+      - "services/api/tests/test_text_masking_regression.py"
+      - "services/api/pytest.ini"
+      - "docs/archive/instrument_references/gibson_melody_maker/**"
+      - "services/api/app/instrument_geometry/reference_dxf/cuatro/*.pdf"
+      - "scripts/ci/vectorizer_regression_summary.py"
+      - ".github/workflows/vectorizer-regression.yml"
+
+env:
+  SG_SPEC_TOKEN: ${{ secrets.SG_SPEC_TOKEN }}
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  vectorizer-regression:
+    name: Vectorizer Regression (real plans)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Configure git for private repos
+        if: ${{ env.SG_SPEC_TOKEN != '' }}
+        run: |
+          git config --global url."https://${{ secrets.SG_SPEC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Install API dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r services/api/requirements.txt
+      - name: Run vectorizer regressions
+        env:
+          VECTORIZER_REGRESSION_METRICS: ${{ github.workspace }}/vectorizer-regression/melody_maker.json
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/vectorizer-regression"
+          cd services/api
+          # --no-cov: pytest.ini's coverage floor is calibrated for the full suite.
+          python -m pytest -m vectorizer_regression --no-cov -rs \
+            --junitxml="$GITHUB_WORKSPACE/vectorizer-regression/junit.xml"
+      - name: Summarize (reports skips as not covered)
+        if: always()
+        run: |
+          python scripts/ci/vectorizer_regression_summary.py \
+            --junit vectorizer-regression/junit.xml \
+            --metrics vectorizer-regression/melody_maker.json \
+            --out vectorizer-regression/metrics.json \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vectorizer-regression-metrics
+          path: vectorizer-regression/*.json
+          if-no-files-found: warn
