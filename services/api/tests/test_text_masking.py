@@ -306,3 +306,7 @@ class TestTextDetectionFailureIsNotSilent:
         assert result.status is not ConversionStatus.SUCCESS
         assert out.exists(), "output must still be produced, not refused"
         assert "DEGRADED" in result.summary()
+        # VECTORIZER-CI-BOUNDARY-001: this fixture emits 1,116 LINE entities (reproduced
+        # on CI and locally). The ceiling keeps the contract test bounded; it is not a cap
+        # passed to the converter, so it cannot turn the result into CAP_EXCEEDED.
+        assert 0 < result.line_count <= 5_000
