@@ -99,9 +99,11 @@ jobs:
           path: /tmp/uvicorn.log
           if-no-files-found: ignore
       - name: Run pytest
+        # Real-plan vectorizer regressions run in vectorizer-regression.yml
+        # (VECTORIZER-CI-BOUNDARY-001). Only that marker is excluded here.
         run: |
           cd services/api
-          python -m pytest -q
+          python -m pytest -q -m "not vectorizer_regression"
 
   geometry-parity:
     name: Geometry Parity
