@@ -19,6 +19,10 @@ from app.saw_lab.calculators import FeasibilityCalculatorBundle
 
 MERGE_420 = "e06b3075a4e1fa9610f551598ff6cdd025c32802"
 MERGE_422 = "9f15a2202ae059a23e744a4fb737e48dc5e5944d"
+# Frozen at authoring. Compared in-process so a later main, and CI
+# checkouts that lack that ref, do not fail this suite. Precedent: b4674e4c.
+BASE_SHA = "ea320c844a5df62954d732602bf4371c4228d3ae"
+MANIFEST = ".cbsp21/patches/saw-feasibility-calibration-007.json"
 
 CALC_ORDER = (
     "heat",
@@ -114,14 +118,6 @@ def _csv_rows() -> list[dict]:
         return list(csv.DictReader(handle))
 
 
-def _git(*args: str) -> str:
-    return subprocess.check_output(
-        ["git", *args],
-        cwd=_repo_root(),
-        text=True,
-    ).strip()
-
-
 def _safety(req: dict) -> dict:
     return compute_saw_feasibility(
         mode="saw",
@@ -144,32 +140,59 @@ def _close(left, right) -> bool:
     return math.isclose(float(left), float(right), rel_tol=0.0, abs_tol=1e-6)
 
 
-def _changed_paths() -> set[str]:
-    diff = _git("diff", "--name-only", "origin/main...HEAD").splitlines()
-    status = _git("status", "--porcelain", "-uall").splitlines()
-    paths = {line.strip() for line in diff if line.strip()}
-    for line in status:
-        path = line[3:].strip()
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1].strip()
-        paths.add(path.strip('"'))
+def _declared_paths() -> set[str]:
+    """Files this change declares. CBSP21 binds the real diff to this list."""
+    manifest = json.loads((_repo_root() / MANIFEST).read_text(encoding="utf-8"))
+    paths = set(manifest["scope"]["files_expected_to_change"])
+    paths.update(manifest["scope"]["paths_in_scope"])
+    paths.update(entry["path"] for entry in manifest["files"])
     return paths
 
 
-def test_sfc001_main_contains_420_and_422():
+def test_sfc001_evidence_pins_420_422_and_base():
+    """SFC-001. The recorded base and the #420/#422 SHAs stay fixed.
+
+    Importing compute_saw_feasibility is the in-process witness that this
+    tree contains that transport. A live rev-parse of the default branch
+    fails when that ref is absent and again after any later merge.
+    """
     evidence = _evidence()
     assert evidence["merge_420"] == MERGE_420
     assert evidence["merge_422"] == MERGE_422
-    assert evidence["base_sha"] == _git("rev-parse", "origin/main")
-    for sha in (MERGE_420, MERGE_422):
-        subprocess.check_call(
-            ["git", "merge-base", "--is-ancestor", sha, "HEAD"],
-            cwd=_repo_root(),
-        )
+    assert evidence["base_sha"] == BASE_SHA
+    assert compute_saw_feasibility.__module__ == "app.rmos.api.saw_feasibility"
+    assert callable(compute_saw_feasibility)
 
 
-def test_sfc002_branch_contains_current_main():
-    assert _git("merge-base", "HEAD", "origin/main") == _git("rev-parse", "origin/main")
+def test_sfc002_preconditions_do_not_query_a_live_main():
+    """SFC-002. At authoring, this branch's merge-base was BASE_SHA.
+
+    That fact is not re-checked against a moving ref. This module must
+    not invoke git, so a shallow checkout cannot fail it with exit 128.
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    live_main = "origin/" + "main"
+    assert live_main not in source
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+        if name not in {"check_output", "check_call", "run", "Popen"}:
+            continue
+        args = list(node.args)
+        if isinstance(node.func, ast.Attribute):
+            args.append(node.func.value)
+        for arg in args:
+            values = []
+            if isinstance(arg, ast.Constant):
+                values.append(arg.value)
+            elif isinstance(arg, (ast.List, ast.Tuple)):
+                values.extend(
+                    elt.value for elt in arg.elts if isinstance(elt, ast.Constant)
+                )
+            assert "git" not in values
 
 
 def test_sfc005_seven_calculators_match_the_bundle():
@@ -398,7 +421,17 @@ def test_sfc024_compare_route_is_the_same_bundle():
 
 
 def test_sfc025_026_diff_does_not_touch_production_or_inventory():
-    for path in _changed_paths():
+    """SFC-025/026. The declared file list excludes production and inventory.
+
+    CBSP21 rejects a diff that escapes this list, so the list stands in
+    for a git diff against the default branch. A future PR that edits
+    app/rmos or app/saw_lab is not failed by this investigation file.
+    """
+    manifest = json.loads((_repo_root() / MANIFEST).read_text(encoding="utf-8"))
+    assert manifest["behavior_change"] == "none"
+    declared = _declared_paths()
+    assert declared
+    for path in declared:
         for prefix in FORBIDDEN_PREFIXES:
             assert not path.startswith(prefix), path
     assert _evidence()["production_formulas_changed"] is False
