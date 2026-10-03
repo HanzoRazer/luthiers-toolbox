@@ -16,8 +16,6 @@ from pathlib import Path
 
 from app.rmos.api.saw_feasibility import compute_saw_feasibility
 from app.saw_lab.calculators import FeasibilityCalculatorBundle
-from tests.rmos.test_rmos_feasibility_authority import SANE_SAW
-from tests.rmos.test_saw_authority_context import COMPLETE_SAW_REQUEST
 
 MERGE_420 = "e06b3075a4e1fa9610f551598ff6cdd025c32802"
 MERGE_422 = "9f15a2202ae059a23e744a4fb737e48dc5e5944d"
@@ -76,6 +74,31 @@ def _repo_root() -> Path:
         if (parent / ".git").exists() and (parent / "AGENTS.md").is_file():
             return parent
     raise RuntimeError("repository root not found")
+
+
+def _literal_dict(relative: str, name: str) -> dict:
+    """Load a cited literal fixture without importing another test module."""
+    tree = ast.parse((_repo_root() / relative).read_text(), filename=relative)
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in node.targets
+        ):
+            value = ast.literal_eval(node.value)
+            if not isinstance(value, dict):
+                break
+            return value
+    raise RuntimeError(f"literal dict {name!r} not found in {relative}")
+
+
+COMPLETE_SAW_REQUEST = _literal_dict(
+    "services/api/tests/rmos/test_saw_authority_context.py",
+    "COMPLETE_SAW_REQUEST",
+)
+SANE_SAW = _literal_dict(
+    "services/api/tests/rmos/test_rmos_feasibility_authority.py",
+    "SANE_SAW",
+)
 
 
 def _evidence_dir() -> Path:

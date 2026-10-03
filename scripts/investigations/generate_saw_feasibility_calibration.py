@@ -6,6 +6,7 @@ Writes the committed JSON trace and the one-variable sensitivity CSV.
 """
 from __future__ import annotations
 
+import ast
 import csv
 import json
 import sys
@@ -20,8 +21,6 @@ from pydantic import ValidationError  # noqa: E402
 from app.rmos.api.saw_feasibility import compute_saw_feasibility  # noqa: E402
 from app.saw_lab.calculators import FeasibilityCalculatorBundle  # noqa: E402
 from app.saw_lab.models import MaterialProperties, SawContext  # noqa: E402
-from tests.rmos.test_rmos_feasibility_authority import SANE_SAW  # noqa: E402
-from tests.rmos.test_saw_authority_context import COMPLETE_SAW_REQUEST  # noqa: E402
 
 OUT_DIR = ROOT / "docs" / "investigations" / "saw-feasibility-calibration_2026-10-02"
 EVIDENCE_PATH = OUT_DIR / "evidence.json"
@@ -74,6 +73,32 @@ CASE_D_SOURCE = (
     "services/api/tests/rmos/test_saw_authority_context.py:"
     "test_sac026_028_unsafe_fixture_blocks_red_real_evaluator"
 )
+
+
+def _literal_dict(source: str) -> dict:
+    """Read a named repository fixture without importing the tests package.
+
+    Some dependencies install their own top-level ``tests`` package.  Importing
+    ``tests.rmos`` therefore depends on collection order in the full suite.
+    Parsing the literal assignment keeps the evidence pinned to the cited file
+    while avoiding execution of another test module.
+    """
+    relative, name = source.split(":", 1)
+    tree = ast.parse((ROOT / relative).read_text(), filename=relative)
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in node.targets
+        ):
+            value = ast.literal_eval(node.value)
+            if not isinstance(value, dict):
+                break
+            return value
+    raise RuntimeError(f"literal dict {name!r} not found in {relative}")
+
+
+COMPLETE_SAW_REQUEST = _literal_dict(CASE_B_SOURCE)
+SANE_SAW = _literal_dict(SANE_SOURCE)
 
 
 def _case_d() -> dict:
