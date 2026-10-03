@@ -48,9 +48,13 @@ test-api:
 .PHONY: api-test api-verify
 
 # Runs the full API test suite (includes Phase 32.0 contract tests in app/tests)
+# Real-plan vectorizer regressions are excluded by default and run in
+# .github/workflows/vectorizer-regression.yml (VECTORIZER-CI-BOUNDARY-001).
+# Override to include them: make api-test API_TEST_MARKERS=""
+API_TEST_MARKERS ?= not vectorizer_regression
 api-test:
 	@echo "🧪 Running API tests (pytest)"
-	cd services/api && PYTHONPATH=.:tests python -m pytest -q tests/ app/tests/
+	cd services/api && PYTHONPATH=.:tests python -m pytest -q -m "$(API_TEST_MARKERS)" tests/ app/tests/
 
 # Alias: api-verify runs all gates (fences + scope + tests)
 api-verify: check-art-studio-scope check-boundaries api-test
