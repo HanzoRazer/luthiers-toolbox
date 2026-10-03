@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SAW_FEASIBILITY_CALIBRATION_007",
+  "title": "Explain why complete Saw feasibility requests stay RED without changing formulas, thresholds, routes, or inventory",
+  "intent": "Evidence and adjudication only. Trace the canonical Saw feasibility path from repository facts through all seven calculators and record why the public verdict is RED. Do not change production formulas, thresholds, routes, persistence, or the manufacturing-output inventory. Do not contain either Saw route. Do not merge.",
+  "change_type": "investigation/test-only",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/saw-feasibility-calibration-007.json",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/README.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/INPUT_AUTHORITY.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/CALCULATOR_TRACE.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/UNIT_AUDIT.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/SENSITIVITY.csv",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/evidence.json",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/ADJUDICATION.md",
+      "scripts/investigations/generate_saw_feasibility_calibration.py",
+      "services/api/tests/rmos/test_saw_feasibility_calibration_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/saw-feasibility-calibration-007.json",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/README.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/INPUT_AUTHORITY.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/CALCULATOR_TRACE.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/UNIT_AUDIT.md",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/SENSITIVITY.csv",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/evidence.json",
+      "docs/investigations/saw-feasibility-calibration_2026-10-02/ADJUDICATION.md",
+      "scripts/investigations/generate_saw_feasibility_calibration.py",
+      "services/api/tests/rmos/test_saw_feasibility_calibration_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Added a read-only generator and a committed trace for the canonical Saw feasibility path. The generator calls compute_saw_feasibility and records per-calculator scores, metadata, the weighted sum, and one-variable sweeps. Investigation notes classify the RED verdict. A pytest module checks that the trace matches a fresh canonical evaluation and that regeneration is byte-identical. The generator and evidence test read their cited repository fixture dictionaries with ast.literal_eval instead of importing through the ambiguous top-level tests package, making full-suite collection independent of import order. No calculator, router, model, route, or inventory file is modified.",
+    "why": "Complete in-range Saw requests still return RED after truthful fact transport. This increment separates a correct safety result of the frozen formulas from a mapping gap and an unresolved specific-cutting-energy identity, without tuning the score.",
+    "why_not_redundant": "Orders 006 and the integer fail-closed follow-up proved that submitted facts reach the calculators. They did not trace which calculator forces RED, whether the fixture is a catalogued job, or whether kc=30 J/mm3 is the same quantity as the species-file estimates. This package answers those questions from production outputs and stops at a single next decision, SAW-ENERGY-IDENTITY-008. Containment readiness is NO.",
+    "what_did_not_change": "No formula, threshold, weight, material coefficient, or favourable default. Neither Saw route is contained. SawLabService.check_feasibility, the compare route, and G-code/geometry generators are untouched. The manufacturing-output inventory is not regenerated and remains at 13 LIVE_UNGOVERNED. No machine profile, blade specification, or material constant was added.",
+    "representative_cases": "CASE-A is not assembled: no repository machine, blade, and job record jointly supply thickness, arbor, RPM, feed, stock, power, and cut geometry. CASE-B is COMPLETE_SAW_REQUEST, a constructed authority fixture, not a production setup: RED 56.2, first gate heat, also forced by deflection and cutting_force, kc metadata 30, cutting power 112500 W, available 2550 W, power ratio 44.118. SANE_SAW via spindle_power_watts=3000 matches that verdict. CASE-C sweeps are hypothetical_sweep and all RED. CASE-D, the existing unsafe fixture, stays RED 34.3."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main  # ea320c844a5df62954d732602bf4371c4228d3ae; merge-base equals that tip; #420 e06b3075 and #422 9f15a220 are ancestors; gh pr list --state open returned []",
+      "services/api/.venv/bin/python scripts/investigations/generate_saw_feasibility_calibration.py  # wrote evidence.json and SENSITIVITY.csv; CASE-B RED 56.2 first_red heat; second in-process generation matched",
+      "cd services/api && .venv/bin/python -m pytest tests/rmos/test_saw_feasibility_calibration_evidence.py -q --no-cov  # 25 passed",
+      "cd services/api && .venv/bin/python -m pytest tests/rmos/test_saw_feasibility_calibration_evidence.py -q --no-cov  # 25 passed after SFC-001/002/025 stopped calling git; api-verify failed those three with exit 128 because the CI checkout has no origin/main ref",
+      "cd services/api && /tmp/pr424-py311/bin/python -m pytest --collect-only -q  # 9465 tests collected; confirms the evidence module no longer resolves a dependency's top-level tests package",
+      "cd services/api && .venv/bin/python -m pytest tests/rmos/test_saw_authority_context.py tests/rmos/test_rmos_feasibility_authority.py tests/rmos/test_rmos_governed_cam_path.py tests/rmos/test_cf2_rosette_design_containment.py tests/rmos/test_cf2_rosette_output_containment.py tests/test_saw_toolpath_builder.py -q --no-cov  # 150 passed, 3 skipped",
+      "cd services/api && .venv/bin/python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check  # OK candidates=239 live=1157 naive=10; containment Counter LIVE_UNGOVERNED 13, FAIL_CLOSED 37, UNKNOWN 189",
+      "cd services/api && .venv/bin/python -m app.ci.check_execution_class_compliance  # OK",
+      "cd services/api && .venv/bin/python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json  # OK",
+      "cd services/api && .venv/bin/python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json  # OK",
+      "cd services/api && .venv/bin/python -m app.ci.check_bare_except  # OK",
+      "cd services/api && .venv/bin/python -m app.ci.fence_checker_v2  # Passed 2, Failed 0",
+      "cd services/api && .venv/bin/python -m app.ci.check_duplication --threshold 100  # OK, 0 clone groups",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)  # PASS coverage 100%",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD  # PASS",
+      "services/api/.venv/bin/python -m pytest scripts/ci/ -k cbsp21 -q  # 36 passed, 61 deselected"
+    ],
+    "proofs": [
+      "Base ea320c844a5df62954d732602bf4371c4228d3ae contains merge e06b3075 (PR #420, 2026-10-01) and merge 9f15a220 (PR #422, 2026-10-02). No open pull request overlapped the Saw evaluator, calculators, profiles, blades, or this evidence set.",
+      "CASE-B observed RED 56.2 via feasibility_scorer. Weighted sum matches. Heat score 15 is the first <30 gate; deflection 20 and cutting_force 10 also force RED. Rim speed 45.88 m/s, bite 0.03623 mm/tooth, and blade dynamics margin 0.6185 score 100. kc metadata is 30.0 on every sensitivity row. Cutting power 112500 W against 2550 W available.",
+      "CASE-A status is not_assembled. Sample blades, MACHINE_PRESETS, wood_species specific-cutting-energy estimates (0.22-1.08, rejected by MaterialProperties ge=5), and bandsaw records were inspected and not combined into a fake job. CASE-D stays RED 34.3. All 26 SENSITIVITY.csv data rows are RED and marked not approved.",
+      "Repeat count 1 versus 8 leaves calculator scores unchanged and moves cut time from 11.0 s to 88.0 s. Boundary RPM, feed, diameter, and tooth count are echoed rather than replaced by 5000 or 3000.",
+      "Evidence tests: 25 passed, including byte-identical regeneration. Full Python 3.11 collection: 9465 tests collected with no collection error; the initial CI failure was reproduced as top-level tests-package shadowing and removed by reading the cited literal fixtures through ast.literal_eval. api-verify then failed the same three tests (SFC-001, SFC-002, SFC-025) with git exit 128 because the checkout has no origin/main ref. Those checks now follow b4674e4c: SFC-001 compares the recorded base to the frozen SHA ea320c84 and imports compute_saw_feasibility; SFC-002 asserts this module does not invoke git; SFC-025 checks the manifest's declared paths against the forbidden production prefixes. 25 passed after that change. Focused Saw/RMOS regressions: 150 passed, 3 skipped. Inventory check OK with 13 LIVE_UNGOVERNED. Execution-class, complexity, file-size, bare-except, fence, and duplication gates passed. CBSP21 coverage 100%, patch-input PASS, ownership tests 36 passed. No production calculator was monkeypatched."
+    ],
+    "hardware": "No physical-machine execution and no manufacturing output produced. Read-only evaluation of the existing feasibility function, plus tests and notes."
+  },
+  "files": [
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/README.md", "intent": "State the question, frozen decisions, SHAs, conclusion, and reproduction commands.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/INPUT_AUTHORITY.md", "intent": "Cite every CASE-B and CASE-D fact and record why CASE-A was not assembled.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/CALCULATOR_TRACE.md", "intent": "Record each calculator's observed output and how the weighted sum and <30 gate produce RED.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/UNIT_AUDIT.md", "intent": "Trace units from the request into each calculator and record unresolved kc identity without repairing it.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/SENSITIVITY.csv", "intent": "Committed one-variable sweeps. Every row is diagnostic and not an approved operating point.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/evidence.json", "intent": "Machine-readable canonical trace regenerated by the investigation script.", "risk": "low", "behavior_change": "none"},
+    {"path": "docs/investigations/saw-feasibility-calibration_2026-10-02/ADJUDICATION.md", "intent": "Classify findings and name exactly one next increment, SAW-ENERGY-IDENTITY-008. Containment readiness NO.", "risk": "low", "behavior_change": "none"},
+    {"path": "scripts/investigations/generate_saw_feasibility_calibration.py", "intent": "Read-only deterministic generator. Calls compute_saw_feasibility and writes the JSON and CSV.", "risk": "low", "behavior_change": "none"},
+    {"path": "services/api/tests/rmos/test_saw_feasibility_calibration_evidence.py", "intent": "Prove the trace, sweeps, aggregation, regeneration, and the absence of production edits.", "risk": "low", "behavior_change": "none"}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-02-SAW-FEASIBILITY-CALIBRATION-007",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: investigation notes, a read-only generator, and evidence tests only. No production formula, threshold, route, persistence, or inventory edit. Canonical Saw verdicts are unchanged. Containment readiness recorded as NO."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test and documentation only. The residual RED is adjudicated, not tuned. The next increment is a decision on specific-cutting-energy identity, not route containment."
+  }
+}
