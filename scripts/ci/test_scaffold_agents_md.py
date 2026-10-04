@@ -18,6 +18,8 @@ against. See core_ci.yml for the named step that pins this file.
 """
 from __future__ import annotations
 
+import ast
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -213,3 +215,199 @@ def test_refuses_a_non_git_directory(tmp_path: Path) -> None:
     result = _run_scaffolder(plain)
     assert result.returncode == 2
     assert not (plain / "AGENTS.md").exists()
+
+
+# --------------------------------------------------------------------------- #
+# AGENT-PROCESS-SAFETY-002
+#
+# Lives in this file because core_ci.yml pins test_scaffold_agents_md.py by
+# name. Nothing collects scripts/ci/ wholesale, so a new file would not run.
+# These tests read the adopted instructions. They never execute a kill.
+# --------------------------------------------------------------------------- #
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CANONICAL_INSTRUCTIONS = REPO_ROOT / "AGENTS.md"
+CLAUDE_INSTRUCTIONS = REPO_ROOT / "CLAUDE.md"
+MANIFEST = REPO_ROOT / ".cbsp21" / "patches" / "agent-process-safety-002.json"
+
+# Command strings only. APS-011 and APS-012 must reject them without running them.
+PROHIBITED_COMMANDS = (
+    "taskkill /F /IM python.exe",
+    "taskkill /F /IM node.exe",
+    "pkill -f python",
+    "killall python",
+)
+
+# A raw PID kill is not a permitted example. Ownership fields are required.
+RAW_PID_COMMAND = "taskkill /PID 4242 /F"
+
+
+def _section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    start = None
+    for index, line in enumerate(lines):
+        if line.strip() == heading:
+            start = index + 1
+            break
+    if start is None:
+        raise AssertionError(f"missing heading: {heading}")
+    body: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("## "):
+            break
+        body.append(line)
+    return " ".join(body).lower()
+
+
+def _canonical() -> str:
+    return _section(
+        CANONICAL_INSTRUCTIONS.read_text(encoding="utf-8"),
+        "## Process termination safety",
+    )
+
+
+def _name_or_wildcard_termination(command: str) -> bool:
+    """Classify a command string. Does not run it."""
+    text = " ".join(command.lower().split())
+    if "taskkill" in text and "/im" in text:
+        return True
+    head = text.split(" ", 1)[0]
+    return head in {"pkill", "killall"}
+
+
+def _ownership_allows(spec: dict) -> bool:
+    pid = spec.get("pid")
+    return (
+        isinstance(pid, int)
+        and not isinstance(pid, bool)
+        and pid > 0
+        and spec.get("started_by_current_task") is True
+        and bool(spec.get("expected_command"))
+        and bool(spec.get("expected_parent_or_session"))
+    )
+
+
+def test_aps001_canonical_instruction_is_agents_md() -> None:
+    assert CANONICAL_INSTRUCTIONS.is_file()
+    claude = CLAUDE_INSTRUCTIONS.read_text(encoding="utf-8").lower()
+    assert "process termination safety" in claude
+    assert "agents.md" in claude
+    assert "canonical text" in claude
+
+
+def test_aps002_policy_requires_an_exact_pid() -> None:
+    assert "process id" in _canonical() or "pid" in _canonical()
+
+
+def test_aps003_policy_requires_the_task_started_the_process() -> None:
+    text = _canonical()
+    assert "started" in text
+    assert "current task" in text
+
+
+def test_aps004_policy_requires_command_identity() -> None:
+    assert "command identity" in _canonical()
+
+
+def test_aps005_policy_requires_parent_or_session() -> None:
+    text = _canonical()
+    assert "parent" in text
+    assert "session" in text
+
+
+def test_aps006_policy_prohibits_executable_name_termination() -> None:
+    text = _canonical()
+    assert "executable name" in text
+    assert "taskkill /im" in text
+
+
+def test_aps007_policy_prohibits_wildcard_and_interpreter_wide_termination() -> None:
+    text = _canonical()
+    assert "wildcard" in text
+    assert "interpreter" in text
+    assert "pkill" in text
+    assert "killall" in text
+
+
+def test_aps008_policy_stops_and_reports_when_ownership_is_uncertain() -> None:
+    text = _canonical()
+    assert "stop and report" in text
+    assert "ownership" in text
+
+
+def test_aps009_policy_prefers_the_managed_execution_session() -> None:
+    text = _canonical()
+    assert "execution tool" in text
+    assert "managed execution session" in text
+
+
+def test_aps010_a_timeout_does_not_expand_termination_authority() -> None:
+    text = _canonical()
+    assert "timeout" in text
+    assert "stalled test" in text
+    assert "does not expand" in text
+
+
+def test_aps011_taskkill_by_image_name_is_rejected_without_execution() -> None:
+    for command in PROHIBITED_COMMANDS:
+        if "taskkill" in command.lower():
+            assert _name_or_wildcard_termination(command)
+
+
+def test_aps012_pkill_and_killall_are_rejected_without_execution() -> None:
+    assert _name_or_wildcard_termination("pkill -f python")
+    assert _name_or_wildcard_termination("killall python")
+    assert _name_or_wildcard_termination("pkill python")
+
+
+def test_aps011_012_this_module_does_not_execute_prohibited_commands() -> None:
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+        if name not in {"run", "check_call", "check_output", "Popen"}:
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                assert not _name_or_wildcard_termination(arg.value)
+
+
+def test_aps_raw_pid_termination_is_not_treated_as_safe() -> None:
+    assert not _name_or_wildcard_termination(RAW_PID_COMMAND)
+    assert not _ownership_allows({"pid": 4242})
+    assert _ownership_allows(
+        {
+            "pid": 4242,
+            "expected_command": "python -m pytest tests/example.py",
+            "expected_parent_or_session": "agent-session",
+            "started_by_current_task": True,
+        }
+    )
+
+
+def test_aps013_014_no_agent_process_utility_to_extend() -> None:
+    """No agent-owned terminator exists, so no child process is created or killed."""
+    roots = [REPO_ROOT / "scripts", REPO_ROOT / ".cursor"]
+    for root in roots:
+        for path in root.rglob("*.py"):
+            if path.resolve() == Path(__file__).resolve():
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            assert "def terminate_owned_process" not in text
+
+
+def test_aps016_manifest_declares_no_production_paths() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    declared = set(manifest["scope"]["files_expected_to_change"])
+    declared.update(entry["path"] for entry in manifest["files"])
+    forbidden = (
+        "services/api/app/",
+        "packages/client/",
+        "services/photo-vectorizer/",
+    )
+    for path in declared:
+        for prefix in forbidden:
+            assert not path.startswith(prefix), path
+    assert manifest["behavior_change"] == "none"
