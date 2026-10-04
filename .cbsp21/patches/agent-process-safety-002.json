@@ -1,0 +1,78 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AGENT_PROCESS_SAFETY_002",
+  "title": "Prohibit agents from terminating processes by executable name",
+  "intent": "Install the process-termination rule on the agent instruction surface after taskkill /F /IM python.exe killed every Python process on a workstation. Tests pin the rule. No production application code changes, no process-killer utility, and no bypass flag.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "scripts/ci/test_scaffold_agents_md.py",
+      ".cbsp21/patches/agent-process-safety-002.json"
+    ],
+    "files_expected_to_change": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "scripts/ci/test_scaffold_agents_md.py",
+      ".cbsp21/patches/agent-process-safety-002.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "AGENTS.md gains the canonical Process termination safety section: exact PID or owned process tree only, command identity and parent/session checks, prohibition of executable-name and wildcard kills, stop-and-report when ownership is unknown, and preference for the execution tool's own session termination. CLAUDE.md points at that section and restates the prohibition because Claude loads CLAUDE.md on its own. The scaffolder self-test, which core_ci.yml already runs by name, gains APS-001 through APS-016 semantic checks and prohibited-command fixtures. Those fixtures classify command strings and do not execute them. No terminate_owned_process helper was added because no agent-owned process utility exists.",
+    "why": "Image-wide termination is a workstation-wide blast radius. A hung test is not authority to kill every Python or Node process. The rule has to live in the files agents actually load, and a test that CI already executes has to fail if the rule disappears.",
+    "why_not_redundant": "AGENTS.md previously had branch and gate rules and no process-termination rule. CLAUDE.md did not point at one. The scaffolder self-test did not read the adopted instruction text. wait_for_api_ready.py only checks liveness and explicitly avoids os.kill on Windows; it is not an agent terminator and was not extended.",
+    "what_did_not_change": "No production application code. No vectorizer, CAM, Saw, or route change. No global shell interceptor. No operating-system permission change. No bypass flag. No new process-management framework."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse origin/main  # 5e3be0694333e04ff0da6db38a55d0aace796349, merge of PR #425; gh pr view 425 state MERGED; gh pr list --state open returned []",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_scaffold_agents_md.py -q --tb=short  # 30 passed",
+      "git diff --check  # clean",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_check_contracts_governance.py -q --tb=line  # 25 passed",
+      "services/api/.venv/bin/python -m pytest scripts/ci/ -k cbsp21 -q --tb=line  # 36 passed",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_gate.py --changed-files $(git diff --name-only origin/main...HEAD)  # PASS coverage 100%",
+      "services/api/.venv/bin/python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD  # PASS"
+    ],
+    "proofs": [
+      "PR #425 is merged as 5e3be069. Worktree was clean. No open PR overlapped agent instructions, process utilities, policy tests, or CBSP21 manifests.",
+      "Effective instructions: AGENTS.md is loaded by Cursor, Codex, and Cloud Agents. CLAUDE.md is the workspace rule loaded when that file is the session context. .cursor/ has environment.json, install.sh, and start.sh, and no competing process-termination policy. No agent-owned terminate helper exists; scripts/ci/wait_for_api_ready.py only checks liveness.",
+      "scripts/ci/test_scaffold_agents_md.py: 30 passed. The new cases classify taskkill /IM, pkill -f python, and killall python as prohibited strings and do not execute them. A raw taskkill /PID is not treated as safe. Governance unit tests: 25 passed. CBSP21 ownership: 36 passed.",
+      "Diff paths are AGENTS.md, CLAUDE.md, scripts/ci/test_scaffold_agents_md.py, and this manifest. No services/api/app, packages/client, or photo-vectorizer file is included."
+    ],
+    "hardware": "No process was killed. Prohibited commands appear only as strings in the policy test."
+  },
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "intent": "Canonical process-termination rule for Cursor, Codex, and Cloud Agents.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Point Claude sessions at the canonical rule and restate the name-wide prohibition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/ci/test_scaffold_agents_md.py",
+      "intent": "Semantic anchors, prohibited-command fixtures, and a production-path check. Already executed by core_ci.yml.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-04-AGENT-PROCESS-SAFETY-002",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 1},
+    "findings": [
+      "LOW: agent instruction text and a policy test. No runtime application path, route, or calculator changed. The blast radius of the incident was machine-wide process termination; this change only documents and pins the prohibition."
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and tests only. Agents that load AGENTS.md or CLAUDE.md are instructed not to kill by image name. Nothing in this change terminates a process."
+  }
+}

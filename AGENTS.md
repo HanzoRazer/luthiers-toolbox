@@ -149,6 +149,29 @@ grepping workflows for path arguments will miss it entirely.
 about the code — check the toolchain against `services/api/requirements.txt` before
 reporting a failure.
 
+## Process termination safety
+
+Canonical rule for this repository. `CLAUDE.md` points here. Cursor, Codex, and
+Cloud Agents load this file. A workstation incident ran `taskkill /F /IM python.exe`
+and killed every Python process, including ones that task had not started.
+
+An agent may terminate only a specific process ID or process tree that it started
+and positively identified. Before termination, verify the PID, command identity,
+and parent or session relationship. The process must belong to the current task.
+
+Commands that terminate processes by executable name, wildcard, interpreter name,
+or other machine-wide selection are prohibited. That includes `taskkill /IM python.exe`,
+`taskkill /IM node.exe`, `pkill python`, `pkill -f python`, `killall python`, and
+the same shape for any other shared executable (test runners, servers, browsers,
+database processes). A raw PID with no ownership check is not permission to kill.
+
+If ownership cannot be established, stop and report the process and the blocker.
+Request human direction if termination still seems necessary. Do not terminate it.
+
+Prefer terminating the managed execution session through the execution tool that
+created it. A timeout or a stalled test does not expand termination authority.
+There is no bypass flag.
+
 ## Cursor Cloud specific instructions
 
 Cloud Agents boot from `.cursor/environment.json`. `bash .cursor/install.sh` installs

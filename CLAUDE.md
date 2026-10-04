@@ -3,6 +3,17 @@
 ## Overview
 Luthiers Toolbox — CAD/CAM platform for guitar builders. FastAPI backend + Vue.js frontend.
 
+## Process termination safety
+
+Canonical text: `AGENTS.md`, section "Process termination safety". This file is
+loaded when `AGENTS.md` is not. Do not terminate processes by executable name,
+wildcard, or interpreter (`taskkill /IM`, `pkill`, `killall`, and the same shape
+for any shared executable). An agent may terminate only a PID or process tree it
+started and positively identified. If ownership is uncertain, stop and report.
+A timeout does not expand that authority. The PID, command-identity, and
+parent/session checks, and the preference for the execution tool's own session
+termination, are in `AGENTS.md`.
+
 ## Code Style
 - Python: PEP 8, type hints, dataclasses for data models
 - Vue: Composition API, TypeScript
