@@ -18,6 +18,7 @@
       "services/api/app/physical_engineering/proposal_v1.py",
       "services/api/app/physical_engineering/screening.py",
       "services/api/app/physical_engineering/snapshot.py",
+      "services/api/tests/physical_engineering/__init__.py",
       "services/api/tests/physical_engineering/test_pep_v1_harden_001.py",
       "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py"
     ],
@@ -30,6 +31,7 @@
       "services/api/app/physical_engineering/proposal_v1.py",
       "services/api/app/physical_engineering/screening.py",
       "services/api/app/physical_engineering/snapshot.py",
+      "services/api/tests/physical_engineering/__init__.py",
       "services/api/tests/physical_engineering/test_pep_v1_harden_001.py",
       "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py"
     ]
@@ -52,6 +54,8 @@
       "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD>  # PASSED, coverage 100%",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD  # PASS",
       "python -m pytest scripts/ci/ -k cbsp21 -q --no-cov  # 36 passed",
+      "python -m pytest -q -m 'not vectorizer_regression' --collect-only --no-cov  # 9563 collected, exit 0, after the tests package import fix",
+      "python -m pytest tests/physical_engineering tests/test_dxf_catalog_gate_robustness.py tests/test_dxf_catalog_geometry.py -q --no-cov  # 118 passed",
       "git diff --check origin/main...HEAD  # clean"
     ],
     "proofs": [
@@ -107,6 +111,12 @@
     {
       "path": "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py",
       "intent": "Updated baseline cases for the hardened contract, including the untrusted geometry-revision limitation.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/__init__.py",
+      "intent": "Makes the advisory-gate tests a real package so pytest does not prepend the directory and import a different tests package.",
       "risk": "low",
       "behavior_change": "Tests only."
     },

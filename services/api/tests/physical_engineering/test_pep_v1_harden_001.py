@@ -24,7 +24,7 @@ from app.physical_engineering import (
 )
 from app.physical_engineering import proposal_v1
 from app.physical_engineering.proposal_v1 import CONTRADICTION_RULE_VERSION as RULE_VERSION
-from tests.physical_engineering.test_physical_engineering_proposal_v1 import (
+from .test_physical_engineering_proposal_v1 import (
     _artifact,
     _policy,
     _proposal,
