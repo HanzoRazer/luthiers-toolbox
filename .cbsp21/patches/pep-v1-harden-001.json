@@ -48,7 +48,11 @@
       "services/api/.venv/bin/python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json  # OK",
       "services/api/.venv/bin/python -m app.ci.check_bare_except  # OK",
       "services/api/.venv/bin/python -m app.ci.fence_checker_v2  # 2 passed",
-      "services/api/.venv/bin/python -m app.ci.check_execution_class_compliance  # OK"
+      "services/api/.venv/bin/python -m app.ci.check_execution_class_compliance  # OK",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <origin/main...HEAD>  # PASSED, coverage 100%",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD  # PASS",
+      "python -m pytest scripts/ci/ -k cbsp21 -q --no-cov  # 36 passed",
+      "git diff --check origin/main...HEAD  # clean"
     ],
     "proofs": [
       "84 tests passed, including the original refusal cases updated to the new contract and the resolver, digest, kind, projected-thickness, configuration, and replay cases.",
