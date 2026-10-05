@@ -1,0 +1,178 @@
+{
+  "schema_version": "code_tool_dogfood_runs_v1",
+  "base_sha": "6ea31376d04b0b6f7961144f6edb725b3db49edb",
+  "pr_425_merge": "5e3be0694333e04ff0da6db38a55d0aace796349",
+  "pr_426_merge": "6ea31376d04b0b6f7961144f6edb725b3db49edb",
+  "defects_repaired": false,
+  "detector": {
+    "name": "code-audit",
+    "package": "code_audit",
+    "version": "0.1.0",
+    "engine_version": "engine_v1",
+    "signal_logic_version": "signals_v5",
+    "analyzer_id": "hollow_guarantee",
+    "analyzer_version": "1.0.1",
+    "rule_id": "HOLLOW_GUARANTEE_001",
+    "owner_repository": "HanzoRazer/code-analysis-tool",
+    "owner_commit": "c2c1ea8fb7abc1221f9c837de645cde1d7b8d61c",
+    "entry_point": "python -m code_audit",
+    "console_script": "code_audit.__main__:main",
+    "configuration": "Default set code_audit.api._DEFAULT_ANALYZERS. No config file is passed by the default CLI. HollowGuaranteeAnalyzer reads only direct children of <scan-root>/.github/workflows/*.{yml,yaml} and ignores the discovered file list. A file path argument is scanned as its parent directory."
+  },
+  "source_blobs": [
+    {
+      "path": "services/api/tests/test_text_masking_regression.py",
+      "git_blob_sha": "0bbc72d56eac600a695105976578cb46930b5c1f",
+      "content_sha256": "6f256e19226f8b06f75e882dfc382decd1e9135051d6306d53aee9b8289dfd03"
+    },
+    {
+      "path": "services/photo-vectorizer/edge_to_dxf.py",
+      "git_blob_sha": "c847c04365d37230d7d43d8e872909fbbee942cd",
+      "content_sha256": "8809c15c0af9e0b53bc2e78dd26a772793d5760623b55ef09b80203a931a1fae"
+    },
+    {
+      "path": "services/api/app/services/blueprint_orchestrator.py",
+      "git_blob_sha": "5418ce3fba5fdc51cf88d545113a26db6af3d23a",
+      "content_sha256": "06adc5090bca839a4b38e9ab368817105f71d6932fb8e4b36201f04505d22093"
+    }
+  ],
+  "scan_topology": {
+    "normal_invocation": ["python", "-m", "code_audit", "<directory-or-file>", "--json"],
+    "file_argument_scans": "parent directory",
+    "discovery": "recursive *.py and JS/TS under the scan root; .git, .github, virtualenvs, node_modules, dist, and build are excluded from language discovery",
+    "tests_included": true,
+    "changed_files": false,
+    "staged_files": false,
+    "merge_base_diff": false,
+    "hollow_scope": ".github/workflows direct children only",
+    "full_repository_mode": "same command as the normal scan when the path is the repository root",
+    "ci_flag": "--ci is refused unless the CI environment variable is true; it is not the local default"
+  },
+  "runs": [
+    {
+      "id": "CTD-001",
+      "role": "self_test",
+      "argv": ["python", "-m", "pytest", "tests/test_hollow_guarantee_analyzer.py", "-q", "--tb=line", "--override-ini", "addopts=", "-p", "no:cacheprovider"],
+      "exit_code": 0,
+      "finding_count": null,
+      "notes": "18 passed",
+      "stdout_sha256": "11a0325b6060b3447fd362169f65fd99c3a188fa6dfd7ec5bc03dd76fc5d3cb6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "CTD-002",
+      "role": "normal_and_full_repository",
+      "also_satisfies": ["CTD-006"],
+      "argv": ["python", "-m", "code_audit", "<repository>", "--json"],
+      "exit_code": 2,
+      "exit_meaning": "completed scan, confidence score 0/100",
+      "finding_count": 8111,
+      "counts_by_type": {
+        "complexity": 5198,
+        "context_pinned_hash": 38,
+        "cross_copy_drift": 33,
+        "dead_code": 4,
+        "exceptions": 627,
+        "gate_wrong_artifact": 5,
+        "global_state": 1518,
+        "hollow_guarantee": 2,
+        "order_dependence": 1,
+        "routers": 124,
+        "security": 89,
+        "sql": 472
+      },
+      "hollow_findings": [
+        {
+          "path": ".github/workflows/client_lint_build.yml",
+          "line": 54,
+          "rule_id": "HOLLOW_GUARANTEE_001",
+          "verification_tool": "vue-tsc",
+          "guard_kind": "continue-on-error: true"
+        },
+        {
+          "path": ".github/workflows/client_lint_build.yml",
+          "line": 68,
+          "rule_id": "HOLLOW_GUARANTEE_001",
+          "verification_tool": "ESLint",
+          "guard_kind": "continue-on-error: true"
+        }
+      ],
+      "fixture_semantic_hits": {
+        "services/api/tests/test_text_masking_regression.py": 0,
+        "services/photo-vectorizer/edge_to_dxf.py": 0,
+        "services/api/app/services/blueprint_orchestrator.py": 0
+      },
+      "stdout_sha256": "c04612ecf8254d03f2b6531125e2c9073495760600bff2f9f00300de81886a48",
+      "stderr_sha256": "014b50247769a130c6ce8fbfe3c401048c131f8fe4e4ebb92da7a9c38fcb8d8d"
+    },
+    {
+      "id": "CTD-004",
+      "role": "direct_f2",
+      "argv": ["python", "-m", "code_audit", "services/api/tests/test_text_masking_regression.py", "--json"],
+      "scan_root": "services/api/tests",
+      "exit_code": 2,
+      "finding_count": 1714,
+      "hollow_guarantee_count": 0,
+      "fixture_semantic_hits": 0,
+      "stdout_sha256": "96fcb22f88089fd848ef68fbe386235ced2700232d0800ae0e24c5eab304b019",
+      "stderr_sha256": "df99e1fc84064a0944d4180e93608756b8c7439560bd5747b62866f0af23c3b1"
+    },
+    {
+      "id": "CTD-005-edge",
+      "role": "direct_f3_ocr",
+      "argv": ["python", "-m", "code_audit", "services/photo-vectorizer/edge_to_dxf.py", "--json"],
+      "scan_root": "services/photo-vectorizer",
+      "exit_code": 2,
+      "finding_count": 211,
+      "hollow_guarantee_count": 0,
+      "fixture_semantic_hits": 0,
+      "stdout_sha256": "2cf3370d463f8fdc0fc9cba6be84006b6d7dc7236d113d9664eb7e7978dea19b",
+      "stderr_sha256": "e78772a7f0c326505c18c620a3ae509930fd3b488eb1f47319c0b44d9e09f3b8"
+    },
+    {
+      "id": "CTD-005-orchestrator",
+      "role": "direct_f3_result_type",
+      "argv": ["python", "-m", "code_audit", "services/api/app/services/blueprint_orchestrator.py", "--json"],
+      "scan_root": "services/api/app/services",
+      "exit_code": 2,
+      "finding_count": 161,
+      "hollow_guarantee_count": 0,
+      "fixture_semantic_hits": 0,
+      "stdout_sha256": "e1464cb22e23be405403e84880c57de514317d70ab43f604f148e24524887fab",
+      "stderr_sha256": "de146ba1b4fcce24ee338c472fc56313626648f96b12f738dcf3bebe36498ad2"
+    },
+    {
+      "id": "CTD-CI-FLAG",
+      "role": "not_default",
+      "argv": ["python", "-m", "code_audit", "<repository>", "--ci", "--json"],
+      "exit_code": 2,
+      "exit_meaning": "refused because CI is unset",
+      "finding_count": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "bafb3c9663f2db7ed3b90dac412e871910b32ba3be9ef9d8031bdfdff4990698"
+    },
+    {
+      "id": "CTD-PROTOCOL",
+      "role": "hollow_files_argument",
+      "argv": ["HollowGuaranteeAnalyzer.run", "<repository>", "<F-2 file, edge_to_dxf.py, blueprint_orchestrator.py>"],
+      "exit_code": 0,
+      "finding_count": 2,
+      "notes": "files argument ignored; findings are the two client_lint_build.yml steps",
+      "stdout_sha256": "c7f90dcfd058935b978f8ce102e6eda0e323d2a7190aaee821d46c205063dd8c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "changed_file_selection": {
+    "supported_by_default_cli": false,
+    "command_run": null
+  },
+  "classifications": {
+    "F-2": "SIGNATURE_GAP",
+    "F-3": "SIGNATURE_GAP"
+  },
+  "successors": {
+    "F-2": "CODE-TOOL-SIGNATURES-004",
+    "F-3": "CODE-TOOL-SIGNATURES-004"
+  },
+  "successor_repository": "HanzoRazer/code-analysis-tool"
+}
