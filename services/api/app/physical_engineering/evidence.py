@@ -46,25 +46,9 @@ class EvidenceRef:
 
 @dataclass(frozen=True)
 class ResolvedEvidence:
-    """A fact returned by the trusted resolver after it recomputed the digest."""
+    """A fact returned by the trusted resolver after it recomputed the digest.
 
-    ref_id: str
-    kind: str
-    value: float | None
-    unit: str | None
-    uncertainty: float | None
-    source_run: str
-    schema_id: str
-    schema_version: str
-    artifact_sha256: str
-
-
-@dataclass(frozen=True)
-class FixtureArtifact:
-    """Opaque bytes plus the metadata the fixture store claims for them.
-
-    ``expected_sha256`` is what the store says the bytes hash to. The resolver
-    recomputes SHA-256 and does not trust this field on its own.
+    Schema identity waits for PEP-V1-CONTRACT-002. This record does not carry one.
     """
 
     ref_id: str
@@ -73,10 +57,30 @@ class FixtureArtifact:
     unit: str | None
     uncertainty: float | None
     source_run: str
-    schema_id: str
-    schema_version: str
-    artifact_bytes: bytes
+    artifact_sha256: str
+
+
+@dataclass(frozen=True)
+class StoredEvidenceArtifact:
+    """Opaque bytes plus the metadata the fixture store claims for them.
+
+    ``expected_sha256`` is what the store says the bytes hash to. The resolver
+    recomputes SHA-256 of ``payload`` and does not trust this field on its own.
+    This type exists for deterministic tests. It is not a database record.
+    """
+
+    ref_id: str
+    payload: bytes
     expected_sha256: str
+    kind: str
+    value: float | None
+    unit: str | None
+    uncertainty: float | None
+    source_run: str
+
+
+def sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
 
 
 class EvidenceResolver(Protocol):
@@ -93,11 +97,14 @@ class InMemoryEvidenceResolver:
     after a snapshot is captured. Replay must not observe that change.
     """
 
-    def __init__(self, artifacts: Mapping[str, FixtureArtifact] | tuple[FixtureArtifact, ...]):
+    def __init__(
+        self,
+        artifacts: Mapping[str, StoredEvidenceArtifact] | tuple[StoredEvidenceArtifact, ...],
+    ):
         if isinstance(artifacts, dict):
             self._artifacts = artifacts
             return
-        store: dict[str, FixtureArtifact] = {}
+        store: dict[str, StoredEvidenceArtifact] = {}
         for artifact in artifacts:
             if artifact.ref_id in store:
                 raise ValidatorConfigurationError(
@@ -110,7 +117,7 @@ class InMemoryEvidenceResolver:
         artifact = self._artifacts.get(ref.ref_id)
         if artifact is None:
             raise EvidenceNotFound(ref.ref_id)
-        digest = hashlib.sha256(artifact.artifact_bytes).hexdigest()
+        digest = sha256_bytes(artifact.payload)
         if digest != artifact.expected_sha256:
             raise EvidenceDigestMismatch(ref.ref_id)
         return ResolvedEvidence(
@@ -120,7 +127,5 @@ class InMemoryEvidenceResolver:
             unit=artifact.unit,
             uncertainty=artifact.uncertainty,
             source_run=artifact.source_run,
-            schema_id=artifact.schema_id,
-            schema_version=artifact.schema_version,
             artifact_sha256=digest,
         )

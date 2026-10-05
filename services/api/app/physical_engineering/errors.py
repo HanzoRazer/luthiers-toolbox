@@ -5,11 +5,15 @@ class ValidatorConfigurationError(RuntimeError):
     """The gate was not configured, so it did not execute and produced no verdict."""
 
 
-class EvidenceNotFound(LookupError):
+class EvidenceResolutionError(RuntimeError):
+    """The resolver could not turn a citation into a trusted fact."""
+
+
+class EvidenceNotFound(EvidenceResolutionError):
     """The cited reference is absent from the trusted evidence store."""
 
 
-class EvidenceDigestMismatch(ValueError):
+class EvidenceDigestMismatch(EvidenceResolutionError):
     """Recomputed SHA-256 of the artifact bytes does not match the store.
 
     A matching digest establishes integrity of those bytes. It does not
@@ -18,4 +22,4 @@ class EvidenceDigestMismatch(ValueError):
 
 
 class SnapshotIntegrityError(RuntimeError):
-    """A frozen snapshot does not replay to the verdict it records."""
+    """A frozen snapshot's digest does not match the record it carries."""

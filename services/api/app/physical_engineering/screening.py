@@ -71,14 +71,10 @@ def _adjudicate(proposal, resolved, policy):
     failure = _resolved_identity_failure(proposal, resolved)
     if failure is not None:
         return failure
-    action = ActionType(proposal.proposed_change.action)
-    if action is ActionType.ACQUIRE_MORE_EVIDENCE:
-        return (
-            ValidationResult.ADVISORY_ALLOWED,
-            "ACQUISITION_REQUEST_FOR_HUMAN_REVIEW",
-            (),
-        )
-    failure = _required_kind_failure(resolved, policy)
+    failure = _required_kind_failure(resolved)
+    if failure is not None:
+        return failure
+    failure = _magnitude_failure(proposal, policy)
     if failure is not None:
         return failure
     failure = _thickness_conflict(resolved, proposal.proposed_change.magnitude_mm, policy)
@@ -87,12 +83,11 @@ def _adjudicate(proposal, resolved, policy):
     return (ValidationResult.ADVISORY_ALLOWED, "ALL_CHECKS_PASSED", ())
 
 
-def _before_resolution(proposal, policy):
+def _before_resolution(proposal, _policy):
     checks = (
         lambda: _structure_failure(proposal),
         lambda: _claim_failure(proposal),
-        lambda: _action_failure(proposal),
-        lambda: _magnitude_failure(proposal, policy),
+        lambda: _action_gate(proposal),
         lambda: _geometry_failure(proposal),
         lambda: _stated_evidence_failure(proposal),
     )
@@ -141,10 +136,12 @@ def _claim_failure(proposal):
     return None
 
 
-def _action_failure(proposal):
+def _action_gate(proposal):
     action = _known_action(proposal)
     if action is None:
-        return (ValidationResult.REJECTED, "UNSUPPORTED_ACTION", ())
+        return (ValidationResult.REJECTED, "INVALID_ACTION_TYPE", ())
+    if action is ActionType.ACQUIRE_MORE_EVIDENCE:
+        return (ValidationResult.ADVISORY_ALLOWED, "ACQUISITION_ALWAYS_ADMISSIBLE", ())
     if action is ActionType.MODIFY_BRACE:
         return (ValidationResult.REJECTED, "ACTION_NOT_YET_GOVERNED", ())
     return None
@@ -158,20 +155,15 @@ def _known_action(proposal):
 
 
 def _magnitude_failure(proposal, policy):
-    action = ActionType(proposal.proposed_change.action)
     magnitude = proposal.proposed_change.magnitude_mm
-    if action is ActionType.REMOVE_MATERIAL:
-        return _removal_magnitude_failure(magnitude, policy)
-    if magnitude is not None:
-        return (ValidationResult.REJECTED, "ACQUISITION_CANNOT_REQUEST_REMOVAL", ())
-    return None
-
-
-def _removal_magnitude_failure(magnitude, policy):
     if magnitude is None:
-        return None
+        return (
+            ValidationResult.EVIDENCE_REQUIRED,
+            "REMOVAL_MAGNITUDE_MISSING",
+            ("specify_change_magnitude_mm",),
+        )
     if not is_finite_number(magnitude) or magnitude <= 0:
-        return (ValidationResult.REJECTED, "INVALID_REMOVAL_MAGNITUDE", ())
+        return (ValidationResult.REJECTED, "REMOVAL_MAGNITUDE_INVALID", ())
     if magnitude > policy.max_test_removal_mm:
         return (ValidationResult.REJECTED, "EXCESSIVE_REMOVAL_MAGNITUDE", ())
     return None
@@ -205,12 +197,6 @@ def _stated_evidence_failure(proposal):
 
 
 def _removal_statement_failure(proposal):
-    if proposal.proposed_change.magnitude_mm is None:
-        return (
-            ValidationResult.EVIDENCE_REQUIRED,
-            "REMOVAL_MAGNITUDE_MISSING",
-            ("specify_change_magnitude_mm",),
-        )
     if proposal.contradictory_evidence:
         return (
             ValidationResult.EVIDENCE_REQUIRED,
@@ -220,14 +206,14 @@ def _removal_statement_failure(proposal):
     if proposal.known_missing_evidence:
         return (
             ValidationResult.EVIDENCE_REQUIRED,
-            "KNOWN_MISSING_EVIDENCE",
+            "KNOWN_REQUIRED_EVIDENCE_MISSING",
             proposal.known_missing_evidence,
         )
     if not proposal.evidence_refs:
         return (
             ValidationResult.EVIDENCE_REQUIRED,
-            "INSUFFICIENT_EVIDENCE",
-            ("provide_measured_evidence_refs",),
+            "MISSING_REQUIRED_EVIDENCE_KIND",
+            ("thickness_map", "modal_frequency"),
         )
     if not all(_ref_ok(ref) for ref in proposal.evidence_refs):
         return (
@@ -250,7 +236,7 @@ def _ref_ok(ref) -> bool:
 
 def _resolved_identity_failure(proposal, resolved):
     if len(resolved) != len(proposal.evidence_refs):
-        return (ValidationResult.REJECTED, "INVALID_RESOLVED_EVIDENCE", ())
+        return (ValidationResult.REJECTED, "INVALID_EVIDENCE_VALUE", ())
     for ref, fact in zip(proposal.evidence_refs, resolved):
         failure = _one_fact_failure(ref, fact)
         if failure is not None:
@@ -259,41 +245,40 @@ def _resolved_identity_failure(proposal, resolved):
 
 
 def _one_fact_failure(ref, fact):
-    if not isinstance(fact, ResolvedEvidence):
-        return (ValidationResult.REJECTED, "INVALID_RESOLVED_EVIDENCE", ())
+    if not isinstance(fact, ResolvedEvidence) or fact.ref_id != ref.ref_id:
+        return (ValidationResult.REJECTED, "INVALID_EVIDENCE_VALUE", ())
     if fact.kind != ref.expected_kind:
         return (ValidationResult.REJECTED, "EVIDENCE_KIND_MISMATCH", ())
-    if fact.ref_id != ref.ref_id or not _resolved_record_ok(fact):
-        return (ValidationResult.REJECTED, "INVALID_RESOLVED_EVIDENCE", ())
+    if not _trusted_value_ok(fact):
+        return (ValidationResult.REJECTED, "INVALID_EVIDENCE_VALUE", ())
+    if not is_finite_number(fact.uncertainty) or fact.uncertainty < 0:
+        return (ValidationResult.REJECTED, "INVALID_EVIDENCE_UNCERTAINTY", ())
     return None
 
 
-def _resolved_record_ok(fact) -> bool:
-    numbers_ok = _resolved_numbers_ok(fact)
-    text_ok = all(
-        text_token(value)
-        for value in (fact.source_run, fact.schema_id, fact.schema_version, fact.unit)
+def _trusted_value_ok(fact) -> bool:
+    return (
+        is_finite_number(fact.value)
+        and text_token(fact.unit)
+        and text_token(fact.source_run)
+        and _sha256_text(fact.artifact_sha256)
     )
-    return numbers_ok and text_ok and _sha256_text(fact.artifact_sha256)
 
 
-def _resolved_numbers_ok(fact) -> bool:
-    if fact.value is not None and not is_finite_number(fact.value):
-        return False
-    if not is_finite_number(fact.uncertainty):
-        return False
-    return fact.uncertainty >= 0
+_REQUIRED_KINDS = ("thickness_map", "modal_frequency")
 
 
-def _required_kind_failure(resolved, policy):
-    present = {fact.kind for fact in resolved}
-    missing = tuple(
-        kind for kind in policy.required_evidence_kinds if kind not in present
-    )
+def _required_kind_failure(resolved):
+    counts: dict[str, int] = {}
+    for fact in resolved:
+        counts[fact.kind] = counts.get(fact.kind, 0) + 1
+    if any(counts.get(kind, 0) > 1 for kind in _REQUIRED_KINDS):
+        return (ValidationResult.REJECTED, "AMBIGUOUS_REQUIRED_EVIDENCE", ())
+    missing = tuple(kind for kind in _REQUIRED_KINDS if counts.get(kind, 0) == 0)
     if missing:
         return (
             ValidationResult.EVIDENCE_REQUIRED,
-            "REQUIRED_EVIDENCE_KIND_MISSING",
+            "MISSING_REQUIRED_EVIDENCE_KIND",
             missing,
         )
     return None
@@ -311,7 +296,7 @@ def _thickness_conflict(resolved, removal_mm, policy):
 
 def _one_thickness(fact, removal_mm, policy):
     if fact.unit != "mm" or not is_finite_number(fact.value):
-        return (ValidationResult.REJECTED, "INVALID_RESOLVED_EVIDENCE", ())
+        return (ValidationResult.REJECTED, "INVALID_EVIDENCE_VALUE", ())
     # Strict <: the policy names a minimum, so equality satisfies it.
     remaining = fact.value - removal_mm
     if remaining < policy.min_test_remaining_thickness_mm:

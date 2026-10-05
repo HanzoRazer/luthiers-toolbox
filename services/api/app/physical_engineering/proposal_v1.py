@@ -15,19 +15,17 @@ authority. The gate has no numeric defaults.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict, replace
+from dataclasses import dataclass, asdict
 from enum import Enum
 import json
-import hashlib
 
 from app.physical_engineering.errors import (
     SnapshotIntegrityError,
     ValidatorConfigurationError,
 )
 from app.physical_engineering.evidence import (
+    EvidenceRef,
     EvidenceResolver,
-    is_finite_number,
-    text_token,
 )
 from app.physical_engineering.policy import ValidationPolicyV1
 from app.physical_engineering.snapshot import FrozenValidationSnapshotV1, integrity_digest
@@ -116,11 +114,10 @@ class PhysicalEngineeringValidationV1:
     checks_passed: tuple[str, ...] = ()
     checks_failed: tuple[str, ...] = ()
     advisory_review_allowed: bool = False
-    proposal_sha256: str | None = None
+    policy_id: str = ""
+    policy_version: str = ""
+    validator_version: str = ""
     snapshot_sha256: str | None = None
-    policy_id: str | None = None
-    policy_version: str | None = None
-    validator_version: str = VALIDATOR_VERSION
 
     def __post_init__(self):
         if type(self.advisory_review_allowed) is not bool:
@@ -137,10 +134,10 @@ def validate_proposal(
     policy: ValidationPolicyV1,
 ) -> PhysicalEngineeringValidationV1:
     """Screen one proposal. Both arguments are required; neither has a default."""
-    return capture_snapshot(proposal, resolver=resolver, policy=policy).result
+    return build_validation_snapshot(proposal, resolver=resolver, policy=policy).validation
 
 
-def capture_snapshot(
+def build_validation_snapshot(
     proposal: PhysicalEngineeringProposalV1,
     *,
     resolver: EvidenceResolver,
@@ -157,15 +154,29 @@ def capture_snapshot(
     return _freeze(proposal, policy, stored, status, verdict)
 
 
-def replay_validation(snapshot: FrozenValidationSnapshotV1) -> PhysicalEngineeringValidationV1:
+def replay_validation_snapshot(
+    snapshot: FrozenValidationSnapshotV1,
+) -> PhysicalEngineeringValidationV1:
     """Recompute the verdict from the snapshot. This function takes no resolver."""
     if not isinstance(snapshot, FrozenValidationSnapshotV1):
         raise SnapshotIntegrityError("replay requires a frozen snapshot")
-    recomputed = _replay(snapshot).result
-    identity_ok = recomputed.snapshot_sha256 == snapshot.snapshot_sha256
-    if not identity_ok or recomputed != snapshot.result:
+    recorded = _snapshot_payload(
+        snapshot.schema_id,
+        snapshot.schema_version,
+        snapshot.proposal,
+        snapshot.policy,
+        snapshot.resolved_evidence,
+        snapshot.resolution_status,
+        snapshot.validation,
+        snapshot.validator_version,
+        snapshot.contradiction_rule_version,
+    )
+    if integrity_digest(recorded) != snapshot.snapshot_sha256:
+        raise SnapshotIntegrityError("snapshot digest does not match its contents")
+    recomputed = _replay(snapshot)
+    if recomputed != snapshot:
         raise SnapshotIntegrityError("frozen snapshot does not replay")
-    return recomputed
+    return recomputed.validation
 
 
 def to_json(obj) -> str:
@@ -195,60 +206,70 @@ def _require_configuration(resolver, policy) -> None:
         raise ValidatorConfigurationError(
             "evidence resolver is required; the gate did not execute"
         )
-    if not isinstance(policy, ValidationPolicyV1) or not _policy_fields_ok(policy):
+    if not isinstance(policy, ValidationPolicyV1):
         raise ValidatorConfigurationError(
             "validation policy is required; the gate did not execute"
         )
 
 
-def _policy_fields_ok(policy) -> bool:
-    limits_ok = (
-        is_finite_number(policy.max_test_removal_mm)
-        and policy.max_test_removal_mm > 0
-        and is_finite_number(policy.min_test_remaining_thickness_mm)
-        and policy.min_test_remaining_thickness_mm >= 0
-    )
-    kinds = policy.required_evidence_kinds
-    kinds_ok = (
-        isinstance(kinds, tuple)
-        and bool(kinds)
-        and len(set(kinds)) == len(kinds)
-        and all(text_token(kind) for kind in kinds)
-    )
-    return text_token(policy.policy_id) and text_token(policy.policy_version) and limits_ok and kinds_ok
-
-
 def _freeze(proposal, policy, resolved, status, verdict) -> FrozenValidationSnapshotV1:
     code, reason, required = verdict
-    preliminary = _result(proposal, policy, code, reason, required, None)
-    digest = _decision_digest(proposal, policy, resolved, status, preliminary)
-    final = replace(preliminary, snapshot_sha256=digest)
+    validation = _result(proposal, policy, code, reason, required)
+    schema_id = "physical_engineering_validation_snapshot"
+    schema_version = "1.0"
+    digest = integrity_digest(
+        _snapshot_payload(
+            schema_id,
+            schema_version,
+            proposal,
+            policy,
+            resolved,
+            status,
+            validation,
+            VALIDATOR_VERSION,
+            CONTRADICTION_RULE_VERSION,
+        )
+    )
     return FrozenValidationSnapshotV1(
+        schema_id=schema_id,
+        schema_version=schema_version,
         proposal=proposal,
         resolved_evidence=tuple(resolved),
         policy=policy,
         validator_version=VALIDATOR_VERSION,
         contradiction_rule_version=CONTRADICTION_RULE_VERSION,
         resolution_status=status,
-        result=final,
+        validation=validation,
         snapshot_sha256=digest,
     )
 
 
-def _decision_digest(proposal, policy, resolved, status, preliminary) -> str:
-    payload = {
-        "contradiction_rule_version": CONTRADICTION_RULE_VERSION,
+def _snapshot_payload(
+    schema_id,
+    schema_version,
+    proposal,
+    policy,
+    resolved,
+    status,
+    validation,
+    validator_version,
+    rule_version,
+) -> dict:
+    """Temporary internal encoding. Canonical serialization is PEP-V1-CONTRACT-002."""
+    return {
+        "contradiction_rule_version": rule_version,
         "policy": policy,
         "proposal": proposal,
         "resolution_status": status,
-        "resolved_evidence": resolved,
-        "result": preliminary,
-        "validator_version": VALIDATOR_VERSION,
+        "resolved_evidence": tuple(resolved),
+        "schema_id": schema_id,
+        "schema_version": schema_version,
+        "validation": validation,
+        "validator_version": validator_version,
     }
-    return integrity_digest(payload)
 
 
-def _result(proposal, policy, code, reason, required, snapshot_sha256):
+def _result(proposal, policy, code, reason, required):
     passed = code is ValidationResult.ADVISORY_ALLOWED
     proposal_id = proposal.proposal_id if isinstance(proposal, PhysicalEngineeringProposalV1) else ""
     return PhysicalEngineeringValidationV1(
@@ -261,20 +282,10 @@ def _result(proposal, policy, code, reason, required, snapshot_sha256):
         checks_passed=("advisory_screening_passed",) if passed else (),
         checks_failed=() if passed else (reason,),
         advisory_review_allowed=passed,
-        proposal_sha256=_proposal_digest(proposal),
-        snapshot_sha256=snapshot_sha256,
         policy_id=policy.policy_id,
         policy_version=policy.policy_version,
         validator_version=VALIDATOR_VERSION,
     )
-
-
-def _proposal_digest(proposal):
-    try:
-        encoded = to_json(proposal).encode("utf-8")
-    except (TypeError, ValueError, OverflowError):
-        return None
-    return hashlib.sha256(encoded).hexdigest()
 
 
 

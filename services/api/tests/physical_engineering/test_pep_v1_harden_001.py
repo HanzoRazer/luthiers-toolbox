@@ -8,20 +8,21 @@ import pytest
 from dataclasses import replace
 
 from app.physical_engineering import (
-    CONTRADICTION_RULE_VERSION,
     VALIDATOR_VERSION,
     EvidenceDigestMismatch,
     EvidenceNotFound,
     EvidenceRef,
+    EvidenceResolutionError,
     FrozenValidationSnapshotV1,
     SnapshotIntegrityError,
     ValidationResult,
     ValidatorConfigurationError,
-    capture_snapshot,
-    is_finite_number,
-    replay_validation,
+    build_validation_snapshot,
+    replay_validation_snapshot,
     validate_proposal,
 )
+from app.physical_engineering.evidence import is_finite_number
+from app.physical_engineering.policy import ValidationPolicyV1
 from app.physical_engineering import proposal_v1
 from app.physical_engineering.proposal_v1 import CONTRADICTION_RULE_VERSION as RULE_VERSION
 from .test_physical_engineering_proposal_v1 import (
@@ -59,11 +60,11 @@ def test_digest_mismatch_is_rejected():
 def test_resolver_recomputes_the_digest_from_bytes():
     artifact = _store()["thk-2026-10-04-R17"]
     with pytest.raises(EvidenceDigestMismatch):
-        _resolver({"thk-2026-10-04-R17": replace(artifact, artifact_bytes=b"tampered")}).resolve(
+        _resolver({"thk-2026-10-04-R17": replace(artifact, payload=b"tampered")}).resolve(
             EvidenceRef("thk-2026-10-04-R17", "thickness_map")
         )
     resolved = _resolver().resolve(EvidenceRef("thk-2026-10-04-R17", "thickness_map"))
-    assert resolved.artifact_sha256 == hashlib.sha256(artifact.artifact_bytes).hexdigest()
+    assert resolved.artifact_sha256 == hashlib.sha256(artifact.payload).hexdigest()
 
 
 def test_missing_reference_is_evidence_required_not_rejected():
@@ -89,12 +90,15 @@ def test_projected_remaining_thickness_conflict_is_independent():
 
 
 def test_remaining_thickness_equal_to_the_minimum_is_allowed():
+    """3.0 mm trusted thickness minus 0.5 mm removal equals the 2.5 mm test minimum."""
+    store = _store()
+    store["thk-2026-10-04-R17"] = replace(store["thk-2026-10-04-R17"], value=3.0)
     proposal = _proposal(
         proposed_change=proposal_v1.ProposedChange(
-            proposal_v1.ActionType.REMOVE_MATERIAL, 0.4, "within the test minimum"
+            proposal_v1.ActionType.REMOVE_MATERIAL, 0.5, "half millimetre"
         ),
     )
-    verdict = _screen(proposal)
+    verdict = _screen(proposal, resolver=_resolver(store))
     assert verdict.result is ValidationResult.ADVISORY_ALLOWED
     assert verdict.advisory_review_allowed is True
 
@@ -137,7 +141,7 @@ def test_matching_digest_does_not_make_bytes_trustworthy():
         "thickness_map",
         2.9,
         "mm",
-        artifact_bytes=raw,
+        payload=raw,
         expected_sha256=hashlib.sha256(raw).hexdigest(),
     )
     store = _store()
@@ -155,7 +159,7 @@ def test_non_finite_resolved_numbers_are_rejected(value):
     store["thk-2026-10-04-R17"] = replace(store["thk-2026-10-04-R17"], value=value)
     verdict = _screen(resolver=_resolver(store))
     assert verdict.result is ValidationResult.REJECTED
-    assert verdict.reason_codes == ("INVALID_RESOLVED_EVIDENCE",)
+    assert verdict.reason_codes == ("INVALID_EVIDENCE_VALUE",)
 
 
 def test_negative_resolved_uncertainty_is_rejected():
@@ -167,11 +171,11 @@ def test_negative_resolved_uncertainty_is_rejected():
 def test_replay_ignores_a_later_change_to_the_live_store():
     store = _store()
     resolver = _resolver(store)
-    snapshot = capture_snapshot(_proposal(), resolver=resolver, policy=_policy())
-    assert snapshot.result.result is ValidationResult.ADVISORY_ALLOWED
+    snapshot = build_validation_snapshot(_proposal(), resolver=resolver, policy=_policy())
+    assert snapshot.validation.result is ValidationResult.ADVISORY_ALLOWED
     del store["thk-2026-10-04-R17"]
-    replayed = replay_validation(snapshot)
-    assert replayed == snapshot.result
+    replayed = replay_validation_snapshot(snapshot)
+    assert replayed == snapshot.validation
     live = validate_proposal(_proposal(), resolver=resolver, policy=_policy())
     assert live.result is ValidationResult.EVIDENCE_REQUIRED
     assert live.reason_codes == ("EVIDENCE_REFERENCE_NOT_FOUND",)
@@ -189,43 +193,77 @@ def test_replay_does_not_call_the_resolver():
             return self.inner.resolve(ref)
 
     resolver = Counting(_resolver())
-    snapshot = capture_snapshot(_proposal(), resolver=resolver, policy=_policy())
+    snapshot = build_validation_snapshot(_proposal(), resolver=resolver, policy=_policy())
     calls_after_capture = resolver.calls
     assert calls_after_capture == 2
-    replay_validation(snapshot)
+    replay_validation_snapshot(snapshot)
     assert resolver.calls == calls_after_capture
-    assert "resolver" not in inspect.signature(replay_validation).parameters
+    assert "resolver" not in inspect.signature(replay_validation_snapshot).parameters
 
 
 def test_tampered_snapshot_refuses_to_replay():
-    snapshot = capture_snapshot(_proposal(), resolver=_resolver(), policy=_policy())
+    snapshot = build_validation_snapshot(_proposal(), resolver=_resolver(), policy=_policy())
     tampered = replace(
         snapshot,
-        result=replace(snapshot.result, reason_codes=("ALL_CHECKS_PASSED", "injected")),
+        validation=replace(snapshot.validation, reason_codes=("ALL_CHECKS_PASSED", "injected")),
     )
     with pytest.raises(SnapshotIntegrityError):
-        replay_validation(tampered)
+        replay_validation_snapshot(tampered)
 
 
 def test_snapshot_records_the_authoritative_inputs():
     policy = _policy()
-    snapshot = capture_snapshot(_proposal(), resolver=_resolver(), policy=policy)
+    snapshot = build_validation_snapshot(_proposal(), resolver=_resolver(), policy=policy)
+    again = build_validation_snapshot(_proposal(), resolver=_resolver(), policy=policy)
     assert isinstance(snapshot, FrozenValidationSnapshotV1)
     assert snapshot.policy == policy
+    assert snapshot.policy.policy_id == policy.policy_id
+    assert snapshot.validation.policy_id == policy.policy_id
+    assert snapshot.validation.policy_version == policy.policy_version
     assert snapshot.validator_version == VALIDATOR_VERSION
+    assert snapshot.validation.validator_version == VALIDATOR_VERSION
     assert snapshot.contradiction_rule_version == RULE_VERSION
     assert snapshot.resolution_status == "resolved"
     assert len(snapshot.resolved_evidence) == 2
-    assert snapshot.snapshot_sha256 == snapshot.result.snapshot_sha256
-    assert snapshot.result.validator_version == VALIDATOR_VERSION
-    assert CONTRADICTION_RULE_VERSION == "projected-remaining-thickness-1"
+    assert snapshot.validation.snapshot_sha256 is None
+    assert snapshot.snapshot_sha256 == again.snapshot_sha256
+    assert RULE_VERSION == "projected-remaining-thickness-1"
 
 
 def test_deleted_authority_names_are_absent():
-    assert "advisory_authority_granted" not in proposal_v1.PhysicalEngineeringValidationV1.__dataclass_fields__
+    fields = proposal_v1.PhysicalEngineeringValidationV1.__dataclass_fields__
+    assert "advisory_authority_granted" not in fields
+    assert "proposal_sha256" not in fields
     assert not hasattr(proposal_v1, "MAX_SINGLE_PASS_REMOVAL_MM")
     assert not hasattr(proposal_v1, "AdvisoryReviewContext")
-    assert "advisory_review_allowed" in proposal_v1.PhysicalEngineeringValidationV1.__dataclass_fields__
+    assert "advisory_review_allowed" in fields
+    assert "required_evidence_kinds" not in ValidationPolicyV1.__dataclass_fields__
+    assert issubclass(EvidenceNotFound, EvidenceResolutionError)
+    assert issubclass(EvidenceDigestMismatch, EvidenceResolutionError)
+
+
+def test_two_thickness_artifacts_are_not_silently_chosen():
+    extra = _artifact("thk-other", "thickness_map", 2.8, "mm")
+    store = _store()
+    store["thk-other"] = extra
+    refs = _refs() + (EvidenceRef("thk-other", "thickness_map"),)
+    verdict = _screen(_proposal(evidence_refs=refs), resolver=_resolver(store))
+    assert verdict.result is ValidationResult.REJECTED
+    assert verdict.reason_codes == ("AMBIGUOUS_REQUIRED_EVIDENCE",)
+
+
+def test_thickness_without_modal_frequency_is_incomplete():
+    verdict = _screen(_proposal(evidence_refs=(_refs()[1],)))
+    assert verdict.result is ValidationResult.EVIDENCE_REQUIRED
+    assert verdict.reason_codes == ("MISSING_REQUIRED_EVIDENCE_KIND",)
+    assert verdict.required_evidence == ("modal_frequency",)
+
+
+def test_negative_uncertainty_names_its_reason():
+    store = _store()
+    store["thk-2026-10-04-R17"] = replace(store["thk-2026-10-04-R17"], uncertainty=-0.01)
+    verdict = _screen(resolver=_resolver(store))
+    assert verdict.reason_codes == ("INVALID_EVIDENCE_UNCERTAINTY",)
 
 
 def test_geometry_limitation_is_documented():

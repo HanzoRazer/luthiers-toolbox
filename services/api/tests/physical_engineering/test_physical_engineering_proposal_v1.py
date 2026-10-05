@@ -15,7 +15,6 @@ from app.physical_engineering import (
     ActionType,
     AuthorityClass,
     EvidenceRef,
-    FixtureArtifact,
     GeometryRegion,
     InMemoryEvidenceResolver,
     PhysicalEngineeringProposalV1,
@@ -24,9 +23,11 @@ from app.physical_engineering import (
     ValidationPolicyV1,
     ValidationResult,
     ValidatorConfigurationError,
+    build_validation_snapshot,
     to_json,
     validate_proposal,
 )
+from app.physical_engineering.evidence import StoredEvidenceArtifact
 
 
 # Test-policy fixture only. No production engineering authority.
@@ -46,26 +47,24 @@ def _region(**over) -> GeometryRegion:
     return GeometryRegion(**base)
 
 
-def _artifact(ref_id, kind, value, unit, **over) -> FixtureArtifact:
-    raw = over.pop("artifact_bytes", f"fixture-bytes:{ref_id}".encode())
+def _artifact(ref_id, kind, value, unit, **over) -> StoredEvidenceArtifact:
+    raw = over.pop("payload", f"fixture-bytes:{ref_id}".encode())
     digest = over.pop("expected_sha256", hashlib.sha256(raw).hexdigest())
     base = dict(
         ref_id=ref_id,
+        payload=raw,
+        expected_sha256=digest,
         kind=kind,
         value=value,
         unit=unit,
         uncertainty=0.05,
         source_run="fixture-run",
-        schema_id="fixture-evidence",
-        schema_version="1",
-        artifact_bytes=raw,
-        expected_sha256=digest,
     )
     base.update(over)
-    return FixtureArtifact(**base)
+    return StoredEvidenceArtifact(**base)
 
 
-def _store() -> dict[str, FixtureArtifact]:
+def _store() -> dict[str, StoredEvidenceArtifact]:
     return {
         "ttp-2026-10-04-mode3": _artifact(
             "ttp-2026-10-04-mode3", "modal_frequency", 184.6, "hz", uncertainty=1.8,
@@ -88,7 +87,6 @@ def _policy(**over):
         policy_version="1",
         max_test_removal_mm=TEST_MAX_REMOVAL_MM,
         min_test_remaining_thickness_mm=TEST_MIN_REMAINING_MM,
-        required_evidence_kinds=("modal_frequency", "thickness_map"),
     )
     base.update(over)
     return ValidationPolicyV1(**base)
@@ -132,8 +130,9 @@ def test_missing_evidence_refuses_does_not_default():
     verdict = _screen(_proposal(evidence_refs=()))
     assert verdict.result is ValidationResult.EVIDENCE_REQUIRED
     assert verdict.advisory_review_allowed is False
-    assert "INSUFFICIENT_EVIDENCE" in verdict.reason_codes
-    assert "provide_measured_evidence_refs" in verdict.required_evidence
+    assert "MISSING_REQUIRED_EVIDENCE_KIND" in verdict.reason_codes
+    assert "thickness_map" in verdict.required_evidence
+    assert "modal_frequency" in verdict.required_evidence
 
 
 def test_contradictory_evidence_escalates():
@@ -227,11 +226,21 @@ def test_acquisition_cannot_bypass_authority_check():
     assert _screen(proposal).result is ValidationResult.REJECTED
 
 
-def test_acquisition_cannot_carry_removal():
+def test_acquisition_is_admissible_without_removal_screening():
     proposal = _proposal(
         proposed_change=ProposedChange(ActionType.ACQUIRE_MORE_EVIDENCE, 0.25),
+        evidence_refs=(EvidenceRef("missing", "thickness_map"),),
+        geometry_region=_region(region_id=""),
     )
-    assert _screen(proposal).result is ValidationResult.REJECTED
+
+    class Boom:
+        def resolve(self, ref):
+            raise AssertionError("acquisition must not resolve evidence")
+
+    verdict = validate_proposal(proposal, resolver=Boom(), policy=_policy())
+    assert verdict.result is ValidationResult.ADVISORY_ALLOWED
+    assert verdict.reason_codes == ("ACQUISITION_ALWAYS_ADMISSIBLE",)
+    assert verdict.advisory_review_allowed is True
 
 
 def test_brace_modification_fails_closed():
@@ -275,6 +284,7 @@ def test_unknown_reference_requires_evidence():
 def test_required_evidence_kind_not_replaced_by_any_one_ref():
     proposal = _proposal(evidence_refs=(_refs()[0],))
     verdict = _screen(proposal)
+    assert verdict.reason_codes == ("MISSING_REQUIRED_EVIDENCE_KIND",)
     assert verdict.required_evidence == ("thickness_map",)
     assert verdict.advisory_review_allowed is False
 
@@ -313,10 +323,10 @@ def test_geometry_revision_is_an_untrusted_claim():
         dict(max_test_removal_mm=float("nan")),
         dict(max_test_removal_mm=-1),
         dict(max_test_removal_mm=True),
+        dict(max_test_removal_mm=float("inf")),
         dict(policy_id=""),
-        dict(required_evidence_kinds=()),
-        dict(required_evidence_kinds=("thickness_map", "thickness_map")),
         dict(min_test_remaining_thickness_mm=float("nan")),
+        dict(min_test_remaining_thickness_mm=float("-inf")),
         dict(min_test_remaining_thickness_mm=-0.1),
     ],
 )
@@ -331,12 +341,14 @@ def test_duplicate_fixture_ref_is_a_configuration_error():
         InMemoryEvidenceResolver((artifact, artifact))
 
 
-def test_excessive_review_magnitude_rejected_even_without_evidence():
+def test_missing_evidence_is_reported_before_the_test_cap():
     proposal = _proposal(
         evidence_refs=(),
         proposed_change=ProposedChange(ActionType.REMOVE_MATERIAL, 0.7),
     )
-    assert _screen(proposal).result is ValidationResult.REJECTED
+    verdict = _screen(proposal)
+    assert verdict.result is ValidationResult.EVIDENCE_REQUIRED
+    assert "MISSING_REQUIRED_EVIDENCE_KIND" in verdict.reason_codes
 
 
 @pytest.mark.parametrize(
@@ -383,14 +395,21 @@ def test_nan_not_serializable_as_json():
 
 def test_result_bound_to_proposal_content_and_policy():
     proposal = _proposal()
-    first = _screen(proposal)
-    changed = _screen(replace(proposal, engineering_basis="changed"))
-    policy_changed = _screen(proposal, policy=_policy(policy_version="2"))
-    assert first.proposal_sha256 != changed.proposal_sha256
+    first = build_validation_snapshot(proposal, resolver=_resolver(), policy=_policy())
+    changed = build_validation_snapshot(
+        replace(proposal, engineering_basis="changed"),
+        resolver=_resolver(),
+        policy=_policy(),
+    )
+    policy_changed = build_validation_snapshot(
+        proposal, resolver=_resolver(), policy=_policy(policy_version="2"),
+    )
+    assert first.snapshot_sha256 != changed.snapshot_sha256
     assert first.snapshot_sha256 != policy_changed.snapshot_sha256
-    assert first.policy_version == "1"
-    assert policy_changed.policy_version == "2"
-    assert to_json(first) == to_json(_screen(proposal))
+    assert first.validation.snapshot_sha256 is None
+    assert first.validation.policy_version == "1"
+    assert policy_changed.validation.policy_version == "2"
+    assert to_json(first.validation) == to_json(_screen(proposal))
 
 
 def test_wrong_top_level_type_returns_rejection():
