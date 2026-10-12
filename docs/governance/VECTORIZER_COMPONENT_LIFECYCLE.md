@@ -1,7 +1,7 @@
 # Vectorizer Component Lifecycle Registry
 
 **Date:** 2026-05-20  
-**Last updated:** 2026-05-20 (semantic incubation architecture; sandbox as cognition layer)  
+**Last updated:** 2026-10-11 (research-only disposition and post-migration reconciliation)  
 **Status:** ACTIVE GOVERNANCE  
 **Authority:** Single source of truth for vectorizer-adjacent component states and promotion rules.
 
@@ -30,11 +30,19 @@ Unwired cognitive/grid lineage may still encode topology, occupancy, or interpre
 
 ---
 
+## Accepted disposition — 2026-10-11
+
+**Disposition: `RETAIN_RESEARCH_ONLY` for the relocated Tier A semantic/cognitive lineage.**
+
+The cognitive/grid/Phase-2 lineage moved to `HanzoRazer/vectorizer-sandbox` remains valuable for benchmarking, archaeology, semantic research, and reproducibility, but it carries **zero production authority** in `luthiers-toolbox`. It must not be re-imported into `services/`, routed from the Blueprint Reader, or used to confer fabrication authority. Any future use in production must graduate through the constitutional bridge in `SEMANTIC_INCUBATION_ARCHITECTURE.md` as a new reviewed implementation.
+
+This disposition does **not** retire the current canonical production vectorizer. `CleanupMode.REFINED`, the photo pipeline, constitutional IBG intake, and other current production paths remain unchanged. It also clarifies that `CleanupMode.ENHANCED` is **API-exposed experimental / SANDBOX authority**, not a production-qualified capability; reachability through the canonical endpoint is not lifecycle promotion.
+
 ## Three semantic generations (repo archaeology)
 
 | Generation | Era | Characteristics | Operational role today |
 |------------|-----|-----------------|------------------------|
-| **Early cognitive / grid** | Pre-constitutional | Semantic occupancy, topology cognition, primitive heuristics | **ARCHAEOLOGICAL_RESEARCH** — not wired |
+| **Early cognitive / grid** | Pre-constitutional | Semantic occupancy, topology cognition, primitive heuristics | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** — preserved in `vectorizer-sandbox`, no production authority |
 | **Mid vectorizer recovery** | 2026 recovery sprint | DXF recovery, contour chaining, `refined` / `edge_to_dxf`, Phase 3 raw | **ACTIVE** / **SANDBOX** recovery modes |
 | **Constitutional runtime** | IBG + governance | Provenance, authority gating, deterministic intake, `ibg_intake_gate` | **ACTIVE** enforcement layer |
 
@@ -116,12 +124,12 @@ States reflect verification run **2026-05-20** (`scripts/governance/verify_vecto
 | `CleanupMode.BASELINE` / `RESTORED_BASELINE` | CANONICAL_PRODUCTION | **ACTIVE** | Explicit `mode=` only |
 | `CleanupMode.V2_RAW` | CANONICAL_RECOVERY | **SANDBOX** | Protected; not default (`MRP_1C`) |
 | `CleanupMode.PHOTO_V2` / `PHOTO_REFINED` | CANONICAL_RECOVERY | **SANDBOX** | Photo/blueprint recovery; explicit `mode=` |
-| `CleanupMode.ENHANCED` / `LAYERED_DUAL_PASS` | EXPERIMENTAL | **SANDBOX** | Not MVP default |
+| `CleanupMode.ENHANCED` / `LAYERED_DUAL_PASS` | EXPERIMENTAL (API-exposed by explicit mode) | **SANDBOX** | Callable for controlled experiments; not MVP default and not production-qualified |
 | `CleanupMode.CAM_READY_R2000` | PRODUCTION (paid) | **ACTIVE** | Auth-gated; Phase 3 R2000 |
 | `CleanupMode.VECTORIZER_V2_SIMPLE` | FUTURE (handoff only) | **FUTURE** | **Unwired** — do not implement without gate + governance |
 | `ExtractionMode.SMART` (Phase 3) | CANONICAL (via v2_raw / cam_ready branches) | **ACTIVE** | When orchestrator routes to Phase 3 |
 | `ExtractionMode.SIMPLE` (Phase 3) | ORPHAN (no production caller) | **BROKEN** → **EXPORT_SAFE** after PR-1 | Not commercially viable after PR-1 alone |
-| `vectorizer_phase2.py` | ABANDONED | **ABANDONED** | Dev `/vectorize-geometry` only |
+| former `services/blueprint-import/vectorizer_phase2.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Runtime source removed; `/vectorize-geometry` returns relocation detail |
 | Phase 2 `extraction_mode=simple` | DEVELOPMENT_ONLY | **SANDBOX** | Not Phase 3 SIMPLE |
 
 ### Photo pipeline
@@ -146,10 +154,10 @@ States reflect verification run **2026-05-20** (`scripts/governance/verify_vecto
 
 | Component | Path classification | Lifecycle state | Notes |
 |-----------|---------------------|-----------------|-------|
-| `cognitive_extractor.py` | ORPHAN (unwired) | **ARCHAEOLOGICAL_RESEARCH** | ~1470 LOC; occupancy / semantic experimentation |
-| `cognitive_extraction_engine.py` | ORPHAN (unwired) | **ARCHAEOLOGICAL_RESEARCH** | ~1503 LOC; parallel cognition engine |
-| `extract_body_grid.py` | ABANDONED (unwired) | **ARCHAEOLOGICAL_RESEARCH** | v1 grid primitive experiments |
-| `extract_body_grid_v2.py` – `v5.py` | ABANDONED (unwired) | **ARCHAEOLOGICAL_RESEARCH** | Generations of grid extraction heuristics |
+| former `services/photo-vectorizer/cognitive_extractor.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved at `vectorizer-sandbox/src/semantic/`; no production re-import |
+| former `services/photo-vectorizer/cognitive_extraction_engine.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved at `vectorizer-sandbox/src/semantic/`; no production re-import |
+| former `services/photo-vectorizer/extract_body_grid.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved at `vectorizer-sandbox/src/archaeology/` |
+| former `services/photo-vectorizer/extract_body_grid_v2.py` – `v5.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved at `vectorizer-sandbox/src/archaeology/` |
 | `march_pipeline_restore.py` | PARTIAL import | **PARTIAL** → Tier B migration | `photo_vectorizer_v2` imports layer export helpers — extract before external move |
 
 **Harvest before delete (future gate):** Document extracted concepts (topology assumptions, grouping ideas, occupancy rules) in `docs/governance/` or handoff; sign-off that no unique semantics remain before any deletion or external move.
