@@ -1,0 +1,152 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_HARVEST_FREEZE_001",
+  "title": "Close vectorizer recovery-retirement workstream as retained research-only lineage",
+  "intent": "Reconcile the already-executed Tier A relocation of cognitive/grid/Phase-2 lineage into vectorizer-sandbox, preserve benchmark and forensic evidence, correct stale governance contradictions, and pin the existing production re-import gate. Current production vectorizer behavior remains unchanged.",
+  "change_type": "governance/evidence/test-only",
+  "behavior_change": "No production runtime behavior change. No vectorizer algorithm, router, default UI mode, DXF output, IBG intake, CAM authority, or manufacturing output change. Governance now records RETAIN_RESEARCH_ONLY for the relocated Tier A lineage and classifies CleanupMode.ENHANCED as API-exposed experimental/SANDBOX authority rather than production-qualified.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md",
+      "docs/governance/VECTORIZER_CANONICAL_PATHS.md",
+      "docs/governance/VECTORIZER_CAPABILITY_MAP.md",
+      "docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md",
+      "docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md",
+      "docs/governance/VECTORIZER_TECHNICAL_DEBT_INVENTORY.md",
+      "docs/investigations/vectorizer-recovery-retirement_2026-10/HARVEST_AND_FREEZE.md",
+      "docs/investigations/vectorizer-recovery-retirement_2026-10/PRESERVATION_INVENTORY.csv",
+      "tests/test_vectorizer_research_only_freeze.py",
+      ".cbsp21/patches/vectorizer-harvest-freeze-001.json"
+    ],
+    "files_expected_to_change": [
+      "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md",
+      "docs/governance/VECTORIZER_CANONICAL_PATHS.md",
+      "docs/governance/VECTORIZER_CAPABILITY_MAP.md",
+      "docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md",
+      "docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md",
+      "docs/governance/VECTORIZER_TECHNICAL_DEBT_INVENTORY.md",
+      "docs/investigations/vectorizer-recovery-retirement_2026-10/HARVEST_AND_FREEZE.md",
+      "docs/investigations/vectorizer-recovery-retirement_2026-10/PRESERVATION_INVENTORY.csv",
+      "tests/test_vectorizer_research_only_freeze.py",
+      ".cbsp21/patches/vectorizer-harvest-freeze-001.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Lifecycle/canonical-path/capability/debt documents were reconciled with the relocation that already happened in May 2026; VEC-ROOT-001 gains a provenance erratum for body_lexicon.md; a closeout record and preservation inventory were added; a lightweight integrity test pins the boundary.",
+    "why": "The repository still contained stale statements that Tier A migration was merely proposed, local paths that had already been removed, a false claim that body_lexicon.md had never been committed, and conflicting governance labels for CleanupMode.ENHANCED.",
+    "why_not_redundant": "The existing check_semantic_sandbox_imports.py already enforces the production import boundary, so this patch intentionally does not add a duplicate freeze checker. The new test only pins the accepted lifecycle/document state and existing gate.",
+    "what_did_not_change": "services/api/app/, services/photo-vectorizer runtime code, services/blueprint-import runtime code, hostinger/blueprint-reader.html, vectorizer algorithms, test_text_masking_regression.py, Cuatro artifacts, Melody Maker fixture, and the vectorizer-regression workflow."
+  },
+  "verification": {
+    "commands_run": [
+      "Repository-state inspection: main pinned at d77a70b7dc05e9fc63b16c7983226fe81452be1e before branch creation.",
+      "Verified relocated Tier A files are absent from luthiers-toolbox runtime spine and relocation pointers identify vectorizer-sandbox destinations.",
+      "Verified scripts/governance/check_semantic_sandbox_imports.py already owns the no-reimport gate and is included in scripts/governance/check_all.py and tests/test_governance_compliance.py.",
+      "Verified current blueprint router accepts explicit CleanupMode values while default remains refined; no router/runtime edit is made.",
+      "PR CI will run repository governance and focused integrity tests."
+    ],
+    "proofs": [
+      "No production algorithm or router path is in files_expected_to_change.",
+      "Tier A research lineage is preserved externally and not deleted.",
+      "CleanupMode.ENHANCED documentation is reconciled to SANDBOX/API_EXPOSED_EXPERIMENTAL without changing callable runtime behavior.",
+      "F-2 and F-3 remain explicitly unresolved and untouched."
+    ],
+    "hardware": "No machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": "docs/audit/VEC-ROOT-001_eligibility_body_definition.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/SEMANTIC_INCUBATION_ARCHITECTURE.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/VECTORIZER_CANONICAL_PATHS.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/VECTORIZER_CAPABILITY_MAP.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/VECTORIZER_SANDBOX_MIGRATION_PLAN.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/governance/VECTORIZER_TECHNICAL_DEBT_INVENTORY.md",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-recovery-retirement_2026-10/HARVEST_AND_FREEZE.md",
+      "intent": "Close the recovery-retirement workstream with the accepted RETAIN_RESEARCH_ONLY disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/vectorizer-recovery-retirement_2026-10/PRESERVATION_INVENTORY.csv",
+      "intent": "List evidence/research assets that remain preserved and non-authoritative.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "tests/test_vectorizer_research_only_freeze.py",
+      "intent": "Pin the research-only governance boundary and existing re-import gate.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/vectorizer-harvest-freeze-001.json",
+      "intent": "Reconcile governance/provenance documentation with the accepted research-only disposition.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-11-VECTORIZER-HARVEST-FREEZE-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "findings": [
+      {
+        "id": "VHF-F2",
+        "severity": "low",
+        "summary": "Pre-existing hollow entity-count assertion remains unfixed by scope."
+      },
+      {
+        "id": "VHF-F3",
+        "severity": "low",
+        "summary": "Pre-existing no-EasyOCR masking behavior remains unfixed by scope."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "This increment closes lifecycle/governance ambiguity only. It does not repair or promote vectorizer code."
+  }
+}
