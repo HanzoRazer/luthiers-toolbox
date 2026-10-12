@@ -155,9 +155,9 @@ Response: { artifacts: { svg: {...}, dxf: {...} } }
 | `FeedbackSystem.submit_correction` | vectorizer_phase3.py | **NEVER CALLED** — user feedback intake dead |
 | `TrainingDataCollector` | vectorizer_phase3.py:1273 | Never instantiated |
 | `phase4/` directory | blueprint-import | Complete but standalone |
-| `cognitive_extractor.py` | photo-vectorizer | Never imported |
-| `cognitive_extraction_engine.py` | photo-vectorizer | Never imported |
-| `extract_body_grid_v*.py` | photo-vectorizer | 5 abandoned versions |
+| former `cognitive_extractor.py` | relocated external | Preserved in `vectorizer-sandbox/src/semantic/`; no production import |
+| former `cognitive_extraction_engine.py` | relocated external | Preserved in `vectorizer-sandbox/src/semantic/`; no production import |
+| former `extract_body_grid_v*.py` | relocated external | Preserved in `vectorizer-sandbox/src/archaeology/`; no production import |
 
 ---
 
