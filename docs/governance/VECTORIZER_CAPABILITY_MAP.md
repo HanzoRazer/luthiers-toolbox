@@ -1,7 +1,7 @@
 # Vectorizer Capability Map
 
 **Date:** 2026-05-20  
-**Status:** ARCHAEOLOGY_COMPLETE  
+**Status:** ARCHAEOLOGY_COMPLETE — reconciled 2026-10-11  
 **Sprint:** Vectorizer Technical Debt Archaeology  
 **Lifecycle:** `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md`
 
@@ -20,7 +20,7 @@
 | `photo_v2` | `EdgeToDXF.convert_enhanced()` | R12 LINE | Good | Text masked out | **CANONICAL_RECOVERY** |
 | `photo_refined` | `EdgeToDXF.convert()` kernel=0 | R12 LINE | Good | Higher entity count | CANONICAL_RECOVERY |
 | `layered_dual_pass` | `extract_dual_pass()` | R12/R2000 | Variable | Pass B stub | EXPERIMENTAL |
-| `enhanced` | `extract_blueprint_enhanced()` | R12 LINE | High detail | 50k-300k entities | PRODUCTION |
+| `enhanced` | `extract_blueprint_enhanced()` | R12 LINE | High detail | 50k-300k entities | **SANDBOX authority — API-exposed experimental** |
 | `cam_ready_r2000` | `Phase3Vectorizer(R2000)` | R2000 LWPOLYLINE | CAM-ready | Auth required | PRODUCTION |
 
 ### ExtractionMode Enum (Phase3 Internal)
@@ -125,8 +125,13 @@
 | `submit_correction()` not wired | User feedback cannot reach learning system | Medium |
 | `_simple_extraction()` broken | Non-guitar instruments fail | High |
 | Phase 4 not integrated | Manual dimension annotation | Low |
-| `cognitive_*` / grid v1–v5 unwired | Archaeological research — not delete-by-default | Medium (governance clarity) |
+| relocated `cognitive_*` / grid v1–v5 | Research-only lineage preserved in `vectorizer-sandbox`; production re-import prohibited | Low (boundary maintenance) |
 
 ---
 
 *Vectorizer Capability Map — Archaeology Complete — 2026-05-20*
+
+
+## Research-only disposition — 2026-10-11
+
+The relocated Tier A semantic/cognitive lineage is retained for research, benchmarking, archaeology, and reproducibility only. It is not a production capability surface. The current production runtime remains the canonical paths listed above; research assets may inform a future ADR or implementation only through the graduation bridge.
