@@ -74,7 +74,7 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 | CleanupMode invalid input default | vectorize_router.py:195 | **maintainability** | Silent default to REFINED | Log warning |
 | `geometry_coach.py` v1 not deprecated | photo-vectorizer/ | **maintainability** | v2 is canonical but v1 still exists | Deprecate v1 |
 | `photo_vectorizer_v2.py` version mismatch | photo-vectorizer/ | **maintainability** | File says v2, docstring says v3.0 | Align naming |
-| `vectorizer_phase2.py` superseded | blueprint-import/ | **maintainability** | No API wiring | Deprecate or archive |
+| relocated `vectorizer_phase2.py` | `vectorizer-sandbox/src/archaeology/vectorizer_phase2_runtime_spine.py` | **maintainability** | Removed from runtime spine; dev route is relocation stub | Preserve externally; no production re-import |
 | `light_line_body_extractor.py` unknown | photo-vectorizer/ | **regression_risk** | Status unknown, no imports found | Investigate and classify |
 | `photo_silhouette_extractor.py` unknown | photo-vectorizer/ | **regression_risk** | Status unknown, no imports found | Investigate and classify |
 | Scale detection fragmentation | Multiple files | **semantic** | 4+ scale detection systems | Consolidate via calibration_integration |
@@ -87,7 +87,7 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 |-----------|----------|--------|-------|----------------|
 | Neural network boost TODO | classifiers/latin_american/classifier.py:503 | **semantic** | Incomplete feature | Complete or remove TODO |
 | DEPRECATED comment | edge_to_dxf.py:261 | **maintainability** | Method marked deprecated but kept | Remove or document why kept |
-| Optional dep print statements | cognitive_extraction_engine.py:1491 | **maintainability** | Uses print() instead of logger | Convert to logger.info |
+| Optional dep print statements | `vectorizer-sandbox/src/semantic/cognitive_extraction_engine.py` | **maintainability** | Research-only implementation detail | Address only in sandbox research work |
 | March pipeline restore orphaned | march_pipeline_restore.py | **maintainability** | Restoration script never integrated | Archive |
 | Archive references in specs | gibson_sg.json, gibson_explorer.json | **maintainability** | Reference archived files | Update paths or document |
 
@@ -125,12 +125,12 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 | Item | Severity | Location |
 |------|----------|----------|
 | Contour hierarchy duplication | HIGH | edge_to_dxf.py |
-| cognitive_extractor.py unwired (archaeological) | MEDIUM | photo-vectorizer |
-| cognitive_extraction_engine.py unwired (archaeological) | MEDIUM | photo-vectorizer |
+| relocated cognitive_extractor.py | LOW | vectorizer-sandbox (research-only) |
+| relocated cognitive_extraction_engine.py | LOW | vectorizer-sandbox (research-only) |
 | 5 grid extractors v1–v5 (archaeological) | MEDIUM | photo-vectorizer |
 | geometry_coach v1 not deprecated | MEDIUM | photo-vectorizer |
 | photo_vectorizer_v2.py version mismatch | MEDIUM | photo-vectorizer |
-| vectorizer_phase2.py superseded | MEDIUM | blueprint-import |
+| relocated vectorizer_phase2.py | LOW | vectorizer-sandbox (research-only) |
 | CleanupMode invalid default | MEDIUM | vectorize_router.py |
 | March pipeline restore orphaned | LOW | photo-vectorizer |
 | DEPRECATED comment kept | LOW | edge_to_dxf.py |
@@ -161,7 +161,7 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 
 | File | LOC | Status | Action |
 |------|-----|--------|--------|
-| `vectorizer_phase2.py` | 1684 | **ABANDONED** | Deprecate after parity documented; not same as archaeological lineage |
+| former `vectorizer_phase2.py` | 1684 | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved in `vectorizer-sandbox/src/archaeology/vectorizer_phase2_runtime_spine.py` |
 
 **~5,800 LOC** cognitive/grid: **research artifacts**, not janitorial delete target for PR-1–3.
 
@@ -191,7 +191,7 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 
 3. **SIMPLE:** Export fix (PR-1) → **EXPORT_SAFE** only; commercial ACTIVE requires `VECTORIZER_COMPONENT_LIFECYCLE.md` gate + sign-off.
 
-4. **Archaeological lineage:** ~5,800 LOC cognitive/grid — **ARCHAEOLOGICAL_RESEARCH**; preserve, extract concepts, optional separate repo; grep CI to prevent production re-import.
+4. **Relocated research lineage:** cognitive/grid/Phase-2 assets are **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** in `vectorizer-sandbox`; preserve and harvest concepts there, with the existing grep gate preventing production re-import.
 
 **Conclusion:** Trustworthiness on the **live** path requires PR-2 observability on `refined`, constitutional IBG intake, and golden `refined` stability — not enabling Phase 3 SIMPLE for MVP.
 
