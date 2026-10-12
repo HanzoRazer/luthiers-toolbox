@@ -1,7 +1,7 @@
 # Vectorizer Technical Debt Inventory
 
 **Date:** 2026-05-20  
-**Status:** ARCHAEOLOGY_COMPLETE  
+**Status:** ARCHAEOLOGY_COMPLETE — reconciled 2026-10-11  
 **Sprint:** Vectorizer Technical Debt Archaeology  
 **Lifecycle authority:** `docs/governance/VECTORIZER_COMPONENT_LIFECYCLE.md` (component states, ACTIVE promotion, SIMPLE gate)
 
@@ -57,10 +57,10 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 | Debt Item | Location | Domain | Issue | Recommendation |
 |-----------|----------|--------|-------|----------------|
 | Contour hierarchy duplication | edge_to_dxf.py:419 | **maintainability** | Duplicates contour_hierarchy.py | Extract shared module |
-| `cognitive_extractor.py` unwired | photo-vectorizer/ | **regression_risk** | 1400+ LOC; **ARCHAEOLOGICAL_RESEARCH** | Freeze; no production import; harvest before delete |
-| `cognitive_extraction_engine.py` unwired | photo-vectorizer/ | **regression_risk** | 1500+ LOC; same | Same |
+| relocated `cognitive_extractor.py` | `vectorizer-sandbox/src/semantic/` | **regression_risk** | Research-only; no longer in runtime spine | Preserve externally; production re-import remains gated |
+| relocated `cognitive_extraction_engine.py` | `vectorizer-sandbox/src/semantic/` | **regression_risk** | Research-only; no longer in runtime spine | Preserve externally; production re-import remains gated |
 | edge_to_dxf grouping fallback silent | edge_to_dxf.py:1294 | **topology** | Falls back to deprecated method on any exception | Add telemetry, fix exceptions |
-| 5 abandoned grid extractors | photo-vectorizer/ | **maintainability** | extract_body_grid_v1-v5 never wired | **ARCHAEOLOGICAL_RESEARCH** — preserve, harvest concepts |
+| relocated grid extractors v1–v5 | `vectorizer-sandbox/src/archaeology/` | **maintainability** | Research-only; no longer in runtime spine | Preserve externally; harvest concepts only through research |
 | Phase 4 standalone | blueprint-import/phase4/ | **semantic** | Complete but not integrated | Integrate or document as future work |
 
 ---
@@ -150,10 +150,10 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 
 | File | LOC | Lifecycle state | Action |
 |------|-----|-----------------|--------|
-| `cognitive_extractor.py` | ~1470 | **ARCHAEOLOGICAL_RESEARCH** | Freeze; document concepts; optional future external repo |
-| `cognitive_extraction_engine.py` | ~1503 | **ARCHAEOLOGICAL_RESEARCH** | Same |
-| `extract_body_grid.py` v1–v5 | ~1,640 total | **ARCHAEOLOGICAL_RESEARCH** | Same |
-| `march_pipeline_restore.py` | ~100 | **ARCHAEOLOGICAL_RESEARCH** | Same |
+| former `cognitive_extractor.py` | ~1470 | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved in `vectorizer-sandbox/src/semantic/` |
+| former `cognitive_extraction_engine.py` | ~1503 | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved in `vectorizer-sandbox/src/semantic/` |
+| former `extract_body_grid.py` v1–v5 | ~1,640 total | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Preserved in `vectorizer-sandbox/src/archaeology/` |
+| `march_pipeline_restore.py` | ~100 | **PARTIAL / Tier B** | Remains separately coupled; not part of completed Tier A disposition |
 
 **Policy:** Unwired ≠ worthless. Harvest semantic/topology ideas before any deletion. See `VECTORIZER_COMPONENT_LIFECYCLE.md`.
 
@@ -173,7 +173,7 @@ Non-canonical or unwired systems must use lifecycle states in `VECTORIZER_COMPON
 |----------|----------|-------|-------------|
 | P0-live | HIGH/telemetry | 1 | PR-2 grouping fallback visibility on `refined` path |
 | P0-code | CRITICAL | 3 | PR-1 SIMPLE export; PR-3 gate DEAD feedback paths |
-| P1 | HIGH | 6 | Harvest archaeological lineage; grep-gate imports; optional external repo — **no bulk delete** |
+| P1 | HIGH | 6 | **Tier A complete:** relocated to `vectorizer-sandbox`, research-only, grep-gated against production re-import; Tier B remains separate |
 | P2 | MEDIUM | 8 | Calibration on main vectorize (optional), consolidate scale |
 | P3 | LOW | 5 | Cleanup when convenient |
 
