@@ -166,7 +166,7 @@ States reflect verification run **2026-05-20** (`scripts/governance/verify_vecto
 
 | Component | Path classification | Lifecycle state | Notes |
 |-----------|---------------------|-----------------|-------|
-| `vectorizer_phase2.py` | ABANDONED | **ABANDONED** | Superseded by Phase 3 + orchestrator; dev `/vectorize-geometry` only |
+| former `services/blueprint-import/vectorizer_phase2.py` | RELOCATED_EXTERNAL | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Superseded implementation preserved in sandbox; dev route is relocation stub |
 | `calibration_integration` (main vectorize) | Not wired | **FUTURE** (orchestrator unify) | Strategic P2, not sprint P0 |
 
 ### DXF and governance
@@ -254,7 +254,7 @@ IBG intake rule: __________________
 | PR-1 | SIMPLE → **EXPORT_SAFE** | SIMPLE → **ACTIVE** |
 | PR-3 | DEAD/PARTIAL truth; 501 on `submit_correction`; doc cross-links | Learning loop enabled |
 
-**Explicitly out of sprint:** Deletion or bulk archive of **ARCHAEOLOGICAL_RESEARCH** files (~5.8k LOC cognitive/grid). Operational freeze only.
+**Historical policy carried forward:** deletion of relocated cognitive/grid research remains unauthorized. The lineage is now preserved externally under **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY**; operational freeze continues.
 
 ---
 
@@ -287,7 +287,7 @@ Until Tier A re-home completes: keep archaeological code **in-tree**, **frozen**
 - Re-run `scripts/governance/verify_vectorizer_audit.ps1` after any vectorizer change.
 - Update registry when adding `CleanupMode`, wiring Phase 3 modes, or **relocating** (not deleting) archaeological files.
 - Stale debt inventory sections must match this doc (`VECTORIZER_TECHNICAL_DEBT_INVENTORY.md`).
-- New lifecycle state assignments for research lineage: **ARCHAEOLOGICAL_RESEARCH** only with one-line “what semantics might live here” in registry notes.
+- New in-tree unwired research may use **ARCHAEOLOGICAL_RESEARCH** with a one-line statement of potential semantic value; successfully migrated Tier A lineage remains **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY**.
 
 ---
 
