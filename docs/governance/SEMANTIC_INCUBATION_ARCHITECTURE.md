@@ -52,6 +52,14 @@ The sandbox is **not** a code graveyard. It is a **semantic R&D laboratory** tha
 
 ---
 
+## 3a. Retained research-only disposition — 2026-10-11
+
+The Tier A cognitive/grid/Phase-2 lineage already relocated to `vectorizer-sandbox` is retained there **for research only**. It may be benchmarked, reproduced, cited, and mined for concepts. It has no operational or fabrication authority in the runtime spine. The pre-existing import gate remains the enforcement mechanism; no second freeze checker is introduced because that would duplicate governance already owned by `scripts/governance/check_semantic_sandbox_imports.py`.
+
+The disposition preserves the current production vectorizer rather than retiring it. Future replacement or promotion work must enter through the bridge below as new reviewed runtime code.
+
+---
+
 ## 4. Constitutional graduation bridge
 
 Nothing moves from sandbox to production **directly**. Capabilities graduate only through:
