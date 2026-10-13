@@ -1,0 +1,82 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_F2_COUNT_INTEGRITY_001",
+  "title": "Repair the hollow Melody Maker entity-count test without claiming a reduction",
+  "intent": "F-2 read a missing attribute through getattr default 0, so the reduction assertion could not fail. Read dxf.entity_count directly, check it once against the emitted DXF, and stop asserting a reduction until F-3 reports that masking was applied.",
+  "change_type": "test",
+  "behavior_change": "Test integrity only. No vectorizer algorithm, orchestrator, result model, DXF generation, OCR capability, workflow, or default API CI change. The real-plan tests remain on the vectorizer_regression marker.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vectorizer-f2-count-integrity-001.json",
+      "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/text_masking_counts.py",
+      "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vectorizer-f2-count-integrity-001.json",
+      "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/text_masking_counts.py",
+      "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "test_entity_count_reduction is now test_melody_maker_reports_entity_counts. It reads result.dxf.entity_count and checks one emitted DXF. It does not assert masked < unmasked. Fast tests cover a missing count, an artifact mismatch, an applied reduction, an identical applied pair, and a refused comparison when applied is not true. The Melody Maker fixture uses the same two-call cache. The 2026-10-03 census is unchanged; the evidence test maps the old test id to the new name.",
+    "why": "The previous assertion compared zeros and could not detect a failed mask. Claiming a reduction now would also be false, because the result does not yet report whether masking was applied.",
+    "why_not_redundant": "CODE-TOOL-DOGFOOD-003 classified the detector miss and left the test hollow. This order repairs the test. It does not add a detector and it does not repair F-3.",
+    "what_did_not_change": "edge_to_dxf.py, the orchestrator, result models, DXF generation, OCR installation, vectorizer-regression.yml, core CI marker exclusion, the dogfood record, and the 2026-10-03 census."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr merge 434 --merge  # merged as fbf36095b99d0a97ee4574f27d6482a09e87bd6c; branch cut from that main",
+      "services/api/.venv/bin/python -m pytest tests/vectorizer/test_text_masking_count_integrity.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py -q --no-cov --tb=short  # 23 passed",
+      "services/api/.venv/bin/python -m pytest tests/test_vectorizer_research_only_freeze.py -q --tb=line  # 6 passed",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <manifest, closeout, regression test, helper, fast tests, census evidence test>  # PASSED, coverage 100%",
+      "git diff --name-only  # no services/api/app, photo-vectorizer, edge_to_dxf, workflow, or pytest.ini path"
+    ],
+    "proofs": [
+      "23 tests passed: missing dxf and entity_count raise, a mismatched artifact fails, applied equal counts fail, and applied is required before a strict reduction comparison.",
+      "The census evidence test still matches the 2026-10-03 excluded set through the rename map. The census file was not edited.",
+      "The Melody Maker PDF was not converted in this run. The two-call cache is the function the fixture uses, and the fast test calls it four times and records two computes."
+    ],
+    "hardware": "No machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_text_masking_regression.py",
+      "intent": "Report canonical entity counts from the two cached Melody Maker runs and check one emitted DXF.",
+      "risk": "low",
+      "behavior_change": "The hollow reduction assertion is gone. The conversions stay at two."
+    },
+    {
+      "path": "services/api/tests/vectorizer/text_masking_counts.py",
+      "intent": "Direct count access, one artifact consistency check, and the applied-only reduction helper.",
+      "risk": "low",
+      "behavior_change": "Test helper. No production import."
+    },
+    {
+      "path": "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "intent": "Fast synthetic proofs for missing counts, artifact mismatch, and the reduction gate.",
+      "risk": "low",
+      "behavior_change": "Tests only. They do not convert a blueprint."
+    },
+    {
+      "path": "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "intent": "Keep the historical census id mapped to the renamed test.",
+      "risk": "low",
+      "behavior_change": "Tests only. The census file is not edited."
+    },
+    {
+      "path": "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "intent": "Record what F-2 now proves and what remains for F-3 and the detector successor.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    }
+  ]
+}

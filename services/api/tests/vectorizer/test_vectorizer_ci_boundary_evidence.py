@@ -26,6 +26,12 @@ REGRESSION_MODULE = TESTS_DIR / "test_text_masking_regression.py"
 GENERATOR = REPO_ROOT / "scripts" / "investigations" / "generate_vectorizer_ci_boundary.py"
 
 MARKER = "vectorizer_regression"
+# The 2026-10-03 census names the hollow test. F-2 renamed it. The census stays
+# the historical record; this map is the only bridge.
+CENSUS_TEST_SUCCESSORS = {
+    "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction":
+    "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_melody_maker_reports_entity_counts",
+}
 LARGE_COUNT = 266_359
 ELLIPSE_COUNT = 1_116
 CUATRO_SHA256 = "41e62ec08c1c748681f43d05c1abab305978b5cce6ef1278a6ddc36be639613a"
@@ -142,11 +148,21 @@ def test_the_marker_is_applied_in_exactly_one_module():
     assert f"pytestmark = pytest.mark.{MARKER}" in REGRESSION_MODULE.read_text(encoding="utf-8")
 
 
+def _census_ids_for_current_module(module_ids: list[str]) -> list[str]:
+    current_to_census = {current: historical for historical, current in CENSUS_TEST_SUCCESSORS.items()}
+    return [current_to_census.get(item, item) for item in module_ids]
+
+
 def test_excluded_and_dedicated_sets_are_the_same_complete_set():
     default_ci = _census()["default_ci"]
     module_ids = sorted(f"tests/test_text_masking_regression.py::{i}" for i in _regression_test_ids())
-    assert sorted(default_ci["excluded"]) == module_ids
-    assert sorted(default_ci["dedicated"]) == module_ids
+    census_ids = sorted(_census_ids_for_current_module(module_ids))
+    assert sorted(default_ci["excluded"]) == census_ids
+    assert sorted(default_ci["dedicated"]) == census_ids
+    assert CENSUS_TEST_SUCCESSORS[
+        "tests/test_text_masking_regression.py::TestTextMaskingComparison::test_entity_count_reduction"
+    ] in module_ids
+    assert "TestTextMaskingComparison::test_entity_count_reduction" not in _regression_test_ids()
 
 
 def test_dedicated_workflow_is_bounded_manual_and_path_triggered():
