@@ -182,6 +182,16 @@ function deleteSelected() {
   deselect(); store.removeInlay(selectedInlayId.value); inlayLayer.draw(); saveHistory()
 }
 
+function setInlayScale(e: Event) {
+  if (!selectedInlay.value) return
+  const v = +(e.target as HTMLInputElement).value
+  selectedInlay.value.node.scaleX(v); selectedInlay.value.node.scaleY(v); inlayLayer?.draw()
+}
+function setInlayRotation(e: Event) {
+  if (!selectedInlay.value) return
+  selectedInlay.value.node.rotation(+(e.target as HTMLInputElement).value); inlayLayer?.draw()
+}
+
 function snapshotInlays() { return inlays.value.map(l => ({ id:l.id, x:l.node.x(), y:l.node.y(), s:l.node.scaleX(), r:l.node.rotation(), v:l.node.visible() })) }
 function saveHistory() { const s = snapshotInlays(); history.value = history.value.slice(0, histIdx.value+1); history.value.push(s); if(history.value.length>80) history.value.shift(); histIdx.value = history.value.length-1 }
 function undo() {
@@ -287,8 +297,8 @@ const emit = defineEmits<{ toast: [msg: string] }>()
         <div class="sec-lbl">Element</div>
         <div v-if="!selectedInlay" class="no-sel">No selection</div>
         <template v-else>
-          <div class="param-row"><span class="param-name">Scale</span><input class="prop-val" type="number" step="0.05" :value="selectedInlay.node.scaleX().toFixed(2)" @change="e => { selectedInlay!.node.scaleX(+(e.target as HTMLInputElement).value); selectedInlay!.node.scaleY(+(e.target as HTMLInputElement).value); inlayLayer?.draw() }"><span class="param-unit">×</span></div>
-          <div class="param-row"><span class="param-name">Rotate</span><input class="prop-val" type="number" step="1" :value="Math.round(selectedInlay.node.rotation())" @change="e => { selectedInlay!.node.rotation(+(e.target as HTMLInputElement).value); inlayLayer?.draw() }"><span class="param-unit">°</span></div>
+          <div class="param-row"><span class="param-name">Scale</span><input class="prop-val" type="number" step="0.05" :value="selectedInlay.node.scaleX().toFixed(2)" @change="setInlayScale"><span class="param-unit">×</span></div>
+          <div class="param-row"><span class="param-name">Rotate</span><input class="prop-val" type="number" step="1" :value="Math.round(selectedInlay.node.rotation())" @change="setInlayRotation"><span class="param-unit">°</span></div>
           <div style="display:flex;gap:4px;margin-top:4px">
             <button class="sbtn" style="flex:1" @click="selectedInlay.node.scaleX(-selectedInlay.node.scaleX()); inlayLayer?.draw()">⇔ Flip</button>
             <button class="sbtn" style="flex:1;color:var(--red)" @click="deleteSelected">✕ Del</button>
