@@ -1,0 +1,74 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_TSC_3_3_12_BUMP",
+  "title": "build(deps-dev): bump vue-tsc from 3.3.11 to 3.3.12 (with a type-check fix it surfaced)",
+  "intent": "Routine patch-level currency for the client type checker. No advisory is driving it. As Dependabot opened it, lint-build failed the type-check ratchet at 152 against a ceiling of 150. vue-tsc 3.3.12 stops synthesizing ignore comments around compound inline event handlers (language-tools 3.3.12 release notes: 'eliminate synthesized ignore comments across codegen, scoped class aliases and compound event handlers'). The two multi-statement @change arrows on the inlay Scale/Rotate inputs in headstock/WorkspaceView.vue were type-checked for the first time and produced 2 new errors. The fix moves both handlers into typed script functions. No ceiling was raised.",
+  "change_type": "chore",
+  "behavior_change": "Dev tooling only; nothing in the shipped bundle changes at runtime. I rebuilt the PR branch on current main 073a7fb4 (Dependabot's commit was 24 commits behind, and #429 has since changed the same two files). I then enumerated every entry in packages/client/package-lock.json against that base (400 -> 400 entries). Version changes (2): vue-tsc 3.3.11->3.3.12 and @vue/language-core 3.3.11->3.3.12. Added 0, removed 0. Both tarballs match the lockfile integrity, both resolve from registry.npmjs.org, both were published via npm OIDC from GitHub Actions by the listed maintainers, neither has an install hook, and GitHub advisories list 0 for either version. A merge-tree onto main is clean and reverts no sibling (including #429's eslint toolchain). Type-check: with vue-tsc 3.3.11 and 3.3.12 on the same tree, the error sets differ by exactly the two WorkspaceView.vue handler errors. After the source fix, the position-independent error set is identical to the 3.3.11 set (150). The source change moves two inline handlers into script functions with the same statements, so the handlers behave exactly as before.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-tsc-3.3.12-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/views/cam/headstock/WorkspaceView.vue"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-tsc-3.3.12-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/views/cam/headstock/WorkspaceView.vue"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Dependabot's commit bumps vue-tsc ^3.3.11 -> ^3.3.12 and its lockfile entries (cherry-picked unchanged onto current main). A follow-up commit replaces the two compound @change arrows on the inlay Scale and Rotate inputs with setInlayScale(e) and setInlayRotation(e) script functions. These run the same statements and return early when nothing is selected, as the v-else template guard already ensured.",
+    "why_not_redundant": "Dependabot currency. The PR cannot pass the required lint-build check as opened, so it can be neither merged nor closed-as-superseded without this fix."
+  },
+  "verification": {
+    "commands_run": [
+      "Full lockfile enumeration (every packages entry: version-changed / added / removed / field-diff) against base 073a7fb4; the result is recorded in behavior_change",
+      "npm ci: clean; npm ls vue-tsc @vue/language-core -> 3.3.12 / 3.3.12",
+      "npm run type-check + scripts/ci/check_client_type_check_ratchet.py: FAIL 152/150 before the fix (reproduces CI), PASS 150/150 after",
+      "Same tree with vue-tsc 3.3.11 (npm i --no-save): 150 errors; diff vs 3.3.12 = exactly WorkspaceView.vue handler lines 290/291",
+      "npm run lint:report + scripts/ci/check_client_lint_ratchet.py: PASS at 34 errors / 7683 warnings (ceiling unchanged)",
+      "npm test: 777 passed; 1 suite (nodeEngineFloor.spec.ts) fails identically on main on a Windows/autocrlf checkout, so it is pre-existing and not touched by this change",
+      "npm run build: success",
+      "gh advisories for vue-tsc@3.3.11 and @3.3.12: 0 / 0"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "vue-tsc ^3.3.12 (Dependabot).",
+      "risk": "low",
+      "behavior_change": "Dev-only type-checker patch bump."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "Only vue-tsc and @vue/language-core move, 3.3.11 -> 3.3.12."
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/WorkspaceView.vue",
+      "intent": "Move the inlay Scale/Rotate compound @change arrows into typed script functions so that vue-tsc 3.3.12 checks them without new errors.",
+      "risk": "low",
+      "behavior_change": "None: the same Konva calls followed by inlayLayer?.draw()."
+    },
+    {
+      "path": ".cbsp21/patches/vue-tsc-3.3.12-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-tooling patch bump; no architectural surface. The one source edit is a handler extraction inside a single view."
+  }
+}
