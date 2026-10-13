@@ -5,11 +5,15 @@ on:
     paths:
       - "packages/client/**"
       - ".github/workflows/client_lint_build.yml"
+      - "scripts/ci/check_client_type_check_ratchet.py"
+      - "scripts/ci/client_type_check_baseline.json"
   push:
     branches: [main]
     paths:
       - "packages/client/**"
       - ".github/workflows/client_lint_build.yml"
+      - "scripts/ci/check_client_type_check_ratchet.py"
+      - "scripts/ci/client_type_check_baseline.json"
 
 concurrency:
   group: client-lint-build-${{ github.ref }}
