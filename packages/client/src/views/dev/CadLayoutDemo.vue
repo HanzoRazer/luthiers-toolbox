@@ -17,7 +17,7 @@ import type { FeatureToggleItem } from "@/components/layout/CadFeatureToggles.vu
 import { useFeatureToggles } from "@/composables/useFeatureToggles";
 
 // Feature toggles demo
-const { toggles, isEnabled, toggle } = useFeatureToggles({
+const { isEnabled, toggle } = useFeatureToggles({
   showToolpath: true,
   showRapids: true,
   showMaterial: false,
@@ -37,7 +37,7 @@ const displayFeatures = ref<FeatureToggleItem[]>([
 ]);
 
 function handleToggle(key: string, checked: boolean) {
-  toggle(key as keyof typeof toggles);
+  toggle(key as Parameters<typeof toggle>[0]);
   const feature = displayFeatures.value.find((f) => f.key === key);
   if (feature) feature.checked = checked;
 }

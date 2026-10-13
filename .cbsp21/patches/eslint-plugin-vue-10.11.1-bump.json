@@ -1,0 +1,122 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ESLINT_PLUGIN_VUE_10_11_1_BUMP",
+  "title": "build(deps-dev): bump eslint-plugin-vue from 9.33.0 to 10.11.1 (with @typescript-eslint 6 -> 8 in lockstep)",
+  "intent": "Routine currency, no advisory driving it. This is a SEMVER-MAJOR lint-tooling bump. As Dependabot opened it, npm ci failed with ERESOLVE: eslint-plugin-vue 10 declares peerOptional @typescript-eslint/parser ^7 || ^8, and the client pinned ^6.21.0. That one conflict was the cause of every red build lane on PR #429 (lint-build, build-and-test, Containers, proxy-parity, proxy-adaptive, Railway client). The fix is to move @typescript-eslint/parser and @typescript-eslint/eslint-plugin to ^8.71.2 together, and to rename the legacy preset that v10 renamed.",
+  "change_type": "chore",
+  "behavior_change": "Dev tooling only; nothing in the shipped bundle changes at runtime. I enumerated every entry in packages/client/package-lock.json against merge base d989d542 (412 -> 400 entries). Version changes (16): eslint-plugin-vue 9.33.0->10.11.1; vue-eslint-parser 9.4.3->10.4.1; @typescript-eslint/{eslint-plugin,parser,scope-manager,type-utils,types,typescript-estree,utils,visitor-keys} 6.21.0->8.71.2; ts-api-utils 1.4.3->2.5.0; postcss-selector-parser 6.1.4->7.1.6; xml-name-validator 4.0.0->5.0.0; minimatch 9.0.3->10.2.6, brace-expansion 2.1.4->5.0.12, picomatch 2.3.2->4.0.7 (hoisting only: these versions already existed nested and are now hoisted). Added (11): @typescript-eslint/project-service and tsconfig-utils 8.71.2, @types/esrecurse 4.3.1, fdir 6.5.0, tinyglobby 0.2.17, plus nested copies of ignore 7.0.12, eslint-visitor-keys 5.0.1 (x2), eslint-scope 9.1.2, espree 11.2.0, balanced-match 4.0.4. Removed (23): the typescript-eslint v6 globby tree (globby, fast-glob, micromatch, braces, fill-range, to-regex-range, is-number, merge2, dir-glob, path-type, slash, array-union, glob-parent@5), @types/json-schema, @types/semver, lodash, and nested minimatch/brace-expansion/balanced-match/picomatch copies that the new hoisting deduped. No package outside the eslint toolchain moved. No sibling dependency was reverted (main has not touched packages/client since the merge base). Linter behavior: three things changed, and each was handled so that the lint ratchet stays exactly at its ceiling (34 errors / 7683 warnings) without raising any ceiling. (1) 'plugin:vue/vue3-recommended' -> 'plugin:vue/recommended' (v10 renamed it). (2) @typescript-eslint/no-unused-vars now sets caughtErrors: 'none' explicitly. That was the v6 default and v8 flipped it to 'all', so this keeps the previous behavior rather than relaxing it. (3) v8's recommended set newly reports 4 errors and 3 warnings, and these are fixed in source rather than suppressed (see files[]).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/eslint-plugin-vue-10.11.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/.eslintrc.cjs",
+      "packages/client/src/models/strip_family.ts",
+      "packages/client/src/composables/types.ts",
+      "packages/client/src/components/art/snapshot_compare/composables/useSnapshotCompareKeyboard.ts",
+      "packages/client/src/components/cam/CamBackplot3D.vue",
+      "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "packages/client/src/views/dev/CadLayoutDemo.vue"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/eslint-plugin-vue-10.11.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/.eslintrc.cjs",
+      "packages/client/src/models/strip_family.ts",
+      "packages/client/src/composables/types.ts",
+      "packages/client/src/components/art/snapshot_compare/composables/useSnapshotCompareKeyboard.ts",
+      "packages/client/src/components/cam/CamBackplot3D.vue",
+      "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "packages/client/src/views/dev/CadLayoutDemo.vue"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Dependabot's commit bumped only eslint-plugin-vue, which left the tree unresolvable. This follow-up commit bumps @typescript-eslint/{parser,eslint-plugin} ^6.21.0 -> ^8.71.2 to satisfy the peer range, renames the vue preset, and pins caughtErrors to the v6 default. It also fixes the source findings that v8 newly surfaces. It restores two inBundle lock entries (@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/{core,runtime} 1.11.1) verbatim from the merge base: npm on Windows pruned them during regeneration, and they belong to a wasm32-only optional package whose resolution did not change.",
+    "why_not_redundant": "Dependabot currency for a major version. The PR cannot install as opened, so it can be neither merged nor closed-as-superseded without this resolution."
+  },
+  "verification": {
+    "commands_run": [
+      "Full lockfile enumeration (every packages entry: version-changed / added / removed / field-diff) against merge base d989d542; the result is recorded in behavior_change",
+      "rm -rf node_modules && npm ci: clean, no ERESOLVE; npm ls --all exits 0",
+      "npm run lint:report + scripts/ci/check_client_lint_ratchet.py: PASS at 34 errors / 7683 warnings, identical to the same measurement at the merge base",
+      "npm run type-check + scripts/ci/check_client_type_check_ratchet.py: PASS, 150 / ceiling 150",
+      "npm test: 777 passed; 1 suite (nodeEngineFloor.spec.ts) fails identically at the merge base on a Windows/autocrlf checkout, so it is pre-existing and not touched by this change",
+      "npm run build: success",
+      "npm audit: 8 advisories vs 20 at the merge base. The PR set is a strict subset; none are new.",
+      "Engine floors: every moved package accepts the client floor ^20.19.0 || >=22.22.2"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "eslint-plugin-vue ^10.11.1 (Dependabot); @typescript-eslint/parser and eslint-plugin ^8.71.2 (required peer range).",
+      "risk": "low",
+      "behavior_change": "Dev-only toolchain major bump; no runtime dependency changes."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "All incidental movements are listed in the top-level behavior_change. All of them are in the eslint toolchain."
+    },
+    {
+      "path": "packages/client/.eslintrc.cjs",
+      "intent": "Use the preset name v10 renamed to (vue3-recommended -> recommended), and pin no-unused-vars caughtErrors to the v6 default.",
+      "risk": "low",
+      "behavior_change": "None intended: the same rule coverage as before the upgrade."
+    },
+    {
+      "path": "packages/client/src/models/strip_family.ts",
+      "intent": "Remove a stray 'confirm' token after the closing brace of MaterialVisualProps. It was a no-op expression statement that referenced window.confirm, probably a paste accident. Found by v8 no-unused-expressions.",
+      "risk": "low",
+      "behavior_change": "None (dead expression removed)."
+    },
+    {
+      "path": "packages/client/src/composables/types.ts",
+      "intent": "Inline-disable no-empty-object-type on the BaseDeps/BaseState marker interfaces, which are documented as intentionally empty extension points.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/components/art/snapshot_compare/composables/useSnapshotCompareKeyboard.ts",
+      "intent": "Inline-disable no-empty-object-type on an intentionally empty return contract.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/components/cam/CamBackplot3D.vue",
+      "intent": "Mark the 'moves' prop optional because it has a default (vue/no-required-prop-with-default, new in plugin v10).",
+      "risk": "low",
+      "behavior_change": "Type-level only: withDefaults still supplies null."
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "intent": "bucketsRaw was destructured only to be used in 'typeof' positions (v8 no-unused-vars). Replace those with a RiskBucket alias derived from useRiskBuckets' return type.",
+      "risk": "low",
+      "behavior_change": "Type-level only."
+    },
+    {
+      "path": "packages/client/src/views/dev/CadLayoutDemo.vue",
+      "intent": "toggles was used only as 'keyof typeof toggles'. Replace it with Parameters<typeof toggle>[0]. Both resolve to keyof T, so the type is unchanged. This is an unrouted dev view.",
+      "risk": "low",
+      "behavior_change": "Type-level only."
+    },
+    {
+      "path": ".cbsp21/patches/eslint-plugin-vue-10.11.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-tooling bump; no architectural surface. The lockfile moves the full eslint/typescript-eslint toolchain beyond the titled package, as enumerated in behavior_change. The six source edits are lint-driven, and five of them are type-level or comment-only."
+  }
+}

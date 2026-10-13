@@ -159,9 +159,10 @@ const {
   filtersAreEmpty,
 } = useRiskFilters()
 
+type RiskBucket = ReturnType<typeof useRiskBuckets>['bucketsRaw']['value'][number]
+
 // Buckets composable
 const {
-  bucketsRaw,
   selectedBucket,
   bucketEntries,
   bucketEntriesLoading,
@@ -216,11 +217,11 @@ function handleApplyFilters(filters: Record<string, string>) {
   handleRefresh()
 }
 
-function handleSelectBucket(bucket: (typeof bucketsRaw.value)[0]) {
+function handleSelectBucket(bucket: RiskBucket) {
   loadBucketDetails(bucket, jobFilter.value)
 }
 
-function handleGoToLab(bucket: (typeof bucketsRaw.value)[0]) {
+function handleGoToLab(bucket: RiskBucket) {
   goToLab(bucket, jobFilter.value)
 }
 
