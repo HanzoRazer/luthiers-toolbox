@@ -1,7 +1,7 @@
 # Vectorizer Canonical Paths
 
 **Date:** 2026-05-20  
-**Status:** ARCHAEOLOGY_COMPLETE  
+**Status:** ARCHAEOLOGY_COMPLETE — reconciled 2026-10-11  
 **Sprint:** Vectorizer Technical Debt Archaeology
 
 ---
@@ -15,6 +15,7 @@ Paths are classified as:
 - **CANONICAL_RECOVERY** — Protected experimental recovery modes (MRP-1C)
 - **DEVELOPMENT_ONLY** — Dev/staging environment only
 - **DEBUG_TOOL** — Manual debugging, not production
+- **API_EXPOSED_EXPERIMENTAL** — Reachable only by an explicit mode through a production endpoint; lifecycle authority remains SANDBOX and the mode is not production-qualified
 - **ARCHAEOLOGICAL_RESEARCH** — Unwired; potentially informative semantics/topology lineage (see `VECTORIZER_COMPONENT_LIFECYCLE.md`) — **not** delete-by-default
 - **ORPHAN** — Code exists but never wired; no documented research value
 - **ABANDONED** — Superseded by active implementation
@@ -55,7 +56,7 @@ POST /api/blueprint/vectorize
 | `photo_v2` | `EdgeToDXF.convert_enhanced()` | Multi-scale Canny | **CANONICAL_RECOVERY** |
 | `photo_refined` | `EdgeToDXF.convert()` morph_close_kernel=0 | Text-preserving photo | **CANONICAL_RECOVERY** |
 | `layered_dual_pass` | `extract_dual_pass()` | Phase 4 layer building | EXPERIMENTAL |
-| `enhanced` | `extract_blueprint_enhanced()` | Multi-scale fusion (50k-300k entities) | PRODUCTION |
+| `enhanced` | `extract_blueprint_enhanced()` | Multi-scale fusion (50k-300k entities) | **API_EXPOSED_EXPERIMENTAL** — SANDBOX authority, explicit mode only |
 | `cam_ready_r2000` | `Phase3Vectorizer(dxf_version='R2000')` | Paid tier LWPOLYLINE | PRODUCTION (auth required) |
 
 ### Photo Vectorizer Endpoint
@@ -90,7 +91,7 @@ POST /api/vectorizer/extract
 | `vectorizer_phase3.py` | `Phase3Vectorizer.extract()` | **CANONICAL** | Primary blueprint extraction |
 | `vectorizer_phase3.py:_raw_extract()` | Line 2838 | **CANONICAL_RECOVERY** | V2_RAW mode source |
 | `vectorizer_phase3.py:_simple_extraction()` | Line 3766 | BROKEN → EXPORT_SAFE (PR-1) | Not ACTIVE until lifecycle gate; see `VECTORIZER_COMPONENT_LIFECYCLE.md` |
-| `vectorizer_phase2.py` | `VectorizerPhase2` | SUPERSEDED | No API wiring |
+| former `vectorizer_phase2.py` | Relocated to `vectorizer-sandbox/src/archaeology/vectorizer_phase2_runtime_spine.py` | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | Runtime source removed; dev route returns relocation detail |
 | `vectorizer_enhancements.py` | Optional import by phase3 | ACTIVE | Phase 3.7 features |
 | `dxf_compat.py` | All DXF creation | **CANONICAL** | R12/R2000 abstraction |
 | `phase4/` | Dimension linking | STANDALONE | Not integrated |
@@ -104,9 +105,9 @@ POST /api/vectorizer/extract
 | `edge_to_dxf.py` | `EdgeToDXF.convert_enhanced()` | **CANONICAL** | PHOTO_V2 mode source |
 | `body_isolation_stage.py` | `BodyIsolationStage` | **CANONICAL** | Stage 4.5 body isolation |
 | `geometry_coach_v2.py` | `GeometryCoachV2` | ACTIVE | Retry logic |
-| `cognitive_extractor.py` | Never imported | **ORPHAN** | High risk |
-| `cognitive_extraction_engine.py` | Never imported | **ORPHAN** | High risk |
-| `extract_body_grid_v*.py` (5 files) | None | **ABANDONED** | Never wired |
+| former `cognitive_extractor.py` | Relocated to `vectorizer-sandbox/src/semantic/` | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | No production authority |
+| former `cognitive_extraction_engine.py` | Relocated to `vectorizer-sandbox/src/semantic/` | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | No production authority |
+| former `extract_body_grid_v*.py` | Relocated to `vectorizer-sandbox/src/archaeology/` | **RELOCATED_EXTERNAL / RETAIN_RESEARCH_ONLY** | No production authority |
 
 ---
 
@@ -154,9 +155,9 @@ Response: { artifacts: { svg: {...}, dxf: {...} } }
 | `FeedbackSystem.submit_correction` | vectorizer_phase3.py | **NEVER CALLED** — user feedback intake dead |
 | `TrainingDataCollector` | vectorizer_phase3.py:1273 | Never instantiated |
 | `phase4/` directory | blueprint-import | Complete but standalone |
-| `cognitive_extractor.py` | photo-vectorizer | Never imported |
-| `cognitive_extraction_engine.py` | photo-vectorizer | Never imported |
-| `extract_body_grid_v*.py` | photo-vectorizer | 5 abandoned versions |
+| former `cognitive_extractor.py` | relocated external | Preserved in `vectorizer-sandbox/src/semantic/`; no production import |
+| former `cognitive_extraction_engine.py` | relocated external | Preserved in `vectorizer-sandbox/src/semantic/`; no production import |
+| former `extract_body_grid_v*.py` | relocated external | Preserved in `vectorizer-sandbox/src/archaeology/`; no production import |
 
 ---
 

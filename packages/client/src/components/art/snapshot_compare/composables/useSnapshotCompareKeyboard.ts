@@ -3,6 +3,7 @@
  */
 import { onMounted, onBeforeUnmount, type Ref } from 'vue'
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally empty return contract
 export interface SnapshotCompareKeyboardReturn {
   // Keyboard handling is done internally
 }

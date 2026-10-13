@@ -1,0 +1,136 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PEP_V1_HARDEN_001",
+  "title": "Harden the physical-engineering proposal into a fail-closed advisory screening gate",
+  "intent": "Add PhysicalEngineeringProposalV1 as an untrusted claim, then require a validator-owned evidence resolver and an explicit test policy before any verdict. Geometry stays an untrusted claim. The gate is not mounted on a route and does not authorize physical work.",
+  "change_type": "feature",
+  "behavior_change": "New library only. validate_proposal now requires a resolver and a ValidationPolicyV1, resolves evidence itself, computes projected remaining thickness, and freezes a replayable snapshot. No route, mesh, calculator, or manufacturing output calls it.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/pep-v1-harden-001.json",
+      "services/api/app/physical_engineering/__init__.py",
+      "services/api/app/physical_engineering/errors.py",
+      "services/api/app/physical_engineering/evidence.py",
+      "services/api/app/physical_engineering/policy.py",
+      "services/api/app/physical_engineering/proposal_v1.py",
+      "services/api/app/physical_engineering/screening.py",
+      "services/api/app/physical_engineering/snapshot.py",
+      "services/api/tests/physical_engineering/__init__.py",
+      "services/api/tests/physical_engineering/test_pep_v1_harden_001.py",
+      "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py",
+      "docs/physical_engineering/PEP-V1-HARDEN-001.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/pep-v1-harden-001.json",
+      "services/api/app/physical_engineering/__init__.py",
+      "services/api/app/physical_engineering/errors.py",
+      "services/api/app/physical_engineering/evidence.py",
+      "services/api/app/physical_engineering/policy.py",
+      "services/api/app/physical_engineering/proposal_v1.py",
+      "services/api/app/physical_engineering/screening.py",
+      "services/api/app/physical_engineering/snapshot.py",
+      "services/api/tests/physical_engineering/__init__.py",
+      "services/api/tests/physical_engineering/test_pep_v1_harden_001.py",
+      "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py",
+      "docs/physical_engineering/PEP-V1-HARDEN-001.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "services/api/app/physical_engineering is a new package. EvidenceRef carries only ref_id and expected_kind. InMemoryEvidenceResolver recomputes SHA-256 over opaque bytes. EvidenceNotFound and EvidenceDigestMismatch subclass EvidenceResolutionError. ValidationPolicyV1 supplies only policy identity, max_test_removal_mm, and min_test_remaining_thickness_mm, with no production default and no required-kind list. validate_proposal rejects a missing resolver or policy with ValidatorConfigurationError before any verdict. Kind mismatch is REJECTED / EVIDENCE_KIND_MISMATCH. A missing reference is EVIDENCE_REQUIRED / EVIDENCE_REFERENCE_NOT_FOUND. A digest mismatch is REJECTED / EVIDENCE_DIGEST_MISMATCH. REMOVE_MATERIAL requires thickness_map and modal_frequency. Two artifacts of one required kind are REJECTED / AMBIGUOUS_REQUIRED_EVIDENCE. Projected remaining thickness below the test minimum is EVIDENCE_REQUIRED / THICKNESS_CONFLICT_WITH_REMOVAL; equality passes. MODIFY_BRACE is REJECTED / ACTION_NOT_YET_GOVERNED. ACQUIRE_MORE_EVIDENCE is ADVISORY_ALLOWED / ACQUISITION_ALWAYS_ADMISSIBLE after the envelope check. The verdict field is advisory_review_allowed and snapshot_sha256 stays unset on that object. build_validation_snapshot freezes the proposal, resolved evidence, policy, validator version, contradiction-rule version, and verdict. replay_validation_snapshot checks the stored digest and takes no resolver. screening.py holds the rule functions so proposal_v1.py stays under the 500-line ratchet. GeometryRegion is still an agent claim. docs/physical_engineering/PEP-V1-HARDEN-001.md records that boundary.",
+    "why": "An agent proposal must not carry measured values, a resolves flag, or an authority grant, and a caller-supplied evidence bundle must not be treated as independent confirmation. The hardened gate separates untrusted citations from validator-owned bytes and keeps the historical verdict stable when the live store changes.",
+    "why_not_redundant": "No physical-engineering proposal type existed on main. The first commit imports the corrected baseline and its 66 tests. The second commit deletes that caller-supplied evidence bundle, AdvisoryReviewContext, advisory_authority_granted, and MAX_SINGLE_PASS_REMOVAL_MM, and replaces them with the resolver, the test policy, the projected-thickness rule, and snapshot replay. Mesh integration is deferred to PEP-MESH-SEAM-003. Wire canonicalization is deferred to PEP-V1-CONTRACT-002.",
+    "what_did_not_change": "services/api/app/mesh was not modified. No router, calculator, CAM export, or manufacturing inventory calls this gate. 0.6 is not a module constant; it appears only as a test-policy fixture. The gate does not claim physical admissibility."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base HEAD origin/main  # d989d54240bfddd6fd21eff7389633e0903f4405, equal to origin/main",
+      "services/api/.venv/bin/python -m pytest tests/physical_engineering -q --no-cov --tb=short  # 87 passed",
+      "services/api/.venv/bin/python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json  # OK",
+      "services/api/.venv/bin/python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json  # OK",
+      "services/api/.venv/bin/python -m app.ci.check_bare_except  # OK",
+      "services/api/.venv/bin/python -m app.ci.fence_checker_v2  # 2 passed",
+      "services/api/.venv/bin/python -m app.ci.check_execution_class_compliance  # OK",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <package, tests, doc, manifest>  # PASSED, coverage 100%",
+      "services/api/.venv/bin/python -m pytest scripts/ci/ -k cbsp21 -q --no-cov  # 36 passed",
+      "services/api/.venv/bin/python -m pytest -q -m 'not vectorizer_regression' --collect-only --no-cov  # 9566 collected, 5 deselected, exit 0",
+      "services/api/.venv/bin/python -m pytest -q -m 'not vectorizer_regression' --no-cov  # 9337 passed, 116 failed, 14 errors, 58 skipped, 41 xfailed; no physical_engineering failure. Failures are FileNotFoundError for a 'python' subprocess, missing workflow_sessions table, and an unreachable db.your-project.supabase.co host."
+    ],
+    "proofs": [
+      "87 advisory-gate tests passed, including resolver, digest, kind, projected-thickness equality, configuration refusal, ambiguous required evidence, and snapshot replay.",
+      "Replay after deleting a live fixture artifact still returns the frozen ADVISORY_ALLOWED verdict, and a fresh validate_proposal call on the mutated store returns EVIDENCE_REFERENCE_NOT_FOUND.",
+      "No file under services/api/app/mesh is in the diff. The wider API suite's failures are environment errors and do not name this package."
+    ],
+    "hardware": "No machine execution and no manufacturing output. Policy numbers are test thresholds only."
+  },
+  "files": [
+    {
+      "path": "services/api/app/physical_engineering/__init__.py",
+      "intent": "Public exports for the advisory screening gate.",
+      "risk": "low",
+      "behavior_change": "New package surface. Nothing in the running API imports it yet."
+    },
+    {
+      "path": "services/api/app/physical_engineering/errors.py",
+      "intent": "ValidatorConfigurationError, EvidenceNotFound, EvidenceDigestMismatch, and SnapshotIntegrityError.",
+      "risk": "low",
+      "behavior_change": "Configuration and resolver failures are typed and are not proposal verdicts."
+    },
+    {
+      "path": "services/api/app/physical_engineering/evidence.py",
+      "intent": "Reference-only EvidenceRef, trusted ResolvedEvidence, and the in-memory resolver that recomputes SHA-256.",
+      "risk": "low",
+      "behavior_change": "Measured values live only on resolver output."
+    },
+    {
+      "path": "services/api/app/physical_engineering/policy.py",
+      "intent": "ValidationPolicyV1. Numeric limits are mandatory test-policy fields with no production authority.",
+      "risk": "low",
+      "behavior_change": "The gate no longer embeds a removal cap."
+    },
+    {
+      "path": "services/api/app/physical_engineering/proposal_v1.py",
+      "intent": "Proposal and verdict types, validate_proposal, capture_snapshot, and replay_validation.",
+      "risk": "low",
+      "behavior_change": "advisory_review_allowed replaces advisory_authority_granted. Replay takes no resolver."
+    },
+    {
+      "path": "services/api/app/physical_engineering/screening.py",
+      "intent": "Deterministic rule functions split out so proposal_v1.py stays under the file-size ratchet.",
+      "risk": "low",
+      "behavior_change": "Same rules the gate executes. No separate entry point."
+    },
+    {
+      "path": "services/api/app/physical_engineering/snapshot.py",
+      "intent": "FrozenValidationSnapshotV1 and the internal integrity digest.",
+      "risk": "low",
+      "behavior_change": "snapshot_sha256 is the decision identity. It is not a wire schema."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_physical_engineering_proposal_v1.py",
+      "intent": "Updated baseline cases for the hardened contract, including the untrusted geometry-revision limitation.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/__init__.py",
+      "intent": "Makes the advisory-gate tests a real package so pytest does not prepend the directory and import a different tests package.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_pep_v1_harden_001.py",
+      "intent": "Adversarial coverage for kind, digest, projected thickness, configuration refusal, and snapshot replay.",
+      "risk": "low",
+      "behavior_change": "Tests only."
+    },
+    {
+      "path": "docs/physical_engineering/PEP-V1-HARDEN-001.md",
+      "intent": "State the untrusted proposal boundary, the trusted resolver and test policy, and what replay does and does not prove.",
+      "risk": "low",
+      "behavior_change": "Documentation only. Geometry remains an unverified claim. Test-policy numbers are not physical safety limits."
+    }
+  ]
+}

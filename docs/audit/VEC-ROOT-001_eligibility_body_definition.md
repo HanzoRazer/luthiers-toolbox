@@ -551,3 +551,12 @@ as a bit-exact target, not as a souvenir. **[RUN]**
 
 D-16 guard observed on every run: source copied to scratch, original hashed before and after,
 both `OK`.
+
+
+## Erratum — body_lexicon.md repository status (2026-10-11)
+
+The statement in §5a that `body_lexicon.md` had never been committed is **superseded as repository-status provenance**.
+
+Verified later evidence shows the draft exists in the private repository `HanzoRazer/vectorizer-sandbox` on branch `ibg-grammar-001`. The earlier audit statement is retained above as part of the historical record because it accurately records what the investigator believed from the local clone at that time.
+
+This correction changes **location/status provenance only**. The document remains a **draft, unimplemented research definition** and is not production authority in `luthiers-toolbox`. Any future production use must graduate through the semantic-incubation bridge rather than by direct import or citation-as-specification.

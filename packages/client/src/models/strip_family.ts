@@ -22,7 +22,7 @@ export interface MaterialVisual {
   grain_angle_deg?: number
   burn_gradient?: boolean
   repeat_pattern?: boolean
-}confirm 
+}
 
 export interface MaterialSpec {
   key: string

@@ -11,7 +11,7 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:vue/vue3-recommended'
+    'plugin:vue/recommended' // eslint-plugin-vue 10 renamed vue3-recommended -> recommended
   ],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -25,7 +25,8 @@ module.exports = {
   rules: {
     // Relaxed rules for initial adoption
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    // caughtErrors: 'none' pins the typescript-eslint v6 default; v8 flipped it to 'all'.
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
     'vue/multi-word-component-names': 'off',
     'vue/no-v-html': 'warn',
 
