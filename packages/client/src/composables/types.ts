@@ -54,6 +54,7 @@ export interface BaseConfig {
  * Base dependencies interface.
  * Extend this for composable-specific deps.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- marker interface, extended per composable
 export interface BaseDeps {
   // Marker interface - extend with specific dependencies
 }
@@ -62,6 +63,7 @@ export interface BaseDeps {
  * Base state interface.
  * Extend this for composable-specific state.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- marker interface, extended per composable
 export interface BaseState {
   // Marker interface - extend with specific state
 }

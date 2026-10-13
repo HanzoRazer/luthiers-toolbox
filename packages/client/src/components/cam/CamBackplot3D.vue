@@ -96,7 +96,7 @@ type SimMetricsOut = {
 }
 
 const props = withDefaults(defineProps<{
-  moves: Move[] | null
+  moves?: Move[] | null
   metrics?: SimMetricsOut | null
   units?: 'mm' | 'inch'
   toolD?: number
