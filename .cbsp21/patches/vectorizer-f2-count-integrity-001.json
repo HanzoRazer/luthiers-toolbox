@@ -15,7 +15,9 @@
       "services/api/tests/test_text_masking_regression.py",
       "services/api/tests/vectorizer/text_masking_counts.py",
       "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
-      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/vectorizer-f2-count-integrity-001.json",
@@ -23,25 +25,27 @@
       "services/api/tests/test_text_masking_regression.py",
       "services/api/tests/vectorizer/text_masking_counts.py",
       "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
-      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py"
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "test_entity_count_reduction is now test_melody_maker_reports_entity_counts. It reads result.dxf.entity_count and checks one emitted DXF. It does not assert masked < unmasked. Fast tests cover a missing count, an artifact mismatch, an applied reduction, an identical applied pair, and a refused comparison when applied is not true. The Melody Maker fixture uses the same two-call cache. The 2026-10-03 census is unchanged; the evidence test maps the old test id to the new name.",
+    "what_changed": "test_entity_count_reduction is now test_melody_maker_reports_entity_counts. It reads result.dxf.entity_count and checks one emitted DXF. It does not assert masked < unmasked. Fast tests cover a missing count, an artifact mismatch, an applied reduction, an identical applied pair, and a refused comparison when applied is not true. The Melody Maker fixture uses the same two-call cache. The 2026-10-03 census is unchanged; the evidence test maps the old test id to the new name. The dogfood evidence test accepts a stored copy of the scanned regression bytes when the live file no longer matches that pin.",
     "why": "The previous assertion compared zeros and could not detect a failed mask. Claiming a reduction now would also be false, because the result does not yet report whether masking was applied.",
     "why_not_redundant": "CODE-TOOL-DOGFOOD-003 classified the detector miss and left the test hollow. This order repairs the test. It does not add a detector and it does not repair F-3.",
-    "what_did_not_change": "edge_to_dxf.py, the orchestrator, result models, DXF generation, OCR installation, vectorizer-regression.yml, core CI marker exclusion, the dogfood record, and the 2026-10-03 census."
+    "what_did_not_change": "edge_to_dxf.py, the orchestrator, result models, DXF generation, OCR installation, vectorizer-regression.yml, core CI marker exclusion, DETECTOR_RUNS.json hashes, defects_repaired, the dogfood sentence that neither defect was repaired, and the 2026-10-03 census."
   },
   "verification": {
     "commands_run": [
       "gh pr merge 434 --merge  # merged as fbf36095b99d0a97ee4574f27d6482a09e87bd6c; branch cut from that main",
-      "services/api/.venv/bin/python -m pytest tests/vectorizer/test_text_masking_count_integrity.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py -q --no-cov --tb=short  # 23 passed",
+      "services/api/.venv/bin/python -m pytest tests/vectorizer/test_text_masking_count_integrity.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py tests/test_code_tool_dogfood_003_evidence.py -q --no-cov --tb=short",
       "services/api/.venv/bin/python -m pytest tests/test_vectorizer_research_only_freeze.py -q --tb=line  # 6 passed",
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <manifest, closeout, regression test, helper, fast tests, census evidence test>  # PASSED, coverage 100%",
       "git diff --name-only  # no services/api/app, photo-vectorizer, edge_to_dxf, workflow, or pytest.ini path"
     ],
     "proofs": [
-      "23 tests passed: missing dxf and entity_count raise, a mismatched artifact fails, applied equal counts fail, and applied is required before a strict reduction comparison.",
+      "30 tests passed: the dogfood source-blob check accepts the stored scan (content sha256 6f256e19226f8b06f75e882dfc382decd1e9135051d6306d53aee9b8289dfd03, git blob 0bbc72d56eac600a695105976578cb46930b5c1f); missing dxf and entity_count raise; a mismatched artifact fails; applied equal counts fail; applied is required before a strict reduction comparison.",
       "The census evidence test still matches the 2026-10-03 excluded set through the rename map. The census file was not edited.",
       "The Melody Maker PDF was not converted in this run. The two-call cache is the function the fixture uses, and the fast test calls it four times and records two computes."
     ],
@@ -77,6 +81,18 @@
       "intent": "Record what F-2 now proves and what remains for F-3 and the detector successor.",
       "risk": "low",
       "behavior_change": "Documentation only."
+    },
+    {
+      "path": "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "intent": "Accept the stored scanned bytes when a later repair changes a pinned source file.",
+      "risk": "low",
+      "behavior_change": "Tests only. DETECTOR_RUNS.json is not edited."
+    },
+    {
+      "path": "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py",
+      "intent": "Preserve the regression file bytes code_audit 0.1.0 scanned.",
+      "risk": "low",
+      "behavior_change": "Stored pin only. It is not a collected test."
     }
   ]
 }

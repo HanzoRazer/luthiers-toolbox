@@ -18,4 +18,4 @@ No change to `edge_to_dxf.py`, the orchestrator, result models, DXF generation, 
 
 The 2026-10-03 census still names `test_entity_count_reduction`. That name is the historical measurement. The evidence test maps it to the new name and does not rewrite the census.
 
-The dogfood record in `docs/investigations/code-tool-dogfood_2026-10-05/` stays the acceptance basis for `CODE-TOOL-SIGNATURES-004` in `HanzoRazer/code-analysis-tool`. `code_audit` 0.1.0 at `c2c1ea8` was not rerun. F-3 is a separate repair.
+The dogfood record in `docs/investigations/code-tool-dogfood_2026-10-05/` stays the acceptance basis for `CODE-TOOL-SIGNATURES-004` in `HanzoRazer/code-analysis-tool`. `code_audit` 0.1.0 at `c2c1ea8` was not rerun. The regression file it scanned is preserved at `docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py`; the evidence test accepts that snapshot when the live file no longer matches the pinned digest. F-3 is a separate repair.
