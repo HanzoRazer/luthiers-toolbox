@@ -1,12 +1,20 @@
 # Vectorizer Semantic Incubation — Migration Plan
 
 **Date:** 2026-05-20 (revised)  
-**Status:** PROPOSED — requires explicit approval before execution  
+**Status:** TIER A EXECUTED — research-only disposition confirmed 2026-10-11; Tier B remains separately gated  
 **Authority:** `SEMANTIC_INCUBATION_ARCHITECTURE.md`, `VECTORIZER_COMPONENT_LIFECYCLE.md`  
 **Prerequisite:** Remediation sprint PR-2 → PR-1 → PR-3 complete; no production behavior change until Phase 4 gates pass
 
 **Target cognition repo (existing):** https://github.com/HanzoRazer/vectorizer-sandbox  
 **Local workspace clone:** sibling `../vectorizer-sandbox/` (`local/README.md`, `local/clone-vectorizer-sandbox.ps1`)
+
+---
+
+## 0. Execution reconciliation — 2026-10-11
+
+Tier A relocation is complete. The former cognitive/grid/Phase-2 files are absent from the runtime spine, relocation pointers are committed, the sandbox holds the preserved lineage, and `scripts/governance/check_semantic_sandbox_imports.py` blocks production re-import. The accepted disposition is **RETAIN_RESEARCH_ONLY**. This document remains the migration history and graduation contract; it is no longer an unexecuted proposal for Tier A.
+
+Tier B decoupling remains separate work and is not implied complete by this reconciliation.
 
 ---
 

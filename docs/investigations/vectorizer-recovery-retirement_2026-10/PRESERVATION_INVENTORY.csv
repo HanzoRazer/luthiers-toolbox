@@ -1,0 +1,12 @@
+asset,repository,role,preserve_reason,operational_status,research_status,deletion_allowed,notes
+VEC-ROOT-001,luthiers-toolbox,forensic audit,eligibility and representational evidence,NON_RUNTIME,PRESERVE,false,historical claims retained with erratum
+Cuatro artifacts,luthiers-toolbox,benchmark/provenance witness,roles remain unresolved,NO_AUTHORITY,PRESERVE,false,ROLE_UNRESOLVED
+Melody Maker regression witness,luthiers-toolbox,real-plan CI benchmark,documents entity-volume and OCR behavior,NON_REQUIRED_TEST,PRESERVE,false,dedicated regression lane
+L-00 evidence,luthiers-toolbox,eligibility failure witness,documents scan failure mode,NON_RUNTIME,PRESERVE,false,do not generalize beyond evidence
+Archtop control,luthiers-toolbox,positive control,shows eligibility does not imply constructibility,NON_RUNTIME,PRESERVE,false,AI-image input class
+PR #425 evidence,luthiers-toolbox,CI containment evidence,reconciled runtime cost and provenance,MERGED_EVIDENCE,PRESERVE,false,no algorithm change
+body_lexicon.md,vectorizer-sandbox,research definition,candidate semantic vocabulary,NO_AUTHORITY,RETAIN_RESEARCH_ONLY,false,draft and unimplemented
+cognitive_extractor.py,vectorizer-sandbox,semantic research,occupancy/cognition lineage,NO_AUTHORITY,RETAIN_RESEARCH_ONLY,false,former Tier A runtime-spine path
+cognitive_extraction_engine.py,vectorizer-sandbox,semantic research,parallel cognition lineage,NO_AUTHORITY,RETAIN_RESEARCH_ONLY,false,former Tier A runtime-spine path
+extract_body_grid.py..v5.py,vectorizer-sandbox,archaeology,grid/topology experimentation history,NO_AUTHORITY,RETAIN_RESEARCH_ONLY,false,preserved under src/archaeology
+vectorizer_phase2_runtime_spine.py,vectorizer-sandbox,archaeology,superseded Phase-2 implementation lineage,NO_AUTHORITY,RETAIN_RESEARCH_ONLY,false,dev route in main is relocation stub
