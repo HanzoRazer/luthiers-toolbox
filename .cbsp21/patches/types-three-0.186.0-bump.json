@@ -6,7 +6,7 @@
   "title": "build(deps-dev): bump @types/three from 0.185.4 to 0.186.0",
   "intent": "Routine Dependabot currency, no advisory. Typings-only devDependency @types/three 0.185.4 -> 0.186.0 in packages/client; closes the known lag recorded in three-0.186.1-bump.json (runtime three is already ^0.186.1). Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001).",
   "change_type": "chore",
-  "behavior_change": "none in the shipped app: @types/* is compile-time only and is not bundled. Lockfile audited against merge base 073a7fb4 by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count 400 before and 400 after; zero added, zero removed. Exactly 1 version change: node_modules/@types/three 0.185.4 -> 0.186.0 (version, resolved, integrity, and its own dependency range fflate ~0.8.2 -> ~0.8.3). That range change moves nothing: node_modules/fflate resolves to 0.8.3 both before and after. The root entry differs only in devDependencies.@types/three. The remaining 16 touched entries change only the `peer` flag (e.g. vue/typescript/vite/eslint drop peer:true; vue-eslint-parser and 3 of its nested deps plus @types/esrecurse gain it). This is npm-version lockfile normalization: running local npm 11.6.1 `install --package-lock-only` on the PR tree flips exactly those 16 flags back, so neither state is a fixed point across npm versions. The flag only affects `npm ci --omit=peer`, which no workflow, Dockerfile or client script uses, so it is installation-inert. Consumers: components/cam/ToolpathCanvas3D.vue (live) and components/cam/CamBackplot3D.vue import three; CI type-check ratchet holds with the new typings.",
+  "behavior_change": "none in the shipped app: @types/* is compile-time only and is not bundled. Branch merged with origin/main c3383d56 (after sibling bumps #431 supabase-js and #432 @types/node landed on adjacent lines); the conflict was resolved by taking main's package.json and package-lock.json and applying only the @types/three delta. Lockfile audited against c3383d56 by parsing both trees and comparing every `packages` entry in full: 400 entries before and after, zero added, zero removed, exactly 1 node_modules entry changed: @types/three 0.185.4 -> 0.186.0 (version, resolved, integrity, and its own range fflate ~0.8.2 -> ~0.8.3), byte-for-byte equal to the entry Dependabot generated at 7781b91b. The fflate range change moves nothing: node_modules/fflate resolves to 0.8.3 before and after. The root entry differs only in devDependencies.@types/three. The 16 peer-flag-only entries in Dependabot's original lockfile were npm-version normalization noise and are dropped, matching the convention set by #432 (ec88eedd reverted the same churn). Sibling versions preserved at HEAD: @types/node 26.6.5, @supabase/supabase-js 2.117.2, vue-tsc 3.3.12. Consumers: components/cam/ToolpathCanvas3D.vue (live) and components/cam/CamBackplot3D.vue import three.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -21,19 +21,19 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "packages/client/package.json moves the devDependency range for @types/three from ^0.185.4 to ^0.186.0 -- one line. package-lock.json resolves @types/three 0.185.4 -> 0.186.0; no other version moves; 16 entries carry peer-flag-only normalization from Dependabot's npm version.",
+    "what_changed": "packages/client/package.json moves the devDependency range for @types/three from ^0.185.4 to ^0.186.0 -- one line. package-lock.json resolves @types/three 0.185.4 -> 0.186.0; no other entry changes.",
     "why_not_redundant": "Dependabot currency and alignment of typings with the already-merged three 0.186.1 runtime. No existing manifest covers this diff; borrowing three-0.186.1-bump.json (which covers the same two files) is what CBSP21-NOBORROW-001 refuses."
   },
   "verification": {
     "commands_run": [
       "failing-gate attribution: both CBSP21 gates on Dependabot head 7781b91b reported no manifest of the PR's own -- the gates were correct",
-      "lockfile audit (full-entry enumeration) vs merge base 073a7fb4: entries 400 -> 400, added=0, removed=0, version-changed=1 (@types/three), peer-flag-only=16",
-      "npm 11.6.1 install --package-lock-only on the PR tree: rewrites exactly the 16 peer flags back and nothing else of substance -> flags are npm-version noise",
-      "git grep for omit=peer across .github, Dockerfiles, packages/client -> 0 uses",
+      "conflict attribution: after #431/#432 merged, the @types/node line directly above @types/three made the 3-way merge conflict in both client files; resolved by merging origin/main c3383d56 (no force-push) and re-applying only the @types/three delta onto main's files",
+      "lockfile audit (full-entry enumeration) vs c3383d56: entries 400 -> 400, added=0, removed=0, changed = root + node_modules/@types/three only",
+      "rebuilt node_modules/@types/three entry == Dependabot's entry at 7781b91b (full dict equality)",
+      "sibling assertion at HEAD: @types/node 26.6.5, @supabase/supabase-js 2.117.2, vue-tsc 3.3.12 equal origin/main -> no reversion",
+      "npm ci --ignore-scripts on the merged tree -> OK; npm ls -> @types/three@0.186.0, fflate@0.8.3",
       "supply-chain: registry integrity for @types/three@0.186.0 and fflate@0.8.3 equals the lockfile; publisher `types` (DefinitelyTyped bot); published 2026-09-11",
       "advisories: GitHub Advisory Database, affects @types/three@0.185.4 and @0.186.0 -> 0 and 0",
-      "merge onto current origin/main d42712e0: git merge-tree clean; merged lockfile 400 entries; no sibling reversions",
-      "CI on head 7781b91b: lint-build (type-check ratchet PASS, lint ratchet PASS), build-and-test, API Tests, Containers Build + Smoke all passed",
       "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/types-three-0.186.0-bump.json packages/client/package.json packages/client/package-lock.json",
       "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
     ]
@@ -58,7 +58,7 @@
         "packages/client/package-lock.json"
       ],
       "risk": "low",
-      "behavior_change": "none - @types/three forward, typings only; fflate unchanged at 0.8.3; 16 peer-flag-only entries are installation-inert",
+      "behavior_change": "none - @types/three forward, typings only; fflate unchanged at 0.8.3; no other entry touched",
       "verification": [
         "lockfile entry enumeration -> version-changed=1, added=0, removed=0"
       ]
