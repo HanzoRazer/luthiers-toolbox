@@ -62,7 +62,10 @@ Each March claim was checked separately for:
 - UI consumer reachable from the client router;
 - a test that exercises it.
 
-Results (`MARCH_CLAIM_REACHABILITY.csv`, mechanical; adjudications in `IMPLEMENTATION_RECONCILIATION.md`):
+Results (`MARCH_CLAIM_REACHABILITY.csv`, mechanical; adjudications in `IMPLEMENTATION_RECONCILIATION.md`).
+Imports are read syntactically, so dynamic imports are missed (reachability can under-count). The UI-consumer
+check is a substring search for URL prefixes, so it can over-count. A `VERIFIED_STRUCTURAL` row is therefore
+an upper bound on UI reachability, not proof of it:
 
 | Classification | Count |
 |---|---|

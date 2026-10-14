@@ -22,14 +22,6 @@
       "confidence": "content-hash + contract comparison",
       "follow_up": "input to NECK-CLEARANCE-AUTHORITY-001 only"
     },
-    "headstock_transition_export.py": {
-      "disposition": "LIVE_MODIFIED",
-      "subsystem": "Headstock Suite",
-      "reason": "Bundle 03-17T155948 draft; registered live by c2c332b8 (business_manifest.py:50-56), later modified (dxf_compat migration 9b7630b9).",
-      "safety": "ACTIVE SAFETY CANDIDATE: live /api/headstock/transition/gcode, LIVE_UNGOVERNED in inventory, no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion (program sha256 3b5ddbaa...). Clearance adequacy UNRESOLVED.",
-      "confidence": "source + offline generation + modal parser",
-      "follow_up": "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
-    },
     "BridgeBreakAnglePanel.vue": {
       "disposition": "RECOVERED_FEATURE_CANDIDATE",
       "subsystem": "Calculator UI",
@@ -62,7 +54,23 @@
       "confidence": "content-hash"
     }
   },
-  "by_blob": {},
+  "by_blob": {
+    "8e436e7b9c32e6c1d18d176327b29b232b1bb56f": {
+      "disposition": "LIVE_MODIFIED",
+      "subsystem": "Headstock Suite",
+      "reason": "Bundle 03-17T155948 draft (B15S/B16S/F44); live file first committed byte-identical to this blob (21fe1b1f); registered live by c2c332b8 (business_manifest.py:50-56), later modified (dxf_compat migration 9b7630b9).",
+      "safety": "ACTIVE SAFETY CANDIDATE: live /api/headstock/transition/gcode, LIVE_UNGOVERNED in inventory, no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion (program sha256 3b5ddbaa...). Clearance adequacy UNRESOLVED.",
+      "confidence": "source + offline generation + modal parser",
+      "follow_up": "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
+    },
+    "721cfa3d150e712c7b9a0e745aa19927713e9c20": {
+      "disposition": "SUPERSEDED",
+      "subsystem": "Headstock Suite",
+      "reason": "Sibling draft from bundle 03-17T160517 (B17S), archived at archive/experimental/2026-03/.../files - 2026-03-17T160517.587/. Never entered the live tree: the live module was first committed byte-identical to the 03-17T155948 draft (blob 8e436e7b, commit 21fe1b1f), not to this one (32-line diff).",
+      "safety": "Not the live lineage. The active safety candidate is the live route; see the 8e436e7b row.",
+      "confidence": "content-hash (live first-commit blob compared to both drafts)"
+    }
+  },
   "reference_only": [
     {"candidate_id": "MC-R01", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/stores/headstock", "filename": "stores/headstock", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "Imported by the four preserved headstock views; never copied out of the 2026-03-17 claude.ai session (headstock lineage reconciliation, PR #437).", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery from the claude.ai conversation"},
     {"candidate_id": "MC-R02", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/types/headstock", "filename": "types/headstock", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "As MC-R01.", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery"},

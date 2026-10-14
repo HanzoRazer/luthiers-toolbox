@@ -6,7 +6,7 @@
   "title": "docs(investigations): CAM orchestrator recovery evidence + March 2026 consolidation recovery census (evidence only)",
   "intent": "Determine whether the archived 2026-03-18 neck-CAM orchestrator is a predecessor or partial fix for the neck rapid-at-cutting-depth defect, and census what the March 15-21 consolidation period stranded. Evidence only; no production behaviour changes.",
   "change_type": "docs",
-  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds investigation documents, preserved offline replay outputs, three read-only evidence tools under scripts/investigations/, and one test module. Findings: the archived orchestrator does not touch the defect (702 rapids below Z0 on the pre-#398 tree with or without it), cannot run on the current machine contract, and duplicates tool changes; owner ruled SUPERSEDED / INCOMPATIBLE_WITH_CURRENT_RUNTIME / DO_NOT_FORWARD_PORT. The census records 52 sources, 194 candidates, and one active safety candidate (/api/headstock/transition/gcode) routed to its own order and not fixed here.",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds investigation documents, preserved offline replay outputs, three read-only evidence tools under scripts/investigations/, one test module, and one ACKNOWLEDGED_NON_DIMENSION_FILES entry in test_jumbo_dimension_consistency.py. Findings: the archived orchestrator does not touch the defect (702 rapids below Z0 on the pre-#398 tree with or without it), cannot run on the current machine contract, and duplicates tool changes; owner ruled SUPERSEDED / INCOMPATIBLE_WITH_CURRENT_RUNTIME / DO_NOT_FORWARD_PORT. The census records 52 sources, 194 candidates, and one active safety candidate (/api/headstock/transition/gcode) routed to its own order and not fixed here.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -54,7 +54,8 @@
       "scripts/investigations/march_2026_census_ledger.py",
       "scripts/investigations/march_2026_claim_reachability.py",
       "scripts/investigations/neck_gcode_motion_metrics.py",
-      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
+      "services/api/tests/test_jumbo_dimension_consistency.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/cam-orchestrator-recovery-evidence.json",
@@ -101,11 +102,12 @@
       "scripts/investigations/march_2026_census_ledger.py",
       "scripts/investigations/march_2026_claim_reachability.py",
       "scripts/investigations/neck_gcode_motion_metrics.py",
-      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
+      "services/api/tests/test_jumbo_dimension_consistency.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Two evidence directories (orchestrator investigation; March census), replay programs and metrics with recorded hashes, tooling for modal G-code metrics, bundle census, claim reachability and ledger generation, and 49 tests that pin hashes, the 702 baseline, the disposition and census integrity.",
+    "what_changed": "Two evidence directories (orchestrator investigation; March census), replay programs and metrics with recorded hashes, tooling for modal G-code metrics, bundle census, claim reachability and ledger generation, and 51 tests that pin hashes, the 702 baseline, the disposition and census integrity.",
     "why_not_redundant": "No prior record tested the archived orchestrator against the defect or established that 702 (not 780) is the reproducible count; no prior census compared the March bundles to Git by content hash or checked 'complete' claims for reachability. The CL-RED premise is corrected by erratum rather than built on."
   },
   "verification": {
@@ -115,7 +117,7 @@
       "python -I scripts/investigations/march_2026_bundle_census.py over 52 sources (ZIPs read in memory)",
       "python -I scripts/investigations/march_2026_claim_reachability.py over 50 March claims",
       "python -I scripts/investigations/march_2026_census_ledger.py: ledger, inventory and planning regenerate byte-for-byte",
-      "pytest services/api/tests/test_cam_orchestrator_recovery_evidence.py: 49 passed"
+      "pytest services/api/tests/test_cam_orchestrator_recovery_evidence.py: 51 passed"
     ]
   },
   "files": [
@@ -386,6 +388,12 @@
     {
       "path": "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
       "intent": "Parser unit tests and evidence-integrity tests (pure text; no application import beyond the conftest).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_jumbo_dimension_consistency.py",
+      "intent": "Registry entry only: acknowledge BUNDLE_CENSUS.json in ACKNOWLEDGED_NON_DIMENSION_FILES (jumbo appears only in member filenames; magnitude hits are hex digests). No assertion changes.",
       "risk": "low",
       "behavior_change": "none"
     }

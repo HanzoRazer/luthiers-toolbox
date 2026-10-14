@@ -15,6 +15,12 @@ Automatic disposition (overrides win, and every override records its reason):
 
 Rows whose member path matches an ``exclude`` pattern (third-party saved web
 pages) are counted but not ledgered.
+
+Overrides are keyed ``by_blob`` (preferred) or ``by_name`` (basename). A
+``by_blob`` entry wins. A ``by_name`` entry whose basename maps to more than one
+distinct blob is refused (exit 2), because it would stamp one reason on
+different files. ``PLANNING_RECONCILIATION.csv`` still joins claims to sources
+by basename; its ``located_source_by_name`` column says so.
 """
 from __future__ import annotations
 
@@ -186,6 +192,16 @@ def main(argv=None) -> int:
             continue
         by_blob.setdefault(m["blob_lf"], []).append(m)
 
+    # A by_name override stamps every blob sharing that basename. Refuse when a
+    # name maps to more than one distinct blob: key that override by_blob instead.
+    blobs_by_name: dict[str, set[str]] = {}
+    for blob, group in by_blob.items():
+        blobs_by_name.setdefault(PurePosixPath(group[0]["member"].split("!/")[-1]).name, set()).add(blob)
+    ambiguous = {n: sorted(blobs_by_name[n]) for n in ov["by_name"] if len(blobs_by_name.get(n, ())) > 1}
+    if ambiguous:
+        print(f"ambiguous by_name overrides (re-key by_blob): {json.dumps(ambiguous)}", file=sys.stderr)
+        return 2
+
     src_path = {s["source_id"]: s["path"] for s in census["sources"]}
     rows = []
     for i, (blob, group) in enumerate(sorted(by_blob.items(), key=lambda kv: (kv[1][0]["source_id"], kv[1][0]["member"])), 1):
@@ -197,7 +213,7 @@ def main(argv=None) -> int:
             disp = "LIVE_MODIFIED" if live_same_name else "UNRESOLVED"
         else:
             disp = AUTO[state]
-        override = ov["by_name"].get(name) or ov["by_blob"].get(blob)
+        override = ov["by_blob"].get(blob) or ov["by_name"].get(name)
         reason = ""
         if override:
             disp = override["disposition"]

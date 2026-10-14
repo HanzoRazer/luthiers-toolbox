@@ -16,6 +16,14 @@ each one has failed on its own in this repository's history:
 ``test_non_vacuous`` is never decided here -- it needs a human reading the
 assertions -- so the column is always ``NOT_ASSESSED`` from this tool.
 
+Method limits. Labels are mechanical and need human adjudication:
+  - imports are a syntactic AST graph (static ``import`` / ``from`` only);
+    dynamic imports and string-loaded modules are invisible, so
+    import/route reachability can UNDER-count;
+  - ``ui_consumer`` is a plain substring search for URL prefixes in client
+    text, so it can OVER-count (a prefix in a comment or an unrelated string
+    counts as a caller).
+
 Usage:
     python scripts/investigations/march_2026_claim_reachability.py --root . \
         --claims claims.csv --out results.csv

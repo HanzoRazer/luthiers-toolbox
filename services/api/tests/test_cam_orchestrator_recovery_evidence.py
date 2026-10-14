@@ -304,6 +304,9 @@ _ALLOWED = (
     "docs/investigations/march-2026-consolidation-recovery-census/",
     "scripts/investigations/",
     "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
+    # One ACKNOWLEDGED_NON_DIMENSION_FILES entry for BUNDLE_CENSUS.json; no
+    # assertion in that test changes.
+    "services/api/tests/test_jumbo_dimension_consistency.py",
     ".cbsp21/patches/",
 )
 
@@ -354,6 +357,7 @@ def test_every_ledger_disposition_is_an_allowed_value():
 def test_every_manual_override_states_its_reason():
     overrides = json.loads((CENSUS / "LEDGER_OVERRIDES.json").read_text(encoding="utf-8"))
     unexplained = [name for name, o in overrides["by_name"].items() if len(o.get("reason", "")) < 20]
+    unexplained += [blob for blob, o in overrides["by_blob"].items() if len(o.get("reason", "")) < 20]
     unexplained += [r["candidate_id"] for r in overrides["reference_only"] if len(r.get("disposition_reason", "")) < 5]
     assert unexplained == []
     assert overrides["exclude_reason"], "an exclusion without a reason hides evidence"
@@ -383,6 +387,39 @@ def test_the_ledger_regenerates_byte_for_byte(tmp_path):
     assert outs["ledger"].read_bytes() == (CENSUS / "RECOVERY_LEDGER.csv").read_bytes().replace(b"\r\n", b"\n")
     assert outs["inventory"].read_bytes() == (CENSUS / "SOURCE_BUNDLE_INVENTORY.csv").read_bytes().replace(b"\r\n", b"\n")
     assert outs["planning"].read_bytes() == (CENSUS / "PLANNING_RECONCILIATION.csv").read_bytes().replace(b"\r\n", b"\n")
+
+
+def test_a_name_override_matching_two_blobs_is_refused(tmp_path):
+    """A by_name override must not silently stamp two different files."""
+    member = {"source_id": "S1", "state": "HISTORY_ONLY", "name_only_matches_on_ref": [],
+              "sha256": "", "first_commit": "", "first_date": "", "first_path": "",
+              "live_paths": [], "archive_paths": []}
+    census = {"sources": [{"source_id": "S1", "path": "s1.zip"}], "members": [
+        member | {"member": "a/x.py", "blob_lf": "1" * 40},
+        member | {"member": "b/x.py", "blob_lf": "2" * 40},
+    ]}
+    overrides = {"exclude": [], "reference_only": [], "by_blob": {},
+                 "by_name": {"x.py": {"disposition": "SUPERSEDED", "reason": "r" * 20}}}
+    (tmp_path / "c.json").write_text(json.dumps(census), encoding="utf-8")
+    (tmp_path / "o.json").write_text(json.dumps(overrides), encoding="utf-8")
+    run = subprocess.run(
+        [sys.executable, "-I", str(LEDGER_TOOL), "--census", str(tmp_path / "c.json"),
+         "--overrides", str(tmp_path / "o.json"), "--out", str(tmp_path / "l.csv"),
+         "--out-inventory", str(tmp_path / "i.csv"),
+         "--reachability", str(CENSUS / "MARCH_CLAIM_REACHABILITY.csv"),
+         "--out-planning", str(tmp_path / "p.csv")],
+        capture_output=True, text=True,
+    )
+    assert run.returncode == 2
+    assert "x.py" in run.stderr
+    assert not (tmp_path / "l.csv").exists()
+
+
+def test_only_the_live_lineage_carries_the_active_safety_label():
+    """The live headstock route descends from blob 8e436e7b, not the B17S sibling draft."""
+    flagged = [r["content_blob_lf"][:8] for r in _csv("RECOVERY_LEDGER.csv")
+               if "ACTIVE SAFETY CANDIDATE" in r["safety_relevance"]]
+    assert flagged == ["8e436e7b"]
 
 
 def _evidence_lines(pattern: str):
