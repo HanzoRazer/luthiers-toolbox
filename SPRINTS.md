@@ -956,7 +956,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-007 | No client bundle-size budget — growth accrues unobserved | Client / build hygiene | QUEUED | 2026-08-18 |
 | MAINT-DEFER-008 | GitHub Actions runtime deprecation (Node 20 actions force-run on Node 24) | Process / CI infra | DEFERRED | 2026-08-17 |
 | MAINT-DEFER-009 | Client ESLint regression ratchet (companion to the type-check ratchet) | CI / client gates | QUEUED | 2026-08-18 |
-| MAINT-DEFER-010 | Orphaned `packages/client/src/views/cam/headstock/` — 42% of client type errors | Cleanup / client | DEFERRED | 2026-08-18 |
+| MAINT-DEFER-010 | Headstock suite views (formerly orphaned `views/cam/headstock/`) — PRESERVED to `archive/experimental/2026-03/headstock-suite-refined/`; ceiling follow-up pending | Cleanup / client | QUEUED — PRESERVED | 2026-10-14 |
 | MAINT-DEFER-011 | `.gitignore` `/ci/` swallows newly added CI data files | Process / repo hygiene | QUEUED | 2026-08-18 |
 | MAINT-DEFER-012 | Client container smoke has no readiness wait — ambiguous reds in `Containers (Build + Smoke)` | CI / containers | QUEUED | 2026-08-19 |
 | MAINT-DEFER-013 | `mesh-pipeline-ci` demo steps call `app.retopo` (deleted in `ee36ddf1`); stub removed, demo steps now report NOT RUN instead of certifying fabricated output | CI / mesh pipeline | RESOLVED — TRUTH ONLY | 2026-09-17 |
@@ -1305,10 +1305,49 @@ one number hides error regressions behind warning noise.
 
 **Path:** HYG — repository maintenance; not machine-control / CAM MVP cut path.
 
-### MAINT-DEFER-010 — Orphaned `packages/client/src/views/cam/headstock/`
+### MAINT-DEFER-010 — Headstock suite views (formerly orphaned `packages/client/src/views/cam/headstock/`)
 
-**Status:** DEFERRED — owner decision required  
-**last_verified:** 2026-08-18  
+> **UPDATE 2026-10-13: PRESERVED, not deleted.** The original finding below is preserved as written;
+> only the Status and last_verified lines are updated.
+>
+> **Ruling provenance — REPORTED OWNER STATEMENT.** The owner chose preservation in the 2026-10-13 session
+> (option A of the evidence doc §5, which lists options and does not record a choice). No separate
+> committed decision record exists. The owner's merge of PR #438, which carries this text, is the act that
+> authenticates it; until then, treat it as reported, not verified.
+>
+> **Status token:** `QUEUED` is from this table's documented enum (`DEFERRED | QUEUED | BLOCKED`).
+> `PRESERVED` qualifies it, the same way `RESOLVED — TRUTH ONLY` qualifies MAINT-DEFER-013. The
+> queued work is item (a) below. Two corrections from the lineage reconciliation
+> (`docs/investigations/headstock-lineage-reconciliation_2026-10-13.md`, PR #437):
+>
+> 1. **These were not dead code to discard.** They are the final iterations of the headstock half of the
+>    2026-03-17 `ps-vue` suite; its neck and CAM halves were integrated and are live. They carry capability the
+>    routed `/art-studio/headstock` lacks, and they are the only UI for the live `/headstock-dxf`
+>    veneer/binding/cost endpoints. 3 of the 11 "missing" modules are live at other paths, 3 are archive-only
+>    and **5 are lost** (`stores/headstock`, `types/headstock`, `useHeadstock`, `useParametric`, `headstockData`).
+> 2. **The removal PR #308 never reached `main`.** It shows MERGED, but its base was #306's branch, which had
+>    already merged. Merge commit `f8f5a568` is not an ancestor of `main`. To re-check this yourself:
+>    `gh pr view 308 --json baseRefName,mergeCommit` gives base `ci/client-type-check-ratchet` and merge
+>    `f8f5a568`; `gh pr view 306 --json mergedAt` gives 2026-08-19T22:03Z, before #308's 2026-08-20T02:23Z;
+>    and `git merge-base --is-ancestor f8f5a568 origin/main; echo $?` gives `1` (not an ancestor).
+>
+> **Disposition:** the four views moved byte-identical to
+> `archive/experimental/2026-03/headstock-suite-refined/` (README there), out of `vue-tsc`'s `src/**` include.
+> **Remaining:** (a) lower the type-check ceiling by the measured amount in a separate PR, after this move
+> merges; (b) recover the 5 lost modules from the 03-17 claude.ai session if they still exist; (c) reconstruction
+> or harvest into `/art-studio/headstock`, each under its own order; (d) §5 option A also says to copy the 3
+> archive-only modules (`stores/variants`, `VariantLibraryPanel.vue`, `WoodGrainPanel.vue`) beside the views.
+> PR #438 does **not** do that. It is still open.
+>
+> **Restore trigger (current):** PR #438 merges. **Done-condition (current):** the ceiling is lowered
+> 150 → 87 and the 5 stale `views/cam/headstock/` per-file keys leave
+> `scripts/ci/client_type_check_baseline.json`, via `--write-baseline` on post-merge `main`.
+> The 5 errors that stay in `src/` (`useDxfImport.ts`, `useExportDxf.ts` and `useCamSpec.ts` importing the lost
+> `@/types/headstock` and `headstockData`) are not part of this item.
+
+
+**Status:** QUEUED — PRESERVED (owner chose preservation 2026-10-13; see update above)  
+**last_verified:** 2026-10-14  
 **Category:** Cleanup / client
 
 **Finding:** the directory is **unreachable dead code**. Four `.vue` files
