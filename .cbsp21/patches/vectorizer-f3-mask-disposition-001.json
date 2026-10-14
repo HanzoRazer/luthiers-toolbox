@@ -1,0 +1,117 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_F3_MASK_DISPOSITION_001",
+  "title": "Report a text-masking disposition and degrade when a requested mask does not apply",
+  "intent": "mask_text=True with no usable OCR still reported SUCCESS. Record whether masking was unavailable, failed to initialize, failed while scanning, found no text, or applied, and withhold a clean success when the requested mask did not apply.",
+  "change_type": "fix",
+  "behavior_change": "A requested mask that is unavailable or fails returns DEGRADED and still emits the DXF. Enhanced blueprint acceptance is review rather than accept in that case. No text detected and mask_text=False stay SUCCESS. Default API CI markers are unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vectorizer-f3-mask-disposition-001.json",
+      "docs/investigations/vectorizer-f3-mask-disposition_2026-10-14/README.md",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/edge_to_dxf.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/blueprint_orchestrator.py",
+      "services/photo-vectorizer/edge_to_dxf.py",
+      "services/api/app/services/blueprint_extract.py",
+      "services/api/app/services/blueprint_orchestrator.py",
+      "services/api/app/routers/blueprint/edge_to_dxf_router.py",
+      "services/api/tests/test_text_masking.py",
+      "services/api/tests/test_text_masking_disposition.py",
+      "services/api/tests/test_text_masking_regression.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vectorizer-f3-mask-disposition-001.json",
+      "docs/investigations/vectorizer-f3-mask-disposition_2026-10-14/README.md",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/edge_to_dxf.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/blueprint_orchestrator.py",
+      "services/photo-vectorizer/edge_to_dxf.py",
+      "services/api/app/services/blueprint_extract.py",
+      "services/api/app/services/blueprint_orchestrator.py",
+      "services/api/app/routers/blueprint/edge_to_dxf_router.py",
+      "services/api/tests/test_text_masking.py",
+      "services/api/tests/test_text_masking_disposition.py",
+      "services/api/tests/test_text_masking_regression.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "convert_enhanced records text_masking and returns DEGRADED when a requested mask is unavailable or fails. The DXF is still written. Enhanced orchestrator acceptance is review in that case, and the API payload includes the disposition. The Melody Maker count test asserts a reduction only when applied is true.",
+    "why": "An empty OCR result previously meant both 'no text' and 'EasyOCR is not installed', so a skipped mask was reported as success.",
+    "why_not_redundant": "F-2 made the count test honest and refused a reduction until production reported that masking applied. This order supplies that report. It does not add a detector signature.",
+    "what_did_not_change": "Default API CI marker exclusion, vectorizer-regression.yml, entity-count substring logic, DETECTOR_RUNS.json, EasyOCR installation, and CODE-TOOL-SIGNATURES-004."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api/.venv/bin/python -m pytest tests/test_text_masking.py tests/vectorizer/test_text_masking_count_integrity.py tests/test_code_tool_dogfood_003_evidence.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py -q --no-cov --tb=line"
+    ],
+    "proofs": [
+      "41 passed and 1 skipped (EasyOCR absent, so the live-reader filter is skipped). Unavailable, initialization failure, execution failure, no text, and applied each have a fast test. Degraded cases still write a DXF.",
+      "The Melody Maker PDF was not converted in this run. The reduction helper is called from the existing regression test only when applied is true."
+    ],
+    "hardware": "No machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": "services/photo-vectorizer/edge_to_dxf.py",
+      "intent": "Classify the masking pass and mark a requested miss DEGRADED while still writing the DXF.",
+      "risk": "low",
+      "behavior_change": "Unavailable and initialization failure are no longer reported as success."
+    },
+    {
+      "path": "services/api/app/services/blueprint_extract.py",
+      "intent": "Carry the disposition onto the extraction result.",
+      "risk": "low",
+      "behavior_change": "Enhanced extraction keeps success when the DXF exists and records a degraded mask in warnings."
+    },
+    {
+      "path": "services/api/app/services/blueprint_orchestrator.py",
+      "intent": "Expose the disposition and withhold accept when the mask did not apply.",
+      "risk": "low",
+      "behavior_change": "Enhanced results with a degraded mask return ok false and recommendation review. The DXF remains on the result."
+    },
+    {
+      "path": "services/api/app/routers/blueprint/edge_to_dxf_router.py",
+      "intent": "Return the conversion status and disposition from the enhanced endpoint.",
+      "risk": "low",
+      "behavior_change": "The enhanced JSON status can be DEGRADED. The file is still registered."
+    },
+    {
+      "path": "services/api/tests/test_text_masking.py",
+      "intent": "A missing provider and an OCR crash are errors, and the crash still emits a degraded DXF.",
+      "risk": "low",
+      "behavior_change": "Tests only. They run in default API CI."
+    },
+    {
+      "path": "services/api/tests/test_text_masking_disposition.py",
+      "intent": "Prove each disposition on a small ellipse without a blueprint PDF.",
+      "risk": "low",
+      "behavior_change": "Tests only. They run in default API CI."
+    },
+    {
+      "path": "services/api/tests/test_text_masking_regression.py",
+      "intent": "Assert the known Melody Maker reduction only when applied is true.",
+      "risk": "low",
+      "behavior_change": "The test stays on the vectorizer_regression marker."
+    },
+    {
+      "path": "docs/investigations/vectorizer-f3-mask-disposition_2026-10-14/README.md",
+      "intent": "Record the disposition contract and what remains for the detector successor.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    },
+    {
+      "path": "docs/investigations/code-tool-dogfood_2026-10-05/pins/edge_to_dxf.py",
+      "intent": "Preserve the edge_to_dxf.py bytes code_audit 0.1.0 scanned.",
+      "risk": "low",
+      "behavior_change": "Stored pin only."
+    },
+    {
+      "path": "docs/investigations/code-tool-dogfood_2026-10-05/pins/blueprint_orchestrator.py",
+      "intent": "Preserve the orchestrator bytes code_audit 0.1.0 scanned.",
+      "risk": "low",
+      "behavior_change": "Stored pin only."
+    }
+  ]
+}

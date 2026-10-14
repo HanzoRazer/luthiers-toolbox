@@ -50,6 +50,8 @@ class ExtractionResult:
     grouping: Optional[dict] = None
     # PR-2: surfaced on API response via orchestrator (not debug-only)
     topology_provenance: Optional[dict] = None
+    # Text-masking outcome from enhanced extraction. None when that pass did not run.
+    text_masking: Optional[dict] = None
 
 
 # ─── Guardrail Helpers ───────────────────────────────────────────────────────
@@ -353,7 +355,7 @@ def extract_blueprint_enhanced(
             cv2.imwrite(source_path, image)
 
         _ensure_edge_to_dxf_importable()
-        from edge_to_dxf import EdgeToDXF
+        from edge_to_dxf import ConversionStatus, EdgeToDXF
 
         converter = EdgeToDXF()
         result = converter.convert_enhanced(
@@ -363,6 +365,15 @@ def extract_blueprint_enhanced(
             gap_close_size=gap_close_size,
             mask_text=mask_text,
         )
+
+        masking = None
+        if getattr(result, "text_masking", None) is not None:
+            masking = result.text_masking.to_dict()
+        if result.status == ConversionStatus.DEGRADED:
+            warnings.append(
+                "Text masking was requested but did not apply. "
+                "DXF emitted as degraded output."
+            )
 
         return ExtractionResult(
             success=True,
@@ -374,6 +385,7 @@ def extract_blueprint_enhanced(
             mm_per_px=result.mm_per_px,
             processing_time_ms=result.processing_time_ms,
             warnings=warnings,
+            text_masking=masking,
         )
 
     except BlueprintGuardrailError as e:

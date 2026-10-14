@@ -11,7 +11,6 @@ Date: 2026-04-26
 
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -127,23 +126,20 @@ class TestTextDetection:
     """Tests for OCR-based text detection."""
 
     def test_detect_text_regions_no_easyocr(self):
-        """Returns empty list when EasyOCR unavailable."""
+        """A missing provider is an error, not an empty region list."""
         np = _photo_numpy()
-        from edge_to_dxf import detect_text_regions
+        import edge_to_dxf
+        from edge_to_dxf import TextDetectionError, detect_text_regions
 
-        # Mock EasyOCR as unavailable
-        with patch.dict('sys.modules', {'easyocr': None}):
-            import edge_to_dxf
-            # Reset the availability flag
-            original_available = edge_to_dxf._EASYOCR_AVAILABLE
-            edge_to_dxf._EASYOCR_AVAILABLE = False
-
-            try:
-                image = np.zeros((100, 100, 3), dtype=np.uint8)
-                regions = detect_text_regions(image)
-                assert regions == []
-            finally:
-                edge_to_dxf._EASYOCR_AVAILABLE = original_available
+        original_available = edge_to_dxf._EASYOCR_AVAILABLE
+        edge_to_dxf._EASYOCR_AVAILABLE = False
+        try:
+            image = np.zeros((100, 100, 3), dtype=np.uint8)
+            with pytest.raises(TextDetectionError) as caught:
+                detect_text_regions(image)
+            assert caught.value.diagnostic_code == "OCR_PROVIDER_UNAVAILABLE"
+        finally:
+            edge_to_dxf._EASYOCR_AVAILABLE = original_available
 
     def test_detect_text_regions_filters_low_confidence(self):
         """Low-confidence detections are filtered out."""
@@ -304,6 +300,9 @@ class TestTextDetectionFailureIsNotSilent:
         assert result.text_detection_failed is True
         assert result.status is ConversionStatus.DEGRADED
         assert result.status is not ConversionStatus.SUCCESS
+        assert result.text_masking.diagnostic_code == "OCR_EXECUTION_FAILED"
+        assert result.text_masking.applied is False
+        assert result.text_masking.attempted is True
         assert out.exists(), "output must still be produced, not refused"
         assert "DEGRADED" in result.summary()
         # VECTORIZER-CI-BOUNDARY-001: this fixture emits 1,116 LINE entities (reproduced
