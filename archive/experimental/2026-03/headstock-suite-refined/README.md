@@ -1,7 +1,7 @@
 # Headstock Suite — refined views (preserved)
 
 **Status:** PRESERVED, pending feature reconciliation. Not compiled, not routed, not shipped.
-**Moved here from:** `packages/client/src/views/cam/headstock/` on 2026-10-13. The files are **byte-identical** to `main` at `2a2f3924`.
+**Moved here from:** `packages/client/src/views/cam/headstock/` on 2026-10-13. The files are **byte-identical** to `main` at `2a2f3924`, and still are at `b5e61805` (after #437).
 **Evidence:** `docs/investigations/headstock-lineage-reconciliation_2026-10-13.md` (PR #437)
 **Ledger:** SPRINTS.md MAINT-DEFER-010
 
@@ -31,11 +31,27 @@ The `@/` imports are left as written. Here is where each import resolves today:
 
 | Import | Status |
 |---|---|
-| `@/composables/useKonvaCanvas`, `useWoodGrain`, `useDxfImport`, `useExportDxf` | live in `packages/client/src/composables/` |
-| `@/composables/useCamSpec`, `@/composables/drawCamOverlay` | live, byte-identical, at `design-utilities/lutherie/neck/` |
+| `@/composables/useKonvaCanvas`, `useWoodGrain` | live in `packages/client/src/composables/` |
+| `@/composables/useDxfImport`, `useExportDxf` | **present but broken** in `packages/client/src/composables/`: they import the lost `@/types/headstock` and `headstockData` (4 of the 5 type errors that stay in `src/`) |
+| `@/composables/useCamSpec`, `@/composables/drawCamOverlay` | live, byte-identical, at `design-utilities/lutherie/neck/` (`useCamSpec.ts` also imports the lost `@/types/headstock`: the 5th remaining error) |
 | `@/components/CamSpecPanel.vue` | live, byte-identical, at `components/cam/neck/` |
 | `@/stores/variants`, `@/components/VariantLibraryPanel.vue`, `@/components/WoodGrainPanel.vue` | archive only: `docs/archive/photo_vectorizer_patches/` |
 | `@/stores/headstock`, `@/types/headstock`, `@/composables/useHeadstock`, `@/composables/useParametric`, `@/assets/data/headstockData` | **lost**: in no git ref and no archive. Partial logic exists in `../Interactive_Headstock_Generator/ps-suite.html` and `ps-parametric.html`. Recovery is being attempted from the 2026-03-17 claude.ai session's `/mnt/user-data/outputs/ps-vue*/src/` |
+
+## Why moving them out of `src/` is safe
+
+Preserving these views and moving them out of `src/` do not conflict. Preservation is about keeping the work;
+`src/` is only for code that compiles and ships. These files can't compile in `src/` (5 of their imports are lost)
+and nothing in the app reaches them, so moving them changes the type-check count and nothing else.
+You can re-run every check below:
+
+| Check | Command | Result (merged with `main` `b5e61805`) |
+|---|---|---|
+| Nothing imports or routes them | `git grep -nE "headstock/(Configurator\|Import\|Parametric\|Workspace)View" -- packages/ services/` | no matches |
+| No code path names the old folder | `git grep -l "views/cam/headstock" -- packages services scripts .github` | only the ratchet's baseline (5 per-file keys, removed by the ceiling follow-up) and synthetic fixtures in `scripts/ci/test_client_type_check_ratchet.py` (11 passed) |
+| Moved byte-identical | `git rev-parse HEAD:<new path>` vs `git rev-parse b5e61805:<old path>` | 4 of 4 equal |
+| Type-check ratchet | `npm run type-check > log; python scripts/ci/check_client_type_check_ratchet.py --log log --baseline scripts/ci/client_type_check_baseline.json` | `vue-tsc errors: 87 \| baseline ceiling: 150`: falls by exactly the views' 63 |
+| Build | `npm run build` | passes; the views were never in the module graph |
 
 ## Rules for this folder
 

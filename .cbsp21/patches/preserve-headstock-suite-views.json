@@ -6,7 +6,7 @@
   "title": "chore(client): preserve headstock suite views out of src (MAINT-DEFER-010)",
   "intent": "Owner ruling 2026-10-13: the four views in packages/client/src/views/cam/headstock/ are work to preserve, not debris. The lineage reconciliation (PR #437) shows they are the final iterations of the headstock half of the 2026-03-17 ps-vue suite, with capability the routed /art-studio/headstock lacks. They are uncompilable in src/ because 5 supporting modules are lost, and they accounted for 63 of the 150 tolerated vue-tsc errors. Move them, byte-identical, to a documented archive location outside vue-tsc's src/** include. Do not delete them.",
   "change_type": "chore",
-  "behavior_change": "None at runtime. The views had zero inbound imports and no route, so vite build never included them; the shipped bundle is unchanged. The four files move by pure git rename (similarity 100%) to archive/experimental/2026-03/headstock-suite-refined/. Blobs are unchanged: ConfiguratorView 4c3ac93b, ImportView 674d3fde, ParametricView 755e25e6, WorkspaceView 3be10a9e. A README there records provenance, where each import resolves, and folder rules. SPRINTS.md MAINT-DEFER-010 is updated to PRESERVED with the two corrections (not dead code; #308 never reached main), and the original finding text is kept. The vue-tsc error count falls below the 150 ceiling (see verification). The ceiling and scripts/ci/client_type_check_baseline.json are deliberately NOT changed here: lowering the ceiling is a separate follow-up after this preservation merges, per the agreed order.",
+  "behavior_change": "None at runtime. The views had zero inbound imports and no route, so vite build never included them; the shipped bundle is unchanged. The four files move by pure git rename (similarity 100%) to archive/experimental/2026-03/headstock-suite-refined/. Blobs are unchanged: ConfiguratorView 4c3ac93b, ImportView 674d3fde, ParametricView 755e25e6, WorkspaceView 3be10a9e. A README there records provenance, where each import resolves, and folder rules. SPRINTS.md MAINT-DEFER-010 is updated to QUEUED — PRESERVED (documented enum token qualified, with the ruling marked as a reported owner statement that the owner's merge authenticates) with the two corrections (not dead code; #308 never reached main), and the original finding text is kept. The vue-tsc error count falls below the 150 ceiling (see verification). The ceiling and scripts/ci/client_type_check_baseline.json are deliberately NOT changed here: lowering the ceiling is a separate follow-up after this preservation merges, per the agreed order.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -48,25 +48,91 @@
       "remaining 87 errors compared per file against the baseline minus the four headstock entries: 0 differences, so no error moved or appeared elsewhere",
       "npm run lint:report + check_client_lint_ratchet.py: PASS, errors 34 -> 34, warnings 7683 -> 6980 (the views' warnings leave lint scope; packages/client lints only its own tree)",
       "npm run build: success (the views were never in the module graph)",
-      "ceiling and baselines intentionally unchanged; lowering is the follow-up PR after this merges"
+      "ceiling and baselines intentionally unchanged; lowering is the follow-up PR after this merges",
+      "review follow-up 2026-10-14: merged origin/main b5e61805 (#436 ratchet parser, #437 evidence doc) with no force-push; the 4 blobs are unchanged",
+      "re-measured on the merged tree: npm ci + npm run type-check + check_client_type_check_ratchet.py gives 87 against ceiling 150 (PASS); the 5 remaining headstock-named errors are in src/composables/useDxfImport.ts, useExportDxf.ts and design-utilities/lutherie/neck/useCamSpec.ts (lost @/types/headstock and headstockData), not from the moved views",
+      "npm run build on the merged tree: exit 0",
+      "git grep -nE 'headstock/(Configurator|Import|Parametric|Workspace)View' -- packages/ services/ returns no matches",
+      "pytest scripts/ci/test_client_type_check_ratchet.py: 11 passed (its old-path strings are synthetic fixtures)",
+      "gh pr view 308/306 + git merge-base --is-ancestor f8f5a568 origin/main gives exit 1, so the stranding claim is reproduced; the command is embedded in SPRINTS.md"
     ]
   },
   "files": [
-    { "path": "archive/experimental/2026-03/headstock-suite-refined/WorkspaceView.vue", "intent": "Preserved, byte-identical (3be10a9e).", "risk": "low", "behavior_change": "none" },
-    { "path": "archive/experimental/2026-03/headstock-suite-refined/ParametricView.vue", "intent": "Preserved, byte-identical (755e25e6).", "risk": "low", "behavior_change": "none" },
-    { "path": "archive/experimental/2026-03/headstock-suite-refined/ImportView.vue", "intent": "Preserved, byte-identical (674d3fde).", "risk": "low", "behavior_change": "none" },
-    { "path": "archive/experimental/2026-03/headstock-suite-refined/ConfiguratorView.vue", "intent": "Preserved, byte-identical (4c3ac93b).", "risk": "low", "behavior_change": "none" },
-    { "path": "packages/client/src/views/cam/headstock/WorkspaceView.vue", "intent": "Rename source (moved).", "risk": "low", "behavior_change": "none: never imported or routed" },
-    { "path": "packages/client/src/views/cam/headstock/ParametricView.vue", "intent": "Rename source (moved).", "risk": "low", "behavior_change": "none: never imported or routed" },
-    { "path": "packages/client/src/views/cam/headstock/ImportView.vue", "intent": "Rename source (moved).", "risk": "low", "behavior_change": "none: never imported or routed" },
-    { "path": "packages/client/src/views/cam/headstock/ConfiguratorView.vue", "intent": "Rename source (moved).", "risk": "low", "behavior_change": "none: never imported or routed" },
-    { "path": "archive/experimental/2026-03/headstock-suite-refined/README.md", "intent": "Provenance, import map, folder rules.", "risk": "low", "behavior_change": "none" },
-    { "path": "SPRINTS.md", "intent": "MAINT-DEFER-010 -> PRESERVED, with corrections; original text kept.", "risk": "low", "behavior_change": "none" },
-    { "path": ".cbsp21/patches/preserve-headstock-suite-views.json", "intent": "Per-PR CBSP21 patch manifest.", "risk": "low", "behavior_change": "none" }
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/WorkspaceView.vue",
+      "intent": "Preserved, byte-identical (3be10a9e).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ParametricView.vue",
+      "intent": "Preserved, byte-identical (755e25e6).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ImportView.vue",
+      "intent": "Preserved, byte-identical (674d3fde).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ConfiguratorView.vue",
+      "intent": "Preserved, byte-identical (4c3ac93b).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/WorkspaceView.vue",
+      "intent": "Rename source (moved).",
+      "risk": "low",
+      "behavior_change": "none: never imported or routed"
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/ParametricView.vue",
+      "intent": "Rename source (moved).",
+      "risk": "low",
+      "behavior_change": "none: never imported or routed"
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/ImportView.vue",
+      "intent": "Rename source (moved).",
+      "risk": "low",
+      "behavior_change": "none: never imported or routed"
+    },
+    {
+      "path": "packages/client/src/views/cam/headstock/ConfiguratorView.vue",
+      "intent": "Rename source (moved).",
+      "risk": "low",
+      "behavior_change": "none: never imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/README.md",
+      "intent": "Provenance, import map, folder rules.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "MAINT-DEFER-010 -> PRESERVED, with corrections; original text kept.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/preserve-headstock-suite-views.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
   ],
   "architecture_scan": {
     "scan_id": "AS-2026-07-04-002",
-    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
     "findings": [],
     "acknowledged": true,
     "acknowledgement_notes": "Moves unreachable, uncompiled files out of src; no import graph, route or bundle change."
