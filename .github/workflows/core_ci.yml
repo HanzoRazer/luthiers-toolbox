@@ -70,6 +70,12 @@ jobs:
       - name: Scaffolder Self-Test (SCAFFOLD-DIST-001)
         run: |
           python -m pytest scripts/ci/test_scaffold_agents_md.py -v
+      # Parser tests for the client type-check ratchet. Pinned here, not in
+      # client_lint_build.yml: that workflow is path-filtered to the client, and
+      # these tests must also run when only the ratchet script changes.
+      - name: Client Type-Check Ratchet Parser Tests
+        run: |
+          python -m pytest scripts/ci/test_client_type_check_ratchet.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api
