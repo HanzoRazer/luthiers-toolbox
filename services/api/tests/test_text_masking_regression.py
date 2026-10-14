@@ -24,6 +24,12 @@ from pathlib import Path
 
 import pytest
 
+from vectorizer.text_masking_counts import (
+    assert_reported_count_matches_artifact,
+    cached_flag_calls,
+    reported_entity_count,
+)
+
 # VECTORIZER-CI-BOUNDARY-001: real-plan conversions run in the dedicated
 # vectorizer-regression workflow, not in default API CI (see pytest.ini).
 pytestmark = pytest.mark.vectorizer_regression
@@ -77,30 +83,32 @@ def melody_maker_run():
 
     orchestrator = BlueprintOrchestrator()
     file_bytes = MELODY_MAKER_PDF.read_bytes()
-    results = {}
     conversions = []
 
-    def run(mask_text: bool):
-        if mask_text not in results:
-            started = time.perf_counter()
-            result = orchestrator.process_file(
-                file_bytes=file_bytes,
-                filename="melody_maker.pdf",
-                mode=CleanupMode.ENHANCED,
-                mask_text=mask_text,
-                gap_close_size=7,
-            )
-            conversions.append({
-                "mask_text": mask_text,
-                "elapsed_s": round(time.perf_counter() - started, 1),
-                "dxf_entity_count": result.dxf.entity_count,
-                "ok": result.ok,
-                "stage": result.stage,
-            })
-            results[mask_text] = result
-        return results[mask_text]
+    def compute(mask_text: bool):
+        started = time.perf_counter()
+        result = orchestrator.process_file(
+            file_bytes=file_bytes,
+            filename="melody_maker.pdf",
+            mode=CleanupMode.ENHANCED,
+            mask_text=mask_text,
+            gap_close_size=7,
+        )
+        conversions.append({
+            "mask_text": mask_text,
+            "elapsed_s": round(time.perf_counter() - started, 1),
+            "dxf_entity_count": result.dxf.entity_count,
+            "ok": result.ok,
+            "stage": result.stage,
+        })
+        return result
 
+    run = cached_flag_calls(compute)
     yield run
+    if len(run.calls) > 2 or len(set(run.calls)) != len(run.calls):
+        raise AssertionError(
+            f"Melody Maker fixture performed {len(run.calls)} conversions; the cap is 2"
+        )
 
     metrics_path = os.environ.get("VECTORIZER_REGRESSION_METRICS")
     if metrics_path:
@@ -210,34 +218,28 @@ class TestTextMaskingRegression:
 
 
 class TestTextMaskingComparison:
-    """Compare text masking on vs off for quantitative analysis."""
+    """Shared Melody Maker runs. This class reports counts. It does not claim a reduction."""
 
     @pytest.mark.slow
-    def test_entity_count_reduction(self, melody_maker_run):
-        """Text masking should reduce entity count (fewer text-shaped contours)."""
+    def test_melody_maker_reports_entity_counts(self, melody_maker_run):
+        """Both runs expose ``dxf.entity_count``, and each matches its parsed DXF.
+
+        A strict ``masked < unmasked`` check waits until the result reports that
+        masking was applied. Production does not report that yet. F-3 will.
+        """
         skip_if_no_test_file(MELODY_MAKER_PDF)
 
-        # With text masking
-        result_masked = melody_maker_run(mask_text=True)
+        masked = melody_maker_run(mask_text=True)
+        unmasked = melody_maker_run(mask_text=False)
+        masked_count = reported_entity_count(masked)
+        unmasked_count = reported_entity_count(unmasked)
+        assert_reported_count_matches_artifact(masked)
+        assert_reported_count_matches_artifact(unmasked)
 
-        # Without text masking
-        result_unmasked = melody_maker_run(mask_text=False)
-
-        # Get entity counts
-        masked_count = getattr(result_masked, 'entity_count', 0)
-        unmasked_count = getattr(result_unmasked, 'entity_count', 0)
-
-        print(f"\n=== ENTITY COUNT COMPARISON ===")
-        print(f"With text masking: {masked_count:,}")
-        print(f"Without text masking: {unmasked_count:,}")
-        if unmasked_count > 0:
-            reduction = (unmasked_count - masked_count) / unmasked_count * 100
-            print(f"Reduction: {reduction:.1f}%")
-
-        # Text masking should not INCREASE entity count
-        # (it can only remove or leave unchanged)
-        assert masked_count <= unmasked_count + 1000, \
-            f"Text masking unexpectedly increased entities: {masked_count} > {unmasked_count}"
+        print("\n=== ENTITY COUNTS REPORTED ===")
+        print(f"mask_text=True: {masked_count:,}")
+        print(f"mask_text=False: {unmasked_count:,}")
+        print("Reduction is not asserted; masking disposition is not reported.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,105 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VECTORIZER_F2_COUNT_INTEGRITY_001",
+  "title": "Repair the hollow Melody Maker entity-count test without claiming a reduction",
+  "intent": "F-2 read a missing attribute through getattr default 0, so the reduction assertion could not fail. Read dxf.entity_count directly, check each run against a structured ezdxf parse of its emitted DXF, and stop asserting a reduction until F-3 reports that masking was applied.",
+  "change_type": "test",
+  "behavior_change": "Test integrity only. No vectorizer algorithm, orchestrator, result model, DXF generation, OCR capability, workflow, or default API CI change. The real-plan tests remain on the vectorizer_regression marker.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vectorizer-f2-count-integrity-001.json",
+      "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/text_masking_counts.py",
+      "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vectorizer-f2-count-integrity-001.json",
+      "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "services/api/tests/test_text_masking_regression.py",
+      "services/api/tests/vectorizer/text_masking_counts.py",
+      "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "test_entity_count_reduction is now test_melody_maker_reports_entity_counts. It reads result.dxf.entity_count and checks both emitted DXFs against an ezdxf parse (LINE + LWPOLYLINE in modelspace). It does not assert masked < unmasked. Fast tests cover a missing count, an artifact mismatch, an applied reduction, an identical applied pair, and a refused comparison when applied is not true. The Melody Maker fixture uses the same two-call cache. The 2026-10-03 census is unchanged; the evidence test maps the old test id to the new name. The dogfood evidence test accepts a stored copy of the scanned regression bytes when the live file no longer matches that pin. Review follow-up: the first draft's artifact check re-ran the orchestrator's own \"\nLINE\n\" substring count over the same bytes, so it agreed with production by construction and could not fail. It now parses group-code pairs; a fast test with a TEXT entity whose value is LINE fails if the helper reverts to the substring rule. The main test uses reported_entity_count for both runs instead of an inline type check. The pipeline writes CRLF; ezdxf reads an unnormalized CRLF stream as zero entities, so the helper normalizes line endings before parsing, and a CRLF fast test fails if that normalization is removed.",
+    "why": "The previous assertion compared zeros and could not detect a failed mask. Claiming a reduction now would also be false, because the result does not yet report whether masking was applied.",
+    "why_not_redundant": "CODE-TOOL-DOGFOOD-003 classified the detector miss and left the test hollow. This order repairs the test. It does not add a detector and it does not repair F-3.",
+    "what_did_not_change": "edge_to_dxf.py, the orchestrator, result models, DXF generation, OCR installation, vectorizer-regression.yml, core CI marker exclusion, DETECTOR_RUNS.json hashes, defects_repaired, the dogfood sentence that neither defect was repaired, and the 2026-10-03 census."
+  },
+  "verification": {
+    "commands_run": [
+      "gh pr merge 434 --merge  # merged as fbf36095b99d0a97ee4574f27d6482a09e87bd6c; branch cut from that main",
+      "services/api/.venv/bin/python -m pytest tests/vectorizer/test_text_masking_count_integrity.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py tests/test_code_tool_dogfood_003_evidence.py -q --no-cov --tb=short",
+      "services/api/.venv/bin/python -m pytest tests/test_vectorizer_research_only_freeze.py -q --tb=line  # 6 passed",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <manifest, closeout, regression test, helper, fast tests, census evidence test>  # PASSED, coverage 100%",
+      "git diff --name-only  # no services/api/app, photo-vectorizer, edge_to_dxf, workflow, or pytest.ini path",
+      "py -3.11 -m pytest tests/vectorizer/test_text_masking_count_integrity.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py tests/test_code_tool_dogfood_003_evidence.py -q --no-cov  # 33 passed (Windows, review follow-up)",
+      "mutation: helper reverted to the substring rule -> test_artifact_check_is_independent_of_the_substring_count FAILED (1 failed, 12 passed); helper restored",
+      "real Melody Maker probe, mask_text=True, ENHANCED, gap_close_size=7: reported 223427, substring 223427, ezdxf modelspace LINE 223427, LINE/LWPOLYLINE inside BLOCK definitions 0",
+      "mutation: CRLF normalization removed -> test_crlf_dxf_is_parsed_not_read_as_empty FAILED (1 failed, 13 passed); helper restored",
+      "first real run of the edited regression test (before CRLF normalization) FAILED: reported 223427 vs 0 parsed -- the synthetic DXFs were LF-only and missed it",
+      "py -3.11 -m pytest tests/test_text_masking_regression.py::TestTextMaskingComparison::test_melody_maker_reports_entity_counts -m vectorizer_regression --no-cov -s  # 1 passed in 1001.86s (Windows, EasyOCR present); both runs' reported counts equal the ezdxf parse: mask_text=True 223427, mask_text=False 266359"
+    ],
+    "proofs": [
+      "30 tests passed: the dogfood source-blob check accepts the stored scan (content sha256 6f256e19226f8b06f75e882dfc382decd1e9135051d6306d53aee9b8289dfd03, git blob 0bbc72d56eac600a695105976578cb46930b5c1f); missing dxf and entity_count raise; a mismatched artifact fails; applied equal counts fail; applied is required before a strict reduction comparison.",
+      "The census evidence test still matches the 2026-10-03 excluded set through the rename map. The census file was not edited.",
+      "The original draft never converted the Melody Maker PDF, so its artifact check had not run on real output. The review follow-up ran it: the structured count equals the reported count on the real masked output (223427).",
+      "On this machine masking did reduce the count (223427 vs 266359), but the test still does not assert it: the result does not report whether masking was applied, and CI lacks EasyOCR (F-3)."
+    ],
+    "hardware": "No machine execution and no manufacturing output."
+  },
+  "files": [
+    {
+      "path": "services/api/tests/test_text_masking_regression.py",
+      "intent": "Report canonical entity counts from the two cached Melody Maker runs and check both emitted DXFs.",
+      "risk": "low",
+      "behavior_change": "The hollow reduction assertion is gone. The conversions stay at two."
+    },
+    {
+      "path": "services/api/tests/vectorizer/text_masking_counts.py",
+      "intent": "Direct count access, an artifact check by structured ezdxf parse (independent of the orchestrator's substring count), and the applied-only reduction helper.",
+      "risk": "low",
+      "behavior_change": "Test helper. No production import."
+    },
+    {
+      "path": "services/api/tests/vectorizer/test_text_masking_count_integrity.py",
+      "intent": "Fast synthetic proofs on real dxf_compat documents: missing counts, artifact mismatch, LWPOLYLINE counting, independence from the substring rule, and the reduction gate.",
+      "risk": "low",
+      "behavior_change": "Tests only. They do not convert a blueprint."
+    },
+    {
+      "path": "services/api/tests/vectorizer/test_vectorizer_ci_boundary_evidence.py",
+      "intent": "Keep the historical census id mapped to the renamed test.",
+      "risk": "low",
+      "behavior_change": "Tests only. The census file is not edited."
+    },
+    {
+      "path": "docs/investigations/vectorizer-f2-count-integrity_2026-10-13/README.md",
+      "intent": "Record what F-2 now proves and what remains for F-3 and the detector successor.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    },
+    {
+      "path": "services/api/tests/test_code_tool_dogfood_003_evidence.py",
+      "intent": "Accept the stored scanned bytes when a later repair changes a pinned source file.",
+      "risk": "low",
+      "behavior_change": "Tests only. DETECTOR_RUNS.json is not edited."
+    },
+    {
+      "path": "docs/investigations/code-tool-dogfood_2026-10-05/pins/test_text_masking_regression.py",
+      "intent": "Report canonical entity counts from the two cached Melody Maker runs and check both emitted DXFs.",
+      "risk": "low",
+      "behavior_change": "Stored pin only. It is not a collected test."
+    }
+  ]
+}

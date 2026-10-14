@@ -82,19 +82,40 @@ def test_ctd_commands_have_exit_codes_and_digests():
         assert SHA256.match(run["stderr_sha256"])
 
 
+def _git_blob_sha(relative: str) -> str:
+    return subprocess.run(
+        ["git", "hash-object", "--", relative],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
 def test_ctd_source_blobs_match_baseline():
+    """The scanned bytes stay pinned after a later repair edits the live file.
+
+    A working tree that still matches is that record. When it has moved, the
+    bundle stores the scanned bytes under pins/<basename>. Hashing that file
+    does not need git cat-file, so a shallow checkout can still prove the pin.
+    """
     for pin in _runs()["source_blobs"]:
-        path = REPO_ROOT / pin["path"]
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        assert digest == pin["content_sha256"]
-        blob = subprocess.run(
-            ["git", "hash-object", pin["path"]],
-            cwd=REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-        assert blob == pin["git_blob_sha"]
+        relative = pin["path"]
+        live = REPO_ROOT / relative
+        if hashlib.sha256(live.read_bytes()).hexdigest() == pin["content_sha256"]:
+            assert _git_blob_sha(relative) == pin["git_blob_sha"]
+            continue
+        snapshot_rel = (
+            "docs/investigations/code-tool-dogfood_2026-10-05/pins/"
+            f"{Path(relative).name}"
+        )
+        snapshot = REPO_ROOT / snapshot_rel
+        assert snapshot.is_file(), (
+            f"{relative} no longer matches the scanned bytes and {snapshot_rel} is missing"
+        )
+        stored = snapshot.read_bytes()
+        assert hashlib.sha256(stored).hexdigest() == pin["content_sha256"]
+        assert _git_blob_sha(snapshot_rel) == pin["git_blob_sha"]
 
 
 def test_ctd_defects_not_repaired_and_no_secrets():
