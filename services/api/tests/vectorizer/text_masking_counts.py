@@ -7,6 +7,9 @@ was applied. Production does not report that disposition yet. F-3 will.
 from __future__ import annotations
 
 import base64
+import io
+
+import ezdxf
 
 
 class MaskingReductionNotPermitted(AssertionError):
@@ -22,16 +25,26 @@ def reported_entity_count(result) -> int:
 
 
 def emitted_line_entity_count(dxf_bytes: bytes) -> int:
-    """Count LINE and LWPOLYLINE records the same way the orchestrator does.
+    """Count LINE and LWPOLYLINE entities in modelspace by parsing the DXF.
+
+    The orchestrator's encode stage derives ``dxf.entity_count`` by counting
+    ``"\\nLINE\\n"`` substrings. Repeating that substring count here would agree
+    with production by construction, so the artifact check could never fail.
+    A structured parse is independent: it reads group-code pairs, so a TEXT value
+    or layer name spelled ``LINE`` is not an entity.
+
+    The pipeline writes CRLF line endings. ezdxf reads a CRLF text stream as zero
+    entities, so line endings are normalized before parsing.
 
     This checks bytes that were already produced. It does not run a conversion.
     """
     text = dxf_bytes.decode("utf-8", errors="ignore").replace("\r\n", "\n")
-    return text.count("\nLINE\n") + text.count("\nLWPOLYLINE\n")
+    doc = ezdxf.read(io.StringIO(text))
+    return sum(1 for e in doc.modelspace() if e.dxftype() in ("LINE", "LWPOLYLINE"))
 
 
 def assert_reported_count_matches_artifact(result) -> None:
-    """The reported count must equal the entities in the emitted DXF bytes."""
+    """The reported count must equal the parsed entities in the emitted DXF bytes."""
     reported = reported_entity_count(result)
     raw = base64.b64decode(result.dxf.base64)
     parsed = emitted_line_entity_count(raw)

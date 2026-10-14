@@ -27,6 +27,7 @@ import pytest
 from vectorizer.text_masking_counts import (
     assert_reported_count_matches_artifact,
     cached_flag_calls,
+    reported_entity_count,
 )
 
 # VECTORIZER-CI-BOUNDARY-001: real-plan conversions run in the dedicated
@@ -221,7 +222,7 @@ class TestTextMaskingComparison:
 
     @pytest.mark.slow
     def test_melody_maker_reports_entity_counts(self, melody_maker_run):
-        """Both runs expose ``dxf.entity_count``, and one matches its emitted DXF.
+        """Both runs expose ``dxf.entity_count``, and each matches its parsed DXF.
 
         A strict ``masked < unmasked`` check waits until the result reports that
         masking was applied. Production does not report that yet. F-3 will.
@@ -230,10 +231,9 @@ class TestTextMaskingComparison:
 
         masked = melody_maker_run(mask_text=True)
         unmasked = melody_maker_run(mask_text=False)
-        masked_count = masked.dxf.entity_count
-        unmasked_count = unmasked.dxf.entity_count
-        if type(masked_count) is not int or type(unmasked_count) is not int:
-            raise AssertionError("dxf.entity_count must be an int on both runs")
+        masked_count = reported_entity_count(masked)
+        unmasked_count = reported_entity_count(unmasked)
+        assert_reported_count_matches_artifact(masked)
         assert_reported_count_matches_artifact(unmasked)
 
         print("\n=== ENTITY COUNTS REPORTED ===")

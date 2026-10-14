@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import base64
+import io
 from types import SimpleNamespace
 
 import pytest
-
 from vectorizer.text_masking_counts import (
     MaskingReductionNotPermitted,
     assert_known_fixture_reduced,
@@ -14,13 +14,38 @@ from vectorizer.text_masking_counts import (
     reported_entity_count,
 )
 
+from app.util.dxf_compat import add_polyline, create_document
 
-def _dxf_bytes(line_count: int) -> bytes:
-    parts = ["0", "SECTION", "2", "ENTITIES"]
-    for _ in range(line_count):
-        parts.extend(["0", "LINE", "8", "0"])
-    parts.extend(["0", "ENDSEC", "0", "EOF", ""])
-    return "\n".join(parts).encode("ascii")
+
+def _dxf_bytes(
+    line_count: int,
+    *,
+    version: str = "R12",
+    text_values: tuple[str, ...] = (),
+    crlf: bool = False,
+) -> bytes:
+    """A real DXF from dxf_compat: R12 emits LINE segments, R2000 one LWPOLYLINE.
+
+    ``crlf`` matches the line endings the pipeline writes.
+    """
+    doc = create_document(version)
+    msp = doc.modelspace()
+    points = [(float(i), 0.0) for i in range(line_count + 1)]
+    add_polyline(msp, points, version=version)
+    for value in text_values:
+        msp.add_text(value)
+    stream = io.StringIO()
+    doc.write(stream)
+    text = stream.getvalue()
+    if crlf:
+        text = text.replace("\n", "\r\n")
+    return text.encode("utf-8")
+
+
+def _substring_count(dxf_bytes: bytes) -> int:
+    """The orchestrator encode stage's counting rule, reproduced only to contrast with it."""
+    text = dxf_bytes.decode("utf-8", errors="ignore").replace("\r\n", "\n")
+    return text.count("\nLINE\n") + text.count("\nLWPOLYLINE\n")
 
 
 def _result(entity_count, payload: bytes = b""):
@@ -57,6 +82,32 @@ def test_reported_count_matches_the_emitted_dxf():
 def test_reported_count_rejects_a_mismatch_with_the_emitted_dxf():
     with pytest.raises(AssertionError, match="does not match"):
         assert_reported_count_matches_artifact(_result(1, _dxf_bytes(2)))
+
+
+def test_crlf_dxf_is_parsed_not_read_as_empty():
+    """The pipeline writes CRLF. Unnormalized, ezdxf reads it as zero entities."""
+    payload = _dxf_bytes(3, crlf=True)
+    assert b"\r\nLINE\r\n" in payload
+    assert_reported_count_matches_artifact(_result(3, payload))
+
+
+def test_lwpolyline_counts_as_one_entity():
+    payload = _dxf_bytes(4, version="R2000")
+    assert_reported_count_matches_artifact(_result(1, payload))
+
+
+def test_artifact_check_is_independent_of_the_substring_count():
+    """A TEXT whose value is LINE is not an entity.
+
+    The substring rule counts it, so a count derived that way disagrees with the
+    parse. If the helper ever reverted to the substring rule, both sides would
+    agree by construction and this test would fail.
+    """
+    payload = _dxf_bytes(2, text_values=("LINE",))
+    assert _substring_count(payload) == 3
+    assert_reported_count_matches_artifact(_result(2, payload))
+    with pytest.raises(AssertionError, match="does not match"):
+        assert_reported_count_matches_artifact(_result(_substring_count(payload), payload))
 
 
 def test_applied_mask_passes_when_the_known_fixture_shrinks():

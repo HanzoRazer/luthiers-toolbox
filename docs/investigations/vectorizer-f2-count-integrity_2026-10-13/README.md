@@ -4,7 +4,9 @@ F-2 was a test that could not fail. `test_entity_count_reduction` read `result.e
 
 ## What this repair does
 
-The Melody Maker regression now reads `result.dxf.entity_count` directly. A missing `dxf` or `entity_count` fails the test. One already-emitted DXF is checked once: the reported count must equal the `LINE` and `LWPOLYLINE` records in those bytes. That check does not run another conversion.
+The Melody Maker regression now reads `result.dxf.entity_count` directly. A missing `dxf` or `entity_count` fails the test. Each run's already-emitted DXF is parsed with ezdxf, and the reported count must equal the `LINE` and `LWPOLYLINE` entities in modelspace. That check does not run another conversion.
+
+The parse is deliberate. The orchestrator's encode stage derives `entity_count` by counting `"\nLINE\n"` substrings in the same bytes. A first draft of this repair repeated that substring count, which agrees with production by construction and so could not fail. A structured parse reads group-code pairs: a TEXT value or layer name spelled `LINE` is not an entity. A fast test pins this — it fails if the helper reverts to the substring rule. The pipeline writes CRLF line endings, which ezdxf reads as zero entities unless normalized, so the helper normalizes them first; a CRLF fast test pins that too.
 
 The test is renamed `test_melody_maker_reports_entity_counts`. It reports the two counts. It does not assert that masking reduced them. Production does not yet say whether masking was applied. F-3 will add that disposition. Until then a strict `masked < unmasked` check would claim a runtime fact the result does not report.
 
