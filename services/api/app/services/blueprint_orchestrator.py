@@ -56,6 +56,7 @@ from .blueprint_extract import (
     DualPassResult,
     extract_dual_pass,
 )
+from .blueprint_text_masking import enhanced_acceptance
 from .blueprint_clean import (
     CleanResult,
     CleanupMode,
@@ -137,7 +138,6 @@ class BlueprintResult:
     recommendation: Recommendation = field(default_factory=Recommendation)
     metrics: dict[str, Any] = field(default_factory=dict)
     debug: dict[str, Any] = field(default_factory=dict)
-    # None when this run did not perform enhanced text masking.
     text_masking: Optional[dict] = None
 
     def to_response_dict(self, include_debug: bool = False) -> dict[str, Any]:
@@ -184,38 +184,6 @@ DXF_MIN_BYTES = 800
 
 
 # ─── Orchestrator ────────────────────────────────────────────────────────────
-
-_MASKING_DEGRADED_CODES = frozenset({
-    "OCR_PROVIDER_UNAVAILABLE",
-    "OCR_INITIALIZATION_FAILED",
-    "OCR_EXECUTION_FAILED",
-})
-
-
-def enhanced_acceptance(
-    dxf_valid: bool,
-    text_masking: Optional[dict],
-) -> tuple[bool, str, RecommendationAction, list[str]]:
-    """Enhanced output is accepted only when a requested mask actually applied or was not needed.
-
-    A degraded mask still has a DXF. That file is review output, not an accepted
-    manufacturing result. No text detected is a completed mask and stays acceptable.
-    """
-    code = (text_masking or {}).get("diagnostic_code")
-    if dxf_valid and code not in _MASKING_DEGRADED_CODES:
-        return True, "complete", RecommendationAction.ACCEPT, ["Full edge detail preserved"]
-    if dxf_valid and code in _MASKING_DEGRADED_CODES:
-        return (
-            False,
-            "complete",
-            RecommendationAction.REVIEW,
-            [
-                "Text masking was requested but did not apply. "
-                "The emitted DXF requires review before manufacturing use."
-            ],
-        )
-    return False, "extraction", RecommendationAction.REJECT, ["Extraction produced no output"]
-
 
 class BlueprintOrchestratorError(RuntimeError):
     """Error during orchestration with stage context."""
@@ -932,7 +900,6 @@ class BlueprintOrchestrator:
                     warnings.append("DXF content missing or empty")
 
                 # ─── Stage: Recommendation ────────────────────────────────
-                # ENHANCED: Accept raw output directly (no filtering applied)
                 if mode == CleanupMode.ENHANCED:
                     is_ok, stage, action, reasons = enhanced_acceptance(
                         dxf_valid, extract_result.text_masking
@@ -947,11 +914,7 @@ class BlueprintOrchestrator:
                         reasons=["Enhanced multi-scale extraction"],
                     )
 
-                    rec = Recommendation(
-                        action=action,
-                        reasons=reasons,
-                        confidence=1.0 if is_ok else 0.0,
-                    )
+                    rec = Recommendation(action=action, reasons=reasons, confidence=1.0 if is_ok else 0.0)
 
                 # LAYERED_DUAL_PASS uses layered acceptance logic instead of recommend()
                 elif mode == CleanupMode.LAYERED_DUAL_PASS:

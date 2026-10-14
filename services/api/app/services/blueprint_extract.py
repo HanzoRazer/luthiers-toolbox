@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from .blueprint_limits import LIMITS, BlueprintGuardrailError
+from .blueprint_text_masking import record_text_masking
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,6 @@ class ExtractionResult:
     grouping: Optional[dict] = None
     # PR-2: surfaced on API response via orchestrator (not debug-only)
     topology_provenance: Optional[dict] = None
-    # Text-masking outcome from enhanced extraction. None when that pass did not run.
     text_masking: Optional[dict] = None
 
 
@@ -318,12 +318,9 @@ def extract_blueprint_enhanced(
     """
     Run multi-scale edge fusion extraction (highest quality).
 
-    Uses three Canny threshold levels (30/100, 50/150, 80/200) for
-    complete edge coverage. Produces 50,000-300,000+ LINE entities.
+    Uses Canny levels 30/100, 50/150, and 80/200 for complete edge coverage.
 
-    Text masking (Sprint 3): When enabled, detects text regions via OCR
-    and removes them from edges before morphological gap closing. This
-    prevents the 7×7 kernel from bridging text glyph strokes.
+    Text masking records a disposition. A requested mask that does not apply is degraded output.
 
     Args:
         source_path: Path to input image
@@ -355,7 +352,7 @@ def extract_blueprint_enhanced(
             cv2.imwrite(source_path, image)
 
         _ensure_edge_to_dxf_importable()
-        from edge_to_dxf import ConversionStatus, EdgeToDXF
+        from edge_to_dxf import EdgeToDXF
 
         converter = EdgeToDXF()
         result = converter.convert_enhanced(
@@ -365,15 +362,6 @@ def extract_blueprint_enhanced(
             gap_close_size=gap_close_size,
             mask_text=mask_text,
         )
-
-        masking = None
-        if getattr(result, "text_masking", None) is not None:
-            masking = result.text_masking.to_dict()
-        if result.status == ConversionStatus.DEGRADED:
-            warnings.append(
-                "Text masking was requested but did not apply. "
-                "DXF emitted as degraded output."
-            )
 
         return ExtractionResult(
             success=True,
@@ -385,7 +373,7 @@ def extract_blueprint_enhanced(
             mm_per_px=result.mm_per_px,
             processing_time_ms=result.processing_time_ms,
             warnings=warnings,
-            text_masking=masking,
+            text_masking=record_text_masking(result, warnings),
         )
 
     except BlueprintGuardrailError as e:

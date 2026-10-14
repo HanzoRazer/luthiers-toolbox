@@ -620,10 +620,12 @@ def detect_text_regions(
             if confidence < min_confidence:
                 continue
 
-            # Convert polygon bbox to (x, y, w, h)
-            pts = np.array(bbox)
-            x_min, y_min = pts.min(axis=0).astype(int)
-            x_max, y_max = pts.max(axis=0).astype(int)
+            # Plain coordinates. np.ndarray.astype fails with _NoValueType
+            # after ezdxf reimports NumPy in a long pytest session.
+            xs = [float(point[0]) for point in bbox]
+            ys = [float(point[1]) for point in bbox]
+            x_min, y_min = int(min(xs)), int(min(ys))
+            x_max, y_max = int(max(xs)), int(max(ys))
 
             # Add padding to account for text proximity effects
             x_min = max(0, x_min - padding_px)

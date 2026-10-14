@@ -17,6 +17,7 @@
       "services/photo-vectorizer/edge_to_dxf.py",
       "services/api/app/services/blueprint_extract.py",
       "services/api/app/services/blueprint_orchestrator.py",
+      "services/api/app/services/blueprint_text_masking.py",
       "services/api/app/routers/blueprint/edge_to_dxf_router.py",
       "services/api/tests/test_text_masking.py",
       "services/api/tests/test_text_masking_disposition.py",
@@ -30,6 +31,7 @@
       "services/photo-vectorizer/edge_to_dxf.py",
       "services/api/app/services/blueprint_extract.py",
       "services/api/app/services/blueprint_orchestrator.py",
+      "services/api/app/services/blueprint_text_masking.py",
       "services/api/app/routers/blueprint/edge_to_dxf_router.py",
       "services/api/tests/test_text_masking.py",
       "services/api/tests/test_text_masking_disposition.py",
@@ -44,11 +46,13 @@
   },
   "verification": {
     "commands_run": [
-      "services/api/.venv/bin/python -m pytest tests/test_text_masking.py tests/vectorizer/test_text_masking_count_integrity.py tests/test_code_tool_dogfood_003_evidence.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py -q --no-cov --tb=line"
+      "services/api/.venv/bin/python -m pytest tests/test_text_masking.py tests/test_text_masking_disposition.py tests/vectorizer/test_text_masking_count_integrity.py tests/test_code_tool_dogfood_003_evidence.py tests/vectorizer/test_vectorizer_ci_boundary_evidence.py -q --no-cov --tb=line",
+      "python ci/file_size_gate.py"
     ],
     "proofs": [
-      "41 passed and 1 skipped (EasyOCR absent, so the live-reader filter is skipped). Unavailable, initialization failure, execution failure, no text, and applied each have a fast test. Degraded cases still write a DXF.",
-      "The Melody Maker PDF was not converted in this run. The reduction helper is called from the existing regression test only when applied is true."
+      "55 passed and 1 skipped (EasyOCR absent, so the live-reader filter is skipped). Unavailable, initialization failure, execution failure, no text, and applied each have a fast test. Degraded cases still write a DXF.",
+      "After a second NumPy import, the applied ellipse stays SUCCESS with TEXT_MASK_APPLIED (1036 LINE entities, 589 edge pixels). ndarray.astype is not used for the bounding box.",
+      "blueprint_orchestrator.py is 1128 lines and blueprint_extract.py is 709, both at the file-size baseline. The Melody Maker PDF was not converted."
     ],
     "hardware": "No machine execution and no manufacturing output."
   },
@@ -58,6 +62,12 @@
       "intent": "Classify the masking pass and mark a requested miss DEGRADED while still writing the DXF.",
       "risk": "low",
       "behavior_change": "Unavailable and initialization failure are no longer reported as success."
+    },
+    {
+      "path": "services/api/app/services/blueprint_text_masking.py",
+      "intent": "Hold the degraded-mask acceptance decision outside the ratcheted orchestrator and extract modules.",
+      "risk": "low",
+      "behavior_change": "Enhanced acceptance and the degraded-DXF warning are unchanged. They live in this module so those two files stay at their file-size baseline."
     },
     {
       "path": "services/api/app/services/blueprint_extract.py",

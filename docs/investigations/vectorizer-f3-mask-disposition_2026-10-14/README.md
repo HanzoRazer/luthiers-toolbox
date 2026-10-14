@@ -4,7 +4,7 @@ F-3 was a requested text mask that still reported success. `detect_text_regions`
 
 ## What this repair does
 
-The conversion result now carries `text_masking`:
+The conversion result now carries `text_masking`. Enhanced acceptance for a degraded mask lives in `blueprint_text_masking.py`, so the orchestrator and extract modules stay at their file-size baseline. Bounding boxes are measured with plain coordinates because a long pytest session reimports NumPy and `ndarray.astype` then raises `_NoValueType`.
 
 | Field | Meaning |
 |---|---|
