@@ -32,9 +32,9 @@
         "tool_changes_without_known_retract": 1,
         "total_lines": 1935
       },
-      "program_file": "A_pre_p1.gcode.txt",
+      "program_file": "A_pre_p1.gcode.evidence",
       "program_sha256": "e305d5f711abc74307da86efce7c57947cb4c8095bc949741d9da0d82c40806e",
-      "record_sha256": "8750afca87cac65984c9f243cf5776e48739e334ab2e8e6ab9ac0f7348dc99ff",
+      "record_sha256": "fd57f39dca91d098d31841f1db5230397fa369ae9f4da7877b1e0ca4ff695cfa",
       "status": "GENERATED",
       "tree": "git archive 9c5f46a95af3bc4b983fa30d1328b530f08c520c services/api/app (extracted outside the repo)"
     },
@@ -70,9 +70,9 @@
         "tool_changes_without_known_retract": 1,
         "total_lines": 1935
       },
-      "program_file": "B_live.gcode.txt",
+      "program_file": "B_live.gcode.evidence",
       "program_sha256": "5f78b3c2a705a0fb5c0b2df4f57bab68c667c6262912b4b006db5d50d1434b46",
-      "record_sha256": "7160ff0ce8c3a7e18216bd8f7638f0e8c316d34f71d12cdf6a7ce000b069c25b",
+      "record_sha256": "4912629cb222a5eb74df47f92e4b03db1d01bd5cd6277572487b538a54d2f896",
       "status": "GENERATED",
       "tree": "git archive d42712e0e358b2344ddc046e83f169233581dce5 services/api/app (extracted outside the repo)"
     },
@@ -117,9 +117,9 @@
         "tool_changes_without_known_retract": 1,
         "total_lines": 1974
       },
-      "program_file": "D_bundle_as_shipped.gcode.txt",
+      "program_file": "D_bundle_as_shipped.gcode.evidence",
       "program_sha256": "600c8d557ab6eff35236d2f1cff69ff804616016132357ddffb6d4e8bdd8bdd6",
-      "record_sha256": "f2c5a3b0f77d1a01df0dce10efe88c7115655fcdcd41f47727f7c6da4b86ccea",
+      "record_sha256": "b88e7e31957c577f2633c267e4caef2498dd9ade7de06f38053026edd33b2281",
       "status": "GENERATED",
       "tree": "git archive d42712e0e358b2344ddc046e83f169233581dce5 + archived orchestrator + archived machines services/api/app (extracted outside the repo)"
     },
@@ -155,9 +155,9 @@
         "tool_changes_without_known_retract": 1,
         "total_lines": 1974
       },
-      "program_file": "E_bundle_on_pre_p1.gcode.txt",
+      "program_file": "E_bundle_on_pre_p1.gcode.evidence",
       "program_sha256": "8c90da30da1466373e14db1bf2b1e46386d603bcd076d1be1594de66945a96ff",
-      "record_sha256": "6a03c23ab15914da42038b029ea7b40d583dab441d76e5be75eb9149c9266431",
+      "record_sha256": "4fb9b5b031daad9ff791e194ab637d7c0217c811261d25f2e042536a9ecf4044",
       "status": "GENERATED",
       "tree": "git archive 9c5f46a95af3bc4b983fa30d1328b530f08c520c + archived orchestrator + archived machines services/api/app (extracted outside the repo)"
     }
@@ -194,7 +194,7 @@
     },
     "replay_metrics": {
       "path": "replay/results/metrics.json",
-      "sha256": "c02e3d7599e6d3154dbd29b2846eb7de5c71e940bcfcfc336717e3a642d29d43"
+      "sha256": "2ba26f1fc7636730b834f26e9a49b394e8132f8fca9ceaecd4d5dad8d8037b3d"
     }
   },
   "base_sha": "d42712e0e358b2344ddc046e83f169233581dce5",

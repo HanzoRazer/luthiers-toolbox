@@ -1,0 +1,3 @@
+# Evidence programs are hashed byte-for-byte: never convert line endings.
+*.gcode.evidence -text
+*.json text eol=lf

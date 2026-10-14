@@ -132,9 +132,13 @@ git archive <sha> services/api/app | tar -x -C <tmp>/<arm>     # outside the rep
 python -I docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py \
     --tree <tmp>/<arm>/services/api --arm <arm> --out-dir <out>
 python -I scripts/investigations/neck_gcode_motion_metrics.py --plane-z 0.0 --out metrics.json \
-    A_pre_p1=A_pre_p1.gcode.txt B_live=B_live.gcode.txt \
-    D_bundle_as_shipped=D_bundle_as_shipped.gcode.txt E_bundle_on_pre_p1=E_bundle_on_pre_p1.gcode.txt
+    A_pre_p1=A_pre_p1.gcode.evidence B_live=B_live.gcode.evidence \
+    D_bundle_as_shipped=D_bundle_as_shipped.gcode.evidence E_bundle_on_pre_p1=E_bundle_on_pre_p1.gcode.evidence
 ```
 
 Re-running the parser on the committed programs reproduces `replay/results/metrics.json` byte for byte
-(SHA-256 `c02e3d75…9d43`).
+(SHA-256 `2ba26f1f…7b3d`).
+
+Programs carry a `.gcode.evidence` extension on purpose. `*.txt` is ignored repository-wide, and no
+machine tooling recognises `.gcode.evidence`. A local `.gitattributes` (`-text`) keeps their bytes, and
+so their hashes, identical on every platform.

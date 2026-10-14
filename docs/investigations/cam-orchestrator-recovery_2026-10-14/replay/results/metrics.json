@@ -59,7 +59,7 @@
       ],
       "plane_z": 0.0,
       "sha256": "e305d5f711abc74307da86efce7c57947cb4c8095bc949741d9da0d82c40806e",
-      "source": "A_pre_p1.gcode.txt",
+      "source": "A_pre_p1.gcode.evidence",
       "tool_change_count": 4,
       "tool_changes": [
         {
@@ -148,7 +148,7 @@
       ],
       "plane_z": 0.0,
       "sha256": "5f78b3c2a705a0fb5c0b2df4f57bab68c667c6262912b4b006db5d50d1434b46",
-      "source": "B_live.gcode.txt",
+      "source": "B_live.gcode.evidence",
       "tool_change_count": 4,
       "tool_changes": [
         {
@@ -237,7 +237,7 @@
       ],
       "plane_z": 0.0,
       "sha256": "600c8d557ab6eff35236d2f1cff69ff804616016132357ddffb6d4e8bdd8bdd6",
-      "source": "D_bundle_as_shipped.gcode.txt",
+      "source": "D_bundle_as_shipped.gcode.evidence",
       "tool_change_count": 8,
       "tool_changes": [
         {
@@ -369,7 +369,7 @@
       ],
       "plane_z": 0.0,
       "sha256": "8c90da30da1466373e14db1bf2b1e46386d603bcd076d1be1594de66945a96ff",
-      "source": "E_bundle_on_pre_p1.gcode.txt",
+      "source": "E_bundle_on_pre_p1.gcode.evidence",
       "tool_change_count": 8,
       "tool_changes": [
         {

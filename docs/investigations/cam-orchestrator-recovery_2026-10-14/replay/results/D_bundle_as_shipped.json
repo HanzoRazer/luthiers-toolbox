@@ -1,6 +1,6 @@
 {
   "arm": "D_bundle_as_shipped",
-  "gcode_file": "D_bundle_as_shipped.gcode.txt",
+  "gcode_file": "D_bundle_as_shipped.gcode.evidence",
   "gcode_sha256": "600c8d557ab6eff35236d2f1cff69ff804616016132357ddffb6d4e8bdd8bdd6",
   "generated_lines_normalised": 1,
   "generator_retract_z_mm": {

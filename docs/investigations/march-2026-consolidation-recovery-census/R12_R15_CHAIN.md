@@ -96,7 +96,7 @@ The same shape shows up in Sprint 3 (10 claims entered with no commits behind th
 `/api/headstock/transition/gcode` (`headstock_transition_export.py:299`, registered at `business_manifest.py:51-52`) emits G-code, but:
 - it has **no readiness gate and no `@safety_critical`**;
 - it has **no tests**;
-- it is **absent from `services/api/governance/manufacturing_output_inventory.json`**, which lists only `/dxf` at :3437.
+- it **is** inventoried, at `services/api/governance/manufacturing_output_inventory.json:3456-3474`, as `CONFIRMED_EMITTER`, `authentication: none`, `containment: LIVE_UNGOVERNED`. *(Corrected 2026-10-14: an earlier draft said the route was absent and only `/dxf` at :3437 was listed. That was wrong.)* The inventory already knows the route is ungoverned. It does **not** record the motion finding below.
 
 Default request, generated offline and measured with `scripts/investigations/neck_gcode_motion_metrics.py --plane-z 0.0`:
 - 1,231 lines, sha256 prefix `3b5ddbaa53dfe40f`;

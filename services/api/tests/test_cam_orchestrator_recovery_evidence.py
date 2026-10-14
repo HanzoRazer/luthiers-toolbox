@@ -187,7 +187,7 @@ def metrics() -> dict:
 
 @pytest.mark.parametrize("arm", GENERATED_ARMS)
 def test_recorded_program_hashes_match_the_files(arm, evidence, metrics):
-    actual = _sha(RESULTS / f"{arm}.gcode.txt")
+    actual = _sha(RESULTS / f"{arm}.gcode.evidence")
     assert evidence["arms"][arm]["program_sha256"] == actual
     assert metrics["arms"][arm]["sha256"] == actual
 
@@ -203,12 +203,12 @@ def test_arms_cannot_be_silently_swapped(evidence):
     for arm in GENERATED_ARMS:
         record = json.loads((RESULTS / f"{arm}.json").read_text(encoding="utf-8"))
         assert record["arm"] == arm
-        assert record["gcode_file"] == f"{arm}.gcode.txt"
+        assert record["gcode_file"] == f"{arm}.gcode.evidence"
 
 
 def test_metrics_are_deterministic_and_reproduce_the_committed_report(tmp_path):
     out_a, out_b = tmp_path / "a.json", tmp_path / "b.json"
-    arms = [f"{a}={RESULTS / f'{a}.gcode.txt'}" for a in GENERATED_ARMS]
+    arms = [f"{a}={RESULTS / f'{a}.gcode.evidence'}" for a in GENERATED_ARMS]
     assert mm.main(["--plane-z", "0.0", "--out", str(out_a), *arms]) == 0
     assert mm.main(["--plane-z", "0.0", "--out", str(out_b), *arms]) == 0
     assert out_a.read_bytes() == out_b.read_bytes()
@@ -223,7 +223,7 @@ def test_metrics_are_deterministic_and_reproduce_the_committed_report(tmp_path):
 def test_the_baseline_is_702_not_780():
     """The repeatable historical count, measured from the committed programs."""
     def count(arm):
-        text = (RESULTS / f"{arm}.gcode.txt").read_text(encoding="utf-8")
+        text = (RESULTS / f"{arm}.gcode.evidence").read_text(encoding="utf-8")
         return mm.analyse(text, plane_z=0.0)["g0_xy_below_plane"]
 
     assert count("A_pre_p1") == 702
@@ -233,7 +233,7 @@ def test_the_baseline_is_702_not_780():
 
 def test_the_archived_bundle_duplicates_tool_changes():
     def changes(arm):
-        text = (RESULTS / f"{arm}.gcode.txt").read_text(encoding="utf-8")
+        text = (RESULTS / f"{arm}.gcode.evidence").read_text(encoding="utf-8")
         return mm.analyse(text, plane_z=0.0)["tool_change_count"]
 
     assert (changes("B_live"), changes("D_bundle_as_shipped")) == (4, 8)
@@ -324,3 +324,92 @@ def test_no_production_application_file_changed():
         pytest.skip("NOT_RUN: HEAD is not the evidence branch")
     outside = [p for p in changed if not p.startswith(_ALLOWED)]
     assert outside == [], f"evidence PR touched non-evidence paths: {outside}"
+
+
+# -----------------------------------------------------------------------------
+# March 2026 consolidation recovery census: integrity
+# -----------------------------------------------------------------------------
+
+CENSUS = REPO_ROOT / "docs" / "investigations" / "march-2026-consolidation-recovery-census"
+LEDGER_TOOL = REPO_ROOT / "scripts" / "investigations" / "march_2026_census_ledger.py"
+ALLOWED_DISPOSITIONS = {
+    "LIVE_INTEGRATED", "LIVE_MODIFIED", "PARTIALLY_INTEGRATED", "ARCHIVED_COMPLETE",
+    "ARCHIVED_INCOMPLETE", "EXTERNAL_ONLY", "LOST_REFERENCE_ONLY", "SUPERSEDED",
+    "RECOVERED_FEATURE_CANDIDATE", "RECOVERED_SAFETY_FIX_CANDIDATE", "DUPLICATE", "UNRESOLVED",
+}
+
+
+def _csv(name: str) -> list[dict]:
+    import csv
+    with (CENSUS / name).open(encoding="utf-8", newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+def test_every_ledger_disposition_is_an_allowed_value():
+    bad = {r["candidate_id"]: r["disposition"] for r in _csv("RECOVERY_LEDGER.csv")
+           if r["disposition"] not in ALLOWED_DISPOSITIONS}
+    assert bad == {}
+
+
+def test_every_manual_override_states_its_reason():
+    overrides = json.loads((CENSUS / "LEDGER_OVERRIDES.json").read_text(encoding="utf-8"))
+    unexplained = [name for name, o in overrides["by_name"].items() if len(o.get("reason", "")) < 20]
+    unexplained += [r["candidate_id"] for r in overrides["reference_only"] if len(r.get("disposition_reason", "")) < 5]
+    assert unexplained == []
+    assert overrides["exclude_reason"], "an exclusion without a reason hides evidence"
+
+
+def test_inventory_agrees_with_the_raw_census():
+    census = json.loads((CENSUS / "BUNDLE_CENSUS.json").read_text(encoding="utf-8"))
+    inventory = _csv("SOURCE_BUNDLE_INVENTORY.csv")
+    assert [r["source_id"] for r in inventory] == [s["source_id"] for s in census["sources"]]
+    for row in inventory:
+        total = int(row["members"]) + int(row["excluded_third_party"])
+        assert total == sum(1 for m in census["members"] if m["source_id"] == row["source_id"]), row["source_id"]
+
+
+def test_the_ledger_regenerates_byte_for_byte(tmp_path):
+    outs = {k: tmp_path / f"{k}.csv" for k in ("ledger", "inventory", "planning")}
+    run = subprocess.run(
+        [sys.executable, "-I", str(LEDGER_TOOL),
+         "--census", str(CENSUS / "BUNDLE_CENSUS.json"),
+         "--overrides", str(CENSUS / "LEDGER_OVERRIDES.json"),
+         "--out", str(outs["ledger"]), "--out-inventory", str(outs["inventory"]),
+         "--reachability", str(CENSUS / "MARCH_CLAIM_REACHABILITY.csv"),
+         "--out-planning", str(outs["planning"])],
+        capture_output=True, text=True,
+    )
+    assert run.returncode == 0, run.stderr
+    assert outs["ledger"].read_bytes() == (CENSUS / "RECOVERY_LEDGER.csv").read_bytes().replace(b"\r\n", b"\n")
+    assert outs["inventory"].read_bytes() == (CENSUS / "SOURCE_BUNDLE_INVENTORY.csv").read_bytes().replace(b"\r\n", b"\n")
+    assert outs["planning"].read_bytes() == (CENSUS / "PLANNING_RECONCILIATION.csv").read_bytes().replace(b"\r\n", b"\n")
+
+
+def _evidence_lines(pattern: str):
+    rx = re.compile(pattern, re.IGNORECASE)
+    for base in (CENSUS, BUNDLE):
+        for path in sorted(base.rglob("*.md")):
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if rx.search(line):
+                    yield f"{path.name}:{number}", line
+
+
+def test_cl_red_is_never_used_as_a_recovery_object():
+    """Owner ruling 2026-10-14: CL-RED was a July typo for CI-RED."""
+    misuse = [where for where, line in _evidence_lines(r"CL-RED")
+              if not re.search(r"typo|\bnot\b|erratum", line, re.IGNORECASE)]
+    assert misuse == []
+
+
+def test_no_loss_is_attributed_to_a_namespace_collision():
+    """No collision record exists for this window; only denials may mention it."""
+    claims = [where for where, line in _evidence_lines(r"namespace[- ]collision")
+              if not _NEGATION.search(line)]
+    assert claims == []
+
+
+def test_the_active_safety_candidate_is_recorded_not_fixed():
+    row = next(r for r in _csv("RECOVERY_LEDGER.csv")
+               if r["filename"] == "headstock_transition_export.py" and r["safety_relevance"])
+    assert "ACTIVE SAFETY CANDIDATE" in row["safety_relevance"]
+    assert row["follow_up_order"] == "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"

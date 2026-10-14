@@ -1,6 +1,6 @@
 {
   "arm": "A_pre_p1",
-  "gcode_file": "A_pre_p1.gcode.txt",
+  "gcode_file": "A_pre_p1.gcode.evidence",
   "gcode_sha256": "e305d5f711abc74307da86efce7c57947cb4c8095bc949741d9da0d82c40806e",
   "generated_lines_normalised": 1,
   "generator_retract_z_mm": {

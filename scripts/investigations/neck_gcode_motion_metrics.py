@@ -285,7 +285,8 @@ def main(argv: list[str] | None = None) -> int:
         metrics["source"] = path.name
         report["arms"][name] = metrics
 
-    args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    # LF on every platform: the report is hashed as evidence.
+    args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return 0
 
 

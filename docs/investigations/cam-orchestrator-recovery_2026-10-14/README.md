@@ -59,6 +59,20 @@ Full hashes are in [`PROVENANCE.md`](PROVENANCE.md) and [`EVIDENCE.json`](EVIDEN
    - It arrived through generator-level PostProcessor wiring (`fe1e2f51`, `1d7dbd9e`, 2026-03-17).
    - Every arm stops the spindle before each tool change and applies G43 after it.
 
+**🔴 Safety candidate found during the census, NOT fixed here:**
+
+- `/api/headstock/transition/gcode` is live. It is registered at `business_manifest.py:50-56` and
+  handled at `routers/neck/headstock_transition_export.py:299`.
+- It has no readiness gate, no `@safety_critical`, and no tests.
+- The governance inventory already records it (`manufacturing_output_inventory.json:3456-3474`:
+  `CONFIRMED_EMITTER`, `authentication: none`, `containment: LIVE_UNGOVERNED`). The motion defect
+  below is **not** recorded there.
+- On the default request it emits 21 rapids that end below Z0 while moving in X, one per station. The
+  first is `G00 X-26.262 Z-11.0199` (program SHA-256 `3b5ddbaa…1956`).
+- Whether those paths cross stock depends on an undeclared Z datum, so this is unresolved.
+- It needs its own validation order: proposed **`HEADSTOCK-TRANSITION-GCODE-SAFETY-001`**. See the
+  census `RECOVERY_RECOMMENDATIONS.md`.
+
 **Separate follow-up, not fixed here:** every arm, live included, emits header comments with nested
 parentheses, e.g. `( Scale length: 647.70mm (25.500in) )`. Strict RS274 ends a comment at the first `)`.
 Candidate order: **`GCODE-COMMENT-DIALECT-COMPATIBILITY-001`**.
@@ -85,7 +99,7 @@ Candidate order: **`GCODE-COMMENT-DIALECT-COMPATIBILITY-001`**.
 | [`CONSOLIDATION_CONTEXT.md`](CONSOLIDATION_CONTEXT.md) | Bounded March 15–21 provenance context |
 | [`RECOMMENDATION.md`](RECOMMENDATION.md) | Answers to the seven order questions |
 | [`EVIDENCE.json`](EVIDENCE.json) | Machine-readable record |
-| `replay/` | Harness, preserved programs (`*.gcode.txt`), per-arm records and `metrics.json` |
+| `replay/` | Harness, preserved programs (`*.gcode.evidence`), per-arm records and `metrics.json` |
 
 The parser is `scripts/investigations/neck_gcode_motion_metrics.py`. Its tests are
 `services/api/tests/investigations/test_cam_orchestrator_recovery_evidence.py`.

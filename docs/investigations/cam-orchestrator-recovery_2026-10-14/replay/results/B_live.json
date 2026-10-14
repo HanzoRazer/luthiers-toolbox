@@ -1,6 +1,6 @@
 {
   "arm": "B_live",
-  "gcode_file": "B_live.gcode.txt",
+  "gcode_file": "B_live.gcode.evidence",
   "gcode_sha256": "5f78b3c2a705a0fb5c0b2df4f57bab68c667c6262912b4b006db5d50d1434b46",
   "generated_lines_normalised": 1,
   "generator_retract_z_mm": {
