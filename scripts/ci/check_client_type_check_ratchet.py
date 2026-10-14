@@ -39,8 +39,14 @@ import re
 import sys
 
 # `src/views/x.vue(12,5): error TS2345: ...`
+# The file group must not cross a line break. CI pipes `npm run type-check`
+# through `tee`, so npm's `> @production-shop/client@1.0.0 type-check` header
+# precedes the first diagnostic. With `[^(]*?` the match began at that `>` and
+# ran across the newlines to the first `(line,col)`, filing the first error
+# under a key made of the header text. The total stayed right, but every CI run
+# reported a phantom per-file delta (`src/api/profiling.ts: 0 -> 1` on #430).
 ERROR_RE = re.compile(
-    r"^(?P<file>[^\s(][^(]*?)\((?P<line>\d+),(?P<col>\d+)\): error (?P<code>TS\d+)",
+    r"^(?P<file>[^\s(][^(\r\n]*?)\((?P<line>\d+),(?P<col>\d+)\): error (?P<code>TS\d+)",
     re.MULTILINE,
 )
 # vue-tsc / tsc summary line, used as proof the tool actually executed.

@@ -1,0 +1,45 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HEADSTOCK_LINEAGE_RECONCILIATION",
+  "title": "docs(investigations): headstock lineage reconciliation (MAINT-DEFER-010), evidence only",
+  "intent": "Before retiring the orphaned views in packages/client/src/views/cam/headstock/, establish their provenance and what capability would be lost. The owner judged that they may be the refined headstock feature that was in progress, not debris.",
+  "change_type": "docs",
+  "behavior_change": "None. Adds one investigation document. No source, config, baseline or ledger file is modified. Findings: the four views are the final iterations of a one-day 2026-03-17 claude.ai-generated suite, not duplicates of the archived headstock bundle. Removal PR #308 shows MERGED but was stranded on #306's already-merged branch and never reached main. Of the 11 missing modules, 3 are live at other paths, 3 are archive-only and 5 are lost. The views carry capability (interactive inlay workspace, parametric generator with novelty scoring, import/normalize, customer configurator, and the only UI for the live /headstock-dxf veneer/binding/cost endpoints) that the routed /art-studio/headstock feature lacks.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/headstock-lineage-reconciliation.json",
+      "docs/investigations/headstock-lineage-reconciliation_2026-10-13.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/headstock-lineage-reconciliation.json",
+      "docs/investigations/headstock-lineage-reconciliation_2026-10-13.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New evidence document with blob-level provenance, the #308 stranding, a missing-module census, a capability matrix and owner dispositions.",
+    "why_not_redundant": "SPRINTS.md MAINT-DEFER-010 classified the directory as unreachable dead code to delete. This document records that it is the unharvested remainder of a partly integrated feature, which changes the disposition."
+  },
+  "verification": {
+    "commands_run": [
+      "git rev-parse <commit>:<path> for each view at 8c553069, 8d91c4c7, 2b4c0033~1, d3035e19, origin/main; git ls-tree -r over the archive folders",
+      "git log --all -- <path> for each of the 11 imports; find over Downloads for the missing modules",
+      "gh pr view 308 (base ci/client-type-check-ratchet); git merge-base --is-ancestor f8f5a568 origin/main -> false; 8 control PRs all on main",
+      "git grep -il 'namespace collision' docs/, then each hit searched for headstock/views/cam/ps-vue: no relevant hit",
+      "symbol search of the 4 HTML prototypes for the 17 symbols the views import: 4 found"
+    ]
+  },
+  "files": [
+    { "path": "docs/investigations/headstock-lineage-reconciliation_2026-10-13.md", "intent": "Evidence record.", "risk": "low", "behavior_change": "none" },
+    { "path": ".cbsp21/patches/headstock-lineage-reconciliation.json", "intent": "Per-PR CBSP21 patch manifest.", "risk": "low", "behavior_change": "none" }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation only."
+  }
+}

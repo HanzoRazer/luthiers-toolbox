@@ -1,0 +1,80 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_TYPE_CHECK_RATCHET_PARSER",
+  "title": "ci: stop the client type-check ratchet from filing npm's header as a file",
+  "intent": "The type-check ratchet's per-file report was wrong on every CI run. CI pipes `npm run type-check` through `tee`, so npm's `> @production-shop/client@1.0.0 type-check` / `> vue-tsc --noEmit` header comes right before the first diagnostic. ERROR_RE's file group (`[^(]*?`) could cross line breaks, so the match began at the header's `>` and ran on to the first `(line,col)`. The first error was then filed under a key made of the header text plus `src/api/profiling.ts`. The total stayed correct, so the gate itself still blocked correctly. But the 'Files above their baseline' report always contained a phantom line. On PR #430 it read `src/api/profiling.ts: 0 -> 1` beside the real regression, although profiling.ts was unchanged. That points developers at the wrong file and can hide the real source of a future regression.",
+  "change_type": "fix",
+  "behavior_change": "Per-file attribution in the ratchet's FAIL report and in --write-baseline output is now correct when the log contains npm's header (always, in CI). The pass/fail decision is unchanged, because it depends only on the total count, and the total was already correct. The ceiling (total_errors 150) and the committed baseline are not modified. The baseline's by_file already records src/api/profiling.ts: 2 correctly; only the reading of CI logs was wrong. Two CI wiring changes: (1) core_ci.yml runs the new parser tests on every PR. (2) client_lint_build.yml now also triggers on changes to the ratchet script and its baseline. Before this, a PR that edited only the ratchet or raised the ceiling never ran the gate it changed.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-type-check-ratchet-parser.json",
+      ".github/workflows/client_lint_build.yml",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/check_client_type_check_ratchet.py",
+      "scripts/ci/test_client_type_check_ratchet.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/client-type-check-ratchet-parser.json",
+      ".github/workflows/client_lint_build.yml",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/check_client_type_check_ratchet.py",
+      "scripts/ci/test_client_type_check_ratchet.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "ERROR_RE's file group changes from `[^(]*?` to `[^(\\r\\n]*?`, so a match cannot cross a line break, with a comment recording why. New scripts/ci/test_client_type_check_ratchet.py (11 tests, stdlib-only). Its fixtures are copied from PR #430's real lint-build log (run 37291225924), including the npm header and an indented continuation line. The tests cover: the header is never part of a file key; the same diagnostics with and without the header parse identically; continuation lines are not counted; CRLF logs; Windows backslash paths normalize to POSIX; --write-baseline from a CI-shaped log writes no header keys; unchanged diagnostics PASS with no per-file movement; a real new error is reported against its own file and no other; checking never rewrites the baseline; and the committed baseline has no header, multi-line or backslash keys, with by_file summing to total_errors.",
+    "why_not_redundant": "No existing test covered the ratchet's parser. The defect was only visible as a misleading line in a FAIL report, and the gate only prints that report when it is already failing for a real reason. That is exactly when nobody questions the file list."
+  },
+  "verification": {
+    "commands_run": [
+      "Defect reproduced from PR #430's CI log: the FAIL report listed `src/api/profiling.ts: 0 -> 1` although that file's two errors are byte-identical under vue-tsc 3.3.11 and 3.3.12",
+      "py -3.11 -m pytest scripts/ci/test_client_type_check_ratchet.py -q -> 11 passed",
+      "Same tests against origin/main's unmodified parser -> 7 failed, 4 passed (the 4 that pass do not depend on header attribution), so the tests detect the defect",
+      "Full real log, 150 errors with npm header (main 2a2f3924 tree): per-file counts vs committed baseline -> 0 differences",
+      "Full real log, 152 errors with npm header (PR #430 pre-fix): FAIL report now lists exactly `src/views/cam/headstock/WorkspaceView.vue: 21 -> 23`, no phantom profiling.ts line",
+      "scripts/ci/client_type_check_baseline.json unchanged (total_errors 150)"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/check_client_type_check_ratchet.py",
+      "intent": "Bound ERROR_RE's file group to a single line.",
+      "risk": "low",
+      "behavior_change": "Correct per-file attribution; the gate decision is unchanged."
+    },
+    {
+      "path": "scripts/ci/test_client_type_check_ratchet.py",
+      "intent": "Regression tests built from the real CI log shape.",
+      "risk": "low",
+      "behavior_change": "none (tests only)"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run the parser tests on every PR. Nothing else collects scripts/ci/ wholesale, so an unpinned test would never run.",
+      "risk": "low",
+      "behavior_change": "One additional test step in Core CI."
+    },
+    {
+      "path": ".github/workflows/client_lint_build.yml",
+      "intent": "Trigger the client lint-build (which runs the ratchet) when the ratchet script or its baseline changes.",
+      "risk": "low",
+      "behavior_change": "lint-build now also runs on PRs touching those two files."
+    },
+    {
+      "path": ".cbsp21/patches/client-type-check-ratchet-parser.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI tooling only; no application code or architectural surface touched."
+  }
+}
