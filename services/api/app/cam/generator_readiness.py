@@ -438,6 +438,25 @@ GENERATOR_READINESS: Mapping[str, GeneratorReadinessRecord] = {
             "LTB-CAM-EXPOSURE-MATRIX_2026-09-20.md NK-1, NK-2",
         ),
     ),
+    "headstock_transition_gcode": GeneratorReadinessRecord(
+        route="headstock_transition_gcode",
+        readiness=GeneratorReadiness.BLOCKED,
+        reason=(
+            "Witnessed defects. HST-01: each station opens with an X+Z rapid ending "
+            "below Z0. HST-02: depth counted twice; min Z -46.76 mm on a 21 mm neck. "
+            "HST-03: no machine datum; tool centre placed below the declared surface."
+        ),
+        exit_condition=(
+            "All required: (1) authoritative setup and datum; (2) owner ruling on the "
+            "intended cross-section; (3) depth and ball-radius corrected to it; (4) no "
+            "X/Y rapid below an authority-set clearance; (5) route and motion tests "
+            "shown to fail on this generator. Then a readiness decision on evidence."
+        ),
+        evidence=(
+            "HEADSTOCK-TRANSITION-GCODE-SAFETY-001 findings HST-01, HST-02, HST-03",
+            "Recovery census PR #439 MC-060; blob 63a16e79 default: min Z -46.7618",
+        ),
+    ),
 }
 
 

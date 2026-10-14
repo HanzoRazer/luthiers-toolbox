@@ -480,7 +480,8 @@ def test_rds33_37_inventory_design_moves_only():
     assert exp["containment"] == "FAIL_CLOSED"
     assert exp["authority_key"] == "rosette:export_cnc"
     ung = [r for r in doc["rows"] if r["containment"] == "LIVE_UNGOVERNED"]
-    assert len(ung) == 13
+    # HEADSTOCK-TRANSITION-GCODE-SAFETY-001 moved /api/headstock/transition/gcode 13 -> 12.
+    assert len(ung) == 12
     assert all(r["containment"] != "PERMITTED_BY_AUTHORITY" for r in doc["rows"])
 
 

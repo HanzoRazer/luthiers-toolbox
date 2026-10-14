@@ -11,17 +11,17 @@ Pinned base SHA: `cf3f1c131fbee4586d82780b865eb1d09af8a350`
 - Delegates: 3
 - Non-emitting: 0
 - Unexamined: 189
-- Fail-closed: 37
+- Fail-closed: 38
 - Permitted by authority: 0
-- Live-ungoverned: 13
+- Live-ungoverned: 12
 - Unknown containment: 189
 - Not applicable: 0
 
 ## Authority layers
 
 - `manufacturing_output`: 23
-- `none`: 13
-- `readiness`: 14
+- `none`: 12
+- `readiness`: 15
 - `unknown`: 189
 
 ## Live-ungoverned families
@@ -33,7 +33,6 @@ Pinned base SHA: `cf3f1c131fbee4586d82780b865eb1d09af8a350`
 - `app.routers.geometry.bundle_router.export_bundle`: 1
 - `app.routers.geometry.bundle_router.export_bundle_multi`: 1
 - `app.routers.geometry.export_router.export_gcode`: 1
-- `app.routers.neck.headstock_transition_export.build_transition_gcode`: 1
 - `app.routers.polygon_offset_router.generate_polygon_offset_nc_program`: 1
 - `app.routers.radius_dish_router.generate_radius_dish_gcode`: 1
 - `app.services.saw_lab_toolpaths_from_decision_service.generate_toolpaths_from_decision`: 1
