@@ -3,10 +3,10 @@
   "schema_version": "cbsp21_patch_input_v1",
   "coverage_min": 0.95,
   "patch_id": "CAM_ORCHESTRATOR_RECOVERY_EVIDENCE_001",
-  "title": "docs(investigations): CAM orchestrator recovery evidence + March 2026 consolidation recovery census (evidence only)",
-  "intent": "Determine whether the archived 2026-03-18 neck-CAM orchestrator is a predecessor or partial fix for the neck rapid-at-cutting-depth defect, and census what the March 15-21 consolidation period stranded. Evidence only; no production behaviour changes.",
+  "title": "docs(investigations): CAM orchestrator recovery evidence (evidence only)",
+  "intent": "Determine whether the archived 2026-03-18 neck-CAM orchestrator is a predecessor or partial fix for the neck rapid-at-cutting-depth defect. Evidence only; no production behaviour changes. The March 2026 consolidation census was split out to its own draft PR (#442).",
   "change_type": "docs",
-  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds investigation documents, preserved offline replay outputs, three read-only evidence tools under scripts/investigations/, one test module, and one ACKNOWLEDGED_NON_DIMENSION_FILES entry in test_jumbo_dimension_consistency.py. Findings: the archived orchestrator does not touch the defect (702 rapids below Z0 on the pre-#398 tree with or without it), cannot run on the current machine contract, and duplicates tool changes; owner ruled SUPERSEDED / INCOMPATIBLE_WITH_CURRENT_RUNTIME / DO_NOT_FORWARD_PORT. The census records 52 sources, 194 candidates, and one active safety candidate (/api/headstock/transition/gcode) routed to its own order and not fixed here.",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds investigation documents, per-arm replay records, metrics and line excerpts (full G-code programs are not committed), the replay harness and a rebuild-and-verify tool, the read-only motion parser under scripts/investigations/, and one test module. Findings: 702 rapids below Z0 on the pre-#398 tree with or without the archived orchestrator (#398 fixed the defect); the orchestrator cannot run on the current machine contract and duplicates tool changes. Owner ruling: SUPERSEDED / INCOMPATIBLE_WITH_CURRENT_RUNTIME / DO_NOT_FORWARD_PORT.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -20,42 +20,17 @@
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.gcode.evidence",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/README.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
-      "scripts/investigations/march_2026_bundle_census.py",
-      "scripts/investigations/march_2026_census_ledger.py",
-      "scripts/investigations/march_2026_claim_reachability.py",
       "scripts/investigations/neck_gcode_motion_metrics.py",
-      "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
-      "services/api/tests/test_jumbo_dimension_consistency.py"
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/cam-orchestrator-recovery-evidence.json",
@@ -68,56 +43,28 @@
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.gcode.evidence",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
-      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.gcode.evidence",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
       "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/README.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
-      "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
-      "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
-      "scripts/investigations/march_2026_bundle_census.py",
-      "scripts/investigations/march_2026_census_ledger.py",
-      "scripts/investigations/march_2026_claim_reachability.py",
       "scripts/investigations/neck_gcode_motion_metrics.py",
-      "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
-      "services/api/tests/test_jumbo_dimension_consistency.py"
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Two evidence directories (orchestrator investigation; March census), replay programs and metrics with recorded hashes, tooling for modal G-code metrics, bundle census, claim reachability and ledger generation, and 51 tests that pin hashes, the 702 baseline, the disposition and census integrity.",
-    "why_not_redundant": "No prior record tested the archived orchestrator against the defect or established that 702 (not 780) is the reproducible count; no prior census compared the March bundles to Git by content hash or checked 'complete' claims for reachability. The CL-RED premise is corrected by erratum rather than built on."
+    "what_changed": "Orchestrator evidence directory, replay records with recorded program hashes, metrics and excerpts, replay/regenerate_programs.py (rebuilds the four programs from pinned history and verifies hashes and metrics.json), the modal G-code motion parser, and 14 table-driven tests covering the parser and the agreement of every record.",
+    "why_not_redundant": "No prior record tested the archived orchestrator against the defect or established that 702 (not 780) is the reproducible count."
   },
   "verification": {
     "commands_run": [
-      "git archive <sha> services/api/app per arm (outside the repo); python -I replay/generate_arm.py for 5 arms (C exits 4: AttributeError dwell_after_spindle_ms)",
-      "python -I scripts/investigations/neck_gcode_motion_metrics.py --plane-z 0.0 on 4 committed programs: deterministic, byte-identical rerun",
-      "python -I scripts/investigations/march_2026_bundle_census.py over 52 sources (ZIPs read in memory)",
-      "python -I scripts/investigations/march_2026_claim_reachability.py over 50 March claims",
-      "python -I scripts/investigations/march_2026_census_ledger.py: ledger, inventory and planning regenerate byte-for-byte",
-      "pytest services/api/tests/test_cam_orchestrator_recovery_evidence.py: 51 passed"
+      "python -I replay/regenerate_programs.py --work-dir <tmp> --excerpts replay/results/EXCERPTS.md: 4/4 program SHA-256 MATCH EVIDENCE.json; metrics.json byte-identical (2026-10-14)",
+      "python -I replay/generate_arm.py --arm C_archived_on_live exits 4 (AttributeError dwell_after_spindle_ms), recorded in C_archived_on_live.json",
+      "pytest services/api/tests/test_cam_orchestrator_recovery_evidence.py: 14 passed"
     ]
   },
   "files": [
@@ -129,253 +76,109 @@
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/CONSOLIDATION_CONTEXT.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/EVIDENCE.json",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/ORCHESTRATOR_DIFF.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/PROVENANCE.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/README.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/RECOMMENDATION.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
-      "intent": "Orchestrator recovery evidence record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.gcode.evidence",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Marks generated replay records linguist-generated and keeps their line endings fixed.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.gcode.evidence",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.gcode.evidence",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
-      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.gcode.evidence",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
     {
       "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
-      "intent": "Preserved replay output: generated program (evidence only, not manufacturing-approved) or per-arm record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/README.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
-      "intent": "March 2026 consolidation recovery census record.",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "scripts/investigations/march_2026_bundle_census.py",
-      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "scripts/investigations/march_2026_census_ledger.py",
-      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "scripts/investigations/march_2026_claim_reachability.py",
-      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
       "risk": "low",
       "behavior_change": "none"
     },
@@ -387,13 +190,7 @@
     },
     {
       "path": "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
-      "intent": "Parser unit tests and evidence-integrity tests (pure text; no application import beyond the conftest).",
-      "risk": "low",
-      "behavior_change": "none"
-    },
-    {
-      "path": "services/api/tests/test_jumbo_dimension_consistency.py",
-      "intent": "Registry entry only: acknowledge BUNDLE_CENSUS.json in ACKNOWLEDGED_NON_DIMENSION_FILES (jumbo appears only in member filenames; magnitude hits are hex digests). No assertion changes.",
+      "intent": "Parser unit tests and evidence-agreement tests (pure text; no application import beyond the conftest).",
       "risk": "low",
       "behavior_change": "none"
     }

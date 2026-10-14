@@ -127,18 +127,21 @@ G0 Z10.000
 
 ## Reproduce
 
+The full programs are **not committed**. One command rebuilds all four outside the repository from pinned
+history, checks each SHA-256 against `EVIDENCE.json`, re-runs the parser, and requires
+`replay/results/metrics.json` (SHA-256 `2ba26f1f…7b3d`) to come back byte for byte:
+
 ```
-git archive <sha> services/api/app | tar -x -C <tmp>/<arm>     # outside the repo
-python -I docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py \
-    --tree <tmp>/<arm>/services/api --arm <arm> --out-dir <out>
-python -I scripts/investigations/neck_gcode_motion_metrics.py --plane-z 0.0 --out metrics.json \
-    A_pre_p1=A_pre_p1.gcode.evidence B_live=B_live.gcode.evidence \
-    D_bundle_as_shipped=D_bundle_as_shipped.gcode.evidence E_bundle_on_pre_p1=E_bundle_on_pre_p1.gcode.evidence
+python -I docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py \
+    --work-dir <tmp outside the repo> [--excerpts <path>]
 ```
 
-Re-running the parser on the committed programs reproduces `replay/results/metrics.json` byte for byte
-(SHA-256 `2ba26f1f…7b3d`).
+Per arm, it runs `git archive <sha> services/api/app` into the work directory. For D and E it overlays the
+archived pair from `docs/archive/photo_vectorizer_patches/`, then calls `replay/generate_arm.py`. It
+needs full Git history; hosted CI clones shallow, so CI checks the records' agreement instead. On
+2026-10-14 all four hashes and `metrics.json` matched.
 
-Programs carry a `.gcode.evidence` extension on purpose. `*.txt` is ignored repository-wide, and no
-machine tooling recognises `.gcode.evidence`. A local `.gitattributes` (`-text`) keeps their bytes, and
-so their hashes, identical on every platform.
+`replay/results/EXCERPTS.md` holds the line evidence for each program: the first rapid below Z0 with
+its inherited depth, and every tool change. Each excerpt is pinned to its program's SHA-256.
+`EVIDENCE.json` still names each program as `<arm>.gcode.evidence`, the name it had when hashed; that is
+the file the tool rebuilds.

@@ -4,6 +4,19 @@
 **Base:** `origin/main` @ `d42712e0e358b2344ddc046e83f169233581dce5` (2026-10-13)
 **Branch:** `docs/cam-orchestrator-recovery-evidence`
 
+## Regeneration map
+
+| Output | Inputs | Command | Reproducible in hosted CI? |
+|---|---|---|---|
+| The four replay programs (A, B, D, E) | commits `9c5f46a9` and `d42712e0`, plus the archived `orchestrator.py`/`machines.py` pair in `docs/archive/photo_vectorizer_patches/` (arms D and E) | `python -I replay/regenerate_programs.py --work-dir <tmp>` | **No:** it needs full Git history, and CI clones shallow. The programs are **not committed**. The tool rebuilds them outside the repo and checks each SHA-256 against `EVIDENCE.json`. All four matched on 2026-10-14 using only in-repo sources: the archived pair reproduces the recorded D and E hashes, so the external Downloads bundle is **not** needed. |
+| `replay/results/metrics.json` | the four rebuilt programs | the same command (it re-runs `neck_gcode_motion_metrics.py --plane-z 0.0`) | No, for the same reason. It came back byte-identical on 2026-10-14. CI checks that every record agrees with it. |
+| `replay/results/EXCERPTS.md` | the rebuilt programs + `metrics.json` | the same command with `--excerpts` | No, for the same reason. CI checks that each excerpt is pinned to its program hash and its line numbers. |
+| `replay/results/<arm>.json`, `EVIDENCE.json` | `replay/generate_arm.py` per arm, plus the investigation | recorded in `EVIDENCE.json` → `commands` | Hand-checked; their hashes cross-check in CI. |
+| All `.md` | human-authored | — | Not generated. These are the review surface. |
+
+Full programs are left out on purpose. Two of them carry the 702 rapids below Z0, and complete executable
+G-code adds nothing to review that the hashes, metrics and excerpts do not.
+
 ## Purpose
 
 An archived March 18, 2026 neck-CAM `orchestrator.py` describes itself as a "SAFETY FIX". This
@@ -59,7 +72,7 @@ Full hashes are in [`PROVENANCE.md`](PROVENANCE.md) and [`EVIDENCE.json`](EVIDEN
    - It arrived through generator-level PostProcessor wiring (`fe1e2f51`, `1d7dbd9e`, 2026-03-17).
    - Every arm stops the spindle before each tool change and applies G43 after it.
 
-**🔴 Safety candidate found during the census, NOT fixed here:**
+**🔴 Safety candidate found during the companion census (#442), NOT fixed here:**
 
 - `/api/headstock/transition/gcode` is live. It is registered at `business_manifest.py:50-56` and
   handled at `routers/neck/headstock_transition_export.py:299`.
@@ -71,7 +84,7 @@ Full hashes are in [`PROVENANCE.md`](PROVENANCE.md) and [`EVIDENCE.json`](EVIDEN
   first is `G00 X-26.262 Z-11.0199` (program SHA-256 `3b5ddbaa…1956`).
 - Whether those paths cross stock depends on an undeclared Z datum, so this is unresolved.
 - It needs its own validation order: proposed **`HEADSTOCK-TRANSITION-GCODE-SAFETY-001`**. See the
-  census `RECOVERY_RECOMMENDATIONS.md`.
+  `RECOVERY_RECOMMENDATIONS.md` in #442.
 
 **Separate follow-up, not fixed here:** every arm, live included, emits header comments with nested
 parentheses, e.g. `( Scale length: 647.70mm (25.500in) )`. Strict RS274 ends a comment at the first `)`.
@@ -99,10 +112,9 @@ Candidate order: **`GCODE-COMMENT-DIALECT-COMPATIBILITY-001`**.
 | [`CONSOLIDATION_CONTEXT.md`](CONSOLIDATION_CONTEXT.md) | Bounded March 15–21 provenance context |
 | [`RECOMMENDATION.md`](RECOMMENDATION.md) | Answers to the seven order questions |
 | [`EVIDENCE.json`](EVIDENCE.json) | Machine-readable record |
-| `replay/` | Harness, preserved programs (`*.gcode.evidence`), per-arm records and `metrics.json` |
+| `replay/` | Harness (`generate_arm.py`), rebuild-and-verify tool (`regenerate_programs.py`), per-arm records, `metrics.json` and `EXCERPTS.md`. Full programs are not committed. |
 
 The parser is `scripts/investigations/neck_gcode_motion_metrics.py`. Its tests are
-`services/api/tests/investigations/test_cam_orchestrator_recovery_evidence.py`.
+`services/api/tests/test_cam_orchestrator_recovery_evidence.py`.
 
-The broader March census lives in
-[`../march-2026-consolidation-recovery-census/`](../march-2026-consolidation-recovery-census/).
+The broader March census is the March 2026 consolidation recovery census, draft PR #442 (`docs/investigations/march-2026-consolidation-recovery-census/`, not on `main` until #442 merges).

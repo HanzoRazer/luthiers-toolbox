@@ -1,7 +1,6 @@
 # Consolidation context (bounded to direct CAM provenance)
 
-The full March 15–21 census is in
-[`../march-2026-consolidation-recovery-census/`](../march-2026-consolidation-recovery-census/). This file
+The full March 15–21 census is the March 2026 consolidation recovery census, draft PR #442 (`docs/investigations/march-2026-consolidation-recovery-census/`, not on `main` until #442 merges). This file
 covers only what is needed to explain how the orchestrator candidate came to be archived instead of
 integrated.
 
@@ -49,4 +48,4 @@ cannot run against it). Archiving under an unrelated patch-history commit is con
 | `services/api/app/cam/_om_purf_08_additions.py` | 03-17 (`0a3d53b9`) | G38.2 channel-depth probe cycle; a filename prefixed `_` sitting on a live path | Census row; reachability unverified here |
 
 No other stranded CAM file self-describing as a safety fix was found in the bounded window. The census
-ledger is the place for any further rows.
+ledger (#442) is the place for any further rows.
