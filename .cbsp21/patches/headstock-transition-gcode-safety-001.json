@@ -1,0 +1,134 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HEADSTOCK_TRANSITION_GCODE_SAFETY_001",
+  "title": "fix(cam): contain /api/headstock/transition/gcode before generation (HEADSTOCK-TRANSITION-GCODE-SAFETY-001 PR A)",
+  "intent": "Fail-closed containment of a live, unauthenticated, ungoverned G-code emitter whose default program commands 21 X+Z rapids ending below Z0 and a minimum Z of -46.76 mm on a 21 mm neck. Containment, not qualification; repair needs separate rulings.",
+  "change_type": "fix",
+  "behavior_change": "POST /api/headstock/transition/gcode returns HTTP 409 SAFETY_BLOCKED (ok=false, reason HEADSTOCK_TRANSITION_NOT_MANUFACTURING_QUALIFIED, order_id HEADSTOCK-TRANSITION-GCODE-SAFETY-001) for every valid request, with no program, no program hash and no attachment. /dxf, /analysis, the generator and the browser twin are unchanged. /dxf's pre-existing 500 (HST-06) is recorded, not repaired.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/headstock-transition-gcode-safety-001.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/neck/headstock_transition_export.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_design_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_headstock_transition_gcode_containment.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/headstock-transition-gcode-safety-001.json",
+      "services/api/app/cam/generator_readiness.py",
+      "services/api/app/routers/neck/headstock_transition_export.py",
+      "services/api/governance/manufacturing_output_inventory.json",
+      "services/api/governance/manufacturing_output_inventory.md",
+      "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_design_containment.py",
+      "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "services/api/tests/test_generator_readiness.py",
+      "services/api/tests/test_generator_readiness_routes.py",
+      "services/api/tests/test_headstock_transition_gcode_containment.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "A readiness call before generation in one route handler, one BLOCKED readiness record, a canonically regenerated inventory and report, a containment test module, one-key additions to two registry key-set pins, and live-ungoverned 13 -> 12 in three inventory-delta pins.",
+    "why_not_redundant": "The route had no readiness gate, authentication, safety decorator or tests, and the inventory listed it LIVE_UNGOVERNED. No existing containment covers /api/headstock/transition/*."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --write-inventory governance/manufacturing_output_inventory.json --write-report governance/manufacturing_output_inventory.md (canonical regeneration; only the /gcode row changes)",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check -> OK candidates=239 live=1157 naive=10",
+      "cd services/api && python -m pytest <26 files: containment, generator readiness, inventory, P3 governed, CF2 probe/rosette, CF4 Flying V, P1/P2 neck, neck CNC/endpoint/gcode smoke, headstock smoke, CAM workspace smoke, post-processor> -> 534 passed",
+      "Non-vacuity: test_headstock_transition_gcode_containment.py against the byte-exact pre-containment route (blob 63a16e79) -> 7 failed (4 refusal, spy, ordering, key), 5 passed (span/analysis/dxf pins, static inventory)",
+      "Function source-span SHA-256 before/after: only transition_gcode changes (plus new _containment_refusal); generator, helpers, TransitionRequest, transition_dxf, transition_analysis identical",
+      "python scripts/governance/check_all.py --tier precommit -> 6/6 passed; --tier ci -> OK (4 pre-existing non-blocking warnings, none in this diff)",
+      "cd services/api && check_file_sizes (generator_readiness.py = 500 lines), check_complexity, check_bare_except, check_duplication --threshold 100, fence_checker_v2, check_execution_class_compliance -> all exit 0"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/headstock-transition-gcode-safety-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/app/cam/generator_readiness.py",
+      "intent": "One BLOCKED readiness record for headstock_transition_gcode citing HST-01/02/03 with explicit exit conditions (owner-authorised scope expansion).",
+      "risk": "low",
+      "behavior_change": "Adds a registry entry; no existing record changed."
+    },
+    {
+      "path": "services/api/app/routers/neck/headstock_transition_export.py",
+      "intent": "Route containment: /gcode calls require_generator_readiness before build_transition_gcode and converts the refusal to 409 SAFETY_BLOCKED. Generator, helpers, /dxf and /analysis source spans are byte-identical.",
+      "risk": "medium",
+      "behavior_change": "/gcode refuses every request with 409; no program is returned."
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.json",
+      "intent": "Regenerated by app.ci.manufacturing_output_inventory --write-inventory; only the /gcode row changes (LIVE_UNGOVERNED -> FAIL_CLOSED, readiness, before_generation).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/governance/manufacturing_output_inventory.md",
+      "intent": "Regenerated report: fail-closed 37 -> 38, live-ungoverned 13 -> 12.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_probe_output_containment.py",
+      "intent": "Inventory-delta pin: live-ungoverned 13 -> 12 for the /gcode row (history comment).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_rosette_design_containment.py",
+      "intent": "Inventory-delta pin: live-ungoverned 13 -> 12 for the /gcode row (history comment).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/rmos/test_cf2_rosette_output_containment.py",
+      "intent": "Inventory-delta pin: live-ungoverned 13 -> 12 for the /gcode row (history comment).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness.py",
+      "intent": "Registry key-set pin: classify the new key deliberately (same pattern as P1/P2).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_generator_readiness_routes.py",
+      "intent": "Off-surface record set: classify the new key deliberately (same pattern as P1/P2).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_headstock_transition_gcode_containment.py",
+      "intent": "12 containment tests: 409 contract over 4 requests, generator spy (zero calls), AST ordering, BLOCKED record, function-span invariance, /analysis body hashes, /dxf unchanged incl. HST-06, inventory row.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Route-level containment using the existing generator-readiness layer; no new architecture."
+  }
+}

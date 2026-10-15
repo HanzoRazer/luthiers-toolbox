@@ -357,5 +357,6 @@ def test_inventory_moves_only_the_ten_probe_rows():
     assert rows[("POST", "/api/geometry/export_gcode")]["containment"] == "LIVE_UNGOVERNED"
     ungoverned = [row for row in rows.values() if row["containment"] == "LIVE_UNGOVERNED"]
     # CF2-ROSETTE-OUTPUT-CONTAINMENT-001 (Phase A) moved /export-cnc 15 -> 14;
-    # CF2-ROSETTE-DESIGN-CONTAINMENT-003R (Phase B) moved /design 14 -> 13.
-    assert len(ungoverned) == 13
+    # CF2-ROSETTE-DESIGN-CONTAINMENT-003R (Phase B) moved /design 14 -> 13;
+    # HEADSTOCK-TRANSITION-GCODE-SAFETY-001 moved /api/headstock/transition/gcode 13 -> 12.
+    assert len(ungoverned) == 12

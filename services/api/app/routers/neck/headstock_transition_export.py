@@ -27,6 +27,13 @@ Geometry:
 Add to main.py:
     from headstock_transition_export import router as trans_router
     app.include_router(trans_router, prefix="/api/headstock/transition")
+
+CONTAINED (HEADSTOCK-TRANSITION-GCODE-SAFETY-001):
+    POST /gcode refuses with HTTP 409 SAFETY_BLOCKED before the generator runs.
+    The default program commands combined X+Z rapids ending below Z0 at every
+    station and a minimum Z of -46.76 mm for a 21 mm neck, with no machine
+    datum in the output. build_transition_gcode is left unchanged as evidence.
+    This is containment, not qualification. /dxf and /analysis are unchanged.
 """
 
 from __future__ import annotations
@@ -40,6 +47,10 @@ from ezdxf import units
 from ezdxf.enums import TextEntityAlignment
 from fastapi import APIRouter, HTTPException
 
+from app.cam.generator_readiness import (
+    GeneratorReadinessBlocked,
+    require_generator_readiness,
+)
 from app.util.dxf_compat import create_document
 from app.util.dxf_lifecycle_guard import (
     DxfLifecycleContext,
@@ -49,6 +60,33 @@ from fastapi.responses import StreamingResponse, PlainTextResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 router = APIRouter(tags=["headstock-transition"])
+
+# ─── Containment (HEADSTOCK-TRANSITION-GCODE-SAFETY-001) ──────────────────────
+
+#: Readiness key for POST /gcode. Its record is BLOCKED (app/cam/generator_readiness.py),
+#: which stops emission. A record that permits emission is a separate,
+#: evidence-backed decision; the containment tests fail if one appears.
+READINESS_KEY = "headstock_transition_gcode"
+SAFETY_ORDER_ID = "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
+REFUSAL_REASON = "HEADSTOCK_TRANSITION_NOT_MANUFACTURING_QUALIFIED"
+
+
+def _containment_refusal(exc: GeneratorReadinessBlocked) -> HTTPException:
+    """409 with no program, no program hash and no attachment."""
+    return HTTPException(
+        status_code=409,
+        detail={
+            "ok": False,
+            "error": "SAFETY_BLOCKED",
+            "reason": REFUSAL_REASON,
+            "order_id": SAFETY_ORDER_ID,
+            "message": (
+                "Headstock transition G-code is not manufacturing-qualified. "
+                "Generation is refused before any program is built."
+            ),
+            "readiness": exc.as_detail(),
+        },
+    )
 
 # ─── Layer names ──────────────────────────────────────────────────────────────
 
@@ -302,7 +340,14 @@ async def transition_gcode(r: TransitionRequest):
     Generate BCAM 3-axis ball-nose G-code for the headstock transition zone.
     Crown compensation is not applied here — this surfaces the geometric
     interface between neck profile and headstock plane.
+
+    Contained: refused with 409 before generation
+    (HEADSTOCK-TRANSITION-GCODE-SAFETY-001).
     """
+    try:
+        require_generator_readiness("headstock_transition_gcode")
+    except GeneratorReadinessBlocked as exc:
+        raise _containment_refusal(exc)
     try:
         code = build_transition_gcode(r)
     except Exception as e:  # audited: http-500 — ValueError,IOError

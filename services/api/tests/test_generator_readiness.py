@@ -72,6 +72,8 @@ def test_all_exposed_routes_are_represented():
         "acoustic_body",
         "acoustic_soundhole",
         "acoustic_binding",
+        # HEADSTOCK-TRANSITION-GCODE-SAFETY-001: /api/headstock/transition/gcode
+        "headstock_transition_gcode",
     }
 
 
