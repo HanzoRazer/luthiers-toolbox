@@ -1,0 +1,210 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CAM_ORCHESTRATOR_RECOVERY_EVIDENCE_001",
+  "title": "docs(investigations): CAM orchestrator recovery evidence (evidence only)",
+  "intent": "Determine whether the archived 2026-03-18 neck-CAM orchestrator is a predecessor or partial fix for the neck rapid-at-cutting-depth defect. Evidence only; no production behaviour changes. The March 2026 consolidation census was split out to its own draft PR (#442).",
+  "change_type": "docs",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds investigation documents, per-arm replay records, metrics and line excerpts (full G-code programs are not committed), the replay harness and a rebuild-and-verify tool, the read-only motion parser under scripts/investigations/, and one test module. Findings: 702 rapids below Z0 on the pre-#398 tree with or without the archived orchestrator (#398 fixed the defect); the orchestrator cannot run on the current machine contract and duplicates tool changes. Owner ruling: SUPERSEDED / INCOMPATIBLE_WITH_CURRENT_RUNTIME / DO_NOT_FORWARD_PORT.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/cam-orchestrator-recovery-evidence.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/CONSOLIDATION_CONTEXT.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/EVIDENCE.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/ORCHESTRATOR_DIFF.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/PROVENANCE.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/README.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/RECOMMENDATION.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
+      "scripts/investigations/neck_gcode_motion_metrics.py",
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/cam-orchestrator-recovery-evidence.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/CONSOLIDATION_CONTEXT.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/EVIDENCE.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/ORCHESTRATOR_DIFF.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/PROVENANCE.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/README.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/RECOMMENDATION.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
+      "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
+      "scripts/investigations/neck_gcode_motion_metrics.py",
+      "services/api/tests/test_cam_orchestrator_recovery_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Orchestrator evidence directory, replay records with recorded program hashes, metrics and excerpts, replay/regenerate_programs.py (rebuilds the four programs from pinned history and verifies hashes and metrics.json), the modal G-code motion parser, and 14 table-driven tests covering the parser and the agreement of every record.",
+    "why_not_redundant": "No prior record tested the archived orchestrator against the defect or established that 702 (not 780) is the reproducible count."
+  },
+  "verification": {
+    "commands_run": [
+      "python -I replay/regenerate_programs.py --work-dir <tmp> --excerpts replay/results/EXCERPTS.md: 4/4 program SHA-256 MATCH EVIDENCE.json; metrics.json byte-identical (2026-10-14)",
+      "python -I replay/generate_arm.py --arm C_archived_on_live exits 4 (AttributeError dwell_after_spindle_ms), recorded in C_archived_on_live.json",
+      "pytest services/api/tests/test_cam_orchestrator_recovery_evidence.py: 14 passed"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/cam-orchestrator-recovery-evidence.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/CONSOLIDATION_CONTEXT.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/EVIDENCE.json",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/ORCHESTRATOR_DIFF.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/PROVENANCE.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/README.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/RECOMMENDATION.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_INVARIANTS.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/SAFETY_REPLAY.md",
+      "intent": "Investigation evidence and conclusions. Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/generate_arm.py",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/regenerate_programs.py",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/.gitattributes",
+      "intent": "Marks generated replay records linguist-generated and keeps their line endings fixed.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/A_pre_p1.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/B_live.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/C_archived_on_live.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/D_bundle_as_shipped.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/EXCERPTS.md",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/E_bundle_on_pre_p1.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/cam-orchestrator-recovery_2026-10-14/replay/results/metrics.json",
+      "intent": "Offline replay harness, rebuild-and-verify tool, and generated replay records. No full programs.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/neck_gcode_motion_metrics.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_cam_orchestrator_recovery_evidence.py",
+      "intent": "Parser unit tests and evidence-agreement tests (pure text; no application import beyond the conftest).",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and offline evidence tooling only."
+  }
+}

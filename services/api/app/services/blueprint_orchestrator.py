@@ -56,6 +56,7 @@ from .blueprint_extract import (
     DualPassResult,
     extract_dual_pass,
 )
+from .blueprint_text_masking import enhanced_acceptance
 from .blueprint_clean import (
     CleanResult,
     CleanupMode,
@@ -137,6 +138,7 @@ class BlueprintResult:
     recommendation: Recommendation = field(default_factory=Recommendation)
     metrics: dict[str, Any] = field(default_factory=dict)
     debug: dict[str, Any] = field(default_factory=dict)
+    text_masking: Optional[dict] = None
 
     def to_response_dict(self, include_debug: bool = False) -> dict[str, Any]:
         """Convert to API response dictionary."""
@@ -166,6 +168,7 @@ class BlueprintResult:
             "selection": self.selection.to_dict(),
             "recommendation": self.recommendation.to_dict(),
             "metrics": self.metrics,
+            "text_masking": self.text_masking,
         }
         if self.metrics.get("topology_provenance"):
             payload["topology_provenance"] = self.metrics["topology_provenance"]
@@ -897,10 +900,10 @@ class BlueprintOrchestrator:
                     warnings.append("DXF content missing or empty")
 
                 # ─── Stage: Recommendation ────────────────────────────────
-                # ENHANCED: Accept raw output directly (no filtering applied)
                 if mode == CleanupMode.ENHANCED:
-                    is_ok = dxf_valid
-                    stage = "complete" if is_ok else "extraction"
+                    is_ok, stage, action, reasons = enhanced_acceptance(
+                        dxf_valid, extract_result.text_masking
+                    )
 
                     selection = SelectionResult(
                         candidate_count=extract_result.line_count,
@@ -911,11 +914,7 @@ class BlueprintOrchestrator:
                         reasons=["Enhanced multi-scale extraction"],
                     )
 
-                    rec = Recommendation(
-                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
-                        reasons=["Full edge detail preserved"] if is_ok else ["Extraction produced no output"],
-                        confidence=1.0 if is_ok else 0.0,
-                    )
+                    rec = Recommendation(action=action, reasons=reasons, confidence=1.0 if is_ok else 0.0)
 
                 # LAYERED_DUAL_PASS uses layered acceptance logic instead of recommend()
                 elif mode == CleanupMode.LAYERED_DUAL_PASS:
@@ -1029,6 +1028,7 @@ class BlueprintOrchestrator:
                     ),
                     selection=selection,
                     recommendation=rec,
+                    text_masking=extract_result.text_masking,
                     metrics={
                         "processing_ms": extract_result.processing_time_ms,  # Canonical name
                         "extraction_ms": extract_result.processing_time_ms,  # Legacy alias

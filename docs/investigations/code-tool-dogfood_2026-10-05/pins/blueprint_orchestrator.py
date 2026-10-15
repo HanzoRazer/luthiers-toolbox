@@ -1,0 +1,1128 @@
+# GOVERNANCE:
+# SYSTEM: BLUEPRINT_READER_MVP
+# STATUS: PROTECTED_PRODUCTION_BASELINE
+# DOC: docs/governance/BLUEPRINT_READER_PROTECTION_RULES.md
+# RULE: Do not alter production behavior without GOVERNANCE_APPROVED_CHANGE.
+
+"""
+Blueprint Orchestrator
+======================
+
+Single orchestration boundary for blueprint vectorization.
+Composes extraction + cleanup services and returns canonical artifacts.
+
+This is the central business logic owner. Routes call this, not the
+individual services directly (except for legacy/debug endpoints).
+
+SCOPE BOUNDARY: Blueprint Pipeline Only
+---------------------------------------
+This refactor applies to the blueprint pipeline only.
+
+Blueprint contour selection now uses unified contour scoring, where
+ownership is a weighted input signal rather than a standalone hard gate.
+Low-confidence results return with warnings instead of failing outright.
+
+The photo vectorizer (/api/vectorizer/extract, services/photo-vectorizer/)
+remains on its existing ownership-threshold logic (hard gate at 0.60) and
+is OUT OF SCOPE for this refactor. Do not assume behavioral parity.
+
+Usage:
+    orchestrator = BlueprintOrchestrator()
+    result = orchestrator.process_file(
+        file_bytes=content,
+        filename="blueprint.pdf",
+        target_height_mm=500.0,
+    )
+    return result.to_response_dict()
+
+Author: Production Shop
+"""
+
+from __future__ import annotations
+
+import base64
+import logging
+import tempfile
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable, Optional
+
+from .blueprint_extract import (
+    ExtractionResult,
+    extract_blueprint_to_dxf,
+    extract_blueprint_enhanced,
+    extract_pdf_page,
+    # Dual-pass extraction
+    DualPassResult,
+    extract_dual_pass,
+)
+from .blueprint_clean import (
+    CleanResult,
+    CleanupMode,
+    clean_blueprint_dxf,
+    validate_cleanup_result,
+)
+from .contour_recommendation import (
+    ProcessingMode,
+    Recommendation,
+    RecommendationAction,
+    RecommendationInput,
+    SelectionResult,
+    recommend,
+)
+from .layer_builder import (
+    Layer,
+    LayeredEntities,
+    ExportPreset,
+    AcceptanceGrade,
+    LayeredAcceptance,
+    GapJoinResult,
+    build_layers,
+    evaluate_layered_acceptance,
+    join_body_gaps,
+    apply_scale_correction,
+)
+from .layered_dxf_writer import (
+    write_layered_dxf,
+    get_preset_from_string,
+)
+
+# Phase 3 vectorizer is lazy-loaded to avoid circular import issues.
+# The blueprint/__init__.py imports phase3_router before constants.py
+# finishes setting up sys.path, causing PHASE3_AVAILABLE to be False
+# at module-level import time. Lazy loading defers the import until
+# CAM_READY_R2000 mode is actually invoked.
+
+logger = logging.getLogger(__name__)
+
+# Type alias for progress callbacks
+ProgressCallback = Optional[Callable[[str, int], None]]
+
+
+# ─── Canonical Result Schema ─────────────────────────────────────────────────
+
+@dataclass
+class SVGArtifact:
+    present: bool = False
+    content: str = ""
+    path_count: int = 0
+
+
+@dataclass
+class DXFArtifact:
+    present: bool = False
+    base64: str = ""
+    entity_count: int = 0
+    closed_contours: int = 0
+
+
+@dataclass
+class Dimensions:
+    width_mm: float = 0.0
+    height_mm: float = 0.0
+
+
+@dataclass
+class BlueprintResult:
+    """Canonical result from blueprint orchestration."""
+    ok: bool  # True only when recommendation.action == "accept"
+    processed: bool = True  # Pipeline completed (transport-level)
+    stage: str = "complete"
+    error: str = ""
+    warnings: list[str] = field(default_factory=list)
+    dimensions: Dimensions = field(default_factory=Dimensions)
+    svg: SVGArtifact = field(default_factory=SVGArtifact)
+    dxf: DXFArtifact = field(default_factory=DXFArtifact)
+    selection: SelectionResult = field(default_factory=SelectionResult)
+    recommendation: Recommendation = field(default_factory=Recommendation)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    debug: dict[str, Any] = field(default_factory=dict)
+
+    def to_response_dict(self, include_debug: bool = False) -> dict[str, Any]:
+        """Convert to API response dictionary."""
+        payload = {
+            "ok": self.ok,
+            "processed": self.processed,
+            "stage": self.stage,
+            "error": self.error,
+            "warnings": self.warnings,
+            "dimensions": {
+                "width_mm": self.dimensions.width_mm,
+                "height_mm": self.dimensions.height_mm,
+            },
+            "artifacts": {
+                "svg": {
+                    "present": self.svg.present,
+                    "content": self.svg.content,
+                    "path_count": self.svg.path_count,
+                },
+                "dxf": {
+                    "present": self.dxf.present,
+                    "base64": self.dxf.base64,
+                    "entity_count": self.dxf.entity_count,
+                    "closed_contours": self.dxf.closed_contours,
+                },
+            },
+            "selection": self.selection.to_dict(),
+            "recommendation": self.recommendation.to_dict(),
+            "metrics": self.metrics,
+        }
+        if self.metrics.get("topology_provenance"):
+            payload["topology_provenance"] = self.metrics["topology_provenance"]
+        if include_debug and self.debug:
+            payload["debug"] = self.debug
+        return payload
+
+
+# ─── Validation Thresholds ───────────────────────────────────────────────────
+
+SVG_MIN_CHARS = 50
+DXF_MIN_BYTES = 800
+
+
+# ─── Orchestrator ────────────────────────────────────────────────────────────
+
+class BlueprintOrchestratorError(RuntimeError):
+    """Error during orchestration with stage context."""
+    def __init__(self, stage: str, message: str):
+        super().__init__(message)
+        self.stage = stage
+        self.message = message
+
+
+class BlueprintOrchestrator:
+    """
+    Orchestrates blueprint extraction + cleanup into canonical artifacts.
+
+    Single source of truth for blueprint business logic. Both sync routes
+    and future async job runners call this orchestrator.
+    """
+
+    # Class-level cache for lazy-loaded Phase3Vectorizer
+    _phase3_vectorizer_class = None
+    _phase3_import_error = None
+
+    @classmethod
+    def _get_phase3_vectorizer(cls):
+        """
+        Lazy-load Phase3Vectorizer to avoid circular import issues.
+
+        The import is deferred until CAM_READY_R2000 mode is actually invoked,
+        by which time blueprint/__init__.py has finished initializing and
+        sys.path includes the blueprint-import service.
+
+        Returns:
+            Phase3Vectorizer class, or None if unavailable
+        """
+        if cls._phase3_vectorizer_class is None and cls._phase3_import_error is None:
+            try:
+                # Add blueprint-import to path if not already present
+                import sys
+                from pathlib import Path
+                bp_path = Path(__file__).parent.parent.parent.parent / "blueprint-import"
+                if str(bp_path) not in sys.path:
+                    sys.path.insert(0, str(bp_path))
+
+                from vectorizer_phase3 import Phase3Vectorizer
+                cls._phase3_vectorizer_class = Phase3Vectorizer
+                logger.info("Phase3Vectorizer lazy-loaded successfully")
+            except ImportError as e:
+                cls._phase3_import_error = str(e)
+                logger.warning(f"Phase3Vectorizer not available: {e}")
+        return cls._phase3_vectorizer_class
+
+    def process_file(
+        self,
+        *,
+        file_bytes: bytes,
+        filename: str,
+        page_num: int = 0,
+        target_height_mm: float = 500.0,
+        min_contour_length_mm: float = 50.0,
+        close_gaps_mm: float = 1.0,
+        canny_low: int = 50,
+        canny_high: int = 150,
+        debug: bool = False,
+        progress_callback: ProgressCallback = None,
+        mode: CleanupMode = CleanupMode.REFINED,
+        export_preset: str = "geometry_only",
+        spec_name: Optional[str] = None,
+        gap_close_size: int = 7,
+        mask_text: bool = True,
+        reinsert_text: bool = False,
+    ) -> BlueprintResult:
+        """
+        Process a blueprint file through extraction and cleanup.
+
+        Args:
+            file_bytes: Raw file content (image or PDF)
+            filename: Original filename for extension detection
+            page_num: PDF page number (0-indexed)
+            target_height_mm: Target height for scaling
+            min_contour_length_mm: Minimum contour length to keep
+            close_gaps_mm: Maximum gap to close
+            canny_low: Canny edge detection low threshold
+            canny_high: Canny edge detection high threshold
+            debug: Include debug info in result
+            progress_callback: Optional (stage, percent) callback
+            mode: CleanupMode.BASELINE for stable pre-grouping behavior,
+                  CleanupMode.REFINED for current logic (default)
+            mask_text: If True, detect and mask text regions before gap closing
+                       (Sprint 3 text-masking preprocessing)
+            reinsert_text: If True, extract text from image and add as TEXT
+                          entities on a separate layer (Sprint 3 faithful rendering)
+
+        Returns:
+            BlueprintResult with canonical artifacts
+        """
+        stage_timings: dict[str, float] = {}
+        warnings: list[str] = []
+
+        def report(stage: str, progress: int) -> None:
+            if progress_callback:
+                progress_callback(stage, progress)
+
+        try:
+            # ─── Validate input ───────────────────────────────────────────
+            if not file_bytes:
+                return BlueprintResult(
+                    ok=False,
+                    stage="upload",
+                    error="Empty file uploaded",
+                )
+
+            file_ext = Path(filename).suffix.lower()
+            logger.info(f"BLUEPRINT_ORCHESTRATE | file={filename} size={len(file_bytes)} bytes mode={mode.value}")
+
+            # ─── Create temp directory for processing ─────────────────────
+            with tempfile.TemporaryDirectory(prefix="blueprint_orch_") as tmpdir:
+                tmpdir_path = Path(tmpdir)
+
+                # ─── Stage: Image extraction (PDF → image if needed) ──────
+                report("image_extract", 10)
+
+                if file_ext == ".pdf":
+                    # Extract PDF with DPI cap (guardrail applied inside)
+                    image_bytes = extract_pdf_page(file_bytes, page_num, warnings=warnings)
+                    if not image_bytes:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="image_extract",
+                            error=f"Failed to extract page {page_num} from PDF",
+                        )
+                    input_path = tmpdir_path / "input.png"
+                    input_path.write_bytes(image_bytes)
+                else:
+                    input_path = tmpdir_path / f"input{file_ext}"
+                    input_path.write_bytes(file_bytes)
+
+                # ─── Stage: Edge extraction ───────────────────────────────
+                report("edge_extraction", 30)
+
+                raw_dxf_path = tmpdir_path / "raw_edges.dxf"
+
+                # ENHANCED: Multi-scale edge fusion (highest detail, no simplification)
+                if mode == CleanupMode.ENHANCED:
+                    extract_result = extract_blueprint_enhanced(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        gap_close_size=gap_close_size,
+                        mask_text=mask_text,
+                        warnings=warnings,
+                    )
+
+                # LAYERED_DUAL_PASS: Route to dual-pass extraction with layer building
+                # Phase 4: Pass A + Pass B → Layer assignment → Controlled export
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
+                    import cv2
+                    from .annotation_extract import extract_annotations, get_annotation_contours
+
+                    # Ensure edge_to_dxf is importable
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+                    from edge_to_dxf import extract_entities_simple
+
+                    # Load image for contour extraction
+                    image = cv2.imread(str(input_path))
+                    if image is None:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Failed to load image: {input_path}",
+                            warnings=warnings,
+                        )
+
+                    h, w = image.shape[:2]
+                    mm_per_px = target_height_mm / h
+
+                    # Pass A: Structural extraction (SIMPLE method)
+                    pass_a_entities = extract_entities_simple(
+                        image=image,
+                        target_height_mm=target_height_mm,
+                    )
+                    pass_a_contours = pass_a_entities.contours
+
+                    # Pass B: Annotation extraction
+                    pass_b_result = extract_annotations(
+                        image=image,
+                        target_height_mm=target_height_mm,
+                    )
+                    pass_b_contours = get_annotation_contours(pass_b_result)
+
+                    # Build layers
+                    layered = build_layers(
+                        structural_contours=pass_a_contours,
+                        annotation_contours=pass_b_contours,
+                        image_size=(w, h),
+                        mm_per_px=mm_per_px,
+                    )
+
+                    # Apply conservative BODY gap joining
+                    layered, gap_join_result = join_body_gaps(
+                        layered,
+                        max_gap_mm=4.0,
+                        max_angle_deg=25.0,
+                    )
+                    logger.info(
+                        f"Gap join: {gap_join_result.joins_applied} applied "
+                        f"({gap_join_result.joins_attempted} attempted)"
+                    )
+
+                    # Apply scale correction if spec_name provided
+                    scale_factor = 1.0
+                    if spec_name:
+                        layered, scale_factor = apply_scale_correction(layered, spec_name)
+                        logger.info(f"Scale correction applied: {scale_factor:.3f}x")
+
+                    # Evaluate layered acceptance (Phase 4 acceptance logic)
+                    layered_acceptance = evaluate_layered_acceptance(layered)
+                    logger.info(
+                        f"Layered acceptance: ok={layered_acceptance.ok}, "
+                        f"grade={layered_acceptance.grade.value}, "
+                        f"body={layered_acceptance.body_count}"
+                    )
+
+                    # Get export preset
+                    preset = get_preset_from_string(export_preset)
+
+                    # Write layered DXF
+                    layer_counts = write_layered_dxf(
+                        entities=layered,
+                        output_path=str(raw_dxf_path),
+                        preset=preset,
+                    )
+
+                    # Build ExtractionResult for compatibility
+                    # Compute BODY bounding box dimensions (actual DXF output size)
+                    total_entities = sum(layer_counts.values())
+
+                    # Get BODY bounding box for output dimensions
+                    body_width_mm = w * mm_per_px
+                    body_height_mm = h * mm_per_px
+                    if layered.body:
+                        import numpy as np
+                        all_pts = []
+                        for entity in layered.body:
+                            pts = entity.contour.reshape(-1, 2)
+                            all_pts.extend(pts.tolist())
+                        if all_pts:
+                            all_pts = np.array(all_pts)
+                            min_x, max_x = all_pts[:, 0].min(), all_pts[:, 0].max()
+                            min_y, max_y = all_pts[:, 1].min(), all_pts[:, 1].max()
+                            body_width_mm = (max_x - min_x) * mm_per_px
+                            body_height_mm = (max_y - min_y) * mm_per_px
+
+                    extract_result = ExtractionResult(
+                        success=True,
+                        output_path=str(raw_dxf_path),
+                        line_count=total_entities,
+                        edge_pixel_count=0,
+                        image_size_px=(w, h),
+                        output_size_mm=(body_width_mm, body_height_mm),
+                        mm_per_px=mm_per_px,
+                        processing_time_ms=0,  # Not tracked here
+                        error="",
+                        warnings=warnings,
+                    )
+
+                    # Add Phase 4 metadata to debug
+                    counts = layered.counts()
+                    stage_timings["dual_pass_active"] = True
+                    stage_timings["pass_b_active"] = True
+                    stage_timings["pass_a_entity_count"] = len(pass_a_contours)
+                    stage_timings["pass_b_entity_count"] = len(pass_b_contours)
+                    stage_timings["annotation_present"] = pass_b_result.entity_count > 0
+                    stage_timings["annotation_bbox_count"] = pass_b_result.bbox_count
+                    stage_timings["annotation_text_like_count"] = pass_b_result.debug.get("text_like_count", 0)
+                    stage_timings["behavior_source"] = "dual_pass_phase4"
+                    stage_timings["export_preset"] = preset.value
+                    stage_timings["layer_counts"] = counts
+                    stage_timings["annotation_categories"] = pass_b_result.debug.get("categories", {})
+                    # Phase 4 acceptance grading
+                    stage_timings["acceptance_ok"] = layered_acceptance.ok
+                    stage_timings["acceptance_grade"] = layered_acceptance.grade.value
+                    stage_timings["acceptance_reasons"] = layered_acceptance.reasons
+                    stage_timings["body_area_ratio"] = round(layered_acceptance.body_area_ratio, 3)
+                    stage_timings["page_frame_dominance"] = round(layered_acceptance.page_frame_dominance, 3)
+                    # BODY gap joining debug
+                    stage_timings["body_gap_joins_attempted"] = gap_join_result.joins_attempted
+                    stage_timings["body_gap_joins_applied"] = gap_join_result.joins_applied
+                    stage_timings["body_gap_join_max_mm"] = gap_join_result.max_gap_mm
+                    stage_timings["body_gap_join_max_angle_deg"] = gap_join_result.max_angle_deg
+                    # Scale correction debug
+                    stage_timings["scale_factor"] = round(scale_factor, 3)
+                    stage_timings["spec_name"] = spec_name or ""
+
+                # CAM_READY_R2000: Paid-tier mode using Phase 3 with R2000 LWPOLYLINE output
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    # Lazy-load Phase3Vectorizer to avoid circular import issues
+                    Phase3VectorizerClass = self._get_phase3_vectorizer()
+                    if Phase3VectorizerClass is None:
+                        error_detail = self._phase3_import_error or "unknown import error"
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Phase 3 vectorizer not available for CAM-ready R2000 output: {error_detail}",
+                            warnings=warnings,
+                        )
+
+                    # Create Phase 3 vectorizer with R2000 DXF version
+                    vectorizer = Phase3VectorizerClass(
+                        dpi=400,
+                        dxf_version='R2000',
+                        enable_ocr=False,
+                        enable_primitives=True,
+                    )
+
+                    # Extract with cam_ready=True for LWPOLYLINE output
+                    import time
+                    p3_start = time.time()
+
+                    p3_result = vectorizer.extract(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        cam_ready=True,
+                        spec_name=spec_name,
+                    )
+
+                    p3_elapsed_ms = (time.time() - p3_start) * 1000
+
+                    # Convert Phase 3 ExtractionResult to orchestrator's ExtractionResult
+                    extract_result = ExtractionResult(
+                        success=p3_result.validation_passed or p3_result.output_dxf is not None,
+                        output_path=p3_result.output_dxf or str(raw_dxf_path),
+                        line_count=sum(len(v) for v in p3_result.contours_by_category.values()),
+                        edge_pixel_count=0,
+                        image_size_px=(0, 0),  # Not tracked in Phase 3
+                        output_size_mm=p3_result.dimensions_mm,
+                        mm_per_px=vectorizer.mm_per_px,
+                        processing_time_ms=p3_elapsed_ms,
+                        error="" if p3_result.output_dxf else "Phase 3 extraction failed",
+                        warnings=p3_result.warnings,
+                    )
+
+                    # Add CAM R2000 debug info
+                    stage_timings["cam_ready_r2000"] = True
+                    stage_timings["dxf_version"] = "R2000"
+                    stage_timings["phase3_scale_source"] = p3_result.scale_source
+                    stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
+
+                # V2_RAW: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to vectorizer_phase3.py:_raw_extract() for PDF blueprints
+                # March 2026 recipe: CHAIN_APPROX_NONE + no classification + R12 LINE + CONTOURS layer
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.V2_RAW:
+                    Phase3VectorizerClass = self._get_phase3_vectorizer()
+                    if Phase3VectorizerClass is None:
+                        error_detail = self._phase3_import_error or "unknown import error"
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"Phase 3 vectorizer not available for V2_RAW mode: {error_detail}",
+                            warnings=warnings,
+                        )
+
+                    # Create Phase 3 vectorizer with R12 DXF version (March 2026 recipe)
+                    vectorizer = Phase3VectorizerClass(
+                        dpi=300,
+                        dxf_version='R12',
+                        enable_ocr=False,
+                        enable_primitives=False,
+                    )
+
+                    import time
+                    p3_start = time.time()
+
+                    # raw_output=True triggers _raw_extract() path
+                    p3_result = vectorizer.extract(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        raw_output=True,
+                        spec_name=spec_name,
+                    )
+
+                    p3_elapsed_ms = (time.time() - p3_start) * 1000
+
+                    extract_result = ExtractionResult(
+                        success=p3_result.validation_passed or p3_result.output_dxf is not None,
+                        output_path=p3_result.output_dxf or str(raw_dxf_path),
+                        line_count=sum(len(v) for v in p3_result.contours_by_category.values()),
+                        edge_pixel_count=0,
+                        image_size_px=(0, 0),
+                        output_size_mm=p3_result.dimensions_mm,
+                        mm_per_px=vectorizer.mm_per_px,
+                        processing_time_ms=p3_elapsed_ms,
+                        error="" if p3_result.output_dxf else "V2_RAW extraction failed",
+                        warnings=p3_result.warnings,
+                    )
+
+                    stage_timings["v2_raw_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["phase3_scale_source"] = p3_result.scale_source
+                    stage_timings["phase3_scale_factor"] = round(p3_result.scale_factor, 3)
+
+                # PHOTO_V2: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to edge_to_dxf.py:EdgeToDXF.convert_enhanced() for photographic images
+                # Pixel edge extraction via multi-scale Canny - works for photos, not blueprints
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.PHOTO_V2:
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+
+                    try:
+                        from edge_to_dxf import EdgeToDXF, ConversionStatus
+                    except ImportError as e:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"EdgeToDXF not available for PHOTO_V2 mode: {e}",
+                            warnings=warnings,
+                        )
+
+                    import time
+                    photo_start = time.time()
+
+                    # EdgeToDXF with CONTOURS layer (March 2026 recipe)
+                    # Use convert_enhanced for multi-scale Canny edge fusion
+                    converter = EdgeToDXF(layer_name='CONTOURS')
+                    photo_result = converter.convert_enhanced(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        mask_text=False,  # Preserve text in photos
+                    )
+
+                    photo_elapsed_ms = (time.time() - photo_start) * 1000
+
+                    # EdgeToDXFResult is a dataclass, access attributes directly
+                    extract_result = ExtractionResult(
+                        success=photo_result.status == ConversionStatus.SUCCESS,
+                        output_path=photo_result.output_path or str(raw_dxf_path),
+                        line_count=photo_result.line_count,
+                        edge_pixel_count=photo_result.edge_pixel_count,
+                        image_size_px=photo_result.image_size_px,
+                        output_size_mm=photo_result.output_size_mm,
+                        mm_per_px=photo_result.mm_per_px,
+                        processing_time_ms=photo_elapsed_ms,
+                        error=photo_result.error_message or "",
+                        warnings=[],
+                    )
+
+                    stage_timings["photo_v2_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["photo_contour_count"] = photo_result.contour_count
+
+                # PHOTO_REFINED: PROTECTED_EXPERIMENTAL_RECOVERY_MODE
+                # Routes to edge_to_dxf.py:EdgeToDXF.convert() with morph_close_kernel=0
+                # Text-preserving extraction for photos of blueprints (resurrected April 2026 sandbox)
+                # DO NOT MODIFY without reviewing docs/handoffs/MRP_1C_VECTORIZER_V2_ARCHAEOLOGY_HANDOFF.md
+                elif mode == CleanupMode.PHOTO_REFINED:
+                    from .blueprint_extract import _ensure_edge_to_dxf_importable
+                    _ensure_edge_to_dxf_importable()
+
+                    try:
+                        from edge_to_dxf import EdgeToDXF, ConversionStatus
+                    except ImportError as e:
+                        return BlueprintResult(
+                            ok=False,
+                            stage="edge_extraction",
+                            error=f"EdgeToDXF not available for PHOTO_REFINED mode: {e}",
+                            warnings=warnings,
+                        )
+
+                    import time
+                    photo_start = time.time()
+
+                    # PHOTO_REFINED: Single-scale Canny, NO morphological closing
+                    # morph_close_kernel=0 preserves text strokes
+                    # This is the April 2026 sandbox recipe that produced text-legible output
+                    converter = EdgeToDXF(layer_name='CONTOURS')
+                    photo_result = converter.convert(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        morph_close_kernel=0,  # CRITICAL: preserves text
+                        max_entities=0,  # No cap - let user control via UI if needed
+                    )
+
+                    photo_elapsed_ms = (time.time() - photo_start) * 1000
+
+                    extract_result = ExtractionResult(
+                        success=photo_result.status == ConversionStatus.SUCCESS,
+                        output_path=photo_result.output_path or str(raw_dxf_path),
+                        line_count=photo_result.line_count,
+                        edge_pixel_count=photo_result.edge_pixel_count,
+                        image_size_px=photo_result.image_size_px,
+                        output_size_mm=photo_result.output_size_mm,
+                        mm_per_px=photo_result.mm_per_px,
+                        processing_time_ms=photo_elapsed_ms,
+                        error=photo_result.error_message or "",
+                        warnings=[],
+                    )
+
+                    stage_timings["photo_refined_mode"] = True
+                    stage_timings["dxf_version"] = "R12"
+                    stage_timings["photo_contour_count"] = photo_result.contour_count
+
+                else:
+                    # RESTORED_BASELINE: Use RETR_LIST (no hierarchy) like commit 86c49526
+                    # All other modes use the default isolate_body=True (RETR_TREE + grouping)
+                    #
+                    # DO NOT CHANGE THIS LOGIC without reviewing docs/RECOVERY_BASELINE.md
+                    # This is the critical fix for the Melody Maker regression.
+                    use_isolate_body = mode != CleanupMode.RESTORED_BASELINE
+
+                    extract_result = extract_blueprint_to_dxf(
+                        source_path=str(input_path),
+                        output_path=str(raw_dxf_path),
+                        target_height_mm=target_height_mm,
+                        canny_low=canny_low,
+                        canny_high=canny_high,
+                        warnings=warnings,  # Pass warnings list for guardrail messages
+                        isolate_body=use_isolate_body,
+                    )
+
+                if not extract_result.success:
+                    return BlueprintResult(
+                        ok=False,
+                        stage="edge_extraction",
+                        error=extract_result.error or "Edge extraction failed",
+                        warnings=warnings,
+                    )
+
+                # warnings were already appended in-place by extract_pdf_page()
+                # and extract_blueprint_to_dxf(..., warnings=warnings)
+                stage_timings["extraction_ms"] = extract_result.processing_time_ms
+
+                # ─── Stage: Cleanup/filtering ─────────────────────────────
+                report("cleanup", 60)
+
+                cleaned_dxf_path = tmpdir_path / "cleaned.dxf"
+
+                # ENHANCED and LAYERED_DUAL_PASS: Skip traditional cleanup
+                if mode == CleanupMode.ENHANCED:
+                    # Use raw_dxf_path directly (no filtering for max detail)
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=0,  # Not tracked in enhanced mode
+                        chains_found=0,
+                        best_confidence=1.0,  # Full confidence for raw output
+                        candidate_count=0,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
+                    # Use raw_dxf_path directly (already filtered by layer export preset)
+                    cleaned_dxf_path = raw_dxf_path
+                    # Create minimal CleanResult for compatibility
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",  # No SVG preview in Phase 4 yet
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=counts.get("body", 0),
+                        chains_found=0,
+                        best_confidence=0.8,  # High confidence for layered output
+                        candidate_count=counts.get("total", 0),
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    # Use raw_dxf_path directly (Phase 3 already produced CAM-ready output)
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for CAM-ready output
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.V2_RAW:
+                    # V2_RAW: Skip cleanup - raw extraction preserves March 2026 fidelity
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.95,  # High confidence for V2 raw output
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.PHOTO_V2:
+                    # PHOTO_V2: Skip cleanup - edge_to_dxf output is already clean
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for photo extraction
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                elif mode == CleanupMode.PHOTO_REFINED:
+                    # PHOTO_REFINED: Skip cleanup - text-preserving extraction already clean
+                    cleaned_dxf_path = raw_dxf_path
+                    clean_result = CleanResult(
+                        success=True,
+                        svg_preview="",
+                        dxf_path=str(raw_dxf_path),
+                        original_entity_count=extract_result.line_count,
+                        cleaned_entity_count=extract_result.line_count,
+                        contours_found=extract_result.line_count,
+                        chains_found=0,
+                        best_confidence=0.9,  # High confidence for refined photo extraction
+                        candidate_count=extract_result.line_count,
+                    )
+                    cleanup_valid = True
+                else:
+                    clean_result = clean_blueprint_dxf(
+                        input_path=str(raw_dxf_path),
+                        output_path=str(cleaned_dxf_path),
+                        min_contour_length_mm=min_contour_length_mm,
+                        close_gaps_mm=close_gaps_mm,
+                        mode=mode,
+                    )
+
+                    # CRITICAL FIX: Do NOT bail early on cleanup failure
+                    # Continue to artifact generation — let recommendation layer decide
+                    # Artifact existence is independent of selection confidence
+                    cleanup_valid = True
+                    if not clean_result.success:
+                        cleanup_valid = False
+                        warnings.append(clean_result.error or "Cleanup encountered issues")
+                    else:
+                        # Validate cleanup result (adds warnings, does NOT block)
+                        cleanup_valid, cleanup_warnings = validate_cleanup_result(clean_result)
+                        warnings.extend(cleanup_warnings)
+
+                # ─── Stage: Text Reinsertion (optional) ───────────────────
+                text_count = 0
+                if reinsert_text and cleaned_dxf_path.exists():
+                    try:
+                        import cv2
+                        from .text_reinsertion import append_text_to_existing_dxf
+
+                        # Load source image for OCR
+                        img = cv2.imread(str(input_path))
+                        if img is not None:
+                            h, w = img.shape[:2]
+                            mm_per_px = target_height_mm / h
+                            text_count = append_text_to_existing_dxf(
+                                dxf_path=str(cleaned_dxf_path),
+                                image=img,
+                                image_height_px=h,
+                                mm_per_px=mm_per_px,
+                                min_confidence=0.3,
+                                layer_name="TEXT",
+                                layer_color=2,
+                            )
+                            if text_count > 0:
+                                stage_timings["text_reinserted"] = text_count
+                                logger.info(f"Text reinsertion: added {text_count} TEXT entities")
+                        else:
+                            warnings.append("Text reinsertion failed: could not load image")
+                    except Exception as e:
+                        warnings.append(f"Text reinsertion failed: {e}")
+                        logger.warning(f"Text reinsertion failed: {e}")
+
+                # ─── Stage: Encode DXF to base64 ──────────────────────────
+                report("encode", 80)
+
+                dxf_b64 = ""
+                dxf_entity_count = 0
+
+                if cleaned_dxf_path.exists():
+                    dxf_bytes = cleaned_dxf_path.read_bytes()
+                    dxf_b64 = base64.b64encode(dxf_bytes).decode("ascii")
+                    # Count entities - normalize line endings for reliable counting
+                    # VALIDATION EXPECTATION (Fusion compatibility):
+                    #   - DXF version: R12 (AC1009)
+                    #   - Entity type: LINE only (no LWPOLYLINE)
+                    #   - See CLAUDE.md "Blueprint Export Compatibility"
+                    dxf_text = dxf_bytes.decode("utf-8", errors="ignore").replace("\r\n", "\n")
+                    dxf_entity_count = (
+                        dxf_text.count("\nLINE\n") +
+                        dxf_text.count("\nLWPOLYLINE\n")  # Should be 0 for R12 output
+                    )
+
+                # ─── Stage: Validation ────────────────────────────────────
+                report("validation", 90)
+
+                svg_content = clean_result.svg_preview
+                svg_path_count = svg_content.count("<path") if svg_content else 0
+                svg_valid = len(svg_content) > SVG_MIN_CHARS
+                dxf_valid = len(dxf_b64) > 0 and dxf_entity_count > 0
+
+                if not svg_valid:
+                    warnings.append("SVG content below minimum threshold")
+                if not dxf_valid:
+                    warnings.append("DXF content missing or empty")
+
+                # ─── Stage: Recommendation ────────────────────────────────
+                # ENHANCED: Accept raw output directly (no filtering applied)
+                if mode == CleanupMode.ENHANCED:
+                    is_ok = dxf_valid
+                    stage = "complete" if is_ok else "extraction"
+
+                    selection = SelectionResult(
+                        candidate_count=extract_result.line_count,
+                        selected_index=0,
+                        selection_score=1.0,
+                        runner_up_score=0.0,
+                        winner_margin=1.0,
+                        reasons=["Enhanced multi-scale extraction"],
+                    )
+
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
+                        reasons=["Full edge detail preserved"] if is_ok else ["Extraction produced no output"],
+                        confidence=1.0 if is_ok else 0.0,
+                    )
+
+                # LAYERED_DUAL_PASS uses layered acceptance logic instead of recommend()
+                elif mode == CleanupMode.LAYERED_DUAL_PASS:
+                    # Phase 4: Use layered acceptance grading
+                    is_ok = layered_acceptance.ok
+                    stage = "complete" if is_ok else "acceptance"
+
+                    # Build minimal selection for compatibility
+                    selection = SelectionResult(
+                        candidate_count=counts.get("total", 0),
+                        selected_index=0 if counts.get("body", 0) > 0 else None,
+                        selection_score=1.0 if layered_acceptance.grade == AcceptanceGrade.PRODUCTION_READY else (
+                            0.8 if layered_acceptance.grade == AcceptanceGrade.USABLE else 0.5
+                        ),
+                        runner_up_score=0.0,
+                        winner_margin=1.0,
+                        reasons=layered_acceptance.reasons,
+                    )
+
+                    # Create recommendation from acceptance for API compatibility
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REVIEW,
+                        reasons=layered_acceptance.reasons,
+                        confidence=selection.selection_score,
+                    )
+
+                    # Add acceptance reasons to warnings if not ok
+                    if not is_ok:
+                        for reason in layered_acceptance.reasons:
+                            if reason not in warnings:
+                                warnings.append(reason)
+
+                # CAM_READY_R2000: Accept CAM-ready output directly
+                elif mode == CleanupMode.CAM_READY_R2000:
+                    is_ok = dxf_valid
+                    stage = "complete" if is_ok else "extraction"
+
+                    selection = SelectionResult(
+                        candidate_count=extract_result.line_count,
+                        selected_index=0,
+                        selection_score=0.9,
+                        runner_up_score=0.0,
+                        winner_margin=0.9,
+                        reasons=["CAM-ready R2000 LWPOLYLINE output"],
+                    )
+
+                    rec = Recommendation(
+                        action=RecommendationAction.ACCEPT if is_ok else RecommendationAction.REJECT,
+                        reasons=["R2000 CAM-ready output for paid tier"] if is_ok else ["Extraction produced no output"],
+                        confidence=0.9 if is_ok else 0.0,
+                    )
+
+                else:
+                    # Non-layered modes use traditional recommendation system
+                    selection = SelectionResult(
+                        candidate_count=clean_result.candidate_count,
+                        selected_index=0 if clean_result.contours_found > 0 else None,
+                        selection_score=clean_result.best_confidence,
+                        runner_up_score=clean_result.runner_up_score,
+                        winner_margin=clean_result.winner_margin,
+                        reasons=[],
+                    )
+
+                    # Build recommendation input
+                    rec_input = RecommendationInput(
+                        selection=selection,
+                        mode=ProcessingMode.BLUEPRINT,
+                        svg_valid=svg_valid,
+                        dxf_valid=dxf_valid,
+                        warnings=warnings,
+                        ownership_score=None,  # Not used for blueprint
+                        scale_source="estimated",  # Blueprint doesn't have calibration
+                    )
+
+                    # Get recommendation
+                    rec = recommend(rec_input)
+
+                    # ok = true only when recommendation.action == "accept"
+                    is_ok = rec.action == RecommendationAction.ACCEPT
+                    stage = "complete" if is_ok else "recommendation"
+
+                    # Add recommendation reasons to warnings if not accept
+                    if rec.action != RecommendationAction.ACCEPT:
+                        for reason in rec.reasons:
+                            if reason not in warnings:
+                                warnings.append(reason)
+
+                # ─── Build result ─────────────────────────────────────────
+                report("complete", 100)
+
+                return BlueprintResult(
+                    ok=is_ok,
+                    processed=True,
+                    stage=stage,
+                    error="" if is_ok else "; ".join(rec.reasons),
+                    warnings=warnings,
+                    dimensions=Dimensions(
+                        width_mm=extract_result.output_size_mm[0],
+                        height_mm=extract_result.output_size_mm[1],
+                    ),
+                    svg=SVGArtifact(
+                        present=svg_valid,
+                        content=svg_content,
+                        path_count=svg_path_count,
+                    ),
+                    dxf=DXFArtifact(
+                        present=dxf_valid,
+                        base64=dxf_b64,
+                        entity_count=dxf_entity_count,
+                        closed_contours=clean_result.contours_found,
+                    ),
+                    selection=selection,
+                    recommendation=rec,
+                    metrics={
+                        "processing_ms": extract_result.processing_time_ms,  # Canonical name
+                        "extraction_ms": extract_result.processing_time_ms,  # Legacy alias
+                        "original_entities": extract_result.line_count,
+                        "cleaned_entities": clean_result.cleaned_entity_count,
+                        "contours_found": clean_result.contours_found,
+                        "chains_found": clean_result.chains_found,
+                        "contour_confidence": round(clean_result.best_confidence, 3),
+                        **(
+                            {"topology_provenance": extract_result.topology_provenance}
+                            if extract_result.topology_provenance
+                            else {}
+                        ),
+                    },
+                    debug=self._build_debug_payload(
+                        stage_timings, extract_result, clean_result, debug
+                    ),
+                )
+
+        except BlueprintOrchestratorError as e:
+            return BlueprintResult(ok=False, stage=e.stage, error=e.message)
+        except Exception as e:
+            logger.exception("Blueprint orchestration failed")
+            return BlueprintResult(ok=False, stage="error", error=str(e))
+
+    def _build_debug_payload(
+        self,
+        stage_timings: dict[str, float],
+        extract_result: ExtractionResult,
+        clean_result: Optional[CleanResult],
+        include_debug: bool,
+    ) -> dict[str, Any]:
+        """
+        Build debug payload including grouping and fallback metadata.
+
+        Grouping metadata is included when:
+        - include_debug=True
+        - extract_result.grouping is not None
+
+        Fallback metadata is included when:
+        - include_debug=True
+        - clean_result is not None
+
+        Fields:
+        - stage_timings: Per-stage timing in ms
+        - group_count: Number of contour groups formed
+        - selected_group_index: Index of winning group
+        - selected_group_bbox: Bounding box of winning group
+        - selected_group_score: Score of winning group
+        - group_winner_margin: Margin between winner and runner-up
+        - grouping_fallback_used: Whether fallback was used
+        - final_candidate_count: Number of candidates after scoring
+        - rejected_candidate_count: Number of rejected candidates
+        - fallback_used: Whether fallback was used in cleanup
+        - fallback_tier: Tier of fallback (1-5)
+        - fallback_reason: Human-readable fallback reason
+        - fallback_reject_reason: Reject reason of fallback candidate
+        - fallback_is_page_border: Whether fallback selected page border
+        - winner_margin: Score margin between winner and runner-up
+        - runner_up_score: Score of runner-up candidate
+        """
+        if not include_debug:
+            return {}
+
+        debug_payload: dict[str, Any] = dict(stage_timings)
+
+        # Add grouping metadata if available
+        grouping = getattr(extract_result, 'grouping', None)
+        if grouping:
+            debug_payload["group_count"] = grouping.get("group_count", 0)
+            debug_payload["selected_group_index"] = grouping.get("selected_group_index", -1)
+            debug_payload["selected_group_bbox"] = grouping.get("selected_group_bbox")
+            debug_payload["selected_group_score"] = grouping.get("selected_group_score", 0.0)
+            debug_payload["group_winner_margin"] = grouping.get("group_winner_margin", 0.0)
+            debug_payload["grouping_fallback_used"] = grouping.get("grouping_fallback_used", False)
+
+        # Add cleanup/fallback metadata if available
+        if clean_result:
+            debug_payload["final_candidate_count"] = clean_result.candidate_count
+            debug_payload["rejected_candidate_count"] = (
+                clean_result.discarded_short +
+                clean_result.discarded_open +
+                clean_result.discarded_low_score
+            )
+            debug_payload["fallback_used"] = clean_result.fallback_used
+            debug_payload["fallback_tier"] = clean_result.fallback_tier
+            debug_payload["fallback_reason"] = clean_result.fallback_reason
+            debug_payload["fallback_reject_reason"] = clean_result.fallback_reject_reason
+            debug_payload["fallback_is_page_border"] = clean_result.fallback_is_page_border
+            debug_payload["winner_margin"] = round(clean_result.winner_margin, 3)
+            debug_payload["runner_up_score"] = round(clean_result.runner_up_score, 3)
+            # Geometry dedupe stats are diagnostic-only and present only when the
+            # BLUEPRINT_ENABLE_GEOMETRY_DEDUPE flag is on and dedupe actually ran.
+            if clean_result.geometry_deduplication is not None:
+                debug_payload["geometry_deduplication"] = clean_result.geometry_deduplication
+
+        return debug_payload

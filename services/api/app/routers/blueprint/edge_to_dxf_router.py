@@ -99,6 +99,8 @@ class EdgeToDXFResponse(BaseModel):
     cap_value: Optional[int] = None
     entities_at_failure: Optional[int] = None
     cap_message: Optional[str] = None
+    # Present on enhanced conversions. Older clients ignore the extra field.
+    text_masking: Optional[dict] = None
 
 
 class EdgeToDXFStatusResponse(BaseModel):
@@ -257,6 +259,15 @@ async def convert_edges(
         )
 
 
+def enhanced_masking_payload(result) -> dict:
+    """Status and disposition for an enhanced conversion that produced a DXF."""
+    masking = None
+    if getattr(result, "text_masking", None) is not None:
+        masking = result.text_masking.to_dict()
+    status_value = result.status.value if getattr(result, "status", None) else "SUCCESS"
+    return {"success": True, "status": status_value, "text_masking": masking}
+
+
 @router.post("/enhanced", response_model=EdgeToDXFResponse)
 async def convert_edges_enhanced(
     file: UploadFile = File(..., description="Image or PDF file"),
@@ -342,9 +353,11 @@ async def convert_edges_enhanced(
                 filename=output_path.name,
             )
 
+        payload = enhanced_masking_payload(result)
         return EdgeToDXFResponse(
-            success=True,
-            status="SUCCESS",
+            success=payload["success"],
+            status=payload["status"],
+            text_masking=payload["text_masking"],
             dxf_path=str(output_path),
             line_count=result.line_count,
             edge_pixel_count=result.edge_pixel_count,

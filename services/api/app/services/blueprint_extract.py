@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from .blueprint_limits import LIMITS, BlueprintGuardrailError
+from .blueprint_text_masking import record_text_masking
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class ExtractionResult:
     grouping: Optional[dict] = None
     # PR-2: surfaced on API response via orchestrator (not debug-only)
     topology_provenance: Optional[dict] = None
+    text_masking: Optional[dict] = None
 
 
 # ─── Guardrail Helpers ───────────────────────────────────────────────────────
@@ -316,12 +318,9 @@ def extract_blueprint_enhanced(
     """
     Run multi-scale edge fusion extraction (highest quality).
 
-    Uses three Canny threshold levels (30/100, 50/150, 80/200) for
-    complete edge coverage. Produces 50,000-300,000+ LINE entities.
+    Uses Canny levels 30/100, 50/150, and 80/200 for complete edge coverage.
 
-    Text masking (Sprint 3): When enabled, detects text regions via OCR
-    and removes them from edges before morphological gap closing. This
-    prevents the 7×7 kernel from bridging text glyph strokes.
+    Text masking records a disposition. A requested mask that does not apply is degraded output.
 
     Args:
         source_path: Path to input image
@@ -374,6 +373,7 @@ def extract_blueprint_enhanced(
             mm_per_px=result.mm_per_px,
             processing_time_ms=result.processing_time_ms,
             warnings=warnings,
+            text_masking=record_text_masking(result, warnings),
         )
 
     except BlueprintGuardrailError as e:
