@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from vectorizer.text_masking_counts import (
+    assert_known_fixture_reduced,
     assert_reported_count_matches_artifact,
     cached_flag_calls,
     reported_entity_count,
@@ -217,15 +218,22 @@ class TestTextMaskingRegression:
             print(f"Confidence: {result.recommendation.confidence}")
 
 
+_DEGRADED_MASK_CODES = {
+    "OCR_PROVIDER_UNAVAILABLE",
+    "OCR_INITIALIZATION_FAILED",
+    "OCR_EXECUTION_FAILED",
+}
+
+
 class TestTextMaskingComparison:
-    """Shared Melody Maker runs. This class reports counts. It does not claim a reduction."""
+    """Shared Melody Maker runs. A reduction is required only when masking applied."""
 
     @pytest.mark.slow
     def test_melody_maker_reports_entity_counts(self, melody_maker_run):
         """Both runs expose ``dxf.entity_count``, and each matches its parsed DXF.
 
-        A strict ``masked < unmasked`` check waits until the result reports that
-        masking was applied. Production does not report that yet. F-3 will.
+        When the masked run reports ``applied=True``, the known fixture must
+        shrink. A degraded disposition keeps the DXF and withholds acceptance.
         """
         skip_if_no_test_file(MELODY_MAKER_PDF)
 
@@ -236,10 +244,21 @@ class TestTextMaskingComparison:
         assert_reported_count_matches_artifact(masked)
         assert_reported_count_matches_artifact(unmasked)
 
+        masking = masked.text_masking or {}
+        assert masking.get("requested") is True
+        assert (unmasked.text_masking or {}).get("requested") is False
+        if masking.get("applied") is True:
+            assert masking.get("diagnostic_code") == "TEXT_MASK_APPLIED"
+            assert_known_fixture_reduced(masked, unmasked, applied=True)
+        elif masking.get("diagnostic_code") in _DEGRADED_MASK_CODES:
+            assert masked.ok is False
+            assert masked.recommendation.action.value == "review"
+            assert masked.dxf.present is True
+
         print("\n=== ENTITY COUNTS REPORTED ===")
         print(f"mask_text=True: {masked_count:,}")
         print(f"mask_text=False: {unmasked_count:,}")
-        print("Reduction is not asserted; masking disposition is not reported.")
+        print(f"text_masking: {masking}")
 
 
 if __name__ == "__main__":

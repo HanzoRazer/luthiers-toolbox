@@ -446,6 +446,73 @@ _EASYOCR_READER = None
 _EASYOCR_AVAILABLE = None
 
 
+class TextMaskDiagnostic:
+    """Codes for a requested text-masking pass.
+
+    ``OCR_NO_TEXT_DETECTED`` means the reader ran and found nothing to mask.
+    That is a completed pass. The three failure codes are not.
+    """
+
+    OCR_PROVIDER_UNAVAILABLE = "OCR_PROVIDER_UNAVAILABLE"
+    OCR_INITIALIZATION_FAILED = "OCR_INITIALIZATION_FAILED"
+    OCR_EXECUTION_FAILED = "OCR_EXECUTION_FAILED"
+    OCR_NO_TEXT_DETECTED = "OCR_NO_TEXT_DETECTED"
+    TEXT_MASK_APPLIED = "TEXT_MASK_APPLIED"
+    DEGRADED = frozenset({
+        OCR_PROVIDER_UNAVAILABLE,
+        OCR_INITIALIZATION_FAILED,
+        OCR_EXECUTION_FAILED,
+    })
+
+
+@dataclass(frozen=True)
+class TextMaskingDisposition:
+    """What a conversion actually did about text masking."""
+
+    requested: bool
+    provider_available: bool
+    attempted: bool
+    applied: bool
+    diagnostic_code: Optional[str] = None
+
+    @property
+    def degraded(self) -> bool:
+        return self.diagnostic_code in TextMaskDiagnostic.DEGRADED
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "requested": self.requested,
+            "provider_available": self.provider_available,
+            "attempted": self.attempted,
+            "applied": self.applied,
+            "diagnostic_code": self.diagnostic_code,
+        }
+
+    @staticmethod
+    def not_requested() -> "TextMaskingDisposition":
+        return TextMaskingDisposition(False, False, False, False, None)
+
+    @staticmethod
+    def from_failure(code: str) -> "TextMaskingDisposition":
+        if code == TextMaskDiagnostic.OCR_PROVIDER_UNAVAILABLE:
+            return TextMaskingDisposition(True, False, False, False, code)
+        if code == TextMaskDiagnostic.OCR_INITIALIZATION_FAILED:
+            return TextMaskingDisposition(True, True, False, False, code)
+        return TextMaskingDisposition(True, True, True, False, code)
+
+    @staticmethod
+    def no_text() -> "TextMaskingDisposition":
+        return TextMaskingDisposition(
+            True, True, True, False, TextMaskDiagnostic.OCR_NO_TEXT_DETECTED
+        )
+
+    @staticmethod
+    def applied() -> "TextMaskingDisposition":
+        return TextMaskingDisposition(
+            True, True, True, True, TextMaskDiagnostic.TEXT_MASK_APPLIED
+        )
+
+
 class TextDetectionError(RuntimeError):
     """OCR text detection failed — masking could not be performed.
 
@@ -456,7 +523,36 @@ class TextDetectionError(RuntimeError):
     the glyph edges stayed in ``combined_edges``, where ``findContours`` traced
     them into the DXF as body geometry. Raising here keeps ``[]`` meaning only
     "no text present", which is a genuine and common result.
+
+    ``diagnostic_code`` distinguishes an unavailable provider, a reader that
+    failed to initialize, and a reader that failed while scanning.
     """
+
+    def __init__(
+        self,
+        message: str,
+        diagnostic_code: str = TextMaskDiagnostic.OCR_EXECUTION_FAILED,
+    ):
+        super().__init__(message)
+        self.diagnostic_code = diagnostic_code
+
+
+def _initialize_easyocr_reader():
+    """Construct the EasyOCR reader. Split out so tests can fail init alone."""
+    try:
+        import easyocr
+    except ImportError as e:
+        raise TextDetectionError(
+            "EasyOCR is not available",
+            diagnostic_code=TextMaskDiagnostic.OCR_PROVIDER_UNAVAILABLE,
+        ) from e
+    try:
+        return easyocr.Reader(['en'], gpu=False, verbose=False)
+    except Exception as e:
+        raise TextDetectionError(
+            f"OCR initialization failed: {e}",
+            diagnostic_code=TextMaskDiagnostic.OCR_INITIALIZATION_FAILED,
+        ) from e
 
 
 def _get_easyocr_reader():
@@ -465,7 +561,7 @@ def _get_easyocr_reader():
 
     if _EASYOCR_AVAILABLE is None:
         try:
-            import easyocr
+            import easyocr  # noqa: F401
             _EASYOCR_AVAILABLE = True
             logger.info("EasyOCR available for text masking")
         except ImportError:
@@ -476,9 +572,8 @@ def _get_easyocr_reader():
         return None
 
     if _EASYOCR_READER is None:
-        import easyocr
         logger.info("Initializing EasyOCR reader (first use)...")
-        _EASYOCR_READER = easyocr.Reader(['en'], gpu=False, verbose=False)
+        _EASYOCR_READER = _initialize_easyocr_reader()
         logger.info("EasyOCR reader initialized")
 
     return _EASYOCR_READER
@@ -499,17 +594,21 @@ def detect_text_regions(
 
     Returns:
         List of (x, y, w, h) bounding boxes for detected text regions.
-        Returns an empty list when EasyOCR is unavailable, or when OCR ran
-        successfully and found no text — both mean "there is nothing to mask".
+        An empty list means OCR ran and found no text. It does not mean the
+        provider was missing.
 
     Raises:
-        TextDetectionError: OCR was available but failed. This is NOT the same as
-            an empty result: masking was required and could not be performed, so
-            the caller must not proceed as though there were no text (BR-037).
+        TextDetectionError: Masking was required and could not be performed.
+            ``diagnostic_code`` is ``OCR_PROVIDER_UNAVAILABLE``,
+            ``OCR_INITIALIZATION_FAILED``, or ``OCR_EXECUTION_FAILED``.
+            An empty list is only "no text present" (BR-037).
     """
     reader = _get_easyocr_reader()
     if reader is None:
-        return []
+        raise TextDetectionError(
+            "EasyOCR is not available",
+            diagnostic_code=TextMaskDiagnostic.OCR_PROVIDER_UNAVAILABLE,
+        )
 
     try:
         # EasyOCR expects BGR or grayscale
@@ -521,10 +620,12 @@ def detect_text_regions(
             if confidence < min_confidence:
                 continue
 
-            # Convert polygon bbox to (x, y, w, h)
-            pts = np.array(bbox)
-            x_min, y_min = pts.min(axis=0).astype(int)
-            x_max, y_max = pts.max(axis=0).astype(int)
+            # Plain coordinates. np.ndarray.astype fails with _NoValueType
+            # after ezdxf reimports NumPy in a long pytest session.
+            xs = [float(point[0]) for point in bbox]
+            ys = [float(point[1]) for point in bbox]
+            x_min, y_min = int(min(xs)), int(min(ys))
+            x_max, y_max = int(max(xs)), int(max(ys))
 
             # Add padding to account for text proximity effects
             x_min = max(0, x_min - padding_px)
@@ -542,12 +643,32 @@ def detect_text_regions(
         logger.info(f"Detected {len(regions)} text regions above confidence {min_confidence}")
         return regions
 
+    except TextDetectionError:
+        raise
     except Exception as e:
         # BR-037: do NOT return [] here. An empty list means "no text to mask",
         # and the caller acts on it by skipping masking entirely — which leaves
         # the glyph edges in the edge image to be traced into the DXF.
         logger.error(f"Text detection failed: {e}")
         raise TextDetectionError(f"OCR text detection failed: {e}") from e
+
+
+def resolve_text_masking(image: np.ndarray, *, requested: bool) -> Tuple[list, TextMaskingDisposition]:
+    """Classify a masking request without applying the mask.
+
+    ``mask_text=False`` does not probe OCR. A requested pass that cannot run
+    returns a degraded disposition and no regions. An empty region list with
+    ``OCR_NO_TEXT_DETECTED`` means the reader ran.
+    """
+    if not requested:
+        return [], TextMaskingDisposition.not_requested()
+    try:
+        regions = detect_text_regions(image, min_confidence=0.3, padding_px=5)
+    except TextDetectionError as exc:
+        return [], TextMaskingDisposition.from_failure(exc.diagnostic_code)
+    if regions:
+        return regions, TextMaskingDisposition.applied()
+    return [], TextMaskingDisposition.no_text()
 
 
 def create_text_mask(
@@ -1413,6 +1534,8 @@ class EdgeToDXFResult:
     # could not be removed and may appear in the geometry. Pairs with
     # status == DEGRADED.
     text_detection_failed: bool = False
+    # Explicit masking outcome. None on paths that never considered masking.
+    text_masking: Optional[TextMaskingDisposition] = None
 
     def summary(self) -> str:
         """Human-readable summary."""
@@ -1442,14 +1565,18 @@ class EdgeToDXFResult:
                 f"  Time: {self.processing_time_ms:.0f} ms"
             )
         else:
+            code = ""
+            if self.text_masking is not None and self.text_masking.diagnostic_code:
+                code = f" ({self.text_masking.diagnostic_code})"
             banner = (
                 "Edge-to-DXF Conversion Complete"
                 if not self.text_detection_failed
                 else (
                     "Edge-to-DXF Conversion DEGRADED\n"
-                    "  WARNING: text masking was requested but OCR failed. Any text\n"
-                    "  in the source image has been vectorised as body geometry and\n"
-                    "  must be removed before this DXF is used for machining."
+                    f"  WARNING: text masking was requested but did not apply{code}.\n"
+                    "  Any text in the source image has been vectorised as body\n"
+                    "  geometry. This DXF is emitted for review and has no\n"
+                    "  manufacturing acceptance."
                 )
             )
             return (
@@ -1985,41 +2112,27 @@ class EdgeToDXF:
             combined_edges = cv2.bitwise_or(combined_edges, edges)
 
         # Text masking: remove text edges BEFORE morphological closing
-        # This prevents the 7×7 kernel from bridging text glyph strokes
+        # This prevents the 7×7 kernel from bridging text glyph strokes.
+        # A requested pass that cannot run still emits the DXF, marked DEGRADED.
         text_removed_count = 0
-        text_detection_failed = False  # BR-037
-        if mask_text:
-            # BR-037: mask_text=True is an explicit caller request. If OCR fails we
-            # cannot honour it, and the glyph edges are already in combined_edges —
-            # findContours below traces them into the DXF as body geometry
-            # (reproduced: 1475 entities inside the text bbox, 0 in a no-text
-            # control). We still emit, because a failed OCR pass cannot tell us
-            # whether the image even had text — refusing would reject the many
-            # images that have none. Instead the result is marked DEGRADED so it
-            # cannot be mistaken for a clean conversion.
-            #
-            # Note: suppressing the morphological close was considered and does NOT
-            # help — it only turns text from bridged blobs into thin outlines; the
-            # text still ships. Only masking removes it, and masking needs OCR.
-            try:
-                text_regions = detect_text_regions(img, min_confidence=0.3, padding_px=5)
-            except TextDetectionError as e:
-                logger.error(
-                    "TEXT_MASK_FAILED | mask_text=True but OCR failed (%s). Emitting "
-                    "DEGRADED output: any text in this image is vectorised as body "
-                    "geometry.", e,
-                )
-                text_detection_failed = True
-                text_regions = []
-            if text_regions:
-                text_mask = create_text_mask((h, w), text_regions)
-                combined_edges, text_removed_count = apply_text_mask_to_edges(
-                    combined_edges, text_mask
-                )
-                logger.info(
-                    f"TEXT_MASK | Removed {text_removed_count:,} edge pixels "
-                    f"from {len(text_regions)} text regions"
-                )
+        text_regions, text_masking = resolve_text_masking(img, requested=mask_text)
+        text_detection_failed = text_masking.degraded
+        if text_detection_failed:
+            logger.error(
+                "TEXT_MASK_FAILED | mask_text=True diagnostic=%s. Emitting "
+                "DEGRADED output: any text in this image is vectorised as body "
+                "geometry.",
+                text_masking.diagnostic_code,
+            )
+        elif text_regions:
+            text_mask = create_text_mask((h, w), text_regions)
+            combined_edges, text_removed_count = apply_text_mask_to_edges(
+                combined_edges, text_mask
+            )
+            logger.info(
+                f"TEXT_MASK | Removed {text_removed_count:,} edge pixels "
+                f"from {len(text_regions)} text regions"
+            )
 
         # Bridge pixel-level gaps before contour extraction (restored from Phase 2)
         if gap_close_size > 0:
@@ -2116,6 +2229,8 @@ class EdgeToDXF:
                 cap_value=max_entities,
                 contours_processed=contour_count,
                 entities_at_failure=line_count,
+                text_detection_failed=text_detection_failed,
+                text_masking=text_masking,
             )
 
         logger.info(f"Created {line_count:,} LINE entities from {len(valid_contours)} contours")
@@ -2133,13 +2248,14 @@ class EdgeToDXF:
             mm_per_px=mm_per_px,
             processing_time_ms=processing_time,
             file_size_bytes=file_size,
-            # BR-037: an unmasked-text run must not report clean success.
+            # A requested mask that did not apply must not report clean success.
             status=(
                 ConversionStatus.DEGRADED
                 if text_detection_failed
                 else ConversionStatus.SUCCESS
             ),
             text_detection_failed=text_detection_failed,
+            text_masking=text_masking,
         )
 
     def convert_batch(
