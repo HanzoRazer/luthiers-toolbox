@@ -214,6 +214,12 @@
       "behavior_change": "none"
     },
     {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
       "path": "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
       "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
       "risk": "low",
@@ -232,6 +238,12 @@
       "behavior_change": "none"
     },
     {
+      "path": "scripts/investigations/march_2026_census_spot_check.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
       "path": "scripts/investigations/march_2026_claim_reachability.py",
       "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
       "risk": "low",
@@ -245,7 +257,7 @@
     },
     {
       "path": "services/api/tests/test_march_2026_census_evidence.py",
-      "intent": "Census integrity tests (pure text; no application import beyond the conftest).",
+      "intent": "Census integrity and fixture tests (text, scratch Git repositories and in-process evidence tools; no application import beyond the conftest).",
       "risk": "low",
       "behavior_change": "none"
     }
