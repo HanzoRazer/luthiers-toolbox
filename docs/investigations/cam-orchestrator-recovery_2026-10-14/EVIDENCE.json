@@ -1,0 +1,300 @@
+{
+  "arms": {
+    "A_pre_p1": {
+      "generator_retract_z_mm": {
+        "fret_slots": 5.0,
+        "profile": 5.0,
+        "truss_rod": 5.0
+      },
+      "generator_safe_z_mm": {
+        "fret_slots": 25.0,
+        "profile": 25.0,
+        "truss_rod": 25.0
+      },
+      "metrics": {
+        "executable_blocks": 1779,
+        "g0_at_or_below_plane": 711,
+        "g0_below_plane": 702,
+        "g0_moves": 927,
+        "g0_xy_at_or_below_plane": 711,
+        "g0_xy_below_plane": 702,
+        "g0_z_only_heights": {
+          "25.000": 58,
+          "5.000": 80,
+          "50.000": 1
+        },
+        "g0_z_only_moves": 139,
+        "g43_count": 4,
+        "nested_comment_lines": 3,
+        "tool_change_count": 4,
+        "tool_changes_with_spindle_on": 0,
+        "tool_changes_without_g43": 0,
+        "tool_changes_without_known_retract": 1,
+        "total_lines": 1935
+      },
+      "program_file": "A_pre_p1.gcode.evidence",
+      "program_sha256": "e305d5f711abc74307da86efce7c57947cb4c8095bc949741d9da0d82c40806e",
+      "record_sha256": "fd57f39dca91d098d31841f1db5230397fa369ae9f4da7877b1e0ca4ff695cfa",
+      "status": "GENERATED",
+      "tree": "git archive 9c5f46a95af3bc4b983fa30d1328b530f08c520c services/api/app (extracted outside the repo)"
+    },
+    "B_live": {
+      "generator_retract_z_mm": {
+        "fret_slots": 5.0,
+        "profile": 5.0,
+        "truss_rod": 5.0
+      },
+      "generator_safe_z_mm": {
+        "fret_slots": 25.0,
+        "profile": 25.0,
+        "truss_rod": 25.0
+      },
+      "metrics": {
+        "executable_blocks": 1779,
+        "g0_at_or_below_plane": 0,
+        "g0_below_plane": 0,
+        "g0_moves": 207,
+        "g0_xy_at_or_below_plane": 0,
+        "g0_xy_below_plane": 0,
+        "g0_z_only_heights": {
+          "25.000": 58,
+          "5.000": 80,
+          "50.000": 1
+        },
+        "g0_z_only_moves": 139,
+        "g43_count": 4,
+        "nested_comment_lines": 3,
+        "tool_change_count": 4,
+        "tool_changes_with_spindle_on": 0,
+        "tool_changes_without_g43": 0,
+        "tool_changes_without_known_retract": 1,
+        "total_lines": 1935
+      },
+      "program_file": "B_live.gcode.evidence",
+      "program_sha256": "5f78b3c2a705a0fb5c0b2df4f57bab68c667c6262912b4b006db5d50d1434b46",
+      "record_sha256": "4912629cb222a5eb74df47f92e4b03db1d01bd5cd6277572487b538a54d2f896",
+      "status": "GENERATED",
+      "tree": "git archive d42712e0e358b2344ddc046e83f169233581dce5 services/api/app (extracted outside the repo)"
+    },
+    "C_archived_on_live": {
+      "error": "'BCamMachineSpec' object has no attribute 'dwell_after_spindle_ms'",
+      "error_type": "AttributeError",
+      "raised_at": "orchestrator.py:113",
+      "raised_in": "dwell_after_spindle_ms=machine.dwell_after_spindle_ms,",
+      "record_sha256": "900770f9e16d88192f2c957bf15a1977178098fac6a0d4b87fce3815c529431e",
+      "status": "NOT_RUNNABLE",
+      "tree": "git archive d42712e0e358b2344ddc046e83f169233581dce5 + archived orchestrator services/api/app (extracted outside the repo)"
+    },
+    "D_bundle_as_shipped": {
+      "generator_retract_z_mm": {
+        "fret_slots": 5.0,
+        "profile": 5.0,
+        "truss_rod": 5.0
+      },
+      "generator_safe_z_mm": {
+        "fret_slots": 10.0,
+        "profile": 10.0,
+        "truss_rod": 10.0
+      },
+      "metrics": {
+        "executable_blocks": 1807,
+        "g0_at_or_below_plane": 0,
+        "g0_below_plane": 0,
+        "g0_moves": 211,
+        "g0_xy_at_or_below_plane": 0,
+        "g0_xy_below_plane": 0,
+        "g0_z_only_heights": {
+          "10.000": 59,
+          "25.000": 4,
+          "5.000": 80
+        },
+        "g0_z_only_moves": 143,
+        "g43_count": 8,
+        "nested_comment_lines": 3,
+        "tool_change_count": 8,
+        "tool_changes_with_spindle_on": 0,
+        "tool_changes_without_g43": 0,
+        "tool_changes_without_known_retract": 1,
+        "total_lines": 1974
+      },
+      "program_file": "D_bundle_as_shipped.gcode.evidence",
+      "program_sha256": "600c8d557ab6eff35236d2f1cff69ff804616016132357ddffb6d4e8bdd8bdd6",
+      "record_sha256": "b88e7e31957c577f2633c267e4caef2498dd9ade7de06f38053026edd33b2281",
+      "status": "GENERATED",
+      "tree": "git archive d42712e0e358b2344ddc046e83f169233581dce5 + archived orchestrator + archived machines services/api/app (extracted outside the repo)"
+    },
+    "E_bundle_on_pre_p1": {
+      "generator_retract_z_mm": {
+        "fret_slots": 5.0,
+        "profile": 5.0,
+        "truss_rod": 5.0
+      },
+      "generator_safe_z_mm": {
+        "fret_slots": 10.0,
+        "profile": 10.0,
+        "truss_rod": 10.0
+      },
+      "metrics": {
+        "executable_blocks": 1807,
+        "g0_at_or_below_plane": 711,
+        "g0_below_plane": 702,
+        "g0_moves": 931,
+        "g0_xy_at_or_below_plane": 711,
+        "g0_xy_below_plane": 702,
+        "g0_z_only_heights": {
+          "10.000": 59,
+          "25.000": 4,
+          "5.000": 80
+        },
+        "g0_z_only_moves": 143,
+        "g43_count": 8,
+        "nested_comment_lines": 3,
+        "tool_change_count": 8,
+        "tool_changes_with_spindle_on": 0,
+        "tool_changes_without_g43": 0,
+        "tool_changes_without_known_retract": 1,
+        "total_lines": 1974
+      },
+      "program_file": "E_bundle_on_pre_p1.gcode.evidence",
+      "program_sha256": "8c90da30da1466373e14db1bf2b1e46386d603bcd076d1be1594de66945a96ff",
+      "record_sha256": "4fb9b5b031daad9ff791e194ab637d7c0217c811261d25f2e042536a9ecf4044",
+      "status": "GENERATED",
+      "tree": "git archive 9c5f46a95af3bc4b983fa30d1328b530f08c520c + archived orchestrator + archived machines services/api/app (extracted outside the repo)"
+    }
+  },
+  "artifacts": {
+    "archived_machines": {
+      "blob": "0946b8330576c78bba6e764a81645d8bfe824a42",
+      "path": "docs/archive/photo_vectorizer_patches/machines.py",
+      "sha256": "ce8e3149228e14191263fa63c796337bd19097c9c4fd22803bc4c8839c8fa7a0"
+    },
+    "archived_orchestrator": {
+      "blob": "a574d92183cb5c39e3aac0aafdea457f04c6311d",
+      "differs_from_bundle": "2 docstring lines (BCAM -> BCAMCNC); code identical",
+      "path": "docs/archive/photo_vectorizer_patches/orchestrator.py",
+      "sha256": "8f37d10b542f88837005472c0a109cb61d65c15987556109f3fd89d3bdc6e707"
+    },
+    "external_bundle": {
+      "machines_blob": "53c5580f0a6cad9ef746b798e21551c9b2e0a899",
+      "orchestrator_blob": "2f10f102576f2eac500a155edf15428081e39f95",
+      "outside_git": true,
+      "path": "Downloads/Storage/files - 2026-03-18T031920.383.zip",
+      "sha256": "ee3f5fdb0b29385f1187772829175f20a8c1927c0c04fac9acd68717462b80aa",
+      "size_bytes": 74372
+    },
+    "live_machines": {
+      "blob": "0ded91122801adf002935e9253112c4e57afe0a7",
+      "path": "services/api/app/cam/machines.py",
+      "sha256": "e39c71d49e638135720f15eae61d16aab4e8262d1654161e97213be9a3da116d"
+    },
+    "live_orchestrator": {
+      "blob": "db5904fe4391b905d7c738b672302436fc13409a",
+      "path": "services/api/app/cam/neck/orchestrator.py",
+      "sha256": "53880c6f08fddec9306273a67117f17e19b9c1cecbb065cdf8f076ed7eabbfbe"
+    },
+    "replay_metrics": {
+      "path": "replay/results/metrics.json",
+      "sha256": "2ba26f1fc7636730b834f26e9a49b394e8132f8fca9ceaecd4d5dad8d8037b3d"
+    }
+  },
+  "base_sha": "d42712e0e358b2344ddc046e83f169233581dce5",
+  "baseline_count": {
+    "claimed": 780,
+    "reproduced": 702,
+    "verdict": "780 SUPERSEDED; 702 reproduced on pre-#398 tree, equals #398's own figure"
+  },
+  "commands": [
+    {
+      "cmd": "git archive <tree-sha> services/api/app | tar -x (outside repo), per arm",
+      "exit": 0
+    },
+    {
+      "cmd": "python -I replay/generate_arm.py --arm A_pre_p1",
+      "exit": 0
+    },
+    {
+      "cmd": "python -I replay/generate_arm.py --arm B_live",
+      "exit": 0
+    },
+    {
+      "cmd": "python -I replay/generate_arm.py --arm C_archived_on_live",
+      "exit": 4
+    },
+    {
+      "cmd": "python -I replay/generate_arm.py --arm D_bundle_as_shipped",
+      "exit": 0
+    },
+    {
+      "cmd": "python -I replay/generate_arm.py --arm E_bundle_on_pre_p1",
+      "exit": 0
+    },
+    {
+      "cmd": "python -I scripts/investigations/neck_gcode_motion_metrics.py --plane-z 0.0 (4 arms)",
+      "exit": 0
+    },
+    {
+      "cmd": "first parser run on A_pre_p1 before nested-comment handling",
+      "exit": 3,
+      "note": "refused: line 5 nested comment; parser changed to strip by depth and report nesting"
+    }
+  ],
+  "commits": {
+    "archive_flatten": "bc196138",
+    "archive_nested": "73a2703d",
+    "bundle_cutting_evaluator": "52ebb632",
+    "bundle_plate_physics": "3855579c",
+    "live_orchestrator_created": "680e3258",
+    "live_orchestrator_safety_critical": "8e28ba4b",
+    "p1_fix": [
+      "fc8b322a",
+      "c731eb94",
+      "351436f7"
+    ],
+    "p1_merge": "b9b0b929",
+    "parentless_root": "8d91c4c7",
+    "postprocessor_wiring": [
+      "fe1e2f51",
+      "1d7dbd9e"
+    ],
+    "pre_p1_tree": "9c5f46a95af3bc4b983fa30d1328b530f08c520c",
+    "pre_rewrite_tag": "v2.4.0-alpha.1",
+    "workspace_router": "95ef35d5"
+  },
+  "compatibility_failures": [
+    "BCamMachineSpec.dwell_after_spindle_ms absent (orchestrator.py:113)",
+    "BCamMachineSpec.retract_z_mm absent (orchestrator.py:125-129)"
+  ],
+  "disposition": {
+    "archived_as_written": "INCOMPATIBLE_WITH_CURRENT_RUNTIME",
+    "forward_port": "DO_NOT_FORWARD_PORT",
+    "rapid_at_depth_defect": "SUPERSEDED",
+    "ruled_by": "owner, 2026-10-14"
+  },
+  "fixture": {
+    "id": "cam_workspace_router._build_pipeline_config(NeckConfigIn())",
+    "operations": [
+      "OP10",
+      "OP40",
+      "OP45",
+      "OP50"
+    ],
+    "plane_z_mm": 0.0,
+    "shared_with": "services/api/tests/test_p1_neck_pipeline_motion.py::_full_program"
+  },
+  "follow_up_candidates": [
+    "GCODE-COMMENT-DIALECT-COMPATIBILITY-001",
+    "NECK-CLEARANCE-AUTHORITY-001",
+    "NECK-TOOLCHANGE-PAUSE-001"
+  ],
+  "manufacturing_approved": false,
+  "order": "CAM-ORCHESTRATOR-RECOVERY-EVIDENCE-001",
+  "production_behavior_changed": false,
+  "schema": "cam-orchestrator-recovery-evidence/1",
+  "unresolved": [
+    "Which clearance (25 machine/generators, 5 PreflightConfig, 50 footer, 10 candidate) is authoritative",
+    "Machine Z at the first tool change (before any Z word)",
+    "Controller validity of nested comments, T M6 and G43 H on the configured GRBL controller",
+    "Who renamed BCAM -> BCAMCNC in the archive copy (03-30..04-05, unpreserved)",
+    "Origin of the 780 figure"
+  ]
+}

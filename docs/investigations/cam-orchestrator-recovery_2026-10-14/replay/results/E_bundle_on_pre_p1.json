@@ -1,0 +1,58 @@
+{
+  "arm": "E_bundle_on_pre_p1",
+  "gcode_file": "E_bundle_on_pre_p1.gcode.evidence",
+  "gcode_sha256": "8c90da30da1466373e14db1bf2b1e46386d603bcd076d1be1594de66945a96ff",
+  "generated_lines_normalised": 1,
+  "generator_retract_z_mm": {
+    "fret_slots": 5.0,
+    "profile": 5.0,
+    "truss_rod": 5.0
+  },
+  "generator_safe_z_mm": {
+    "fret_slots": 10.0,
+    "profile": 10.0,
+    "truss_rod": 10.0
+  },
+  "machine_safe_z_mm": 10.0,
+  "orchestrator_file": "app\\cam\\neck\\orchestrator.py",
+  "static": {
+    "fret_slots.py": {
+      "literal_25_0": 1,
+      "retract_z_assignments": [
+        "5.0"
+      ],
+      "safe_z_assignments": [
+        "25.0"
+      ],
+      "sha256": "8113bd99b4e3aacc6bd0d536a982e1abdbb33225fa0d08e556fe105dd2671644"
+    },
+    "orchestrator.py": {
+      "literal_25_0": 1,
+      "retract_z_assignments": [],
+      "safe_z_assignments": [],
+      "sha256": "8f37d10b542f88837005472c0a109cb61d65c15987556109f3fd89d3bdc6e707"
+    },
+    "profile_carving.py": {
+      "literal_25_0": 1,
+      "retract_z_assignments": [
+        "5.0"
+      ],
+      "safe_z_assignments": [
+        "25.0"
+      ],
+      "sha256": "173a06d995ac1696c9fb7d4c514afc8bf4c86bce7e772ac4afcf143ffa37870a"
+    },
+    "truss_rod_channel.py": {
+      "literal_25_0": 1,
+      "retract_z_assignments": [
+        "5.0"
+      ],
+      "safe_z_assignments": [
+        "25.0"
+      ],
+      "sha256": "ae280084fb1f7c5408524d7a8a032f123912cf7e2b8dbfffa1256941d2f64887"
+    }
+  },
+  "status": "GENERATED",
+  "tree": "git archive 9c5f46a95af3bc4b983fa30d1328b530f08c520c + archived orchestrator + archived machines services/api/app (extracted outside the repo)"
+}

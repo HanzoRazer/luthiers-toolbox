@@ -1,0 +1,448 @@
+{
+  "arms": {
+    "A_pre_p1": {
+      "executable_blocks": 1779,
+      "first_violation_lines": [
+        157,
+        159,
+        161,
+        163,
+        165,
+        167,
+        169,
+        171,
+        173,
+        175
+      ],
+      "g0_at_or_below_plane": 711,
+      "g0_below_plane": 702,
+      "g0_moves": 927,
+      "g0_xy_at_or_below_plane": 711,
+      "g0_xy_below_plane": 702,
+      "g0_z_only_heights": {
+        "25.000": 58,
+        "5.000": 80,
+        "50.000": 1
+      },
+      "g0_z_only_moves": 139,
+      "g43_count": 4,
+      "nested_comment_lines": 3,
+      "op_transitions": [
+        {
+          "line": 30,
+          "motion_before": null,
+          "op": "OP10",
+          "spindle_before": "off",
+          "z_before": null
+        },
+        {
+          "line": 142,
+          "motion_before": "G0",
+          "op": "OP40",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        },
+        {
+          "line": 942,
+          "motion_before": "G0",
+          "op": "OP45",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        },
+        {
+          "line": 1744,
+          "motion_before": "G0",
+          "op": "OP50",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        }
+      ],
+      "plane_z": 0.0,
+      "sha256": "e305d5f711abc74307da86efce7c57947cb4c8095bc949741d9da0d82c40806e",
+      "source": "A_pre_p1.gcode.evidence",
+      "tool_change_count": 4,
+      "tool_changes": [
+        {
+          "g43_before_next_motion": true,
+          "line": 31,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": null
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 143,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 25.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 943,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 25.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1745,
+          "op": "OP50",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 25.0
+        }
+      ],
+      "tool_changes_with_spindle_on": 0,
+      "tool_changes_without_g43": 0,
+      "tool_changes_without_known_retract": 1,
+      "total_lines": 1935
+    },
+    "B_live": {
+      "executable_blocks": 1779,
+      "first_violation_lines": [],
+      "g0_at_or_below_plane": 0,
+      "g0_below_plane": 0,
+      "g0_moves": 207,
+      "g0_xy_at_or_below_plane": 0,
+      "g0_xy_below_plane": 0,
+      "g0_z_only_heights": {
+        "25.000": 58,
+        "5.000": 80,
+        "50.000": 1
+      },
+      "g0_z_only_moves": 139,
+      "g43_count": 4,
+      "nested_comment_lines": 3,
+      "op_transitions": [
+        {
+          "line": 30,
+          "motion_before": null,
+          "op": "OP10",
+          "spindle_before": "off",
+          "z_before": null
+        },
+        {
+          "line": 142,
+          "motion_before": "G0",
+          "op": "OP40",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        },
+        {
+          "line": 942,
+          "motion_before": "G0",
+          "op": "OP45",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        },
+        {
+          "line": 1744,
+          "motion_before": "G0",
+          "op": "OP50",
+          "spindle_before": "cw",
+          "z_before": 25.0
+        }
+      ],
+      "plane_z": 0.0,
+      "sha256": "5f78b3c2a705a0fb5c0b2df4f57bab68c667c6262912b4b006db5d50d1434b46",
+      "source": "B_live.gcode.evidence",
+      "tool_change_count": 4,
+      "tool_changes": [
+        {
+          "g43_before_next_motion": true,
+          "line": 31,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": null
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 143,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 25.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 943,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 25.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1745,
+          "op": "OP50",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 25.0
+        }
+      ],
+      "tool_changes_with_spindle_on": 0,
+      "tool_changes_without_g43": 0,
+      "tool_changes_without_known_retract": 1,
+      "total_lines": 1935
+    },
+    "D_bundle_as_shipped": {
+      "executable_blocks": 1807,
+      "first_violation_lines": [],
+      "g0_at_or_below_plane": 0,
+      "g0_below_plane": 0,
+      "g0_moves": 211,
+      "g0_xy_at_or_below_plane": 0,
+      "g0_xy_below_plane": 0,
+      "g0_z_only_heights": {
+        "10.000": 59,
+        "25.000": 4,
+        "5.000": 80
+      },
+      "g0_z_only_moves": 143,
+      "g43_count": 8,
+      "nested_comment_lines": 3,
+      "op_transitions": [
+        {
+          "line": 42,
+          "motion_before": "G0",
+          "op": "OP10",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 163,
+          "motion_before": "G0",
+          "op": "OP40",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 972,
+          "motion_before": "G0",
+          "op": "OP45",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 1783,
+          "motion_before": "G0",
+          "op": "OP50",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        }
+      ],
+      "plane_z": 0.0,
+      "sha256": "600c8d557ab6eff35236d2f1cff69ff804616016132357ddffb6d4e8bdd8bdd6",
+      "source": "D_bundle_as_shipped.gcode.evidence",
+      "tool_change_count": 8,
+      "tool_changes": [
+        {
+          "g43_before_next_motion": true,
+          "line": 26,
+          "op": null,
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": null
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 43,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 147,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 164,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 957,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 973,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1766,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1784,
+          "op": "OP50",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 10.0
+        }
+      ],
+      "tool_changes_with_spindle_on": 0,
+      "tool_changes_without_g43": 0,
+      "tool_changes_without_known_retract": 1,
+      "total_lines": 1974
+    },
+    "E_bundle_on_pre_p1": {
+      "executable_blocks": 1807,
+      "first_violation_lines": [
+        178,
+        180,
+        182,
+        184,
+        186,
+        188,
+        190,
+        192,
+        194,
+        196
+      ],
+      "g0_at_or_below_plane": 711,
+      "g0_below_plane": 702,
+      "g0_moves": 931,
+      "g0_xy_at_or_below_plane": 711,
+      "g0_xy_below_plane": 702,
+      "g0_z_only_heights": {
+        "10.000": 59,
+        "25.000": 4,
+        "5.000": 80
+      },
+      "g0_z_only_moves": 143,
+      "g43_count": 8,
+      "nested_comment_lines": 3,
+      "op_transitions": [
+        {
+          "line": 42,
+          "motion_before": "G0",
+          "op": "OP10",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 163,
+          "motion_before": "G0",
+          "op": "OP40",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 972,
+          "motion_before": "G0",
+          "op": "OP45",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        },
+        {
+          "line": 1783,
+          "motion_before": "G0",
+          "op": "OP50",
+          "spindle_before": "cw",
+          "z_before": 10.0
+        }
+      ],
+      "plane_z": 0.0,
+      "sha256": "8c90da30da1466373e14db1bf2b1e46386d603bcd076d1be1594de66945a96ff",
+      "source": "E_bundle_on_pre_p1.gcode.evidence",
+      "tool_change_count": 8,
+      "tool_changes": [
+        {
+          "g43_before_next_motion": true,
+          "line": 26,
+          "op": null,
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": null
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 43,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 2,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 147,
+          "op": "OP10",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 164,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 1,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 957,
+          "op": "OP40",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 973,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 3,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1766,
+          "op": "OP45",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 10.0
+        },
+        {
+          "g43_before_next_motion": true,
+          "line": 1784,
+          "op": "OP50",
+          "spindle_at_change": "off",
+          "tool": 4,
+          "z_at_change": 10.0
+        }
+      ],
+      "tool_changes_with_spindle_on": 0,
+      "tool_changes_without_g43": 0,
+      "tool_changes_without_known_retract": 1,
+      "total_lines": 1974
+    }
+  },
+  "plane_z": 0.0,
+  "schema": "neck-gcode-motion-metrics/1"
+}
