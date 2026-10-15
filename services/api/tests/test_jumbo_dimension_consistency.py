@@ -125,6 +125,12 @@ ACKNOWLEDGED_NON_DIMENSION_FILES = {
         "records measured vs typed millimetre outputs; it does not assert IBG jumbo "
         "body dimensions. The scan hits because a git hash contains 432, a pixel "
         "width contains 305, and a scale note contains 254.",
+    "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json":
+        "Content-hash census of the March 2026 bundles. 'jumbo' appears only in "
+        "bundle member filenames (jumbo_body.dxf, jumbo_body.svg, "
+        "result_jumbo_archtop.png); every canonical-magnitude hit is a substring "
+        "of a sha256/commit hex digest or a byte size (13432). It holds no "
+        "numeric dimension values.",
 }
 
 

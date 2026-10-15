@@ -1,0 +1,8 @@
+# Machine-generated evidence: collapsed in GitHub diffs so review focuses on the
+# overrides, the scripts and the conclusions. See README "Regeneration map".
+BUNDLE_CENSUS.json linguist-generated=true
+BUNDLE_MEMBERS.csv linguist-generated=true
+RECOVERY_LEDGER.csv linguist-generated=true
+SOURCE_BUNDLE_INVENTORY.csv linguist-generated=true
+PLANNING_RECONCILIATION.csv linguist-generated=true
+MARCH_CLAIM_REACHABILITY.csv linguist-generated=true
