@@ -1,0 +1,189 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ARCHIVE_HEADSTOCK_SUITE_PS_VUE_SRC",
+  "title": "archive: recover ps-vue-src — lost Headstock Suite modules",
+  "intent": "Preserve, beside the four views #438 archived, the 2026-03-17 standalone ps-vue app output the owner recovered from claude.ai on 2026-10-15. It is the source record for two of the five lost modules (types, store), reconstruction input for two (headstockData, useParametric); useHeadstock is still lost. Archive only.",
+  "change_type": "chore",
+  "behavior_change": "None. No file under packages/client/src, the router, the four archived views, ceilings or baselines changes. The recovered files sit outside vue-tsc's src/** include and outside the client lint tree.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/archive-headstock-suite-ps-vue-src.json",
+      "archive/experimental/2026-03/headstock-suite-refined/README.md",
+      "services/api/tests/test_headstock_ps_vue_src_preserved.py",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/README.md",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/HeadstockSuite.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/INTEGRATION.md",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/constants.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ParametricCanvas.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ScorePanel.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/workspace/WorkspaceCanvas.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useDxfImport.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useHeadstockPath.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useKonvaCanvas.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useScoring.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/stores/headstock.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/styles/ps-tokens.css",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/types/headstock.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/views/ImportView.vue"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/archive-headstock-suite-ps-vue-src.json",
+      "archive/experimental/2026-03/headstock-suite-refined/README.md",
+      "services/api/tests/test_headstock_ps_vue_src_preserved.py",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/README.md",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/HeadstockSuite.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/INTEGRATION.md",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/constants.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ParametricCanvas.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ScorePanel.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/workspace/WorkspaceCanvas.vue",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useDxfImport.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useHeadstockPath.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useKonvaCanvas.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useScoring.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/stores/headstock.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/styles/ps-tokens.css",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/types/headstock.ts",
+      "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/views/ImportView.vue"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "15 files added under archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/ (14 recovered sources as delivered + a recovery README), the parent README's import map, and one integrity test.",
+    "why_not_redundant": "None of the 13 other files exists in any Git ref; useDxfImport.ts and ImportView.vue match the copies already archived from the 2026-03-17T091407 bundle, which dates them."
+  },
+  "verification": {
+    "commands_run": [
+      "zip listing: 25 entries, no absolute, '..' or symlink paths; extracted into an empty scratch directory",
+      "all 14 README SHA-256 values equal the files' raw and LF-normalized hashes",
+      "git log --all --find-object per LF blob: 2 of 15 found (archive/experimental/2026-03/Interactive_Headstock_Generator/files - 2026-03-17T091407.113/), 13 in no ref",
+      "scratch copy of main 703694c1, npm ci (vue-tsc 3.3.12, typescript 6.0.3), vue-tsc --noEmit: 87 errors; + recovered types/headstock.ts: 94; + ParametricParams/ImportedPath aliases: 94",
+      "pytest tests/test_headstock_ps_vue_src_preserved.py: 2 passed; editing a recovered file and copying one into packages/client/src each fail a test",
+      "content scan: no local paths, secrets or session identifiers; only SVG namespace URLs, one CDN URL in INTEGRATION.md and the claude.ai sandbox path in the README"
+    ]
+  },
+  "files": [
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/README.md",
+      "intent": "Recovery note written 2026-10-15: SHA-256 list, module-to-file map, arrival checks, and the measured type-check correction.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/HeadstockSuite.vue",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/INTEGRATION.md",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/constants.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ParametricCanvas.vue",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/parametric/ScorePanel.vue",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/components/headstock/workspace/WorkspaceCanvas.vue",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useDxfImport.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useHeadstockPath.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useKonvaCanvas.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useScoring.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/stores/headstock.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/styles/ps-tokens.css",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/types/headstock.ts",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/views/ImportView.vue",
+      "intent": "Recovered 2026-03-17 standalone app source, preserved as delivered; SHA-256 recorded in ps-vue-src/README.md.",
+      "risk": "low",
+      "behavior_change": "none: outside packages/client/src, not compiled, imported or routed"
+    },
+    {
+      "path": "archive/experimental/2026-03/headstock-suite-refined/README.md",
+      "intent": "Import map updated: two direct recoveries, two reconstruction inputs, useHeadstock still lost; folder rule for ps-vue-src.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_headstock_ps_vue_src_preserved.py",
+      "intent": "Fails if a recovered file is edited, added or removed, or copied into packages/client/src.",
+      "risk": "low",
+      "behavior_change": "none: offline file reads"
+    },
+    {
+      "path": ".cbsp21/patches/archive-headstock-suite-ps-vue-src.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Adds uncompiled archive files outside packages/client/src; no import graph, route or bundle change."
+  }
+}
