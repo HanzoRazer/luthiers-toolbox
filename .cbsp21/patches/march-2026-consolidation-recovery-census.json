@@ -6,7 +6,7 @@
   "title": "docs(investigations): March 2026 consolidation recovery census (evidence only)",
   "intent": "Census what the March 15-21 consolidation period stranded: compare every March output bundle to Git by content hash, check 'complete / integrated' claims for reachability, and record dispositions in a ledger. Split out of #439 so it can be reviewed as a standalone forensic dataset. Evidence only; no production behaviour changes.",
   "change_type": "docs",
-  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds the census directory, three read-only evidence tools under scripts/investigations/, one census test module, and one ACKNOWLEDGED_NON_DIMENSION_FILES entry in test_jumbo_dimension_consistency.py (BUNDLE_CENSUS.json mentions jumbo only in member filenames; its hits on the canonical body magnitudes are hex digests and a byte size). Findings: 52 sources, 194 candidates, one active safety candidate (/api/headstock/transition/gcode) recorded and routed to HEADSTOCK-TRANSITION-GCODE-SAFETY-001, not fixed here.",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds the census directory, four read-only evidence tools under scripts/investigations/, one census test module, and one ACKNOWLEDGED_NON_DIMENSION_FILES entry in test_jumbo_dimension_consistency.py (BUNDLE_CENSUS.json mentions jumbo only in member filenames; its hits on the canonical body magnitudes are hex digests and a byte size). Findings: 52 sources, 194 candidates, one safety candidate (/api/headstock/transition/gcode) recorded and routed to HEADSTOCK-TRANSITION-GCODE-SAFETY-001; #441 has since contained the route (409 before generation); the generator is not fixed here or there.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -31,9 +31,11 @@
       "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
       "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
       "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
       "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
       "scripts/investigations/march_2026_bundle_census.py",
       "scripts/investigations/march_2026_census_ledger.py",
+      "scripts/investigations/march_2026_census_spot_check.py",
       "scripts/investigations/march_2026_claim_reachability.py",
       "services/api/tests/test_jumbo_dimension_consistency.py",
       "services/api/tests/test_march_2026_census_evidence.py"
@@ -60,16 +62,18 @@
       "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
       "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
       "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
       "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
       "scripts/investigations/march_2026_bundle_census.py",
       "scripts/investigations/march_2026_census_ledger.py",
+      "scripts/investigations/march_2026_census_spot_check.py",
       "scripts/investigations/march_2026_claim_reachability.py",
       "services/api/tests/test_jumbo_dimension_consistency.py",
       "services/api/tests/test_march_2026_census_evidence.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "Census dataset (raw census JSON, members, derived ledger/inventory/planning CSVs, claim inputs and reachability results), methodology and findings documents, OVERRIDE_REVIEW.md covering every manual ruling, a regeneration map, linguist-generated marking for machine outputs, three evidence tools, and 7 integrity tests.",
+    "what_changed": "Census dataset (raw census JSON, members, derived ledger/inventory/planning CSVs, claim inputs and reachability results), methodology and findings documents, a reviewer map and per-row proof classes (MECHANICALLY_VERIFIED / HEURISTIC_CANDIDATE / MANUALLY_ADJUDICATED / SOURCE_UNAVAILABLE / UNRESOLVED), OVERRIDE_REVIEW.md covering every manual ruling with a reviewer column, an independent spot-check (SPOT_CHECK.md) with a negative control, a regeneration map, linguist-generated marking for machine outputs, four evidence tools, and 10 integrity and fixture tests.",
     "why_not_redundant": "No prior census compared the March bundles to Git by content hash or checked 'complete' claims for reachability. The CL-RED premise is corrected by erratum rather than built on."
   },
   "verification": {
@@ -77,7 +81,9 @@
       "python -I scripts/investigations/march_2026_bundle_census.py over 52 sources (ZIPs read in memory; bundles outside Git)",
       "python -I scripts/investigations/march_2026_claim_reachability.py --root <git archive d42712e0>: byte-identical to the committed MARCH_CLAIM_REACHABILITY.csv",
       "python -I scripts/investigations/march_2026_census_ledger.py: ledger, inventory and planning regenerate byte-for-byte",
-      "pytest services/api/tests/test_march_2026_census_evidence.py services/api/tests/test_jumbo_dimension_consistency.py"
+      "pytest services/api/tests/test_march_2026_census_evidence.py services/api/tests/test_jumbo_dimension_consistency.py",
+      "python -I scripts/investigations/march_2026_census_spot_check.py over the 52 located bundles: 44 rows, 84 checks PASS, 0 FAIL; negative control (tampered row) exits 1",
+      "Mutation checks: reverting the HISTORY_ONLY rule, a wrong review row, and removing the duplicate-key check each fail at least one census test"
     ]
   },
   "files": [

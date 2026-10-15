@@ -7,7 +7,7 @@ implementation PR. Nothing below is authorised by this census.
 
 | Order | Scope | Why |
 |---|---|---|
-| **HEADSTOCK-TRANSITION-GCODE-SAFETY-001** | Validate `/api/headstock/transition/gcode`. Declare its Z datum. Measure the 21 below-Z0 rapids against the stock model. Decide containment (readiness gate) **before** any fix. | Live, registered, `LIVE_UNGOVERNED` in the inventory, no gate, no `@safety_critical`, no tests. The default request emits `G00 X… Z<0` diagonal rapids at every station. Same family as the neck rapids #398 fixed |
+| **HEADSTOCK-TRANSITION-GCODE-SAFETY-001** | Validate `/api/headstock/transition/gcode`. Declare its Z datum. Measure the 21 below-Z0 rapids against the stock model. **Containment is done** (#441, `703694c1`: 409 before generation, inventory `FAIL_CLOSED`); the generator fix is not. | At the census base: live, registered, `LIVE_UNGOVERNED` in the inventory, no gate, no `@safety_critical`, no tests. The default request emits `G00 X… Z<0` diagonal rapids at every station. Same family as the neck rapids #398 fixed |
 
 ## Preserve (owner action first)
 
@@ -55,14 +55,15 @@ prototypes.
 
 **Yes, but bounded, and not as one campaign.** The census found:
 
-- one active safety candidate;
+- one safety candidate, now contained (#441) but not fixed;
 - one recovered feature with no Git copy (R-2);
 - six stranded implementations;
 - fifteen partial migrations;
 - one lost module set.
 
 That is enough to justify the separate orders above. It is **not** a case for a general restore. 51
-components are live byte-identical, 33 live in modified form, and most "partial" items are calculators
+components are live byte-identical, 25 live in modified form (inferred from path or name), 13 are
+unresolved because the evidence does not pick a successor, and most "partial" items are calculators
 whose backends work and whose UI coverage is a product choice.
 
 **Recommended shape:** run the safety order first. Then the owner-side headstock recovery. Then the

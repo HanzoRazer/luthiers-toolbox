@@ -93,6 +93,12 @@ Status markers: **D** = direct evidence (a hash or file:line at the base); **I**
 The same shape shows up in Sprint 3 (10 claims entered with no commits behind them), in headstock (#308 "MERGED" but stranded), and in the views being the only consumer of a live endpoint. This chain does **not** assume one technical cause. Every item is labelled CONSOLIDATION/MIGRATION ARTIFACT, and no collision record was found.
 
 ## Safety: reported, not fixed
+
+> **Update 2026-10-15.** Since #441 (`703694c1`) the route refuses with 409 `SAFETY_BLOCKED` before
+> the generator runs, and its inventory row is `containment: FAIL_CLOSED`. The generator is unchanged, so
+> the motion finding below still describes what it would emit. The text below is pinned to the census base
+> `d42712e0`.
+
 `/api/headstock/transition/gcode` (`headstock_transition_export.py:299`, registered at `business_manifest.py:51-52`) emits G-code, but:
 - it has **no readiness gate and no `@safety_critical`**;
 - it has **no tests**;

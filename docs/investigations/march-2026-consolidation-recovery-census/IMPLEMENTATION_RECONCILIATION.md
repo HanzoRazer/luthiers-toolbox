@@ -15,9 +15,9 @@ Each subsystem answers nine questions:
 Row-level evidence is in `RECOVERY_LEDGER.csv`, `MARCH_CLAIM_REACHABILITY.csv` and
 `CLAIM_VERIFICATION.csv`.
 
-## Adjudications of the mechanical reachability labels
+## Adjudications of the heuristic reachability labels
 
-| Claim | Mechanical | Adjudicated | Why |
+| Claim | Machine label | Adjudicated | Why |
 |---|---|---|---|
 | CAM-SURVEY-001 | FALSE_MIGRATION_CLAIM | **PARTIAL_MIGRATION** | The claim was "documented in ARCHITECTURE.md". `docs/ARCHITECTURE.md:7` has one table row; the 352-line survey exists only in two archive copies |
 | R-2 BridgeBreakAnglePanel | FALSE_MIGRATION_CLAIM | **NOT_IMPLEMENTED; built externally** | A plan, never claimed done. Built in nested bundle 03-15T193643 and never entered Git → `RECOVERED_FEATURE_CANDIDATE` |
@@ -77,7 +77,7 @@ Row-level evidence is in `RECOVERY_LEDGER.csv`, `MARCH_CLAIM_REACHABILITY.csv` a
 
 ## Neck orchestrator
 
-Fully covered in `docs/investigations/cam-orchestrator-recovery_2026-10-14/` (draft PR #439; not on `main` until it merges).
+Fully covered in `docs/investigations/cam-orchestrator-recovery_2026-10-14/` (merged in #439).
 `SUPERSEDED` / `INCOMPATIBLE_WITH_CURRENT_RUNTIME` / `DO_NOT_FORWARD_PORT`.
 
 ## Binding / purfling
