@@ -112,28 +112,70 @@ def _ledger(tmp_path: Path, members: list[dict], overrides: dict | str) -> tuple
 
 # -- the committed dataset ---------------------------------------------------
 
+_REACHABILITY_LABELS = ("VERIFIED_STRUCTURAL", "PARTIAL_MIGRATION", "STRANDED_IMPLEMENTATION")
+
+
+def _outside(rows: list[dict], column: str, allowed: set[str]) -> dict:
+    return {r["candidate_id"]: r[column] for r in rows if r[column] not in allowed}
+
+
+def _promoted(ledger: list[dict]) -> list[str]:
+    """Rows decided by a name or a ruling that are labelled MECHANICALLY_VERIFIED."""
+    inferred = [r for r in ledger if r["override_id"] or r["census_state"] == "HISTORY_ONLY"]
+    return [r["candidate_id"] for r in inferred if r["proof_class"] == "MECHANICALLY_VERIFIED"]
+
+
+def _unmarked_reachability(name: str) -> list[str]:
+    rows = _csv(name)
+    status = "classification" if "classification" in rows[0] else "current_status"
+    labelled = [r for r in rows if r[status] in _REACHABILITY_LABELS]
+    return [r[list(r)[0]] for r in labelled if r["proof_class"] != "HEURISTIC_CANDIDATE"]
+
+
+def _unexplained(ov: dict) -> list[str]:
+    short = [k for k, o in (ov["by_name"] | ov["by_blob"]).items() if len(o.get("reason", "")) < 20]
+    return short + [r["candidate_id"] for r in ov["reference_only"] if len(r.get("disposition_reason", "")) < 5]
+
+
 def test_ledger_values_and_overrides_are_well_formed():
     ledger = _csv("RECOVERY_LEDGER.csv")
-    bad = {r["candidate_id"]: r["disposition"] for r in ledger if r["disposition"] not in ALLOWED_DISPOSITIONS}
+    bad = _outside(ledger, "disposition", ALLOWED_DISPOSITIONS)
     assert bad == {}, f"dispositions outside the allowed set: {bad}"
-    unclassed = {r["candidate_id"]: r["proof_class"] for r in ledger if r["proof_class"] not in PROOF_CLASSES}
+    unclassed = _outside(ledger, "proof_class", PROOF_CLASSES)
     assert unclassed == {}, f"rows without a proof class: {unclassed}"
-    # A row decided by a name or a ruling must never read as mechanically verified.
-    promoted = [r["candidate_id"] for r in ledger if r["proof_class"] == "MECHANICALLY_VERIFIED"
-                and (r["override_id"] or r["census_state"] == "HISTORY_ONLY")]
+    promoted = _promoted(ledger)
     assert promoted == [], f"inferred or ruled rows labelled MECHANICALLY_VERIFIED: {promoted}"
     for name in ("MARCH_CLAIM_REACHABILITY.csv", "PLANNING_RECONCILIATION.csv"):
-        rows = _csv(name)
-        status = "classification" if "classification" in rows[0] else "current_status"
-        wrong = [r[list(r)[0]] for r in rows if r[status] in ("VERIFIED_STRUCTURAL", "PARTIAL_MIGRATION",
-                 "STRANDED_IMPLEMENTATION") and r["proof_class"] != "HEURISTIC_CANDIDATE"]
+        wrong = _unmarked_reachability(name)
         assert wrong == [], f"{name}: reachability labels not marked heuristic: {wrong}"
 
     ov = _overrides()
-    unexplained = [k for k, o in (ov["by_name"] | ov["by_blob"]).items() if len(o.get("reason", "")) < 20]
-    unexplained += [r["candidate_id"] for r in ov["reference_only"] if len(r.get("disposition_reason", "")) < 5]
+    unexplained = _unexplained(ov)
     assert unexplained == [], f"overrides without a stated reason: {unexplained}"
     assert ov["exclude_reason"], "an exclusion without a reason hides evidence"
+
+
+def _applied_override_ids(ov: dict) -> set[str]:
+    return {*(f"by_name:{k}" for k in ov["by_name"]), *(f"by_blob:{k[:8]}" for k in ov["by_blob"]),
+            *(f"reference_only:{r['candidate_id']}" for r in ov["reference_only"])}
+
+
+def _review_mismatches(oid: str, cells: list[str], row: dict) -> list[str]:
+    """Ways one OVERRIDE_REVIEW.md row disagrees with the ledger row it reviews."""
+    problems = [] if _REVIEWER.fullmatch(cells[-1]) else [f"reviewer disposition {cells[-1]!r}"]
+    if oid.startswith("reference_only:"):
+        if cells[1] != row["disposition"]:
+            problems.append(f"review says {cells[1]}, ledger {row['disposition']}")
+        return problems
+    if row["candidate_id"] not in cells[1]:
+        problems.append("review row names a different candidate")
+    auto, final = (c.strip() for c in cells[2].split("→"))
+    if (auto, final) != (row["automatic_disposition"], row["disposition"]):
+        problems.append(f"review says {auto} -> {final}, tool gives "
+                        f"{row['automatic_disposition']} -> {row['disposition']}")
+    if ("yes" in cells[3]) != (auto != final):
+        problems.append("'changes the answer' is wrong")
+    return problems
 
 
 def test_every_manual_override_has_exactly_one_matching_review_row():
@@ -141,27 +183,17 @@ def test_every_manual_override_has_exactly_one_matching_review_row():
     review = _review_rows()
     ledger = {r["override_id"]: r for r in _csv("RECOVERY_LEDGER.csv") if r["override_id"]}
     ov = _overrides()
-    applied = {*(f"by_name:{k}" for k in ov["by_name"]), *(f"by_blob:{k[:8]}" for k in ov["by_blob"]),
-               *(f"reference_only:{r['candidate_id']}" for r in ov["reference_only"])}
+    applied = _applied_override_ids(ov)
     assert set(ledger) == applied, f"overrides not applied exactly once: {sorted(applied ^ set(ledger))}"
     assert set(review) == applied, (f"review rows without an override: {sorted(set(review) - applied)}; "
                                     f"overrides without a review row: {sorted(applied - set(review))}")
     duplicated = sorted(k for k, rows in review.items() if len(rows) != 1)
     assert duplicated == [], f"overrides reviewed more than once: {duplicated}"
-    for oid, [cells] in review.items():
-        row = ledger[oid]
-        assert _REVIEWER.fullmatch(cells[-1]), f"{oid}: reviewer disposition {cells[-1]!r}"
-        if oid.startswith("reference_only:"):
-            assert cells[1] == row["disposition"], f"{oid}: review says {cells[1]}, ledger {row['disposition']}"
-            continue
-        assert row["candidate_id"] in cells[1], f"{oid}: review row names a different candidate"
-        auto, final = (c.strip() for c in cells[2].split("→"))
-        assert (auto, final) == (row["automatic_disposition"], row["disposition"]), (
-            f"{oid}: review says {auto} -> {final}, tool gives "
-            f"{row['automatic_disposition']} -> {row['disposition']}")
-        assert ("yes" in cells[3]) == (auto != final), f"{oid}: 'changes the answer' is wrong"
-    for pattern in ov["exclude"]:
-        assert f"`{pattern}`" in (CENSUS / "OVERRIDE_REVIEW.md").read_text(encoding="utf-8")
+    mismatches = {oid: m for oid, [cells] in review.items() if (m := _review_mismatches(oid, cells, ledger[oid]))}
+    assert mismatches == {}, f"review rows that disagree with the ledger: {mismatches}"
+    text = (CENSUS / "OVERRIDE_REVIEW.md").read_text(encoding="utf-8")
+    missing = [p for p in ov["exclude"] if f"`{p}`" not in text]
+    assert missing == [], f"exclusions with no row in OVERRIDE_REVIEW.md: {missing}"
 
 
 def test_inventory_agrees_with_the_raw_census():
