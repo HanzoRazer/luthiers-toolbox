@@ -9,17 +9,34 @@ Automatic disposition (overrides win, and every override records its reason):
 
   LIVE_IDENTICAL                         -> LIVE_INTEGRATED
   ARCHIVE_ONLY                           -> ARCHIVED_COMPLETE
-  HISTORY_ONLY + same name live          -> LIVE_MODIFIED
-  HISTORY_ONLY, no same-name live file   -> UNRESOLVED (entered Git, later left main)
+  HISTORY_ONLY (entered Git, later left the ref), by same-name live files:
+    the first-commit path is one of them -> LIVE_MODIFIED (path lineage)
+    exactly one, first path gone         -> LIVE_MODIFIED (name only)
+    two or more                          -> UNRESOLVED (ambiguous; never guessed)
+    none (same name archived, or absent) -> UNRESOLVED
   EXTERNAL_ONLY                          -> EXTERNAL_ONLY
+
+Every row also carries a proof class, so a reader can tell observation from
+inference from ruling:
+
+  MECHANICALLY_VERIFIED  content-hash presence/absence against Git
+  HEURISTIC_CANDIDATE    inferred from a path or a name, not from content
+  MANUALLY_ADJUDICATED   an override decided it (``override_id`` names which)
+  SOURCE_UNAVAILABLE     referenced, but no content survives in any source
+  UNRESOLVED             the evidence does not decide it
+
+``automatic_disposition`` keeps what the rule alone gave, so an override's
+effect stays visible.
 
 Rows whose member path matches an ``exclude`` pattern (third-party saved web
 pages) are counted but not ledgered.
 
 Overrides are keyed ``by_blob`` (preferred) or ``by_name`` (basename). A
-``by_blob`` entry wins. A ``by_name`` entry whose basename maps to more than one
-distinct blob is refused (exit 2), because it would stamp one reason on
-different files. ``PLANNING_RECONCILIATION.csv`` still joins claims to sources
+``by_blob`` entry wins. The overrides file is refused (exit 2, nothing written)
+when it repeats a key, gives a disposition outside the allowed set or a reason
+under 20 characters, names a blob or basename the census does not contain, or
+keys ``by_name`` on a basename that maps to more than one distinct blob (that
+would stamp one reason on different files). ``PLANNING_RECONCILIATION.csv`` still joins claims to sources
 by basename; its ``located_source_by_name`` column says so.
 """
 from __future__ import annotations
@@ -36,6 +53,87 @@ AUTO = {
     "ARCHIVE_ONLY": "ARCHIVED_COMPLETE",
     "EXTERNAL_ONLY": "EXTERNAL_ONLY",
 }
+ALLOWED_DISPOSITIONS = {
+    "LIVE_INTEGRATED", "LIVE_MODIFIED", "PARTIALLY_INTEGRATED", "ARCHIVED_COMPLETE",
+    "ARCHIVED_INCOMPLETE", "EXTERNAL_ONLY", "LOST_REFERENCE_ONLY", "SUPERSEDED",
+    "RECOVERED_FEATURE_CANDIDATE", "RECOVERED_SAFETY_FIX_CANDIDATE", "DUPLICATE", "UNRESOLVED",
+}
+ARCHIVE_PREFIXES = ("docs/archive/", "archive/")
+
+
+class OverrideError(ValueError):
+    pass
+
+
+def _no_duplicate_keys(pairs: list) -> dict:
+    seen: dict = {}
+    for key, value in pairs:
+        if key in seen:
+            raise OverrideError(f"duplicate key {key!r}")
+        seen[key] = value
+    return seen
+
+
+def basename(member: dict) -> str:
+    return PurePosixPath(member["member"].split("!/")[-1]).name
+
+
+def parse_overrides(path: Path) -> dict:
+    """Parse the overrides file, refusing invalid JSON and repeated keys."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_no_duplicate_keys)
+    except json.JSONDecodeError as exc:
+        raise OverrideError(f"not valid JSON: {exc}") from exc
+
+
+def check_overrides(ov: dict, by_blob: dict[str, list[dict]]) -> None:
+    """Check the overrides against the census they will be applied to."""
+    names: dict[str, set[str]] = {}
+    for blob, group in by_blob.items():
+        names.setdefault(basename(group[0]), set()).add(blob)
+    problems = []
+    for kind in ("by_name", "by_blob"):
+        for key, o in ov.get(kind, {}).items():
+            if o.get("disposition") not in ALLOWED_DISPOSITIONS:
+                problems.append(f"{kind}[{key}]: disposition {o.get('disposition')!r} not allowed")
+            if len(o.get("reason", "")) < 20:
+                problems.append(f"{kind}[{key}]: reason missing or under 20 characters")
+            known = names.get(key, set()) if kind == "by_name" else ({key} if key in by_blob else set())
+            if not known:
+                problems.append(f"{kind}[{key}]: matches nothing in the census (stale override)")
+            elif len(known) > 1:
+                problems.append(f"{kind}[{key}]: ambiguous, matches {len(known)} blobs "
+                                f"{sorted(known)} (re-key by_blob)")
+    ids = [r.get("candidate_id", "") for r in ov.get("reference_only", [])]
+    for rid in sorted({i for i in ids if ids.count(i) > 1 or not re.fullmatch(r"MC-R\d\d", i)}):
+        problems.append(f"reference_only[{rid}]: duplicate or not of the form MC-Rnn")
+    for r in ov.get("reference_only", []):
+        if r.get("disposition") not in ALLOWED_DISPOSITIONS:
+            problems.append(f"reference_only[{r.get('candidate_id')}]: disposition not allowed")
+    if problems:
+        raise OverrideError("; ".join(problems))
+
+
+def automatic(member: dict) -> tuple[str, str, str]:
+    """(disposition, proof_class, proof_method) from the content-hash state alone."""
+    state = member["state"]
+    if state in ("LIVE_IDENTICAL", "ARCHIVE_ONLY"):
+        where = (member["live_paths"] or member["archive_paths"])[0]
+        return AUTO[state], "MECHANICALLY_VERIFIED", f"content blob on the census ref at {where}"
+    if state == "EXTERNAL_ONLY":
+        return AUTO[state], "MECHANICALLY_VERIFIED", "content blob in no commit reachable from any ref"
+    same = member["name_only_matches_on_ref"]
+    live = [p for p in same if not p.startswith(ARCHIVE_PREFIXES)]
+    if member["first_path"] in live:
+        return ("LIVE_MODIFIED", "HEURISTIC_CANDIDATE",
+                f"first-commit path still live with other content: {member['first_path']}")
+    if len(live) == 1:
+        return "LIVE_MODIFIED", "HEURISTIC_CANDIDATE", f"only same-name live file: {live[0]}"
+    if live:
+        return "UNRESOLVED", "UNRESOLVED", f"ambiguous: {len(live)} same-name live files, first path gone"
+    if same:
+        return "UNRESOLVED", "UNRESOLVED", "same name survives only in archive paths, with other content"
+    return "UNRESOLVED", "UNRESOLVED", "entered Git and left it; no same-name file on the ref"
 
 
 def subsystem(name: str) -> str:
@@ -96,11 +194,11 @@ def write_planning(census: dict, reachability: Path, out: Path) -> None:
     """
     by_name: dict[str, list[dict]] = {}
     for m in census["members"]:
-        by_name.setdefault(PurePosixPath(m["member"].split("!/")[-1]).name, []).append(m)
+        by_name.setdefault(basename(m), []).append(m)
     src_path = {s["source_id"]: s["path"] for s in census["sources"]}
     fields = ["item", "claimed_artifact", "claimed_state", "located_source_by_name", "source_content_states",
               "entered_git", "current_live_path", "archive_path", "external_only_source", "current_status",
-              "confidence"]
+              "confidence", "proof_class"]
     with reachability.open(encoding="utf-8", newline="") as fh, out.open("w", encoding="utf-8", newline="") as oh:
         w = csv.DictWriter(oh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
@@ -117,8 +215,9 @@ def write_planning(census: dict, reachability: Path, out: Path) -> None:
                 "current_live_path": r["primary_path"] if r["file_present"] == "PASS" else "",
                 "archive_path": ";".join(archive)[:240], "external_only_source": ";".join(external)[:240],
                 "current_status": r["classification"],
-                "confidence": "reachability: mechanical; bundle link: by file name" if hits
-                              else "reachability: mechanical; no bundle carries this name",
+                "confidence": "reachability: heuristic; bundle link: by file name" if hits
+                              else "reachability: heuristic; no bundle carries this name",
+                "proof_class": r["proof_class"],
             })
 
 
@@ -182,42 +281,36 @@ def main(argv=None) -> int:
     ap.add_argument("--out-planning", type=Path, required=True)
     args = ap.parse_args(argv)
     census = json.loads(args.census.read_text(encoding="utf-8"))
-    ov = json.loads(args.overrides.read_text(encoding="utf-8"))
-    exclude = [re.compile(p) for p in ov.get("exclude", [])]
-    by_blob: dict[str, list[dict]] = {}
-    excluded = 0
-    for m in census["members"]:
-        if any(p.search(m["member"]) for p in exclude):
-            excluded += 1
-            continue
-        by_blob.setdefault(m["blob_lf"], []).append(m)
-
-    # A by_name override stamps every blob sharing that basename. Refuse when a
-    # name maps to more than one distinct blob: key that override by_blob instead.
-    blobs_by_name: dict[str, set[str]] = {}
-    for blob, group in by_blob.items():
-        blobs_by_name.setdefault(PurePosixPath(group[0]["member"].split("!/")[-1]).name, set()).add(blob)
-    ambiguous = {n: sorted(blobs_by_name[n]) for n in ov["by_name"] if len(blobs_by_name.get(n, ())) > 1}
-    if ambiguous:
-        print(f"ambiguous by_name overrides (re-key by_blob): {json.dumps(ambiguous)}", file=sys.stderr)
+    try:
+        ov = parse_overrides(args.overrides)
+        exclude = [re.compile(p) for p in ov.get("exclude", [])]
+        by_blob: dict[str, list[dict]] = {}
+        excluded = 0
+        for m in census["members"]:
+            if any(p.search(m["member"]) for p in exclude):
+                excluded += 1
+                continue
+            by_blob.setdefault(m["blob_lf"], []).append(m)
+        check_overrides(ov, by_blob)
+    except OverrideError as exc:
+        print(f"overrides refused: {exc}", file=sys.stderr)
         return 2
 
     src_path = {s["source_id"]: s["path"] for s in census["sources"]}
     rows = []
     for i, (blob, group) in enumerate(sorted(by_blob.items(), key=lambda kv: (kv[1][0]["source_id"], kv[1][0]["member"])), 1):
         first = group[0]
-        name = PurePosixPath(first["member"].split("!/")[-1]).name
+        name = basename(first)
         state = first["state"]
-        live_same_name = first["name_only_matches_on_ref"]
-        if state == "HISTORY_ONLY":
-            disp = "LIVE_MODIFIED" if live_same_name else "UNRESOLVED"
-        else:
-            disp = AUTO[state]
-        override = ov["by_blob"].get(blob) or ov["by_name"].get(name)
-        reason = ""
+        auto_disp, proof_class, method = automatic(first)
+        disp, reason, override_id = auto_disp, "", ""
+        override = ov["by_blob"].get(blob)
         if override:
-            disp = override["disposition"]
-            reason = override["reason"]
+            override_id = f"by_blob:{blob[:8]}"
+        elif name in ov["by_name"]:
+            override, override_id = ov["by_name"][name], f"by_name:{name}"
+        if override:
+            disp, reason, proof_class = override["disposition"], override["reason"], "MANUALLY_ADJUDICATED"
         label = (override or {}).get("subsystem") or subsystem(name)
         if label == "Other":
             nested = first["member"].split("!/")[0] if "!/" in first["member"] else ""
@@ -236,16 +329,26 @@ def main(argv=None) -> int:
             "first_repository_path": first["first_path"],
             "current_live_path": ";".join(first["live_paths"]),
             "archive_path": ";".join(first["archive_paths"]),
-            "same_name_on_main_different_content": ";".join(live_same_name[:3]),
+            "same_name_on_main_different_content": ";".join(first["name_only_matches_on_ref"][:3]),
             "unique_relative_to_main": "no" if first["live_paths"] else "yes",
             "safety_relevance": (override or {}).get("safety") or "",
             "disposition": disp,
             "disposition_reason": reason or f"automatic from census state {state}",
-            "confidence": (override or {}).get("confidence", "content-hash" if state != "HISTORY_ONLY" else "content-hash; current form inferred by name"),
+            "confidence": (override or {}).get("confidence", "content-hash" if state != "HISTORY_ONLY" else "content-hash; current form inferred by path or name"),
             "follow_up_order": (override or {}).get("follow_up", ""),
+            "proof_class": proof_class,
+            "proof_method": method,
+            "automatic_disposition": auto_disp,
+            "override_id": override_id,
         })
     for extra in ov.get("reference_only", []):
-        rows.append({k: extra.get(k, "") for k in rows[0]} | {"candidate_id": extra["candidate_id"]})
+        unresolved = extra["disposition"] == "UNRESOLVED"
+        rows.append({k: extra.get(k, "") for k in rows[0]} | {
+            "candidate_id": extra["candidate_id"],
+            "proof_class": "UNRESOLVED" if unresolved else "SOURCE_UNAVAILABLE",
+            "proof_method": "recorded, not walked" if unresolved else "import references to content no source holds",
+            "override_id": f"reference_only:{extra['candidate_id']}",
+        })
 
     with args.out.open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]), lineterminator="\n")

@@ -24,6 +24,13 @@ Method limits. Labels are mechanical and need human adjudication:
     text, so it can OVER-count (a prefix in a comment or an unrelated string
     counts as a caller).
 
+Proof class. Only a missing path (``FALSE_MIGRATION_CLAIM``) or a present
+non-code artefact (``VERIFIED_PRESENT``) is ``MECHANICALLY_VERIFIED``. Every
+other label, ``VERIFIED_STRUCTURAL`` included, rests on the limits above and is
+a ``HEURISTIC_CANDIDATE`` until a human adjudicates it.
+
+Directory walks are sorted, so output is byte-stable across filesystems.
+
 Usage:
     python scripts/investigations/march_2026_claim_reachability.py --root . \
         --claims claims.csv --out results.csv
@@ -85,23 +92,23 @@ class Index:
         self.root = root
         self.py_mods: dict[str, Path] = {}
         self.importers: dict[str, set[str]] = {}
-        for p in (root / APP).rglob("*.py"):
+        for p in sorted((root / APP).rglob("*.py")):
             self.py_mods[module_of(p.relative_to(root))] = p
         for mod, p in self.py_mods.items():
             for imp in py_imports(p, mod):
                 self.importers.setdefault(imp, set()).add(mod)
         self.routers: dict[str, str] = {}
-        for mf in (root / MANIFESTS).glob("*.py"):
+        for mf in sorted((root / MANIFESTS).glob("*.py")):
             for mod, prefix in _SPEC.findall(mf.read_text(encoding="utf-8")):
                 self.routers[mod] = prefix
         self.test_imports: dict[str, set[str]] = {}
         self.test_text: dict[str, str] = {}
-        for p in (root / TESTS).rglob("test_*.py"):
+        for p in sorted((root / TESTS).rglob("test_*.py")):
             rel = p.relative_to(root).as_posix()
             self.test_text[rel] = p.read_text(encoding="utf-8", errors="replace")
             for imp in py_imports(p, "tests"):
                 self.test_imports.setdefault(imp, set()).add(rel)
-        self.client_files = [p for p in (root / CLIENT_SRC).rglob("*") if p.suffix in (".ts", ".vue", ".js")]
+        self.client_files = [p for p in sorted((root / CLIENT_SRC).rglob("*")) if p.suffix in (".ts", ".vue", ".js")]
         self.client_text = {p: p.read_text(encoding="utf-8", errors="replace") for p in self.client_files}
         self.client_importers: dict[Path, set[Path]] = {}
         for p, text in self.client_text.items():
@@ -206,7 +213,7 @@ def check(idx: Index, rel: str, hops: int) -> dict:
         return {**res, "import_reachable": "FAIL", "route_reachable": "FAIL", "ui_consumer": "FAIL",
                 "test_exercises": "FAIL", "evidence": "path absent from tree"}
     if path.is_dir():
-        files = [p for p in path.rglob("*") if p.suffix in (".py", ".ts", ".vue")]
+        files = [p for p in sorted(path.rglob("*")) if p.suffix in (".py", ".ts", ".vue")]
         sub = [check(idx, p.relative_to(idx.root).as_posix(), hops) for p in files]
         agg = {k: ("PASS" if any(s[k] == "PASS" for s in sub) else "FAIL")
                for k in ("import_reachable", "route_reachable", "ui_consumer", "test_exercises")}
@@ -257,6 +264,15 @@ def classify(r: dict) -> str:
     return "VERIFIED_STRUCTURAL"
 
 
+def proof(classification: str) -> tuple[str, str]:
+    """(proof_class, proof_method) for a classification."""
+    if classification == "FALSE_MIGRATION_CLAIM":
+        return "MECHANICALLY_VERIFIED", "path absent from the tree"
+    if classification == "VERIFIED_PRESENT":
+        return "MECHANICALLY_VERIFIED", "path present (non-code artefact)"
+    return "HEURISTIC_CANDIDATE", "static import graph + URL-substring UI search"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", type=Path, required=True)
@@ -271,14 +287,16 @@ def main(argv=None) -> int:
         return 2
     fields = ["claim_id", "source", "claim_text", "claimed_state", "claimed_commit", "primary_path",
               "file_present", "import_reachable", "route_reachable", "ui_consumer", "test_exercises",
-              "test_non_vacuous", "classification", "evidence"]
+              "test_non_vacuous", "classification", "proof_class", "proof_method", "evidence"]
     with args.out.open("w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         w.writeheader()
         for c in rows:
             r = check(idx, c["primary_path"], args.hops)
-            w.writerow({**{k: c.get(k, "") for k in fields[:6]}, **r,
-                        "test_non_vacuous": "NOT_ASSESSED", "classification": classify(r)})
+            label = classify(r)
+            proof_class, method = proof(label)
+            w.writerow({**{k: c.get(k, "") for k in fields[:6]}, **r, "test_non_vacuous": "NOT_ASSESSED",
+                        "classification": label, "proof_class": proof_class, "proof_method": method})
     return 0
 
 

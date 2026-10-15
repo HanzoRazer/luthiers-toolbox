@@ -59,7 +59,7 @@
       "disposition": "LIVE_MODIFIED",
       "subsystem": "Headstock Suite",
       "reason": "Bundle 03-17T155948 draft (B15S/B16S/F44); live file first committed byte-identical to this blob (21fe1b1f); registered live by c2c332b8 (business_manifest.py:50-56), later modified (dxf_compat migration 9b7630b9).",
-      "safety": "ACTIVE SAFETY CANDIDATE: live /api/headstock/transition/gcode, LIVE_UNGOVERNED in inventory, no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion (program sha256 3b5ddbaa...). Clearance adequacy UNRESOLVED.",
+      "safety": "CONTAINED SAFETY CANDIDATE: live /api/headstock/transition/gcode. At census base d42712e0 it was LIVE_UNGOVERNED (no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion, program sha256 3b5ddbaa...). Since #441 (703694c1) the route refuses with 409 SAFETY_BLOCKED before generation and the inventory row is FAIL_CLOSED. The generator is unchanged; clearance adequacy and the Z frame remain UNRESOLVED.",
       "confidence": "source + offline generation + modal parser",
       "follow_up": "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
     },
@@ -67,7 +67,7 @@
       "disposition": "SUPERSEDED",
       "subsystem": "Headstock Suite",
       "reason": "Sibling draft from bundle 03-17T160517 (B17S), archived at archive/experimental/2026-03/.../files - 2026-03-17T160517.587/. Never entered the live tree: the live module was first committed byte-identical to the 03-17T155948 draft (blob 8e436e7b, commit 21fe1b1f), not to this one (32-line diff).",
-      "safety": "Not the live lineage. The active safety candidate is the live route; see the 8e436e7b row.",
+      "safety": "Not the live lineage. The contained safety candidate is the live route; see the 8e436e7b row.",
       "confidence": "content-hash (live first-commit blob compared to both drafts)"
     }
   },
