@@ -21,7 +21,8 @@ inference from ruling:
 
   MECHANICALLY_VERIFIED  content-hash presence/absence against Git
   HEURISTIC_CANDIDATE    inferred from a path or a name, not from content
-  MANUALLY_ADJUDICATED   an override decided it (``override_id`` names which)
+  MANUALLY_ADJUDICATED   an override decided it (``override_id`` names which);
+                         an override ruling UNRESOLVED keeps the class UNRESOLVED
   SOURCE_UNAVAILABLE     referenced, but no content survives in any source
   UNRESOLVED             the evidence does not decide it
 
@@ -310,7 +311,9 @@ def main(argv=None) -> int:
         elif name in ov["by_name"]:
             override, override_id = ov["by_name"][name], f"by_name:{name}"
         if override:
-            disp, reason, proof_class = override["disposition"], override["reason"], "MANUALLY_ADJUDICATED"
+            disp, reason = override["disposition"], override["reason"]
+            # a ruling of UNRESOLVED records why the evidence fails; it adjudicates nothing
+            proof_class = "UNRESOLVED" if disp == "UNRESOLVED" else "MANUALLY_ADJUDICATED"
         label = (override or {}).get("subsystem") or subsystem(name)
         if label == "Other":
             nested = first["member"].split("!/")[0] if "!/" in first["member"] else ""

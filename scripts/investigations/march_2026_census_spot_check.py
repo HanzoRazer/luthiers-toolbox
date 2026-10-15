@@ -15,7 +15,7 @@ census tool, so a shared bug cannot pass both:
 
 Sample (all selections are by sorted sha256, so a rerun picks the same rows):
 the first five MECHANICALLY_VERIFIED rows, the first five HEURISTIC_CANDIDATE
-rows, every MANUALLY_ADJUDICATED / SOURCE_UNAVAILABLE row, every EXTERNAL_ONLY
+rows, every row an override touches (``override_id``), every EXTERNAL_ONLY
 row, and the rows behind a recovery-order recommendation.
 
 Prints a Markdown table: candidate, class, check, expected, actual, result.
@@ -129,7 +129,7 @@ def main(argv=None) -> int:
         for r in [r for r in by_sha if r["proof_class"] == cls][:5]:
             sample.setdefault(r["candidate_id"], f"first five {cls}")
     for r in ledger:
-        if r["proof_class"] in ("MANUALLY_ADJUDICATED", "SOURCE_UNAVAILABLE"):
+        if r["override_id"]:
             sample.setdefault(r["candidate_id"], "every override")
         if r["census_state"] == "EXTERNAL_ONLY":
             sample.setdefault(r["candidate_id"], "every external-only")

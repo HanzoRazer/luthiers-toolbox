@@ -20,7 +20,7 @@ Row-level evidence is in `RECOVERY_LEDGER.csv`, `MARCH_CLAIM_REACHABILITY.csv` a
 | Claim | Machine label | Adjudicated | Why |
 |---|---|---|---|
 | CAM-SURVEY-001 | FALSE_MIGRATION_CLAIM | **PARTIAL_MIGRATION** | The claim was "documented in ARCHITECTURE.md". `docs/ARCHITECTURE.md:7` has one table row; the 352-line survey exists only in two archive copies |
-| R-2 BridgeBreakAnglePanel | FALSE_MIGRATION_CLAIM | **NOT_IMPLEMENTED; built externally** | A plan, never claimed done. Built in nested bundle 03-15T193643 and never entered Git → `RECOVERED_FEATURE_CANDIDATE` |
+| R-2 BridgeBreakAnglePanel | FALSE_MIGRATION_CLAIM | **NOT_IMPLEMENTED; built externally** | A plan, never claimed done. Built in nested bundle 03-15T193643 and never entered Git. Ledger: `UNRESOLVED` (insufficient evidence to establish lineage, owner 2026-10-15) |
 | R-3 NutBreakAnglePanel | FALSE_MIGRATION_CLAIM | **NOT_IMPLEMENTED** | A plan; no artefact exists anywhere searched |
 | HEADSTOCK-001 | PARTIAL_MIGRATION | PARTIAL_MIGRATION (confirmed) | `/api/export/headstock-dxf*` is live and tested; the only client caller (`useExportDxf.ts`) is reachable only from the stranded headstock `WorkspaceView` |
 
@@ -69,7 +69,8 @@ Row-level evidence is in `RECOVERY_LEDGER.csv`, `MARCH_CLAIM_REACHABILITY.csv` a
    `/neck/generate-full` is fail-closed since #398.
 4. **Archived:** the 03:19 bundle (`73a2703d`).
 5. **External only:** none.
-6. **Superseded by:** live `machines.py` (`fe1e2f51` lineage).
+6. **Superseded by:** UNRESOLVED. The bundle's `machines.py` has insufficient evidence to establish
+   lineage to live `cam/machines.py` (owner, 2026-10-15).
 7. **Missing capability:** no.
 8. **Safety:** the archived orchestrator and machine contract were **closed**; see the companion
    investigation.
@@ -155,11 +156,11 @@ anyway** through `ee31d921` (03-16 17:59, "integrate Phase 7 staging bundles").
 
 | Nested ZIP | Subject | Live identical | Live modified | Superseded | External only | Missing on main? |
 |---|---|---|---|---|---|---|
-| 03-15T182348 | **Project graph** (ADR-002, instrument project schema, service, router) | PLATFORM_ARCHITECTURE.md | schema, service, ADR | unwired `project_router.py` | — | no |
-| 03-15T183010 | **Blueprint save** | composable, panel | project writer | unwired `blueprint_save_router.py` | — | no |
+| 03-15T182348 | **Project graph** (ADR-002, instrument project schema, service, router) | PLATFORM_ARCHITECTURE.md | schema, service, ADR | unwired `project_router.py` (lineage UNRESOLVED) | — | no |
+| 03-15T183010 | **Blueprint save** | composable, panel | project writer | unwired `blueprint_save_router.py` (lineage UNRESOLVED) | — | no |
 | 03-15T184511 | **Instrument hub** | `project-types.ts`, `projects.ts` | `InstrumentHubShell.vue`, `useInstrumentProject.ts` (now with specs) | — | — | no |
 | 03-15T185317 | **Bridge lab** | `useBridgeWorkspace.ts`, `BridgeLabPanel.vue` | — | — | — | no |
-| 03-15T190701 | **Materials** | scorer, `useTonewoods.ts` | schemas, tonewoods, selector | draft `materials_router.py` (live `app/materials/router.py` by role) | — | no |
+| 03-15T190701 | **Materials** | scorer, `useTonewoods.ts` | schemas, tonewoods, selector | draft `materials_router.py` (lineage UNRESOLVED) | — | no |
 | 03-15T193643 | **String tension / break-angle panels** | — | — | — | `StringTensionPanel`, `StiffnessIndexPanel`, `useTension_fixed` drafts; **`BridgeBreakAnglePanel.vue`** | **yes: BridgeBreakAnglePanel (R-2)** |
 | 03-15T195528 | **Router wiring** (7th subject: `_wired` routers) | `blueprint_save_router_wired.py` | `project_router_wired.py` → `app/projects/router.py` | — | — | no |
 

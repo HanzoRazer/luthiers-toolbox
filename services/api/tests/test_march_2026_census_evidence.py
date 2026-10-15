@@ -216,7 +216,7 @@ def test_the_derived_csvs_regenerate_byte_for_byte(tmp_path):
 
 
 def test_the_safety_candidate_is_recorded_once_and_contained():
-    """The live headstock route descends from blob 8e436e7b, not the B17S sibling draft.
+    """The live headstock route's safety note sits on blob 8e436e7b only (its lineage is UNRESOLVED).
 
     #441 contained the route (409 before generation); the generator defect is not fixed.
     """
@@ -267,9 +267,12 @@ def test_ledger_rules_on_fixtures(tmp_path):
         # an ambiguous row that a human then rules on
         _member(member="ruled.py", blob_lf="7" * 40, first_path="old/ruled.py",
                 name_only_matches_on_ref=["app/a/ruled.py", "app/b/ruled.py"]),
+        # a human finds the evidence insufficient: the ruling adjudicates nothing
+        _member(member="doubt.py", blob_lf="8" * 40, state="EXTERNAL_ONLY"),
     ]
     run, rows = _ledger(tmp_path, members, {"by_blob": {"7" * 40: {
-        "disposition": "SUPERSEDED", "reason": "fixture ruling with a long enough reason"}}})
+        "disposition": "SUPERSEDED", "reason": "fixture ruling with a long enough reason"}},
+        "by_name": {"doubt.py": {"disposition": "UNRESOLVED", "reason": "insufficient evidence to establish lineage"}}})
     assert run.returncode == 0, run.stderr
     expected = {
         "a/dup.py": ("LIVE_INTEGRATED", "MECHANICALLY_VERIFIED", "LIVE_INTEGRATED"),
@@ -279,6 +282,7 @@ def test_ledger_rules_on_fixtures(tmp_path):
         "relic.py": ("UNRESOLVED", "UNRESOLVED", "UNRESOLVED"),
         "hint.py": ("EXTERNAL_ONLY", "MECHANICALLY_VERIFIED", "EXTERNAL_ONLY"),
         "ruled.py": ("SUPERSEDED", "MANUALLY_ADJUDICATED", "UNRESOLVED"),
+        "doubt.py": ("UNRESOLVED", "UNRESOLVED", "EXTERNAL_ONLY"),
     }
     got = {k: (r["disposition"], r["proof_class"], r["automatic_disposition"]) for k, r in rows.items()}
     assert got == expected

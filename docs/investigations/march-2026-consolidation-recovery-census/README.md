@@ -27,9 +27,9 @@ Start here. Each conclusion carries a **proof class**, so a reviewer knows what 
 |---|---|---|
 | `MECHANICALLY_VERIFIED` | A content-hash fact: the blob is on the census ref at a cited path, or in no commit reachable from any ref. For claims: the path is absent. | 143 |
 | `HEURISTIC_CANDIDATE` | Inferred from a path or a name, not content. For example: "the first-commit path is still live, so this is its earlier form". Every reachability label other than an absent path is in this class, `VERIFIED_STRUCTURAL` included. | 24 |
-| `MANUALLY_ADJUDICATED` | An override in `LEDGER_OVERRIDES.json` decided it; `override_id` names which. | 9 |
+| `MANUALLY_ADJUDICATED` | An override in `LEDGER_OVERRIDES.json` decided it; `override_id` names which. Only the owner-ruled `orchestrator.py`. | 1 |
 | `SOURCE_UNAVAILABLE` | Referenced by preserved code, but no source holds the content. | 5 |
-| `UNRESOLVED` | The evidence does not decide it, for example several same-named live files. The tool never guesses. | 13 |
+| `UNRESOLVED` | The evidence does not decide it, for example several same-named live files. The tool never guesses. Includes the 8 rows whose proposed rulings the owner found insufficient (2026-10-15; see `OVERRIDE_REVIEW.md`). | 21 |
 
 No row reaches `MECHANICALLY_VERIFIED` by a filename or keyword match; `test_ledger_values_and_overrides_are_well_formed`
 enforces that.
@@ -167,9 +167,9 @@ python -I scripts/investigations/march_2026_census_spot_check.py --repo . --ref 
     --census-dir . --search "<Downloads>" --search "<Downloads>/Storage"   # see SPOT_CHECK.md
 ```
 
-Expected output of the ledger step: `{"dispositions": {"ARCHIVED_COMPLETE": 72, "EXTERNAL_ONLY": 21,
-"LIVE_INTEGRATED": 51, "LIVE_MODIFIED": 25, "LOST_REFERENCE_ONLY": 5, "RECOVERED_FEATURE_CANDIDATE": 1,
-"SUPERSEDED": 6, "UNRESOLVED": 13}, "excluded_members": 68, "rows": 194}`.
+Expected output of the ledger step: `{"dispositions": {"ARCHIVED_COMPLETE": 71, "EXTERNAL_ONLY": 21,
+"LIVE_INTEGRATED": 51, "LIVE_MODIFIED": 24, "LOST_REFERENCE_ONLY": 5, "SUPERSEDED": 1, "UNRESOLVED": 21},
+"excluded_members": 68, "rows": 194}`.
 
 ZIPs are read in memory. Nested ZIPs are walked without extraction, and `.7z` repository snapshots are
 recorded but not walked.

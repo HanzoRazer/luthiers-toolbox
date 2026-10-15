@@ -1,8 +1,10 @@
 # Independent spot-check
 
-**Date:** 2026-10-15. **Census ref:** `d42712e0`. **Result:** 44 rows sampled, 84 content checks PASS,
-0 FAIL, 5 not applicable (reference-only rows have no content). Every override's cited evidence was also
-rechecked by hand (below): 8 of 8 confirmed. **No classification needed correcting.**
+**Date:** 2026-10-15. **Census ref:** `d42712e0`. **Result:** 45 rows sampled, 84 content checks PASS,
+0 FAIL, 6 not applicable (reference-only rows have no content). The facts once cited for the eight
+withdrawn override proposals were also rechecked by hand (below): each fact holds. **The owner ruled on
+2026-10-15 that they do not establish lineage**, so those eight rows are `UNRESOLVED`; a true fact is not
+a proven descent.
 
 ## Why a separate checker
 
@@ -29,7 +31,7 @@ Rows are sorted by member sha256, then candidate ID, so a rerun picks the same s
 
 - the first five `MECHANICALLY_VERIFIED` rows;
 - the first five `HEURISTIC_CANDIDATE` rows;
-- every `MANUALLY_ADJUDICATED` and `SOURCE_UNAVAILABLE` row (all overrides);
+- every row an override touches (`override_id`), whatever its class;
 - every `EXTERNAL_ONLY` row;
 - every row behind a recovery-order recommendation in `RECOVERY_RECOMMENDATIONS.md` (MC-060, MC-113,
   MC-R01–R05).
@@ -41,7 +43,9 @@ backup folder for the two extracted-folder sources). Hosted CI cannot rerun this
 python -I scripts/investigations/march_2026_census_spot_check.py --repo . --ref d42712e0     --census-dir docs/investigations/march-2026-consolidation-recovery-census     --search "<Downloads>" --search "<Downloads>/Storage" --search "<backup folder>"
 ```
 
-## Override evidence, rechecked by hand
+## Facts cited for the withdrawn proposals, rechecked by hand
+
+"Confirmed" means the cited fact is true. It does not validate the proposed lineage; see `OVERRIDE_REVIEW.md`.
 
 | Override | Claim | Check | Result |
 |---|---|---|---|
@@ -97,17 +101,17 @@ Bundles located: 52 of 52. Ref: d42712e0.
 | MC-029 | `dxf-requirements.txt` | MECHANICALLY_VERIFIED | every external-only | log --all --find-object | no commit | no commit | PASS |
 | MC-042 | `index.html` | MECHANICALLY_VERIFIED | first five MECHANICALLY_VERIFIED | member re-read from bundle | a5d1c648 | a5d1c648 | PASS |
 | MC-042 | `index.html` | MECHANICALLY_VERIFIED | first five MECHANICALLY_VERIFIED | log --all --find-object | no commit | no commit | PASS |
-| MC-060 | `headstock_transition_export.py` | MANUALLY_ADJUDICATED | every override; recovery order | member re-read from bundle | 8e436e7b | 8e436e7b | PASS |
-| MC-060 | `headstock_transition_export.py` | MANUALLY_ADJUDICATED | every override; recovery order | log --all --find-object | at least one commit | 21fe1b1f, 3fc19f54, 73a2703d, 8c553069 | PASS |
-| MC-062 | `headstock_transition_export.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | 721cfa3d | 721cfa3d | PASS |
-| MC-062 | `headstock_transition_export.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | at least one commit | 73a2703d, 8c553069, bc196138 | PASS |
+| MC-060 | `headstock_transition_export.py` | UNRESOLVED | every override; recovery order | member re-read from bundle | 8e436e7b | 8e436e7b | PASS |
+| MC-060 | `headstock_transition_export.py` | UNRESOLVED | every override; recovery order | log --all --find-object | at least one commit | 21fe1b1f, 3fc19f54, 73a2703d, 8c553069 | PASS |
+| MC-062 | `headstock_transition_export.py` | UNRESOLVED | every override | member re-read from bundle | 721cfa3d | 721cfa3d | PASS |
+| MC-062 | `headstock_transition_export.py` | UNRESOLVED | every override | log --all --find-object | at least one commit | 73a2703d, 8c553069, bc196138 | PASS |
 | MC-094 | `instrument_project.py` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | member re-read from bundle | 0e2cc244 | 0e2cc244 | PASS |
 | MC-094 | `instrument_project.py` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | log --all --find-object | at least one commit | a6d664d2, ee31d921 | PASS |
 | MC-094 | `instrument_project.py` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | successor services/api/app/schemas/instrument_project.py on ref | present, other content | present, other content | PASS |
-| MC-095 | `project_router.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | 715044cb | 715044cb | PASS |
-| MC-095 | `project_router.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | no commit | no commit | PASS |
-| MC-099 | `blueprint_save_router.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | cb905550 | cb905550 | PASS |
-| MC-099 | `blueprint_save_router.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | no commit | no commit | PASS |
+| MC-095 | `project_router.py` | UNRESOLVED | every override | member re-read from bundle | 715044cb | 715044cb | PASS |
+| MC-095 | `project_router.py` | UNRESOLVED | every override | log --all --find-object | no commit | no commit | PASS |
+| MC-099 | `blueprint_save_router.py` | UNRESOLVED | every override | member re-read from bundle | cb905550 | cb905550 | PASS |
+| MC-099 | `blueprint_save_router.py` | UNRESOLVED | every override | log --all --find-object | no commit | no commit | PASS |
 | MC-100 | `useBlueprintProjectWrite.ts` | MECHANICALLY_VERIFIED | first five MECHANICALLY_VERIFIED | member re-read from bundle | d69f4ac4 | d69f4ac4 | PASS |
 | MC-100 | `useBlueprintProjectWrite.ts` | MECHANICALLY_VERIFIED | first five MECHANICALLY_VERIFIED | rev-parse d42712e0:packages/client/src/design-intake/blueprint/useBlueprintProjectWrite.ts | d69f4ac4 | d69f4ac4 | PASS |
 | MC-103 | `projects_api.ts` | MECHANICALLY_VERIFIED | first five MECHANICALLY_VERIFIED | member re-read from bundle | a5b08b38 | a5b08b38 | PASS |
@@ -115,10 +119,10 @@ Bundles located: 52 of 52. Ref: d42712e0.
 | MC-104 | `useInstrumentProject.ts` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | member re-read from bundle | eaf3873d | eaf3873d | PASS |
 | MC-104 | `useInstrumentProject.ts` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | log --all --find-object | at least one commit | 61807b40, 8d91c4c7, d3035e19, d716d16e | PASS |
 | MC-104 | `useInstrumentProject.ts` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | successor packages/client/src/instrument-workspace/shared-state/useInstrumentProject.ts on ref | present, other content | present, other content | PASS |
-| MC-108 | `materials_router.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | e131cf1a | e131cf1a | PASS |
-| MC-108 | `materials_router.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | no commit | no commit | PASS |
-| MC-113 | `BridgeBreakAnglePanel.vue` | MANUALLY_ADJUDICATED | every override; recovery order | member re-read from bundle | 05d77b7d | 05d77b7d | PASS |
-| MC-113 | `BridgeBreakAnglePanel.vue` | MANUALLY_ADJUDICATED | every override; recovery order | log --all --find-object | no commit | no commit | PASS |
+| MC-108 | `materials_router.py` | UNRESOLVED | every override | member re-read from bundle | e131cf1a | e131cf1a | PASS |
+| MC-108 | `materials_router.py` | UNRESOLVED | every override | log --all --find-object | no commit | no commit | PASS |
+| MC-113 | `BridgeBreakAnglePanel.vue` | UNRESOLVED | every override; recovery order | member re-read from bundle | 05d77b7d | 05d77b7d | PASS |
+| MC-113 | `BridgeBreakAnglePanel.vue` | UNRESOLVED | every override; recovery order | log --all --find-object | no commit | no commit | PASS |
 | MC-114 | `StiffnessIndexPanel.vue` | MECHANICALLY_VERIFIED | every external-only | member re-read from bundle | 135418ec | 135418ec | PASS |
 | MC-114 | `StiffnessIndexPanel.vue` | MECHANICALLY_VERIFIED | every external-only | log --all --find-object | no commit | no commit | PASS |
 | MC-115 | `StringTensionPanel.vue` | MECHANICALLY_VERIFIED | every external-only | member re-read from bundle | bacff396 | bacff396 | PASS |
@@ -130,10 +134,10 @@ Bundles located: 52 of 52. Ref: d42712e0.
 | MC-120 | `archtop_graduation_template.json` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | member re-read from bundle | 249055a7 | 249055a7 | PASS |
 | MC-120 | `archtop_graduation_template.json` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | log --all --find-object | at least one commit | 4a72f1de, 73a2703d, 8c553069, bc196138 | PASS |
 | MC-120 | `archtop_graduation_template.json` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | successor services/api/app/instrument_geometry/models/archtop/archtop_graduation_template.json on ref | present, other content | present, other content | PASS |
-| MC-122 | `BACKLOG.md` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | 50022d74 | 50022d74 | PASS |
-| MC-122 | `BACKLOG.md` | MANUALLY_ADJUDICATED | every override | rev-parse d42712e0:docs/archive/photo_vectorizer_patches/BACKLOG.md | 50022d74 | 50022d74 | PASS |
-| MC-132 | `machines.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | 53c5580f | 53c5580f | PASS |
-| MC-132 | `machines.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | at least one commit | 73a2703d, bc196138 | PASS |
+| MC-122 | `BACKLOG.md` | UNRESOLVED | every override | member re-read from bundle | 50022d74 | 50022d74 | PASS |
+| MC-122 | `BACKLOG.md` | UNRESOLVED | every override | rev-parse d42712e0:docs/archive/photo_vectorizer_patches/BACKLOG.md | 50022d74 | 50022d74 | PASS |
+| MC-132 | `machines.py` | UNRESOLVED | every override | member re-read from bundle | 53c5580f | 53c5580f | PASS |
+| MC-132 | `machines.py` | UNRESOLVED | every override | log --all --find-object | at least one commit | 73a2703d, bc196138 | PASS |
 | MC-133 | `orchestrator.py` | MANUALLY_ADJUDICATED | every override | member re-read from bundle | 2f10f102 | 2f10f102 | PASS |
 | MC-133 | `orchestrator.py` | MANUALLY_ADJUDICATED | every override | log --all --find-object | at least one commit | 73a2703d, bc196138 | PASS |
 | MC-143 | `soundhole_calc.py` | HEURISTIC_CANDIDATE | first five HEURISTIC_CANDIDATE | member re-read from bundle | 03af5226 | 03af5226 | PASS |
@@ -161,5 +165,6 @@ Bundles located: 52 of 52. Ref: d42712e0.
 | MC-R03 | `useHeadstock` | SOURCE_UNAVAILABLE | every override; recovery order | no content to check | reference only | reference only | N/A |
 | MC-R04 | `useParametric` | SOURCE_UNAVAILABLE | every override; recovery order | no content to check | reference only | reference only | N/A |
 | MC-R05 | `headstockData` | SOURCE_UNAVAILABLE | every override; recovery order | no content to check | reference only | reference only | N/A |
+| MC-R06 | `luthiers-toolbox-main (28).7z` | UNRESOLVED | every override | no content to check | reference only | reference only | N/A |
 
-Rows sampled: 44. Checks: N/A 5, PASS 84
+Rows sampled: 45. Checks: N/A 6, PASS 84

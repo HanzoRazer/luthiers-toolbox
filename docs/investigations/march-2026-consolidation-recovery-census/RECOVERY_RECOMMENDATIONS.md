@@ -37,9 +37,15 @@ implementation PR. Nothing below is authorised by this census.
 
 ## Superseded / no action
 
-Archived orchestrator and `machines.py` (closed by owner ruling); unwired router drafts (project,
-blueprint save, materials); the three string-tension drafts; side-bending iterations; path-pack HTML
+Archived orchestrator (closed by owner ruling 2026-10-14); the three string-tension drafts; side-bending iterations; path-pack HTML
 prototypes.
+
+## Unresolved by owner ruling (2026-10-15)
+
+Insufficient evidence to establish lineage: both `headstock_transition_export.py` drafts (MC-060,
+MC-062), `machines.py`, the unwired router drafts (project, blueprint save, materials),
+`BridgeBreakAnglePanel.vue` and the bundle's `BACKLOG.md`. No order follows from their lineage. The live
+headstock route's safety order above does not depend on it.
 
 ## Requires owner decision
 
@@ -62,8 +68,8 @@ prototypes.
 - one lost module set.
 
 That is enough to justify the separate orders above. It is **not** a case for a general restore. 51
-components are live byte-identical, 25 live in modified form (inferred from path or name), 13 are
-unresolved because the evidence does not pick a successor, and most "partial" items are calculators
+components are live byte-identical, 24 live in modified form (inferred from path or name), 21 are
+unresolved because the evidence does not pick a successor (8 of them by owner ruling 2026-10-15), and most "partial" items are calculators
 whose backends work and whose UI coverage is a product choice.
 
 **Recommended shape:** run the safety order first. Then the owner-side headstock recovery. Then the

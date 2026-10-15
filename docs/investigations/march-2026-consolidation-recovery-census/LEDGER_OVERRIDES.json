@@ -15,60 +15,59 @@
       "follow_up": "NECK-CLEARANCE-AUTHORITY-001 (decision); NECK-TOOLCHANGE-PAUSE-001"
     },
     "machines.py": {
-      "disposition": "SUPERSEDED",
+      "disposition": "UNRESOLVED",
       "subsystem": "CAM Workspace/backend",
-      "reason": "Single-preset BCamMachineSpec (safe Z 10, retract 5, dwell, M1). Live cam/machines.py descends from fe1e2f51 with six presets and a different contract; candidate fields absent live.",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
       "safety": "Clearance values conflict with live (10 vs 25 mm)",
-      "confidence": "content-hash + contract comparison",
+      "confidence": "insufficient evidence",
       "follow_up": "input to NECK-CLEARANCE-AUTHORITY-001 only"
     },
     "BridgeBreakAnglePanel.vue": {
-      "disposition": "RECOVERED_FEATURE_CANDIDATE",
+      "disposition": "UNRESOLVED",
       "subsystem": "Calculator UI",
-      "reason": "March remediation task R-2 ('Build BridgeBreakAnglePanel.vue'). Built in nested 03-15T193643 bundle; no file of this name or content exists anywhere in Git. Backend calculators/bridge_break_angle.py is live.",
-      "confidence": "content-hash + name search",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (RECOVERED_FEATURE_CANDIDATE) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence",
       "follow_up": "R-2 parity comparison against the current break-angle UI before any restore"
     },
     "project_router.py": {
-      "disposition": "SUPERSEDED",
+      "disposition": "UNRESOLVED",
       "subsystem": "Project graph",
-      "reason": "Unwired draft; the '_wired' variant from nested 03-15T195528 entered Git at ee31d921 (2026-03-16) and descends to live app/projects/router.py.",
-      "confidence": "content-hash of successor + name"
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
     },
     "blueprint_save_router.py": {
-      "disposition": "SUPERSEDED",
+      "disposition": "UNRESOLVED",
       "subsystem": "Blueprint save",
-      "reason": "Unwired draft; blueprint_save_router_wired.py is byte-identical to live app/blueprint/save_router.py.",
-      "confidence": "content-hash of successor"
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
     },
     "materials_router.py": {
-      "disposition": "SUPERSEDED",
+      "disposition": "UNRESOLVED",
       "subsystem": "Materials",
-      "reason": "Draft; live app/materials/router.py is registered (system_manifest.py:111). Contents differ; successor by role, not by hash.",
-      "confidence": "name + role (inferred)"
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
     },
     "BACKLOG.md": {
-      "disposition": "ARCHIVED_COMPLETE",
+      "disposition": "UNRESOLVED",
       "subsystem": "Planning record",
-      "reason": "Primary March planning authority (blob 50022d74), archived at docs/archive/photo_vectorizer_patches/BACKLOG.md; the committed docs/BACKLOG.md history is reachable only via tag v2.4.0-alpha.1.",
-      "confidence": "content-hash"
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (ARCHIVED_COMPLETE) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
     }
   },
   "by_blob": {
     "8e436e7b9c32e6c1d18d176327b29b232b1bb56f": {
-      "disposition": "LIVE_MODIFIED",
+      "disposition": "UNRESOLVED",
       "subsystem": "Headstock Suite",
-      "reason": "Bundle 03-17T155948 draft (B15S/B16S/F44); live file first committed byte-identical to this blob (21fe1b1f); registered live by c2c332b8 (business_manifest.py:50-56), later modified (dxf_compat migration 9b7630b9).",
-      "safety": "CONTAINED SAFETY CANDIDATE: live /api/headstock/transition/gcode. At census base d42712e0 it was LIVE_UNGOVERNED (no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion, program sha256 3b5ddbaa...). Since #441 (703694c1) the route refuses with 409 SAFETY_BLOCKED before generation and the inventory row is FAIL_CLOSED. The generator is unchanged; clearance adequacy and the Z frame remain UNRESOLVED.",
-      "confidence": "source + offline generation + modal parser",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (LIVE_MODIFIED) from the available ledgers (2026-10-15); not approved.",
+      "safety": "CONTAINED SAFETY CANDIDATE: live /api/headstock/transition/gcode (this draft's lineage to it is UNRESOLVED). At census base d42712e0 the route was LIVE_UNGOVERNED (no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion, program sha256 3b5ddbaa...). Since #441 (703694c1) it refuses with 409 SAFETY_BLOCKED before generation and the inventory row is FAIL_CLOSED. The generator is unchanged; clearance adequacy and the Z frame remain UNRESOLVED.",
+      "confidence": "insufficient evidence",
       "follow_up": "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
     },
     "721cfa3d150e712c7b9a0e745aa19927713e9c20": {
-      "disposition": "SUPERSEDED",
+      "disposition": "UNRESOLVED",
       "subsystem": "Headstock Suite",
-      "reason": "Sibling draft from bundle 03-17T160517 (B17S), archived at archive/experimental/2026-03/.../files - 2026-03-17T160517.587/. Never entered the live tree: the live module was first committed byte-identical to the 03-17T155948 draft (blob 8e436e7b, commit 21fe1b1f), not to this one (32-line diff).",
-      "safety": "Not the live lineage. The contained safety candidate is the live route; see the 8e436e7b row.",
-      "confidence": "content-hash (live first-commit blob compared to both drafts)"
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
     }
   },
   "reference_only": [
