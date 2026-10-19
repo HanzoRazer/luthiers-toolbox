@@ -1,0 +1,81 @@
+{
+  "schema": "march-2026-ledger-overrides/1",
+  "note": "Manual dispositions that the census tool cannot derive from content hashes. Every entry states its reason. Overrides win over the automatic mapping.",
+  "exclude": [
+    "^Kerf Spacing Calculator Bending Wood - Inch"
+  ],
+  "exclude_reason": "Third-party saved web page (Kerf Spacing Calculator site: HTML, ad scripts, tracking assets) zipped into files - 2026-03-20T023112.442 (2).zip. Not Claude output, not owner material, licence unknown: counted, not ledgered, never preserved.",
+  "by_name": {
+    "orchestrator.py": {
+      "disposition": "SUPERSEDED",
+      "subsystem": "Neck orchestrator",
+      "reason": "Owner ruling 2026-10-14: SUPERSEDED for rapid-at-depth (fixed by #398; candidate never touched the profile loop, 702 with or without it); INCOMPATIBLE_WITH_CURRENT_RUNTIME as written; DO_NOT_FORWARD_PORT. Evidence: docs/investigations/cam-orchestrator-recovery_2026-10-14/.",
+      "safety": "Self-described 'SAFETY FIX'; replay shows duplicated tool changes and safe Z 25->10; closed as repair candidate",
+      "confidence": "replayed",
+      "follow_up": "NECK-CLEARANCE-AUTHORITY-001 (decision); NECK-TOOLCHANGE-PAUSE-001"
+    },
+    "machines.py": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "CAM Workspace/backend",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "safety": "Clearance values conflict with live (10 vs 25 mm)",
+      "confidence": "insufficient evidence",
+      "follow_up": "input to NECK-CLEARANCE-AUTHORITY-001 only"
+    },
+    "BridgeBreakAnglePanel.vue": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Calculator UI",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (RECOVERED_FEATURE_CANDIDATE) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence",
+      "follow_up": "R-2 parity comparison against the current break-angle UI before any restore"
+    },
+    "project_router.py": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Project graph",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
+    },
+    "blueprint_save_router.py": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Blueprint save",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
+    },
+    "materials_router.py": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Materials",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
+    },
+    "BACKLOG.md": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Planning record",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (ARCHIVED_COMPLETE) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
+    }
+  },
+  "by_blob": {
+    "8e436e7b9c32e6c1d18d176327b29b232b1bb56f": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Headstock Suite",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (LIVE_MODIFIED) from the available ledgers (2026-10-15); not approved.",
+      "safety": "CONTAINED SAFETY CANDIDATE: live /api/headstock/transition/gcode (this draft's lineage to it is UNRESOLVED). At census base d42712e0 the route was LIVE_UNGOVERNED (no readiness gate/@safety_critical/tests; default request emits 21 rapids ending below Z0 with X motion, program sha256 3b5ddbaa...). Since #441 (703694c1) it refuses with 409 SAFETY_BLOCKED before generation and the inventory row is FAIL_CLOSED. The generator is unchanged; clearance adequacy and the Z frame remain UNRESOLVED.",
+      "confidence": "insufficient evidence",
+      "follow_up": "HEADSTOCK-TRANSITION-GCODE-SAFETY-001"
+    },
+    "721cfa3d150e712c7b9a0e745aa19927713e9c20": {
+      "disposition": "UNRESOLVED",
+      "subsystem": "Headstock Suite",
+      "reason": "Insufficient evidence to establish lineage. The owner could not validate the proposed ruling (SUPERSEDED) from the available ledgers (2026-10-15); not approved.",
+      "confidence": "insufficient evidence"
+    }
+  },
+  "reference_only": [
+    {"candidate_id": "MC-R01", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/stores/headstock", "filename": "stores/headstock", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "Imported by the four preserved headstock views; never copied out of the 2026-03-17 claude.ai session (headstock lineage reconciliation, PR #437).", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery from the claude.ai conversation"},
+    {"candidate_id": "MC-R02", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/types/headstock", "filename": "types/headstock", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "As MC-R01.", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery"},
+    {"candidate_id": "MC-R03", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/composables/useHeadstock", "filename": "useHeadstock", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "As MC-R01.", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery"},
+    {"candidate_id": "MC-R04", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/composables/useParametric", "filename": "useParametric", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "As MC-R01.", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery"},
+    {"candidate_id": "MC-R05", "subsystem": "Headstock Suite", "original_path": "/mnt/user-data/outputs/ps-vue/src/data/headstockData", "filename": "headstockData", "disposition": "LOST_REFERENCE_ONLY", "disposition_reason": "As MC-R01.", "unique_relative_to_main": "yes", "confidence": "import references only", "follow_up_order": "owner-side recovery"},
+    {"candidate_id": "MC-R06", "subsystem": "Repository snapshot", "original_path": "files - 2026-03-21T123917.995.zip!/luthiers-toolbox-main (28).7z", "filename": "luthiers-toolbox-main (28).7z", "disposition": "UNRESOLVED", "disposition_reason": "51,298,423-byte repository snapshot inside a 03-21 bundle; recorded, not walked (archive format not read by the census tool). May bear on the unpreserved 03-30..04-05 window only if its date postdates 03-30; it does not (bundle dated 03-21).", "unique_relative_to_main": "unknown", "confidence": "presence only", "follow_up_order": "none unless a pre-03-21 gap is identified"}
+  ]
+}

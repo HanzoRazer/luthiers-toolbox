@@ -1,0 +1,51 @@
+claim_id,source,claim_text,claimed_state,claimed_commit,primary_path
+PORT-001,BACKLOG.md (50022d74),Port tap-tone-pi plate thickness design module,removed as complete 21fe1b1f,3855579c,services/api/app/routers/acoustics/plate_router.py
+PORT-001b,BACKLOG.md (50022d74),plate_design package,removed as complete 21fe1b1f,3855579c,services/api/app/calculators/plate_design/__init__.py
+ARCH-001,BACKLOG.md (50022d74),Connect plate thickness solver to archtop graduation map,removed: done via ARCH-003 (4741f084),3bac45f5,services/api/app/cam/carving/graduation_map.py
+NECK-001,BACKLOG.md (50022d74),Neck suite Vue composables + NeckView,removed: neck suite integrated 2026-03-18 (4741f084),36e8e8df,packages/client/src/design-utilities/lutherie/neck/useNeckTaper.ts
+NECK-001b,BACKLOG.md (50022d74),Neck suite CamSpec composable,removed: integrated 2026-03-18,36e8e8df,packages/client/src/design-utilities/lutherie/neck/useCamSpec.ts
+NECK-001c,SPRINT_BOARD.md,CamSpecPanel (cam/neck),integrated 2026-03-18,8c553069,packages/client/src/components/cam/neck/CamSpecPanel.vue
+NECK-001d,SPRINT_BOARD.md,CamSpecPanel (neck),integrated 2026-03-18,8c553069,packages/client/src/components/neck/CamSpecPanel.vue
+HEADSTOCK-001,BACKLOG.md (50022d74),DXF export veneer + binding + material cost,removed as complete 21fe1b1f,98c0b58d,services/api/app/routers/headstock/dxf_export.py
+HEADSTOCK-001-UI,SPRINT_BOARD.md,Headstock suite workspace view (consumer of /headstock-dxf),integrated 2026-03-18,8c553069,packages/client/src/views/cam/headstock/WorkspaceView.vue
+HEADSTOCK-TRANSITION,bundle 03-17T155948 + c2c332b8,Neck-to-headstock transition DXF + G-code router,registered 2026-03-18,c2c332b8,services/api/app/routers/neck/headstock_transition_export.py
+NECK-PROFILE-EXPORT,bundle 03-17T153916,Neck profile export router (cited as HEADSTOCK/VECTORIZER evidence),cited 1fdd5d53; deleted as orphan next day,—,services/api/app/routers/neck/neck_profile_export.py
+VECTORIZER-001,BACKLOG.md (50022d74),Photo-to-DXF vectorizer FastAPI router,removed as complete 21fe1b1f,98c0b58d,services/api/app/routers/photo_vectorizer_router.py
+CAM-SURVEY-001,BACKLOG.md (50022d74),CAM workspace architecture reference document,removed: documented in ARCHITECTURE.md (4741f084),5b3675fa,docs/CAM_SURVEY.md
+CAM-WS-P1,SPRINT_BOARD.md,CAM Workspace wizard view,Phase 1 complete 2026-03-17,34e22a77,packages/client/src/views/cam/CamWorkspaceView.vue
+CAM-WS-P1b,SPRINT_BOARD.md,NeckOpPanel,complete 2026-03-18,95ef35d5,packages/client/src/components/cam/NeckOpPanel.vue
+CAM-WS-BACKEND,commit 95ef35d5,cam_workspace_router (neck evaluate/generate),integrated 2026-03-18,95ef35d5,services/api/app/routers/cam/cam_workspace_router.py
+CAM-MACHINES,commit fe1e2f51,BCamMachineSpec machine presets,added 2026-03-17,fe1e2f51,services/api/app/cam/machines.py
+CAM-CUT-EVAL,commit 52ebb632,cam_cutting_evaluator complete 7-function version,updated 2026-03-18,52ebb632,services/api/app/calculators/cam_cutting_evaluator.py
+GEN-6,commit 3466da7f,Acoustic body generator + CAM endpoints,added 2026-03-17,3466da7f,services/api/app/generators/acoustic_body_generator.py
+OM-PURF-05,commit 0a3d53b9,Binding corner miter G-code,gap resolved 2026-03-17,0a3d53b9,services/api/app/cam/binding/binding_corner_miter.py
+OM-PURF-08,commit 0a3d53b9,Channel depth probe cycle (G38.2),gap resolved 2026-03-17,0a3d53b9,services/api/app/cam/_om_purf_08_additions.py
+RADIUS-DISH,bundle 03-20T023112 + 3215ef9b,Radius dish router for parametric G-code,added 2026-03-21,3215ef9b,services/api/app/routers/radius_dish_router.py
+CONTEXT-TOOLS,SPRINT_BOARD.md,Calculator context slot infrastructure,complete 2026-03-18,8c553069,packages/client/src/composables/useContextTools.ts
+CALC-REGISTRY,SPRINT_BOARD.md,calculator-registry module-to-tool mapping,complete 2026-03-18,8c553069,packages/client/src/design-utilities/calculator-registry.ts
+R-1,calculator-unification-remediation.md,Lutherie Geometry category in CalculatorHub,planned 2026-03-15,—,packages/client/src/design-utilities/lutherie/LutherieGeometryPanel.vue
+R-2,calculator-unification-remediation.md,BridgeBreakAnglePanel.vue,planned 2026-03-15; built in nested 03-15T193643 bundle,—,packages/client/src/design-utilities/lutherie/BridgeBreakAnglePanel.vue
+R-3,calculator-unification-remediation.md,NutBreakAnglePanel.vue,planned 2026-03-15,—,packages/client/src/design-utilities/lutherie/NutBreakAnglePanel.vue
+CONSTRUCTION-001,BACKLOG.md (50022d74),Nut slot depth schedule,removed as complete,1fe59f1f,services/api/app/calculators/nut_slot_calc.py
+CONSTRUCTION-002,BACKLOG.md (50022d74),Instrument setup cascade,removed as complete,451a91c8,services/api/app/calculators/setup_cascade.py
+CONSTRUCTION-003,BACKLOG.md (50022d74),Fret leveling geometry,removed as complete,98187d30,services/api/app/calculators/fret_leveling_calc.py
+CONSTRUCTION-004,BACKLOG.md (50022d74),String tension calculator,removed as complete,3f543019,services/api/app/calculators/string_tension.py
+CONSTRUCTION-005,BACKLOG.md (50022d74),Glue joint geometry,removed as complete,b50f58e8,services/api/app/calculators/glue_joint_calc.py
+CONSTRUCTION-006,BACKLOG.md (50022d74),Humidity and wood movement,removed as complete,2f6e6d60,services/api/app/calculators/wood_movement_calc.py
+CONSTRUCTION-007,BACKLOG.md (50022d74),Finish schedule calculator,removed as complete,d3cd3326,services/api/app/calculators/finish_calc.py
+CONSTRUCTION-008,BACKLOG.md (50022d74),Electronics physical layout,removed as complete,e245bea0,services/api/app/calculators/electronics_layout_calc.py
+CONSTRUCTION-009,BACKLOG.md (50022d74),Acoustic voicing history,removed as complete,eaf915f8,services/api/app/calculators/voicing_history_calc.py
+CONSTRUCTION-010,BACKLOG.md (50022d74),Build sequence composition,removed as complete,d3dbe3e6,services/api/app/calculators/build_sequence.py
+GEOMETRY-001,BACKLOG.md (50022d74),Neck angle first-class calculator,removed as complete,1aada15c,services/api/app/instrument_geometry/neck/neck_angle.py
+GEOMETRY-002,BACKLOG.md (50022d74),Soundhole placement and sizing,removed as complete,adae5518,services/api/app/calculators/soundhole_calc.py
+GEOMETRY-003,BACKLOG.md (50022d74),Kerfing geometry,removed as complete,f1bfbde8,services/api/app/calculators/kerfing_calc.py
+GEOMETRY-004,BACKLOG.md (50022d74),Bridge design geometry,removed as complete,b3d62f68,services/api/app/calculators/bridge_calc.py
+GEOMETRY-005,BACKLOG.md (50022d74),Neck and tail block sizing,removed as complete,313af5ca,services/api/app/calculators/neck_block_calc.py
+GEOMETRY-006,BACKLOG.md (50022d74),Fret wire selection,removed as complete,16292bf4,services/api/app/calculators/fret_wire_calc.py
+GEOMETRY-007,BACKLOG.md (50022d74),Nut compensation,removed as complete,1faa7701,services/api/app/calculators/nut_compensation_calc.py
+GEOMETRY-008,BACKLOG.md (50022d74),Tuning machine post height,removed as complete,ec6c8592,services/api/app/calculators/tuning_machine_calc.py
+GEOMETRY-009,BACKLOG.md (50022d74),Back brace generator,removed (4741f084 says not present; diff deletes it),—,services/api/app/calculators/back_brace_calc.py
+GEOMETRY-010,BACKLOG.md (50022d74),Side bending parameters,removed as complete,cf727766,services/api/app/calculators/side_bending_calc.py
+ACOUSTIC-002,BACKLOG (committed),Saddle force decomposition,removed as complete,e6b9c2cb,services/api/app/calculators/saddle_force_calc.py
+ACOUSTIC-003,BACKLOG (committed),Top deflection calculator,removed as complete,74bcb2de,services/api/app/calculators/top_deflection_calc.py
+ACOUSTIC-004,BACKLOG (committed),Inverse brace sizing,removed as complete,022e48f8,services/api/app/calculators/bracing_calc.py

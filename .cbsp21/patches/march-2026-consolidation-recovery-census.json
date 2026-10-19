@@ -1,0 +1,277 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MARCH_2026_CONSOLIDATION_RECOVERY_CENSUS_001",
+  "title": "docs(investigations): March 2026 consolidation recovery census (evidence only)",
+  "intent": "Census what the March 15-21 consolidation period stranded: compare every March output bundle to Git by content hash, check 'complete / integrated' claims for reachability, and record dispositions in a ledger. Split out of #439 so it can be reviewed as a standalone forensic dataset. Evidence only; no production behaviour changes.",
+  "change_type": "docs",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs or baselines is modified. Adds the census directory, four read-only evidence tools under scripts/investigations/, one census test module, and one ACKNOWLEDGED_NON_DIMENSION_FILES entry in test_jumbo_dimension_consistency.py (BUNDLE_CENSUS.json mentions jumbo only in member filenames; its hits on the canonical body magnitudes are hex digests and a byte size). Findings: 52 sources, 194 candidates, one safety candidate (/api/headstock/transition/gcode) recorded and routed to HEADSTOCK-TRANSITION-GCODE-SAFETY-001; #441 has since contained the route (409 before generation); the generator is not fixed here or there.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/march-2026-consolidation-recovery-census.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/.gitattributes",
+      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/OVERRIDE_REVIEW.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/README.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
+      "scripts/investigations/march_2026_bundle_census.py",
+      "scripts/investigations/march_2026_census_ledger.py",
+      "scripts/investigations/march_2026_census_spot_check.py",
+      "scripts/investigations/march_2026_claim_reachability.py",
+      "services/api/tests/test_jumbo_dimension_consistency.py",
+      "services/api/tests/test_march_2026_census_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/march-2026-consolidation-recovery-census.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/.gitattributes",
+      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/OVERRIDE_REVIEW.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/README.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
+      "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
+      "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
+      "scripts/investigations/march_2026_bundle_census.py",
+      "scripts/investigations/march_2026_census_ledger.py",
+      "scripts/investigations/march_2026_census_spot_check.py",
+      "scripts/investigations/march_2026_claim_reachability.py",
+      "services/api/tests/test_jumbo_dimension_consistency.py",
+      "services/api/tests/test_march_2026_census_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Census dataset (raw census JSON, members, derived ledger/inventory/planning CSVs, claim inputs and reachability results), methodology and findings documents, a reviewer map and per-row proof classes (MECHANICALLY_VERIFIED / HEURISTIC_CANDIDATE / MANUALLY_ADJUDICATED / SOURCE_UNAVAILABLE / UNRESOLVED), OVERRIDE_REVIEW.md covering every manual ruling with a reviewer column, an independent spot-check (SPOT_CHECK.md) with a negative control, a regeneration map, linguist-generated marking for machine outputs, four evidence tools, and 10 integrity and fixture tests.",
+    "why_not_redundant": "No prior census compared the March bundles to Git by content hash or checked 'complete' claims for reachability. The CL-RED premise is corrected by erratum rather than built on."
+  },
+  "verification": {
+    "commands_run": [
+      "python -I scripts/investigations/march_2026_bundle_census.py over 52 sources (ZIPs read in memory; bundles outside Git)",
+      "python -I scripts/investigations/march_2026_claim_reachability.py --root <git archive d42712e0>: byte-identical to the committed MARCH_CLAIM_REACHABILITY.csv",
+      "python -I scripts/investigations/march_2026_census_ledger.py: ledger, inventory and planning regenerate byte-for-byte",
+      "pytest services/api/tests/test_march_2026_census_evidence.py services/api/tests/test_jumbo_dimension_consistency.py",
+      "python -I scripts/investigations/march_2026_census_spot_check.py over the 52 located bundles: 44 rows, 84 checks PASS, 0 FAIL; negative control (tampered row) exits 1",
+      "Mutation checks: reverting the HISTORY_ONLY rule, a wrong review row, and removing the duplicate-key check each fail at least one census test"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/march-2026-consolidation-recovery-census.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/.gitattributes",
+      "intent": "Marks machine-generated census outputs linguist-generated so review focuses on overrides, scripts and conclusions.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_CENSUS.json",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/BUNDLE_MEMBERS.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/CLAIM_VERIFICATION.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/CONSOLIDATION_TIMELINE.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/ERRATUM_CL_RED.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/IMPLEMENTATION_RECONCILIATION.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/LEDGER_OVERRIDES.json",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIMS_INPUT.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_CLAIM_REACHABILITY.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/MARCH_PLANNING_INDEX.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/OVERRIDE_REVIEW.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/PLANNING_RECONCILIATION.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/PRESERVATION_GAPS.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/R12_R15_CHAIN.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/README.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_LEDGER.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/RECOVERY_RECOMMENDATIONS.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/SOURCE_BUNDLE_INVENTORY.csv",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/SPOT_CHECK.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/march-2026-consolidation-recovery-census/SUPERSESSION_LEDGER.md",
+      "intent": "Census evidence (dataset, methodology, findings). Documentation only.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/march_2026_bundle_census.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/march_2026_census_ledger.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/march_2026_census_spot_check.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/march_2026_claim_reachability.py",
+      "intent": "Offline, read-only evidence tooling (no network, no machine, explicit arguments, no application startup).",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_jumbo_dimension_consistency.py",
+      "intent": "Registry entry only: acknowledge BUNDLE_CENSUS.json in ACKNOWLEDGED_NON_DIMENSION_FILES. No assertion changes.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_march_2026_census_evidence.py",
+      "intent": "Census integrity and fixture tests (text, scratch Git repositories and in-process evidence tools; no application import beyond the conftest).",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and offline evidence tooling only."
+  }
+}
