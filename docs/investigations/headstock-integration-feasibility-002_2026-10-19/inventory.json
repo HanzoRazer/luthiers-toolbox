@@ -1,0 +1,137 @@
+{
+  "order": "HEADSTOCK-INTEGRATION-FEASIBILITY-002",
+  "measured_against": "4837c500d7f1fa4756c0ea365396478796887582",
+  "open_prs_owning_headstock": [],
+  "provisional_destination": "packages/client/src/views/art-studio/HeadstockDesignerView.vue",
+  "provisional_route": "/art-studio/headstock",
+  "comparison_only": "packages/client/src/views/art/art_studio_headstock/ArtStudioHeadstock.vue",
+  "recommendation": {
+    "outcome": "port",
+    "cluster_id": "parametric-outline-preview",
+    "manufacturing": false,
+    "destination": "packages/client/src/views/art-studio/HeadstockDesignerView.vue",
+    "restores_archived_application": false
+  },
+  "use_headstock": {
+    "classification": "NOT_RECOVERED_GENERATION_UNKNOWN",
+    "module_path": "composables/useHeadstock.ts",
+    "exports": [
+      {
+        "name": "drawBackground",
+        "classification": "NOT_RECOVERED_GENERATION_UNKNOWN",
+        "call_shape": "drawBackground(layer, canvas, showGrid: boolean)"
+      },
+      {
+        "name": "drawHeadstock",
+        "classification": "NOT_RECOVERED_GENERATION_UNKNOWN",
+        "call_shape": "drawHeadstock(hsLayer, guideLayer | null, canvas, hs, showCenterline: boolean, showNut: boolean)"
+      },
+      {
+        "name": "createInlayGroup",
+        "classification": "NOT_RECOVERED_GENERATION_UNKNOWN",
+        "call_shape": "createInlayGroup(type, cx, cy, inlayLayer, canvas, snap, boundary, hs, onSelect, onChange)"
+      },
+      {
+        "name": "exportWorkspaceSVG",
+        "classification": "NOT_RECOVERED_GENERATION_UNKNOWN",
+        "call_shape": "exportWorkspaceSVG(hs, modelKey, inlays, canvas) => string"
+      }
+    ]
+  },
+  "konva": {
+    "live": "packages/client/src/composables/useKonvaCanvas.ts",
+    "recovered": "archive/experimental/2026-03/headstock-suite-refined/ps-vue-src/composables/useKonvaCanvas.ts",
+    "implements_four_exports": false,
+    "classification": "PARTIAL_RECONSTRUCTION_INPUT"
+  },
+  "adapters": [
+    {
+      "lost_import": "@/assets/data/headstockData",
+      "status": "incomplete",
+      "may_reexport": ["HS_MODELS", "PARAM_DEFS", "TIP_STYLE_LABELS", "TUNER_PATTERNS", "MM", "buildHeadstockPath", "buildTunerPositions"],
+      "must_not_claim": "historical module boundary"
+    },
+    {
+      "lost_import": "@/composables/useParametric",
+      "status": "infeasible_as_drop_in",
+      "may_reexport": ["buildHeadstockPath", "buildTunerPositions", "useHeadstockPath", "computeNovelty", "computeGates", "useScoring"],
+      "must_not_claim": "aliases such as buildParametricPath or scoreNovelty"
+    }
+  ],
+  "reachability": [
+    {
+      "symbol": "useDxfImport",
+      "definition": "packages/client/src/composables/useDxfImport.ts",
+      "runtime_callers": ["packages/client/src/views/art-studio/InlayWorkspaceShell.vue"],
+      "routed": true,
+      "route": "/art-studio/inlay-workspace"
+    },
+    {
+      "symbol": "useExportDxf",
+      "definition": "packages/client/src/composables/useExportDxf.ts",
+      "runtime_callers": [],
+      "routed": false,
+      "route": null
+    },
+    {
+      "symbol": "useCamSpec",
+      "definition": "packages/client/src/design-utilities/lutherie/neck/useCamSpec.ts",
+      "runtime_callers": [],
+      "routed": false,
+      "route": null
+    }
+  ],
+  "type_errors_exposed_by_recovered_types": [
+    {"file": "packages/client/src/composables/useDxfImport.ts", "line": 124, "code": "TS2339", "detail": "Property 'pad' does not exist on type 'NormalizeOptions'."},
+    {"file": "packages/client/src/composables/useDxfImport.ts", "line": 168, "code": "TS2769", "detail": "No overload matches this call."},
+    {"file": "packages/client/src/composables/useDxfImport.ts", "line": 180, "code": "TS2353", "detail": "Object literal may only specify known properties, and 'type' does not exist in type 'RawPath'."},
+    {"file": "packages/client/src/composables/useDxfImport.ts", "line": 198, "code": "TS2353", "detail": "Object literal may only specify known properties, and 'type' does not exist in type 'RawPath'."},
+    {"file": "packages/client/src/composables/useDxfImport.ts", "line": 207, "code": "TS2353", "detail": "Object literal may only specify known properties, and 'type' does not exist in type 'RawPath'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 34, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 37, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 38, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 39, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 40, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."},
+    {"file": "packages/client/src/composables/useExportDxf.ts", "line": 74, "code": "TS2339", "detail": "Property 'node' does not exist on type 'InlayLayer'."}
+  ],
+  "vue_tsc": {
+    "toolchain": "vue-tsc 3.3.12, TypeScript 6.0.3",
+    "tree": "4837c500 with recovered types/headstock.ts plus ParametricParams and ImportedPath aliases, scratch only",
+    "error_count": 94
+  },
+  "scores": [
+    {"cluster_id": "parametric-outline-preview", "complete": 5, "fit": 4, "independent": 5, "no_manufacturing": 5, "testable": 5, "value": 5, "total": 29, "selected": true},
+    {"cluster_id": "novelty-scoring", "complete": 5, "fit": 3, "independent": 5, "no_manufacturing": 5, "testable": 5, "value": 3, "total": 26, "selected": false},
+    {"cluster_id": "preset-model-paths", "complete": 5, "fit": 3, "independent": 5, "no_manufacturing": 4, "testable": 5, "value": 3, "total": 25, "selected": false},
+    {"cluster_id": "import-comparison", "complete": 4, "fit": 2, "independent": 5, "no_manufacturing": 1, "testable": 3, "value": 4, "total": 19, "selected": false},
+    {"cluster_id": "wood-grain", "complete": 3, "fit": 2, "independent": 5, "no_manufacturing": 4, "testable": 3, "value": 2, "total": 19, "selected": false},
+    {"cluster_id": "variants", "complete": 1, "fit": 2, "independent": 5, "no_manufacturing": 4, "testable": 2, "value": 2, "total": 16, "selected": false},
+    {"cluster_id": "cam-overlay", "complete": 4, "fit": 1, "independent": 3, "no_manufacturing": 1, "testable": 2, "value": 2, "total": 13, "selected": false},
+    {"cluster_id": "interactive-inlay", "complete": 1, "fit": 2, "independent": 1, "no_manufacturing": 2, "testable": 1, "value": 5, "total": 12, "selected": false}
+  ],
+  "endpoints": [
+    {"id": "headstock-inlay-templates", "method": "GET", "path": "/api/instruments/guitar/headstock-inlay/templates", "used_by": "HeadstockDesignerView.vue", "class": "live", "kind": "design"},
+    {"id": "headstock-inlay-styles", "method": "GET", "path": "/api/instruments/guitar/headstock-inlay/styles", "used_by": "HeadstockDesignerView.vue", "class": "live", "kind": "design"},
+    {"id": "headstock-inlay-prompt", "method": "POST", "path": "/api/instruments/guitar/headstock-inlay/generate-prompt", "used_by": "HeadstockDesignerView.vue", "class": "live", "kind": "design"},
+    {"id": "cam-headstock-inlay", "method": "GET/POST", "path": "/api/cam/headstock/inlay", "used_by": "app.cam.headstock.router", "class": "live", "kind": "design"},
+    {"id": "headstock-dxf", "method": "POST", "path": "/api/export/headstock-dxf", "used_by": "archived WorkspaceView via useExportDxf", "class": "live", "kind": "manufacturing", "governed": true},
+    {"id": "headstock-dxf-preview", "method": "POST", "path": "/api/export/headstock-dxf/preview", "used_by": "useExportDxf.fetchPreview", "class": "live", "kind": "manufacturing", "governed": true},
+    {"id": "headstock-dxf-cost", "method": "POST", "path": "/api/export/headstock-dxf/cost", "used_by": "suite DXF cost", "class": "live", "kind": "manufacturing", "governed": true},
+    {"id": "spline-evaluate", "method": "POST", "path": "/api/dxf/spline/evaluate", "used_by": "useDxfImport.parseDXFText", "class": "broken", "kind": "manufacturing"},
+    {"id": "vectorizer-status", "method": "GET", "path": "/api/vectorizer/status", "used_by": "useDxfImport.checkVectorizerStatus", "class": "live", "kind": "design"},
+    {"id": "pipeline-run", "method": "POST", "path": "client api/pipeline runPipeline", "used_by": "ArtStudioHeadstock.vue", "class": "live", "kind": "manufacturing"},
+    {"id": "cam-risk", "method": "GET/POST", "path": "client api/camRisk", "used_by": "ArtStudioHeadstock.vue", "class": "live", "kind": "manufacturing"}
+  ],
+  "archive_hashes_lf": {
+    "ConfiguratorView.vue": "29670eb1148222bbc608a4d6d6797478b47f39bbcddbd483dda04b651fd8db1b",
+    "ImportView.vue": "c76a02a1198b078819e78bb3b4cbc3dbfff09a4777205f02ff2973f85661c9cc",
+    "ParametricView.vue": "141dc0cc7a5fb0173c3b06ed1128410ed72043626e14268660d1db666ff14f88",
+    "WorkspaceView.vue": "329e1bd6525962bf57fda89f57f519796b12d6cf0fad10fd48c20a8f8aa879a0",
+    "ps-vue-src/types/headstock.ts": "e1f41b9622ad77297c33f5fc75ac528db52b84f7e1bf06dbf5b8883a035253ee",
+    "ps-vue-src/stores/headstock.ts": "d62da3602a738434df4e9fce8dd486c0f81ca7c1c4a4b2b3a8f75f7f88f22b62",
+    "ps-vue-src/composables/useHeadstockPath.ts": "5a0be21190fc07b0dc989353ea97fa7693594d276c780c75d1ac14a87a9d43b6",
+    "ps-vue-src/composables/useScoring.ts": "eb0011c0454134b9aaf08866214a9275ecf7113412b8d0ba9f2cc03b6fa3c440",
+    "ps-vue-src/composables/useKonvaCanvas.ts": "1e981dc54266d2ffbfa8469c067b12a206da45077e67fb56e3931c9e2c05b867",
+    "ps-vue-src/components/headstock/constants.ts": "176f80d84e845df6d0e1a9e6a347d55ac9011cf0287ad874bee0809a42f264bf"
+  }
+}
