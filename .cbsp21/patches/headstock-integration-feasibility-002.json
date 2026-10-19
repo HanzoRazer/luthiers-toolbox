@@ -1,0 +1,137 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HEADSTOCK_INTEGRATION_FEASIBILITY_002",
+  "title": "docs: headstock integration feasibility, evidence only",
+  "intent": "Record whether the archived 2026-03 headstock suite can be restored, which destination a recovered design capability would use, and which single design-only cluster the evidence supports. Do not edit production client or API code, and do not carry out the follow-on implementation order.",
+  "change_type": "docs",
+  "behavior_change": "None. Adds an investigation folder, a machine-readable inventory, and an offline test that reads those files and the archive bytes. No route, composable, or endpoint changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/headstock-integration-feasibility-002.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/USE_HEADSTOCK_RECONSTRUCTION.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/TYPE_COMPATIBILITY.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/DEPENDENCY_GRAPH.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/CAPABILITY_COMPARISON.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/OPTIONS.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/RECOMMENDATION.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "services/api/tests/test_headstock_integration_feasibility_002.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/headstock-integration-feasibility-002.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/USE_HEADSTOCK_RECONSTRUCTION.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/TYPE_COMPATIBILITY.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/DEPENDENCY_GRAPH.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/CAPABILITY_COMPARISON.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/OPTIONS.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/RECOMMENDATION.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "services/api/tests/test_headstock_integration_feasibility_002.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Investigation documents, inventory.json, and one pytest module. The recommendation is to port a parametric outline preview into HeadstockDesignerView.vue later. This branch does not do that port.",
+    "why_not_redundant": "The lineage note and the ps-vue-src archive record what was recovered. They do not choose a destination, score a first cluster, or close the useHeadstock preflight."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api .venv python -m pytest tests/test_headstock_integration_feasibility_002.py tests/test_headstock_ps_vue_src_preserved.py -q --no-cov: 10 passed",
+      "repo root: python3 scripts/ci/check_cbsp21_gate.py --changed-files <the 12 files in this manifest>: coverage 100%, PASSED"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "intent": "Index of the evidence set.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "intent": "Machine-readable capability, dependency, and score inventory.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/USE_HEADSTOCK_RECONSTRUCTION.md",
+      "intent": "Bounded preflight. Classification NOT_RECOVERED_GENERATION_UNKNOWN.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/TYPE_COMPATIBILITY.md",
+      "intent": "Recovered types and the two adapter limits.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "intent": "Design endpoints versus manufacturing endpoints.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/DEPENDENCY_GRAPH.md",
+      "intent": "Recovered imports and reachability.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/CAPABILITY_COMPARISON.md",
+      "intent": "Archived suite versus the routed designer and the engraving view.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/OPTIONS.md",
+      "intent": "Restore, port, or keep archived.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/RECOMMENDATION.md",
+      "intent": "One design-only cluster: parametric outline preview.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "intent": "HEADSTOCK-PARAMETRIC-OUTLINE-PREVIEW-003, not implemented here.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_headstock_integration_feasibility_002.py",
+      "intent": "Locks hashes, the selected cluster, the eleven type errors, and reachability.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/headstock-integration-feasibility-002.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and an offline evidence test. No production surface changes."
+  }
+}
