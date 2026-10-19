@@ -1,0 +1,182 @@
+/* Production Shop — CSS design tokens
+   Import in main.ts:  import '@/styles/ps-tokens.css'
+*/
+:root {
+  /* Background tiers */
+  --ps-bg:       #0f0d0a;
+  --ps-surface1: #1a1612;
+  --ps-surface2: #201d18;
+  --ps-surface3: #2a2520;
+
+  /* Borders */
+  --ps-border:  #2a2520;
+  --ps-border2: #201d18;
+
+  /* Text */
+  --ps-text:     #f0e8d4;
+  --ps-text-dim: #e8dfc8;
+  --ps-dim:      #9a8460;
+  --ps-dim2:     #7a6448;
+  --ps-dim3:     #5a4830;
+
+  /* Brass accent */
+  --ps-brass:  #b8962e;
+  --ps-brass2: #d4ae48;
+  --ps-brass3: #8a6e1a;
+  --ps-brass4: #5a4810;
+
+  /* Semantic */
+  --ps-green: #3a7a4a;
+  --ps-red:   #9a3828;
+  --ps-amber: #b87020;
+  --ps-blue:  #3a6a8a;
+  --ps-blue2: #5b8fa8;
+
+  /* Typography */
+  --ps-serif: 'Palatino Linotype', Palatino, Georgia, serif;
+  --ps-mono:  'Courier New', Courier, monospace;
+}
+
+/* Shared layout primitives used across all panels */
+.ps-left {
+  flex-shrink: 0;
+  background: var(--ps-surface1);
+  border-right: 1px solid var(--ps-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.ps-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--ps-bg);
+}
+.ps-right {
+  flex-shrink: 0;
+  background: var(--ps-surface1);
+  border-left: 1px solid var(--ps-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section block */
+.ps-sec {
+  padding: 10px 13px 8px;
+  border-bottom: 1px solid var(--ps-border2);
+}
+.ps-sec-lbl {
+  font-size: 8px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--ps-brass3);
+  margin-bottom: 7px;
+}
+.ps-sec-ttl {
+  font-family: var(--ps-serif);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ps-brass2);
+  margin-bottom: 8px;
+}
+
+/* Parameter slider row */
+.ps-param-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.ps-param-name  { width: 72px; font-size: 9px; color: var(--ps-dim); flex-shrink: 0; }
+.ps-param-slide { flex: 1; accent-color: var(--ps-brass); cursor: pointer; }
+.ps-param-val   { width: 34px; text-align: right; font-size: 10px; color: var(--ps-text); flex-shrink: 0; }
+.ps-param-unit  { width: 18px; font-size: 8px; color: var(--ps-dim2); flex-shrink: 0; }
+
+/* Toggle row */
+.ps-tgl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ps-tgl-lbl { font-size: 9px; color: var(--ps-dim); }
+.ps-tgl {
+  width: 26px; height: 13px; border-radius: 7px;
+  background: var(--ps-surface3); position: relative;
+  cursor: pointer; transition: background .15s; flex-shrink: 0;
+}
+.ps-tgl.on { background: var(--ps-brass3); }
+.ps-tgl-kn {
+  position: absolute; top: 1.5px; left: 1.5px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ps-text-dim); transition: left .15s;
+}
+.ps-tgl.on .ps-tgl-kn { left: 14.5px; }
+
+/* Small button */
+.ps-sbtn {
+  background: none;
+  border: 1px solid var(--ps-border);
+  border-radius: 3px;
+  color: var(--ps-dim);
+  font-family: var(--ps-mono);
+  font-size: 9px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  padding: 5px 7px;
+  cursor: pointer;
+  transition: all .1s;
+  text-align: center;
+}
+.ps-sbtn:hover { border-color: var(--ps-brass3); color: var(--ps-text); }
+.ps-sbtn.on    { border-color: var(--ps-brass); background: rgba(184,150,46,.07); color: var(--ps-brass2); }
+
+/* Layer list item */
+.ps-layer-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 6px; border-radius: 3px; margin-bottom: 2px;
+  cursor: pointer; border: 1px solid transparent; transition: all .1s;
+}
+.ps-layer-item:hover { background: var(--ps-surface2); }
+.ps-layer-item.sel   { background: rgba(184,150,46,.07); border-color: var(--ps-brass3); }
+.ps-lpip  { width: 6px; height: 6px; border-radius: 1px; flex-shrink: 0; }
+.ps-lname { flex: 1; font-size: 9px; color: var(--ps-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-layer-item.sel .ps-lname { color: var(--ps-text); }
+
+/* Model button */
+.ps-mbtn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 7px; border-radius: 3px;
+  cursor: pointer; border: 1px solid transparent;
+  background: none; font-family: var(--ps-serif); font-size: 11px;
+  color: var(--ps-dim); transition: all .1s; text-align: left; width: 100%;
+}
+.ps-mbtn:hover { background: var(--ps-surface2); color: var(--ps-text); }
+.ps-mbtn.on    { border-color: var(--ps-brass3); background: rgba(184,150,46,.06); color: var(--ps-brass2); }
+.ps-mswatch    { width: 7px; height: 7px; border-radius: 1px; flex-shrink: 0; }
+
+/* Inlay grid button */
+.ps-inlay-btn {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 1px solid var(--ps-surface3);
+  border-radius: 3px; background: var(--ps-surface2);
+  cursor: pointer; font-size: 8px; color: var(--ps-dim);
+  transition: all .1s;
+}
+.ps-inlay-btn:hover { border-color: var(--ps-brass3); color: var(--ps-brass2); }
+.ps-inlay-btn svg { width: 18px; height: 18px; }
+
+/* Prop input */
+.ps-prop-val {
+  flex: 1; background: var(--ps-surface2); border: 1px solid var(--ps-border);
+  border-radius: 2px; color: var(--ps-text); font-family: var(--ps-mono);
+  font-size: 10px; padding: 3px 5px; text-align: right;
+}
+.ps-prop-val:focus { outline: none; border-color: var(--ps-brass); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--ps-surface1); }
+::-webkit-scrollbar-thumb { background: var(--ps-border); border-radius: 2px; }
