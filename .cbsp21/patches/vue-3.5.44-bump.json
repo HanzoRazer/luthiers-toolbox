@@ -1,0 +1,92 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_3_5_44_BUMP",
+  "title": "build(deps): bump vue from 3.5.43 to 3.5.44",
+  "intent": "Routine Dependabot currency, no advisory. vue 3.5.43 -> 3.5.44 in packages/client (patch release, 2026-10-13, bug fixes only: compiler v-html constant stringification of 0/false, v-memo key guard, v-show transition, reactivity watcher/iterator/shallow-collection fixes, runtime-core prop-key and scheduler fixes, KeepAlive/Suspense/Teleport/Transition fixes). Moves the @vue/* family in lockstep AND four transitive packages the title does not name -- see behavior_change. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001). The Dependabot commit also flipped `peer: true` on 16 entries (13 with unchanged versions, plus the peer key on vue, postcss and @vue/compiler-dom); per main's convention since #432 (ec88eedd) that churn is dropped so the diff is the bump only.",
+  "change_type": "chore",
+  "behavior_change": "Lockfile audited against merge base 2e2d635f by parsing both package-lock.json trees and comparing every `packages` entry in full. Entries 400 -> 400, added=0, removed=0. Fourteen node_modules entries moved: vue and @vue/{compiler-core, compiler-dom, compiler-sfc, compiler-ssr, reactivity, runtime-core, runtime-dom, server-renderer, shared} 3.5.43 -> 3.5.44 in lockstep; plus four transitive movements NOT named in the PR title: postcss 8.5.28 -> 8.5.30, nanoid 3.3.18 -> 3.3.20 (postcss dependency), source-map-js 1.2.1 -> 1.2.2, @babel/parser 7.29.8 -> 7.29.9. The postcss move is forced, not incidental: @vue/compiler-sfc 3.5.44 raised its postcss range from ^8.5.28 to ^8.5.29 (npm view), so the hoisted postcss 8.5.28 no longer satisfies it. This overlaps sibling PR #449 (postcss 8.5.28 -> 8.5.30 devDependency range bump): both resolve postcss to the identical 8.5.30 entry, so the move is forward and consistent, not a #296-shaped revert. Every `dependencies` map that changed was checked key by key: same key sets, only version-range movements. The root entry differs in one key, dependencies.vue ^3.5.43 -> ^3.5.44; the declared devDependency postcss range stays ^8.5.28 (still satisfied by 8.5.30). Runtime: vue is the framework, so every route is affected; 3.5.44 is a bug-fix patch. The one fix that touches a directive the app uses heavily, v-html (about 20 SFCs), changes only compile-time stringification of constant literals 0/false; the app binds HTML/SVG strings, so output is unchanged. postcss/nanoid/source-map-js/@babel/parser are build-time (SFC compile, CSS) with no runtime footprint in the bundle beyond compiled output.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-3.5.44-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-3.5.44-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared vue range ^3.5.43 -> ^3.5.44 -- one line. package-lock.json resolves vue + nine @vue/* packages 3.5.43 -> 3.5.44 and four transitive build-time packages (postcss 8.5.30, nanoid 3.3.20, source-map-js 1.2.2, @babel/parser 7.29.9). Dependabot's peer-flag churn reverted to the merge-base values.",
+    "why_not_redundant": "Dependabot currency. No existing manifest covers this diff; borrowing an older one is what CBSP21-NOBORROW-001 refuses. The postcss overlap with #449 is declared here rather than left for a reviewer to discover."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on Dependabot head ebf1fc2d reported no manifest of its own; all other checks passed",
+      "lockfile audit (full-entry enumeration) vs merge base 2e2d635f: 400 -> 400, added=0, removed=0, real changes = root + 14 entries; 16 peer-flag changes reverted",
+      "npm view @vue/compiler-sfc@3.5.43 / @3.5.44 dependencies.postcss -> ^8.5.28 / ^8.5.29 (postcss move is forced by the bump)",
+      "lockfile rebuild: merge-base lock + the real-change entries with merge-base peer flags; merge-base round-trip asserted byte-exact; result: zero peer differences from base, zero non-peer differences from the Dependabot head",
+      "supply-chain, all 14 moved packages: npm registry dist.integrity equals lockfile integrity; resolved from registry.npmjs.org; no install-time hooks; vue/@vue/@babel published via npm OIDC trusted publishing",
+      "advisories (GitHub Advisory Database, npm): vue@3.5.43 0, vue@3.5.44 0, postcss@8.5.30 0, nanoid@3.3.20 0, source-map-js@1.2.2 0",
+      "changelog read (vuejs/core CHANGELOG.md 3.5.44): bug fixes only, no breaking changes",
+      "merge onto current origin/main fef162a8: git merge-tree clean; 400 entries; no already-merged version reverted",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/vue-3.5.44-bump.json packages/client/package.json packages/client/package-lock.json -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base 2e2d635f --head HEAD -> PASS (selected this PR's own manifest)",
+      "CI (lint-build incl. type-check ratchet, build-and-test, containers) is the build/test verification; all passed on ebf1fc2d"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, vue ^3.5.43 -> ^3.5.44.",
+      "scan_targets": [
+        "packages/client/package.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": [
+        "full parse of both package.json trees -> one key changed; no other top-level key changed"
+      ]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": [
+        "packages/client/package-lock.json"
+      ],
+      "risk": "low",
+      "behavior_change": "vue + 9 @vue/* entries 3.5.43 -> 3.5.44 in lockstep; transitive postcss 8.5.30, nanoid 3.3.20, source-map-js 1.2.2, @babel/parser 7.29.9; integrity matches the registry for all; peer-flag churn reverted",
+      "verification": [
+        "lockfile entry enumeration -> moved set = vue family + 4 named transitive packages, nothing else"
+      ]
+    },
+    {
+      "path": ".cbsp21/patches/vue-3.5.44-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [
+        ".cbsp21/patches/vue-3.5.44-bump.json"
+      ],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-20-VUE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. vue is on every live path, so CI build/test and the type-check ratchet are the meaningful checks; 3.5.44 is a bug-fix patch. Transitive build-tool movement (postcss family) enumerated and declared, including its overlap with sibling #449.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
