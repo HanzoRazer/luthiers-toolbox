@@ -34,7 +34,7 @@
   },
   "verification": {
     "commands_run": [
-      "services/api .venv python -m pytest tests/test_headstock_endpoint_evidence_correction_002a.py tests/test_headstock_integration_feasibility_002.py tests/test_headstock_ps_vue_src_preserved.py -q --no-cov: 13 passed",
+      "services/api .venv python -m pytest tests/test_headstock_endpoint_evidence_correction_002a.py tests/test_headstock_integration_feasibility_002.py tests/test_headstock_ps_vue_src_preserved.py -q --no-cov: initial run 13 passed; 14 tests after the complexity-only assertion split",
       "packages/client: npx vitest run src/composables/__tests__/useDxfImport.splineEvaluate.spec.ts: 1 passed",
       "repo root: python3 scripts/ci/check_cbsp21_gate.py --changed-files <the 7 files in this manifest>: coverage 100%, PASSED",
       "mounted route walk plus TestClient POST /api/dxf/spline/evaluate: 404 Not Found",
