@@ -8,7 +8,7 @@ Evidence only. Measured against `main` at `4837c500` (merge of PR #443). No prod
 | [DEPENDENCY_GRAPH.md](DEPENDENCY_GRAPH.md) | Which recovered file each import resolves to, and which calls are reachable |
 | [TYPE_COMPATIBILITY.md](TYPE_COMPATIBILITY.md) | The 11 errors the recovered types expose, and the two adapter limits |
 | [USE_HEADSTOCK_RECONSTRUCTION.md](USE_HEADSTOCK_RECONSTRUCTION.md) | The preflight for the four missing canvas exports |
-| [BACKEND_ENDPOINT_AUDIT.md](BACKEND_ENDPOINT_AUDIT.md) | Live, governed, and obsolete endpoints. The spline row was corrected by 002A |
+| [BACKEND_ENDPOINT_AUDIT.md](BACKEND_ENDPOINT_AUDIT.md) | Live, governed, failed, and obsolete endpoints. The spline row was corrected by 002A |
 | [SPLINE_EVALUATE_WITNESS.md](SPLINE_EVALUATE_WITNESS.md) | Runtime witness for `POST /api/dxf/spline/evaluate` |
 | [OPTIONS.md](OPTIONS.md) | Restore, port, or keep archived |
 | [RECOMMENDATION.md](RECOMMENDATION.md) | One design-only cluster, or none |
