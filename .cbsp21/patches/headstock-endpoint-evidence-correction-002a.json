@@ -1,0 +1,100 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HEADSTOCK_ENDPOINT_EVIDENCE_CORRECTION_002A",
+  "title": "docs: correct the spline evaluate evidence classification",
+  "intent": "Replace PR #444's unsupported claim that POST /api/dxf/spline/evaluate is broken. Record the runtime class REACHABLE_VISIBLE_FAILURE: the inlay workspace import is reachable, the parser is absent, the page shows that error, and the missing route is never requested.",
+  "change_type": "docs",
+  "behavior_change": "None. Corrects two investigation records and adds tests that read them and the mounted route table. No client or API behavior change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/headstock-endpoint-evidence-correction-002a.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/SPLINE_EVALUATE_WITNESS.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "services/api/tests/test_headstock_endpoint_evidence_correction_002a.py",
+      "packages/client/src/composables/__tests__/useDxfImport.splineEvaluate.spec.ts"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/headstock-endpoint-evidence-correction-002a.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/SPLINE_EVALUATE_WITNESS.md",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "services/api/tests/test_headstock_endpoint_evidence_correction_002a.py",
+      "packages/client/src/composables/__tests__/useDxfImport.splineEvaluate.spec.ts"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "The spline endpoint record now cites the inlay-workspace witness. A pytest checks route absence, the single caller, and agreement between the audit and inventory. A vitest checks that a DXF upload does not fetch the missing route when DxfParser is absent.",
+    "why_not_redundant": "PR #444 inferred a reachable call from the source of evaluateSplineServer. The routed page throws before that function runs."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api .venv python -m pytest tests/test_headstock_endpoint_evidence_correction_002a.py tests/test_headstock_integration_feasibility_002.py tests/test_headstock_ps_vue_src_preserved.py -q --no-cov: 13 passed",
+      "packages/client: npx vitest run src/composables/__tests__/useDxfImport.splineEvaluate.spec.ts: 1 passed",
+      "repo root: python3 scripts/ci/check_cbsp21_gate.py --changed-files <the 7 files in this manifest>: coverage 100%, PASSED",
+      "mounted route walk plus TestClient POST /api/dxf/spline/evaluate: 404 Not Found",
+      "headless Chrome on /art-studio/inlay-workspace with a SPLINE DXF: visible Error: DxfParser not loaded, zero spline/evaluate requests"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/BACKEND_ENDPOINT_AUDIT.md",
+      "intent": "Withdraw the broken classification and record REACHABLE_VISIBLE_FAILURE.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/inventory.json",
+      "intent": "Same classification, with the witness fields the tests lock.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/SPLINE_EVALUATE_WITNESS.md",
+      "intent": "Browser and route-enumeration witness.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/README.md",
+      "intent": "Index the witness.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/test_headstock_endpoint_evidence_correction_002a.py",
+      "intent": "Route absence, single caller, and matching records.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/composables/__tests__/useDxfImport.splineEvaluate.spec.ts",
+      "intent": "DXF load does not fetch spline/evaluate when the parser is absent.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/headstock-endpoint-evidence-correction-002a.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Evidence correction and tests. No production route or client behavior change."
+  }
+}
