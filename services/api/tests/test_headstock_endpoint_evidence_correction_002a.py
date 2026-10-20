@@ -82,24 +82,28 @@ def test_inlay_workspace_is_the_only_runtime_importer():
     assert callers == ["packages/client/src/views/art-studio/InlayWorkspaceShell.vue"]
 
 
-def test_records_agree_and_do_not_leave_the_path_broken():
+def test_inventory_records_witnessed_failure_without_active_broken_label():
     row = _spline_row()
-    assert row["class"] == CLASSIFICATION
-    assert row["class"] != "broken"
-    assert row["prior_classification"] == "broken"
-    assert row["prior_classification_status"] == "withdrawn"
-    assert row["route_present"] is False
-    assert row["direct_post_status"] == 404
-    assert row["workflow_reachable"] is True
-    assert row["endpoint_request_observed"] is False
-    assert row["visible_behavior"] == "Error: DxfParser not loaded"
-    assert row["processing_continues"] is False
-    assert row["substitute_geometry_shown"] is False
-    assert row["kind"] == "manufacturing"
+    expected = {
+        "class": CLASSIFICATION,
+        "prior_classification": "broken",
+        "prior_classification_status": "withdrawn",
+        "route_present": False,
+        "direct_post_status": 404,
+        "workflow_reachable": True,
+        "endpoint_request_observed": False,
+        "visible_behavior": "Error: DxfParser not loaded",
+        "processing_continues": False,
+        "substitute_geometry_shown": False,
+        "kind": "manufacturing",
+    }
+    assert {key: row[key] for key in expected} == expected
 
+
+def test_narrative_records_match_the_inventory_classification():
     audit = (EVIDENCE / "BACKEND_ENDPOINT_AUDIT.md").read_text(encoding="utf-8")
     witness = (EVIDENCE / "SPLINE_EVALUATE_WITNESS.md").read_text(encoding="utf-8")
-    assert f"| `{CLASSIFICATION}` |" in audit or f"**{CLASSIFICATION}**" in audit
+
     assert CLASSIFICATION in audit
     assert CLASSIFICATION in witness
     assert "Prior statement from PR #444, withdrawn" in audit
@@ -108,5 +112,5 @@ def test_records_agree_and_do_not_leave_the_path_broken():
 
     # The current spline row is the witnessed class, not the withdrawn word.
     spline_section = audit.split("## Spline evaluate, corrected", 1)[1]
-    assert "Current class: **REACHABLE_VISIBLE_FAILURE**" in spline_section
+    assert f"Current class: **{CLASSIFICATION}**" in spline_section
     assert "class | broken" not in audit
