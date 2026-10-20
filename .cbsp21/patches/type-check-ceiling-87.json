@@ -1,0 +1,54 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TYPE_CHECK_CEILING_87",
+  "title": "chore(ci): lower client type-check ceiling 150 -> 87",
+  "intent": "Lock in the drop from #438. That PR moved the orphaned headstock views out of src, which removed 63 type errors. The ceiling stayed at 150, so up to 63 new type errors could land without failing the gate. The ratchet itself has asked for this since 165412d8: 'Type errors fell 150 -> 87 (63 fixed). Please lower total_errors'.",
+  "change_type": "chore",
+  "behavior_change": "CI only. The lint-build type-check ratchet now fails above 87 errors instead of above 150. No source, runtime, or dependency change. The baseline was regenerated with --write-baseline from main 165412d8's own lint-build CI log. The remaining 35 per-file counts are identical to the previous baseline; the only change is the removal of the four src/views/cam/headstock/ entries (12+3+27+21 = 63). The _witness note is updated and the stale _known_hotspot note is removed (its condition, 'if removed, the ceiling should drop to about 87', has now been met).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/type-check-ceiling-87.json",
+      "scripts/ci/client_type_check_baseline.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/type-check-ceiling-87.json",
+      "scripts/ci/client_type_check_baseline.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "client_type_check_baseline.json: total_errors 150 -> 87, by_code and by_file regenerated, annotations updated.",
+    "why_not_redundant": "Without it the ratchet allows 63 errors of unnoticed regression, which defeats a regression gate."
+  },
+  "verification": {
+    "commands_run": [
+      "check_client_type_check_ratchet.py --write-baseline on the 'Type check (vue-tsc)' step log of main lint-build run 39411888886 (head 165412d8): total_errors=87, files=35",
+      "Old baseline minus its headstock entries == new by_file (asserted dict-equal); 150 - 63 == 87",
+      "CI Linux error set == local Windows error set (file:line:code, 87 each); identical under vue-tsc 3.3.12 and 3.3.13",
+      "Ratchet against the new baseline: PASS at 87; control with one injected error: FAIL 87 -> 88"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/client_type_check_baseline.json",
+      "intent": "Lower the type-check ceiling to the measured count.",
+      "risk": "low",
+      "behavior_change": "Ratchet fails above 87 instead of above 150."
+    },
+    {
+      "path": ".cbsp21/patches/type-check-ceiling-87.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI baseline data only; no architectural surface."
+  }
+}
