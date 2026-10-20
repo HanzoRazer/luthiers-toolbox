@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HAPPY_DOM_21_0_3_BUMP",
+  "title": "build(deps-dev): bump happy-dom from 20.14.5 to 21.0.3",
+  "intent": "Security currency across a MAJOR version. 20.14.6 fixes a cookie scope forgery vulnerability; 21.0.0 disables CSS file loading and iframe page loading by default to close an SSRF vector (untrusted HTML with <link rel=stylesheet> or <iframe> could make Happy DOM issue server-side requests to attacker-chosen URLs); 21.0.2 fixes an SSRF target-origin bypass in @happy-dom/server-renderer; 21.0.3 stops forwarding the Authorization header across redirects. The GitHub advisory API returned 0 advisories for both happy-dom@20.14.5 and @21.0.3 at audit time (2026-10-20), so these fixes are release-note claims, not yet GHSA-indexed.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped code: happy-dom is a devDependency (dev: true in the lockfile) and is not bundled by vite build. It IS the DOM every client Vitest test runs against (packages/client/vitest.config.ts:9 environment: \"happy-dom\", plus four specs with a @vitest-environment happy-dom docblock), so the 21.0.0 breaking change was checked rather than assumed inert. (1) No test configures Happy DOM settings: no disableCSSFileLoading / enableCSSFileLoading / enableIframePageLoading anywhere in packages/client, and no @happy-dom/server-renderer use. (2) No spec mounts an iframe- or stylesheet-loading component: the only iframes in client src are DesignFirstWorkflowPanel.vue, DesignFirstWorkflowPanelV2.vue, FinishPlanner.vue and WiringWorkbench.vue, and no *.spec.ts / *.test.ts references them or useLogDrawer. (3) Per-test A/B on the same tree: full vitest run under 21.0.3 and under 20.14.5 produced the identical set of 794 tests; the only status difference was 'SPINE-005 bare /instrument-hub compatibility redirect' timing out at 5000ms in the 21.0.3 full-suite run, which then passed 5/5 when src/router/index.spec.ts was re-run alone under 21.0.3 (1.6-2.6s) -- a load-timeout flake, not a behavior change. CI lint-build on the Dependabot head 8d78a749 ran npm test: 46 files passed / 1 skipped, 783 tests passed / 17 todo. Lockfile audited by parsing both package-lock.json files against the merge base 2e2d635f, not by reading the diff view: 400 entries before, 400 after, ZERO added, ZERO removed, exactly ONE version change -- node_modules/happy-dom 20.14.5 -> 21.0.3 (resolved + integrity); its dependencies block is unchanged. Dependabot's npm also flipped the 'peer' flag on 16 entries with unchanged versions (including happy-dom itself); per the convention set in ec88eedd (#432) that churn is dropped -- the committed lockfile is the merge-base lockfile plus the happy-dom delta only, serialized byte-exact (json round-trip verified against the base blob). License unchanged (MIT).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/happy-dom-21.0.3-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/happy-dom-21.0.3-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared devDependency range from ^20.14.5 to ^21.0.3. packages/client/package-lock.json updates the root devDependency range and the node_modules/happy-dom entry's version, resolved URL and integrity hash -- 4 changed lines against the merge base. Dependabot's incidental peer-flag churn on 16 unchanged-version entries was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency, and this manifest exists because Dependabot cannot author one. No existing manifest covers this change; borrowing one is what CBSP21-NOBORROW-001 refuses, and the zod 4->3 revert that rode along inside PR #296 is why that rule exists."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base 8d78a749 origin/main -> 2e2d635f33e44c41256f8dc7d2db6abe08ef0bf0; origin/main at audit = fef162a8 (5 commits ahead).",
+      "C:/tmp/_bump_audit.py on the PR head: entries 400 -> 400; added none; removed none; version change node_modules/happy-dom 20.14.5 -> 21.0.3 only; 16 entries peer-flag-only. happy-dom 21.0.3: integrity matches the npm registry, resolved from registry.npmjs.org, published 2026-10-15 via GitHub Actions OIDC, maintainer davidortner, no install hooks. git merge-tree onto origin/main: clean, 400 entries, no sibling reverted.",
+      "grep packages/client for disableCSSFileLoading|enableCSSFileLoading|enableIframePageLoading|server-renderer -> none; specs referencing the four iframe components -> none.",
+      "npm ci + vitest run --reporter=json under happy-dom 21.0.3, then npm i --no-save happy-dom@20.14.5 + the same run: identical 794-test set; one status difference (router SPINE-005 timeout under 21.0.3), re-run alone 5x under 21.0.3 -> 11/11 passed every time. nodeEngineFloor.spec.ts fails to parse on this Windows host under BOTH versions ('Invalid or unexpected token'); it passes in CI and is unrelated to this bump.",
+      "CI lint-build on 8d78a749: 'Run tests (Vitest)' -> 783 passed / 17 todo."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency version bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^20.14.5 -> ^21.0.3."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "None beyond the titled package. Exactly one entry changed: node_modules/happy-dom 20.14.5 -> 21.0.3, with its resolved URL and integrity. Peer-flag churn reverted to the merge-base flags."
+    },
+    {
+      "path": ".cbsp21/patches/happy-dom-21.0.3-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-20-HAPPY-DOM-21-0-3",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-only dependency bump; no production surface. Major version, but the only breaking change (CSS/iframe loading off by default) has no consumer in the client test suite, established in behavior_change. Noted for future work: if a spec ever mounts DesignFirstWorkflowPanel, FinishPlanner or WiringWorkbench and asserts on iframe content, it will need enableIframePageLoading set explicitly. Separately, router/index.spec.ts SPINE-005 can exceed the 5000ms default timeout under full-suite load on Windows -- a latent flake that predates and is independent of this bump."
+  }
+}
