@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "POSTCSS_8_5_30_BUMP",
+  "title": "build(deps-dev): bump postcss from 8.5.28 to 8.5.30",
+  "intent": "Routine currency with a security-hardening component. postcss 8.5.29/8.5.30: HTML-context escaping of '<style'/'<!--' moves from per-node calls in the Stringifier into a whole-output SafeStringifier in lib/stringify.js (also catches sequences split across nodes), comment-aware list splitting, O(n^2)->O(n) fixes in parser comment handling and sourceMappingURL annotation removal, custom-property detection after a free semicolon, and BOM handling for roots inside a Document. postcss 8.5.30 raises its own dependency floors to nanoid ^3.3.20 and source-map-js ^1.2.2, which moves both. source-map-js 1.2.2 cites CVE-2026-93749 (indexed source map with a huge section offset.line exhausts memory) and adds bounds checks plus a CSP-safe fallback when eval is blocked. GitHub's advisory API returned 0 advisories for postcss@8.5.28 and @8.5.30 at audit time (2026-10-20).",
+  "change_type": "chore",
+  "behavior_change": "None in shipped output, verified by building rather than assumed. THREE packages moved, not one -- the title names only postcss. Lockfile audited by parsing both package-lock.json files against the merge base 165412d8 (= origin/main at audit), not by reading the diff view: 400 entries before, 400 after, ZERO added, ZERO removed, exactly THREE version changes: node_modules/postcss 8.5.28 -> 8.5.30 (plus its dependencies block), node_modules/nanoid 3.3.18 -> 3.3.20, node_modules/source-map-js 1.2.1 -> 1.2.2. Both transitive moves are forced by postcss 8.5.30's own ranges (nanoid ^3.3.20, source-map-js ^1.2.2), not resolver drift. NOTE these are NOT dev-only: none of the three entries carries dev: true, because @vue/compiler-sfc (under vue, a runtime dependency) depends on postcss, and source-map-js is also depended on by @vue/compiler-core, @vue/compiler-sfc and @tailwindcss/node. All of those are build-time compilers. A/B build: vite build on origin/main (postcss 8.5.28 / nanoid 3.3.18 / source-map-js 1.2.1) and on this branch (8.5.30 / 3.3.20 / 1.2.2) produced 199 files each and diff -rq reported ZERO differing files -- the shipped bundle is byte-identical. Client code imports 'nanoid' directly (src/components/rmos/RosetteTemplateLab.vue:221, src/features/ai_images/useAiImageStore.ts:12) WITHOUT declaring it in packages/client/package.json; the browser bundle resolves nanoid's index.browser.js, which is byte-identical between 3.3.18 and 3.3.20 (only the Node index.js/index.cjs changed: a 1024-byte size cap and pool reset on randomFillSync failure). That undeclared (phantom) dependency is pre-existing and is NOT fixed here -- see architecture_scan. Vitest on this branch: 795 tests, 778 passed, 0 failed, 17 todo. Dependabot's npm also flipped the 'peer' flag on 16 entries with unchanged versions; per the convention set in ec88eedd (#432) that churn is dropped -- the committed lockfile is the origin/main lockfile plus the three real deltas, serialized byte-exact (json round-trip verified against the base blob). Licenses unchanged (MIT, MIT, BSD-3-Clause).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/postcss-8.5.30-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/postcss-8.5.30-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves the declared devDependency range from ^8.5.28 to ^8.5.30. packages/client/package-lock.json updates the root devDependency range, the node_modules/postcss entry (version, resolved, integrity, dependencies ranges), and the node_modules/nanoid and node_modules/source-map-js entries (version, resolved, integrity). Dependabot's incidental peer-flag churn on 16 unchanged-version entries was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency, and this manifest exists because Dependabot cannot author one. No existing manifest covers this change; borrowing one is what CBSP21-NOBORROW-001 refuses, and the zod 4->3 revert that rode along inside PR #296 is why that rule exists. The two unnamed transitive moves in this bump are exactly what behavior_change is for."
+  },
+  "verification": {
+    "commands_run": [
+      "Dependabot head 6032543d; git merge-base with origin/main = 165412d8 = origin/main (0 behind; #446 happy-dom ^21.0.3 and #447 vue-tsc already included, both preserved).",
+      "C:/tmp/_bump_audit.py: entries 400 -> 400; added none; removed none; version changes postcss, nanoid, source-map-js only; 16 entries peer-flag-only; merge-tree onto origin/main clean, no sibling reverted. Integrity matches the npm registry for all three. postcss 8.5.30 and nanoid 3.3.20 published via GitHub Actions OIDC (approver ai / Andrey Sitnik). source-map-js 1.2.2 published 2026-09-30 by its sole maintainer 7rulnik (not OIDC), first release since 1.2.1 on 2024-09-08. No install hooks on any.",
+      "npm pack + diff -ru of all three tarballs. source-map-js: lib/quick-sort.js (eval-availability fallback), lib/source-map-consumer.js (section offset validation, 1e7 line cap, single read of nested sources), lib/source-map-generator.js (';'.repeat instead of per-line append), lib/source-node.js (stop at end of code) -- no network, filesystem, process or new eval paths. nanoid: index.js/index.cjs + async types path only; index.browser.js, index.browser.cjs, non-secure/* identical. postcss: lib/list.js, map-generator.js, parser.js, processor.js (version string), stringifier.js, stringify.js -- the removed per-node escapeHTMLInCSS reappears as SafeStringifier in stringify.js.",
+      "A/B production build: npm ci + vite build in a worktree at origin/main and in this branch -> 199 vs 199 files, diff -rq: no differences.",
+      "npx vitest run --reporter=json on this branch: 795 total, 778 passed, 0 failed, 17 todo. nodeEngineFloor.spec.ts fails to parse on this Windows host ('Invalid or unexpected token') identically on main; it passes in CI and is unrelated."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency version bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^8.5.28 -> ^8.5.30."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "Three entries move: postcss 8.5.28 -> 8.5.30, nanoid 3.3.18 -> 3.3.20, source-map-js 1.2.1 -> 1.2.2, the latter two forced by postcss 8.5.30's dependency floors. Built output byte-identical. Peer-flag churn reverted to origin/main's flags."
+    },
+    {
+      "path": ".cbsp21/patches/postcss-8.5.30-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-20-POSTCSS-8-5-30",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 1, "low": 0 },
+    "findings": [
+      {
+        "id": "PHANTOM-DEP-NANOID",
+        "severity": "medium",
+        "status": "pre-existing, not introduced or fixed by this PR",
+        "summary": "Shipped client code imports 'nanoid' (RosetteTemplateLab.vue:221, useAiImageStore.ts:12; the latter is used by AiImagePanel, AiImageFilterToolbar, AiImageProperties, ImageSessionStats) but packages/client/package.json does not declare it. It resolves only because postcss depends on nanoid ^3 and npm hoists it. If postcss changes or drops that dependency, the client's ID generator silently changes version or the build breaks. Fix belongs in its own PR (declare nanoid explicitly); adding a runtime dependency inside a Dependabot bump is the undeclared-ride-along shape CBSP21 exists to stop."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Build-time CSS toolchain bump with a byte-identical production build. The one finding is a pre-existing phantom dependency surfaced by enumerating who consumes the transitively-moved nanoid; it is recorded, not remediated, in this PR."
+  }
+}
