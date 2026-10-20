@@ -1,0 +1,65 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_TSC_3_3_13_BUMP",
+  "title": "build(deps-dev): bump vue-tsc from 3.3.12 to 3.3.13",
+  "intent": "Routine patch-level currency for the client type checker. No advisory is driving it. Dependabot opened it without a manifest, so both CBSP21 gates failed (CBSP21-NOBORROW-001). This manifest is the only addition, plus a lockfile cleanup that drops Dependabot's peer-flag churn.",
+  "change_type": "chore",
+  "behavior_change": "Dev tooling only; nothing in the shipped bundle changes at runtime. I enumerated every entry in packages/client/package-lock.json against merge-base 2e2d635f (400 -> 400 entries). Version changes (2): vue-tsc 3.3.12->3.3.13 and @vue/language-core 3.3.12->3.3.13. Added 0, removed 0. Dependabot's lockfile also flipped the npm 'peer' flag on 16 entries whose versions did not change. That is npm-version noise; main has dropped it since ec88eedd (#432). I removed it by rebuilding the lockfile as the merge-base lock plus the two bumped entries and the root devDependencies range. The lockfile diff is now the bump only. Both tarballs match the lockfile integrity, both resolve from registry.npmjs.org, both were published via npm OIDC from GitHub Actions, neither has an install hook, and GitHub advisories list 0 for vue-tsc 3.3.12/3.3.13 and @vue/language-core 3.3.13 (control query jszip@3.6.0 -> 2). main fef162a8 is 5 commits ahead of the merge base and touches neither client file. A merge-tree onto it is clean and reverts no sibling.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-tsc-3.3.13-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-tsc-3.3.13-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Dependabot's commit bumps vue-tsc ^3.3.12 -> ^3.3.13 and its lockfile entries. A follow-up commit adds this manifest and reverts the 16 peer-flag-only lockfile entries to their merge-base form.",
+    "why_not_redundant": "Dependabot currency. The PR cannot pass the required CBSP21 gates without its own manifest."
+  },
+  "verification": {
+    "commands_run": [
+      "Full lockfile enumeration (every packages entry: version-changed / added / removed / field-diff) against merge-base 2e2d635f; the result is recorded in behavior_change",
+      "npm ci on the rebuilt lockfile: clean, lockfile unmodified; npm ls vue-tsc @vue/language-core -> 3.3.13 / 3.3.13",
+      "npm run type-check + scripts/ci/check_client_type_check_ratchet.py: PASS 87/150",
+      "Same tree with vue-tsc 3.3.12 (npm i --no-save): 87 errors; the file:line:code error sets for 3.3.12 and 3.3.13 are identical. The bump neither adds nor hides any error. The 150 ceiling was already stale before this PR; it is left unchanged here because it is out of scope",
+      "npm view dist.integrity == lockfile integrity for both packages; _npmUser = GitHub Actions OIDC",
+      "gh advisories: vue-tsc@3.3.12 0, vue-tsc@3.3.13 0, @vue/language-core@3.3.13 0; control jszip@3.6.0 2",
+      "git merge-tree onto origin/main fef162a8: clean"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "vue-tsc ^3.3.13 (Dependabot).",
+      "risk": "low",
+      "behavior_change": "Dev-only type-checker patch bump."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump, with Dependabot's peer-flag churn removed.",
+      "risk": "low",
+      "behavior_change": "Only vue-tsc and @vue/language-core move, 3.3.12 -> 3.3.13."
+    },
+    {
+      "path": ".cbsp21/patches/vue-tsc-3.3.13-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-tooling patch bump; no architectural surface and no source edit."
+  }
+}
