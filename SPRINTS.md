@@ -963,6 +963,8 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-014 | `solve_rayleigh_ritz` explicit `inv(M)` + silent non-scipy "scipy" fallback | Calculators / numerics | QUEUED | 2026-08-19 |
 | MAINT-DEFER-015 | `scaffold_agents_md.py --dry-run` dies on a cp1252 console (U+2500 fences) | Process / tooling | QUEUED | 2026-09-09 |
 | MAINT-DEFER-016 | `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-09-09 |
+| MAINT-DEFER-017 | Committed production `VITE_API_BASE` omits `/api`, so Art Studio headstock prompt requests 404 | Client / production config | QUEUED | 2026-10-21 |
+| MAINT-DEFER-018 | `test_client_does_not_import_the_archived_suite` rejects the archive directory slug in any client text, not only imports | Test / provenance | QUEUED | 2026-10-21 |
 | NECK-DEFER-001 | Neck & fretboard solver: wire into the Toolbox as a generic neck tool (width, compound radius, board and neck thickness, back profile at any station; DXF sections) | API / instrument geometry / client / DXF | DEFERRED | 2026-09-13 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
@@ -1553,6 +1555,38 @@ rather than user-facing.
 touching the formula.
 
 **Path:** HYG — calculator correctness; latent, not on a shipped path.
+
+---
+
+### MAINT-DEFER-017 — Committed production `VITE_API_BASE` omits `/api`
+
+**Status:** QUEUED
+**last_verified:** 2026-10-21
+**Category:** Client / production config
+**Held out of:** PR #452 (parametric headstock outline preview). The outline panel does not call the API. Repairing this configuration is a separate change.
+
+**Why deferred:** `packages/client/.env.production` sets `VITE_API_BASE` to the Railway origin with no `/api` suffix. `packages/client/src/api/art-studio.ts` uses that value in place of the default `/api` prefix. A stock `npm run build` therefore requests `https://<host>/instruments/guitar/headstock-inlay/generate-prompt` and receives 404. The same route responds on `https://<host>/api/instruments/guitar/headstock-inlay/generate-prompt`.
+
+**What #452 does and does not show:** Prompt construction in `HeadstockDesignerView.vue` is source-compatible. The successful browser witness of Generate Preview used an uncommitted `VITE_API_BASE=http://127.0.0.1:8010/api`. That override is not production evidence. #452 does not prove Generate Preview works under the committed production environment.
+
+**Restore trigger:** A stock `npm run build`, with no API-base override, loads `/art-studio/headstock` templates and posts Generate Preview to a URL that includes `/api/instruments/guitar/headstock-inlay/generate-prompt`, and that request is not a 404.
+
+**Path:** HYG — pre-existing client configuration. Not on the MVS critical path.
+
+---
+
+### MAINT-DEFER-018 — Archive-suite detector matches comments, not imports
+
+**Status:** QUEUED
+**last_verified:** 2026-10-21
+**Category:** Test / provenance
+**Held out of:** PR #452. The full archive path stays in `docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md`. The kernel comment names `useHeadstockPath.ts` and PR #443 without the suite directory slug.
+
+**Why deferred:** `services/api/tests/test_headstock_integration_feasibility_002.py::test_client_does_not_import_the_archived_suite` treats the string `headstock-suite-refined` anywhere in a client `.ts`, `.vue`, or `.js` file as an import. That blocks an accurate provenance comment. The check should look at import declarations or module resolution.
+
+**Restore trigger:** The test fails when client code imports the archived suite, and it allows a comment that names the archive directory. No production import of `archive/` is introduced by that test change.
+
+**Path:** HYG — test precision. Not on the MVS critical path.
 
 ---
 
