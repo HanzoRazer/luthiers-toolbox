@@ -50,7 +50,7 @@ Appended after the order above. The order text is unchanged. This section record
 
 - Base: `origin/main` `5bb4614224bd7632cc7badcf873235231064f45e`. PR #450 is an ancestor. Open pull requests at branch cut: none.
 - Branch: `cursor/headstock-parametric-outline-preview-003`
-- Draft pull request: opened from that branch against `main`. Merge is not authorized.
+- Draft pull request: https://github.com/HanzoRazer/luthiers-toolbox/pull/452 against `main`. Merge is not authorized.
 - Client type-check stayed at 87. No baseline was raised.
 
 ### Delivered
