@@ -5,6 +5,7 @@ import { mount } from "@vue/test-utils"
 import HeadstockParametricOutlinePreview from "../HeadstockParametricOutlinePreview.vue"
 import {
   HEADSTOCK_OUTLINE_DEFAULTS,
+  HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX,
   HEADSTOCK_OUTLINE_PARAMETER_DEFS,
   buildHeadstockOutlinePath,
 } from "@/design-utilities/lutherie/headstock/parametricOutline"
@@ -22,7 +23,8 @@ describe("HeadstockParametricOutlinePreview", () => {
     expect(wrapper.text()).toContain("Recovered design model")
     expect(wrapper.text()).toContain("Design preview only. This outline is not a manufacturing drawing.")
     expect(wrapper.text()).toContain("Controls use recovered model-space outline units, not millimeters.")
-    expect(wrapper.get("svg").attributes("viewBox")).toBe("0 0 200 320")
+    expect(wrapper.get("svg").attributes("viewBox")).toBe(HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX)
+    expect(HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX).not.toBe("0 0 200 320")
     expect(pathD(wrapper)).toBe(buildHeadstockOutlinePath(HEADSTOCK_OUTLINE_DEFAULTS, "rounded"))
     expect(wrapper.find("path").isVisible()).toBe(true)
   })

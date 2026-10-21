@@ -12,6 +12,7 @@
     "paths_in_scope": [
       ".cbsp21/patches/headstock-parametric-outline-preview-003.json",
       "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "SPRINTS.md",
       "packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue",
       "packages/client/src/components/art-studio/headstock/__tests__/HeadstockParametricOutlinePreview.spec.ts",
       "packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts",
@@ -22,6 +23,7 @@
     "files_expected_to_change": [
       ".cbsp21/patches/headstock-parametric-outline-preview-003.json",
       "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "SPRINTS.md",
       "packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue",
       "packages/client/src/components/art-studio/headstock/__tests__/HeadstockParametricOutlinePreview.spec.ts",
       "packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts",
@@ -31,7 +33,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "A pure kernel builds the recovered closed SVG path. A new panel renders it from BODY and SHOULDER controls and four tip styles. The designer mounts that panel and does not pass its millimeter fields into the kernel.",
+    "what_changed": "A pure kernel builds the recovered closed SVG path. A new panel renders it from BODY and SHOULDER controls and four tip styles, in a padded model-space viewport that contains the valid parameter envelope. The path strings are unchanged. The designer mounts that panel and does not pass its millimeter fields into the kernel.",
     "why_not_redundant": "The archived function was not reachable from the routed designer. This is the first production call of that outline math, and it stays in model space instead of becoming a cutting file."
   },
   "verification": {
@@ -84,7 +86,13 @@
     },
     {
       "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
-      "intent": "Append implementation status under the unchanged order text.",
+      "intent": "Append implementation status, viewport disposition, and capability class under the unchanged order text.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register MAINT-DEFER-017 and MAINT-DEFER-018. Neither is fixed in this patch.",
       "risk": "low",
       "behavior_change": "none"
     },

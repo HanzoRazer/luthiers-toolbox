@@ -187,3 +187,79 @@ export function buildHeadstockOutlinePath(
 
   return `M ${fmt(nutL)},${fmt(ny)} ${leftSide} ${tip} ${rightSide} Z`
 }
+
+/**
+ * Display window for the recovered model space.
+ *
+ * The path is still built in the suite's 200×320 drawing space. Valid corners of
+ * the declared ranges place control points outside that frame; the default pointed
+ * tip includes Y = -5.00. A viewBox of "0 0 200 320" clips those points.
+ *
+ * Cubic segments stay inside the convex hull of their control points, and each
+ * control-point coordinate is linear in the parameters, so the extremes sit on
+ * range corners. This viewport is those corner bounds plus
+ * {@link HEADSTOCK_OUTLINE_VIEWPORT_PAD} outline units, which covers the 1-unit
+ * stroke. It does not change `buildHeadstockOutlinePath`.
+ */
+export const HEADSTOCK_OUTLINE_VIEWPORT_PAD = 2
+
+export interface HeadstockOutlineViewport {
+  minX: number
+  minY: number
+  width: number
+  height: number
+  viewBox: string
+}
+
+function rangeCorners(): HeadstockOutlineParams[] {
+  const count = 1 << HEADSTOCK_OUTLINE_PARAMETER_DEFS.length
+  const corners: HeadstockOutlineParams[] = []
+  for (let mask = 0; mask < count; mask += 1) {
+    const params = {} as HeadstockOutlineParams
+    HEADSTOCK_OUTLINE_PARAMETER_DEFS.forEach((def, index) => {
+      params[def.id] = (mask & (1 << index)) === 0 ? def.min : def.max
+    })
+    corners.push(params)
+  }
+  return corners
+}
+
+function controlPointBounds(): { minX: number; minY: number; maxX: number; maxY: number } {
+  let minX = Number.POSITIVE_INFINITY
+  let minY = Number.POSITIVE_INFINITY
+  let maxX = Number.NEGATIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  for (const params of rangeCorners()) {
+    for (const style of TIP_STYLES) {
+      const numbers = buildHeadstockOutlinePath(params, style).match(/-?\d+\.\d+/g) ?? []
+      for (let index = 0; index < numbers.length; index += 2) {
+        const x = Number(numbers[index])
+        const y = Number(numbers[index + 1])
+        minX = Math.min(minX, x)
+        minY = Math.min(minY, y)
+        maxX = Math.max(maxX, x)
+        maxY = Math.max(maxY, y)
+      }
+    }
+  }
+  return { minX, minY, maxX, maxY }
+}
+
+export function headstockOutlineDisplayViewport(): HeadstockOutlineViewport {
+  const bounds = controlPointBounds()
+  const pad = HEADSTOCK_OUTLINE_VIEWPORT_PAD
+  const minX = bounds.minX - pad
+  const minY = bounds.minY - pad
+  const width = bounds.maxX - bounds.minX + pad * 2
+  const height = bounds.maxY - bounds.minY + pad * 2
+  const fmt = (value: number) => value.toFixed(2)
+  return {
+    minX,
+    minY,
+    width,
+    height,
+    viewBox: `${fmt(minX)} ${fmt(minY)} ${fmt(width)} ${fmt(height)}`,
+  }
+}
+
+export const HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX = headstockOutlineDisplayViewport().viewBox

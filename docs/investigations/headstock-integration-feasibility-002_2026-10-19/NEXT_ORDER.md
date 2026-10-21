@@ -71,3 +71,20 @@ Appended after the order above. The order text is unchanged. This section record
 ### Still excluded
 
 Tuner placement, novelty scoring, interactive inlay, variants, wood-grain rendering, DXF import and export, G-code, CAM, downloads, persistence, backend changes, `useHeadstock`, and any change to `ArtStudioHeadstock.vue`.
+
+## Disposition after review
+
+Status of this increment:
+
+`PRODUCTION_DESIGN_CAPABILITY — NON_DIMENSIONAL — NON_MANUFACTURING — NOT_IN_MVS_CRITICAL_PATH`
+
+It is a recovered design preview. It is not the manufacturing verification standard, and it does not move the critical path. That path remains Grounding Agent recovery, workflow harness completion, the validated-package contract, the guided beginner interface, deterministic gates, and the physical MVS witness, returning through `LTB-G1-002`.
+
+### Viewport
+
+The recovered path is unchanged, including pointed `Y = -5.00`. The SVG display window is no longer `0 0 200 320`. It is the padded bounds of every control point on the valid parameter-range corners, `13.00 -89.00 164.00 389.00`, so the displayed curve includes the whole valid envelope. Path hashes are the same.
+
+### Separate maintenance
+
+- `MAINT-DEFER-017` — the committed production `VITE_API_BASE` omits `/api`. Prompt construction in this increment is source-compatible. The Generate Preview browser witness used an uncommitted API-base override and does not prove the stock production bundle. Repair stays out of PR #452.
+- `MAINT-DEFER-018` — the archive-suite test rejects the directory slug in any client text. Narrowing it to import declarations stays out of PR #452. The full archive path remains in the order section above.

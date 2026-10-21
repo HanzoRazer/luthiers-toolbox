@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from "vue"
 import {
   HEADSTOCK_OUTLINE_DEFAULTS,
+  HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX,
   HEADSTOCK_OUTLINE_PARAMETER_DEFS,
   buildHeadstockOutlinePath,
   validateHeadstockOutlineParams,
@@ -157,7 +158,7 @@ function resetOutline() {
     </p>
 
     <svg
-      viewBox="0 0 200 320"
+      :viewBox="HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX"
       role="img"
       aria-label="Parametric headstock outline"
     >
@@ -166,6 +167,7 @@ function resetOutline() {
         :d="outlinePath"
         fill="none"
         stroke="currentColor"
+        stroke-width="1"
       />
     </svg>
   </section>

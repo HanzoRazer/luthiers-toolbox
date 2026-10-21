@@ -2,7 +2,9 @@ import { createHash } from "node:crypto"
 import { describe, expect, it } from "vitest"
 import {
   HEADSTOCK_OUTLINE_DEFAULTS,
+  HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX,
   HEADSTOCK_OUTLINE_PARAMETER_DEFS,
+  HEADSTOCK_OUTLINE_VIEWPORT_PAD,
   HeadstockOutlineError,
   buildHeadstockOutlinePath,
   validateHeadstockOutlineParams,
@@ -124,5 +126,92 @@ describe("outline kernel", () => {
     expect(kernel).not.toHaveProperty("MM")
     expect(Object.keys(HEADSTOCK_OUTLINE_DEFAULTS)).not.toContain("pegInset")
     expect(HEADSTOCK_OUTLINE_PARAMETER_DEFS.map((def) => def.id)).not.toContain("pegSpacing")
+  })
+})
+
+const STYLES = Object.keys(ARCHIVED_DEFAULTS) as HeadstockTipStyle[]
+
+function viewBoxRect(viewBox: string) {
+  const [minX, minY, width, height] = viewBox.split(" ").map(Number)
+  return { minX, minY, maxX: minX + width, maxY: minY + height }
+}
+
+function coordinates(path: string): Array<[number, number]> {
+  const numbers = path.match(/-?\d+\.\d+/g)?.map(Number) ?? []
+  const pairs: Array<[number, number]> = []
+  for (let index = 0; index < numbers.length; index += 2) {
+    pairs.push([numbers[index], numbers[index + 1]])
+  }
+  return pairs
+}
+
+function expectInside(path: string) {
+  const box = viewBoxRect(HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX)
+  for (const [x, y] of coordinates(path)) {
+    expect(x).toBeGreaterThanOrEqual(box.minX)
+    expect(x).toBeLessThanOrEqual(box.maxX)
+    expect(y).toBeGreaterThanOrEqual(box.minY)
+    expect(y).toBeLessThanOrEqual(box.maxY)
+  }
+}
+
+function atLimits(bound: "min" | "max"): HeadstockOutlineParams {
+  const params = {} as HeadstockOutlineParams
+  for (const def of HEADSTOCK_OUTLINE_PARAMETER_DEFS) {
+    params[def.id] = def[bound]
+  }
+  return params
+}
+
+describe("display viewport", () => {
+  it("fits every default style, including the pointed tip below Y = 0", () => {
+    expect(HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX.startsWith("0 0 200 320")).toBe(false)
+    for (const style of STYLES) {
+      const path = buildHeadstockOutlinePath(DEFAULTS, style)
+      expect(sha256(path)).toBe(ARCHIVED_SHA256[style])
+      expectInside(path)
+    }
+    const pointed = coordinates(ARCHIVED_DEFAULTS.pointed)
+    expect(pointed.some(([, y]) => y === -5)).toBe(true)
+    expectInside(ARCHIVED_DEFAULTS.pointed)
+  })
+
+  it("keeps minimum and maximum parameter vectors inside the viewport", () => {
+    for (const params of [atLimits("min"), atLimits("max")]) {
+      for (const style of STYLES) {
+        expectInside(buildHeadstockOutlinePath(params, style))
+      }
+    }
+  })
+
+  it("pads past every range-corner control point without changing path hashes", () => {
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    const count = 1 << HEADSTOCK_OUTLINE_PARAMETER_DEFS.length
+    for (let mask = 0; mask < count; mask += 1) {
+      const params = {} as HeadstockOutlineParams
+      HEADSTOCK_OUTLINE_PARAMETER_DEFS.forEach((def, index) => {
+        params[def.id] = (mask & (1 << index)) === 0 ? def.min : def.max
+      })
+      for (const style of STYLES) {
+        const path = buildHeadstockOutlinePath(params, style)
+        for (const [x, y] of coordinates(path)) {
+          minX = Math.min(minX, x)
+          minY = Math.min(minY, y)
+          maxX = Math.max(maxX, x)
+          maxY = Math.max(maxY, y)
+        }
+      }
+    }
+    const box = viewBoxRect(HEADSTOCK_OUTLINE_DISPLAY_VIEWBOX)
+    expect(box.minX).toBeLessThanOrEqual(minX - HEADSTOCK_OUTLINE_VIEWPORT_PAD)
+    expect(box.minY).toBeLessThanOrEqual(minY - HEADSTOCK_OUTLINE_VIEWPORT_PAD)
+    expect(box.maxX).toBeGreaterThanOrEqual(maxX + HEADSTOCK_OUTLINE_VIEWPORT_PAD)
+    expect(box.maxY).toBeGreaterThanOrEqual(maxY + HEADSTOCK_OUTLINE_VIEWPORT_PAD)
+    for (const style of STYLES) {
+      expect(sha256(buildHeadstockOutlinePath(DEFAULTS, style))).toBe(ARCHIVED_SHA256[style])
+    }
   })
 })
