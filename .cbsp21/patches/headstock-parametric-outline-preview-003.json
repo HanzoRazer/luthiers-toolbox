@@ -1,0 +1,110 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "HEADSTOCK_PARAMETRIC_OUTLINE_PREVIEW_003",
+  "title": "feat: parametric headstock outline preview on the Art Studio designer",
+  "intent": "Port the recovered headstock outline mathematics into the routed Art Studio designer as a design-only preview in 200 by 320 model space. Do not restore the archived suite, bind millimeter fields, or add manufacturing output.",
+  "change_type": "feature",
+  "behavior_change": "The routed /art-studio/headstock page gains a separate parametric outline panel. Existing template loading and generate-prompt payloads are unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/headstock-parametric-outline-preview-003.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue",
+      "packages/client/src/components/art-studio/headstock/__tests__/HeadstockParametricOutlinePreview.spec.ts",
+      "packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts",
+      "packages/client/src/design-utilities/lutherie/headstock/__tests__/parametricOutline.spec.ts",
+      "packages/client/src/views/art-studio/HeadstockDesignerView.vue",
+      "packages/client/src/views/art-studio/__tests__/HeadstockDesignerView.spec.ts"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/headstock-parametric-outline-preview-003.json",
+      "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue",
+      "packages/client/src/components/art-studio/headstock/__tests__/HeadstockParametricOutlinePreview.spec.ts",
+      "packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts",
+      "packages/client/src/design-utilities/lutherie/headstock/__tests__/parametricOutline.spec.ts",
+      "packages/client/src/views/art-studio/HeadstockDesignerView.vue",
+      "packages/client/src/views/art-studio/__tests__/HeadstockDesignerView.spec.ts"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "A pure kernel builds the recovered closed SVG path. A new panel renders it from BODY and SHOULDER controls and four tip styles. The designer mounts that panel and does not pass its millimeter fields into the kernel.",
+    "why_not_redundant": "The archived function was not reachable from the routed designer. This is the first production call of that outline math, and it stays in model space instead of becoming a cutting file."
+  },
+  "verification": {
+    "commands_run": [
+      "packages/client: npx vitest run the three new headstock specs: 16 passed",
+      "packages/client: npm test: 800 passed, 17 todo, 1 file skipped",
+      "packages/client: npm run type-check then check_client_type_check_ratchet.py: 87 errors, ceiling 87, PASS",
+      "packages/client: npm run lint:report then check_client_lint_ratchet.py: 34 errors, warnings under 7683, PASS; new kernel and preview files have zero findings",
+      "packages/client: npm run check:node and npm run build: Node 22.23.3, vite build succeeded",
+      "repo root: python3 ci/file_size_gate.py PASS; services/api venv complexity, file sizes, fence_checker_v2, and duplication PASS",
+      "repo root: check_cbsp21_gate.py and check_cbsp21_patch_input.py against origin/main...HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts",
+      "intent": "Production-owned outline kernel and recovered BODY/SHOULDER ranges.",
+      "risk": "low",
+      "behavior_change": "New pure module. No caller existed on main."
+    },
+    {
+      "path": "packages/client/src/design-utilities/lutherie/headstock/__tests__/parametricOutline.spec.ts",
+      "intent": "Archive-equivalence fixtures and kernel contract tests.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue",
+      "intent": "Isolated design-only SVG preview and model-space controls.",
+      "risk": "low",
+      "behavior_change": "New component. No network, storage, or export action."
+    },
+    {
+      "path": "packages/client/src/components/art-studio/headstock/__tests__/HeadstockParametricOutlinePreview.spec.ts",
+      "intent": "Rendering, labels, interaction, validation, and side-effect tests.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "packages/client/src/views/art-studio/HeadstockDesignerView.vue",
+      "intent": "Mount the preview panel without changing prompt methods.",
+      "risk": "low",
+      "behavior_change": "Adds one child component after the existing designer grid."
+    },
+    {
+      "path": "packages/client/src/views/art-studio/__tests__/HeadstockDesignerView.spec.ts",
+      "intent": "Route and prompt-payload regression. First test home for this view.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md",
+      "intent": "Append implementation status under the unchanged order text.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/headstock-parametric-outline-preview-003.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Design-only outline preview. No manufacturing authority, DXF, CAM, or backend change."
+  }
+}

@@ -14,6 +14,7 @@ import {
   generateHeadstockPrompt,
   type HeadstockTemplateInfo,
 } from '@/api/art-studio'
+import HeadstockParametricOutlinePreview from '@/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue'
 
 // Headstock types
 const headstockStyle = ref('3x3')  // 3x3, 6-inline, 4x2
@@ -231,6 +232,7 @@ onMounted(() => {
       </div>
     </div>
 
+    <HeadstockParametricOutlinePreview />
   </div>
 </template>
 

@@ -43,3 +43,31 @@ The existing template list and prompt button may remain. The new preview is addi
 ## Still unscheduled after that order
 
 Novelty scoring is the strongest leftover design cluster. It is not part of 003.
+
+## Implementation status
+
+Appended after the order above. The order text is unchanged. This section records what the production branch actually shipped.
+
+- Base: `origin/main` `5bb4614224bd7632cc7badcf873235231064f45e`. PR #450 is an ancestor. Open pull requests at branch cut: none.
+- Branch: `cursor/headstock-parametric-outline-preview-003`
+- Draft pull request: opened from that branch against `main`. Merge is not authorized.
+- Client type-check stayed at 87. No baseline was raised.
+
+### Delivered
+
+- `packages/client/src/design-utilities/lutherie/headstock/parametricOutline.ts` is the production kernel. It ports `buildHeadstockPath` and the BODY and SHOULDER defaults and ranges. It does not import `archive/`. It does not apply `MM`. Coordinates stay in the 200×320 model space and are labeled outline units.
+- `packages/client/src/components/art-studio/headstock/HeadstockParametricOutlinePreview.vue` renders that closed SVG path for Rounded, Squared, Pointed, and Scroll, with independent controls, validation, and reset.
+- `HeadstockDesignerView.vue` mounts that panel under `/art-studio/headstock`. Template loading, millimeter fields, the prompt payload, and `generateHeadstockPrompt` are unchanged.
+
+### Adjustments
+
+- The kernel lives at the path named in the 003 file plan, under `design-utilities/lutherie/headstock/`, rather than in a module beside the view.
+- The kernel's provenance comment names `useHeadstockPath.ts` and PR #443. It does not repeat the suite directory slug. `test_client_does_not_import_the_archived_suite` treats that slug, in any client `.ts` or `.vue` text, as an import. The full archive path stays in the order section above.
+- No designer test existed. Regression coverage was added once, at `packages/client/src/views/art-studio/__tests__/HeadstockDesignerView.spec.ts`.
+- Client tests run with `npm test` (`vitest run`). The client package has no `test:unit` script.
+- Recovered pointed geometry can use a negative model-space Y. The default pointed tip includes `100.00,-5.00`. That is the archived formula, left in place.
+- `(taper || 0) / 2` is kept. Validation already rejects non-finite taper before that expression runs.
+
+### Still excluded
+
+Tuner placement, novelty scoring, interactive inlay, variants, wood-grain rendering, DXF import and export, G-code, CAM, downloads, persistence, backend changes, `useHeadstock`, and any change to `ArtStudioHeadstock.vue`.
