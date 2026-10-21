@@ -1,0 +1,126 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_MVS_BEGINNER_PROPOSAL_HARNESS_001",
+  "title": "feat: beginner proposal harness around validate_proposal",
+  "intent": "Add one new beginner-workflow adapter that forms a PhysicalEngineeringProposalV1, calls validate_proposal once, and copies advisory_allowed, evidence_required, or rejected. Record why LTB-G1-002 was not recovered.",
+  "change_type": "feature",
+  "behavior_change": "A new internal Python service screens one beginner request by delegating to the existing proposal gate. No route, UI, Grounding Agent, or manufacturing authority is added.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-mvs-beginner-proposal-harness-001.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/README.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/RECOVERY_STOP.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/WORKFLOW_CONTRACT.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/FIXTURE.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/TEST_MATRIX.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/DEFERRED.md",
+      "services/api/app/physical_engineering/beginner_proposal_harness.py",
+      "services/api/tests/physical_engineering/test_beginner_proposal_harness.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-mvs-beginner-proposal-harness-001.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/README.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/RECOVERY_STOP.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/WORKFLOW_CONTRACT.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/FIXTURE.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/TEST_MATRIX.md",
+      "docs/investigations/ltb-mvs-beginner-proposal-harness-001/DEFERRED.md",
+      "services/api/app/physical_engineering/beginner_proposal_harness.py",
+      "services/api/tests/physical_engineering/test_beginner_proposal_harness.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New beginner proposal harness and deterministic tests. Investigation notes preserve the LTB-G1-002 stop: the live Grounding Agent stays a handoff checker, and no historical workflow harness was found. The sprint registry records the new adapter without editing MAINT-DEFER-017 or MAINT-DEFER-018.",
+    "why_not_redundant": "The proposal gate had no beginner request adapter. Reusing validate_proposal avoids a second result vocabulary and avoids repurposing tools/grounding_agent."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api: python -m pytest tests/physical_engineering/test_beginner_proposal_harness.py tests/physical_engineering/test_physical_engineering_proposal_v1.py tests/physical_engineering/test_pep_v1_harden_001.py -q --no-cov: 102 passed",
+      "services/api: python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json: OK",
+      "services/api: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json: OK",
+      "services/api: python -m app.ci.check_bare_except: OK",
+      "services/api: python -m app.ci.fence_checker_v2: 2 passed",
+      "services/api: python -m app.ci.check_duplication --threshold 100: OK",
+      "services/api: python -m app.ci.check_execution_class_compliance: OK"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/physical_engineering/beginner_proposal_harness.py",
+      "intent": "Form one existing proposal and copy one validate_proposal verdict.",
+      "risk": "low",
+      "behavior_change": "New module. Not exported from the physical_engineering package."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_beginner_proposal_harness.py",
+      "intent": "Deterministic beginner fixtures for the three gate result names.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/README.md",
+      "intent": "State provenance, authority, and the test commands.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/RECOVERY_STOP.md",
+      "intent": "Preserve the reconnaissance that stopped LTB-G1-002.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/WORKFLOW_CONTRACT.md",
+      "intent": "Document request mapping and the copied result.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/FIXTURE.md",
+      "intent": "Describe the deterministic beginner request and where test policy numbers live.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/TEST_MATRIX.md",
+      "intent": "Map each harness test to a gate result name.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-beginner-proposal-harness-001/DEFERRED.md",
+      "intent": "List UI, API, geometry, and maintenance work this increment does not do.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register LTB-MVS-BEGINNER-PROPOSAL-HARNESS-001. Leave MAINT-DEFER-017 and MAINT-DEFER-018 queued.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/ltb-mvs-beginner-proposal-harness-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "The harness copies the proposal gate result. It grants no physical or manufacturing authority. The Grounding Agent is untouched."
+  }
+}

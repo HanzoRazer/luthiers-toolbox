@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-09-20
+Last updated: 2026-10-21
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -17,6 +17,20 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 | **Governance tail** | `GOV-CONVERGE-*` below | Blocked on **codeowner decisions (003)** and **R1 schedule (002)**. Not on MVP cut path. |
 
 **015-C:** **CLOSED** — api-verify run `26600720296`: `test_total_endpoints_under_target` + `test_endpoints_not_increasing` both **PASSED** after #72 ratchet bump.
+
+---
+
+## LTB-MVS-BEGINNER-PROPOSAL-HARNESS-001 — Beginner proposal adapter (registered 2026-10-21)
+
+**Status:** First milestone registered in this change. Draft until the owner says otherwise. Not a recovery.
+
+**Recovered paths:** none. `LTB-G1-002` stopped. `tools/grounding_agent` is the live handoff-conformance checker and was not repurposed. Git history has no `grounding_workflow` and no `workflow_harness`. Record: `docs/investigations/ltb-mvs-beginner-proposal-harness-001/RECOVERY_STOP.md`.
+
+**New adapter:** `services/api/app/physical_engineering/beginner_proposal_harness.py`. It builds one `PhysicalEngineeringProposalV1`, calls `validate_proposal()` once, and copies `advisory_allowed`, `evidence_required`, or `rejected`. It does not add a second result map, a numeric rule, a UI, or an API route.
+
+**Verification:** From `services/api`, pytest on `tests/physical_engineering/test_beginner_proposal_harness.py`, `test_physical_engineering_proposal_v1.py`, and `test_pep_v1_harden_001.py` (`--no-cov`). Harness tests: 15 passed. Combined with the existing gate tests: 102 passed. Complexity, file size, bare-except, fence, duplication, and execution-class gates passed without a baseline bump.
+
+**Left unresolved:** beginner UI, API route, evidence subject-revision checks, `PEP-MESH-SEAM-003`, and any following MVS shell. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued and are not repaired here. The next MVS increment is not pre-authorized.
 
 ---
 
