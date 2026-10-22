@@ -1,0 +1,82 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_MVS_GUIDED_REVIEW_SLICE_002_STOP",
+  "title": "docs: stop the guided review slice before a production route",
+  "intent": "Record that LTB-MVS-GUIDED-REVIEW-SLICE-002 stopped because no production evidence resolver and no approved production ValidationPolicyV1 exist. Do not add an endpoint or a client.",
+  "change_type": "docs",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-mvs-guided-review-slice-002.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/README.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/DEFERRED_WORK.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-mvs-guided-review-slice-002.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/README.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md",
+      "docs/investigations/ltb-mvs-guided-review-slice-002/DEFERRED_WORK.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Phase 0 ownership record, a short stop note, a deferred list, and a sprint entry. The beginner harness, proposal gate, Grounding Agent, and maintenance items 017 and 018 are unchanged.",
+    "why_not_redundant": "The guided slice cannot choose a server-owned resolver or policy from the current tree. The stop has to be written down so a later session does not mount fixture thresholds on a route."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api on origin/main 8a2f33cb: pytest test_beginner_proposal_harness.py test_physical_engineering_proposal_v1.py test_pep_v1_harden_001.py -q --no-cov: 102 passed",
+      "rg of ValidationPolicyV1( finds one call, the test helper _policy()",
+      "rg of EvidenceResolver implementations finds InMemoryEvidenceResolver only"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/investigations/ltb-mvs-guided-review-slice-002/README.md",
+      "intent": "State that the slice stopped and which documents were not written.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md",
+      "intent": "Name the missing production resolver and the missing production policy.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-guided-review-slice-002/DEFERRED_WORK.md",
+      "intent": "List the unbuilt route, client, and unrelated maintenance.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Mark the harness merged as PR #453 and register this stop. Leave MAINT-DEFER-017 and MAINT-DEFER-018 queued.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/ltb-mvs-guided-review-slice-002.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation of a stop. No route, no policy construction, no resolver, no manufacturing authority."
+  }
+}

@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-10-21
+Last updated: 2026-10-22
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -22,7 +22,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ## LTB-MVS-BEGINNER-PROPOSAL-HARNESS-001 — Beginner proposal adapter (registered 2026-10-21)
 
-**Status:** First milestone registered in this change. Draft until the owner says otherwise. Not a recovery.
+**Status:** Merged as PR #453, commit `8a2f33cb`. Not a recovery.
 
 **Recovered paths:** none. `LTB-G1-002` stopped. `tools/grounding_agent` is the live handoff-conformance checker and was not repurposed. Git history has no `grounding_workflow` and no `workflow_harness`. Record: `docs/investigations/ltb-mvs-beginner-proposal-harness-001/RECOVERY_STOP.md`.
 
@@ -30,7 +30,21 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **Verification:** From `services/api`, pytest on `tests/physical_engineering/test_beginner_proposal_harness.py`, `test_physical_engineering_proposal_v1.py`, and `test_pep_v1_harden_001.py` (`--no-cov`). Harness tests: 15 passed. Combined with the existing gate tests: 102 passed. Complexity, file size, bare-except, fence, duplication, and execution-class gates passed without a baseline bump.
 
-**Left unresolved:** beginner UI, API route, evidence subject-revision checks, `PEP-MESH-SEAM-003`, and any following MVS shell. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued and are not repaired here. The next MVS increment is not pre-authorized.
+**Left unresolved:** beginner UI, API route, evidence subject-revision checks, `PEP-MESH-SEAM-003`, and any following MVS shell. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued and are not repaired here. The guided-review slice stopped before an endpoint. See `LTB-MVS-GUIDED-REVIEW-SLICE-002` below.
+
+---
+
+## LTB-MVS-GUIDED-REVIEW-SLICE-002 — Guided review slice stopped (2026-10-22)
+
+**Status:** STOPPED before production edits. No endpoint, client, resolver, or policy was added.
+
+**Prerequisite:** PR #453 is on `origin/main` at `8a2f33cb`. The harness tests plus the existing proposal-gate tests: 102 passed on that commit.
+
+**Stop:** There is no production-owned evidence resolver and no approved production `ValidationPolicyV1`. The only resolver implementation is the fixture `InMemoryEvidenceResolver`. The only `ValidationPolicyV1(...)` call is the test helper in `test_physical_engineering_proposal_v1.py`. Record: `docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md`.
+
+**Capability of this change:** the stop record. It does not screen a beginner request and it does not authorize manufacture.
+
+**Next prerequisite:** an owner-approved production policy construction and a production evidence resolver over stored artifacts. This slice stays blocked until both exist. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
 
 ---
 
