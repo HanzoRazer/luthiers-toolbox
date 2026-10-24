@@ -10,7 +10,9 @@ The publish shape follows the repository's existing atomic artifact files: write
 
 There is no default path, no in-memory fallback, and no delete method. `list_for_subject` returns matches sorted by `evidence_id`. It does not pick a latest record by UUID or timestamp.
 
-Reopen is a new `FileEvidenceRepository` on the same directory. A second Python process reading that directory returns the same digest. Both are tested.
+Reopen is a new `FileEvidenceRepository` on the same directory. A second Python process reading that directory returns the same digest. Both are tested. Concurrent writers are also tested: identical bytes are idempotent, while different bytes for one id permit exactly one publisher.
+
+The `fsync` applies to the temporary file contents. The hard link provides atomic create-without-replace publication on a same-filesystem directory. This patch does **not** claim absolute power-loss durability for the directory entry, because it does not perform a portable parent-directory `fsync`. Evidence ids are restricted to portable lowercase filename tokens and reject Windows device names. The temporary file is created in the destination directory, so the hard link does not cross filesystems; cleanup runs on success and failure.
 
 ## Rejected stores
 
