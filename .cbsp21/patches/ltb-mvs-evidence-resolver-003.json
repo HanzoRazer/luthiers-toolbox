@@ -1,0 +1,192 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LTB_MVS_EVIDENCE_RESOLVER_003",
+  "title": "feat: LTB-local stored evidence resolver",
+  "intent": "Persist an LTB-local evidence record and resolve PhysicalEngineeringProposalV1 citations by exact id. Storage and resolution grant no engineering or manufacturing authority.",
+  "change_type": "feature",
+  "behavior_change": "A caller-supplied directory can now store immutable evidence JSON and a StoredEvidenceResolver can return one ResolvedEvidence or a typed failure. No route, policy, UI, or manufacturing authority is added.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/ltb-mvs-evidence-resolver-003.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/README.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/PHASE0_OWNERSHIP.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/EVIDENCE_RECORD.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/STORAGE_DECISION.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/RESOLUTION_CONTRACT.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/TEST_MATRIX.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/DEFERRED_POLICY.md",
+      "services/api/app/physical_engineering/evidence_artifact_v1.py",
+      "services/api/app/physical_engineering/evidence_serialization.py",
+      "services/api/app/physical_engineering/evidence_repository.py",
+      "services/api/app/physical_engineering/stored_evidence_repository.py",
+      "services/api/app/physical_engineering/stored_evidence_resolver.py",
+      "services/api/tests/physical_engineering/test_evidence_artifact_v1.py",
+      "services/api/tests/physical_engineering/test_stored_evidence_repository.py",
+      "services/api/tests/physical_engineering/test_stored_evidence_resolver.py",
+      "services/api/tests/physical_engineering/test_evidence_harness_integration.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/ltb-mvs-evidence-resolver-003.json",
+      "SPRINTS.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/README.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/PHASE0_OWNERSHIP.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/EVIDENCE_RECORD.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/STORAGE_DECISION.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/RESOLUTION_CONTRACT.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/TEST_MATRIX.md",
+      "docs/investigations/ltb-mvs-evidence-resolver-003/DEFERRED_POLICY.md",
+      "services/api/app/physical_engineering/evidence_artifact_v1.py",
+      "services/api/app/physical_engineering/evidence_serialization.py",
+      "services/api/app/physical_engineering/evidence_repository.py",
+      "services/api/app/physical_engineering/stored_evidence_repository.py",
+      "services/api/app/physical_engineering/stored_evidence_resolver.py",
+      "services/api/tests/physical_engineering/test_evidence_artifact_v1.py",
+      "services/api/tests/physical_engineering/test_stored_evidence_repository.py",
+      "services/api/tests/physical_engineering/test_stored_evidence_resolver.py",
+      "services/api/tests/physical_engineering/test_evidence_harness_integration.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New LTB-local evidence record, canonical SHA-256, exclusive JSON file repository, and StoredEvidenceResolver. The beginner harness and proposal gate are unchanged. Sprint notes record the PR #454 stop and keep validation policy separate.",
+    "why_not_redundant": "The proposal gate could only resolve the in-memory test fixture. A durable exact-id resolver is required before a review route can cite evidence, and this patch does not invent a Mesh schema or a validation policy."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api on a0861507 before this patch: pytest test_beginner_proposal_harness.py test_physical_engineering_proposal_v1.py test_pep_v1_harden_001.py -q --no-cov: 102 passed",
+      "services/api: focused evidence plus those three files -q --no-cov: 142 passed",
+      "services/api: python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json: OK",
+      "services/api: python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json: OK",
+      "services/api: python -m app.ci.check_bare_except: OK",
+      "services/api: python -m app.ci.fence_checker_v2: 2 passed",
+      "services/api: python -m app.ci.check_duplication --threshold 100: OK",
+      "services/api: python -m app.ci.check_execution_class_compliance: OK",
+      "services/api: python -m compileall -q app/physical_engineering: OK. Full app compileall still fails on five pre-existing files this diff does not touch."
+    ]
+  },
+  "files": [
+    {
+      "path": "services/api/app/physical_engineering/evidence_artifact_v1.py",
+      "intent": "LTB-local immutable evidence record with no authority fields.",
+      "risk": "low",
+      "behavior_change": "New module. Not exported from the package."
+    },
+    {
+      "path": "services/api/app/physical_engineering/evidence_serialization.py",
+      "intent": "Canonical JSON and SHA-256 that exclude the digest field from the digest input.",
+      "risk": "low",
+      "behavior_change": "New module."
+    },
+    {
+      "path": "services/api/app/physical_engineering/evidence_repository.py",
+      "intent": "save, get, and list_for_subject. No delete and no latest-by-UUID lookup.",
+      "risk": "low",
+      "behavior_change": "New protocol."
+    },
+    {
+      "path": "services/api/app/physical_engineering/stored_evidence_repository.py",
+      "intent": "Durable exclusive JSON directory using temp file, fsync, and os.link.",
+      "risk": "low",
+      "behavior_change": "New store. Does not migrate or write art studio, CAM, or RMOS tables."
+    },
+    {
+      "path": "services/api/app/physical_engineering/stored_evidence_resolver.py",
+      "intent": "EvidenceResolver adapter. Applicability failures propagate and do not become advisory_allowed.",
+      "risk": "low",
+      "behavior_change": "New resolver. Does not construct ValidationPolicyV1."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_evidence_artifact_v1.py",
+      "intent": "Record validation and digest tests.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_stored_evidence_repository.py",
+      "intent": "Write, reopen, new process, and duplicate-id tests.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_stored_evidence_resolver.py",
+      "intent": "Applicability, supersession, and multiple-value tests.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_evidence_harness_integration.py",
+      "intent": "The merged harness accepts this resolver and still requires a caller policy.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/README.md",
+      "intent": "Index the increment and its verification.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/PHASE0_OWNERSHIP.md",
+      "intent": "State that the record is LTB-local and that no Mesh schema was adopted.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/EVIDENCE_RECORD.md",
+      "intent": "Document fields, digest bytes, and supersession.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/STORAGE_DECISION.md",
+      "intent": "Document the exclusive JSON directory and the stores that were not used.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/RESOLUTION_CONTRACT.md",
+      "intent": "Map resolver codes onto the existing gate exceptions.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/TEST_MATRIX.md",
+      "intent": "Map EVR-001 through EVR-035, including the MULTIPLE_VALUES_REQUIRE_POLICY deviation.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/ltb-mvs-evidence-resolver-003/DEFERRED_POLICY.md",
+      "intent": "Keep validation policy, the guided UI, and maintenance items 017 and 018 out of this patch.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Record the PR #454 stop, this ownership boundary, and that policy work stays separate.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".cbsp21/patches/ltb-mvs-evidence-resolver-003.json",
+      "intent": "Per-PR CBSP21 patch manifest. This patch creates no engineering or manufacturing authority.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "LTB-local evidence persistence and resolver. No validation policy, no HTTP route, no CAM or manufacturing authority."
+  }
+}
