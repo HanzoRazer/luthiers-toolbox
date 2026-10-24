@@ -21,7 +21,16 @@ from app.physical_engineering.evidence_serialization import payload_digest
 SCHEMA_ID = "ltb_stored_evidence_artifact"
 SCHEMA_VERSION = "1.0"
 
-_EVIDENCE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_EVIDENCE_ID = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,126}[a-z0-9_-])?$")
+_WINDOWS_RESERVED_NAMES = {
+    "aux",
+    "clock$",
+    "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
+    "con",
+    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
+    "nul",
+    "prn",
+}
 _UNIT = re.compile(r"^[a-z][a-z0-9_]*$")
 _DECIMAL = re.compile(r"^(?:0|[1-9]\d*)(?:\.\d+)?$")
 _SIGNED_DECIMAL = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
@@ -213,7 +222,9 @@ def _require_quantity(record: LtbStoredEvidenceArtifactV1) -> None:
 
 
 def _require_evidence_id(value: str, name: str) -> None:
-    if not isinstance(value, str) or _EVIDENCE_ID.fullmatch(value) is None:
+    valid = isinstance(value, str) and _EVIDENCE_ID.fullmatch(value) is not None
+    reserved = valid and value.split(".", 1)[0] in _WINDOWS_RESERVED_NAMES
+    if not valid or reserved:
         raise EvidenceRecordError(f"{name} is required")
 
 
