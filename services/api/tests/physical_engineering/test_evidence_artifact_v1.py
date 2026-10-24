@@ -11,7 +11,7 @@ from app.physical_engineering.evidence_artifact_v1 import (
     make_evidence_artifact,
     record_fields,
 )
-from app.physical_engineering.evidence_serialization import payload_digest
+from app.physical_engineering.evidence_serialization import canonical_payload, payload_digest
 
 
 def provenance() -> EvidenceProvenance:
@@ -55,6 +55,18 @@ def test_valid_record_is_accepted_and_digest_matches():
 def test_blank_evidence_id_is_refused():
     with pytest.raises(EvidenceRecordError):
         make_record(evidence_id=" ")
+
+
+def test_evidence_id_is_a_portable_lowercase_filename():
+    for invalid in ("A", "../escape", "a/b", r"a\\b", "record.", "con", "con.measurement"):
+        with pytest.raises(EvidenceRecordError):
+            make_record(evidence_id=invalid)
+
+
+def test_canonical_payload_has_a_golden_digest():
+    record = make_record()
+    assert record.payload_digest == "ffc902e41c61b1c1eb89897d570a02249c913909dc4e9fc65c8e7ff9d1beeca8"
+    assert "\\n" not in canonical_payload(record_fields(record))
 
 
 def test_blank_subject_id_is_refused():
