@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-10-22
+Last updated: 2026-10-23
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -36,15 +36,31 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ## LTB-MVS-GUIDED-REVIEW-SLICE-002 — Guided review slice stopped (2026-10-22)
 
-**Status:** STOPPED before production edits. No endpoint, client, resolver, or policy was added.
+**Status:** STOPPED before production edits. The stop record merged as PR #454, commit `a0861507` (2026-10-22, 8:31 AM America/Chicago). No endpoint, client, or policy was added in that PR.
 
 **Prerequisite:** PR #453 is on `origin/main` at `8a2f33cb`. The harness tests plus the existing proposal-gate tests: 102 passed on that commit.
 
-**Stop:** There is no production-owned evidence resolver and no approved production `ValidationPolicyV1`. The only resolver implementation is the fixture `InMemoryEvidenceResolver`. The only `ValidationPolicyV1(...)` call is the test helper in `test_physical_engineering_proposal_v1.py`. Record: `docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md`.
+**Stop:** At the time of the stop there was no production-owned evidence resolver and no approved production `ValidationPolicyV1`. The only resolver implementation was the fixture `InMemoryEvidenceResolver`. The only `ValidationPolicyV1(...)` call is the test helper in `test_physical_engineering_proposal_v1.py`. Record: `docs/investigations/ltb-mvs-guided-review-slice-002/PHASE0_POLICY_OWNERSHIP.md`.
 
 **Capability of this change:** the stop record. It does not screen a beginner request and it does not authorize manufacture.
 
-**Next prerequisite:** an owner-approved production policy construction and a production evidence resolver over stored artifacts. This slice stays blocked until both exist. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
+**Next prerequisite:** evidence resolution has its own increment (`LTB-MVS-EVIDENCE-RESOLVER-003`). An owner-approved production policy is still a separate order (`LTB-MVS-VALIDATION-POLICY-004`). This slice stays blocked until both exist. UI work waits on those two. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
+
+---
+
+## LTB-MVS-EVIDENCE-RESOLVER-003 — Stored evidence resolver (registered 2026-10-23)
+
+**Status:** Draft. Not merged.
+
+**Why this precedes UI:** PR #454 stopped the guided slice because a route would have had to invent measurements. Durable evidence has to exist before a review screen can cite it. A validation policy is still a different decision and is not part of this patch.
+
+**Ownership:** Physical Engineering Mesh still owns ecosystem evidence semantics. No Mesh schema is adopted in this repository. The record `ltb_stored_evidence_artifact` 1.0 is LTB-local persistence awaiting ecosystem adoption. LTB owns the file store, applicability checks, and the `EvidenceResolver` adapter. Storage does not grant engineering or manufacturing authority. Record: `docs/investigations/ltb-mvs-evidence-resolver-003/PHASE0_OWNERSHIP.md`.
+
+**Store:** `FileEvidenceRepository` writes one canonical JSON file per evidence id with temp file, `fsync`, and `os.link`. Reopen in a new process reads the same digest. `StoredEvidenceResolver` checks subject, revision, region, unit, digest, and supersession. Two active values for the same quantity raise `MULTIPLE_VALUES_REQUIRE_POLICY`. No tolerance was added.
+
+**Verification:** From `services/api`, the four new test modules plus `test_beginner_proposal_harness.py`, `test_physical_engineering_proposal_v1.py`, and `test_pep_v1_harden_001.py` (`--no-cov`): 142 passed. The previous baseline on `a0861507` was 102 passed. Complexity, file size, bare-except, fence, duplication, and execution-class gates passed without a baseline bump.
+
+**Left unresolved:** `LTB-MVS-VALIDATION-POLICY-004`, the guided-review route and UI, `PEP-MESH-SEAM-003`, and any Mesh adoption of this record. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
 
 ---
 
