@@ -25,6 +25,11 @@ from .test_physical_engineering_proposal_v1 import _policy, _refs, _resolver
 from .test_validation_policy_record_v1 import active_record
 
 
+API_ROOT = Path(__file__).resolve().parents[2]
+PHYSICAL_ENGINEERING_ROOT = API_ROOT / "app" / "physical_engineering"
+CLIENT_ROOT = API_ROOT.parents[1] / "packages" / "client"
+
+
 def _store(tmp_path):
     repository = FileValidationPolicyRepository(tmp_path / "policies")
     repository.save(
@@ -139,7 +144,7 @@ def test_malformed_policy_does_not_call_the_validator(tmp_path, monkeypatch):
 
 
 def test_new_modules_do_not_add_a_route_or_a_threshold_literal():
-    root = Path("/workspace/services/api/app/physical_engineering")
+    root = PHYSICAL_ENGINEERING_ROOT
     names = (
         "validation_policy_record_v1.py",
         "validation_policy_serialization.py",
@@ -167,7 +172,7 @@ def test_gate_and_harness_modules_were_not_rewired():
         source = (root / name).read_text(encoding="utf-8")
         assert "select_validation_policy" not in source
         assert "FileValidationPolicyRepository" not in source
-    client = Path("/workspace/packages/client")
+    client = CLIENT_ROOT
     for path in client.rglob("*"):
         if "node_modules" in path.parts or path.suffix not in {".vue", ".ts", ".js"}:
             continue
