@@ -21,6 +21,10 @@ from .test_physical_engineering_proposal_v1 import _policy
 from .test_stored_evidence_resolver import context
 
 
+API_ROOT = Path(__file__).resolve().parents[2]
+PHYSICAL_ENGINEERING_ROOT = API_ROOT / "app" / "physical_engineering"
+
+
 def _directory(tmp_path):
     return tmp_path / "evidence"
 
@@ -146,7 +150,7 @@ def test_missing_policy_does_not_call_the_harness_validator(tmp_path, monkeypatc
 
 
 def test_new_modules_do_not_add_routes_or_manufacturing_imports():
-    root = Path("/workspace/services/api/app/physical_engineering")
+    root = PHYSICAL_ENGINEERING_ROOT
     names = (
         "evidence_artifact_v1.py",
         "evidence_serialization.py",
@@ -172,12 +176,10 @@ def test_new_modules_do_not_add_routes_or_manufacturing_imports():
 
 
 def test_in_memory_resolver_remains_the_test_fixture():
-    source = Path(
-        "/workspace/services/api/app/physical_engineering/evidence.py"
-    ).read_text(encoding="utf-8")
+    source = (PHYSICAL_ENGINEERING_ROOT / "evidence.py").read_text(encoding="utf-8")
     assert "not a database record" in source
     assert "class InMemoryEvidenceResolver" in source
-    production = Path(
-        "/workspace/services/api/app/physical_engineering/stored_evidence_resolver.py"
-    ).read_text(encoding="utf-8")
+    production = (PHYSICAL_ENGINEERING_ROOT / "stored_evidence_resolver.py").read_text(
+        encoding="utf-8"
+    )
     assert "InMemoryEvidenceResolver" not in production
