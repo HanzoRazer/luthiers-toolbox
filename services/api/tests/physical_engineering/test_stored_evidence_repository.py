@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -15,6 +16,9 @@ from app.physical_engineering.stored_evidence_repository import (
     FileEvidenceRepository,
 )
 from .test_evidence_artifact_v1 import make_record
+
+
+API_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _directory(tmp_path):
@@ -51,7 +55,7 @@ def test_new_process_reads_the_saved_record(tmp_path):
     )
     completed = subprocess.run(
         [sys.executable, "-c", script],
-        cwd="/workspace/services/api",
+        cwd=API_ROOT,
         capture_output=True,
         text=True,
         check=False,
