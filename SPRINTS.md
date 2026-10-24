@@ -50,7 +50,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ## LTB-MVS-EVIDENCE-RESOLVER-003 — Stored evidence resolver (registered 2026-10-23)
 
-**Status:** Draft. Not merged.
+**Status:** Merged as PR #455, merge commit `02032884` (2026-10-23, 10:55 PM America/Chicago). Head `20725b0a`.
 
 **Why this precedes UI:** PR #454 stopped the guided slice because a route would have had to invent measurements. Durable evidence has to exist before a review screen can cite it. A validation policy is still a different decision and is not part of this patch.
 
@@ -61,6 +61,20 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 **Verification:** From `services/api`, the four new test modules plus `test_beginner_proposal_harness.py`, `test_physical_engineering_proposal_v1.py`, and `test_pep_v1_harden_001.py` (`--no-cov`): 142 passed. The previous baseline on `a0861507` was 102 passed. Complexity, file size, bare-except, fence, duplication, and execution-class gates passed without a baseline bump.
 
 **Left unresolved:** `LTB-MVS-VALIDATION-POLICY-004`, the guided-review route and UI, `PEP-MESH-SEAM-003`, and any Mesh adoption of this record. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
+
+---
+
+## LTB-MVS-VALIDATION-POLICY-004 — Production policy mechanism (registered 2026-10-23)
+
+**Status:** Draft. No active production policy.
+
+**Owner gate:** `ValidationPolicyV1` has four fields. The two numeric fields are consumed by `screening._magnitude_failure` and `screening._one_thickness`. Neither has an owner, a source, or an approved value. The test numbers `0.6` and `2.5` stay fixtures. Record: `docs/investigations/ltb-mvs-validation-policy-004/POLICY_FIELD_AUTHORITY.md`.
+
+**Mechanism:** `ltb_validation_policy` 1.0 is an LTB-local record. Approval is a separate block whose digest covers the payload and excludes itself. `FileValidationPolicyRepository` publishes one JSON file per id and revision with temp file, `fsync`, and `os.link`. `select_validation_policy` returns the existing `ValidationPolicyV1` only for one approved `ACTIVE` match. Missing and ambiguous policies fail closed. This does not authorize manufacture.
+
+**Verification:** Focused policy tests plus the existing proposal, harness, and harden suites. `proposal_v1.py` and `beginner_proposal_harness.py` are unchanged.
+
+**Left unresolved:** an owner-approved production record, then the guided-review endpoint. `MAINT-DEFER-017` and `MAINT-DEFER-018` stay queued.
 
 ---
 
