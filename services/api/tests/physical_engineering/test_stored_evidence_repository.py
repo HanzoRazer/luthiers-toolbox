@@ -1,7 +1,9 @@
 """Durable evidence files. Reopen means a new repository object, and a new process."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import json
+from threading import Barrier
 import subprocess
 import sys
 from pathlib import Path
@@ -77,6 +79,47 @@ def test_same_id_with_different_payload_is_refused(tmp_path):
     repository.save(make_record())
     with pytest.raises(DuplicateEvidenceContent):
         repository.save(make_record(quantity_value="3.1"))
+
+
+
+def _concurrent_save(directory, record, barrier):
+    barrier.wait()
+    try:
+        FileEvidenceRepository(directory).save(record)
+        return "saved"
+    except DuplicateEvidenceContent:
+        return "duplicate"
+
+
+def test_concurrent_identical_writers_are_idempotent(tmp_path):
+    directory = _directory(tmp_path)
+    barrier = Barrier(2)
+    record = make_record()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = tuple(
+            pool.map(
+                lambda _: _concurrent_save(directory, record, barrier),
+                range(2),
+            )
+        )
+    assert results == ("saved", "saved")
+    assert FileEvidenceRepository(directory).get(record.evidence_id) == record
+
+
+def test_concurrent_different_bytes_allow_exactly_one_writer(tmp_path):
+    directory = _directory(tmp_path)
+    barrier = Barrier(2)
+    records = (make_record(), make_record(quantity_value="3.1"))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = tuple(
+            pool.map(
+                lambda record: _concurrent_save(directory, record, barrier),
+                records,
+            )
+        )
+    assert sorted(results) == ["duplicate", "saved"]
+    stored = FileEvidenceRepository(directory).get(records[0].evidence_id)
+    assert stored.quantity_value in {"2.9", "3.1"}
 
 
 def test_missing_id_is_not_found(tmp_path):
