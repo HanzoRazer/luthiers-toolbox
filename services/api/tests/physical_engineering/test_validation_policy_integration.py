@@ -167,7 +167,7 @@ def test_new_modules_do_not_add_a_route_or_a_threshold_literal():
 
 
 def test_gate_and_harness_modules_were_not_rewired():
-    root = Path("/workspace/services/api/app/physical_engineering")
+    root = PHYSICAL_ENGINEERING_ROOT
     for name in ("proposal_v1.py", "beginner_proposal_harness.py"):
         source = (root / name).read_text(encoding="utf-8")
         assert "select_validation_policy" not in source
