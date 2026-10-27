@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
@@ -172,7 +173,8 @@ def _load() -> List[Dict[str, Any]]:
 
 def create_art_job(lane: str, payload: Dict[str, Any], job_id: str | None = None) -> ArtJob:
     _init()
-    jid = job_id or f"{lane}_job_{int(time.time() * 1000)}"
+    # uuid suffix: a same-millisecond fallback id would upsert over another job (MAINT-DEFER-019).
+    jid = job_id or f"{lane}_job_{int(time.time() * 1000)}_{uuid.uuid4().hex}"
     created_at = time.time()
     payload_json = _payload_to_json(payload)
     stored_payload = _row_to_job_dict({
