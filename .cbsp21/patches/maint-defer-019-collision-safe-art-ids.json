@@ -1,0 +1,90 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "MAINT_DEFER_019_COLLISION_SAFE_ART_IDS",
+  "title": "fix(stores): collision-safe art preset and art job ids (MAINT-DEFER-019)",
+  "intent": "Three id generators built ids from epoch milliseconds, so two calls in the same millisecond collided: an IntegrityError in the SQLite preset store (the CI flake in test_sqlite_art_stores.py), duplicate ids in the live JSON preset store, and a silent upsert-overwrite in the art job store's fallback id. Append uuid4 hex to the millisecond prefix so ids stay time-led and unique.",
+  "change_type": "fix",
+  "behavior_change": "Newly created preset ids and fallback job ids carry a _<32 hex> suffix. No existing record, schema, route or ordering query changes; ORDER BY created_at is unaffected.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/maint-defer-019-collision-safe-art-ids.json",
+      "SPRINTS.md",
+      "services/api/app/services/art_job_store.py",
+      "services/api/app/services/art_presets_store.py",
+      "services/api/app/stores/sqlite_art_presets_store.py",
+      "services/api/tests/test_maint_defer_019_collision_safe_ids.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/maint-defer-019-collision-safe-art-ids.json",
+      "SPRINTS.md",
+      "services/api/app/services/art_job_store.py",
+      "services/api/app/services/art_presets_store.py",
+      "services/api/app/stores/sqlite_art_presets_store.py",
+      "services/api/tests/test_maint_defer_019_collision_safe_ids.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Three one-line id expressions plus uuid imports; one new test module; one SPRINTS.md ledger entry.",
+    "why_not_redundant": "No existing manifest or PR touches these generators; owner ruled 2026-10-26 that the flake be repaired with collision-safe ids, independently of PR #462."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/test_maint_defer_019_collision_safe_ids.py tests/test_sqlite_art_stores.py tests/test_art_job_stores_migration.py -q --no-cov -> 35 passed",
+      "same new test module run against unfixed origin/main 02032884 code -> 3 failed (UNIQUE constraint failed: art_presets.id; duplicate JSON id; upsert overwrite)",
+      "grep -rnE 'f\"[^\"]*\\{int\\(time\\.time\\(\\)\\s*\\*\\s*1000\\)\\}' services/api/app -> exactly the three fixed sites before; none after"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/maint-defer-019-collision-safe-art-ids.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register MAINT-DEFER-019 (table row + detail section).",
+      "risk": "low",
+      "behavior_change": "None. Ledger text."
+    },
+    {
+      "path": "services/api/app/services/art_job_store.py",
+      "intent": "Collision-safe fallback job id: millisecond prefix + uuid4 hex.",
+      "risk": "low",
+      "behavior_change": "Fallback ids gain a 33-character suffix; ids passed by callers are unchanged."
+    },
+    {
+      "path": "services/api/app/services/art_presets_store.py",
+      "intent": "Collision-safe preset id: millisecond prefix + uuid4 hex.",
+      "risk": "low",
+      "behavior_change": "New preset ids gain a 33-character suffix; existing ids are untouched."
+    },
+    {
+      "path": "services/api/app/stores/sqlite_art_presets_store.py",
+      "intent": "Collision-safe preset id: millisecond prefix + uuid4 hex.",
+      "risk": "low",
+      "behavior_change": "New preset ids gain a 33-character suffix; existing ids are untouched."
+    },
+    {
+      "path": "services/api/tests/test_maint_defer_019_collision_safe_ids.py",
+      "intent": "Regression tests with a frozen clock forcing same-millisecond calls.",
+      "risk": "low",
+      "behavior_change": "None. Tests only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-26-MAINT-DEFER-019",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Id-format change confined to three store generators; no consumer parses the id."
+  }
+}

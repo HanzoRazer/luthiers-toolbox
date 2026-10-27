@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+import uuid
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -45,7 +46,8 @@ def list_presets(lane: Optional[str] = None) -> List[Dict[str, Any]]:
 
 def create_preset(lane: str, name: str, params: Dict[str, Any]) -> ArtPreset:
     rows = _load()
-    pid = f"{lane}_preset_{int(time.time()*1000)}"
+    # uuid suffix: same-millisecond calls must not share an id (MAINT-DEFER-019).
+    pid = f"{lane}_preset_{int(time.time()*1000)}_{uuid.uuid4().hex}"
     preset = ArtPreset(
         id=pid,
         lane=lane,
