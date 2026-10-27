@@ -33,7 +33,8 @@
       "A/B production build: npm ci + vite build in a worktree at origin/main and in this branch's worktree, outputs compared with diff -rq.",
       "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push.",
       "npm pack postcss@8.5.30 and @8.5.31, diff -r: 3 files (lib/processor.js, lib/stringify.js, package.json version); no install scripts; no new network/eval/process tokens.",
-      "A/B vite build: 199 vs 199 files, diff -rq: no differences."
+      "A/B vite build: 199 vs 199 files, diff -rq: no differences.",
+      "2026-10-27: origin/main de6f7128 (PR #463, MAINT-DEFER-019 collision-safe art ids) merged into this branch -- no force-push -- because every API Tests / api-verify red on the first manifest head was tests/test_sqlite_art_stores.py UNIQUE constraint failed: art_presets.id, the ms-timestamp id collision #463 fixes. git diff --name-only 02032884 de6f7128 touches no packages/client file, so the lockfile enumeration and A/B results above still hold against the new merge base."
     ]
   },
   "files": [
