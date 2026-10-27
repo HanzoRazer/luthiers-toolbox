@@ -32,15 +32,15 @@ should reuse that pattern rather than invent one.
 **What blocks it:**
 - No explicit contract exists today for an ERP job to pin an LTB design revision, material subject or operation (JOB_IDENTITY_MAP: ABSENT/UNKNOWN).
 - Choosing an ERP is outside this order.
-- Owner rulings R1 and R2 come first.
+- Ruled since (R1, R2): CNC-PS owns the job and the official estimate. A bridge is therefore an internal LTB↔CNC-PS contract, not an ERP selection.
 - An ERP would still need LTB to emit a durable per-operation record for actuals.
 
-**Verdict:** premature. It depends on rulings and on the same missing seam.
+**Verdict:** not chosen. R1/R2 make CNC-Production-Shop the commercial engine, so an external ERP is outside scope. Any bridge is an internal LTB↔CNC-PS contract that reuses the sha256 source pattern, and it still needs the missing operation-record seam.
 
 ## 3. Build a narrow internal operating loop
 
 Build only the missing seam inside LTB:
-- an append-only shop-operation record keyed to the existing `project_id`
+- an append-only shop-operation record keyed to the CNC-PS `job_id` (ruled R1/R5)
 - operation key, subject and evidence ids
 - start/complete/abort events
 - actual minutes and material lines
@@ -48,7 +48,7 @@ Build only the missing seam inside LTB:
 - no approval fields
 
 Reuse the SOL-D02 and SOL-E01 patterns rather than inventing new ones. Leave
-commercial identity (R1), estimator ownership (R2), kits (R3) and the
-validation policy (R6) untouched.
+the CNC-PS job and estimate (R1, R2), kits (R3) and the validation policy (R6)
+untouched.
 
 **Verdict:** recommended as the next increment. See RECOMMENDATION.md.

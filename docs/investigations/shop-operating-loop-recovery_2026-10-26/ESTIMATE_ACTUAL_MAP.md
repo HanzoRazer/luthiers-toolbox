@@ -35,11 +35,14 @@ with any estimate. No feedback loop updates a cost or time estimate.
 - **Actuals on the same job and operation:** no. No actual shares a key with an estimate (SOL-B05 MISSING).
 - **Feedback into future estimates:** none for cost or time.
 - **Commercial or engineering authority:** cost is commercial only. No gate consumes it; LTB labels the business router `LANE: UTILITY`.
-- **Truthfulness risk:** SOL-D05 shows derived numbers labelled "actual". Any future variance report must not read from it (owner question R7).
+- **Truthfulness risk:** SOL-D05 shows derived numbers labelled "actual". Ruled (R7): estimates never populate `actual_time_s`, and derived values are excluded from estimate-versus-actual.
 
 ## Ownership conflict
 
-SOL-B01 and SOL-B04 both estimate guitar builds for a commercial decision,
-with different inputs, keys and persistence. Neither is marked canonical. This
-is owner question **R2**, recorded and not resolved, per the order's stop rule
-on competing authorities.
+SOL-B01 and SOL-B04 both estimate guitar builds, with different inputs, keys
+and persistence.
+
+**Ruled (R2, 2026-10-26):**
+- CNC-PS (SOL-B04) is the official estimator, with one official estimate revision per job.
+- The LTB estimator (SOL-B01) is a clearly labeled non-binding design preview that must never silently replace or update a job's accepted estimate.
+- Actuals for S9 come from LTB completed operation records keyed to the CNC-PS `job_id` (R5).

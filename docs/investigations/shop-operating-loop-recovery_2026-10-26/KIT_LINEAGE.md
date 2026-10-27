@@ -56,7 +56,7 @@ or imply CAM readiness.
 
 **R3 RULED (2026-10-26):** SOL-C07 is canonical configuration identity. The
 kit layer (quantities, units, substitutions, BOM semantics) is the missing work.
-Which repo hosts it follows R1/R2. *Original question:* should a future kit be built on SOL-C01 (LTB templates)
+Per the resulting architecture it follows the CNC job/configuration contract. *Original question:* should a future kit be built on SOL-C01 (LTB templates)
 or on SOL-C07 (CNC-PS product records)? The evidence leaned toward SOL-C07 because
 it is the only configuration a job already pins by content. No kit work is
 recommended next.

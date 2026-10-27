@@ -6,19 +6,27 @@
 | **Date** | 2026-10-26 |
 | **Baseline** | luthiers-toolbox `origin/main` `02032884` (secondary SHAs in BASELINE.md) |
 | **Implementation authority** | None. No production source, route, schema, threshold, policy or deployment file changes. |
-| **Status** | Draft PR for owner review. **Two of seven owner rulings made (R3, R4, 2026-10-26); five open** (OWNER_RULINGS.md). The CI red is MAINT-DEFER-019, unrelated (#463). |
+| **Status** | Draft PR, **internally final: all seven owner rulings recorded (2026-10-26, OWNER_RULINGS.md); 0 rows await a ruling.** Awaiting owner disposition. The CI red is MAINT-DEFER-019, unrelated (#463). |
 
 ## Conclusion
 
-**No step of the nine-step operating loop is AVAILABLE today, and no segment
-runs end to end.**
+**No segment runs end to end.** After the owner rulings, two steps are
+AVAILABLE in CNC-Production-Shop through an operator CLI, not a guided surface.
+They became AVAILABLE because the rulings named canonical owners, not because
+of new code.
 
-- 3 steps are ADAPT:
-  - **S1 job identity:** LTB `project_id`
-  - **S2 configuration:** the CNC-PS product definition, which a job pins by sha256
-  - **S3 estimate revision:** CNC-PS quote records
-- 5 steps are BUILD.
-- 1 step is BLOCKED: **S6** needs an owner-approved validation policy (PR #456 has the mechanism, not the values).
+- 2 steps are AVAILABLE:
+  - **S1 job of record:** CNC-PS `job_id` (R1)
+  - **S3 official estimate revision:** CNC-PS (R2)
+- 1 step is ADAPT: **S2.** The product definition plus digest is canonical configuration identity; the commercial-kit layer is missing (R3).
+- 5 steps are BUILD: S4, S5, S7, S8, S9.
+- 1 step is BLOCKED: **S6.** By ruling, it waits on the first real soundboard policy evidence (R6).
+
+**Ownership, as ruled:**
+- CNC-PS owns the job and the estimate.
+- LTB owns the design project, the guided shop workflow and the operation records keyed to `job_id`.
+- Creation Studio owns CAM package assembly and review.
+- Manufacturing authority stays a separate readiness/CAM verdict plus human authorization (OWNER_RULINGS.md).
 
 The missing seam for a first-soundboard witness is a durable,
 append-only record of a shop operation performed on a job. Steps S7 (next
@@ -33,7 +41,7 @@ as an LTB library with no route, no UI and no authority (RECOMMENDATION.md).
 | By track | A job identity 8 · B estimate/actual 5 · C kits 8 · D time 9 · E guided 10 |
 | By repo | luthiers-toolbox 34 (85%) · CNC-Production-Shop 4 · CAM-Assist-Blueprint 1 · CAM-Creation-Studio 1 |
 | By reachability | LIVE_ROUTED 17 · LIVE_LIBRARY 4 · BUILT_DISCONNECTED 8 · ARCHIVED_RECOVERABLE 1 · CONCEPT_ONLY 5 · MISSING 5 |
-| By disposition | RETAIN_CANONICAL 8 · ADAPT 6 · REFERENCE_ONLY 17 · OWNER_RULING_REQUIRED 3 · MISSING_BUILD 5 · SUPERSEDED 1 · RECONNECT 0 |
+| By disposition | RETAIN_CANONICAL 9 · ADAPT 8 · REFERENCE_ONLY 17 · MISSING_BUILD 5 · SUPERSEDED 1 · OWNER_RULING_REQUIRED 0 · RECONNECT 0 |
 
 **RECONNECT is 0:** no complete capability is waiting to be switched back on.
 Every useful disconnected asset is PARTIAL.
@@ -52,13 +60,14 @@ Every useful disconnected asset is PARTIAL.
 2. **Reachable today:** the 21 LIVE_* rows. Each cites its registration or caller as file:line.
 3. **Disconnected or archived:** 8 BUILT_DISCONNECTED rows, plus 1 ARCHIVED_RECOVERABLE from pre-rewrite tag `v2.4.0-alpha.1`.
 4. **Discussed, never built:** the 5 CONCEPT_ONLY rows and 2 routed mocks.
-5. **Overlaps and conflicts:** see AUTHORITY_BOUNDARY.md.
-   - Two job identities (R1).
-   - Two estimators (R2).
-   - Two kit/configuration bases (R3).
-   - A self-asserted `manufacturing_state` that feeds a G-code precondition (R4).
-   - The CCS guided/job-composition claim (R5).
-   - Fabricated "actuals" (R7).
+5. **Overlaps and conflicts:** see AUTHORITY_BOUNDARY.md. All are now ruled:
+   - two job identities (R1: CNC-PS)
+   - two estimators (R2: CNC-PS official, LTB preview)
+   - two configuration bases (R3: product definition)
+   - a self-asserted `manufacturing_state` (R4: workflow assertion only; the DXF stays quarantined)
+   - the CCS claim (R5: split)
+   - the beginner policy values (R6: unapproved)
+   - fabricated actuals (R7: correct the screen)
 6. **Truly missing:** MVS_GAP_MATRIX.md.
 7. **Next increment:** SHOP-OP-RECORD-001.
 8. **Why it advances a beginner-guided app:** every guided surface found kept completion in memory or in a bare list. A beginner flow can say "next" and "done" only from a durable operation record.

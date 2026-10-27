@@ -28,11 +28,11 @@
   },
   "generated_outputs": {
     "CAPABILITY_LEDGER.csv": {
-      "sha256": "6f33d02ad595fb28d8741d6d14db0422ad7f45bd5b6308fb0624a6b021470866",
+      "sha256": "026f0e7d724c41ad824a301bc2ed32ededcc80c7774df9ee83b0845a8ac1a47b",
       "authored": "row text by hand; every content_digest computed with git rev-parse <source_revision>:<path_or_ref>"
     },
     "CAPABILITY_LEDGER.json": {
-      "sha256": "6b8c6f087f58829246e05cfa308decb8fdc062c0820b14d36e57c1608080bb39",
+      "sha256": "0f8da7edb9f123666fe4d8c756976c64adaeefa437a299a3e0c6f811d015fada",
       "generated_by": "python scripts/investigations/shop_operating_loop_ledger.py --package <pkg> --write-json"
     }
   },
@@ -61,10 +61,9 @@
     },
     "by_disposition": {
       "REFERENCE_ONLY": 17,
-      "RETAIN_CANONICAL": 8,
-      "ADAPT": 6,
+      "RETAIN_CANONICAL": 9,
+      "ADAPT": 8,
       "MISSING_BUILD": 5,
-      "OWNER_RULING_REQUIRED": 3,
       "SUPERSEDED": 1
     },
     "by_completeness": {
@@ -74,8 +73,8 @@
       "STUB": 4
     },
     "by_authority": {
-      "NONE": 21,
-      "COMMERCIAL": 5,
+      "NONE": 22,
+      "COMMERCIAL": 4,
       "DESIGN": 4,
       "CAM": 3,
       "SHOP_EXECUTION": 3,
@@ -85,8 +84,8 @@
     "ltb_digests_reverified": 29,
     "raw_candidates_before_screening": 52,
     "mvs_steps": {
-      "AVAILABLE": 0,
-      "ADAPT": 3,
+      "AVAILABLE": 2,
+      "ADAPT": 1,
       "BUILD": 5,
       "BLOCKED": 1
     },
@@ -97,16 +96,15 @@
     "corrections": 1,
     "owner_rulings": {
       "ruled": [
-        "R3",
-        "R4"
-      ],
-      "open": [
         "R1",
         "R2",
+        "R3",
+        "R4",
         "R5",
         "R6",
         "R7"
       ],
+      "open": [],
       "ruled_on": "2026-10-26"
     }
   },

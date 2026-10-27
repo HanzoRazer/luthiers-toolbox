@@ -170,7 +170,7 @@
     },
     {
       "path": "services/api/tests/test_shop_operating_loop_recovery_evidence.py",
-      "intent": "Validator test: committed package passes every rule, digests reproduce, and fixtures make each rule fire.",
+      "intent": "Validator test: committed package passes every rule, digests reproduce, and fixtures make each rule fire. Also asserts the package is internally final: no row awaits a ruling and R1-R7 are all recorded as RULED.",
       "risk": "low",
       "behavior_change": "None. Offline text analysis; no application import."
     },
@@ -182,7 +182,7 @@
     },
     {
       "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
-      "intent": "Owner rulings record: R3/R4 ruled 2026-10-26 with their recorded effects; R1, R2, R5, R6, R7 stated in full with evidence and options.",
+      "intent": "Owner rulings record: all seven (R1-R7) ruled 2026-10-26, with the resulting architecture and each ruling's recorded effect.",
       "risk": "low",
       "behavior_change": "None. Documentation only."
     }

@@ -137,6 +137,15 @@ def test_committed_package_passes_and_digests_reproduce():
         "services/api/tests/test_shop_operating_loop_recovery_evidence.py",
     }
 
+    # Internally final: every owner ruling is recorded and no row still awaits one.
+    assert [r["candidate_id"] for r in rows if r["disposition"] == "OWNER_RULING_REQUIRED"] == []
+    rulings = (PKG / "OWNER_RULINGS.md").read_text(encoding="utf-8")
+    ruled = {m for m in (f"R{i}" for i in range(1, 8)) if f"## {m} " in rulings and "(RULED" in
+             rulings.split(f"## {m} ", 1)[1].splitlines()[0]}
+    assert ruled == {f"R{i}" for i in range(1, 8)}
+    assert set(evidence["counts"]["owner_rulings"]["ruled"]) == ruled
+    assert evidence["counts"]["owner_rulings"]["open"] == []
+
 
 def test_fixture_package_covers_the_eight_named_cases(tmp_path):
     tool = _tool()

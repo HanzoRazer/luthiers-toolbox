@@ -43,7 +43,7 @@ No link is proven by name matching.
 | CNC-PS job | estimate, bid, proposal | PROVEN | stored: required fields in CNC-Production-Shop schemas/workflows/job_quote_manifest_v1.schema.json:87 |
 | CNC-PS job | product configuration (by content) | PROVEN | stored: manifest `sources[]` entries require role, record_id, snapshot_ref and sha256 at CNC-Production-Shop schemas/workflows/job_quote_manifest_v1.schema.json:28. Product role loaded at business/workflows/loading.py:385, `product_id` cross-checked at :404. |
 | CNC-PS job | LTB project / design revision | ABSENT | Neither `job_quote_request_v1` nor `job_quote_manifest_v1` has a design, project or run field |
-| LTB project | CNC-PS job | UNKNOWN | No field on either side, and no contract document. **No crosswalk invented.** |
+| LTB project | CNC-PS job | UNKNOWN | No field on either side as built, and no crosswalk invented. **R1 makes it required:** the CNC-PS manifest must reference LTB `project_id`, an immutable design revision/snapshot id, the design-package sha256 and generator identity/version (MVS S4, unbuilt). |
 | LTB estimate (SOL-B01) | project or design revision | ABSENT | `EstimateResult` has no id, revision or design hash |
 | CAM Assist package | CNC-PS job | UNKNOWN | Schema exists (SOL-A07); no consumer in LTB or CNC-PS |
 | RMOS JobLog `op_id` | a shop operation definition | UNKNOWN | `op_id` is a free optional string (feedback/schemas.py:80). There is no operation catalog. |

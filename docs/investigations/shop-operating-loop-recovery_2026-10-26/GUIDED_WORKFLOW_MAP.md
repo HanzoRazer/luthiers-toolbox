@@ -33,9 +33,10 @@ From `docs/investigations/ltb-mvs-*`:
   and persistent job state. None of it was implemented.
 - CAM Creation Studio's ratified product boundary (SOL-E09) names "guided
   authoring and progressive disclosure" and "artifact assembly and job
-  composition" as Creation Studio roles. **Owner question R5:** does that
-  overlap an LTB shop-floor traveler? The evidence shows a plausible overlap,
-  not a proven one.
+  composition" as Creation Studio roles. **Ruled (R5):** split. Creation
+  Studio assembles and reviews the CAM package and does not become the ERP or
+  shop traveler. LTB provides the beginner-guided shop-floor interface and
+  records operations against the CNC-PS `job_id`.
 - `docs/investigations/headstock-integration-feasibility-002_2026-10-19/NEXT_ORDER.md:81`
   expands "MVS" as "manufacturing verification standard". This order uses the
   operating-loop sense. The two are noted, not reconciled.
