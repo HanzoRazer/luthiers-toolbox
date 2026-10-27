@@ -21,6 +21,7 @@
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
@@ -42,6 +43,7 @@
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
@@ -177,6 +179,12 @@
       "intent": "Continuation pass: citation spot check, SOL-C07 correction, R4 latency witness, CI attribution.",
       "risk": "low",
       "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
+      "intent": "Owner rulings record: R3/R4 ruled 2026-10-26 with their recorded effects; R1, R2, R5, R6, R7 stated in full with evidence and options.",
+      "risk": "low",
+      "behavior_change": "None. Documentation only."
     }
   ],
   "architecture_scan": {

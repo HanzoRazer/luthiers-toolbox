@@ -78,7 +78,10 @@ two presets in the same lane back to back, so a same-millisecond call raises
 
 This flake is not recorded in `SPRINTS.md`, `docs/ci/` or `docs/investigations/`.
 It is **not fixed here**, because this order permits no production change. It
-needs its own CI-RED entry.
+needs its own CI-RED entry. Owner ruling 2026-10-26: separate it. It is now
+MAINT-DEFER-019, repaired with collision-safe ids in draft PR #463. The same pattern
+was also found live in `services/art_presets_store.py:48` and latent in
+`services/art_job_store.py:175`.
 
 **Independence witness:**
 - Re-running the failed jobs reproduced the same failure. The api-verify reruns were 121979598501 (`test_search_by_name`) and 121979602343 (`test_list_by_lane`, `test_search_by_name`).

@@ -54,8 +54,9 @@ None of these artifacts decides anything about manufacturing:
 A kit that a job pins would be commercial authority only. It must not carry
 or imply CAM readiness.
 
-**Owner question R3:** should a future kit be built on SOL-C01 (LTB templates)
-or on SOL-C07 (CNC-PS product records)? The evidence now leans toward SOL-C07:
-it is the only configuration a job already pins by content. It still carries
-no BOM. This should be decided before any kit work, and no kit work is
+**R3 RULED (2026-10-26):** SOL-C07 is canonical configuration identity. The
+kit layer (quantities, units, substitutions, BOM semantics) is the missing work.
+Which repo hosts it follows R1/R2. *Original question:* should a future kit be built on SOL-C01 (LTB templates)
+or on SOL-C07 (CNC-PS product records)? The evidence leaned toward SOL-C07 because
+it is the only configuration a job already pins by content. No kit work is
 recommended next.

@@ -6,7 +6,7 @@
 | **Date** | 2026-10-26 |
 | **Baseline** | luthiers-toolbox `origin/main` `02032884` (secondary SHAs in BASELINE.md) |
 | **Implementation authority** | None. No production source, route, schema, threshold, policy or deployment file changes. |
-| **Status** | Draft PR for owner review. **Not merge-ready by itself:** seven owner rulings are open (RECOMMENDATION.md). |
+| **Status** | Draft PR for owner review. **Two of seven owner rulings made (R3, R4, 2026-10-26); five open** (OWNER_RULINGS.md). The CI red is MAINT-DEFER-019, unrelated (#463). |
 
 ## Conclusion
 
@@ -33,7 +33,7 @@ as an LTB library with no route, no UI and no authority (RECOMMENDATION.md).
 | By track | A job identity 8 · B estimate/actual 5 · C kits 8 · D time 9 · E guided 10 |
 | By repo | luthiers-toolbox 34 (85%) · CNC-Production-Shop 4 · CAM-Assist-Blueprint 1 · CAM-Creation-Studio 1 |
 | By reachability | LIVE_ROUTED 17 · LIVE_LIBRARY 4 · BUILT_DISCONNECTED 8 · ARCHIVED_RECOVERABLE 1 · CONCEPT_ONLY 5 · MISSING 5 |
-| By disposition | RETAIN_CANONICAL 7 · ADAPT 6 · REFERENCE_ONLY 17 · OWNER_RULING_REQUIRED 5 · MISSING_BUILD 5 · RECONNECT 0 |
+| By disposition | RETAIN_CANONICAL 8 · ADAPT 6 · REFERENCE_ONLY 17 · OWNER_RULING_REQUIRED 3 · MISSING_BUILD 5 · SUPERSEDED 1 · RECONNECT 0 |
 
 **RECONNECT is 0:** no complete capability is waiting to be switched back on.
 Every useful disconnected asset is PARTIAL.

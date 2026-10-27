@@ -38,10 +38,11 @@ because shop-execution evidence on LTB-designed instruments already lives here
 
 - It is the missing seam named in MVS_GAP_MATRIX.md. S7, S8 and S9 all need a
   durable per-operation record, and none exists in any scoped repo.
-- It is unblocked:
-  - it needs no owner ruling (R1–R5)
-  - it needs no approved validation policy (R6)
-  - it needs no new authority
+- It needs no approved validation policy (R6) and no new authority.
+- **Sequencing (owner ruling 2026-10-26):** it does not start until all seven
+  rulings are closed and this package is final. The record must be derived from
+  the settled ownership and identity map. R1 fixes its key (LTB `project_id`
+  with or without a CNC-PS `job_id` reference), and R5 fixes which repo hosts it.
 - It advances the **beginner-guided** app rather than another isolated feature.
   Every guided surface found (Hub, GuidedWorkflow, wizards) failed the same
   way: completion lived in memory or in a bare string list. A guided flow can
@@ -59,14 +60,16 @@ because shop-execution evidence on LTB-designed instruments already lives here
 | Time-entry UI (`/rmos/time`) | Needs the record this increment creates |
 | Variance reporting | Needs both estimate and actual on one key. SOL-D05's fabricated actuals must be excluded (R7). |
 
-## Open owner rulings
+## Owner rulings
 
-| ID | Question |
-|---|---|
-| R1 | Is LTB `project_id` the job anchor, or does CNC-PS `job_id` own job identity, and through what contract? |
-| R2 | Which estimator is canonical for guitar jobs: LTB `business/estimator` or CNC-PS `business/estimates`? |
-| R3 | Should a kit be built on LTB BOM templates or on the CNC-PS product definition (`GuitarProductDefinitionV1`, already pinned per job by sha256)? |
-| R4 | Should `manufacturing_state` stop being client-writable through PUT design-state? |
-| R5 | Does CAM Creation Studio's "job composition" role overlap an LTB shop-floor traveler? |
-| R6 | Approve or source the PR #456 policy values |
-| R7 | Retire or relabel CAM job-intelligence derived "actuals" |
+Full questions, evidence and options: OWNER_RULINGS.md. R3 and R4 were ruled 2026-10-26. The owner has ruled this increment does not start until all seven are closed.
+
+| ID | Question | Status |
+|---|---|---|
+| R1 | Is LTB `project_id` the job anchor, or does CNC-PS `job_id` own job identity, and through what contract? | OPEN |
+| R2 | Which estimator is canonical for guitar jobs: LTB `business/estimator` or CNC-PS `business/estimates`? | OPEN |
+| R3 | Should a kit be built on LTB BOM templates or on the CNC-PS product definition (`GuitarProductDefinitionV1`, already pinned per job by sha256)? | RULED: product definition = configuration identity; kit layer unbuilt |
+| R4 | Should `manufacturing_state` stop being client-writable through PUT design-state? | RULED: workflow assertion only; independent CAM/readiness disposition required before the LP DXF leaves quarantine; DXF stays quarantined |
+| R5 | Does CAM Creation Studio's "job composition" role overlap an LTB shop-floor traveler? | OPEN |
+| R6 | Approve or source the PR #456 policy values | OPEN |
+| R7 | Retire or relabel CAM job-intelligence derived "actuals" | OPEN |

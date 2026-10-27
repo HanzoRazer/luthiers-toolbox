@@ -28,11 +28,11 @@
   },
   "generated_outputs": {
     "CAPABILITY_LEDGER.csv": {
-      "sha256": "330e6c5cf0285743788dc9533cbbbac27243c2b1756e72ee8eb03d043014ce5e",
+      "sha256": "6f33d02ad595fb28d8741d6d14db0422ad7f45bd5b6308fb0624a6b021470866",
       "authored": "row text by hand; every content_digest computed with git rev-parse <source_revision>:<path_or_ref>"
     },
     "CAPABILITY_LEDGER.json": {
-      "sha256": "4eeca58f8780e12d0c7d2accde74b3d82759348a7abed6a4f39e76be76a4ec0d",
+      "sha256": "6b8c6f087f58829246e05cfa308decb8fdc062c0820b14d36e57c1608080bb39",
       "generated_by": "python scripts/investigations/shop_operating_loop_ledger.py --package <pkg> --write-json"
     }
   },
@@ -61,10 +61,11 @@
     },
     "by_disposition": {
       "REFERENCE_ONLY": 17,
-      "RETAIN_CANONICAL": 7,
+      "RETAIN_CANONICAL": 8,
       "ADAPT": 6,
       "MISSING_BUILD": 5,
-      "OWNER_RULING_REQUIRED": 5
+      "OWNER_RULING_REQUIRED": 3,
+      "SUPERSEDED": 1
     },
     "by_completeness": {
       "PARTIAL": 20,
@@ -73,10 +74,10 @@
       "STUB": 4
     },
     "by_authority": {
-      "NONE": 20,
+      "NONE": 21,
       "COMMERCIAL": 5,
       "DESIGN": 4,
-      "CAM": 4,
+      "CAM": 3,
       "SHOP_EXECUTION": 3,
       "EVIDENCE": 2,
       "VALIDATION": 2
@@ -89,12 +90,25 @@
       "BUILD": 5,
       "BLOCKED": 1
     },
-    "owner_rulings_open": 7,
     "spot_check_citations": {
       "checked": 26,
       "misses": 0
     },
-    "corrections": 1
+    "corrections": 1,
+    "owner_rulings": {
+      "ruled": [
+        "R3",
+        "R4"
+      ],
+      "open": [
+        "R1",
+        "R2",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "ruled_on": "2026-10-26"
+    }
   },
   "commands": [
     "git -C <repo> fetch origin; git -C <repo> rev-parse origin/main   (each scoped repo)",
@@ -126,7 +140,8 @@
     "continuation: python -c 'import app.cam.generator_readiness' registry dump   (10 records; only les_paul_body GOVERNED_BY_ASSET_AUTHORITY)",
     "continuation: resolve_manufacturing_authority(instrument_geometry/body/dxf/electric/LesPaul_CAM_Closed.dxf)   (BLOCKED, UNADJUDICATED)",
     "continuation: gh run view <run> --job <job> --log-failed   (4 red jobs; all test_sqlite_art_stores.py preset-id collisions)",
-    "continuation: gh run rerun <run> --failed   (40437007694, 40437040091, 40437007717, 40437040142)"
+    "continuation: gh run rerun <run> --failed   (40437007694, 40437040091, 40437007717, 40437040142)",
+    "rulings pass: gh pr diff 456 | grep max_test_removal_mm|min_test_remaining_thickness_mm   (both present; head 7a42854e)"
   ],
   "changed_paths": [
     ".cbsp21/patches/shop-operating-loop-recovery-001.json",
@@ -140,6 +155,7 @@
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+    "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
@@ -148,5 +164,8 @@
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
     "scripts/investigations/shop_operating_loop_ledger.py",
     "services/api/tests/test_shop_operating_loop_recovery_evidence.py"
-  ]
+  ],
+  "related": {
+    "MAINT-DEFER-019": "draft PR #463 (preset/job id collisions; the CI red on this PR)"
+  }
 }

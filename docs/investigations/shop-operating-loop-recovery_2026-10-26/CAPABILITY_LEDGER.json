@@ -280,7 +280,7 @@
       "disposition": "ADAPT",
       "disposition_basis": "BOM_TEMPLATES is a class-level dict (bom_service.py:181) with explicit quantity/unit/unit_cost (business/schemas.py:86-89) but no id, version or substitution field; POST /materials writes memory only",
       "mvs_step": "S2",
-      "open_question": "Is a BOM template the right base for a versioned kit, or is SOL-C07 (CNC-PS product record)? (R3)"
+      "open_question": "R3 ruled 2026-10-26: configuration identity is SOL-C07; the kit layer (quantities, units, substitutions, BOM semantics) is unbuilt. Which repo hosts it follows R1/R2"
     },
     {
       "candidate_id": "SOL-C02",
@@ -397,10 +397,10 @@
       "authority": "COMMERCIAL",
       "current_owner": "CNC-Production-Shop",
       "overlap_or_successor": "candidate commercial configuration; overlaps SOL-C01; sibling schema instrument_product_v2 has 0 consumers in business/ or scripts/",
-      "disposition": "OWNER_RULING_REQUIRED",
-      "disposition_basis": "A job pins this configuration by content (role, record_id, snapshot_ref, sha256) and status allows superseded/retired; it records materials per part and pickup/bridge/control/finish choices but no quantities, units or substitutions",
+      "disposition": "RETAIN_CANONICAL",
+      "disposition_basis": "Owner ruling R3 (2026-10-26): canonical configuration identity. A job pins it by content (role, record_id, snapshot_ref, sha256) and status allows superseded/retired; it records materials per part and pickup/bridge/control/finish choices but no quantities, units or substitutions",
       "mvs_step": "S2",
-      "open_question": "Is the CNC-PS product definition the configuration a job pins, with a BOM kit layered on it later? (R3)"
+      "open_question": "none (R3 ruled); the commercial-kit layer on top of it is SOL-C08"
     },
     {
       "candidate_id": "SOL-C08",
@@ -654,13 +654,13 @@
       "reachability": "LIVE_ROUTED",
       "reachability_evidence": "manufacturing_state read at _project_gcode_common.py:69-79; written through PUT /api/projects/{id}/design-state (projects/router.py:181) whose body is the whole InstrumentProjectData including manufacturing_state (instrument_project.py:759)",
       "completeness": "PARTIAL",
-      "authority": "CAM",
+      "authority": "NONE",
       "current_owner": "none (self-asserted)",
-      "overlap_or_successor": "conflicts with SOL-E02 as a CAM gate input",
-      "disposition": "OWNER_RULING_REQUIRED",
-      "disposition_basis": "The project owner can set manufacturing_state.status / cam_approved / approved_by in the PUT body; no role check or approval event; the 422 text instructs the user to set it",
+      "overlap_or_successor": "superseded as a release input by an independently produced CAM/readiness disposition (SOL-E02 lineage)",
+      "disposition": "SUPERSEDED",
+      "disposition_basis": "Owner ruling R4 (2026-10-26): a project workflow assertion only, not manufacturing authority. Today the owner can set manufacturing_state.status / cam_approved / approved_by in the PUT body (no role check, no approval event) and the gate reads it; latent because LesPaul_CAM_Closed.dxf stays quarantined",
       "mvs_step": "S6",
-      "open_question": "Authority leak: a design-state field acts as CAM gate input (R4). Fix is out of scope here"
+      "open_question": "Release precondition (ruled): before LesPaul_CAM_Closed.dxf leaves quarantine, its route must require an independent CAM/readiness disposition; not implemented here"
     },
     {
       "candidate_id": "SOL-E04",
