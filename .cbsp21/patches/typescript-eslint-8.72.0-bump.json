@@ -1,0 +1,85 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TYPESCRIPT_ESLINT_8_72_0_BUMP",
+  "title": "build(deps-dev): bump @typescript-eslint/eslint-plugin from 8.71.2 to 8.72.0",
+  "intent": "Dev-tooling currency, no advisory. The title names one package but this moves the WHOLE @typescript-eslint family in lockstep: eslint-plugin 8.72.0 declares peerDependencies @typescript-eslint/parser ^8.72.0 and pins its internals (scope-manager, type-utils, utils, visitor-keys) to exactly 8.72.0, so npm moves parser and every internal with it. 8.72.0: lazy-loaded rules; await-thenable allowMixedPromiseArrays option; typescript-estree errors on `abstract export`; no-deprecated now reports deprecated properties in object literals; require-array-sort-compare checks tuples; several TS<5 crash fixes. GitHub's advisory API returns 0 for eslint-plugin and parser at 8.72.0.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped output and none in lint results, verified by running both rather than assumed. TEN packages moved, not one. Lockfile vs merge base 02032884: 400 entries before and after, ZERO added, ZERO removed, exactly ten node_modules entries version-changed, all 8.71.2 -> 8.72.0: @typescript-eslint/eslint-plugin, parser, project-service, scope-manager, tsconfig-utils, type-utils, types, typescript-estree, utils, visitor-keys. Root differs only in devDependencies['@typescript-eslint/eslint-plugin'] ^8.71.2 -> ^8.72.0; the declared parser range stays ^8.71.2 (satisfied by 8.72.0). The whole family is consistent at one version, which is what typescript-eslint requires. A/B vite build: 199 vs 199 files, byte-identical (dev-only tooling, as expected). A/B eslint (`eslint . --ext .ts,.vue --format json`, the lint:report script CI uses) on origin/main vs this branch: 7013 vs 7013 messages, the per-(rule,severity) counts are identical and the (file,line,rule,message) sets are identical -- zero added, zero removed. scripts/ci/check_client_lint_ratchet.py on this branch's report: PASS.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/typescript-eslint-8.72.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/typescript-eslint-8.72.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves devDependencies['@typescript-eslint/eslint-plugin'] from ^8.71.2 to ^8.72.0. package-lock.json moves the ten @typescript-eslint/* entries 8.71.2 -> 8.72.0 and updates the root range. Dependabot's incidental peer-flag churn on 16 unchanged-version entries was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). No existing manifest covers this diff, and borrowing one is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Merge base with origin/main = 02032884 = origin/main at audit (0 behind).",
+      "Lockfile enumerated as data (both package-lock.json trees parsed, every `packages` entry compared in full), not read from the diff view.",
+      "Dependabot's npm flipped the 'peer' flag on 16 entries with unchanged versions; per the convention set in ec88eedd (#432) that churn is reverted -- the committed lockfile is the merge-base lockfile plus the real deltas only (re-enumerated after the revert: zero peer-flag differences remain).",
+      "Integrity of every moved entry == `npm view <pkg>@<ver> dist.integrity`; published via GitHub Actions OIDC with SLSA provenance; no preinstall/install/postinstall scripts.",
+      "A/B production build: npm ci + vite build in a worktree at origin/main and in this branch's worktree, outputs compared with diff -rq.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push.",
+      "Integrity == npm registry for all ten moved entries plus the two nested entries (eslint-plugin/node_modules/ignore 7.0.12, visitor-keys/node_modules/eslint-visitor-keys 5.0.1, both unchanged); all ten published via GitHub Actions OIDC 2026-10-19.",
+      "A/B eslint JSON report origin/main vs this branch: 7013 vs 7013, identical message sets. check_client_lint_ratchet.py: PASS (it also reports the baseline in scripts/ci/client_lint_baseline.json is stale-high on main: warnings 7683 vs actual 6979; pre-existing, not touched here).",
+      "A/B vite build: 199 vs 199 files, diff -rq: no differences."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^8.71.2 -> ^8.72.0."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "Ten @typescript-eslint/* entries move 8.71.2 -> 8.72.0 in lockstep (forced by eslint-plugin's exact internal pins and parser peer range). Lint output and build output identical. Peer-flag churn reverted."
+    },
+    {
+      "path": ".cbsp21/patches/typescript-eslint-8.72.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-26-TSESLINT-8-72-0",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 1,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "SIBLING-PR-459-FAMILY-SPLIT",
+        "severity": "medium",
+        "status": "process finding, not a code defect in this PR",
+        "summary": "Dependabot opened the parser bump separately as PR #459. This PR already moves parser to 8.72.0 in the lockfile. #459 on its own leaves eslint-plugin at 8.71.2 and installs a SECOND copy of six @typescript-eslint internals plus eslint-visitor-keys nested under parser/node_modules (400 -> 407 entries) -- the mixed-version state typescript-eslint does not support -- and its lockfile conflicts with this one. Merge this PR first; #459 should then be recreated by Dependabot (range-only) or closed, not fixed in place."
+      },
+      {
+        "id": "LINT-BASELINE-STALE",
+        "severity": "low",
+        "status": "pre-existing",
+        "summary": "client_lint_baseline.json on main records 7683 warnings; actual is 6979. The ratchet passes but no longer locks in the reduction. Belongs in its own PR."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-only lint toolchain bump with identical lint and build output; findings are recorded, not remediated here."
+  }
+}
