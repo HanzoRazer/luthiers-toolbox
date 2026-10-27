@@ -1,0 +1,202 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SHOP_OPERATING_LOOP_RECOVERY_001",
+  "title": "docs(investigations): shop operating loop capability and MVS gap audit (evidence only)",
+  "intent": "Inventory what already exists in Luthier's Toolbox (and, only to answer LTB questions, CNC-Production-Shop, CAM-Assist-Blueprint, CAM-Creation-Studio) for five capabilities: job identity, estimate vs actual, reusable kits, time capture, and a guided beginner shop-floor workflow. Classify 40 candidates by reachability, completeness, authority and disposition; map the nine-step MVS operating loop; recommend one bounded next increment. No implementation.",
+  "change_type": "docs",
+  "behavior_change": "None. No file under services/api/app, packages/client, workflows, configs, schemas or baselines is modified. Adds one investigation package, one offline validator under scripts/investigations/, its test, and this manifest.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/shop-operating-loop-recovery-001.json",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/BASELINE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.csv",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.json",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/ESTIMATE_ACTUAL_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/GUIDED_WORKFLOW_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/JOB_IDENTITY_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
+      "scripts/investigations/shop_operating_loop_ledger.py",
+      "services/api/tests/test_shop_operating_loop_recovery_evidence.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/shop-operating-loop-recovery-001.json",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/BASELINE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.csv",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.json",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/ESTIMATE_ACTUAL_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/GUIDED_WORKFLOW_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/JOB_IDENTITY_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
+      "scripts/investigations/shop_operating_loop_ledger.py",
+      "services/api/tests/test_shop_operating_loop_recovery_evidence.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New package docs/investigations/shop-operating-loop-recovery_2026-10-26/ (README, BASELINE, SOURCE_SCOPE, CAPABILITY_LEDGER.csv/.json, five capability maps, AUTHORITY_BOUNDARY, MVS_GAP_MATRIX, OPTIONS, RECOMMENDATION, evidence.json); scripts/investigations/shop_operating_loop_ledger.py; services/api/tests/test_shop_operating_loop_recovery_evidence.py. Continuation pass adds SPOT_CHECK.md and corrects SOL-C07 (CNC-PS product definition is pinned per job by sha256).",
+    "why_not_redundant": "The ltb-mvs-* investigations cover the beginner proposal gate only; no prior audit inventoried job identity, estimate/actual, kits, time capture and guided workflow together or across the commercial repo."
+  },
+  "verification": {
+    "commands_run": [
+      "python -I scripts/investigations/shop_operating_loop_ledger.py --package docs/investigations/shop-operating-loop-recovery_2026-10-26 --write-json --verify-digests -> OK, 29 LTB digests reverified",
+      "pytest services/api/tests/test_shop_operating_loop_recovery_evidence.py -q --no-cov",
+      "git diff --name-only origin/main...HEAD equals evidence.json changed_paths"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/shop-operating-loop-recovery-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/AUTHORITY_BOUNDARY.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/BASELINE.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.csv",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/CAPABILITY_LEDGER.json",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/ESTIMATE_ACTUAL_MAP.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/GUIDED_WORKFLOW_MAP.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/JOB_IDENTITY_MAP.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/KIT_LINEAGE.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/MVS_GAP_MATRIX.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/OPTIONS.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
+      "intent": "Audit package document or dataset.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "scripts/investigations/shop_operating_loop_ledger.py",
+      "intent": "Read-only package validator; --write-json regenerates the JSON ledger from the CSV.",
+      "risk": "low",
+      "behavior_change": "None. Not imported by the application."
+    },
+    {
+      "path": "services/api/tests/test_shop_operating_loop_recovery_evidence.py",
+      "intent": "Validator test: committed package passes every rule, digests reproduce, and fixtures make each rule fire. Also asserts the package is internally final: no row awaits a ruling and R1-R7 are all recorded as RULED.",
+      "risk": "low",
+      "behavior_change": "None. Offline text analysis; no application import."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
+      "intent": "Continuation pass: citation spot check, SOL-C07 correction, R4 latency witness, CI attribution.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/OWNER_RULINGS.md",
+      "intent": "Owner rulings record: all seven (R1-R7) ruled 2026-10-26, with the resulting architecture and each ruling's recorded effect.",
+      "risk": "low",
+      "behavior_change": "None. Documentation only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-26-SHOP-OPERATING-LOOP-RECOVERY-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Documentation and offline evidence tooling only."
+  }
+}
