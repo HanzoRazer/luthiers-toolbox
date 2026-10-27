@@ -131,7 +131,10 @@ class SQLiteArtPresetsStore(SQLiteStoreBase):
             Created preset record
         """
         import time
-        preset_id = f"{lane}_preset_{int(time.time() * 1000)}"
+        import uuid
+        # Millisecond prefix keeps ids time-led; the uuid suffix makes two calls in
+        # the same millisecond distinct (MAINT-DEFER-019).
+        preset_id = f"{lane}_preset_{int(time.time() * 1000)}_{uuid.uuid4().hex}"
         return self.create({
             'id': preset_id,
             'lane': lane,
