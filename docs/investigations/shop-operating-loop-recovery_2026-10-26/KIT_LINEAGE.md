@@ -1,10 +1,21 @@
 # Kit lineage (track C)
 
-**Finding:** no reusable, versioned commercial kit exists in any scoped repo
-(SOL-C08 MISSING). What exists falls into three categories, each with a
-different authority:
+**Finding:** no BOM-style commercial kit (quantities, units, substitutions)
+exists in any scoped repo (SOL-C08 MISSING). There is, however, one reusable
+commercial *configuration* that a job pins by content: the CNC-PS
+`GuitarProductDefinitionV1` (SOL-C07). The job-quote manifest records it as a
+source with `role`, `record_id`, `snapshot_ref` and `sha256`.
+
+> **Correction (continuation pass, 2026-10-26).** The first version of this
+> row cited the sibling schema `instrument_product_v2` and said no quote or job
+> referenced a product record. That was wrong for `guitar_product_definition_v1`,
+> which the job-quote pipeline loads and pins. The `instrument_product_v2`
+> half of the claim still holds: it has 0 consumers in `business/` or `scripts/`.
+> See SPOT_CHECK.md.
+
+What exists falls into three categories, each with a different authority:
 - **Sales configuration:**
-  - CNC-PS `InstrumentProductV2` (SOL-C07)
+  - CNC-PS `GuitarProductDefinitionV1` (SOL-C07). Pinned per job by sha256. The unconsumed sibling `InstrumentProductV2` is covered by the same row.
   - LTB estimator presets in localStorage (inside SOL-B01)
 - **Commercial cost templates:** LTB BOM/COGS templates (SOL-C01)
 - **Design inputs and takeoffs:**
@@ -15,7 +26,7 @@ different authority:
 | Row | Kind | Reusable | Versioned | Substitutions recorded | Qty and units explicit | Job pins a revision |
 |---|---|---|---|---|---|---|
 | SOL-C01 BOM/COGS templates | Commercial cost template | Yes (by `InstrumentType`) | **No.** Class dict, no id. | No | **Yes** (`quantity`, `unit`, `unit_cost`) | No. Nothing links a BOM to a project or job. |
-| SOL-C07 CNC-PS `InstrumentProductV2` | Sales/product configuration | Yes (`product_id`) | Schema-versioned only. Records carry `status`, no revision chain. | No | Partial (`components` lists) | No. No quote or job references a product. |
+| SOL-C07 CNC-PS `GuitarProductDefinitionV1` | Sales/product configuration | Yes (`product_id`) | Lifecycle `status` (draft → approved → superseded/retired). No version field; the revision is the content digest. | No | No (materials per part, configuration choices) | **Yes, by content.** The job manifest pins the record's sha256 snapshot. |
 | SOL-C02 instrument spec JSONs | Design input | Yes | Git history only; registry `version: 1.1.0` | Prose only ("X or Y") | No | No |
 | SOL-C03 material BOM (photo-vectorizer) | Design takeoff per outline | Per run | No | No | Area units with waste factor | No |
 | SOL-C06 wood species catalog | Material identity (species) | Yes | Git + sourcing policy | n/a | n/a | No. Species, not a physical board. |
@@ -44,5 +55,7 @@ A kit that a job pins would be commercial authority only. It must not carry
 or imply CAM readiness.
 
 **Owner question R3:** should a future kit be built on SOL-C01 (LTB templates)
-or on SOL-C07 (CNC-PS product records)? It should be decided before any kit
-work, and no kit work is recommended next.
+or on SOL-C07 (CNC-PS product records)? The evidence now leans toward SOL-C07:
+it is the only configuration a job already pins by content. It still carries
+no BOM. This should be decided before any kit work, and no kit work is
+recommended next.

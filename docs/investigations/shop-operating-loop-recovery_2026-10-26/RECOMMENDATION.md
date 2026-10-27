@@ -65,7 +65,7 @@ because shop-execution evidence on LTB-designed instruments already lives here
 |---|---|
 | R1 | Is LTB `project_id` the job anchor, or does CNC-PS `job_id` own job identity, and through what contract? |
 | R2 | Which estimator is canonical for guitar jobs: LTB `business/estimator` or CNC-PS `business/estimates`? |
-| R3 | Should a kit be built on LTB BOM templates or on CNC-PS `InstrumentProductV2`? |
+| R3 | Should a kit be built on LTB BOM templates or on the CNC-PS product definition (`GuitarProductDefinitionV1`, already pinned per job by sha256)? |
 | R4 | Should `manufacturing_state` stop being client-writable through PUT design-state? |
 | R5 | Does CAM Creation Studio's "job composition" role overlap an LTB shop-floor traveler? |
 | R6 | Approve or source the PR #456 policy values |

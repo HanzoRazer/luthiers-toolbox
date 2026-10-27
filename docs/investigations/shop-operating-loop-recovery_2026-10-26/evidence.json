@@ -3,28 +3,98 @@
   "order": "SHOP-OPERATING-LOOP-RECOVERY-001",
   "date": "2026-10-26",
   "sources": {
-    "luthiers-toolbox": {"ref": "origin/main", "sha": "02032884c32d871b8a5addc24021763748eae949", "pre_rewrite_tag": "v2.4.0-alpha.1"},
-    "CNC-Production-Shop": {"ref": "origin/main", "sha": "408f88037707be868ae08ff2a0a25b1149a18932"},
-    "CAM-Assist-Blueprint": {"ref": "origin/main", "sha": "ccad852d26bc6dd1a3eb03933b7a0a8e89b9928f"},
-    "CAM-Creation-Studio": {"ref": "origin/main", "sha": "374fa5832e571cebb470c5dc2e57f43b71e71226"},
-    "luthiers-toolbox-consolidation-lab": {"ref": "origin/main", "sha": "acda02289785a9736ae972a255b86388306c6c15", "rows": 0}
+    "luthiers-toolbox": {
+      "ref": "origin/main",
+      "sha": "02032884c32d871b8a5addc24021763748eae949",
+      "pre_rewrite_tag": "v2.4.0-alpha.1"
+    },
+    "CNC-Production-Shop": {
+      "ref": "origin/main",
+      "sha": "408f88037707be868ae08ff2a0a25b1149a18932"
+    },
+    "CAM-Assist-Blueprint": {
+      "ref": "origin/main",
+      "sha": "ccad852d26bc6dd1a3eb03933b7a0a8e89b9928f"
+    },
+    "CAM-Creation-Studio": {
+      "ref": "origin/main",
+      "sha": "374fa5832e571cebb470c5dc2e57f43b71e71226"
+    },
+    "luthiers-toolbox-consolidation-lab": {
+      "ref": "origin/main",
+      "sha": "acda02289785a9736ae972a255b86388306c6c15",
+      "rows": 0
+    }
   },
   "generated_outputs": {
-    "CAPABILITY_LEDGER.csv": {"sha256": "8a1428a9e0b0291133153c713463581b21ecec03d481fdd268d514d07db7eac4", "authored": "row text by hand; every content_digest computed with git rev-parse <source_revision>:<path_or_ref>"},
-    "CAPABILITY_LEDGER.json": {"sha256": "66a86a91074c549a1997cb1cad905202c5a2da68440537c50cd7a655d5434cc0", "generated_by": "python scripts/investigations/shop_operating_loop_ledger.py --package <pkg> --write-json"}
+    "CAPABILITY_LEDGER.csv": {
+      "sha256": "330e6c5cf0285743788dc9533cbbbac27243c2b1756e72ee8eb03d043014ce5e",
+      "authored": "row text by hand; every content_digest computed with git rev-parse <source_revision>:<path_or_ref>"
+    },
+    "CAPABILITY_LEDGER.json": {
+      "sha256": "4eeca58f8780e12d0c7d2accde74b3d82759348a7abed6a4f39e76be76a4ec0d",
+      "generated_by": "python scripts/investigations/shop_operating_loop_ledger.py --package <pkg> --write-json"
+    }
   },
   "counts": {
     "rows": 40,
-    "by_track": {"A_JOB_IDENTITY": 8, "B_ESTIMATE_ACTUAL": 5, "C_KITS": 8, "D_TIME_CAPTURE": 9, "E_GUIDED_WORKFLOW": 10},
-    "by_repo": {"luthiers-toolbox": 34, "CNC-Production-Shop": 4, "CAM-Assist-Blueprint": 1, "CAM-Creation-Studio": 1},
-    "by_reachability": {"LIVE_ROUTED": 17, "LIVE_LIBRARY": 3, "BUILT_DISCONNECTED": 9, "ARCHIVED_RECOVERABLE": 1, "CONCEPT_ONLY": 5, "MISSING": 5},
-    "by_disposition": {"RETAIN_CANONICAL": 7, "ADAPT": 6, "REFERENCE_ONLY": 17, "OWNER_RULING_REQUIRED": 5, "MISSING_BUILD": 5},
-    "by_completeness": {"COMPLETE": 6, "PARTIAL": 20, "STUB": 4, "NOT_APPLICABLE": 10},
-    "by_authority": {"NONE": 21, "CAM": 4, "COMMERCIAL": 4, "DESIGN": 4, "SHOP_EXECUTION": 3, "EVIDENCE": 2, "VALIDATION": 2},
+    "by_track": {
+      "E_GUIDED_WORKFLOW": 10,
+      "D_TIME_CAPTURE": 9,
+      "A_JOB_IDENTITY": 8,
+      "C_KITS": 8,
+      "B_ESTIMATE_ACTUAL": 5
+    },
+    "by_repo": {
+      "luthiers-toolbox": 34,
+      "CNC-Production-Shop": 4,
+      "CAM-Assist-Blueprint": 1,
+      "CAM-Creation-Studio": 1
+    },
+    "by_reachability": {
+      "LIVE_ROUTED": 17,
+      "BUILT_DISCONNECTED": 8,
+      "CONCEPT_ONLY": 5,
+      "MISSING": 5,
+      "LIVE_LIBRARY": 4,
+      "ARCHIVED_RECOVERABLE": 1
+    },
+    "by_disposition": {
+      "REFERENCE_ONLY": 17,
+      "RETAIN_CANONICAL": 7,
+      "ADAPT": 6,
+      "MISSING_BUILD": 5,
+      "OWNER_RULING_REQUIRED": 5
+    },
+    "by_completeness": {
+      "PARTIAL": 20,
+      "NOT_APPLICABLE": 10,
+      "COMPLETE": 6,
+      "STUB": 4
+    },
+    "by_authority": {
+      "NONE": 20,
+      "COMMERCIAL": 5,
+      "DESIGN": 4,
+      "CAM": 4,
+      "SHOP_EXECUTION": 3,
+      "EVIDENCE": 2,
+      "VALIDATION": 2
+    },
     "ltb_digests_reverified": 29,
     "raw_candidates_before_screening": 52,
-    "mvs_steps": {"AVAILABLE": 0, "ADAPT": 2, "BUILD": 6, "BLOCKED": 1},
-    "owner_rulings_open": 7
+    "mvs_steps": {
+      "AVAILABLE": 0,
+      "ADAPT": 3,
+      "BUILD": 5,
+      "BLOCKED": 1
+    },
+    "owner_rulings_open": 7,
+    "spot_check_citations": {
+      "checked": 26,
+      "misses": 0
+    },
+    "corrections": 1
   },
   "commands": [
     "git -C <repo> fetch origin; git -C <repo> rev-parse origin/main   (each scoped repo)",
@@ -50,7 +120,13 @@
     "git -C CNC-Production-Shop grep -liE 'actual_(cost|hours|minutes|labor)|actuals' origin/main -- business schemas docs manufacturing   (0)",
     "git -C CNC-Production-Shop grep -liE 'time_entry|timer|clock_in|start_time|stopwatch' origin/main -- business schemas docs manufacturing   (0)",
     "git -C luthiers-toolbox grep -ln production_shop_handoff origin/main   (0)",
-    "python -I scripts/investigations/shop_operating_loop_ledger.py --package docs/investigations/shop-operating-loop-recovery_2026-10-26 --write-json --verify-digests"
+    "python -I scripts/investigations/shop_operating_loop_ledger.py --package docs/investigations/shop-operating-loop-recovery_2026-10-26 --write-json --verify-digests",
+    "continuation: python spot-check of 26 cited file ranges at 02032884 (0 misses)",
+    "continuation: git -C CNC-Production-Shop grep -n product origin/main -- business/workflows/loading.py   (role 'product' loaded at :385, id checked at :404)",
+    "continuation: python -c 'import app.cam.generator_readiness' registry dump   (10 records; only les_paul_body GOVERNED_BY_ASSET_AUTHORITY)",
+    "continuation: resolve_manufacturing_authority(instrument_geometry/body/dxf/electric/LesPaul_CAM_Closed.dxf)   (BLOCKED, UNADJUDICATED)",
+    "continuation: gh run view <run> --job <job> --log-failed   (4 red jobs; all test_sqlite_art_stores.py preset-id collisions)",
+    "continuation: gh run rerun <run> --failed   (40437007694, 40437040091, 40437007717, 40437040142)"
   ],
   "changed_paths": [
     ".cbsp21/patches/shop-operating-loop-recovery-001.json",
@@ -67,6 +143,7 @@
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+    "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
     "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
     "scripts/investigations/shop_operating_loop_ledger.py",

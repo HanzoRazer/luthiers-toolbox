@@ -41,6 +41,7 @@ No link is proven by name matching.
 | evidence record | physical subject (e.g. `plate-007`) | PROVEN | stored: `subject_id` at services/api/app/physical_engineering/evidence_artifact_v1.py:69. This is a string, not a reference to any material record. |
 | evidence `subject_id` | material / soundboard record | ABSENT | No material, lot or reservation record exists (SOL-A08) |
 | CNC-PS job | estimate, bid, proposal | PROVEN | stored: required fields in CNC-Production-Shop schemas/workflows/job_quote_manifest_v1.schema.json:87 |
+| CNC-PS job | product configuration (by content) | PROVEN | stored: manifest `sources[]` entries require role, record_id, snapshot_ref and sha256 at CNC-Production-Shop schemas/workflows/job_quote_manifest_v1.schema.json:28. Product role loaded at business/workflows/loading.py:385, `product_id` cross-checked at :404. |
 | CNC-PS job | LTB project / design revision | ABSENT | Neither `job_quote_request_v1` nor `job_quote_manifest_v1` has a design, project or run field |
 | LTB project | CNC-PS job | UNKNOWN | No field on either side, and no contract document. **No crosswalk invented.** |
 | LTB estimate (SOL-B01) | project or design revision | ABSENT | `EstimateResult` has no id, revision or design hash |
@@ -52,6 +53,6 @@ No link is proven by name matching.
 
 - **Persistent:** LTB `project_id` and RMOS `run_id`. CNC-PS ids persist only as files the CLI writes.
 - **Immutable or overwritten:** project design state is overwritten. Runs are create-once with in-place mutable fields. Only physical-engineering evidence keeps a supersede chain.
-- **Tied to one job:** quote ↔ design ↔ CAM ↔ execution cannot be tied by a stored field today. The only stored hop is project → run.
+- **Tied to one job:** quote ↔ design ↔ CAM ↔ execution cannot be tied by a stored field today. Inside LTB the only stored hop is project → run. Inside CNC-PS a job pins its commercial sources (product configuration, estimate input) by sha256 snapshot, which is the strongest revision pin found. It stops at the repo boundary.
 - **Invalidation:** a changed design input invalidates nothing.
 - **Cross-repo:** there are no explicit ID contracts in use. CAM Assist's handoff schema is the only candidate, and nothing consumes it.

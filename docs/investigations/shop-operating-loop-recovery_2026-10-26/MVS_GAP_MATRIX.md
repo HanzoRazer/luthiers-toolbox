@@ -12,7 +12,7 @@ best existing candidate otherwise.
 | Step | Operating-loop step | Status | Artifact | Basis |
 |---|---|---|---|---|
 | S1 | Create a guitar job with a persistent identity | ADAPT | SOL-A01 | LTB `project_id` is persistent and live, but it is a design project, not a commercial job. CNC-PS `job_id` (SOL-A06) is commercial and file-based. No link exists between them (R1). |
-| S2 | Select a reusable commercial kit or configuration | BUILD | SOL-C08 | No versioned kit exists. SOL-C01 templates are unversioned, and SOL-C07 product records are unconsumed (R3). |
+| S2 | Select a reusable commercial kit or configuration | ADAPT | SOL-C07 | A CNC-PS job pins a reusable product *configuration* by content (manifest source: role, record_id, snapshot, sha256). A BOM-style kit with quantities, units and substitutions is still missing (SOL-C08). Base ruling R3. |
 | S3 | Preserve the quote or estimate revision | ADAPT | SOL-B04 | CNC-PS writes revision-schema'd estimate/bid/proposal records. LTB estimates are not stored. Canonical estimator unresolved (R2). |
 | S4 | Pin the design-package revision used by the job | BUILD | SOL-A02 | Project design state is overwritten. `ProjectArtifactRef` pins run hashes, not a design revision. Nothing invalidates on change. |
 | S5 | Reserve the identified soundboard or material set | BUILD | SOL-A08 | No material, lot or reservation record. Evidence `subject_id` is a bare string. |

@@ -24,6 +24,7 @@
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
       "scripts/investigations/shop_operating_loop_ledger.py",
@@ -44,6 +45,7 @@
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/README.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/RECOMMENDATION.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/SOURCE_SCOPE.md",
+      "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/TIME_CAPTURE_MAP.md",
       "docs/investigations/shop-operating-loop-recovery_2026-10-26/evidence.json",
       "scripts/investigations/shop_operating_loop_ledger.py",
@@ -51,7 +53,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "New package docs/investigations/shop-operating-loop-recovery_2026-10-26/ (README, BASELINE, SOURCE_SCOPE, CAPABILITY_LEDGER.csv/.json, five capability maps, AUTHORITY_BOUNDARY, MVS_GAP_MATRIX, OPTIONS, RECOMMENDATION, evidence.json); scripts/investigations/shop_operating_loop_ledger.py; services/api/tests/test_shop_operating_loop_recovery_evidence.py.",
+    "what_changed": "New package docs/investigations/shop-operating-loop-recovery_2026-10-26/ (README, BASELINE, SOURCE_SCOPE, CAPABILITY_LEDGER.csv/.json, five capability maps, AUTHORITY_BOUNDARY, MVS_GAP_MATRIX, OPTIONS, RECOMMENDATION, evidence.json); scripts/investigations/shop_operating_loop_ledger.py; services/api/tests/test_shop_operating_loop_recovery_evidence.py. Continuation pass adds SPOT_CHECK.md and corrects SOL-C07 (CNC-PS product definition is pinned per job by sha256).",
     "why_not_redundant": "The ltb-mvs-* investigations cover the beginner proposal gate only; no prior audit inventoried job identity, estimate/actual, kits, time capture and guided workflow together or across the commercial repo."
   },
   "verification": {
@@ -169,6 +171,12 @@
       "intent": "Validator test: committed package passes every rule, digests reproduce, and fixtures make each rule fire.",
       "risk": "low",
       "behavior_change": "None. Offline text analysis; no application import."
+    },
+    {
+      "path": "docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md",
+      "intent": "Continuation pass: citation spot check, SOL-C07 correction, R4 latency witness, CI attribution.",
+      "risk": "low",
+      "behavior_change": "None. Documentation/evidence only."
     }
   ],
   "architecture_scan": {

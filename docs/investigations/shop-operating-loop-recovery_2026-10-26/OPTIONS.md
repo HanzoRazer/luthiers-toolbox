@@ -25,6 +25,10 @@ CNC-Production-Shop already is an internal commercial engine (SOL-A06/B04).
 An external ERP (Factory.app was a comparison model only) could hold jobs,
 quotes, kits and labor.
 
+CNC-PS already shows the right pinning pattern for commercial sources: a job
+manifest records each source by role, id, snapshot and sha256. Any bridge
+should reuse that pattern rather than invent one.
+
 **What blocks it:**
 - No explicit contract exists today for an ERP job to pin an LTB design revision, material subject or operation (JOB_IDENTITY_MAP: ABSENT/UNKNOWN).
 - Choosing an ERP is outside this order.
