@@ -1,0 +1,122 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SHOP_OP_RECORD_001",
+  "title": "feat(shop_operations): append-only shop-operation record keyed to CNC-PS job_id (SHOP-OP-RECORD-001)",
+  "intent": "First slice of the operating-loop seam named by SHOP-OPERATING-LOOP-RECOVERY-001 (#462): a durable, append-only record of operations performed on a CNC-Production-Shop job, holding only operation identity/status, measured duration and provenance, material quantity/unit, separate evidence/readiness references and human completion. Owner GO 2026-10-26 after #462 merged.",
+  "change_type": "feature",
+  "behavior_change": "None at runtime. New library package app/shop_operations with no route, no router-manifest entry, no client, no migration and no importer outside its own tests. Grants no CAM or manufacturing authority; never writes manufacturing_state.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/shop-op-record-001.json",
+      "docs/investigations/shop-op-record-001/README.md",
+      "services/api/app/shop_operations/__init__.py",
+      "services/api/app/shop_operations/errors.py",
+      "services/api/app/shop_operations/operation_record_v1.py",
+      "services/api/app/shop_operations/repository.py",
+      "services/api/app/shop_operations/serialization.py",
+      "services/api/tests/shop_operations/__init__.py",
+      "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "services/api/tests/shop_operations/test_operation_repository.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/shop-op-record-001.json",
+      "docs/investigations/shop-op-record-001/README.md",
+      "services/api/app/shop_operations/__init__.py",
+      "services/api/app/shop_operations/errors.py",
+      "services/api/app/shop_operations/operation_record_v1.py",
+      "services/api/app/shop_operations/repository.py",
+      "services/api/app/shop_operations/serialization.py",
+      "services/api/tests/shop_operations/__init__.py",
+      "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "services/api/tests/shop_operations/test_operation_repository.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New domain package app/shop_operations (record, repository, serialization, errors), its tests, and a design record under docs/investigations/shop-op-record-001/.",
+    "why_not_redundant": "The audit found no persisted per-operation record keyed to a job in any scoped repo (SOL-D09, SOL-E10 MISSING). The op-keyed RMOS JobLogService (SOL-D03) is uncalled, keyed to saw execution artifacts, and has no human-completion, provenance or supersede semantics; the saw-lab job-log (SOL-D02) is saw-only."
+  },
+  "verification": {
+    "commands_run": [
+      "pytest tests/shop_operations -q --no-cov -> 18 passed",
+      "python -m app.ci.check_complexity / check_file_sizes / manufacturing_output_inventory --check / check_bare_except / fence_checker_v2 / check_duplication --threshold 100 -> all OK (0 clone groups)",
+      "grep: app/shop_operations imports only the standard library and itself"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/shop-op-record-001.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/shop-op-record-001/README.md",
+      "intent": "Design record: owner boundaries and where each is enforced; record and repository rules; non-goals.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/__init__.py",
+      "intent": "Package exports.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/errors.py",
+      "intent": "Record and repository error types.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/operation_record_v1.py",
+      "intent": "ShopOperationRecordV1: job reference (CNC-PS job_id, UNVERIFIED_EXTERNAL_REFERENCE only), operation identity/status, measured duration with provenance (MEASURED only), material quantity/unit, separate evidence/readiness refs, human completion, supersede-only correction, payload digest.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/repository.py",
+      "intent": "Append-only file repository: atomic publish, reread on new process, per job/operation sequencing, supersede-only corrections.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/serialization.py",
+      "intent": "Canonical JSON and payload digest, local to the domain (no cross-domain import).",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/__init__.py",
+      "intent": "Test package marker.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "intent": "Record rule tests, including no approval/CAM/design-fingerprint fields and no derived actuals.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/test_operation_repository.py",
+      "intent": "Repository tests: durability across processes, idempotence, sequencing, corrections, tamper and path-escape refusal.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-27-SHOP-OP-RECORD-001",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "New Layer-4 domain module; no cross-domain imports (ARCHITECTURE_INVARIANTS Rule 4); unrouted."
+  }
+}
