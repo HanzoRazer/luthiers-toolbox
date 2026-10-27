@@ -1,0 +1,62 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ZOD_4_6_7_BUMP",
+  "title": "build(deps): bump zod from 4.6.5 to 4.6.7",
+  "intent": "Security currency. zod < 4.6.6 is affected by GHSA-mrhx-c7xc-m3w5 (severity HIGH, published 2026-10-01: 'Zod can exhaust memory while validating oversized constrained collections'); first patched version 4.6.6. The fix (zod commit a0ebf970, 'check array, set and map size bounds before parsing elements') makes .max()/.length() size checks run BEFORE element parsing, in both the interpreted path (core/schemas) and the JIT path (core/compile.ts generateSizeGate). 4.6.6 also contains a types-only fix for record input/output; 4.6.7 is a version-only re-release. GitHub's advisory API returns 1 advisory for zod@4.6.5 (this one) and 0 for zod@4.6.7. A FORWARD move within zod 4, not the PR #296 revert shape.",
+  "change_type": "chore",
+  "behavior_change": "None in the shipped app; the security fix is real but not reachable from shipped code today. Lockfile vs merge base 02032884: 400 entries before and after, ZERO added, ZERO removed, exactly ONE node_modules entry changed: zod 4.6.5 -> 4.6.7 (version, resolved, integrity; its dependency map unchanged). Root entry differs only in dependencies.zod ^4.6.5 -> ^4.6.7. Consumers: zod's only importer in packages/client/src is cam/compare/compare_types.ts; its only other importer, compare_storage.ts, uses `import type` (erased at compile), so zod executes only in tests. A/B vite build: 199 vs 199 files, diff -rq reports ZERO differences -- the shipped bundle is byte-identical, which independently confirms zod is not in it. compare_types.ts does use .min() on arrays (pts .min(3), pt .min(2)), i.e. the size-check path the fix reorders; its test suite passes (5/5).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/zod-4.6.7-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/zod-4.6.7-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves dependencies.zod from ^4.6.5 to ^4.6.7. package-lock.json resolves zod 4.6.5 -> 4.6.7 and updates the root range. Dependabot's incidental peer-flag churn on 16 unchanged-version entries was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). No existing manifest covers this diff, and borrowing one is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Merge base with origin/main = 02032884 = origin/main at audit (0 behind).",
+      "Lockfile enumerated as data (both package-lock.json trees parsed, every `packages` entry compared in full), not read from the diff view.",
+      "Dependabot's npm flipped the 'peer' flag on 16 entries with unchanged versions; per the convention set in ec88eedd (#432) that churn is reverted -- the committed lockfile is the merge-base lockfile plus the real deltas only (re-enumerated after the revert: zero peer-flag differences remain).",
+      "Integrity of every moved entry == `npm view <pkg>@<ver> dist.integrity`; published via GitHub Actions OIDC with SLSA provenance; no preinstall/install/postinstall scripts.",
+      "A/B production build: npm ci + vite build in a worktree at origin/main and in this branch's worktree, outputs compared with diff -rq.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push.",
+      "gh api '/advisories?ecosystem=npm&affects=zod@4.6.5' -> 1 (GHSA-mrhx-c7xc-m3w5, high, vulnerable < 4.6.6, patched 4.6.6); affects=zod@4.6.7 -> 0; control jszip@3.6.0 -> 2 (query filter works).",
+      "Supply-chain: zod's 4.6.6 release notes disclose six malicious commits pushed to zod main on 2026-09-21 with a compromised git credential, reverted the same day and stated never published. Checked the artifact rather than the statement: npm pack zod@4.6.5 and zod@4.6.7, diff -r -> 20 files, all in core/compile, core/schemas, core/util, core/versions, their tests and package.json (version field only; no scripts). Added lines contain no fetch/XMLHttpRequest/eval/new Function/child_process/process.env/WebSocket tokens. zod@4.6.7 gitHead b500a2ee == the release commit listed in the v4.6.7 GitHub release; integrity matches the lockfile.",
+      "A/B vite build origin/main vs this branch: 199 vs 199 files, diff -rq: no differences.",
+      "npx vitest run src/cam/compare -> 1 file, 5 passed.",
+      "2026-10-27: origin/main de6f7128 (PR #463, MAINT-DEFER-019 collision-safe art ids) merged into this branch -- no force-push -- because every API Tests / api-verify red on the first manifest head was tests/test_sqlite_art_stores.py UNIQUE constraint failed: art_presets.id, the ms-timestamp id collision #463 fixes. git diff --name-only 02032884 de6f7128 touches no packages/client file, so the lockfile enumeration and A/B results above still hold against the new merge base."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^4.6.5 -> ^4.6.7."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "One entry moves: zod 4.6.5 -> 4.6.7 (patches GHSA-mrhx-c7xc-m3w5). Built output byte-identical. Peer-flag churn reverted to origin/main's flags."
+    },
+    {
+      "path": ".cbsp21/patches/zod-4.6.7-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
