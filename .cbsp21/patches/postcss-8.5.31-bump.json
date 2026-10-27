@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "POSTCSS_8_5_31_BUMP",
+  "title": "build(deps-dev): bump postcss from 8.5.30 to 8.5.31",
+  "intent": "Build-toolchain currency, no advisory. postcss 8.5.31: 'Fix better source map on </style> escaping' -- a follow-up to 8.5.29/8.5.30's SafeStringifier, touching lib/stringify.js and lib/processor.js (version string) only. Unlike the 8.5.30 bump (PR #449), postcss 8.5.31 raises no dependency floors, so nothing moves transitively. GitHub's advisory API returns 0 advisories for postcss@8.5.31.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped output, verified by building. Lockfile vs merge base 02032884: 400 entries before and after, ZERO added, ZERO removed, exactly ONE node_modules entry changed: postcss 8.5.30 -> 8.5.31 (version, resolved, integrity; dependency map unchanged, so nanoid/source-map-js do not move). Root differs only in devDependencies.postcss ^8.5.30 -> ^8.5.31. Not dev-only in practice (vue -> @vue/compiler-sfc -> postcss), but it is a build-time compiler. A/B vite build: 199 vs 199 files, diff -rq reports ZERO differences -- byte-identical. The pre-existing phantom 'nanoid' dependency recorded in postcss-8.5.30-bump.json is unchanged by this PR.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/postcss-8.5.31-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/postcss-8.5.31-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves devDependencies.postcss from ^8.5.30 to ^8.5.31. package-lock.json resolves postcss 8.5.30 -> 8.5.31 and updates the root range. Dependabot's incidental peer-flag churn on 16 unchanged-version entries was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). No existing manifest covers this diff, and borrowing one is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Merge base with origin/main = 02032884 = origin/main at audit (0 behind).",
+      "Lockfile enumerated as data (both package-lock.json trees parsed, every `packages` entry compared in full), not read from the diff view.",
+      "Dependabot's npm flipped the 'peer' flag on 16 entries with unchanged versions; per the convention set in ec88eedd (#432) that churn is reverted -- the committed lockfile is the merge-base lockfile plus the real deltas only (re-enumerated after the revert: zero peer-flag differences remain).",
+      "Integrity of every moved entry == `npm view <pkg>@<ver> dist.integrity`; published via GitHub Actions OIDC with SLSA provenance; no preinstall/install/postinstall scripts.",
+      "A/B production build: npm ci + vite build in a worktree at origin/main and in this branch's worktree, outputs compared with diff -rq.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push.",
+      "npm pack postcss@8.5.30 and @8.5.31, diff -r: 3 files (lib/processor.js, lib/stringify.js, package.json version); no install scripts; no new network/eval/process tokens.",
+      "A/B vite build: 199 vs 199 files, diff -rq: no differences."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^8.5.30 -> ^8.5.31."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "One entry moves: postcss 8.5.30 -> 8.5.31. Built output byte-identical. Peer-flag churn reverted."
+    },
+    {
+      "path": ".cbsp21/patches/postcss-8.5.31-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ]
+}
