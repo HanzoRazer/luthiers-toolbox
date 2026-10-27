@@ -17,6 +17,10 @@ Sequencing, per ``(job_id, operation_id)`` over the records not superseded:
   operation and status
 
 The sequencing check reads, then writes. It assumes one writer per directory.
+That single-writer limit is a deployment constraint of this store.
+
+A new file whose material line has no measurement provenance is refused.
+A file stored before that rule, re-saved with the same bytes, is idempotent.
 """
 from __future__ import annotations
 
@@ -43,6 +47,7 @@ from app.shop_operations.operation_record_v1 import (
     ShopOperationRecordV1,
     parse_time,
     record_fields,
+    require_new_material_provenance,
     require_record_id,
 )
 from app.shop_operations.serialization import canonical_record
@@ -64,6 +69,7 @@ class FileShopOperationRepository:
             if path.read_text(encoding="utf-8") != text:
                 raise DuplicateOperationRecord(record.record_id)
             return
+        require_new_material_provenance(record)
         self._require_sequence(record)
         self._publish_new(path, text, record.record_id)
 

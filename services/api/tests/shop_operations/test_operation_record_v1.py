@@ -9,13 +9,16 @@ import pytest
 from app.shop_operations import (
     HumanCompletion,
     JobReference,
+    MaterialMeasurementSource,
     MaterialUsage,
     MeasuredDuration,
     OperationRecordError,
     OperationStatus,
     ShopOperationRecordV1,
     make_operation_record,
+    new_operation_record_id,
 )
+import app.shop_operations.operation_record_v1 as records
 from app.shop_operations.operation_record_v1 import record_fields
 
 T0 = datetime(2026, 10, 27, 14, 0, tzinfo=timezone.utc)
@@ -28,13 +31,27 @@ def measured(minutes: str = "42.5", **kw) -> MeasuredDuration:
     return MeasuredDuration(**base)
 
 
+def consumed(quantity: str = "1", unit: str = "piece", **kw) -> MaterialUsage:
+    base = dict(
+        material_ref="spruce-top-plate-007",
+        quantity=quantity,
+        unit=unit,
+        measurement_source="COUNTED",
+        recorded_by="operator-1",
+        observed_at=(T0 + timedelta(minutes=45)).isoformat(),
+        source_ref=None,
+    )
+    base.update(kw)
+    return MaterialUsage(**base)
+
+
 def make_record(status=OperationStatus.STARTED, **kw) -> ShopOperationRecordV1:
     base = dict(record_id="rec-start", job_id="JOB-2026-0001", operation_id="top-thickness-pass-1",
                 status=status, occurred_at=T0, recorded_at=T0, recorded_by="operator-1")
     if status is OperationStatus.COMPLETED:
         base.update(record_id="rec-done", occurred_at=T0 + timedelta(minutes=45),
                     recorded_at=T0 + timedelta(minutes=46), measured_duration=measured(),
-                    material_usage=(MaterialUsage("spruce-top-plate-007", "1", "piece"),),
+                    material_usage=(consumed(),),
                     evidence_refs=("ev-thickness-map-007",), readiness_refs=("rd-acoustic-top-review",),
                     human_completion=HumanCompletion("operator-1", (T0 + timedelta(minutes=45)).isoformat()))
     base.update(kw)
@@ -127,6 +144,67 @@ def test_tampered_field_breaks_the_digest():
     done = make_record(OperationStatus.COMPLETED)
     with pytest.raises(OperationRecordError, match="DIGEST_MISMATCH"):
         replace(done, measured_duration=measured(minutes="10"))
+
+
+@pytest.mark.unit
+def test_default_record_ids_are_collision_safe_and_caller_ids_still_work(monkeypatch):
+    frozen = 1_761_500_000.123
+    monkeypatch.setattr(records.time, "time", lambda: frozen)
+    first = new_operation_record_id()
+    second = new_operation_record_id()
+    prefix = f"sop_{int(frozen * 1000)}_"
+    assert first != second
+    assert first.startswith(prefix) and second.startswith(prefix)
+    assert len(first.removeprefix(prefix)) == 32
+    generated = make_operation_record(
+        job_id="JOB-2026-0001", operation_id="top-thickness-pass-1",
+        status=OperationStatus.STARTED, occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+    )
+    assert generated.record_id.startswith(prefix)
+    supplied = make_record()
+    assert supplied.record_id == "rec-start"
+
+
+@pytest.mark.unit
+def test_new_material_line_requires_measurement_provenance_and_refuses_estimates():
+    legacy = MaterialUsage("spruce-top-plate-007", "1", "piece")
+    assert legacy.measurement_source is None
+    with pytest.raises(OperationRecordError, match="provenance is required"):
+        make_record(OperationStatus.COMPLETED, material_usage=(legacy,))
+    for source in ("ESTIMATE", "DERIVED", "DERIVED_ESTIMATE", "MOVE_COUNT", "DEFAULT", "UNKNOWN", "BOM", "PLANNED"):
+        with pytest.raises(OperationRecordError, match="not a measurement"):
+            consumed(measurement_source=source)
+    with pytest.raises(OperationRecordError, match="requires source_ref"):
+        consumed(measurement_source="IMPORTED_MEASUREMENT", source_ref=None)
+    with pytest.raises(OperationRecordError, match="incomplete"):
+        consumed(recorded_by=None)
+    imported = consumed(measurement_source="IMPORTED_MEASUREMENT", source_ref="scale-export-9")
+    assert imported.measurement_source == MaterialMeasurementSource.IMPORTED_MEASUREMENT.value
+    weighed = consumed(measurement_source="SCALE_READING", quantity="18.6", unit="g")
+    assert weighed.source_ref is None
+    assert weighed.quantity == "18.6" and weighed.unit == "g"
+
+
+@pytest.mark.unit
+def test_minutes_and_quantity_keep_their_decimal_strings():
+    tiny = "0." + ("0" * 400) + "1"
+    duration = measured(minutes=tiny)
+    line = consumed(quantity="18.60", unit="g")
+    assert duration.minutes == tiny
+    assert line.quantity == "18.60"
+    done = make_record(OperationStatus.COMPLETED, measured_duration=duration, material_usage=(line,))
+    assert done.measured_duration.minutes == tiny
+    assert done.material_usage[0].quantity == "18.60"
+    assert done.material_usage[0].unit == "g"
+
+
+@pytest.mark.unit
+def test_unit_tokens_stay_explicit_and_are_not_a_closed_conversion_table():
+    for unit in ("g", "kg", "mm", "cm2", "cm3", "piece", "board_feet"):
+        assert consumed(unit=unit).unit == unit
+    for unit in ("Piece", "mm thick", ""):
+        with pytest.raises(OperationRecordError, match="material unit"):
+            consumed(unit=unit)
 
 
 @pytest.mark.unit

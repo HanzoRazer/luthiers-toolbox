@@ -19,11 +19,13 @@ from app.shop_operations.operation_record_v1 import (
     HumanCompletion,
     JobReference,
     JobReferenceVerification,
+    MaterialMeasurementSource,
     MaterialUsage,
     MeasuredDuration,
     OperationStatus,
     ShopOperationRecordV1,
     make_operation_record,
+    new_operation_record_id,
 )
 from app.shop_operations.repository import FileShopOperationRepository
 
@@ -37,6 +39,7 @@ __all__ = [
     "HumanCompletion",
     "JobReference",
     "JobReferenceVerification",
+    "MaterialMeasurementSource",
     "MaterialUsage",
     "MeasuredDuration",
     "OperationRecordError",
@@ -46,4 +49,5 @@ __all__ = [
     "OperationStatus",
     "ShopOperationRecordV1",
     "make_operation_record",
+    "new_operation_record_id",
 ]

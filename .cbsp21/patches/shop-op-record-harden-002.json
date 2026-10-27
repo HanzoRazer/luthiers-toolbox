@@ -1,0 +1,135 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SHOP_OP_RECORD_HARDEN_002",
+  "title": "feat(shop_operations): collision-safe ids and material provenance (SHOP-OP-RECORD-HARDEN-002)",
+  "intent": "Harden the merged SHOP-OP-RECORD-001 file-per-event record in place. Add a collision-safe default record id, require measurement provenance on newly written material lines, document the unit token rule and the authority boundary, and prove the package does not import CAM, readiness, G-code, or estimate code. Do not add verified job references, routes, or a second record model.",
+  "change_type": "feature",
+  "behavior_change": "New material lines written through make_operation_record or FileShopOperationRepository.save require measurement provenance. Historical three-field material lines still load and re-save when the bytes are unchanged. make_operation_record can omit record_id and receive sop_{milliseconds}_{uuid4 hex}. Schema id and version are unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/shop-op-record-harden-002.json",
+      "docs/investigations/shop-op-record-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-op-record-001/README.md",
+      "docs/investigations/shop-op-record-harden-002/README.md",
+      "services/api/app/shop_operations/__init__.py",
+      "services/api/app/shop_operations/operation_record_v1.py",
+      "services/api/app/shop_operations/repository.py",
+      "services/api/tests/shop_operations/fixtures/pre_harden_002_completed.json",
+      "services/api/tests/shop_operations/test_authority_structure.py",
+      "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "services/api/tests/shop_operations/test_operation_repository.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/shop-op-record-harden-002.json",
+      "docs/investigations/shop-op-record-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-op-record-001/README.md",
+      "docs/investigations/shop-op-record-harden-002/README.md",
+      "services/api/app/shop_operations/__init__.py",
+      "services/api/app/shop_operations/operation_record_v1.py",
+      "services/api/app/shop_operations/repository.py",
+      "services/api/tests/shop_operations/fixtures/pre_harden_002_completed.json",
+      "services/api/tests/shop_operations/test_authority_structure.py",
+      "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "services/api/tests/shop_operations/test_operation_repository.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Default record ids use the MAINT-DEFER-019 millisecond-plus-uuid shape while caller-supplied ids remain valid. MaterialUsage gains optional provenance fields that canonical JSON omits when absent, so pre-harden files keep their digest. New writes require MANUAL_MEASUREMENT, SCALE_READING, COUNTED, or IMPORTED_MEASUREMENT, plus recorder, observation time, and a source reference for imports. AUTHORITY_BOUNDARY.md and structural import tests record the non-authority boundary. No schema id change, no route.",
+    "why_not_redundant": "PR #464 is the canonical operation record. This increment does not add a second aggregate. It closes three gaps on that record: caller-only ids, material lines with no measurement provenance, and a missing authority-boundary document. Verified job references stay deferred to SHOP-JOB-REFERENCE-RESOLVER-001."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && python -m pytest tests/shop_operations -q --no-cov -> 26 passed",
+      "cd services/api && python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK",
+      "cd services/api && python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
+      "cd services/api && python -m app.ci.check_bare_except -> OK",
+      "cd services/api && python -m app.ci.fence_checker_v2 -> 2 passed",
+      "cd services/api && python -m app.ci.check_duplication --threshold 100 -> 70 clone groups, OK",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check -> OK candidates=239",
+      "cd services/api && python -m app.ci.check_execution_class_compliance -> OK"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/shop-op-record-harden-002.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/shop-op-record-001/AUTHORITY_BOUNDARY.md",
+      "intent": "Normative non-authority boundary for the merged shop-operation record.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/shop-op-record-001/README.md",
+      "intent": "Point the merged design record at the authority boundary and the provenance rule for new material lines.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/shop-op-record-harden-002/README.md",
+      "intent": "Record SHOP-OP-RECORD-HARDEN-002 scope, the unit-vocabulary decision, and the single-writer limit.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/__init__.py",
+      "intent": "Export MaterialMeasurementSource and new_operation_record_id.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/app/shop_operations/operation_record_v1.py",
+      "intent": "Default collision-safe record ids. Material provenance on new lines. Decimal-string checks for minutes and quantity. Historical three-field material lines remain canonical.",
+      "risk": "low",
+      "behavior_change": "New writes require material measurement provenance. Omitted record_id is generated. Stored schema id ltb_shop_operation_record 1.0 is unchanged."
+    },
+    {
+      "path": "services/api/app/shop_operations/repository.py",
+      "intent": "Refuse a new file whose material line lacks provenance. Identical re-save of a historical file stays idempotent.",
+      "risk": "low",
+      "behavior_change": "New files without material provenance are refused. Existing files are not rewritten."
+    },
+    {
+      "path": "services/api/tests/shop_operations/fixtures/pre_harden_002_completed.json",
+      "intent": "Canonical bytes of a completed record written before provenance fields existed.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/test_authority_structure.py",
+      "intent": "AST tests: stdlib-and-self imports only; no CAM, readiness, G-code, router, or estimate import; no derived measurement source.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/test_operation_record_v1.py",
+      "intent": "Cover default ids, provenance refusal, decimal strings, and the open unit-token rule.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "services/api/tests/shop_operations/test_operation_repository.py",
+      "intent": "Prove a pre-harden file reopens with the same digest and a new unprovenanced write is refused.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-27-SHOP-OP-RECORD-HARDEN-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Hardening inside the existing Layer-4 shop_operations module. No new domain import. Unrouted."
+  }
+}

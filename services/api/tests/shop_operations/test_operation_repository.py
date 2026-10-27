@@ -12,11 +12,14 @@ import pytest
 from app.shop_operations import (
     DuplicateOperationRecord,
     FileShopOperationRepository,
+    MaterialUsage,
+    OperationRecordError,
     OperationRecordNotFound,
     OperationRepositoryError,
     OperationSequenceError,
     OperationStatus,
 )
+from app.shop_operations.operation_record_v1 import _build_operation_record
 
 from .test_operation_record_v1 import T0, make_record, measured
 
@@ -139,6 +142,47 @@ def test_corrupt_or_tampered_files_are_refused_on_read(ops_dir):
     path.write_text("{not json", encoding="utf-8")
     with pytest.raises(OperationRepositoryError, match="MALFORMED"):
         repo.get("rec-start")
+
+
+@pytest.mark.unit
+def test_pre_harden_file_reopens_and_a_new_unprovenanced_write_is_refused(ops_dir):
+    fixture = Path(__file__).parent / "fixtures" / "pre_harden_002_completed.json"
+    raw = fixture.read_text(encoding="utf-8")
+    repo = FileShopOperationRepository(ops_dir)
+    (ops_dir / "rec-done.json").write_text(raw, encoding="utf-8", newline="\n")
+
+    loaded = repo.get("rec-done")
+    assert loaded.schema_id == "ltb_shop_operation_record"
+    assert loaded.schema_version == "1.0"
+    assert loaded.payload_digest == "6de312e9279943d8ecfd113b93ec831226ecabe825465d440e448cfb6db3bf6f"
+    assert loaded.job.verification == "UNVERIFIED_EXTERNAL_REFERENCE"
+    assert loaded.measured_duration.minutes == "42.5"
+    line = loaded.material_usage[0]
+    assert (line.material_ref, line.quantity, line.unit) == ("spruce-top-plate-007", "1", "piece")
+    assert line.measurement_source is None
+    repo.save(loaded)
+
+    fresh = _build_operation_record(
+        record_id="rec-legacy-copy",
+        job_id=loaded.job.job_id,
+        operation_id=loaded.operation_id,
+        status=OperationStatus.COMPLETED,
+        occurred_at=T0 + timedelta(minutes=45),
+        recorded_at=T0 + timedelta(minutes=46),
+        recorded_by="operator-1",
+        measured_duration=loaded.measured_duration,
+        material_usage=(MaterialUsage("spruce-top-plate-007", "1", "piece"),),
+        evidence_refs=loaded.evidence_refs,
+        readiness_refs=loaded.readiness_refs,
+        human_completion=loaded.human_completion,
+        supersedes_record_id=None,
+        correction_reason=None,
+    )
+    with pytest.raises(OperationRecordError, match="provenance is required"):
+        repo.save(fresh)
+    assert not (ops_dir / "rec-legacy-copy.json").exists()
+    assert list(ops_dir.glob("*.tmp")) == []
+    assert repo.get("rec-done").payload_digest == loaded.payload_digest
 
 
 @pytest.mark.unit
