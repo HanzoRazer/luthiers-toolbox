@@ -1009,7 +1009,7 @@ Domain handoffs and governance docs may add detail but **must cite the SPRINTS I
 | MAINT-DEFER-016 | `acoustic_body_volume.py` Helmholtz `L_eff` applies the end-correction to the thickness term — reconcile with `soundhole_calc.py` | API / calculators (acoustics) | QUEUED | 2026-09-09 |
 | MAINT-DEFER-017 | Committed production `VITE_API_BASE` omits `/api`, so Art Studio headstock prompt requests 404 | Client / production config | QUEUED | 2026-10-21 |
 | MAINT-DEFER-018 | `test_client_does_not_import_the_archived_suite` rejects the archive directory slug in any client text, not only imports | Test / provenance | QUEUED | 2026-10-21 |
-| MAINT-DEFER-019 | Art preset / art job ids built from epoch milliseconds collide within one millisecond (CI flake `UNIQUE constraint failed: art_presets.id`) | API / stores | IN REVIEW — draft PR #463 | 2026-10-26 |
+| MAINT-DEFER-019 | Art preset / art job ids built from epoch milliseconds collide within one millisecond (CI flake `UNIQUE constraint failed: art_presets.id`) | API / stores | RESOLVED — #463 | 2026-10-26 |
 | NECK-DEFER-001 | Neck & fretboard solver: wire into the Toolbox as a generic neck tool (width, compound radius, board and neck thickness, back profile at any station; DXF sections) | API / instrument geometry / client / DXF | DEFERRED | 2026-09-13 |
 | CI-RED-001 | sg-spec clone auth — api-verify dead | CI / infra | CLOSED | 2026-05-28 |
 | CI-RED-002 | legacy-usage gate 131/10 | CI / API hygiene | CLOSED | 2026-05-31 |
@@ -1637,7 +1637,7 @@ touching the formula.
 
 ### MAINT-DEFER-019 — Millisecond ids collide in the art preset and art job stores
 
-**Status:** IN REVIEW — draft PR #463 (owner ruling 2026-10-26: separate from PR #462 and repair independently with collision-safe ids, not retries or timing gaps)
+**Status:** RESOLVED — #463 (owner ruling 2026-10-26: separate from PR #462 and repair independently with collision-safe ids, not retries or timing gaps)
 **last_verified:** 2026-10-26 (`origin/main` @ `02032884`)
 **Category:** API / stores
 **Found by:** SHOP-OPERATING-LOOP-RECOVERY-001 continuation pass (`docs/investigations/shop-operating-loop-recovery_2026-10-26/SPOT_CHECK.md` §4 on PR #462)
@@ -1656,7 +1656,7 @@ touching the formula.
 
 **Not in scope (same family, second resolution, recorded only):** `cam_core/tools/registry.py:36,86`, `core/pipeline_handoff.py` (`rmos_handoff_{int(time.time())}` names a file that a same-second handoff overwrites), `routers/adaptive/helpers.py:224,233`, `routers/geometry/helpers.py:112,121`. Each needs its own reach check before any change.
 
-**Restore trigger:** n/a. Closes when the draft PR merges with `test_sqlite_art_stores.py` green.
+**Restore trigger:** n/a. Closed by #463: `test_sqlite_art_stores.py` green in API Tests and api-verify on the PR.
 
 **Path:** HYG — CI truth. Not on the MVS critical path.
 
