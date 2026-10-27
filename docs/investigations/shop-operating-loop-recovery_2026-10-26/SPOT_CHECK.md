@@ -78,5 +78,12 @@ two presets in the same lane back to back, so a same-millisecond call raises
 
 This flake is not recorded in `SPRINTS.md`, `docs/ci/` or `docs/investigations/`.
 It is **not fixed here**, because this order permits no production change. It
-needs its own CI-RED entry. The failed jobs were re-run once to obtain a clean
-witness.
+needs its own CI-RED entry.
+
+**Independence witness:**
+- Re-running the failed jobs reproduced the same failure. The api-verify reruns were 121979598501 (`test_search_by_name`) and 121979602343 (`test_list_by_lane`, `test_search_by_name`).
+- Dependabot PRs #457–#461, which share no file with this one, fail the same tests: #459 and #460 at `test_list_by_lane`, `UNIQUE constraint failed: art_presets.id`.
+- #456 passed all four of its API test jobs, a timing outcome on the same code.
+
+The red is environmental and independent of this diff. It currently affects
+most open PRs.
