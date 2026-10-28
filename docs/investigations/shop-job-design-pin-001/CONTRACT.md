@@ -16,7 +16,7 @@ Schema id `ltb_design_snapshot`. Schema version `1.0` only. Any other version fa
 | `project_ref.source_state_digest` | SHA-256 of the canonical design payload. For an untransformed capture this equals `design_payload_digest`. |
 | `captured_at` | Timezone-aware timestamp. `datetime.isoformat()` writes an offset, not `Z`. |
 | `captured_by.actor_id` | Non-empty actor reference. |
-| `design_payload` | JSON object copied from the project serializer. Engineering fields are not dropped. |
+| `design_payload` | JSON object copied from the project serializer and recursively frozen in the snapshot object. Engineering fields are not dropped. |
 | `design_payload_digest` | SHA-256 of the canonical design payload only. |
 | `artifact_refs` | Caller order. Each item needs `artifact_id`, `artifact_kind`, and lowercase `content_digest`. `media_type` and `source_path_hint` are null when omitted. The hint is a relative path. |
 | `generator_refs` | Caller order. `generator_id` and `generator_version` are required. Digests are null unless the caller has them. |
