@@ -174,7 +174,10 @@ class FileShopOperationRepository:
         try:
             record = record_from_payload(payload)
         except OperationRecordError as exc:
-            raise OperationRepositoryError(str(exc) if str(exc) == "DIGEST_MISMATCH" else "MALFORMED") from exc
+            stable_code = exc.code or str(exc)
+            if stable_code not in {"DIGEST_MISMATCH", "UNKNOWN_SCHEMA_VERSION"}:
+                stable_code = "MALFORMED"
+            raise OperationRepositoryError(stable_code) from exc
         except (KeyError, TypeError, AttributeError) as exc:
             raise OperationRepositoryError("MALFORMED") from exc
         if canonical_record_text(record) != raw:
