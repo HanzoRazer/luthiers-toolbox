@@ -25,6 +25,7 @@ SCHEMA_ID = "ltb_shop_operation_record"
 SCHEMA_VERSION = "1.0"
 SCHEMA_VERSION_V1_0 = SCHEMA_VERSION
 SCHEMA_VERSION_V1_1 = "1.1"
+CURRENT_WRITE_SCHEMA_VERSION = SCHEMA_VERSION_V1_1
 SUPPORTED_SCHEMA_VERSIONS = frozenset({SCHEMA_VERSION_V1_0, SCHEMA_VERSION_V1_1})
 LEGACY_PROVENANCE_UNAVAILABLE = "LEGACY_PROVENANCE_UNAVAILABLE"
 JOB_SYSTEM = "CNC-Production-Shop"
@@ -326,7 +327,7 @@ def make_operation_record(
         record_id = (id_factory or new_operation_record_id)()
     record = _build_operation_record(
         record_id=record_id,
-        schema_version=SCHEMA_VERSION_V1_1,
+        schema_version=CURRENT_WRITE_SCHEMA_VERSION,
         job_id=job_id,
         operation_id=operation_id,
         status=status,
