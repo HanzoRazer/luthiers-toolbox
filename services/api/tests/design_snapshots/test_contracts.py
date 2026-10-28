@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timezone
 from types import MappingProxyType
 
@@ -157,4 +158,11 @@ def test_snapshot_payload_is_deeply_immutable_and_accepts_mapping_input():
 
     assert snap.design_payload["nested"]["value"] == 1
     assert snap.design_payload["points"] == [[1.0, 2.0]]
+
+    rebuilt = replace(snap, artifact_refs=list(snap.artifact_refs), generator_refs=list(snap.generator_refs))
+    assert isinstance(rebuilt.artifact_refs, tuple)
+    assert isinstance(rebuilt.generator_refs, tuple)
+    with pytest.raises(DesignSnapshotError) as bad_ref:
+        replace(snap, artifact_refs=[object()])
+    assert bad_ref.value.code == "ARTIFACT"
 
