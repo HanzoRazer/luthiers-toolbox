@@ -311,6 +311,17 @@ class LtbDesignSnapshotV1:
             raise DesignSnapshotError("design payload must be an object", code="PAYLOAD")
         immutable_payload = _freeze_json(copy_design_payload(self.design_payload))
         object.__setattr__(self, "design_payload", immutable_payload)
+        try:
+            artifact_refs = tuple(self.artifact_refs)
+            generator_refs = tuple(self.generator_refs)
+        except TypeError:
+            raise DesignSnapshotError("snapshot references must be collections", code="REFERENCE") from None
+        if not all(isinstance(item, ArtifactReferenceV1) for item in artifact_refs):
+            raise DesignSnapshotError("artifact reference type is invalid", code="ARTIFACT")
+        if not all(isinstance(item, GeneratorReferenceV1) for item in generator_refs):
+            raise DesignSnapshotError("generator reference type is invalid", code="GENERATOR")
+        object.__setattr__(self, "artifact_refs", artifact_refs)
+        object.__setattr__(self, "generator_refs", generator_refs)
         _require_payload_integrity(self)
         _unique(self.artifact_refs, "artifact_id", "ARTIFACT")
         _unique(self.generator_refs, "generator_id", "GENERATOR")
