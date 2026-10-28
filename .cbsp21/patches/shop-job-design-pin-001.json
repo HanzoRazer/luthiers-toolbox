@@ -1,0 +1,102 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SHOP_JOB_DESIGN_PIN_001",
+  "title": "feat(design_snapshots): immutable LTB design snapshot pinned to an unverified CNC job",
+  "intent": "Add an immutable ltb_design_snapshot 1.0 that copies the current project serializer output and pins it to a caller-supplied CNC-Production-Shop job_id marked UNVERIFIED_EXTERNAL_REFERENCE. Do not change project save, add a route, or grant CAM or manufacturing authority.",
+  "change_type": "feature",
+  "behavior_change": "New unrouted library app/design_snapshots. Project save bytes are unchanged. New writes are immutable JSON files in a caller-supplied directory. The CNC job reference cannot be marked verified.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/shop-job-design-pin-001.json",
+      "docs/investigations/shop-job-design-pin-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-job-design-pin-001/CONTRACT.md",
+      "docs/investigations/shop-job-design-pin-001/README.md",
+      "docs/investigations/shop-job-design-pin-001/SOURCE_STATE.md",
+      "docs/investigations/shop-job-design-pin-001/fixtures/baseline_acoustic_guitar_design_state.json",
+      "docs/investigations/shop-job-design-pin-001/fixtures/cnc_consumer_conformance.json",
+      "docs/investigations/shop-job-design-pin-001/fixtures/golden_snapshot.json",
+      "services/api/app/design_snapshots/__init__.py",
+      "services/api/app/design_snapshots/capture.py",
+      "services/api/app/design_snapshots/contracts.py",
+      "services/api/app/design_snapshots/errors.py",
+      "services/api/app/design_snapshots/repository.py",
+      "services/api/app/design_snapshots/serialization.py",
+      "services/api/tests/design_snapshots/__init__.py",
+      "services/api/tests/design_snapshots/conftest.py",
+      "services/api/tests/design_snapshots/test_boundaries.py",
+      "services/api/tests/design_snapshots/test_capture.py",
+      "services/api/tests/design_snapshots/test_contracts.py",
+      "services/api/tests/design_snapshots/test_repository.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/shop-job-design-pin-001.json",
+      "docs/investigations/shop-job-design-pin-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/shop-job-design-pin-001/CONTRACT.md",
+      "docs/investigations/shop-job-design-pin-001/README.md",
+      "docs/investigations/shop-job-design-pin-001/SOURCE_STATE.md",
+      "docs/investigations/shop-job-design-pin-001/fixtures/baseline_acoustic_guitar_design_state.json",
+      "docs/investigations/shop-job-design-pin-001/fixtures/cnc_consumer_conformance.json",
+      "docs/investigations/shop-job-design-pin-001/fixtures/golden_snapshot.json",
+      "services/api/app/design_snapshots/__init__.py",
+      "services/api/app/design_snapshots/capture.py",
+      "services/api/app/design_snapshots/contracts.py",
+      "services/api/app/design_snapshots/errors.py",
+      "services/api/app/design_snapshots/repository.py",
+      "services/api/app/design_snapshots/serialization.py",
+      "services/api/tests/design_snapshots/__init__.py",
+      "services/api/tests/design_snapshots/conftest.py",
+      "services/api/tests/design_snapshots/test_boundaries.py",
+      "services/api/tests/design_snapshots/test_capture.py",
+      "services/api/tests/design_snapshots/test_contracts.py",
+      "services/api/tests/design_snapshots/test_repository.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New domain package app/design_snapshots copies serialize_design_state output into an immutable file with a collision-safe snapshot id, an unverified CNC job reference, and sha256 digests of the design payload and the snapshot. Project save, routers, and CNC-Production-Shop are not modified.",
+    "why_not_redundant": "SHOP-OPERATING-LOOP-RECOVERY-001 left MVS S4 unbuilt: LTB overwrites Project.data and has no immutable design revision. PR #464 records shop operations and does not pin a design. Rosette and art snapshots are different products."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && python -m pytest tests/design_snapshots tests/shop_operations tests/test_analyzer_project_observation.py tests/projects/test_project_artifact_association.py tests/physical_engineering/test_evidence_artifact_v1.py tests/test_openapi.py -q --no-cov",
+      "cd services/api && python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json",
+      "cd services/api && python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json",
+      "cd services/api && python -m app.ci.check_bare_except",
+      "cd services/api && python -m app.ci.fence_checker_v2",
+      "cd services/api && python -m app.ci.check_duplication --threshold 100",
+      "cd services/api && python -m app.ci.manufacturing_output_inventory --inventory governance/manufacturing_output_inventory.json --check",
+      "cd services/api && python -m app.ci.check_execution_class_compliance"
+    ]
+  },
+  "files": [
+    {"path": ".cbsp21/patches/shop-job-design-pin-001.json", "intent": "Per-PR CBSP21 patch manifest.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/AUTHORITY_BOUNDARY.md", "intent": "Normative non-authority boundary.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/CONTRACT.md", "intent": "Field, digest, and identity rules for schema 1.0.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/README.md", "intent": "Scope, discovery, limits, and rerun commands.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/SOURCE_STATE.md", "intent": "Which project serializer is copied and which fields stay out.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/fixtures/baseline_acoustic_guitar_design_state.json", "intent": "Pre-change serializer witness for the default acoustic project.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/fixtures/cnc_consumer_conformance.json", "intent": "Portable digest witness for a later CNC consumer. Integrity only.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "docs/investigations/shop-job-design-pin-001/fixtures/golden_snapshot.json", "intent": "Canonical snapshot bytes for the baseline design.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/app/design_snapshots/__init__.py", "intent": "Public export of the snapshot contract, capture, and repository.", "risk": "low", "behavior_change": "New import path. No router."},
+    {"path": "services/api/app/design_snapshots/capture.py", "intent": "Copy a serialized design state into a snapshot without calling the project module.", "risk": "low", "behavior_change": "New capture function. Does not save a project."},
+    {"path": "services/api/app/design_snapshots/contracts.py", "intent": "Snapshot schema, digests, job reference, and payload checks.", "risk": "low", "behavior_change": "New records are schema 1.0. Unknown versions fail closed."},
+    {"path": "services/api/app/design_snapshots/errors.py", "intent": "Stable refusal types for contract and repository failures.", "risk": "low", "behavior_change": "New exception types. No route."},
+    {"path": "services/api/app/design_snapshots/repository.py", "intent": "Atomic no-overwrite file store.", "risk": "low", "behavior_change": "Identical bytes are idempotent. Different bytes for an existing id are refused. No delete."},
+    {"path": "services/api/app/design_snapshots/serialization.py", "intent": "Local canonical JSON and sha256 helper.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/__init__.py", "intent": "Test package marker.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/conftest.py", "intent": "Fixture paths and the frozen capture clock.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/test_boundaries.py", "intent": "AST ban on routers, CAM, policy, project service, and HTTP clients.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/test_capture.py", "intent": "Serializer witness, units, and no invented generators.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/test_contracts.py", "intent": "Golden bytes, digests, and refusal codes.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."},
+    {"path": "services/api/tests/design_snapshots/test_repository.py", "intent": "Immutability, corruption, reopen, and temp cleanup.", "risk": "low", "behavior_change": "None at runtime; not imported by the application."}
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-10-28-SHOP-JOB-DESIGN-PIN-001",
+    "risk_summary": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "New Layer-4 design_snapshots module. No domain import. Unrouted."
+  }
+}

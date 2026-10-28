@@ -1,0 +1,22 @@
+{
+  "artifact_content_digests": [],
+  "canonical_snapshot_file": "golden_snapshot.json",
+  "canonical_snapshot_sha256": "4e25cd1876ad6ae2873ea3b0045579d9c6dd354801a99ea7d93071de738abc55",
+  "cnc_note": "CncJobQuoteManifestV1 and CncJobQuoteManifestV2 do not contain project_id or a design snapshot. This fixture is not a CNC manifest and does not modify CNC-Production-Shop.",
+  "design_payload_digest": "f35324c276d931e53da0c38d068031206e96fac95a5be8f058b16737e2e54e23",
+  "design_payload_file": "baseline_acoustic_guitar_design_state.json",
+  "design_payload_file_sha256": "f35324c276d931e53da0c38d068031206e96fac95a5be8f058b16737e2e54e23",
+  "design_snapshot_id": "dsn-synth-0001",
+  "external_job": {
+    "job_id": "JOB-SYNTH-0001",
+    "system": "CNC-Production-Shop",
+    "verification_status": "UNVERIFIED_EXTERNAL_REFERENCE"
+  },
+  "fixture_id": "ltb_design_snapshot_cnc_consumer_v1",
+  "generator_output_digests": [],
+  "project_id": "project-synth-0001",
+  "project_schema_id": null,
+  "project_schema_version": "1.1",
+  "snapshot_digest": "6915d01d67419c3f3d7eccbd8603cb8d2193a0a1c84ccb91fc407ee0e36f574c",
+  "statement": "Matching these digests proves the bytes of one synthetic LTB design snapshot. It does not prove design correctness, evidence sufficiency, CAM readiness, or manufacturing authorization."
+}
