@@ -86,3 +86,11 @@ atomic-publish pattern instead. The duplication gate reports 0 clone groups.
 cd services/api
 python -m pytest tests/shop_operations -q --no-cov
 ```
+
+## Addendum — SHOP-OP-RECORD-HARDEN-002 (2026-10-27)
+
+PR #464 remains the first slice described above. This addendum does not replace it.
+
+`SHOP-OP-RECORD-HARDEN-002` keeps `schema_id` `ltb_shop_operation_record` and the file-per-event store. Schema 1.0 files stay readable and are not rewritten. New writes use schema 1.1, which adds material measurement provenance. A 1.0 material line is reported as `LEGACY_PROVENANCE_UNAVAILABLE`. No recorder, source, or observation time is invented for it.
+
+The versioning decision, unit audit, id factory, and limits are in `HARDEN_002.md`. The authority boundary is in `AUTHORITY_BOUNDARY.md`.

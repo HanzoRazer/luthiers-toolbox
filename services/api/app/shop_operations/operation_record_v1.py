@@ -1,44 +1,33 @@
-"""LTB shop-operation record (SHOP-OP-RECORD-001).
+"""LTB shop-operation record (SHOP-OP-RECORD-001, SHOP-OP-RECORD-HARDEN-002).
 
-One record is one event in the life of one operation on one job: it started,
-it completed, or it was aborted. The record states facts only:
-
-* which job and operation (the CNC-Production-Shop ``job_id`` is the governing
-  key, owner ruling R1/R5, 2026-10-26)
-* the event status
-* a measured duration and how it was measured
-* material used, with quantity and unit
-* evidence references and readiness references, kept apart
-* who completed the operation
-
-It carries no approval, release or CAM field and grants no manufacturing
-authority (owner ruling R4). Human completion records that a person finished
-the work; it does not authorize anything.
-
-LTB cannot verify a CNC-Production-Shop ``job_id``: no resolver or contract
-exists. Every job reference therefore says so, as
-``UNVERIFIED_EXTERNAL_REFERENCE``, and no other verification state is accepted.
-
-A derived or estimated duration is never an actual (owner ruling R7). The only
-duration basis is ``MEASURED``; an unmeasured operation simply has no duration.
-
-Design fingerprints are deliberately absent: pinning a design revision to the
-job belongs to MVS step S4, not to this record.
+One JSON file is one STARTED, COMPLETED, or ABORTED event. Schema 1.0 stays
+readable. New writes are schema 1.1. The authority boundary is
+``docs/investigations/shop-op-record-001/AUTHORITY_BOUNDARY.md``.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 import re
+import time
 from types import SimpleNamespace
+import uuid
 
 from app.shop_operations.errors import OperationRecordError
 from app.shop_operations.serialization import payload_digest
 
 
 SCHEMA_ID = "ltb_shop_operation_record"
+# Merged v1.0 pin. New writes use SCHEMA_VERSION_V1_1. Both stay readable.
 SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION_V1_0 = SCHEMA_VERSION
+SCHEMA_VERSION_V1_1 = "1.1"
+CURRENT_WRITE_SCHEMA_VERSION = SCHEMA_VERSION_V1_1
+SUPPORTED_SCHEMA_VERSIONS = frozenset({SCHEMA_VERSION_V1_0, SCHEMA_VERSION_V1_1})
+LEGACY_PROVENANCE_UNAVAILABLE = "LEGACY_PROVENANCE_UNAVAILABLE"
 JOB_SYSTEM = "CNC-Production-Shop"
 
 _RECORD_ID = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,126}[a-z0-9_-])?$")
@@ -70,12 +59,29 @@ class DurationBasis(str, Enum):
     MEASURED = "MEASURED"
 
 
+class MaterialMeasurementSource(str, Enum):
+    """How a consumed quantity was measured. Estimates have no member here."""
+
+    MANUAL_MEASUREMENT = "MANUAL_MEASUREMENT"
+    SCALE_READING = "SCALE_READING"
+    COUNTED = "COUNTED"
+    IMPORTED_MEASUREMENT = "IMPORTED_MEASUREMENT"
+
+
 TERMINAL_STATUSES = frozenset({OperationStatus.COMPLETED.value, OperationStatus.ABORTED.value})
 
 
 def text_token(value: object) -> bool:
     """True for a non-blank string with no leading or trailing space."""
     return isinstance(value, str) and bool(value.strip()) and value == value.strip()
+
+
+def _require_positive_decimal(value: object, message: str) -> None:
+    """Accept the decimal string as written. Refuse zero, negatives, and non-decimals."""
+    if not isinstance(value, str) or _POSITIVE_DECIMAL.fullmatch(value) is None:
+        raise OperationRecordError(message)
+    if Decimal(value) <= 0:
+        raise OperationRecordError(message)
 
 
 @dataclass(frozen=True)
@@ -107,8 +113,7 @@ class MeasuredDuration:
     def __post_init__(self) -> None:
         if self.basis != DurationBasis.MEASURED.value:
             raise OperationRecordError("a derived or estimated duration is never an actual")
-        if not _POSITIVE_DECIMAL.fullmatch(self.minutes or "") or float(self.minutes) <= 0:
-            raise OperationRecordError("minutes must be a positive decimal string")
+        _require_positive_decimal(self.minutes, "minutes must be a positive decimal string")
         for name in ("method", "measured_by", "source_id"):
             if not text_token(getattr(self, name)):
                 raise OperationRecordError(f"duration {name} is required")
@@ -116,17 +121,58 @@ class MeasuredDuration:
 
 @dataclass(frozen=True)
 class MaterialUsage:
+    """One consumed quantity.
+
+    ``measurement_source``, ``recorded_by``, ``observed_at``, and ``source_ref``
+    are absent together on a line stored before provenance was required. A new
+    line carries the first three, and ``source_ref`` when the source is
+    ``IMPORTED_MEASUREMENT``. Units stay the caller's token. Nothing converts them.
+    """
+
     material_ref: str
     quantity: str
     unit: str
+    measurement_source: str | None = None
+    recorded_by: str | None = None
+    observed_at: str | None = None
+    source_ref: str | None = None
 
     def __post_init__(self) -> None:
         if not text_token(self.material_ref):
             raise OperationRecordError("material_ref is required")
-        if not _POSITIVE_DECIMAL.fullmatch(self.quantity or "") or float(self.quantity) <= 0:
-            raise OperationRecordError("material quantity must be a positive decimal string")
+        _require_positive_decimal(self.quantity, "material quantity must be a positive decimal string")
         if not isinstance(self.unit, str) or not _UNIT.fullmatch(self.unit):
             raise OperationRecordError("material unit must be an explicit lowercase identifier")
+        _validate_material_provenance(self)
+
+
+def _validate_material_provenance(line: MaterialUsage) -> None:
+    if (
+        line.measurement_source is None
+        and line.recorded_by is None
+        and line.observed_at is None
+        and line.source_ref is None
+    ):
+        return
+    if line.measurement_source is None or line.recorded_by is None or line.observed_at is None:
+        raise OperationRecordError("material measurement provenance is incomplete")
+    try:
+        source = MaterialMeasurementSource(line.measurement_source)
+    except ValueError:
+        raise OperationRecordError(
+            "material measurement source is not a measurement",
+            code="PROHIBITED_MEASUREMENT_SOURCE",
+        ) from None
+    object.__setattr__(line, "measurement_source", source.value)
+    if not text_token(line.recorded_by):
+        raise OperationRecordError("material recorded_by is required")
+    require_time(line.observed_at, "material observed_at")
+    if source is MaterialMeasurementSource.IMPORTED_MEASUREMENT:
+        if not text_token(line.source_ref):
+            raise OperationRecordError("imported material measurement requires source_ref")
+        return
+    if line.source_ref is not None and not text_token(line.source_ref):
+        raise OperationRecordError("material source_ref is required")
 
 
 @dataclass(frozen=True)
@@ -165,6 +211,7 @@ class ShopOperationRecordV1:
         _require_status_fields(self)
         _require_references(self)
         _require_correction(self)
+        _require_version_material(self)
         if payload_digest(record_fields(self)) != self.payload_digest:
             raise OperationRecordError("DIGEST_MISMATCH")
 
@@ -193,10 +240,7 @@ def record_fields(record: ShopOperationRecordV1) -> dict[str, object]:
             "measured_by": duration.measured_by,
             "source_id": duration.source_id,
         },
-        "material_usage": [
-            {"material_ref": m.material_ref, "quantity": m.quantity, "unit": m.unit}
-            for m in record.material_usage
-        ],
+        "material_usage": [material_line_fields(m) for m in record.material_usage],
         "evidence_refs": list(record.evidence_refs),
         "readiness_refs": list(record.readiness_refs),
         "human_completion": None if completion is None else {
@@ -209,9 +253,57 @@ def record_fields(record: ShopOperationRecordV1) -> dict[str, object]:
     }
 
 
+def material_provenance_disposition(line: MaterialUsage) -> str:
+    """Read view. Legacy lines stay unknown. This value is not stored."""
+    if line.measurement_source is None:
+        return LEGACY_PROVENANCE_UNAVAILABLE
+    return line.measurement_source
+
+
+def material_line_fields(line: MaterialUsage) -> dict[str, object]:
+    """Canonical material object. Historical lines keep their three stored keys."""
+    fields: dict[str, object] = {
+        "material_ref": line.material_ref,
+        "quantity": line.quantity,
+        "unit": line.unit,
+    }
+    if line.measurement_source is None:
+        return fields
+    fields["measurement_source"] = line.measurement_source
+    fields["recorded_by"] = line.recorded_by
+    fields["observed_at"] = line.observed_at
+    fields["source_ref"] = line.source_ref
+    return fields
+
+
+def new_operation_record_id() -> str:
+    """Collision-safe default id: millisecond prefix, then ``uuid4().hex``.
+
+    Same shape as the MAINT-DEFER-019 art-id repair: the clock prefix keeps the
+    id time-led, and the uuid keeps two calls in one millisecond distinct.
+    Caller-supplied ids that pass ``require_record_id`` stay valid.
+    """
+    return f"sop_{int(time.time() * 1000)}_{uuid.uuid4().hex}"
+
+
+def require_new_material_provenance(record: ShopOperationRecordV1) -> None:
+    """Refuse a new write whose material line omits measurement provenance.
+
+    A file already stored without provenance still loads and may be saved again
+    when the bytes are unchanged. That path does not call this function.
+    """
+    for line in record.material_usage:
+        if line.measurement_source is None:
+            raise OperationRecordError(
+                "material measurement provenance is required",
+                code="MISSING_MEASUREMENT_PROVENANCE",
+            )
+
+
 def make_operation_record(
     *,
-    record_id: str,
+    record_id: str | None = None,
+    id_factory: Callable[[], str] | None = None,
     job_id: str,
     operation_id: str,
     status: OperationStatus | str,
@@ -226,11 +318,62 @@ def make_operation_record(
     supersedes_record_id: str | None = None,
     correction_reason: str | None = None,
 ) -> ShopOperationRecordV1:
-    """Build a record and attach the digest of its canonical payload."""
+    """Build a schema 1.1 record and attach the digest of its canonical payload.
+
+    A caller-supplied ``record_id`` is kept. The factory runs only when that
+    argument is omitted. It is never used to replace an explicit id.
+    """
+    if record_id is None:
+        record_id = (id_factory or new_operation_record_id)()
+    record = _build_operation_record(
+        record_id=record_id,
+        schema_version=CURRENT_WRITE_SCHEMA_VERSION,
+        job_id=job_id,
+        operation_id=operation_id,
+        status=status,
+        occurred_at=occurred_at,
+        recorded_at=recorded_at,
+        recorded_by=recorded_by,
+        measured_duration=measured_duration,
+        material_usage=material_usage,
+        evidence_refs=evidence_refs,
+        readiness_refs=readiness_refs,
+        human_completion=human_completion,
+        supersedes_record_id=supersedes_record_id,
+        correction_reason=correction_reason,
+    )
+    require_new_material_provenance(record)
+    return record
+
+
+def _build_operation_record(
+    *,
+    record_id: str,
+    schema_version: str,
+    job_id: str,
+    operation_id: str,
+    status: OperationStatus | str,
+    occurred_at: datetime,
+    recorded_at: datetime,
+    recorded_by: str,
+    measured_duration: MeasuredDuration | None,
+    material_usage: tuple[MaterialUsage, ...],
+    evidence_refs: tuple[str, ...],
+    readiness_refs: tuple[str, ...],
+    human_completion: HumanCompletion | None,
+    supersedes_record_id: str | None,
+    correction_reason: str | None,
+) -> ShopOperationRecordV1:
+    """Digest-valid record with no new-write provenance gate.
+
+    The repository reader rebuilds historical files through ``ShopOperationRecordV1``.
+    Tests that must persist a pre-provenance shape use this builder. New callers
+    use ``make_operation_record``.
+    """
     status_value = status.value if isinstance(status, OperationStatus) else status
     draft = dict(
         schema_id=SCHEMA_ID,
-        schema_version=SCHEMA_VERSION,
+        schema_version=schema_version,
         record_id=record_id,
         job=JobReference(
             system=JOB_SYSTEM,
@@ -283,8 +426,10 @@ def parse_time(value: str) -> datetime:
 
 
 def _require_identity(record: ShopOperationRecordV1) -> None:
-    if record.schema_id != SCHEMA_ID or record.schema_version != SCHEMA_VERSION:
+    if record.schema_id != SCHEMA_ID:
         raise OperationRecordError("schema identity is not the LTB shop-operation record")
+    if record.schema_version not in SUPPORTED_SCHEMA_VERSIONS:
+        raise OperationRecordError("unsupported schema version", code="UNKNOWN_SCHEMA_VERSION")
     require_record_id(record.record_id, "record_id")
     if not isinstance(record.job, JobReference):
         raise OperationRecordError("job reference is required")
@@ -309,6 +454,19 @@ def _require_status_fields(record: ShopOperationRecordV1) -> None:
         raise OperationRecordError("duration must be a MeasuredDuration")
     if not all(isinstance(m, MaterialUsage) for m in record.material_usage):
         raise OperationRecordError("material usage lines must be MaterialUsage")
+
+
+def _require_version_material(record: ShopOperationRecordV1) -> None:
+    """v1.0 lines have no provenance. v1.1 lines that exist must have it."""
+    legacy = record.schema_version == SCHEMA_VERSION_V1_0
+    for line in record.material_usage:
+        if legacy and line.measurement_source is not None:
+            raise OperationRecordError("v1.0 material lines have no provenance")
+        if not legacy and line.measurement_source is None:
+            raise OperationRecordError(
+                "material measurement provenance is required",
+                code="MISSING_MEASUREMENT_PROVENANCE",
+            )
 
 
 def _require_references(record: ShopOperationRecordV1) -> None:

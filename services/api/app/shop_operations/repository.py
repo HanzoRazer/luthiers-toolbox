@@ -17,6 +17,10 @@ Sequencing, per ``(job_id, operation_id)`` over the records not superseded:
   operation and status
 
 The sequencing check reads, then writes. It assumes one writer per directory.
+That single-writer limit is a deployment constraint of this store.
+
+A new file must be schema 1.1. Re-saving an existing schema 1.0 file with the
+same bytes is idempotent and does not upgrade it.
 """
 from __future__ import annotations
 
@@ -40,9 +44,11 @@ from app.shop_operations.operation_record_v1 import (
     MaterialUsage,
     MeasuredDuration,
     OperationStatus,
+    SCHEMA_VERSION_V1_1,
     ShopOperationRecordV1,
     parse_time,
     record_fields,
+    require_new_material_provenance,
     require_record_id,
 )
 from app.shop_operations.serialization import canonical_record
@@ -64,6 +70,12 @@ class FileShopOperationRepository:
             if path.read_text(encoding="utf-8") != text:
                 raise DuplicateOperationRecord(record.record_id)
             return
+        if record.schema_version != SCHEMA_VERSION_V1_1:
+            raise OperationRecordError(
+                "new writes use schema 1.1",
+                code="NEW_WRITE_REQUIRES_SCHEMA_1_1",
+            )
+        require_new_material_provenance(record)
         self._require_sequence(record)
         self._publish_new(path, text, record.record_id)
 
@@ -162,7 +174,10 @@ class FileShopOperationRepository:
         try:
             record = record_from_payload(payload)
         except OperationRecordError as exc:
-            raise OperationRepositoryError(str(exc) if str(exc) == "DIGEST_MISMATCH" else "MALFORMED") from exc
+            stable_code = exc.code or str(exc)
+            if stable_code not in {"DIGEST_MISMATCH", "UNKNOWN_SCHEMA_VERSION"}:
+                stable_code = "MALFORMED"
+            raise OperationRepositoryError(stable_code) from exc
         except (KeyError, TypeError, AttributeError) as exc:
             raise OperationRepositoryError("MALFORMED") from exc
         if canonical_record_text(record) != raw:

@@ -3,7 +3,15 @@ from __future__ import annotations
 
 
 class OperationRecordError(ValueError):
-    """The record is not valid. Nothing was written."""
+    """The record is not valid. Nothing was written.
+
+    ``code`` is set when a refusal needs a stable name. Other failures leave it
+    ``None`` and keep the message as the contract.
+    """
+
+    def __init__(self, message: str, *, code: str | None = None) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class OperationRepositoryError(RuntimeError):
