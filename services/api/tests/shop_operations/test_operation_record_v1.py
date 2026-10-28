@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.shop_operations import (
+    CURRENT_WRITE_SCHEMA_VERSION,
     HumanCompletion,
     JobReference,
     MaterialMeasurementSource,
@@ -222,8 +223,9 @@ def test_record_carries_no_approval_release_or_cam_field():
 def test_new_writes_are_schema_1_1_and_unknown_versions_fail():
     started = make_record()
     done = make_record(OperationStatus.COMPLETED)
-    assert started.schema_version == "1.1"
-    assert done.schema_version == "1.1"
+    assert CURRENT_WRITE_SCHEMA_VERSION == "1.1"
+    assert started.schema_version == CURRENT_WRITE_SCHEMA_VERSION
+    assert done.schema_version == CURRENT_WRITE_SCHEMA_VERSION
     assert material_provenance_disposition(done.material_usage[0]) == "COUNTED"
     for version in ("1.2", "2.0", "0.9"):
         with pytest.raises(OperationRecordError) as refused:
