@@ -6,6 +6,7 @@ and no ``schema_id``; a missing source schema id stays null.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 import math
 import re
 import time
