@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from types import MappingProxyType
 
 import pytest
 
@@ -138,3 +139,22 @@ def test_payload_rejects_boolean_numbers_paths_and_secrets():
     with pytest.raises(DesignSnapshotError) as secret:
         _capture({"api_key": "not-a-customer-value"})
     assert secret.value.code == "SECRET_KEY"
+
+@pytest.mark.unit
+def test_snapshot_payload_is_deeply_immutable_and_accepts_mapping_input():
+    source = MappingProxyType({
+        "nested": MappingProxyType({"value": 1}),
+        "points": [[1.0, 2.0]],
+    })
+    snap = _capture(source)
+
+    with pytest.raises(TypeError, match="immutable"):
+        snap.design_payload["new"] = "value"
+    with pytest.raises(TypeError, match="immutable"):
+        snap.design_payload["nested"]["value"] = 2
+    with pytest.raises(TypeError, match="immutable"):
+        snap.design_payload["points"].append([3.0, 4.0])
+
+    assert snap.design_payload["nested"]["value"] == 1
+    assert snap.design_payload["points"] == [[1.0, 2.0]]
+
