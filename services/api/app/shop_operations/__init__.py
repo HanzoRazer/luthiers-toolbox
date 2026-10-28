@@ -14,6 +14,7 @@ from app.shop_operations.errors import (
 from app.shop_operations.operation_record_v1 import (
     JOB_SYSTEM,
     LEGACY_PROVENANCE_UNAVAILABLE,
+    CURRENT_WRITE_SCHEMA_VERSION,
     SCHEMA_ID,
     SCHEMA_VERSION,
     SCHEMA_VERSION_V1_0,
@@ -37,6 +38,7 @@ from app.shop_operations.repository import FileShopOperationRepository
 __all__ = [
     "JOB_SYSTEM",
     "LEGACY_PROVENANCE_UNAVAILABLE",
+    "CURRENT_WRITE_SCHEMA_VERSION",
     "SCHEMA_ID",
     "SCHEMA_VERSION",
     "SCHEMA_VERSION_V1_0",
