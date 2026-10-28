@@ -287,3 +287,19 @@ def test_record_ids_cannot_escape_the_directory(ops_dir):
     for bad in ("../outside", "con", "UPPER", ""):
         with pytest.raises(OperationRepositoryError):
             repo.get(bad)
+
+@pytest.mark.unit
+def test_repository_preserves_unknown_schema_version_refusal(ops_dir):
+    repo = FileShopOperationRepository(ops_dir)
+    repo.save(make_record())
+    path = ops_dir / "rec-start.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["schema_version"] = "1.2"
+    path.write_text(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(OperationRepositoryError, match="^UNKNOWN_SCHEMA_VERSION$"):
+        repo.get("rec-start")
+
