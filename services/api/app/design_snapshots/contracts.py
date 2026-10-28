@@ -12,7 +12,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, Mapping
+from typing import Callable
 
 from .errors import DesignSnapshotError
 from .serialization import canonical_json, payload_digest, sha256_text
@@ -38,6 +38,50 @@ _NUMERIC_KEYS = frozenset({
     "fret_count", "string_count", "body_join_fret",
 })
 _ABSOLUTE_PATH = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\|/)|\.\.(?:[/\\]|$)")
+
+
+class _FrozenDict(dict):
+    """JSON-compatible dictionary that refuses mutation after construction."""
+
+    def _immutable(self, *_args, **_kwargs):
+        raise TypeError("design snapshot payload is immutable")
+
+    __setitem__ = _immutable
+    __delitem__ = _immutable
+    clear = _immutable
+    pop = _immutable
+    popitem = _immutable
+    setdefault = _immutable
+    update = _immutable
+    __ior__ = _immutable
+
+
+class _FrozenList(list):
+    """JSON-compatible list that refuses mutation after construction."""
+
+    def _immutable(self, *_args, **_kwargs):
+        raise TypeError("design snapshot payload is immutable")
+
+    __setitem__ = _immutable
+    __delitem__ = _immutable
+    append = _immutable
+    clear = _immutable
+    extend = _immutable
+    insert = _immutable
+    pop = _immutable
+    remove = _immutable
+    reverse = _immutable
+    sort = _immutable
+    __iadd__ = _immutable
+    __imul__ = _immutable
+
+
+def _freeze_json(value: object) -> object:
+    if isinstance(value, dict):
+        return _FrozenDict({key: _freeze_json(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return _FrozenList(_freeze_json(item) for item in value)
+    return value
 
 
 def _token(value: object, message: str, *, code: str) -> str:
@@ -117,12 +161,12 @@ def _copy_json(value: object, key: str | None = None) -> object:
         return value
     if isinstance(value, list):
         return [_copy_json(item, key) for item in value]
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         return _copy_object(value)
     raise DesignSnapshotError("unsupported design value", code="UNSUPPORTED_VALUE")
 
 
-def _copy_object(value: dict) -> dict[str, object]:
+def _copy_object(value: Mapping[object, object]) -> dict[str, object]:
     copied: dict[str, object] = {}
     for raw_key, item in value.items():
         if not isinstance(raw_key, str) or not raw_key.strip() or raw_key != raw_key.strip():
@@ -135,7 +179,7 @@ def _copy_object(value: dict) -> dict[str, object]:
 
 def copy_design_payload(value: object) -> dict[str, object]:
     """Deep-copy a JSON object. Does not drop engineering fields."""
-    if not isinstance(value, dict):
+    if not isinstance(value, Mapping):
         raise DesignSnapshotError("design payload must be an object", code="PAYLOAD")
     return _copy_object(value)
 
@@ -262,8 +306,10 @@ class LtbDesignSnapshotV1:
         require_time(self.captured_at, "captured_at")
         if not isinstance(self.captured_by, ActorReferenceV1):
             raise DesignSnapshotError("captured_by is required", code="ACTOR")
-        if not isinstance(self.design_payload, dict):
+        if not isinstance(self.design_payload, Mapping):
             raise DesignSnapshotError("design payload must be an object", code="PAYLOAD")
+        immutable_payload = _freeze_json(copy_design_payload(self.design_payload))
+        object.__setattr__(self, "design_payload", immutable_payload)
         _require_payload_integrity(self)
         _unique(self.artifact_refs, "artifact_id", "ARTIFACT")
         _unique(self.generator_refs, "generator_id", "GENERATOR")
