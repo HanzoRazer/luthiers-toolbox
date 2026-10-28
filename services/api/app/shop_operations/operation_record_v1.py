@@ -1,40 +1,12 @@
-"""LTB shop-operation record (SHOP-OP-RECORD-001).
+"""LTB shop-operation record (SHOP-OP-RECORD-001, SHOP-OP-RECORD-HARDEN-002).
 
-One record is one event in the life of one operation on one job: it started,
-it completed, or it was aborted. The record states facts only:
-
-* which job and operation (the CNC-Production-Shop ``job_id`` is the governing
-  key, owner ruling R1/R5, 2026-10-26)
-* the event status
-* a measured duration and how it was measured
-* material used, with quantity and unit. A new line also records how that
-  quantity was measured. A line stored before SHOP-OP-RECORD-HARDEN-002 may
-  omit that provenance; it stays readable and is not rewritten
-* evidence references and readiness references, kept apart
-* who completed the operation
-
-It carries no approval, release or CAM field and grants no manufacturing
-authority (owner ruling R4). Human completion records that a person finished
-the work; it does not authorize anything.
-
-LTB cannot verify a CNC-Production-Shop ``job_id``: no resolver or contract
-exists. Every job reference therefore says so, as
-``UNVERIFIED_EXTERNAL_REFERENCE``, and no other verification state is accepted.
-
-A derived or estimated duration is never an actual (owner ruling R7). The only
-duration basis is ``MEASURED``; an unmeasured operation simply has no duration.
-Minutes stay a positive decimal string. That string is the precision, and the
-unit stays minutes. The value is not converted to seconds or to a binary float.
-
-A derived, estimated, planned, or BOM quantity is never material consumption.
-New material lines name a measurement source. Historical lines without that
-source remain valid on read.
-
-Design fingerprints are deliberately absent: pinning a design revision to the
-job belongs to MVS step S4, not to this record.
+One JSON file is one STARTED, COMPLETED, or ABORTED event. Schema 1.0 stays
+readable. New writes are schema 1.1. The authority boundary is
+``docs/investigations/shop-op-record-001/AUTHORITY_BOUNDARY.md``.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -49,7 +21,12 @@ from app.shop_operations.serialization import payload_digest
 
 
 SCHEMA_ID = "ltb_shop_operation_record"
+# Merged v1.0 pin. New writes use SCHEMA_VERSION_V1_1. Both stay readable.
 SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION_V1_0 = SCHEMA_VERSION
+SCHEMA_VERSION_V1_1 = "1.1"
+SUPPORTED_SCHEMA_VERSIONS = frozenset({SCHEMA_VERSION_V1_0, SCHEMA_VERSION_V1_1})
+LEGACY_PROVENANCE_UNAVAILABLE = "LEGACY_PROVENANCE_UNAVAILABLE"
 JOB_SYSTEM = "CNC-Production-Shop"
 
 _RECORD_ID = re.compile(r"^[a-z0-9](?:[a-z0-9._-]{0,126}[a-z0-9_-])?$")
@@ -181,7 +158,10 @@ def _validate_material_provenance(line: MaterialUsage) -> None:
     try:
         source = MaterialMeasurementSource(line.measurement_source)
     except ValueError:
-        raise OperationRecordError("material measurement source is not a measurement") from None
+        raise OperationRecordError(
+            "material measurement source is not a measurement",
+            code="PROHIBITED_MEASUREMENT_SOURCE",
+        ) from None
     object.__setattr__(line, "measurement_source", source.value)
     if not text_token(line.recorded_by):
         raise OperationRecordError("material recorded_by is required")
@@ -230,6 +210,7 @@ class ShopOperationRecordV1:
         _require_status_fields(self)
         _require_references(self)
         _require_correction(self)
+        _require_version_material(self)
         if payload_digest(record_fields(self)) != self.payload_digest:
             raise OperationRecordError("DIGEST_MISMATCH")
 
@@ -271,6 +252,13 @@ def record_fields(record: ShopOperationRecordV1) -> dict[str, object]:
     }
 
 
+def material_provenance_disposition(line: MaterialUsage) -> str:
+    """Read view. Legacy lines stay unknown. This value is not stored."""
+    if line.measurement_source is None:
+        return LEGACY_PROVENANCE_UNAVAILABLE
+    return line.measurement_source
+
+
 def material_line_fields(line: MaterialUsage) -> dict[str, object]:
     """Canonical material object. Historical lines keep their three stored keys."""
     fields: dict[str, object] = {
@@ -305,12 +293,16 @@ def require_new_material_provenance(record: ShopOperationRecordV1) -> None:
     """
     for line in record.material_usage:
         if line.measurement_source is None:
-            raise OperationRecordError("material measurement provenance is required")
+            raise OperationRecordError(
+                "material measurement provenance is required",
+                code="MISSING_MEASUREMENT_PROVENANCE",
+            )
 
 
 def make_operation_record(
     *,
     record_id: str | None = None,
+    id_factory: Callable[[], str] | None = None,
     job_id: str,
     operation_id: str,
     status: OperationStatus | str,
@@ -325,9 +317,16 @@ def make_operation_record(
     supersedes_record_id: str | None = None,
     correction_reason: str | None = None,
 ) -> ShopOperationRecordV1:
-    """Build a record and attach the digest of its canonical payload."""
+    """Build a schema 1.1 record and attach the digest of its canonical payload.
+
+    A caller-supplied ``record_id`` is kept. The factory runs only when that
+    argument is omitted. It is never used to replace an explicit id.
+    """
+    if record_id is None:
+        record_id = (id_factory or new_operation_record_id)()
     record = _build_operation_record(
         record_id=record_id,
+        schema_version=SCHEMA_VERSION_V1_1,
         job_id=job_id,
         operation_id=operation_id,
         status=status,
@@ -348,7 +347,8 @@ def make_operation_record(
 
 def _build_operation_record(
     *,
-    record_id: str | None,
+    record_id: str,
+    schema_version: str,
     job_id: str,
     operation_id: str,
     status: OperationStatus | str,
@@ -372,8 +372,8 @@ def _build_operation_record(
     status_value = status.value if isinstance(status, OperationStatus) else status
     draft = dict(
         schema_id=SCHEMA_ID,
-        schema_version=SCHEMA_VERSION,
-        record_id=new_operation_record_id() if record_id is None else record_id,
+        schema_version=schema_version,
+        record_id=record_id,
         job=JobReference(
             system=JOB_SYSTEM,
             job_id=job_id,
@@ -425,8 +425,10 @@ def parse_time(value: str) -> datetime:
 
 
 def _require_identity(record: ShopOperationRecordV1) -> None:
-    if record.schema_id != SCHEMA_ID or record.schema_version != SCHEMA_VERSION:
+    if record.schema_id != SCHEMA_ID:
         raise OperationRecordError("schema identity is not the LTB shop-operation record")
+    if record.schema_version not in SUPPORTED_SCHEMA_VERSIONS:
+        raise OperationRecordError("unsupported schema version", code="UNKNOWN_SCHEMA_VERSION")
     require_record_id(record.record_id, "record_id")
     if not isinstance(record.job, JobReference):
         raise OperationRecordError("job reference is required")
@@ -451,6 +453,19 @@ def _require_status_fields(record: ShopOperationRecordV1) -> None:
         raise OperationRecordError("duration must be a MeasuredDuration")
     if not all(isinstance(m, MaterialUsage) for m in record.material_usage):
         raise OperationRecordError("material usage lines must be MaterialUsage")
+
+
+def _require_version_material(record: ShopOperationRecordV1) -> None:
+    """v1.0 lines have no provenance. v1.1 lines that exist must have it."""
+    legacy = record.schema_version == SCHEMA_VERSION_V1_0
+    for line in record.material_usage:
+        if legacy and line.measurement_source is not None:
+            raise OperationRecordError("v1.0 material lines have no provenance")
+        if not legacy and line.measurement_source is None:
+            raise OperationRecordError(
+                "material measurement provenance is required",
+                code="MISSING_MEASUREMENT_PROVENANCE",
+            )
 
 
 def _require_references(record: ShopOperationRecordV1) -> None:

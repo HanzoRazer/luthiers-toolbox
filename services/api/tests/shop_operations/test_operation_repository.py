@@ -12,12 +12,14 @@ import pytest
 from app.shop_operations import (
     DuplicateOperationRecord,
     FileShopOperationRepository,
+    make_operation_record,
     MaterialUsage,
     OperationRecordError,
     OperationRecordNotFound,
     OperationRepositoryError,
     OperationSequenceError,
     OperationStatus,
+    material_provenance_disposition,
 )
 from app.shop_operations.operation_record_v1 import _build_operation_record
 
@@ -144,45 +146,139 @@ def test_corrupt_or_tampered_files_are_refused_on_read(ops_dir):
         repo.get("rec-start")
 
 
+_V1_0_DIGESTS = {
+    "rec-start": "0502de2eb983486d7fdf336989d5de1febe60a97c6546c71fdd68bd907a08c18",
+    "rec-done": "6de312e9279943d8ecfd113b93ec831226ecabe825465d440e448cfb6db3bf6f",
+    "rec-abort": "1bebcdecf9fa8b005267a7e69d0e203ce7026882867c0925726a92d404e0e5be",
+    "rec-done-fix": "092938283f071f241d3f9facf66bd6551bb6b5764247a6eb782f801002ed48ba",
+}
+_V1_0_FILES = {
+    "pre_harden_002_started.json": "rec-start",
+    "pre_harden_002_completed.json": "rec-done",
+    "pre_harden_002_aborted.json": "rec-abort",
+    "pre_harden_002_completed_supersession.json": "rec-done-fix",
+}
+
+
+def _place_v1_0(ops_dir: Path, names: dict[str, str] | None = None) -> dict[str, bytes]:
+    fixtures = Path(__file__).parent / "fixtures"
+    chosen = _V1_0_FILES if names is None else names
+    ops_dir.mkdir(parents=True, exist_ok=True)
+    raws = {}
+    for filename, record_id in chosen.items():
+        raw = (fixtures / filename).read_bytes()
+        (ops_dir / f"{record_id}.json").write_bytes(raw)
+        raws[record_id] = raw
+    return raws
+
+
 @pytest.mark.unit
-def test_pre_harden_file_reopens_and_a_new_unprovenanced_write_is_refused(ops_dir):
-    fixture = Path(__file__).parent / "fixtures" / "pre_harden_002_completed.json"
-    raw = fixture.read_text(encoding="utf-8")
+def test_v1_0_goldens_reopen_without_rewrite_or_invented_provenance(ops_dir):
+    raws = _place_v1_0(ops_dir)
     repo = FileShopOperationRepository(ops_dir)
-    (ops_dir / "rec-done.json").write_text(raw, encoding="utf-8", newline="\n")
+    loaded = {record_id: repo.get(record_id) for record_id in _V1_0_DIGESTS}
+    assert loaded["rec-start"].status == "STARTED" and loaded["rec-start"].material_usage == ()
+    assert loaded["rec-done"].status == "COMPLETED"
+    assert loaded["rec-abort"].status == "ABORTED"
+    assert loaded["rec-done"].measured_duration.minutes == "42.5"
+    assert loaded["rec-abort"].material_usage[0].unit == "g"
+    for record_id, digest in _V1_0_DIGESTS.items():
+        assert loaded[record_id].schema_version == "1.0"
+        assert loaded[record_id].payload_digest == digest
+        assert (ops_dir / f"{record_id}.json").read_bytes() == raws[record_id]
+    for record in (loaded["rec-done"], loaded["rec-abort"]):
+        line = record.material_usage[0]
+        assert material_provenance_disposition(line) == "LEGACY_PROVENANCE_UNAVAILABLE"
+        assert line.recorded_by is None and line.observed_at is None and line.source_ref is None
 
-    loaded = repo.get("rec-done")
-    assert loaded.schema_id == "ltb_shop_operation_record"
-    assert loaded.schema_version == "1.0"
-    assert loaded.payload_digest == "6de312e9279943d8ecfd113b93ec831226ecabe825465d440e448cfb6db3bf6f"
-    assert loaded.job.verification == "UNVERIFIED_EXTERNAL_REFERENCE"
-    assert loaded.measured_duration.minutes == "42.5"
-    line = loaded.material_usage[0]
-    assert (line.material_ref, line.quantity, line.unit) == ("spruce-top-plate-007", "1", "piece")
-    assert line.measurement_source is None
-    repo.save(loaded)
 
+@pytest.mark.unit
+def test_v1_0_effective_state_is_unchanged_and_resave_does_not_rewrite(ops_dir):
+    raws = _place_v1_0(ops_dir)
+    repo = FileShopOperationRepository(ops_dir)
+    assert [r.record_id for r in repo.effective_for_job("JOB-2026-0001")] == [
+        "rec-start", "rec-abort", "rec-done-fix",
+    ]
+    for record_id in _V1_0_DIGESTS:
+        repo.save(repo.get(record_id))
+        assert (ops_dir / f"{record_id}.json").read_bytes() == raws[record_id]
+
+
+@pytest.mark.unit
+def test_new_v1_0_write_is_refused_and_v1_1_provenance_survives_reopen(ops_dir):
+    raws = _place_v1_0(ops_dir, {
+        "pre_harden_002_started.json": "rec-start",
+        "pre_harden_002_completed.json": "rec-done",
+    })
+    repo = FileShopOperationRepository(ops_dir)
+    done = repo.get("rec-done")
     fresh = _build_operation_record(
         record_id="rec-legacy-copy",
-        job_id=loaded.job.job_id,
-        operation_id=loaded.operation_id,
+        schema_version="1.0",
+        job_id=done.job.job_id,
+        operation_id=done.operation_id,
         status=OperationStatus.COMPLETED,
         occurred_at=T0 + timedelta(minutes=45),
         recorded_at=T0 + timedelta(minutes=46),
         recorded_by="operator-1",
-        measured_duration=loaded.measured_duration,
+        measured_duration=done.measured_duration,
         material_usage=(MaterialUsage("spruce-top-plate-007", "1", "piece"),),
-        evidence_refs=loaded.evidence_refs,
-        readiness_refs=loaded.readiness_refs,
-        human_completion=loaded.human_completion,
+        evidence_refs=done.evidence_refs,
+        readiness_refs=done.readiness_refs,
+        human_completion=done.human_completion,
         supersedes_record_id=None,
         correction_reason=None,
     )
-    with pytest.raises(OperationRecordError, match="provenance is required"):
+    with pytest.raises(OperationRecordError) as refused:
         repo.save(fresh)
+    assert refused.value.code == "NEW_WRITE_REQUIRES_SCHEMA_1_1"
     assert not (ops_dir / "rec-legacy-copy.json").exists()
     assert list(ops_dir.glob("*.tmp")) == []
-    assert repo.get("rec-done").payload_digest == loaded.payload_digest
+
+    from .test_operation_record_v1 import consumed, make_record
+    hardened = make_record(
+        OperationStatus.COMPLETED,
+        record_id="rec-hard",
+        material_usage=(consumed(measurement_source="SCALE_READING", quantity="18.6", unit="g"),),
+        supersedes_record_id="rec-done",
+        correction_reason="scale reading replaced the piece count",
+    )
+    repo.save(hardened)
+    reopened = FileShopOperationRepository(ops_dir).get("rec-hard")
+    assert reopened.schema_version == "1.1"
+    assert reopened.material_usage[0].measurement_source == "SCALE_READING"
+    assert reopened.material_usage[0].quantity == "18.6"
+    assert [r.record_id for r in repo.effective_for_job("JOB-2026-0001")] == ["rec-start", "rec-hard"]
+    assert (ops_dir / "rec-done.json").read_bytes() == raws["rec-done"]
+
+    script = (
+        "import sys; from pathlib import Path; "
+        "from app.shop_operations import FileShopOperationRepository as R, material_provenance_disposition as D; "
+        "repo = R(Path(sys.argv[1])); "
+        "old = repo.get('rec-done'); new = repo.get('rec-hard'); "
+        "print(old.schema_version, old.payload_digest, D(old.material_usage[0])); "
+        "print(new.schema_version, new.record_id, new.material_usage[0].measurement_source, new.material_usage[0].unit)"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", script, str(ops_dir)], cwd=API_ROOT,
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    assert out[0] == f"1.0 {_V1_0_DIGESTS['rec-done']} LEGACY_PROVENANCE_UNAVAILABLE"
+    assert out[1] == "1.1 rec-hard SCALE_READING g"
+
+
+@pytest.mark.unit
+def test_generated_id_reopens_under_the_same_id(ops_dir):
+    repo = FileShopOperationRepository(ops_dir)
+    record = make_operation_record(
+        job_id="JOB-2026-0001", operation_id="top-thickness-pass-1",
+        status=OperationStatus.STARTED, occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+    )
+    repo.save(record)
+    again = FileShopOperationRepository(ops_dir).get(record.record_id)
+    assert again.record_id == record.record_id
+    assert again.schema_version == "1.1"
+    assert again.payload_digest == record.payload_digest
 
 
 @pytest.mark.unit

@@ -13,8 +13,12 @@ from app.shop_operations.errors import (
 )
 from app.shop_operations.operation_record_v1 import (
     JOB_SYSTEM,
+    LEGACY_PROVENANCE_UNAVAILABLE,
     SCHEMA_ID,
     SCHEMA_VERSION,
+    SCHEMA_VERSION_V1_0,
+    SCHEMA_VERSION_V1_1,
+    SUPPORTED_SCHEMA_VERSIONS,
     DurationBasis,
     HumanCompletion,
     JobReference,
@@ -25,14 +29,19 @@ from app.shop_operations.operation_record_v1 import (
     OperationStatus,
     ShopOperationRecordV1,
     make_operation_record,
+    material_provenance_disposition,
     new_operation_record_id,
 )
 from app.shop_operations.repository import FileShopOperationRepository
 
 __all__ = [
     "JOB_SYSTEM",
+    "LEGACY_PROVENANCE_UNAVAILABLE",
     "SCHEMA_ID",
     "SCHEMA_VERSION",
+    "SCHEMA_VERSION_V1_0",
+    "SCHEMA_VERSION_V1_1",
+    "SUPPORTED_SCHEMA_VERSIONS",
     "DurationBasis",
     "DuplicateOperationRecord",
     "FileShopOperationRepository",
@@ -49,5 +58,6 @@ __all__ = [
     "OperationStatus",
     "ShopOperationRecordV1",
     "make_operation_record",
+    "material_provenance_disposition",
     "new_operation_record_id",
 ]

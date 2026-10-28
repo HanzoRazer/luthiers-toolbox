@@ -16,7 +16,7 @@ The record stores:
 - the external `job_id`, always with verification `UNVERIFIED_EXTERNAL_REFERENCE`
 - operation id and status
 - a measured duration in decimal minutes, when one was measured
-- material quantity, unit, and, on a new line, measurement provenance
+- material quantity, unit, and, on a schema 1.1 line, measurement provenance
 - opaque evidence references and opaque readiness references, in separate fields
 - who attested completion, and when, on a `COMPLETED` file
 
@@ -63,9 +63,13 @@ lowercase identifier matching `^[a-z][a-z0-9_]*$`. The token is stored as
 written. `g` and `kg` are not converted. `mm` and `cm2` are not converted.
 Aggregation across units is out of scope.
 
+## Versions
+
+Supported schema versions are `1.0` and `1.1`. Any other major or minor value fails closed (`UNKNOWN_SCHEMA_VERSION`). Schema 1.0 is the merged file shape. New writes are schema 1.1 (`NEW_WRITE_REQUIRES_SCHEMA_1_1` if a new file is schema 1.0). Reading a 1.0 file does not rewrite it and does not change its digest.
+
 ## Material provenance
 
-A new material line requires:
+A schema 1.1 material line requires:
 
 | Field | Rule |
 |---|---|
@@ -74,11 +78,9 @@ A new material line requires:
 | `observed_at` | Timezone-aware timestamp |
 | `source_ref` | Required for `IMPORTED_MEASUREMENT`. Optional for the other three sources. |
 
-`make_operation_record` and a new `FileShopOperationRepository.save` refuse a
-line that omits this. A file written before the rule, whose material object is
-only `material_ref`, `quantity`, and `unit`, still loads. Its canonical bytes
-and `payload_digest` stay the same. Saving that same payload again is
-idempotent. A new file that copies the old shape is refused.
+A prohibited source (`ESTIMATE`, `DERIVED`, `DEFAULT`, `BOM`, `PLANNED`, `UNKNOWN`, and any other non-member) raises `OperationRecordError` with code `PROHIBITED_MEASUREMENT_SOURCE`. It is not relabeled as a manual measurement. A 1.1 line that omits provenance raises code `MISSING_MEASUREMENT_PROVENANCE`.
+
+A schema 1.0 material object is only `material_ref`, `quantity`, and `unit`. `material_provenance_disposition` reports `LEGACY_PROVENANCE_UNAVAILABLE`. The reader does not fill `recorded_by`, `measurement_source`, `observed_at`, or `source_ref`. The file's canonical bytes and `payload_digest` stay the same. Saving that same payload again is idempotent.
 
 ## Duration
 
@@ -91,9 +93,11 @@ is minutes.
 
 A caller may still supply a `record_id` that passes the existing filename rule.
 When `make_operation_record` is called without one, the id is
-`sop_{unix milliseconds}_{uuid4 hex}`. Two calls in the same millisecond do not
-share an id. This follows the MAINT-DEFER-019 repair: a clock prefix alone is
-not an id.
+`sop_{UTC unix milliseconds}_{32 lowercase hex}`. An injected `id_factory`
+supplies that id in tests. A caller-supplied id is kept and the factory is not
+called. The suffix is the full `uuid4().hex`, not a shortened display form.
+Two calls in the same millisecond do not share an id. The underscore punctuation
+follows the MAINT-DEFER-019 art-id repair: a clock prefix alone is not an id.
 
 ## Persistence constraint
 

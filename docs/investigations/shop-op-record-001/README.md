@@ -6,7 +6,7 @@
 | **Baseline** | `origin/main` `93f9fa9a` (merge of #462) |
 | **Code** | `services/api/app/shop_operations/`, a new self-contained domain package |
 | **Tests** | `services/api/tests/shop_operations/` |
-| **Status** | Merged as PR #464. Library only. Authority boundary: `AUTHORITY_BOUNDARY.md`. Hardening that preserves this record: `docs/investigations/shop-op-record-harden-002/README.md`. |
+| **Status** | Draft PR. Library only. |
 
 ## What it is
 
@@ -26,7 +26,7 @@ built here.
 | Do not pretend LTB can verify that external id; say so explicitly | `JobReferenceVerification` has one member, `UNVERIFIED_EXTERNAL_REFERENCE`. Any other value is refused: "no job resolver exists". |
 | Do not invent a cross-repository lookup | The package imports nothing outside `app.shop_operations` and makes no network or file access outside its injected directory. |
 | No design fingerprints (that is S4) | No design, digest-of-design or fingerprint field. A test fails on field names containing `design_`, `fingerprint`, `sha256`. The record's own `payload_digest` is integrity of the record bytes, not a design pin. |
-| Record only operation identity/status, measured duration and provenance, material quantity/unit, separate evidence/readiness references, human completion | These are the only fact fields. Beyond them the record carries only bookkeeping: who recorded the event and when, and the correction link. A new material line also names its measurement source, recorder, and observation time (`SHOP-OP-RECORD-HARDEN-002`). Lines already stored without that provenance stay readable. |
+| Record only operation identity/status, measured duration and provenance, material quantity/unit, separate evidence/readiness references, human completion | These are the only fact fields. Beyond them the record carries only bookkeeping: who recorded the event and when, and the correction link. |
 | Derived duration must never become an actual | `DurationBasis` has one member, `MEASURED`. `DERIVED_ESTIMATE` and any other basis is refused: "never an actual". An unmeasured operation has *no* duration, never a guess. |
 | Evidence and readiness references stay separate | Two fields. A reference appearing in both is refused. |
 | Add no CAM or manufacturing authority | No approval, release, CAM or manufacturing field (tested by name). It never writes `manufacturing_state`, and nothing reads the record as a gate. Human completion records that a person finished; it authorizes nothing. |
@@ -40,9 +40,8 @@ built here.
 - **ABORTED** may carry a duration and material used, for example scrap.
 
 **Value formats:**
-- **Duration:** positive decimal minutes as a string, plus method, measured-by and source id. The string is the stored precision. It is not converted to seconds.
-- **Material:** `material_ref`, a positive decimal quantity string, and a lowercase unit identifier. There is no shop-operation unit vocabulary to adopt and no conversion. A new line also carries `measurement_source`, `recorded_by`, `observed_at`, and `source_ref` when the source is `IMPORTED_MEASUREMENT`.
-- **Record id:** a caller-supplied id that passes the existing filename rule, or a default `sop_{milliseconds}_{uuid4 hex}` id.
+- **Duration:** positive decimal minutes as a string, plus method, measured-by and source id.
+- **Material:** `material_ref`, a positive decimal quantity string, and a lowercase unit identifier.
 - **Times:** must be timezone-aware.
 
 **Integrity:** a SHA-256 over the canonical payload. A changed field fails on read (`DIGEST_MISMATCH`).
@@ -74,7 +73,7 @@ atomic-publish pattern instead. The duplication gate reports 0 clone groups.
 | Not built | Why / owner |
 |---|---|
 | A route, client screen, migration or database table | First slice is a library (owner GO) |
-| A resolver or contract to verify a `job_id` | None exists. Represented as `UNVERIFIED_EXTERNAL_REFERENCE` until `SHOP-JOB-REFERENCE-RESOLVER-001`. Verified and revoked states are not added here. |
+| A resolver or contract to verify a `job_id` | None exists. Represented as `UNVERIFIED_EXTERNAL_REFERENCE` until one does. |
 | An operation catalog | Operation ids are caller-named; nothing is invented |
 | Design revision pins | MVS S4 (R1) |
 | Cost, labor rates, estimate comparison | Later layers (R2, R7) |
@@ -87,3 +86,11 @@ atomic-publish pattern instead. The duplication gate reports 0 clone groups.
 cd services/api
 python -m pytest tests/shop_operations -q --no-cov
 ```
+
+## Addendum — SHOP-OP-RECORD-HARDEN-002 (2026-10-27)
+
+PR #464 remains the first slice described above. This addendum does not replace it.
+
+`SHOP-OP-RECORD-HARDEN-002` keeps `schema_id` `ltb_shop_operation_record` and the file-per-event store. Schema 1.0 files stay readable and are not rewritten. New writes use schema 1.1, which adds material measurement provenance. A 1.0 material line is reported as `LEGACY_PROVENANCE_UNAVAILABLE`. No recorder, source, or observation time is invented for it.
+
+The versioning decision, unit audit, id factory, and limits are in `HARDEN_002.md`. The authority boundary is in `AUTHORITY_BOUNDARY.md`.

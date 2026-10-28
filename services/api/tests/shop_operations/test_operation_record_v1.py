@@ -16,8 +16,10 @@ from app.shop_operations import (
     OperationStatus,
     ShopOperationRecordV1,
     make_operation_record,
+    material_provenance_disposition,
     new_operation_record_id,
 )
+from app.shop_operations.operation_record_v1 import _build_operation_record
 import app.shop_operations.operation_record_v1 as records
 from app.shop_operations.operation_record_v1 import record_fields
 
@@ -214,3 +216,84 @@ def test_record_carries_no_approval_release_or_cam_field():
         names |= {f.name for f in fields(cls)}
     forbidden = ("approv", "authori", "release", "cam_", "manufactur", "design_", "fingerprint", "sha256")
     assert [n for n in names if any(word in n for word in forbidden)] == []
+
+
+@pytest.mark.unit
+def test_new_writes_are_schema_1_1_and_unknown_versions_fail():
+    started = make_record()
+    done = make_record(OperationStatus.COMPLETED)
+    assert started.schema_version == "1.1"
+    assert done.schema_version == "1.1"
+    assert material_provenance_disposition(done.material_usage[0]) == "COUNTED"
+    for version in ("1.2", "2.0", "0.9"):
+        with pytest.raises(OperationRecordError) as refused:
+            _build_operation_record(
+                record_id="rec-start", schema_version=version, job_id="JOB-2026-0001",
+                operation_id="top-thickness-pass-1", status=OperationStatus.STARTED,
+                occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+                measured_duration=None, material_usage=(), evidence_refs=(), readiness_refs=(),
+                human_completion=None, supersedes_record_id=None, correction_reason=None,
+            )
+        assert refused.value.code == "UNKNOWN_SCHEMA_VERSION"
+
+
+@pytest.mark.unit
+def test_id_factory_is_injected_and_does_not_replace_a_caller_id(monkeypatch):
+    frozen = 1_761_500_000.123
+    monkeypatch.setattr(records.time, "time", lambda: frozen)
+    sample = [new_operation_record_id() for _ in range(256)]
+    assert len(set(sample)) == 256
+    prefix = f"sop_{int(frozen * 1000)}_"
+    assert all(item.startswith(prefix) and len(item.removeprefix(prefix)) == 32 for item in sample)
+
+    ticks = iter(1_761_500_000.0 + i * 0.001 for i in range(4))
+    monkeypatch.setattr(records.time, "time", lambda: next(ticks))
+    ordered = [new_operation_record_id() for _ in range(4)]
+    assert ordered == sorted(ordered)
+
+    def boom() -> str:
+        raise AssertionError("factory must not replace a caller id")
+
+    kept = make_operation_record(
+        record_id="rec-caller", id_factory=boom, job_id="JOB-2026-0001",
+        operation_id="top-thickness-pass-1", status=OperationStatus.STARTED,
+        occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+    )
+    assert kept.record_id == "rec-caller"
+    injected = make_operation_record(
+        id_factory=lambda: "rec-injected", job_id="JOB-2026-0001",
+        operation_id="top-thickness-pass-1", status=OperationStatus.STARTED,
+        occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+    )
+    assert injected.record_id == "rec-injected"
+    for bad in ("CON", "../outside", "Has Space", ""):
+        with pytest.raises(OperationRecordError):
+            make_operation_record(
+                record_id=bad, job_id="JOB-2026-0001", operation_id="top-thickness-pass-1",
+                status=OperationStatus.STARTED, occurred_at=T0, recorded_at=T0, recorded_by="operator-1",
+            )
+
+
+@pytest.mark.unit
+def test_allowed_material_sources_and_prohibited_sources_keep_their_codes():
+    for source in ("MANUAL_MEASUREMENT", "SCALE_READING", "COUNTED"):
+        line = consumed(measurement_source=source)
+        done = make_record(OperationStatus.COMPLETED, material_usage=(line,))
+        assert done.material_usage[0].measurement_source == source
+        assert done.material_usage[0].source_ref is None
+    imported = consumed(measurement_source="IMPORTED_MEASUREMENT", source_ref="scale-export-9")
+    assert make_record(OperationStatus.COMPLETED, material_usage=(imported,)).material_usage[0].source_ref == "scale-export-9"
+    for source in ("ESTIMATE", "DERIVED", "DEFAULT", "BOM", "PLANNED", "UNKNOWN"):
+        with pytest.raises(OperationRecordError) as refused:
+            consumed(measurement_source=source)
+        assert refused.value.code == "PROHIBITED_MEASUREMENT_SOURCE"
+    with pytest.raises(OperationRecordError, match="requires source_ref"):
+        consumed(measurement_source="IMPORTED_MEASUREMENT", source_ref=None)
+    with pytest.raises(OperationRecordError, match="recorded_by"):
+        consumed(recorded_by=" ")
+    with pytest.raises(OperationRecordError, match="timezone-aware"):
+        consumed(observed_at="2026-10-27T14:45:00")
+    for quantity in ("0", "-1", "NaN", "Infinity", "1e3"):
+        with pytest.raises(OperationRecordError, match="positive decimal"):
+            consumed(quantity=quantity)
+    assert consumed(quantity="18.6", unit="g") != consumed(quantity="18.6", unit="kg")
