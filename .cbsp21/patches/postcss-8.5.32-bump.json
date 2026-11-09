@@ -1,0 +1,70 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "POSTCSS_8_5_32_BUMP",
+  "title": "build(deps-dev): bump postcss from 8.5.31 to 8.5.32 in /packages/client",
+  "intent": "Build-tooling currency, no advisory. 8.5.32 (2026-10-26) is fixes only: Input#origin() without opts.from; final-word lookup without source offsets; explicit `start` in Warning#toString(); Promise semantics in LazyResult#finally(). Declared as a devDependency but NOT dev-only in effect: the single hoisted node_modules/postcss is what vite (^8.4.43), @vue/compiler-sfc (^8.5.29) and @tailwindcss/postcss (^8.5.16) resolve, so it processes every stylesheet in the production build -- hence the A/B build below. Every GitHub advisory for postcss affects <= 8.5.22 only; none applies to 8.5.31 or 8.5.32.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped output, verified by building rather than assumed. Lockfile vs merge base 97dbb05b (origin/main, merged in without force-push): 400 entries before and after, ZERO added, ZERO removed, exactly ONE version-changed entry (node_modules/postcss 8.5.31 -> 8.5.32). Its dependencies are unchanged (nanoid ^3.3.20, picocolors ^1.1.1, source-map-js ^1.2.2), so no transitive package moved. There is one postcss copy in the tree (the only other key ending in /postcss is the separate @tailwindcss/postcss package). Root differs only in devDependencies.postcss ^8.5.31 -> ^8.5.32. A/B production build: npm ci + vite build on origin/main 97dbb05b (postcss 8.5.31) and on this branch (8.5.32): 199 vs 199 files, diff -rq reports no differences -- byte-identical dist.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/postcss-8.5.32-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/postcss-8.5.32-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves devDependencies.postcss ^8.5.31 -> ^8.5.32. package-lock.json moves node_modules/postcss 8.5.31 -> 8.5.32 (version, resolved, integrity) and the root range. Dependabot's incidental peer-flag churn (15 unchanged-version entries plus the 'peer' key on postcss itself) was dropped: after merging origin/main 97dbb05b the two client files were rebuilt as main's files plus the postcss delta only.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). postcss-8.5.31-bump.json covers the previous bump, not this diff; borrowing it is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Dependabot branch was based on 0b946f97; origin/main had since gained #469 (konva) and #456, with #469 touching the same two client files. Merged origin/main 97dbb05b into the branch (no force-push; auto-merge clean), then rebuilt package-lock.json = main's lockfile with only node_modules/postcss (main's 'peer' key kept, base key order kept) and the root postcss range replaced, and package.json = main's file with the one range edited. git diff origin/main -- packages/client shows only the postcss lines.",
+      "Lockfile enumerated as data (every `packages` entry compared in full): 400 -> 400, one version change, zero peer-flag differences vs main.",
+      "Integrity == `npm view postcss@8.5.32 dist.integrity`; SLSA v1 provenance, published by GitHub Actions (same as 8.5.31); no preinstall/install/postinstall scripts; dependency set identical to 8.5.31; fileCount 55 both.",
+      "gh api graphql securityVulnerabilities(package: postcss): 9 advisory ranges, all <= 8.5.22 -- none affects 8.5.31 or 8.5.32.",
+      "npm diff postcss@8.5.31 -> 8.5.32: 98 lines across lib/input.js, lazy-result.js, no-work-result.js, node.js, processor.js, warning.js, package.json, matching the release notes; added lines scanned for fetch/XMLHttpRequest/WebSocket/eval/new Function/child_process/net|fs|os requires/process.env/URLs: 0 hits.",
+      "A/B production build: separate worktrees at origin/main and this branch, npm ci (installed postcss confirmed 8.5.31 vs 8.5.32) + npx vite build, both exit 0; diff -rq of dist: 199 vs 199 files, identical.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^8.5.31 -> ^8.5.32."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "node_modules/postcss 8.5.31 -> 8.5.32 only; no transitive moves. Production build byte-identical. Peer-flag churn dropped."
+    },
+    {
+      "path": ".cbsp21/patches/postcss-8.5.32-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-08-POSTCSS-8-5-32",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Build-tool patch bump with byte-identical production output; no architectural surface."
+  }
+}
