@@ -1,0 +1,78 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TYPESCRIPT_ESLINT_8_72_1_BUMP",
+  "title": "build(deps-dev): bump @typescript-eslint/eslint-plugin from 8.72.0 to 8.72.1",
+  "intent": "Dev-tooling currency, no advisory. The title names one package but this moves the WHOLE @typescript-eslint family in lockstep: eslint-plugin 8.72.1 declares peerDependencies @typescript-eslint/parser ^8.72.1 and pins its internals (scope-manager, type-utils, utils, visitor-keys) to exactly 8.72.1, so npm moves parser and every internal with it. 8.72.1 (2026-10-26) is fixes only: no-unnecessary-condition false positives on unresolved conditional types (#13062); no-unnecessary-type-assertion bounds recursive type traversal instead of catching stack overflows (#13039); typescript-estree uses one Program per tsconfig for the project service in single-run mode (#12988). GitHub's advisory database returns 0 vulnerabilities for eslint-plugin and parser.",
+  "change_type": "chore",
+  "behavior_change": "None in shipped output and none in lint results, verified by running both rather than assumed. TEN packages moved, not one. Lockfile vs merge base eafbad16 (= origin/main at audit, 0 behind): 400 entries before and after, ZERO added, ZERO removed, exactly ten node_modules entries version-changed, all 8.72.0 -> 8.72.1: @typescript-eslint/eslint-plugin, parser, project-service, scope-manager, tsconfig-utils, type-utils, types, typescript-estree, utils, visitor-keys. Root differs only in devDependencies['@typescript-eslint/eslint-plugin'] ^8.72.0 -> ^8.72.1; the declared parser range stays ^8.71.2 (satisfied by 8.72.1). The family is consistent at one version, which typescript-eslint requires. A/B eslint (`eslint . --ext .ts,.vue --format json`, the lint:report command) with the family at 8.72.0 vs 8.72.1 on the same tree: 6962 vs 6962 distinct (file,line,rule,severity,message) tuples, zero added, zero removed -- the two changed rules produce no different results on this codebase. check_client_lint_ratchet.py on the 8.72.1 report: PASS (errors 34/34, warnings 6979/7683). No client src file imports @typescript-eslint (references are eslint-disable comments only) and neither vite.config nor vitest.config loads eslint, so the production bundle cannot change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/typescript-eslint-8.72.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/typescript-eslint-8.72.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves devDependencies['@typescript-eslint/eslint-plugin'] from ^8.72.0 to ^8.72.1. package-lock.json moves the ten @typescript-eslint/* entries 8.72.0 -> 8.72.1 (version, resolved, integrity, internal pins) and updates the root range. Dependabot's incidental peer-flag churn on 16 entries (15 with unchanged versions, plus the 'peer' key on parser) was reverted so nothing else moves.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). typescript-eslint-8.72.0-bump.json covers the previous PR's diff, not this one; borrowing it is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Merge base with origin/main = eafbad16 = origin/main at audit (0 behind).",
+      "Lockfile enumerated as data (both package-lock.json trees parsed, every `packages` entry compared in full), not read from the diff view.",
+      "Dependabot's npm flipped the 'peer' flag on 16 entries; per the convention set in ec88eedd (#432) that churn is reverted -- the committed lockfile is the merge-base lockfile plus the real deltas only, with base key order preserved (re-enumerated after the revert: only the root entry and the ten @typescript-eslint entries differ from base; zero peer-flag differences; every changed diff line is a version/resolved/integrity/pin line).",
+      "Integrity of all ten moved entries == `npm view @typescript-eslint/<pkg>@8.72.1 dist.integrity`; all ten carry SLSA v1 provenance attestations; none has preinstall/install/postinstall scripts.",
+      "gh api graphql securityVulnerabilities for @typescript-eslint/eslint-plugin and @typescript-eslint/parser: 0 nodes.",
+      "A/B eslint: npm ci on this branch -> lint:report JSON; then `npm i --no-save` the ten packages @8.72.0 (confirmed installed via node_modules package.json) -> lint:report JSON; diffed as sets: 6962 vs 6962, identical.",
+      "py -3.11 scripts/ci/check_client_lint_ratchet.py --report <8.72.1 report>: PASS (also re-reports the pre-existing stale-high warnings baseline 7683 vs 6979; not touched here, per owner ruling 2026-10-27 that the ceiling is never moved inside a dependency PR).",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^8.72.0 -> ^8.72.1."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "Ten @typescript-eslint/* entries move 8.72.0 -> 8.72.1 in lockstep (forced by eslint-plugin's exact internal pins and parser peer range). Lint output identical; dev-only, not in the bundle. Peer-flag churn reverted."
+    },
+    {
+      "path": ".cbsp21/patches/typescript-eslint-8.72.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-08-TSESLINT-8-72-1",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "LINT-BASELINE-STALE",
+        "severity": "low",
+        "status": "pre-existing",
+        "summary": "client_lint_baseline.json on main records 7683 warnings; actual is 6979. The ratchet passes but no longer locks in the reduction. Belongs in its own PR after a clean re-measure (owner ruling 2026-10-27)."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-only lint toolchain patch bump with identical lint output; finding is recorded, not remediated here."
+  }
+}
