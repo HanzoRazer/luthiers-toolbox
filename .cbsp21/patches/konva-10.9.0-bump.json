@@ -1,0 +1,77 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "KONVA_10_9_0_BUMP",
+  "title": "build(deps): bump konva from 10.7.0 to 10.9.0 in /packages/client",
+  "intent": "Runtime-dependency currency, no advisory. konva is a production dependency (bundled into the client). 10.7.1 (no release notes), 10.8.0 (Transformer rotateMode with corner rotation zones; getClientRect() normalizes negative shape sizes, #2075) and 10.9.0 (batched Transformer updates; Konva.beginUpdateBatch). GitHub's advisory database returns 0 vulnerabilities for konva.",
+  "change_type": "chore",
+  "behavior_change": "None expected for this app, established by reading the published tarball diff against the app's actual Konva usage rather than from release notes. Lockfile vs merge base 0b946f97 (origin/main, merged in without force-push): 400 entries before and after, ZERO added, ZERO removed, exactly ONE version-changed entry (node_modules/konva 10.7.0 -> 10.9.0; no new dependencies). Root differs only in dependencies.konva ^10.7.0 -> ^10.9.0. Tarball diff (npm diff konva@10.7.0 konva@10.9.0) changes lib/Node.js, Shape.js, Container.js, Animation.js, Global.js, _CoreInternals.js, shapes/Transformer.js, the bundles and package.json -- matching the release notes. App usage: 5 client files import konva (useKonvaCanvas.ts, useWoodGrain.ts, useExportDxf.ts, drawCamOverlay.ts, NeckView.vue) and use only Stage/Layer and primitive shapes (Rect, Circle, Ellipse, Arc, Line, Path, Text, Label, Tag) plus destroyChildren(). ZERO uses of Konva.Transformer, rotateMode, getClientRect, cache(), toDataURL/toImage or dragBoundFunc. Change-by-change: (1) Transformer rotateMode / rotate cursor and batched Transformer updates -- unreachable, no Transformer exists in the app. (2) The new update-batch machinery in Node/Container/Animation only defers Transformer callbacks; destroyChildren() (NeckView.vue:58, drawCamOverlay.ts:28) now runs inside a batch and calls _notifySubtreeChange(), which returns immediately when Node._subtreeObserverCount is 0 -- it is 0 without a Transformer. (3) Shape.getClientRect refactor is identical for non-negative sizes and only adds normalization for negative sizes (the bug fix); the app never calls it, and the DXF export (useExportDxf.ts) reads shape attributes (radius/width/height/offset/data) directly, not client rects. The production bundle changes (konva is bundled), by design.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/konva-10.9.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/konva-10.9.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves dependencies.konva ^10.7.0 -> ^10.9.0. package-lock.json moves node_modules/konva 10.7.0 -> 10.9.0 (version, resolved, integrity) and the root range. Dependabot's incidental peer-flag churn on 16 unchanged-version entries was dropped: after merging origin/main 0b946f97 the two client files were rebuilt as main's files plus the konva delta only.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). konva-10.7.0-bump.json covers the previous bump, not this diff; borrowing it is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Dependabot branch was based on eafbad16; origin/main had since gained #467 (ts-eslint) and #468 (@types/node), both touching the same two client files. Merged origin/main 0b946f97 into the branch (no force-push; auto-merge clean), then rebuilt package-lock.json = main's lockfile with only node_modules/konva and the root konva range replaced (base key order kept; json.dumps(indent=2)+newline round-trips npm's format byte-exact), and package.json = main's file with the one range edited. git diff origin/main -- packages/client shows only the konva lines.",
+      "Lockfile enumerated as data (every `packages` entry compared in full): 400 -> 400, one version change, zero peer-flag differences vs main.",
+      "Integrity == `npm view konva@10.9.0 dist.integrity`; no preinstall/install/postinstall scripts; zero runtime dependencies; published by the sole maintainer (lavrton), same publisher as 10.7.0; no provenance attestation on either 10.7.0 or 10.9.0 (unchanged posture, not a regression); fileCount 129 both.",
+      "gh api graphql securityVulnerabilities(package: konva): 0 nodes.",
+      "npm diff konva@10.7.0 -> 10.9.0 (1947 lines): added lines scanned for fetch/XMLHttpRequest/WebSocket/eval/new Function/child_process/atob/cookie/localStorage/URLs -- only hit is the SVG xmlns string of the new Transformer rotate cursor.",
+      "grep of packages/client/src for Transformer|rotateMode|getClientRect|.cache(|toDataURL|toImage|dragBoundFunc: no Konva use (the only 'Transformer' token is an unrelated errorTransformer prop in GlobalErrorHandler.vue).",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^10.7.0 -> ^10.9.0."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "node_modules/konva 10.7.0 -> 10.9.0 only. Changed Konva code paths are Transformer-only or no-ops for this app's usage. Peer-flag churn dropped."
+    },
+    {
+      "path": ".cbsp21/patches/konva-10.9.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-08-KONVA-10-9-0",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "KONVA-10-9-1-AVAILABLE",
+        "severity": "low",
+        "status": "informational",
+        "summary": "konva 10.9.1 was published 2026-10-31, after Dependabot opened this PR. The ^10.9.0 range permits it, but the lockfile pins 10.9.0; a later Dependabot bump will pick it up. Not taken here so the audited diff stays the one Dependabot proposed."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Runtime canvas library minor bump whose changed paths are unreachable from this app's Konva usage; finding is informational."
+  }
+}
