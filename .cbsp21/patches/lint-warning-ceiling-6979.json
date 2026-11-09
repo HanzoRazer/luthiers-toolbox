@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LINT_WARNING_CEILING_6979",
+  "title": "chore(ci): lower client lint warning ceiling 7683 -> 6979",
+  "intent": "Lock in the warning reduction accumulated since the baseline was last written (#306, 432e77d7, 2026-08-19). The ceiling stayed at 7683 while the tree fell to 6979, so up to 704 new warnings could land without failing the gate. The ratchet has asked for this on every run: 'Counts fell (errors 34 -> 34, warnings 7683 -> 6979). Please lower them in client_lint_baseline.json'. Kept out of dependency PRs per owner ruling 2026-10-27; done here as its own increment after #467 merged.",
+  "change_type": "chore",
+  "behavior_change": "CI only. The lint-build lint ratchet now fails above 6979 warnings instead of above 7683. The error ceiling is unchanged at 34. No source, runtime, or dependency change. METRIC: the ratchet counts raw ESLint messages by severity (34 errors + 6979 warnings = 7013 messages). A separately reported figure of 6962 is the same report with identical (file,line,rule,severity,message) tuples de-duplicated (51 duplicates, e.g. several no-explicit-any hits on one line) -- a different metric, not the gate's, and not used here. Baseline regenerated with --write-baseline; errors_by_rule and errors_by_file are identical to the previous baseline; every warnings_by_rule entry fell or held (none rose); files_linted 1477 -> 1483.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/lint-warning-ceiling-6979.json",
+      "scripts/ci/client_lint_baseline.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/lint-warning-ceiling-6979.json",
+      "scripts/ci/client_lint_baseline.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "client_lint_baseline.json: total_warnings 7683 -> 6979, files_linted 1477 -> 1483, warnings_by_rule regenerated. total_errors, errors_by_rule, errors_by_file and _comment unchanged.",
+    "why_not_redundant": "Without it the ratchet allows 704 warnings of unnoticed regression, which defeats a regression gate."
+  },
+  "verification": {
+    "commands_run": [
+      "Authoritative count: 'Lint regression ratchet' step of main lint-build run 42558532607 (head ecbd5e0b, the #467 merge commit, Linux): errors 34 (ceiling 34), warnings 6979 (ceiling 7683), PASS.",
+      "Local Windows eslint report (`eslint . --ext .ts,.vue --format json`, the lint:report command) on a tree whose packages/client is identical to ecbd5e0b (git diff --name-only eafbad16 ecbd5e0b -- packages/client = package.json + package-lock.json only, both equal to the #467 head): 7013 messages = 34 errors + 6979 warnings, 1483 files -- matches CI exactly.",
+      "Metric reconciliation on that report: raw messages 7013; distinct tuples 6962; 7013 - 6962 = 51 collapsed duplicates. The ratchet (check_client_lint_ratchet.py) counts raw messages by severity, so 6979 is the gate's number.",
+      "check_client_lint_ratchet.py --write-baseline to a temp copy, then compared key-by-key with the old baseline: only total_warnings, files_linted, warnings_by_rule differ; no warning rule increased. Written with LF line endings.",
+      "Ratchet against the new baseline: PASS at 6979; control with one injected warning: FAIL 'warnings rose 6979 -> 6980 (+1)'."
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/client_lint_baseline.json",
+      "intent": "Lower the lint warning ceiling to the measured count.",
+      "risk": "low",
+      "behavior_change": "Ratchet fails above 6979 warnings instead of above 7683; error ceiling unchanged."
+    },
+    {
+      "path": ".cbsp21/patches/lint-warning-ceiling-6979.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-08-LINT-CEILING-6979",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI baseline data only; no architectural surface."
+  }
+}
