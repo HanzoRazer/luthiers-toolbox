@@ -7,6 +7,8 @@ on:
       - ".github/workflows/client_lint_build.yml"
       - "scripts/ci/check_client_type_check_ratchet.py"
       - "scripts/ci/client_type_check_baseline.json"
+      - "scripts/ci/check_client_lint_ratchet.py"
+      - "scripts/ci/client_lint_baseline.json"
   push:
     branches: [main]
     paths:
@@ -14,6 +16,8 @@ on:
       - ".github/workflows/client_lint_build.yml"
       - "scripts/ci/check_client_type_check_ratchet.py"
       - "scripts/ci/client_type_check_baseline.json"
+      - "scripts/ci/check_client_lint_ratchet.py"
+      - "scripts/ci/client_lint_baseline.json"
 
 concurrency:
   group: client-lint-build-${{ github.ref }}
