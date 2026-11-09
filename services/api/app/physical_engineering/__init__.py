@@ -15,6 +15,14 @@ from app.physical_engineering.evidence import (
     ResolvedEvidence,
 )
 from app.physical_engineering.policy import ValidationPolicyV1
+from app.physical_engineering.production_validation_policy import (
+    PolicySelection,
+    select_validation_policy,
+)
+from app.physical_engineering.validation_policy_record_v1 import ValidationPolicyError
+from app.physical_engineering.validation_policy_repository import (
+    FileValidationPolicyRepository,
+)
 from app.physical_engineering.proposal_v1 import (
     VALIDATOR_VERSION,
     ActionType,
@@ -43,19 +51,23 @@ __all__ = [
     "EvidenceRef",
     "EvidenceResolutionError",
     "EvidenceResolver",
+    "FileValidationPolicyRepository",
     "FrozenValidationSnapshotV1",
     "GeometryRegion",
     "InMemoryEvidenceResolver",
     "PhysicalEngineeringProposalV1",
+    "PolicySelection",
     "PhysicalEngineeringValidationV1",
     "ProposedChange",
     "ResolvedEvidence",
     "SnapshotIntegrityError",
+    "ValidationPolicyError",
     "ValidationPolicyV1",
     "ValidationResult",
     "ValidatorConfigurationError",
     "build_validation_snapshot",
     "replay_validation_snapshot",
+    "select_validation_policy",
     "to_json",
     "validate_proposal",
 ]
