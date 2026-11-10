@@ -37,7 +37,8 @@
     "commands_run": [
       "services/api/.venv/bin/python -m pytest scripts/ci/test_client_axios_reachability.py -q",
       "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this diff>",
-      "npm run build in packages/client, twice; dist manifests byte-identical; 199 files, 4117422 bytes; no axios string in dist"
+      "npm run build in packages/client, twice; dist manifests byte-identical; 199 files, 4117422 bytes; no axios string in dist",
+      "vue-tsc: 87 errors, ceiling 87, PASS. ESLint: 34 errors and 6979 warnings, ceilings hold, PASS. npm test: 803 passed, 17 todo, 1 file skipped"
     ]
   },
   "files": [

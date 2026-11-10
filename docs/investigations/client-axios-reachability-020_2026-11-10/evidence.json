@@ -1049,7 +1049,10 @@
   "verification_commands": [
     "python3 scripts/investigations/client_axios_reachability.py --src packages/client/src",
     "services/api/.venv/bin/python -m pytest scripts/ci/test_client_axios_reachability.py -q  # 14 passed",
-    "npm run build  # packages/client, twice, manifests identical",
-    "npm ls axios --all  # packages/client, axios@1.20.0 direct only"
+    "npm run build  # packages/client, twice, manifests identical, 199 files, 4117422 bytes, no axios string",
+    "npm ls axios --all  # packages/client, axios@1.20.0 direct only",
+    "python3 scripts/ci/check_client_type_check_ratchet.py --log vue-tsc  # 87 errors, ceiling 87, PASS",
+    "python3 scripts/ci/check_client_lint_ratchet.py  # 34 errors, 6979 warnings, PASS",
+    "npm test  # packages/client, 50 files passed, 1 skipped, 803 tests passed, 17 todo"
   ]
 }
