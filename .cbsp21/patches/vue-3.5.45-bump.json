@@ -1,0 +1,77 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_3_5_45_BUMP",
+  "title": "build(deps): bump vue from 3.5.44 to 3.5.45 in /packages/client",
+  "intent": "Runtime-framework currency, no advisory (the only GitHub advisory for vue covers 2.x). 3.5.45 (2026-11-05) is bug fixes and perf only: ~31 fixes concentrated in Suspense (14), runtime-core async components / directives / error boundaries, KeepAlive, Transition, hydration, compiler-dom static boolean bindings, compiler-sfc lexical scopes, v-model number modifier on Set-valued selects; perf: compiler-ssr static styles, pure-annotated initializers. The title names one package but THIRTEEN move.",
+  "change_type": "chore",
+  "behavior_change": "No observed behavior change, verified by running the app and its tests on both versions. Unlike a build-tool bump the production bundle DOES change (vue's runtime is bundled), so byte-identity is not the test. Lockfile vs merge base c6542957 (origin/main, merged in without force-push): 400 entries before and after, ZERO added, ZERO removed, THIRTEEN version-changed: the ten-package Vue family in lockstep 3.5.44 -> 3.5.45 (vue, @vue/compiler-core, compiler-dom, compiler-sfc, compiler-ssr, reactivity, runtime-core, runtime-dom, server-renderer, shared) plus three Babel packages FORCED by the new floors (@vue/compiler-core/compiler-sfc 3.5.45 require @babel/parser ^7.29.12 -> 7.29.9 -> 7.29.13, which requires @babel/types ^7.29.11 -> 7.29.8 -> 7.29.11, which requires @babel/helper-string-parser ^7.29.11 -> 7.29.7 -> 7.29.13). @vue/compiler-sfc 3.5.45 also raises its postcss floor to ^8.5.32, already satisfied on main (postcss 8.5.32 since #471), so postcss does not move. Root differs only in dependencies.vue ^3.5.44 -> ^3.5.45. App overlap with the changelog: the only touched feature the client uses non-trivially is <Suspense> around defineAsyncComponent, in exactly two live routed views (InlayWorkspaceShell /art-studio/inlay-workspace, 3 stages; SoundholeRosetteShell /art-studio/soundhole-rosette-workspace, 4 stages). Each stage has its own boundary inside a v-show panel, so boundaries mount once and are never unmounted, switched or discarded while pending -- the shapes most of the Suspense fixes address. No <KeepAlive>, no out-in <Transition>, no custom directives, no effectScope/onScopeDispose, no SSR/hydration (the 'hydrate' hits are localStorage store functions), no top-level await in any <script setup>, no multi-select bound with v-model.number. Neither shell is covered by any spec, hence the browser A/B below.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-3.5.45-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-3.5.45-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves dependencies.vue ^3.5.44 -> ^3.5.45. package-lock.json moves the ten Vue-family entries 3.5.44 -> 3.5.45 and three forced Babel entries, and the root range. Dependabot's incidental peer-flag churn (14 unchanged-version entries plus the 'peer' key on vue and @vue/compiler-dom) was dropped: after merging origin/main c6542957 the two client files were rebuilt as main's files plus these thirteen deltas only.",
+    "why_not_redundant": "Dependabot currency; this manifest exists because Dependabot cannot author one (CBSP21-NOBORROW-001). vue-3.5.44-bump.json covers the previous bump, not this diff; borrowing it is what the rule refuses -- PR #296's silent zod 4 -> 3 revert is why."
+  },
+  "verification": {
+    "commands_run": [
+      "Dependabot branch was based on 93c69e26; origin/main had since gained #470 (axios), touching the same two client files. Merged origin/main c6542957 (no force-push; auto-merge clean), then rebuilt package-lock.json = main's lockfile with only the thirteen moved entries replaced (main's 'peer' keys and key order kept; each moved entry asserted equal-version on main and the PR base first) plus the root vue range, and package.json = main's file with the one range edited. Re-enumerated: the only entries differing from main are root + the thirteen; zero peer-flag differences.",
+      "Integrity of all thirteen == `npm view <pkg>@<ver> dist.integrity` (first pass reported all N -- a CRLF artifact of my own list file, 13 CR bytes for 13 lines; re-run with CR stripped: 13/13 match). All thirteen carry SLSA v1 provenance, published by GitHub Actions, no preinstall/install/postinstall scripts.",
+      "gh api graphql securityVulnerabilities: vue -> one advisory, range >= 2.0.0-alpha.1 < 3.0.0-alpha.0 (not applicable); @babel/parser and @vue/compiler-sfc -> none.",
+      "Changelog: vuejs/core CHANGELOG.md section 3.5.45 read in full; usage of each touched feature counted in packages/client/src (Suspense 2 files, defineAsyncComponent 2 files, KeepAlive 0, mode=out-in 0, custom directives 0, effectScope/onScopeDispose 0, SSR/hydration APIs 0, multi-select with v-model.number 0, top-level await in <script setup> 0).",
+      "A/B in separate worktrees (origin/main c6542957 with vue 3.5.44; this branch with 3.5.45; installed versions confirmed): vitest --reporter=json -> 814 vs 814 tests, identical test set, ZERO per-test status differences (797 passed each; the one failing file on both is src/testing/__tests__/nodeEngineFloor.spec.ts, a known Windows-only parse failure that is green on CI). vue-tsc --noEmit -> 87 vs 87 errors, identical error sets (ratchet ceiling 87). vite build -> both exit 0, 199 files each; bundles differ as expected.",
+      "Browser A/B of the two untested Suspense routes: vite preview of each build (4173 = 3.5.44, 4174 = 3.5.45; the served entry chunk confirmed to contain each version string), headless Chromium, all non-local requests aborted so both runs see an identical offline environment (an earlier unblocked run was discarded: the production API's CORS allowed 4173 but not 4174, which confounded the Rosette stage). Each of the 7 stages activated by its tab: all 7 resolved, no fallback left showing, and per-stage rendered character and element counts IDENTICAL between builds; no page exceptions on either; the only console error on both is the aborted external request.",
+      "py -3.11 scripts/ci/check_cbsp21_gate.py --changed-files <PR files> and scripts/ci/check_cbsp21_patch_input.py run locally before push."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version range bump.",
+      "risk": "low",
+      "behavior_change": "None. Range moves ^3.5.44 -> ^3.5.45."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "risk": "low",
+      "behavior_change": "Ten Vue-family entries 3.5.44 -> 3.5.45 plus three forced @babel entries. Tests, type-check and the two Suspense routes behave identically. Peer-flag churn dropped."
+    },
+    {
+      "path": ".cbsp21/patches/vue-3.5.45-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest, hand-authored because Dependabot cannot write one.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-10-VUE-3-5-45",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [
+      {
+        "id": "SUSPENSE-SHELLS-UNTESTED",
+        "severity": "low",
+        "status": "pre-existing coverage gap, not introduced here",
+        "summary": "InlayWorkspaceShell and SoundholeRosetteShell are the only client views using <Suspense> + defineAsyncComponent -- the area most Vue patch releases touch -- and no spec mounts either. Verified for this bump by a manual browser A/B; a mount test that resolves every stage would make future Vue bumps checkable in CI. Belongs in its own PR."
+      }
+    ],
+    "acknowledged": true,
+    "acknowledgement_notes": "Runtime framework patch bump; behavior verified identical on tests, type-check and the only overlapping routes. Finding is a recorded coverage gap, not remediated here."
+  }
+}
