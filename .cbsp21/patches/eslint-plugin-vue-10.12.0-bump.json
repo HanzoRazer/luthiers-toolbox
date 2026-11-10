@@ -1,0 +1,80 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "ESLINT_PLUGIN_VUE_10_12_0_BUMP",
+  "title": "build(deps-dev): bump eslint-plugin-vue from 10.11.1 to 10.12.0 in /packages/client",
+  "intent": "Routine Dependabot currency, no advisory. Dev-only lint plugin, minor version inside the existing ^10 range. Authored by hand because Dependabot cannot author a manifest and CBSP21-NOBORROW-001 makes a borrowed one invalid; that friction is the point.",
+  "change_type": "chore",
+  "behavior_change": "None at runtime: devDependency used only by ESLint, never bundled. Lint output changes by exactly 8 warnings fewer and 0 new: 10.12.0 adds `router-link` and `nuxt-link` to the default `ignores` of vue/singleline-html-element-content-newline (confirmed in dist/rules/singleline-html-element-content-newline.js), so single-line <router-link> elements in components/auth/LoginForm.vue:124, views/auth/SignupView.vue:74,151 and views/auth/UpgradeView.vue:114 (2 warnings each) are no longer flagged. Formatting-only rule; no correctness check is lost. Errors unchanged at 34. The lint ceiling (6979) is deliberately NOT lowered here: owner ruling 2026-10-27, never move a ratchet ceiling inside a dependency PR; lowering 6979 -> 6971 is a follow-up. Lockfile enumerated against merge base 93c69e26 (400->400, 0 added, 0 removed): exactly one version moves, node_modules/eslint-plugin-vue 10.11.1->10.12.0; its dependencies and peerDependencies are unchanged and equal the registry's. Dependabot flipped `peer` on 16 unchanged-version entries (npm-version churn); dropped per main's convention since ec88eedd. Branch merged with origin/main c6542957 (after #470 axios) and the lockfile rebuilt as main's lockfile + the eslint-plugin-vue root range and package entry, so the diff against main is eslint-plugin-vue only.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/eslint-plugin-vue-10.12.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/eslint-plugin-vue-10.12.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json declares eslint-plugin-vue ^10.12.0 (was ^10.11.1). packages/client/package-lock.json resolves eslint-plugin-vue 10.12.0 (root devDependencies range + the one package entry: version, resolved, integrity). No other lockfile line differs from origin/main c6542957.",
+    "why_not_redundant": "Dependabot currency. The bump is open as PR #474 and both CBSP21 gates fail there for want of a manifest of its own; this is that manifest.",
+    "what_did_not_change": "No source file. No ESLint config. scripts/ci/client_lint_baseline.json ceilings (34 errors / 6979 warnings) unchanged. No other dependency; axios stays ^1.21.0 from #470. Lockfile `peer` flags stay as on main."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base origin/main dd692658 -> 93c69e26; origin/main had moved to c6542957 (#470); git merge origin/main (no force-push)",
+      "lockfile JSON enumeration 93c69e26 vs dd692658 -> 400->400, 0 added, 0 removed, 1 version change (eslint-plugin-vue 10.11.1->10.12.0), 16 peer-flag-only entries",
+      "lockfile rebuilt = origin/main lockfile + eslint-plugin-vue root range + package entry; serializer round-trips main byte-for-byte; git diff origin/main -- packages/client shows only the 3 eslint-plugin-vue changes",
+      "npm view eslint-plugin-vue@10.12.0: dist.integrity == lockfile; _npmUser 'GitHub Actions' (OIDC trusted publishing) with SLSA provenance v1, same as 10.11.1; no preinstall/install/postinstall; lock dependencies and peerDependencies == registry",
+      "peer check: eslint 8.57.1 satisfies ^8.57.0||^9||^10; vue-eslint-parser 10.4.1 satisfies ^10.3.0; @typescript-eslint/parser 8.72.1 satisfies ^7||^8; @stylistic/eslint-plugin optional and absent",
+      "GitHub advisories eslint-plugin-vue@10.11.1: 0, @10.12.0: 0 (control jszip@3.6.0: 2)",
+      "npm ci --ignore-scripts; npm run lint:report under 10.12.0 -> check_client_lint_ratchet.py PASS, errors 34, warnings 6971",
+      "npm i --no-save eslint-plugin-vue@10.11.1; npm run lint:report -> errors 34, warnings 6979 (== ceiling); per-message diff: 8 only-in-10.11.1 (all vue/singleline-html-element-content-newline on <router-link>), 0 only-in-10.12.0",
+      "npm pack both versions, diff dist/: bundler rebuild (339->342 files, 36132->30728 lines); added-line scan for eval/new Function/child_process/spawn/network/env/fs-writes: none (node:fs only in pre-existing no-restricted-call-after-await, read-only)",
+      "python scripts/ci/check_cbsp21_patch_input.py --base <merge-base>",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/eslint-plugin-vue-10.12.0-bump.json packages/client/package.json packages/client/package-lock.json"
+    ],
+    "manual_verifications": [
+      "Lockfile was enumerated by parsing both JSON trees, NOT by reading the diff view (PR #296 precedent).",
+      "The warning drop was attributed per message and confirmed in the rule source, not accepted from the count alone: a lint-plugin minor that silences warnings could also be one that stopped detecting real defects. It is a formatting rule's ignore list.",
+      "Ceiling left at 6979 per owner ruling; the ratchet's 'Please lower them' note is expected on this PR's lint-build log."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared devDependency version bump inside the existing ^10 range.",
+      "risk": "low",
+      "behavior_change": "None at runtime."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump, rebuilt on current main with Dependabot's peer-flag churn dropped.",
+      "risk": "low",
+      "behavior_change": "One dev-only movement: eslint-plugin-vue 10.11.1->10.12.0. No other entry differs from origin/main."
+    },
+    {
+      "path": ".cbsp21/patches/eslint-plugin-vue-10.12.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "None. Governance metadata only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. The lockfile moves nothing beyond eslint-plugin-vue. Lint warnings fall 6979 -> 6971 (formatting rule ignore-list change); ceiling deliberately not lowered in a dependency PR."
+  }
+}
