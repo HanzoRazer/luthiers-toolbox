@@ -1,0 +1,78 @@
+{
+  "order": "CLIENT-RISK-DASHBOARD-LINEAGE-021",
+  "recorded_on": "2026-11-10",
+  "base_sha": "93c69e26da887fecec272245a04dc5ba7c39aa88",
+  "ruling": "OUTCOME_B",
+  "target_baseline": "packages/client/src/views/art/risk-dashboard/",
+  "canonical_baseline": null,
+  "disposition": "WITHHELD",
+  "missing_behavior": ["RISK-L01", "RISK-L02", "RISK-L03"],
+  "pr_477": {
+    "number": 477,
+    "state": "OPEN",
+    "head": "cursor/client-axios-reachability-020-b509",
+    "inventory_rows": 20,
+    "risk_dispositions": "UNRESOLVED"
+  },
+  "cluster_files": [
+    "packages/client/src/views/art/composables/useRiskBuckets.ts",
+    "packages/client/src/views/art/composables/useRiskExport.ts",
+    "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+    "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+    "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+  ],
+  "sources": [
+    {
+      "path": "packages/client/src/views/art/composables/index.ts",
+      "sha256": "83e9b856964eec3d325b034884386fad381bfbc07de8f58792953ee54e5589e2"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "sha256": "d82d425d8620e8e46ada0a64416fc857ee8506019ef29e018c17772eb9cbfeec"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskExport.ts",
+      "sha256": "b44c9f5c2451b45877e7d94f03ab3704c7e4e38ad32d76b8f621c9ebf1f4cf4e"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "sha256": "ee11c910841367a094b02be665713871cde24cd6f6446dae61ff4328506a95bd"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+      "sha256": "7e13aaf2e29a44c9ca0ed21b6a9f58a12d3094c4ee6983b8ad76e7a2815fe1ab"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "sha256": "c478a4e2b5995bbdf845953ee5242ffa38b67601e3ee3ce5434d12ac33a1695a"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "sha256": "76c2758b4f5e45b24870965570d598ef72b55c5235aacd8b28c2c4ef04885018"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "sha256": "47d0c365f54cffb1601f736432da872e735512ed44e608accd0af43de6c045b8"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "sha256": "eb56133a0ce9d909bb1362fcfdcce627dbaa911c4f0febfbfd5c67cdef4cb617"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "sha256": "5f37e935b0eafa7160d6196190e9ddbe7b0c00750d1c17bc20f929ac008b3d7a"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "sha256": "b18d464ee2ceed84ebc1c1c83f12e23aed54cba2fc38344dce454dd622bb75a3"
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "sha256": "cc05c4ab8c73342f79aa97447cacfee6b647e8b6f96215e65a27676d27e0b450"
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "sha256": "79e2852e1ea3fbd1d97d6b2cf1dbd3aa1249ee2dc5d061883a2f2d4b59578cae"
+    }
+  ]
+}

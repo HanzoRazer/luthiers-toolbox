@@ -1,0 +1,155 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_RISK_DASHBOARD_LINEAGE_021",
+  "title": "docs(client): adjudicate the risk-dashboard lineage without merging it",
+  "intent": "Record whether the February 22 risk-dashboard decomposition is a complete refactor of the February 19 implementation. Pin both clusters with mocked Axios, classify every difference, and stop before production edits.",
+  "change_type": "test",
+  "behavior_change": "none",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-risk-dashboard-lineage-021.json",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/README.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/BEHAVIOR_MATRIX.csv",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/CONSUMER_MAP.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/HISTORY.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/ENDPOINT_CONTRACTS.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/evidence.json",
+      "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardFixtures.ts",
+      "scripts/ci/test_client_risk_dashboard_lineage.py",
+      ".github/workflows/core_ci.yml",
+      "SPRINTS.md"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/client-risk-dashboard-lineage-021.json",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/README.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/BEHAVIOR_MATRIX.csv",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/CONSUMER_MAP.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/HISTORY.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/ENDPOINT_CONTRACTS.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/evidence.json",
+      "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardFixtures.ts",
+      "scripts/ci/test_client_risk_dashboard_lineage.py",
+      ".github/workflows/core_ci.yml",
+      "SPRINTS.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds the lineage investigation, characterization tests for both risk clusters, an evidence test pinned in core CI, and a parking-lot entry. Production composables, both Vue dashboards, the router, and the Axios dependency are unchanged.",
+    "why_not_redundant": "PR #477 left the five risk files UNRESOLVED. This record compares request and response behavior, names RISK-L01 through RISK-L03, and withholds a canonical ruling until those gaps are ported. It does not delete either cluster."
+  },
+  "verification": {
+    "commands_run": [
+      "cd packages/client && npx vitest run src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_client_risk_dashboard_lineage.py -v",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this diff>",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/client-risk-dashboard-lineage-021.json",
+      "intent": "Per-PR CBSP21 patch manifest for the risk-dashboard lineage adjudication.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/README.md",
+      "intent": "Index of the evidence record and the Outcome B ruling.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/BEHAVIOR_MATRIX.csv",
+      "intent": "Behavioral inventory of both risk clusters with a classification on every row.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/CONSUMER_MAP.md",
+      "intent": "Callers, route reachability, and return-shape match for both dashboards.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/HISTORY.md",
+      "intent": "Introducing commits, the pre-split parent, and the shared download-helper edit.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/ENDPOINT_CONTRACTS.md",
+      "intent": "Shared risk endpoint contract and the fixture results from both clusters.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "intent": "Outcome B: February 22 is the target baseline, with RISK-L01 through RISK-L03 still missing.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/evidence.json",
+      "intent": "Ruling metadata and SHA-256 of the recorded risk-dashboard sources.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "intent": "Characterization tests for the February 19 composables. Mocked Axios only.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "intent": "Characterization tests for the February 22 composables. Mocked Axios only.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardFixtures.ts",
+      "intent": "Shared fixtures for both characterization specs. No live network calls.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "scripts/ci/test_client_risk_dashboard_lineage.py",
+      "intent": "Evidence gate: matrix coverage, classifications, canonical conflicts, and source hashes.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Pins the lineage evidence test so scripts/ci is not skipped.",
+      "risk": "low",
+      "behavior_change": "None at runtime; CI workflow only."
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Parking-lot entry that the lineage stop is Outcome B and production files stay.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-10-CLIENT-RISK-DASHBOARD-LINEAGE-021",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Evidence-only. No production composable, dashboard, route, or Axios change."
+  }
+}
