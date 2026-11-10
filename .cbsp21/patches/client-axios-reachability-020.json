@@ -4,7 +4,7 @@
   "coverage_min": 0.95,
   "patch_id": "CLIENT_AXIOS_REACHABILITY_020",
   "title": "docs(client): record Axios reachability and stop before removal",
-  "intent": "Adjudicate the 20 production Axios importers and stop before dependency removal. Seven rows are UNRESOLVED, so Axios stays at ^1.20.0, no importer is rewritten or deleted, and PR #470 is left open.",
+  "intent": "Adjudicate the 20 production Axios importers and stop before dependency removal. Seven rows are UNRESOLVED, so Axios stays a direct dependency (^1.20.0 at base 93c69e26; ^1.21.0 on main after the owner merged PR #470 as c6542957, which this increment did not modify), and no importer is rewritten or deleted.",
   "change_type": "docs",
   "behavior_change": "CI only. core_ci.yml runs scripts/ci/test_client_axios_reachability.py. No client runtime, route, or dependency change.",
   "risk_level": "low",

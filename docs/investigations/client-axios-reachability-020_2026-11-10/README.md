@@ -16,9 +16,11 @@ Maintenance evidence only. This record grants no production authority, no CAM au
 
 ## PR #470
 
-PR #470 remains open and unmerged. Its head is `dependabot/npm_and_yarn/packages/client/axios-1.21.0`. It changes `packages/client/package.json`, `packages/client/package-lock.json`, and adds `.cbsp21/patches/axios-1.21.0-bump.json` on that branch. That manifest is not on `main`. This branch does not modify #470.
+**Update 2026-11-10:** PR #470 was merged by the owner as `c6542957`, after this audit; main now declares `"axios": "^1.21.0"`. Axios still ships zero bytes in the production bundle, so no finding below changes. The rest of this section is as observed at the audit base.
 
-#470 is not closed. Axios stays at `^1.20.0` because this audit did not reach a retirement that is green.
+At the audit base, PR #470 was open and unmerged. Its head is `dependabot/npm_and_yarn/packages/client/axios-1.21.0`. It changes `packages/client/package.json`, `packages/client/package-lock.json`, and adds `.cbsp21/patches/axios-1.21.0-bump.json` on that branch. That manifest is not on `main`. This branch does not modify #470.
+
+This audit did not retire Axios because no retirement reached green. That decision is independent of the 1.20.0 -> 1.21.0 bump in #470.
 
 Open PRs #473, #474, #475, and #476 also touch `packages/client/package.json` and the lockfile. None of them edit the 20 Axios importers. This branch does not edit the package manifest or the lockfile, so it does not take those dependency bumps.
 
@@ -74,7 +76,7 @@ The seven `UNRESOLVED` rows are the two risk-dashboard decompositions and the ro
 
 ## Dependency disposition
 
-Axios remains a direct dependency.
+Axios remains a direct dependency. Observed at the audit base `93c69e26` (main declares `^1.21.0` since `c6542957`):
 
 - `packages/client/package.json`: `"axios": "^1.20.0"`
 - `npm ls axios --all`: `axios@1.20.0` from the client package only
@@ -97,4 +99,4 @@ On this tree the scanner reports 42 unresolved local specifiers, mostly missing 
 
 ## Explicit non-authority statement
 
-This directory is an investigation record. It does not approve a design, a toolpath, a cut, a job, or a dependency upgrade. It does not close PR #470. The next decision, which this increment does not authorize, is an owner choice of the surviving risk-dashboard and rosette-compare implementations. Until that choice exists, Axios and the 20 importers stay in the production tree.
+This directory is an investigation record. It does not approve a design, a toolpath, a cut, a job, or a dependency upgrade. It did not act on PR #470, which the owner merged separately as `c6542957`. The next decision, which this increment does not authorize, is an owner choice of the surviving risk-dashboard and rosette-compare implementations. Until that choice exists, Axios and the 20 importers stay in the production tree.

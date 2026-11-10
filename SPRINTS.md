@@ -9,7 +9,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ## CLIENT-AXIOS-REACHABILITY-020 — Axios retirement stopped (2026-11-10)
 
-**Status:** Evidence only. Axios remains `^1.20.0`. PR #470 stays open and was not modified.
+**Status:** Evidence only. Axios remains a direct dependency: `^1.20.0` at the audit base `93c69e26`, `^1.21.0` on main since the owner merged PR #470 as `c6542957` (2026-11-10). This increment did not modify #470; the version bump does not change the retirement decision.
 
 **Result:** 20 production Axios importers. 0 are used bindings from `main.ts`, `App.vue`, or the router. 13 are `DORMANT_PRESERVE` and stay at their original paths. 7 are `UNRESOLVED` (the two risk-dashboard decompositions and the rosette-compare panel plus its extracted composable). 0 were migrated, archived, or deleted. The production bundle was built twice from an unchanged client tree and is byte-identical; it contains no Axios source. Record: `docs/investigations/client-axios-reachability-020_2026-11-10/`.
 
