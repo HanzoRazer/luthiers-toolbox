@@ -1,0 +1,117 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_AXIOS_REACHABILITY_020",
+  "title": "docs(client): record Axios reachability and stop before removal",
+  "intent": "Adjudicate the 20 production Axios importers and stop before dependency removal. Seven rows are UNRESOLVED, so Axios stays at ^1.20.0, no importer is rewritten or deleted, and PR #470 is left open.",
+  "change_type": "docs",
+  "behavior_change": "CI only. core_ci.yml runs scripts/ci/test_client_axios_reachability.py. No client runtime, route, or dependency change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/core_ci.yml",
+      "SPRINTS.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/investigations/client_axios_reachability.py"
+    ],
+    "files_expected_to_change": [
+      ".github/workflows/core_ci.yml",
+      "SPRINTS.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/README.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/AXIOS_IMPORT_INVENTORY.csv",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/CAPABILITY_DISPOSITION.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/PRESERVATION_MAP.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/evidence.json",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/dist-manifest.sha256",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/investigations/client_axios_reachability.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds an evidence-only reachability scanner, inventory tests, the 20-row disposition record, and a CI pin so those tests run. Does not change client source, package.json, or the lockfile.",
+    "why_not_redundant": "The production bundle contains no Axios, and that fact is not a deletion decision. The record is the stop: unresolved risk-dashboard and rosette-compare copies block retirement, and dormant sole clients of live routes stay in the tree."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_client_axios_reachability.py -q",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this diff>",
+      "npm run build in packages/client, twice; dist manifests byte-identical; 199 files, 4117422 bytes; no axios string in dist"
+    ]
+  },
+  "files": [
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Pin the new reachability tests in core CI.",
+      "risk": "low",
+      "behavior_change": "CI runs scripts/ci/test_client_axios_reachability.py. No product behavior."
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Register the evidence stop and the deferred retirement.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/README.md",
+      "intent": "Investigation record: base SHA, PR #470, method, aggregate result, build comparison, non-authority.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/AXIOS_IMPORT_INVENTORY.csv",
+      "intent": "One disposition row for each Axios importer.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/CAPABILITY_DISPOSITION.md",
+      "intent": "Explain every row, including the competing risk and rosette implementations.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/PRESERVATION_MAP.md",
+      "intent": "Provenance for each DORMANT_PRESERVE file. Copies were not made.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/evidence.json",
+      "intent": "Machine-readable base SHA, dispositions, and production output hashes.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/dist-manifest.sha256",
+      "intent": "Per-file SHA-256 of the production client build.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/ci/test_client_axios_reachability.py",
+      "intent": "Pin scanner behavior and inventory integrity.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/client_axios_reachability.py",
+      "intent": "Evidence scanner. It does not classify deletion.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-10-CLIENT-AXIOS-REACHABILITY-020",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Evidence record and a read-only scanner. No client runtime, route, or dependency change."
+  }
+}

@@ -1,9 +1,19 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-10-23
+Last updated: 2026-11-10
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **SPRINTS.md is the parking lot** — the live index where open work registers at session end (`CI-RED-*`, `GOV-CONVERGE-*`, `*-DEFER-*`). Audit docs and handoffs are detail; entries **close here** when done. The organizing goal remains the **MVP bar** below — not the ledger itself.
+
+---
+
+## CLIENT-AXIOS-REACHABILITY-020 — Axios retirement stopped (2026-11-10)
+
+**Status:** Evidence only. Axios remains `^1.20.0`. PR #470 stays open and was not modified.
+
+**Result:** 20 production Axios importers. 0 are used bindings from `main.ts`, `App.vue`, or the router. 13 are `DORMANT_PRESERVE` and stay at their original paths. 7 are `UNRESOLVED` (the two risk-dashboard decompositions and the rosette-compare panel plus its extracted composable). 0 were migrated, archived, or deleted. The production bundle was built twice from an unchanged client tree and is byte-identical; it contains no Axios source. Record: `docs/investigations/client-axios-reachability-020_2026-11-10/`.
+
+**Consciously deferred:** choosing the surviving risk dashboard and the surviving rosette-compare baseline client; copying dormant modules to an archive; moving any live call onto `api()`; removing the dependency. None of that is authorized by the evidence record. The raw-Axios fence in `FENCE_REGISTRY.json` stays.
 
 ---
 
