@@ -1,0 +1,87 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "THREE_0_187_0_BUMP",
+  "title": "build(deps): bump three 0.186.1 -> 0.187.0 and @types/three 0.186.0 -> 0.187.0 in /packages/client",
+  "intent": "Routine Dependabot currency, no advisory. three is a production dependency (r186 -> r187); @types/three is its matching type package and moves in lockstep. Authored by hand because Dependabot cannot author a manifest and CBSP21-NOBORROW-001 makes a borrowed one invalid.",
+  "change_type": "chore",
+  "behavior_change": "Production rendering library moves r186 -> r187; measured no visible change in the one live consumer. three is shipped: it is bundled into the DxfToGcodeView chunk (REVISION '187' found in dist/assets/DxfToGcodeView-*.js) via main.ts -> router -> DxfToGcodeView -> ToolpathPlayer -> ToolpathCanvas3D.vue. r187's API removals are CubeUVReflectionMapping (with the cube_uv_reflection shader chunk; PMREM envmaps now flagged by texture.isPMREMTexture) and the r177-deprecated ColorManagement.fromWorkingColorSpace/toWorkingColorSpace aliases; the client uses none of them, nor any envMap, PMREM, render target, setViewport/setScissor or ArrayCamera. ToolpathCanvas3D uses Scene, PerspectiveCamera, WebGLRenderer (antialias, setSize, setPixelRatio), Ambient/DirectionalLight, MeshPhong/MeshBasic/LineBasic/LineDashed/SpriteMaterial, Line, Mesh, Sprite, CanvasTexture, GridHelper, Raycaster and OrbitControls. Source diff of those paths: WebGLRenderer viewport now uses getTargetPixelRatio(), which returns the same _pixelRatio when no render target is set; ColorManagement._getMatrix multiplication order fixed (identity for sRGB/linear-sRGB, which share primaries); Color CSS parser accepts decimal percentages; MeshPhongMaterial change is a doc comment only (displacementScale was already 1); Line.copy and Sprite.toJSON gain fields. OrbitControls (examples/jsm) changes are bug fixes: dolly used clientX for both axes (now clientY), zoomToCursor during drag, state reset when rotate/pan are disabled; key listeners move from getRootNode() back to ownerDocument. Rendered A/B of the real ToolpathCanvas3D (fixed 57-segment fixture: rapids, 3 depth passes of cuts and cw/ccw arcs, stock, grid, tool at 50% progress; headless Chromium/SwiftShader, 800x600, DPR 1): r186 vs r187 = 0 differing pixels of 480,000 (66,899 non-background). Controls: r186 re-run = 0 (deterministic); r186 tool diameter 6 -> 6.5 mm = 2,683 differing pixels (the method detects a 0.5 mm change). A first attempt that reported 0 was discarded: a stale dev server was still serving r187 for both sides, caught because the harness reports THREE.REVISION. Not covered by the A/B: interactive OrbitControls behaviour (the dolly-axis fix above is a behaviour change, in the corrective direction), the heatmap/measurement modes, and real GPUs. three@0.187.0 emits a THREE_CJS_DEPRECATED warning on require('three'); nothing in the repo requires it (Vite resolves the ESM build), and the package export map is identical between versions. @types/three 0.187.0: types only; vue-tsc stays at 87. Lockfile enumerated against merge base f7b8a6aa: exactly two versions move (three, @types/three); both packages' dependencies and peerDependencies are unchanged and equal the registry's. Dependabot flipped `peer` on 16 unchanged-version entries (npm-version churn); dropped per main's convention since ec88eedd. Branch merged with origin/main 111f401b (after #474 eslint-plugin-vue) and the lockfile rebuilt as main's lockfile + the three/@types/three root ranges and package entries; then merged again with origin/main 76df1ac3 (after #476 vue-tsc 3.3.14), a clean merge whose lockfile is byte-identical to main's lockfile + the three/@types/three root ranges and package entries (405 entries; all 12 entries #476 moved are unchanged). The diff against main is three/@types/three only.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/three-0.187.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/three-0.187.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json declares three ^0.187.0 (was ^0.186.1) and @types/three ^0.187.0 (was ^0.186.0). packages/client/package-lock.json resolves three 0.187.0 and @types/three 0.187.0 (root dependency/devDependency ranges + the two package entries: version, resolved, integrity). No other lockfile entry differs from origin/main 76df1ac3.",
+    "why_not_redundant": "Dependabot currency. The bump is open as PR #475 and both CBSP21 gates fail there for want of a manifest of its own; this is that manifest.",
+    "what_did_not_change": "No source file. No three.js call site. Neither @types/three's six dependencies nor three's (none) change, so no transitive package moves. vue-tsc ceiling (87) and lint ceilings (34 / 6979) unchanged. vue-tsc 3.3.14 and its @volar/vscode-* tree (#476), eslint-plugin-vue 10.12.0 (#474), vue 3.5.45 (#473) and axios 1.21.0 (#470) are all as on main. Lockfile `peer` flags stay as on main."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge-base d04dda4e origin/main -> f7b8a6aa; origin/main had moved to 111f401b (#474); git merge-tree --write-tree origin/main d04dda4e -> 5986e739; git merge origin/main (no force-push) -> tree 5986e739 == predicted",
+      "lockfile JSON enumeration f7b8a6aa vs d04dda4e -> 400->400, 0 added, 0 removed, 2 version changes (three 0.186.1->0.187.0, @types/three 0.186.0->0.187.0), 16 peer-flag-only entries; f7b8a6aa vs main 111f401b differs only in eslint-plugin-vue (#474)",
+      "lockfile rebuilt = origin/main lockfile + three/@types/three root ranges + package entries; serializer round-trips main byte-for-byte; 400 entries; only '', node_modules/three, node_modules/@types/three differ from main",
+      "npm view three@0.187.0 / @types/three@0.187.0: dist.integrity == lockfile; publishers mrdoob / types (same as prior versions); no install scripts; three has no dependencies; @types/three dependencies unchanged",
+      "GitHub advisories: three -> 2 ever (GHSA-fq6p-x6j3-cmmq <0.125.0, GHSA-7vvq-7r29-5vg3 <0.137.0), neither affects 0.186.1 or 0.187.0; @types/three -> 0",
+      "npm pack three@0.186.1 and @0.187.0; diff -rq src/ (323 files) and examples/jsm/controls/OrbitControls.js; exported constants diff -> only CubeUVReflectionMapping removed; removed deprecations -> ColorManagement.fromWorkingColorSpace/toWorkingColorSpace",
+      "git grep packages/client/src for CubeUVReflectionMapping|fromWorkingColorSpace|toWorkingColorSpace|PMREM|envMap|setRenderTarget|WebGLRenderTarget|setViewport|setScissor|ArrayCamera|require('three') -> none",
+      "reachability walker from main.ts (789 value-reachable files): ToolpathCanvas3D.vue LIVE; CamBackplot3D.vue and CamBackplotPanel.vue orphan; control auth/supabase.ts LIVE",
+      "npm ci --ignore-scripts; vue-tsc --noEmit -> 87 errors (== ceiling)",
+      "vite build -> success; REVISION 187 present in assets/DxfToGcodeView-*.js",
+      "npm run lint:report -> 34 errors / 6971 warnings (== main; ceilings 34 / 6979), after excluding 5 no-explicit-any warnings from the uncommitted harness file, which was later deleted",
+      "vitest run -> 797 passed, 17 todo; 1 suite (src/testing/__tests__/nodeEngineFloor.spec.ts) fails to load locally with SyntaxError under BOTH three 0.186.1 and 0.187.0 (blob identical to main; passes in CI build-and-test) -> local environment, unrelated",
+      "rendered A/B: throwaway Vite harness mounting ToolpathCanvas3D + pinia store with a fixed fixture; playwright-core 1.49.1 + Chromium (SwiftShader); pixelmatch threshold 0: r186 vs r187 = 0 px; r186 rerun = 0 px; r186 dia 6 vs 6.5 = 2,683 px. Harness deleted; not committed",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/three-0.187.0-bump.json packages/client/package.json packages/client/package-lock.json",
+      "refresh after #476: git merge-tree --write-tree origin/main(76df1ac3) fbf434ce -> 473e5c96; git merge origin/main (no force) -> clean, tree 473e5c96 == predicted",
+      "lockfile on the merged tree vs main 76df1ac3: 405 -> 405; only '', node_modules/three, node_modules/@types/three differ; parsed AND byte-equal to main + the three/@types/three entries; #476's 12 moved entries (vue-tsc 3.3.14, @vue/language-core 3.3.14, @volar/* 2.4.30, vscode-* ) unchanged; vue 3.5.45, axios 1.21.0, eslint-plugin-vue 10.12.0",
+      "rendered A/B not repeated: #476 moves only type-check tooling (vue-tsc, @volar/*, vscode-*), none of which is bundled or touches three"
+    ],
+    "manual_verifications": [
+      "Lockfile was enumerated by parsing both JSON trees, NOT by reading the diff view (PR #296 precedent).",
+      "three IS shipped to production (unlike axios in #470): src/components/cam/ToolpathCanvas3D.vue is value-reachable main.ts -> router/index.ts -> views/DxfToGcodeView.vue -> components/cam/ToolpathPlayer.vue. src/components/cam/CamBackplot3D.vue is not reachable from main.ts (its only importer, CamBackplotPanel.vue, is itself unreachable). Reachability walker positive control: auth/supabase.ts LIVE.",
+      "No spec imports three or either 3D component, so CI's green tests do not exercise rendering; the rendered A/B below is the only rendering evidence."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared version bumps: three (dependency) and @types/three (devDependency).",
+      "risk": "low",
+      "behavior_change": "See top-level behavior_change."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump, rebuilt on current main with Dependabot's peer-flag churn dropped.",
+      "risk": "low",
+      "behavior_change": "Two movements: three 0.186.1->0.187.0 (production) and @types/three 0.186.0->0.187.0 (types only). No other entry differs from origin/main 76df1ac3."
+    },
+    {
+      "path": ".cbsp21/patches/three-0.187.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "None. Governance metadata only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. Note for the record: CamBackplot3D.vue is unreachable from main.ts (dead code, not addressed here)."
+  }
+}
