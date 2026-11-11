@@ -30,6 +30,16 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
+## CLIENT-RISK-DASHBOARD-LINEAGE-021 — Risk dashboard lineage (registered 2026-11-10)
+
+**Status:** Evidence only. Stopped before production edits. February 22 `packages/client/src/views/art/risk-dashboard/` is the target baseline and is not canonical yet.
+
+**Missing before a canonical ruling:** `RISK-L01` trimmed query values, `RISK-L02` clear the selected bucket when lane, preset, or job changes, `RISK-L03` clear and refresh once when since or until changes. Record: `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md`.
+
+**Left in place:** both risk clusters, both unrouted dashboards, and Axios. Removal waits for a later PR after this adjudication is merged. Axios migration stays behind the consolidated Axios change and PR #477 until Risk Dashboard and Rosette Compare each have a canonical baseline.
+
+---
+
 ## LTB-MVS-BEGINNER-PROPOSAL-HARNESS-001 — Beginner proposal adapter (registered 2026-10-21)
 
 **Status:** Merged as PR #453, commit `8a2f33cb`. Not a recovery.
