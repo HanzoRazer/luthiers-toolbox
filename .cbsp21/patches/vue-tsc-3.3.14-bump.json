@@ -1,0 +1,65 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "VUE_TSC_3_3_14_BUMP",
+  "title": "build(deps-dev): bump vue-tsc from 3.3.13 to 3.3.14",
+  "intent": "Routine patch-level currency for the client type checker. No advisory is driving it. Dependabot opened it without a manifest, so both CBSP21 gates failed (CBSP21-NOBORROW-001). This manifest is the only new file. The branch also merges main 111f401b (no force-push), and the lockfile drops Dependabot's peer-flag churn.",
+  "change_type": "chore",
+  "behavior_change": "Dev tooling only. vue-tsc runs only in `npm run type-check` (client_lint_build.yml, core_ci.yml). vite build does not use it, so the shipped bundle cannot change. The title hides transitive moves. I enumerated every entry in packages/client/package-lock.json against origin/main 111f401b (400 -> 405 entries). Version changes (6): vue-tsc 3.3.13->3.3.14, @vue/language-core 3.3.13->3.3.14, @volar/typescript 2.4.28->2.4.30, @volar/language-core 2.4.28->2.4.30, @volar/source-map 2.4.28->2.4.30, vscode-uri 3.1.0->3.2.0. Added (5, all dev): @volar/language-service 2.4.30 (now a hard dependency of @volar/typescript 2.4.30), and its LSP tree: vscode-languageserver-protocol 3.18.5, vscode-jsonrpc 10.0.0, vscode-languageserver-types 3.18.5, vscode-languageserver-textdocument 1.0.16. Removed 0. Note for later: @volar/typescript 2.4.30 now declares an optional peer `typescript: <7` (client is on 6.0.3, so it is satisfied). A future TypeScript 7 bump will hit that range. Dependabot's lockfile also flipped the npm 'peer' flag on 16 entries whose versions did not change. That is npm-version noise; main has dropped it since ec88eedd (#432). I removed it by rebuilding the lockfile as main's lock plus the 11 moved entries and the root devDependencies range. The lockfile diff is now the bump only, and eslint-plugin-vue 10.12.0 (#474) stays intact. All 11 tarballs match the lockfile integrity and resolve from registry.npmjs.org. The 6 vue/volar packages were published via npm OIDC from GitHub Actions with SLSA provenance. The 5 vscode-* packages were published by microsoft1es without provenance; this is normal for that family. No package has an install hook. GitHub advisories list 0 for all 11 versions (control query jszip@3.6.0 -> 2).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/vue-tsc-3.3.14-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/vue-tsc-3.3.14-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Dependabot's commit bumps vue-tsc ^3.3.13 -> ^3.3.14 and its lockfile entries. A merge of main 111f401b brings the branch current. A follow-up commit adds this manifest and reverts the 16 peer-flag-only lockfile entries to main's form.",
+    "why_not_redundant": "Dependabot currency. The PR cannot pass the required CBSP21 gates without its own manifest."
+  },
+  "verification": {
+    "commands_run": [
+      "Full lockfile enumeration (every packages entry: version-changed / added / removed / field-diff) against origin/main 111f401b; the result is recorded in behavior_change",
+      "npm ci on the rebuilt lockfile: clean, lockfile unmodified; npm ls -> vue-tsc 3.3.14, @vue/language-core 3.3.14, @volar/typescript 2.4.30",
+      "npm run type-check + scripts/ci/check_client_type_check_ratchet.py: PASS 87/87",
+      "Same tree with vue-tsc 3.3.13 (npm i --no-save; it removed exactly the 5 added packages): 87 errors. The file:line:code error sets for 3.3.13 and 3.3.14 are identical, despite ~15 template-codegen fixes in the 3.3.14 release notes. The bump neither adds nor hides any error",
+      "npm view dist.integrity == lockfile integrity for all 11 moved packages; _npmUser recorded; no preinstall/install/postinstall/prepare scripts",
+      "gh advisories (ecosystem=npm, affects=<pkg>@<ver>): 0 for all 11; control jszip@3.6.0 2",
+      "check_cbsp21_gate.py and check_cbsp21_patch_input.py --base origin/main: PASS"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "vue-tsc ^3.3.14 (Dependabot).",
+      "risk": "low",
+      "behavior_change": "Dev-only type-checker patch bump."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump, with Dependabot's peer-flag churn removed.",
+      "risk": "low",
+      "behavior_change": "6 dev entries move and 5 dev entries are added (the volar language-service / vscode LSP tree). Nothing in the production dependency graph changes."
+    },
+    {
+      "path": ".cbsp21/patches/vue-tsc-3.3.14-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-07-04-002",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dev-tooling patch bump; no architectural surface and no source edit."
+  }
+}
