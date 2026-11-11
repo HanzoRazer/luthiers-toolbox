@@ -168,6 +168,44 @@ class ReachabilityFixtures(unittest.TestCase):
             self.assertFalse(by_path["dormant.ts"]["binding_reachable"])
             self.assertTrue(by_path["dormant.ts"]["evaluated_reachable"])
 
+    def test_every_resolvable_extension_is_discovered(self) -> None:
+        # Resolution accepts .jsx/.mjs/.cjs; discovery must too, or a module the
+        # resolver finds silently drops out of the walk and out of the importers.
+        for ext in (".jsx", ".mjs", ".cjs"):
+            with self.subTest(ext=ext), tempfile.TemporaryDirectory() as tmp:
+                src = Path(tmp)
+                _write(src, "main.ts", "import { ping } from './api/ping'\n")
+                _write(src, f"api/ping{ext}", "import axios from 'axios'\nexport function ping() { return axios.get('/ping') }\n")
+                payload = scan.analyze(src, ["main.ts"])
+                self.assertEqual(payload["axios_importers"], [f"api/ping{ext}"])
+                self.assertTrue(payload["importers"][0]["binding_reachable"])
+
+    def test_barrel_side_effect_import_runs_with_binding_import(self) -> None:
+        # main.ts only demands `ping`, which the barrel re-exports from elsewhere.
+        # The barrel is still evaluated, so its bare side-effect import runs.
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp)
+            _write(src, "main.ts", "import { ping } from './api'\n")
+            _write(src, "api/index.ts", "import './interceptors'\nexport { ping } from './ping'\n")
+            _write(src, "api/ping.ts", "export function ping() { return 1 }\n")
+            _write(src, "api/interceptors.ts", "import axios from 'axios'\naxios.interceptors.request.use((c) => c)\n")
+            payload = scan.analyze(src, ["main.ts"])
+            self.assertEqual(payload["axios_importers"], ["api/interceptors.ts"])
+            self.assertTrue(payload["importers"][0]["binding_reachable"])
+
+    def test_axios_reexport_and_subpath_count_as_importers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp)
+            _write(src, "http.ts", "export { default as http } from 'axios'\n")
+            _write(src, "star.ts", "export * from 'axios'\n")
+            _write(src, "sub.ts", "import { AxiosHeaders } from 'axios/index.js'\nexport const h = AxiosHeaders\n")
+            _write(src, "req.js", "const a = require('axios/dist/node/axios.cjs')\n")
+            _write(src, "unrelated.ts", "import x from 'axios-retry'\nexport const y = x\n")
+            self.assertEqual(
+                scan.axios_importers(src),
+                ["http.ts", "req.js", "star.ts", "sub.ts"],
+            )
+
 
 class InventoryIntegrity(unittest.TestCase):
     def test_inventory_matches_scanned_importers_exactly_once(self) -> None:
@@ -199,15 +237,16 @@ class InventoryIntegrity(unittest.TestCase):
                 self.assertIn(row["path"], PRESERVATION.read_text(encoding="utf-8"))
 
     def test_unresolved_blocks_dependency_removal(self) -> None:
+        # One-directional: removing Axios requires zero UNRESOLVED rows. While
+        # Axios is still declared, any number (including zero, once the owner
+        # resolves every row) is allowed, so resolving rows never turns CI red.
         package = json.loads(PACKAGE.read_text(encoding="utf-8"))
-        axios_declared = "axios" in package.get("dependencies", {})
+        declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
         with INVENTORY.open(encoding="utf-8", newline="") as handle:
             rows = list(csv.DictReader(handle))
         unresolved = [row["path"] for row in rows if row["disposition"] == "UNRESOLVED"]
-        if not axios_declared:
+        if "axios" not in declared:
             self.assertEqual(unresolved, [], "a removal PR cannot contain UNRESOLVED")
-        else:
-            self.assertGreater(len(unresolved), 0)
 
     def test_cli_writes_only_the_requested_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

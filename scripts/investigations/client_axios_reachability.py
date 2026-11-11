@@ -13,7 +13,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-_EXTENSIONS = (".ts", ".tsx", ".vue", ".js", ".mjs", ".cjs")
+# Single source of truth: files discovered and specifiers resolved use the same
+# list, so a resolvable module can never silently drop out of the walk.
+_EXTENSIONS = (".ts", ".tsx", ".vue", ".js", ".jsx", ".mjs", ".cjs")
 _IMPORT_FROM = re.compile(
     r"""^[ \t]*import\s+(?P<body>[\s\S]*?)\s+from\s+['\"](?P<spec>[^'\"]+)['\"]\s*;?\s*$""",
     re.M,
@@ -26,7 +28,7 @@ _EXPORT_FROM = re.compile(
 )
 _LINE_COMMENT = re.compile(r"""(?m)//.*?$""")
 _BLOCK_COMMENT = re.compile(r"""/\*.*?\*/""", re.S)
-_REQUIRE_AXIOS = re.compile(r"""(?m)^[ \t]*(?:const|let|var)\s+\w+\s*=\s*require\(\s*['\"]axios['\"]\s*\)""")
+_REQUIRE_AXIOS = re.compile(r"""(?m)^[ \t]*(?:const|let|var)\s+\w+\s*=\s*require\(\s*['\"]axios(?:/[^'\"]*)?['\"]\s*\)""")
 _LOCAL_VALUE = re.compile(
     r"^[ \t]*export\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|class|const|let|var|enum)\s+(\w+)",
     re.M,
@@ -43,6 +45,7 @@ class Edge:
     type_only: bool
     namespace: bool
     dynamic: bool
+    side_effect: bool = False
     resolved: str | None = None
     outside_src: bool = False
 
@@ -190,7 +193,7 @@ def parse_module(path: Path, src: Path) -> Module:
         names, type_only, namespace = _import_names(match.group("body"))
         module.imports.append(Edge(match.group("spec"), names, type_only, namespace, False))
     for match in _IMPORT_SIDE.finditer(joined):
-        module.imports.append(Edge(match.group("spec"), None, False, False, False))
+        module.imports.append(Edge(match.group("spec"), None, False, False, False, side_effect=True))
     for match in _EXPORT_FROM.finditer(joined):
         module.reexports.append((match.group("spec"), match.group("spec"), _export_map(match.group("body")), bool(match.group("kind"))))
     for spec in _dynamic_specs(script):
@@ -231,14 +234,20 @@ def _rel_or_outside(resolved: Path | None, src: Path) -> tuple[str | None, bool]
         return None, True
 
 
+def _source_files(src: Path) -> list[Path]:
+    return sorted(
+        path
+        for ext in _EXTENSIONS
+        for path in src.rglob(f"*{ext}")
+        if "node_modules" not in path.parts and path.is_file()
+    )
+
+
 def load_modules(src: Path) -> dict[str, Module]:
     modules: dict[str, Module] = {}
-    for pattern in ("*.ts", "*.tsx", "*.vue", "*.js"):
-        for path in src.rglob(pattern):
-            if "node_modules" in path.parts:
-                continue
-            module = parse_module(path, src)
-            modules[module.path] = module
+    for path in _source_files(src):
+        module = parse_module(path, src)
+        modules[module.path] = module
     for module in modules.values():
         importer = src / module.path
         for edge in module.imports:
@@ -253,9 +262,15 @@ def load_modules(src: Path) -> dict[str, Module]:
     return modules
 
 
+def _is_axios(specifier: str) -> bool:
+    return specifier == "axios" or specifier.startswith("axios/")
+
+
 def imports_axios(path: Path, src: Path) -> bool:
     module = parse_module(path, src)
-    if any(edge.specifier == "axios" for edge in module.imports):
+    specs = [edge.specifier for edge in module.imports]
+    specs.extend(spec for spec, _resolved, _mapping, _type_only in module.reexports)
+    if any(_is_axios(spec) for spec in specs):
         return True
     script = _strip_comments(_script_text(path, path.read_text(encoding="utf-8")))
     return _REQUIRE_AXIOS.search(script) is not None
@@ -263,12 +278,9 @@ def imports_axios(path: Path, src: Path) -> bool:
 
 def axios_importers(src: Path) -> list[str]:
     found: list[str] = []
-    for pattern in ("*.ts", "*.tsx", "*.vue", "*.js"):
-        for path in src.rglob(pattern):
-            if "node_modules" in path.parts:
-                continue
-            if imports_axios(path, src):
-                found.append(path.relative_to(src).as_posix())
+    for path in _source_files(src):
+        if imports_axios(path, src):
+            found.append(path.relative_to(src).as_posix())
     return sorted(found)
 
 
@@ -339,10 +351,13 @@ def _walk(
                         push(provider, frozenset({demanded}))
                 else:
                     local_or_unknown = True
-        if local_or_unknown or not binding:
-            for edge in module.imports:
-                if edge.type_only:
-                    continue
+        for edge in module.imports:
+            if edge.type_only:
+                continue
+            # A bare `import './x'` runs whenever this module is evaluated, even
+            # when every demanded binding is re-exported from elsewhere, so it is
+            # followed in binding mode too.
+            if local_or_unknown or not binding or edge.side_effect:
                 push(edge.resolved, None if edge.namespace or edge.names is None else edge.names)
         if (not binding) or names is None:
             for _spec, resolved, _mapping, type_only in module.reexports:
