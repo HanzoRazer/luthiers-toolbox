@@ -1,0 +1,65 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SUSPENSE_SHELL_MOUNT_TEST",
+  "title": "test(client): mount both Suspense workspace shells and resolve every async stage",
+  "intent": "Close finding SUSPENSE-SHELLS-UNTESTED recorded in .cbsp21/patches/vue-3.5.45-bump.json (#473). InlayWorkspaceShell and SoundholeRosetteShell are the only client components that combine <Suspense> with defineAsyncComponent, and no spec covered either, so the #473 Vue bump had to be verified by a hand-run headless-browser A/B. This spec puts that check into the gating Vitest step of Client Lint & Build so future Vue bumps are checked by CI.",
+  "change_type": "test",
+  "behavior_change": "Test only. One new spec file; no source, runtime, dependency, workflow, or baseline change. Client Lint & Build's existing 'Run tests (Vitest)' step (gating) picks it up through vitest.config.ts include src/**/*.spec.ts.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "packages/client/src/views/art-studio/__tests__/SuspenseShells.spec.ts",
+      ".cbsp21/patches/suspense-shell-mount-test.json"
+    ],
+    "files_expected_to_change": [
+      "packages/client/src/views/art-studio/__tests__/SuspenseShells.spec.ts",
+      ".cbsp21/patches/suspense-shell-mount-test.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "New spec mounting each shell with its REAL stage views (no component stubs), Pinia active, and global fetch rejecting (backend offline). Per shell, test 1 asserts every Suspense panel shows its exact fallback text at mount (the boundary is genuinely async), then waits until every fallback is gone and asserts each panel contains the stage's own view (a selector only that view renders) with real content. Test 2 clicks every tab and asserts exactly one panel is visible and aria-selected matches. Both tests fail on any app errorHandler call or any [Vue warn]/[Vue error] console message.",
+    "why_not_redundant": "No existing spec mounts either shell (git grep for InlayWorkspaceShell / SoundholeRosetteShell in *.spec.ts / *.test.ts on main: none). HeadstockDesignerView.spec.ts mounts that view directly, never through Suspense."
+  },
+  "verification": {
+    "commands_run": [
+      "npx vitest run src/views/art-studio/__tests__/SuspenseShells.spec.ts (Windows, Node 24.11.0, vitest 2.1.9, vue 3.5.45 from main 111f401b): 4 passed; repeated 3 more times, 4 passed each.",
+      "Mutation M1 (fretboard loader rejects): 2 Inlay tests FAIL - 'fretboard: h1 rendered: expected false to be true' and errorHandler received 'M1 loader broken'. Note: the fallback DID clear on a rejected loader, so the per-stage marker check, not the fallback check, is what catches this case.",
+      "Mutation M2 (binding loader never resolves): 2 Soundhole tests FAIL (fallback never clears).",
+      "Mutation M3 (purfling panel v-show bound to 'binding'): tab test FAIL - 'with purfling active, purfling visible: expected false to be true'.",
+      "Mutation M4 (pattern stage loads BindingDesignerView instead): FAIL - 'pattern: .inlay-pattern-view rendered: expected false to be true'.",
+      "Mutation M5 (unresolvable component inside a stage panel): 2 Soundhole tests FAIL on captured [Vue warn] messages.",
+      "All mutations reverted with git checkout; git status shows only the new spec.",
+      "npm run type-check + check_client_type_check_ratchet.py: 87 errors, ceiling 87, PASS; zero errors reference SuspenseShells.spec.ts.",
+      "npx eslint on the new spec: 0 errors, 0 warnings (lint ceiling unaffected).",
+      "Full npx vitest run x3: 801 passed / 17 todo in two runs; one run had 1 failure in src/router/index.spec.ts ('redirects bare /instrument-hub', a router.push that lazy-loads a real view under the default 5 s timeout) which passed in isolation and in the two other full runs -- pre-existing load sensitivity, not touched here. src/testing/__tests__/nodeEngineFloor.spec.ts fails to parse locally (SyntaxError at 4:31) with or without the new spec; it passes on main CI (Linux)."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/src/views/art-studio/__tests__/SuspenseShells.spec.ts",
+      "intent": "Mount both Suspense shells with real stages and assert every async stage resolves and tab switching works, with no Vue warnings or errors.",
+      "risk": "low",
+      "behavior_change": "none (test only); adds ~3.6 s to the Vitest step"
+    },
+    {
+      "path": ".cbsp21/patches/suspense-shell-mount-test.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-10-SUSPENSE-SHELL-MOUNT-TEST",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Test-only addition; no architectural surface."
+  }
+}
