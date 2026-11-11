@@ -1,0 +1,63 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "LINT_WARNING_CEILING_6971",
+  "title": "chore(ci): lower client lint warning ceiling 6979 -> 6971",
+  "intent": "Lock in the 8-warning reduction from #474 (eslint-plugin-vue 10.11.1 -> 10.12.0). The ceiling stayed at 6979 while main fell to 6971, so up to 8 new warnings could land without failing the gate; the ratchet has asked for this on every run since. Kept out of the dependency PR per owner ruling 2026-10-27 (never move a ratchet ceiling inside a dependency PR); done here as its own increment after #474 merged, following the precedent of 790597e4 (7683 -> 6979).",
+  "change_type": "chore",
+  "behavior_change": "CI only. The lint-build lint ratchet now fails above 6971 warnings instead of above 6979. The error ceiling is unchanged at 34. No source, runtime, workflow or dependency change. Baseline regenerated with --write-baseline from a lint report of main 0f4f8606; compared key-by-key with the previous baseline, exactly three values differ: total_warnings 6979 -> 6971; warnings_by_rule vue/singleline-html-element-content-newline 1592 -> 1584 (the 8 single-line <router-link> warnings eslint-plugin-vue 10.12.0 now ignores by default, attributed per message in #474's manifest: LoginForm.vue:124, SignupView.vue:74,151, UpgradeView.vue:114, 2 each); files_linted 1483 -> 1484 (src/views/art-studio/__tests__/SuspenseShells.spec.ts added by #479, which contributes 0 errors and 0 warnings). total_errors, errors_by_rule, errors_by_file, every other warnings_by_rule entry and _comment are unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/lint-warning-ceiling-6971.json",
+      "scripts/ci/client_lint_baseline.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/lint-warning-ceiling-6971.json",
+      "scripts/ci/client_lint_baseline.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "client_lint_baseline.json: total_warnings 6979 -> 6971, files_linted 1483 -> 1484, warnings_by_rule['vue/singleline-html-element-content-newline'] 1592 -> 1584. Three lines.",
+    "why_not_redundant": "Without it the ratchet tolerates 8 warnings of unnoticed regression. A ratchet only ratchets if the ceiling follows the count down.",
+    "what_did_not_change": "Error ceiling 34 and its breakdowns. The type-check ceiling (87). client_lint_build.yml (its path filters already include this baseline since 790597e4, so lint-build runs on this PR and is the CI witness). No source file, no ESLint config, no dependency."
+  },
+  "verification": {
+    "commands_run": [
+      "Authoritative count: 'Lint regression ratchet' step of main Client Lint & Build run 42980711723 (head 0f4f8606, the #475 merge commit, Linux): ESLint over 1484 files; errors 34 (ceiling 34), warnings 6971 (ceiling 6979), success.",
+      "Local Windows report on a worktree at 0f4f8606 (npm ci --ignore-scripts; npm run lint:report -- --output-file <json>): errors 34, warnings 6971, 1484 files -- matches CI exactly.",
+      "Branch based on origin/main 3dcf6aec (#477 merged after the report was taken): git diff --name-only 0f4f8606 3dcf6aec -- packages/client scripts/ci/client_lint_baseline.json .github/workflows/client_lint_build.yml -> empty, so the measured counts apply unchanged (main's lint-build did not run on 3dcf6aec: path-filtered).",
+      "check_client_lint_ratchet.py --report <json> --baseline <temp copy> --write-baseline -> 'errors=34, warnings=6971, files=1484'; key-by-key comparison with the previous baseline: only total_warnings, files_linted and one warnings_by_rule entry differ; no rule increased; key set identical. Line endings normalised to LF.",
+      "Ratchet against the new baseline: PASS ('warnings 6971 (ceiling 6971)'); control with one injected warning in the report: FAIL 'warnings rose 6971 -> 6972 (+1)'.",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files .cbsp21/patches/lint-warning-ceiling-6971.json scripts/ci/client_lint_baseline.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/client_lint_baseline.json",
+      "intent": "Lower the lint warning ceiling to the measured count on main.",
+      "risk": "low",
+      "behavior_change": "Ratchet fails above 6971 warnings instead of above 6979; error ceiling unchanged."
+    },
+    {
+      "path": ".cbsp21/patches/lint-warning-ceiling-6971.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-11-LINT-CEILING-6971",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI baseline data only; no architectural surface."
+  }
+}
