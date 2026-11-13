@@ -35,8 +35,12 @@ export function useRiskBucketDetails(
   const bucketEntries = ref<BucketEntry[]>([])
   const bucketEntriesLoading = ref(false)
   const bucketEntriesError = ref<string | null>(null)
+  // Each detail request owns a generation; clearBucketDetails() also advances it.
+  // Only the current request may write entries, error, or loading state.
+  let requestGeneration = 0
 
   async function loadBucketDetails(bucket: Bucket): Promise<void> {
+    const generation = ++requestGeneration
     selectedBucket.value = bucket
     bucketEntriesLoading.value = true
     bucketEntriesError.value = null
@@ -55,16 +59,21 @@ export function useRiskBucketDetails(
         '/api/compare/risk_bucket_detail',
         { params }
       )
+      if (generation !== requestGeneration) return
       bucketEntries.value = res.data || []
     } catch (err) {
+      if (generation !== requestGeneration) return
       console.error('Failed to load bucket entries', err)
       bucketEntriesError.value = 'Failed to load bucket entries.'
     } finally {
-      bucketEntriesLoading.value = false
+      if (generation === requestGeneration) {
+        bucketEntriesLoading.value = false
+      }
     }
   }
 
   function clearBucketDetails(): void {
+    requestGeneration += 1
     selectedBucket.value = null
     bucketEntries.value = []
     bucketEntriesError.value = null

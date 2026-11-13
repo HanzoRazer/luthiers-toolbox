@@ -35,6 +35,17 @@
       ]
     }
   },
+  "request_order_guards": {
+    "reason": "Review of PR #481 found that the date-triggered refresh added for RISK-L03 let an older aggregate response overwrite a newer one, and that clearing the selection did not cancel a pending detail request.",
+    "implementations": {
+      "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts": "refresh() takes a generation number. Only the newest generation may write bucketsRaw, so an older success or failure that arrives last is discarded.",
+      "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts": "Each loadBucketDetails() call takes a generation number and clearBucketDetails() advances it. Only the current request may write entries, the error, or the loading flag.",
+      "packages/client/src/views/art/risk-dashboard/useRiskExports.ts": "Bucket exports read the bucket, job hint, and date window before the request and name the file from those values. A bucket-report failure sets the error only if the same bucket is still selected."
+    },
+    "tests": [
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts"
+    ]
+  },
   "earlier_only_resolutions": [
     {
       "source_file": "packages/client/src/views/art/composables/useRiskFilters.ts",
@@ -120,18 +131,21 @@
     },
     {
       "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
-      "sha256": "76c2758b4f5e45b24870965570d598ef72b55c5235aacd8b28c2c4ef04885018",
-      "status": "unchanged"
+      "sha256": "5755f47f0a239ac15e32f210f2757b47da89204cd3d9274909f93abb2e2f1e6d",
+      "historical_sha256": "76c2758b4f5e45b24870965570d598ef72b55c5235aacd8b28c2c4ef04885018",
+      "status": "edited"
     },
     {
       "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
-      "sha256": "47d0c365f54cffb1601f736432da872e735512ed44e608accd0af43de6c045b8",
-      "status": "unchanged"
+      "sha256": "99b3f676f7907a5f24207e3235bdcb6cda190c02346861c678dd79aca5596ec5",
+      "historical_sha256": "47d0c365f54cffb1601f736432da872e735512ed44e608accd0af43de6c045b8",
+      "status": "edited"
     },
     {
       "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
-      "sha256": "eb56133a0ce9d909bb1362fcfdcce627dbaa911c4f0febfbfd5c67cdef4cb617",
-      "status": "unchanged"
+      "sha256": "d60cf4c30b686a9ad4eaf546d79645fc3c7be5acc0af28b7797e7d672c409482",
+      "historical_sha256": "eb56133a0ce9d909bb1362fcfdcce627dbaa911c4f0febfbfd5c67cdef4cb617",
+      "status": "edited"
     },
     {
       "path": "packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",

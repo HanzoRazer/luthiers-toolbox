@@ -6,7 +6,7 @@
   "title": "fix(client): reconcile the risk dashboard and retire the February 19 cluster",
   "intent": "Port RISK-L01, RISK-L02, and RISK-L03 into the February 22 risk dashboard, declare that directory canonical, and remove the superseded February 19 files after the combined behavior is pinned. Axios stays. The dashboard stays unrouted. No CAM authority is added.",
   "change_type": "fix",
-  "behavior_change": "syncFiltersToQuery trims the five known query values and omits blanks. One watcher clears the selected bucket on lane, preset, or job edits without a new aggregate request, and clears it and refreshes once when since or until changes. The February 19 view and composables leave production. The five risk endpoints, export bytes, filenames, and JSON-report error text stay the same.",
+  "behavior_change": "syncFiltersToQuery trims the five known query values and omits blanks. One watcher clears the selected bucket on lane, preset, or job edits without a new aggregate request, and clears it and refreshes once when since or until changes. The February 19 view and composables leave production. The five risk endpoints, export bytes, filenames, and JSON-report error text stay the same. Aggregate and bucket-detail requests carry a generation number so an older response cannot overwrite a newer one or repopulate a cleared selection, and bucket exports name files from the inputs the request used.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -25,6 +25,10 @@
       "packages/client/src/views/art/composables/useRiskExport.ts",
       "packages/client/src/views/art/composables/useRiskFilters.ts",
       "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
       "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
       "scripts/ci/test_client_axios_reachability.py",
       "scripts/ci/test_client_risk_dashboard_lineage.py"
@@ -45,18 +49,22 @@
       "packages/client/src/views/art/composables/useRiskExport.ts",
       "packages/client/src/views/art/composables/useRiskFilters.ts",
       "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
       "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
       "scripts/ci/test_client_axios_reachability.py",
       "scripts/ci/test_client_risk_dashboard_lineage.py"
     ]
   },
   "diff_articulation": {
-    "what_changed": "The February 22 filter composable trims query values. RiskDashboardCrossLab.vue watches the five filter refs once, clears the selected bucket, and refreshes only for a date-window change, with an initialization guard so mount issues one aggregate request. The February 19 view, composables, and characterization spec are deleted after their hashes are recorded. The lineage gate accepts a closed reconciliation. The Axios gate keeps the 20-row inventory and expects 18 production importers. Rosette Compare stays unresolved.",
+    "what_changed": "The February 22 filter composable trims query values. RiskDashboardCrossLab.vue watches the five filter refs once, clears the selected bucket, and refreshes only for a date-window change, with an initialization guard so mount issues one aggregate request. The February 19 view, composables, and characterization spec are deleted after their hashes are recorded. The lineage gate accepts a closed reconciliation. The Axios gate keeps the 20-row inventory and expects 18 production importers. Rosette Compare stays unresolved. Aggregate and bucket-detail requests carry a generation number so an older response cannot overwrite a newer one or repopulate a cleared selection, and bucket exports name files from the inputs the request used.",
     "why_not_redundant": "PR #478 withheld canonical status because trimmed queries, selection clearing, and a single date-window refresh were missing. This patch restores those three behaviors in the February 22 view and only then removes the February 19 cluster. It does not add a route, change Axios, or grant manufacturing authority."
   },
   "verification": {
     "commands_run": [
-      "cd packages/client && npx vitest run src/views/art/__tests__/RiskDashboardCrossLab.spec.ts src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "cd packages/client && npx vitest run src/views/art/__tests__/RiskDashboardCrossLab.spec.ts src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
       "cd packages/client && npm test",
       "cd packages/client && npm run build",
       "cd packages/client && npm run type-check",
@@ -156,6 +164,30 @@
       "intent": "Pins trimmed query serialization and keeps the endpoint, export, error, and navigation cases.",
       "risk": "low",
       "behavior_change": "None at runtime; test only."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+      "intent": "Holds Axios responses in unresolved promises and settles them out of order to pin the aggregate, bucket-detail, and export request-order guards.",
+      "risk": "low",
+      "behavior_change": "None at runtime; test only."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "intent": "Each detail request takes a generation number, and clearing the selection advances it, so an obsolete response cannot write the panel.",
+      "risk": "low",
+      "behavior_change": "An out-of-order or post-clear detail response no longer changes entries, the error, or the loading flag. The current request behaves as before."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "intent": "refresh() takes a generation number so an older aggregate response cannot overwrite a newer date window.",
+      "risk": "low",
+      "behavior_change": "An older aggregate success or failure that arrives after a newer refresh is dropped. A single refresh behaves as before."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "intent": "Bucket and snapshot exports read their inputs before the request and name the file from them.",
+      "risk": "low",
+      "behavior_change": "Clearing or changing the selection during a bucket export no longer loses the file or misnames it. An obsolete bucket-report failure no longer sets the error on another bucket. Bytes and filenames are unchanged when nothing changes while the request is pending."
     },
     {
       "path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",

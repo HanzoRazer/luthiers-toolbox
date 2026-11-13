@@ -91,11 +91,12 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
 
   async function exportBucketCsv(): Promise<void> {
     if (!selectedBucket.value) return
+    const b = selectedBucket.value
 
     try {
       const params: Record<string, string> = {
-        lane: selectedBucket.value.lane,
-        preset: selectedBucket.value.preset,
+        lane: b.lane,
+        preset: b.preset,
         format: 'csv'
       }
 
@@ -104,7 +105,7 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
         responseType: 'blob'
       })
 
-      const filename = `risk_bucket_${selectedBucket.value.lane}_${selectedBucket.value.preset}.csv`
+      const filename = `risk_bucket_${b.lane}_${b.preset}.csv`
       downloadBlob(new Blob([res.data]), filename)
     } catch (err) {
       console.error('Failed to export bucket CSV', err)
@@ -113,11 +114,12 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
 
   async function exportBucketJson(): Promise<void> {
     if (!selectedBucket.value) return
+    const b = selectedBucket.value
 
     try {
       const params: Record<string, string> = {
-        lane: selectedBucket.value.lane,
-        preset: selectedBucket.value.preset,
+        lane: b.lane,
+        preset: b.preset,
         format: 'json'
       }
 
@@ -126,7 +128,7 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
         responseType: 'blob'
       })
 
-      const filename = `risk_bucket_${selectedBucket.value.lane}_${selectedBucket.value.preset}.json`
+      const filename = `risk_bucket_${b.lane}_${b.preset}.json`
       downloadBlob(new Blob([res.data]), filename)
     } catch (err) {
       console.error('Failed to export bucket JSON', err)
@@ -136,14 +138,17 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
   async function downloadBucketJson(): Promise<void> {
     if (!selectedBucket.value) return
     const b = selectedBucket.value
+    // Name the file from the inputs the request used, not from refs edited mid-flight.
+    const hint = jobFilter.value
+    const windowPart = buildWindowPart()
 
     try {
       const params: Record<string, string> = {
         lane: b.lane,
         preset: b.preset
       }
-      if (jobFilter.value) {
-        params.job_hint = jobFilter.value
+      if (hint) {
+        params.job_hint = hint
       }
 
       const res = await axios.get('/api/compare/risk_bucket_report', {
@@ -156,19 +161,22 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
         type: 'application/json'
       })
 
-      const hintPart = jobFilter.value ? `_hint-${jobFilter.value}` : ''
-      const windowPart = buildWindowPart()
+      const hintPart = hint ? `_hint-${hint}` : ''
       const stamp = filenameTimestamp()
       const filename = `bucket_report_${b.lane}_${b.preset}${hintPart}${windowPart}_${stamp}.json`
 
       downloadBlob(blob, filename)
     } catch (err) {
       console.error('Failed to download bucket JSON report', err)
-      setError('Failed to download bucket JSON report.')
+      // Do not attach an obsolete failure to a bucket the user has since closed or replaced.
+      if (selectedBucket.value === b) {
+        setError('Failed to download bucket JSON report.')
+      }
     }
   }
 
   async function downloadSnapshotJson(): Promise<void> {
+    const windowPart = buildWindowPart()
     try {
       const params: Record<string, string> = {}
       if (since.value) params.since = since.value
@@ -184,7 +192,6 @@ export function useRiskExports(options: UseRiskExportsOptions): RiskExportsState
         type: 'application/json'
       })
 
-      const windowPart = buildWindowPart()
       const stamp = filenameTimestamp()
       const filename = `risk_snapshot${windowPart}_${stamp}.json`
 

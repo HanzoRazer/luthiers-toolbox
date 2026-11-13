@@ -54,6 +54,9 @@ export function useRiskBuckets(options: UseRiskBucketsOptions): RiskBucketsState
   const { laneFilter, presetFilter, since, until } = options
 
   const bucketsRaw = ref<Bucket[]>([])
+  // Each refresh() owns a generation. Only the newest one may write state, so a
+  // slower response for an older date window cannot overwrite a newer one.
+  let requestGeneration = 0
 
   const allLanes = computed(() => {
     const set = new Set<string>()
@@ -84,6 +87,7 @@ export function useRiskBuckets(options: UseRiskBucketsOptions): RiskBucketsState
   })
 
   async function refresh(): Promise<void> {
+    const generation = ++requestGeneration
     try {
       const params: Record<string, string> = {}
       if (since.value) params.since = since.value
@@ -93,6 +97,7 @@ export function useRiskBuckets(options: UseRiskBucketsOptions): RiskBucketsState
         '/api/compare/risk_aggregate',
         { params }
       )
+      if (generation !== requestGeneration) return
       const data = res.data || []
 
       bucketsRaw.value = data.map((row) => {
@@ -122,6 +127,7 @@ export function useRiskBuckets(options: UseRiskBucketsOptions): RiskBucketsState
         }
       })
     } catch (err) {
+      if (generation !== requestGeneration) return
       console.error('Failed to load risk aggregates', err)
       bucketsRaw.value = []
     }

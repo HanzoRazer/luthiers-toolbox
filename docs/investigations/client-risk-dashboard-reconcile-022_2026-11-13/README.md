@@ -30,14 +30,28 @@ Witnesses:
 - `packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts`
 - `packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts`
 
-The five `/api/compare/risk_*` operations, export bytes, filenames, and `Failed to download bucket JSON report.` are unchanged.
+The five `/api/compare/risk_*` operations, export bytes, filenames, and `Failed to download bucket JSON report.` are unchanged when no filter or selection changes while a request is pending.
+
+## Request-order guards
+
+Review of this PR found that the date-triggered refresh from `RISK-L03` let responses be applied out of order, which made the existing out-of-order bug easier to hit.
+
+- `useRiskBuckets.refresh()` takes a generation number. Only the newest refresh writes `bucketsRaw`. An older response that arrives last is dropped, whether it succeeded or failed.
+- `useRiskBucketDetails` gives each detail request a generation number, and `clearBucketDetails()` advances it. Only the current request may set entries, the error, or the loading flag.
+- `useRiskExports` reads the bucket, job hint, and date window before each bucket or snapshot request and names the file from those values. Before this change, clearing the selection mid-download threw a `TypeError` that was logged as an export failure and no file was saved. A bucket-report failure now sets the panel error only if the same bucket is still selected.
+
+Witnesses use unresolved promises to control the order requests complete in (`packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts`). All ten fail against the unguarded composables.
 
 ## Files changed
 
 - `packages/client/src/views/art/risk-dashboard/useRiskFilters.ts`
 - `packages/client/src/views/art/RiskDashboardCrossLab.vue`
+- `packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts`
+- `packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts`
+- `packages/client/src/views/art/risk-dashboard/useRiskExports.ts`
 - `packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts`
 - `packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts`
+- `packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts` (new)
 - `scripts/ci/test_client_risk_dashboard_lineage.py`
 - `scripts/ci/test_client_axios_reachability.py`
 - `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md` (closure appended)
