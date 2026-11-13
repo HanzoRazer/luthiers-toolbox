@@ -1,0 +1,191 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_RISK_DASHBOARD_RECONCILE_022",
+  "title": "fix(client): reconcile the risk dashboard and retire the February 19 cluster",
+  "intent": "Port RISK-L01, RISK-L02, and RISK-L03 into the February 22 risk dashboard, declare that directory canonical, and remove the superseded February 19 files after the combined behavior is pinned. Axios stays. The dashboard stays unrouted. No CAM authority is added.",
+  "change_type": "fix",
+  "behavior_change": "syncFiltersToQuery trims the five known query values and omits blanks. One watcher clears the selected bucket on lane, preset, or job edits without a new aggregate request, and clears it and refreshes once when since or until changes. The February 19 view and composables leave production. The five risk endpoints, export bytes, filenames, and JSON-report error text stay the same.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-risk-dashboard-reconcile-022.json",
+      "SPRINTS.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md",
+      "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/RECONCILIATION.json",
+      "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+      "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "packages/client/src/views/art/composables/index.ts",
+      "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "packages/client/src/views/art/composables/useRiskExport.ts",
+      "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/ci/test_client_risk_dashboard_lineage.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/client-risk-dashboard-reconcile-022.json",
+      "SPRINTS.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md",
+      "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/RECONCILIATION.json",
+      "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+      "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "packages/client/src/views/art/composables/index.ts",
+      "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "packages/client/src/views/art/composables/useRiskExport.ts",
+      "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/ci/test_client_risk_dashboard_lineage.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "The February 22 filter composable trims query values. RiskDashboardCrossLab.vue watches the five filter refs once, clears the selected bucket, and refreshes only for a date-window change, with an initialization guard so mount issues one aggregate request. The February 19 view, composables, and characterization spec are deleted after their hashes are recorded. The lineage gate accepts a closed reconciliation. The Axios gate keeps the 20-row inventory and expects 18 production importers. Rosette Compare stays unresolved.",
+    "why_not_redundant": "PR #478 withheld canonical status because trimmed queries, selection clearing, and a single date-window refresh were missing. This patch restores those three behaviors in the February 22 view and only then removes the February 19 cluster. It does not add a route, change Axios, or grant manufacturing authority."
+  },
+  "verification": {
+    "commands_run": [
+      "cd packages/client && npx vitest run src/views/art/__tests__/RiskDashboardCrossLab.spec.ts src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "cd packages/client && npm test",
+      "cd packages/client && npm run build",
+      "cd packages/client && npm run type-check",
+      "cd packages/client && npm run lint:report",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_client_risk_dashboard_lineage.py scripts/ci/test_client_axios_reachability.py -q",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this diff>",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/client-risk-dashboard-reconcile-022.json",
+      "intent": "CBSP21 manifest for the risk-dashboard reconciliation.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Closes the lineage parking-lot entry and records that Rosette Compare still blocks Axios retirement.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      "intent": "Records the two retired Axios importers and the three canonical unrouted replacements without rewriting the 20-row inventory.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md",
+      "intent": "Appends the implementation closure. The Outcome B text and the 63-row matrix stay as the pre-reconciliation record.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md",
+      "intent": "Human record of the canonical declaration, the three restored behaviors, the removed files, and the non-authority statement.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/RECONCILIATION.json",
+      "intent": "Machine record of resolved findings, superseded paths, and SHA-256 preservation hashes.",
+      "risk": "low",
+      "behavior_change": "None at runtime; not imported by the application."
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "intent": "One batched filter watcher clears the selected bucket and refreshes once for a date-window change.",
+      "risk": "low",
+      "behavior_change": "Lane, preset, and job edits close bucket details without an aggregate request. Since and until edits close details and request the aggregate once. Mount still issues one aggregate request."
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "intent": "Removes the unrouted February 19 dashboard after the February 22 view covers its filter behavior.",
+      "risk": "low",
+      "behavior_change": "The unrouted February 19 view is no longer in the client tree. No route pointed at it."
+    },
+    {
+      "path": "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+      "intent": "Mounts the canonical view with mocked Axios and pins request counts and selection clearing.",
+      "risk": "low",
+      "behavior_change": "None at runtime; test only."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "intent": "Removes the February 19 characterization spec after its hash is recorded.",
+      "risk": "low",
+      "behavior_change": "None at runtime; test only."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/index.ts",
+      "intent": "Removes the February 19 barrel. Its hash is in the reconciliation record.",
+      "risk": "low",
+      "behavior_change": "No remaining source imported this barrel."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "intent": "Removes the February 19 aggregate importer. The canonical replacement is risk-dashboard/useRiskBuckets.ts.",
+      "risk": "low",
+      "behavior_change": "The unrouted February 19 aggregate client is gone. The February 22 client keeps the same GET."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskExport.ts",
+      "intent": "Removes the February 19 export importer. The canonical replacement is risk-dashboard/useRiskExports.ts.",
+      "risk": "low",
+      "behavior_change": "The unrouted February 19 export client is gone. Export bytes and filenames stay on the February 22 client."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "intent": "Removes the February 19 filter composable after trim, clear, and refresh behavior live in the February 22 view.",
+      "risk": "low",
+      "behavior_change": "The February 19 filter composable is gone. The February 22 composable now trims the same query keys."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "intent": "Pins trimmed query serialization and keeps the endpoint, export, error, and navigation cases.",
+      "risk": "low",
+      "behavior_change": "None at runtime; test only."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "intent": "Trims query values in syncFiltersToQuery and drops the unused onFiltersChanged callback.",
+      "risk": "low",
+      "behavior_change": "Whitespace around lane, preset, job_hint, since, and until is removed from the URL. A whitespace-only value is omitted. The filter refs are not rewritten."
+    },
+    {
+      "path": "scripts/ci/test_client_axios_reachability.py",
+      "intent": "Expects 18 production Axios importers and leaves Rosette Compare as the unresolved pair.",
+      "risk": "low",
+      "behavior_change": "None at runtime; CI evidence test only."
+    },
+    {
+      "path": "scripts/ci/test_client_risk_dashboard_lineage.py",
+      "intent": "Allows a canonical ruling only when the three findings are resolved and superseded files are absent with their historical hashes.",
+      "risk": "low",
+      "behavior_change": "None at runtime; CI evidence test only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-13-CLIENT-RISK-DASHBOARD-RECONCILE-022",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 1
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Unrouted display code. No route, dependency, or manufacturing-authority change. Axios remains declared."
+  }
+}

@@ -62,3 +62,18 @@ After this adjudication is merged, a separate PR can:
 7. Leave Axios on the current client dependency. Migrate it only in the later consolidated Axios change, after Risk Dashboard and Rosette Compare both have canonical baselines.
 
 This branch stops before that PR.
+
+## Implementation closure
+
+Record: `docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md`.
+
+```text
+IMPLEMENTATION_CLOSURE:
+CLIENT-RISK-DASHBOARD-RECONCILE-022
+
+CANONICAL_BASELINE:
+packages/client/src/views/art/risk-dashboard/
+
+STATUS:
+RISK-L01, RISK-L02, and RISK-L03 resolved.
+```

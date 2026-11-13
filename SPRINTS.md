@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-11-10
+Last updated: 2026-11-13
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -13,7 +13,9 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **Result:** 20 production Axios importers. 0 are used bindings from `main.ts`, `App.vue`, or the router. 13 are `DORMANT_PRESERVE` and stay at their original paths. 7 are `UNRESOLVED` (the two risk-dashboard decompositions and the rosette-compare panel plus its extracted composable). 0 were migrated, archived, or deleted. The production bundle was built twice from an unchanged client tree and is byte-identical; it contains no Axios source. Record: `docs/investigations/client-axios-reachability-020_2026-11-10/`.
 
-**Consciously deferred:** choosing the surviving risk dashboard and the surviving rosette-compare baseline client; copying dormant modules to an archive; moving any live call onto `api()`; removing the dependency. None of that is authorized by the evidence record. The raw-Axios fence in `FENCE_REGISTRY.json` stays.
+**Consciously deferred:** choosing the surviving rosette-compare baseline client; copying dormant modules to an archive; moving any live call onto `api()`; removing the dependency. None of that is authorized by the evidence record. The raw-Axios fence in `FENCE_REGISTRY.json` stays.
+
+**Follow-up (2026-11-13):** `CLIENT-RISK-DASHBOARD-RECONCILE-022` retired the two February 19 risk importers and reclassified the three February 22 importers as canonical but unrouted. The original 20-row inventory is unchanged. Current importers: 18. Rosette Compare is the remaining unresolved lineage cluster. Axios stays at `^1.21.0`. Overlay: `docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json`.
 
 ---
 
@@ -30,13 +32,13 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 ---
 
-## CLIENT-RISK-DASHBOARD-LINEAGE-021 — Risk dashboard lineage (registered 2026-11-10)
+## CLIENT-RISK-DASHBOARD-LINEAGE-021 — Risk dashboard lineage (closed 2026-11-13)
 
-**Status:** Evidence only. Stopped before production edits. February 22 `packages/client/src/views/art/risk-dashboard/` is the target baseline and is not canonical yet.
+**Status:** Closed by implementation in `CLIENT-RISK-DASHBOARD-RECONCILE-022`. February 22 `packages/client/src/views/art/risk-dashboard/` is canonical. The dashboard remains unrouted. Axios is retained at `^1.21.0`.
 
-**Missing before a canonical ruling:** `RISK-L01` trimmed query values, `RISK-L02` clear the selected bucket when lane, preset, or job changes, `RISK-L03` clear and refresh once when since or until changes. Record: `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md`.
+**Resolved:** `RISK-L01` trimmed query values, `RISK-L02` clear the selected bucket when lane, preset, or job changes, and `RISK-L03` clear and refresh once when since or until changes. The February 19 cluster is preserved by hash and Git history and is removed from production. Record: `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md` and `docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md`.
 
-**Left in place:** both risk clusters, both unrouted dashboards, and Axios. Removal waits for a later PR after this adjudication is merged. Axios migration stays behind the consolidated Axios change and PR #477 until Risk Dashboard and Rosette Compare each have a canonical baseline.
+**Still blocking Axios retirement:** Rosette Compare. The panel and `useRosetteCompareApi.ts` are the only unresolved Axios-lineage cluster. This order does not choose that baseline and does not remove Axios.
 
 ---
 
