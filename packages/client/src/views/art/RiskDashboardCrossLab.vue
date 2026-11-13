@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { SavedViewsPanel } from '@/components/ui'
 import { FiltersBar, BucketsTable, BucketDetailsPanel } from '@/components/dashboard'
 import {
@@ -226,14 +226,10 @@ const { goToLab } = useRiskNavigation({ jobFilter })
 
 function clearAllFilters(): void {
   doClearAllFilters()
-  clearBucketDetails()
-  refresh()
 }
 
 function handleApplyFilters(filters: Record<string, string>): void {
   doHandleApplyFilters(filters)
-  clearBucketDetails()
-  refresh()
 }
 
 async function handleRefresh(): Promise<void> {
@@ -266,11 +262,32 @@ function applyDefaultViewIfNeeded(): void {
 // Lifecycle
 // =============================================================================
 
+let acceptingFilterEdits = false
+
+watch(
+  () => [laneFilter.value, presetFilter.value, jobFilter.value, since.value, until.value],
+  (current, previous) => {
+    if (!acceptingFilterEdits || !previous) return
+    const selectionChanged = current[0] !== previous[0]
+      || current[1] !== previous[1]
+      || current[2] !== previous[2]
+    const windowChanged = current[3] !== previous[3] || current[4] !== previous[4]
+    if (!selectionChanged && !windowChanged) return
+    clearBucketDetails()
+    if (windowChanged) {
+      void refresh()
+    }
+  }
+)
+
 onMounted(async () => {
   applyQueryToFilters()
-  // Wait for panel to mount and load views before applying default
+  // Wait for panel to mount and load views before applying default.
+  // Filter edits during this setup stay ignored so mount issues one aggregate request.
   await nextTick()
   applyDefaultViewIfNeeded()
-  refresh()
+  await nextTick()
+  acceptingFilterEdits = true
+  await refresh()
 })
 </script>

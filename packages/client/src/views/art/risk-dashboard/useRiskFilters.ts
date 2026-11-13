@@ -50,9 +50,7 @@ export interface RiskFiltersState {
 // Composable
 // ============================================================================
 
-export function useRiskFilters(
-  onFiltersChanged?: () => void
-): RiskFiltersState {
+export function useRiskFilters(): RiskFiltersState {
   const router = useRouter()
   const route = useRoute()
 
@@ -162,7 +160,6 @@ export function useRiskFilters(
     since.value = start
     until.value = end
     syncFiltersToQuery()
-    onFiltersChanged?.()
   }
 
   function applyLanePreset(id: string): void {
@@ -179,7 +176,6 @@ export function useRiskFilters(
     until.value = end
 
     syncFiltersToQuery()
-    onFiltersChanged?.()
   }
 
   function clearAllFilters(): void {
@@ -190,7 +186,6 @@ export function useRiskFilters(
     until.value = ''
     quickRangeMode.value = 'all'
     syncFiltersToQuery()
-    onFiltersChanged?.()
   }
 
   function getCurrentFilters(): Record<string, string> {
@@ -211,17 +206,21 @@ export function useRiskFilters(
     until.value = filters.until || ''
     quickRangeMode.value = !since.value && !until.value ? 'all' : ''
     syncFiltersToQuery()
-    onFiltersChanged?.()
   }
 
   function syncFiltersToQuery(): void {
     const q: Record<string, string> = {}
+    const lane = laneFilter.value.trim()
+    const preset = presetFilter.value.trim()
+    const jobHint = jobFilter.value.trim()
+    const sinceValue = since.value.trim()
+    const untilValue = until.value.trim()
 
-    if (laneFilter.value) q.lane = laneFilter.value
-    if (presetFilter.value) q.preset = presetFilter.value
-    if (jobFilter.value) q.job_hint = jobFilter.value
-    if (since.value) q.since = since.value
-    if (until.value) q.until = until.value
+    if (lane) q.lane = lane
+    if (preset) q.preset = preset
+    if (jobHint) q.job_hint = jobHint
+    if (sinceValue) q.since = sinceValue
+    if (untilValue) q.until = untilValue
 
     router.replace({ query: q }).catch(() => {})
   }

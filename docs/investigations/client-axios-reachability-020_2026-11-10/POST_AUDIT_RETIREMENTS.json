@@ -1,0 +1,39 @@
+{
+  "order_id": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
+  "merge_commit": "pending-owner-merge",
+  "note": "The original 20-row AXIOS_IMPORT_INVENTORY.csv is unchanged. Current importers are that inventory minus retired_importers plus post_audit_importers.",
+  "retired_importers": [
+    {
+      "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "sha256": "d82d425d8620e8e46ada0a64416fc857ee8506019ef29e018c17772eb9cbfeec",
+      "canonical_replacement": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "reconciliation_order": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
+      "reason": "February 19 aggregate and detail importer. Outcome B chose the February 22 directory, and RISK-L01 through RISK-L03 are now in that directory."
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskExport.ts",
+      "sha256": "b44c9f5c2451b45877e7d94f03ab3704c7e4e38ad32d76b8f621c9ebf1f4cf4e",
+      "canonical_replacement": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "reconciliation_order": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
+      "reason": "February 19 export importer. The canonical export composable is useRiskExports.ts in the February 22 directory."
+    }
+  ],
+  "reclassified_importers": [
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
+      "reason": "Canonical aggregate client. RiskDashboardCrossLab.vue is not registered in the router."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
+      "reason": "Canonical export client for the unrouted Risk Dashboard."
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
+      "reason": "Canonical bucket-detail client for the unrouted Risk Dashboard."
+    }
+  ],
+  "post_audit_importers": []
+}

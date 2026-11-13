@@ -1,0 +1,156 @@
+{
+  "order_id": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
+  "base_sha": "eb24a99c7014cd03f2093db05e0b27bd03ebb344",
+  "authority": "NONE",
+  "outcome_b_authority": {
+    "pr": 478,
+    "merge_commit": "e976aea5",
+    "record": "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md"
+  },
+  "target_baseline": "packages/client/src/views/art/risk-dashboard/",
+  "canonical_status": "CANONICAL",
+  "routing_status": "UNROUTED",
+  "axios_status": "RETAINED",
+  "resolved_findings": {
+    "RISK-L01": {
+      "implementation": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "behavior": "syncFiltersToQuery trims lane, preset, job_hint, since, and until, omits a value that is empty after trimming, and does not write the trimmed text back onto the filter refs. The query object still replaces the five known keys.",
+      "tests": [
+        "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+        "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts"
+      ]
+    },
+    "RISK-L02": {
+      "implementation": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "behavior": "One watcher clears the selected bucket when lane, preset, or job hint changes. Those edits do not request /api/compare/risk_aggregate.",
+      "tests": [
+        "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts"
+      ]
+    },
+    "RISK-L03": {
+      "implementation": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "behavior": "The same watcher clears the selected bucket and calls refresh once when since or until changes. Quick range, a lane preset with dates, clear filters with an active window, and a saved view that changes the window each produce one aggregate request. Mount applies the query and a default view before the watcher accepts edits, so initialization stays at one request.",
+      "tests": [
+        "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts"
+      ]
+    }
+  },
+  "request_order_guards": {
+    "reason": "Review of PR #481 found that the date-triggered refresh added for RISK-L03 let an older aggregate response overwrite a newer one, and that clearing the selection did not cancel a pending detail request.",
+    "implementations": {
+      "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts": "refresh() takes a generation number. Only the newest generation may write bucketsRaw, so an older success or failure that arrives last is discarded.",
+      "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts": "Each loadBucketDetails() call takes a generation number and clearBucketDetails() advances it. Only the current request may write entries, the error, or the loading flag.",
+      "packages/client/src/views/art/risk-dashboard/useRiskExports.ts": "Bucket exports read the bucket, job hint, and date window before the request and name the file from those values. A bucket-report failure sets the error only if the same bucket is still selected."
+    },
+    "tests": [
+      "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts"
+    ]
+  },
+  "earlier_only_resolutions": [
+    {
+      "source_file": "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "symbol": "syncFiltersToQuery",
+      "finding": "RISK-L01"
+    },
+    {
+      "source_file": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "symbol": "syncFiltersToQuery",
+      "finding": "RISK-L01"
+    },
+    {
+      "source_file": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "symbol": "watch lane preset job",
+      "finding": "RISK-L02"
+    },
+    {
+      "source_file": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "symbol": "watch since until",
+      "finding": "RISK-L03"
+    }
+  ],
+  "superseded_paths": [
+    "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+    "packages/client/src/views/art/composables/index.ts",
+    "packages/client/src/views/art/composables/useRiskBuckets.ts",
+    "packages/client/src/views/art/composables/useRiskExport.ts",
+    "packages/client/src/views/art/composables/useRiskFilters.ts",
+    "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts"
+  ],
+  "source_hashes": [
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLabV2.vue",
+      "sha256": "79e2852e1ea3fbd1d97d6b2cf1dbd3aa1249ee2dc5d061883a2f2d4b59578cae",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/index.ts",
+      "sha256": "83e9b856964eec3d325b034884386fad381bfbc07de8f58792953ee54e5589e2",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
+      "sha256": "d82d425d8620e8e46ada0a64416fc857ee8506019ef29e018c17772eb9cbfeec",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskExport.ts",
+      "sha256": "b44c9f5c2451b45877e7d94f03ab3704c7e4e38ad32d76b8f621c9ebf1f4cf4e",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/useRiskFilters.ts",
+      "sha256": "ee11c910841367a094b02be665713871cde24cd6f6446dae61ff4328506a95bd",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/composables/__tests__/riskDashboardLegacy.spec.ts",
+      "sha256": "bc5fcc31a72429c9b0cf559224cff9b5b19a0cd7cc2a1c46aeda4e2b9f0c4cdd",
+      "status": "superseded"
+    },
+    {
+      "path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "sha256": "03ae8d1b450dfc1cf89516aad3b1d112b6a540a58d5d5717e722a326f28d1e28",
+      "historical_sha256": "cc05c4ab8c73342f79aa97447cacfee6b647e8b6f96215e65a27676d27e0b450",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "sha256": "d85ec303a67e1b20e37191005077a9a5515c86798d5cb8bf8daf277c5685991c",
+      "historical_sha256": "5f37e935b0eafa7160d6196190e9ddbe7b0c00750d1c17bc20f929ac008b3d7a",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+      "sha256": "7e13aaf2e29a44c9ca0ed21b6a9f58a12d3094c4ee6983b8ad76e7a2815fe1ab",
+      "status": "unchanged"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "sha256": "c478a4e2b5995bbdf845953ee5242ffa38b67601e3ee3ce5434d12ac33a1695a",
+      "status": "unchanged"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "sha256": "5755f47f0a239ac15e32f210f2757b47da89204cd3d9274909f93abb2e2f1e6d",
+      "historical_sha256": "76c2758b4f5e45b24870965570d598ef72b55c5235aacd8b28c2c4ef04885018",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "sha256": "99b3f676f7907a5f24207e3235bdcb6cda190c02346861c678dd79aca5596ec5",
+      "historical_sha256": "47d0c365f54cffb1601f736432da872e735512ed44e608accd0af43de6c045b8",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "sha256": "d60cf4c30b686a9ad4eaf546d79645fc3c7be5acc0af28b7797e7d672c409482",
+      "historical_sha256": "eb56133a0ce9d909bb1362fcfdcce627dbaa911c4f0febfbfd5c67cdef4cb617",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "sha256": "b18d464ee2ceed84ebc1c1c83f12e23aed54cba2fc38344dce454dd622bb75a3",
+      "status": "unchanged"
+    }
+  ]
+}

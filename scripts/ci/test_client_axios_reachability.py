@@ -18,7 +18,21 @@ REPO = Path(__file__).resolve().parents[2]
 SCRIPT = REPO / "scripts" / "investigations" / "client_axios_reachability.py"
 INVENTORY_DIR = REPO / "docs" / "investigations" / "client-axios-reachability-020_2026-11-10"
 INVENTORY = INVENTORY_DIR / "AXIOS_IMPORT_INVENTORY.csv"
+RETIREMENTS = INVENTORY_DIR / "POST_AUDIT_RETIREMENTS.json"
 PRESERVATION = INVENTORY_DIR / "PRESERVATION_MAP.md"
+LINEAGE_EVIDENCE = (
+    REPO / "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/evidence.json"
+)
+ROSETTE_UNRESOLVED = [
+    "packages/client/src/components/art/RosetteComparePanel.vue",
+    "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+]
+# Specs that import Axios only to mock it. They are not rows in the 20-row audit.
+CHARACTERIZATION_MOCKS = {
+    "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+    "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+    "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+}
 PACKAGE = REPO / "packages" / "client" / "package.json"
 SRC = REPO / "packages" / "client" / "src"
 sys.path.insert(0, str(SCRIPT.parent))
@@ -207,17 +221,47 @@ class ReachabilityFixtures(unittest.TestCase):
             )
 
 
+def _inventory_rows() -> list[dict[str, str]]:
+    with INVENTORY.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def _retirements() -> dict:
+    return json.loads(RETIREMENTS.read_text(encoding="utf-8"))
+
+
+def expected_importers(rows: list[dict[str, str]], retirements: dict) -> list[str]:
+    retired = {item["path"] for item in retirements["retired_importers"]}
+    extra = set(retirements.get("post_audit_importers") or [])
+    return sorted(({row["path"] for row in rows} - retired) | extra)
+
+
+def effective_unresolved(rows: list[dict[str, str]], retirements: dict) -> list[str]:
+    retired = {item["path"] for item in retirements["retired_importers"]}
+    reclassified = {item["path"] for item in retirements["reclassified_importers"]}
+    return sorted(
+        row["path"]
+        for row in rows
+        if row["disposition"] == "UNRESOLVED"
+        and row["path"] not in retired
+        and row["path"] not in reclassified
+    )
+
+
 class InventoryIntegrity(unittest.TestCase):
     def test_inventory_matches_scanned_importers_exactly_once(self) -> None:
         scanned = [f"packages/client/src/{rel}" for rel in scan.axios_importers(SRC)]
-        with INVENTORY.open(encoding="utf-8", newline="") as handle:
-            rows = list(csv.DictReader(handle))
+        rows = _inventory_rows()
+        retirements = _retirements()
         paths = [row["path"] for row in rows]
+        expected = expected_importers(rows, retirements)
         self.assertEqual(paths, sorted(paths))
         self.assertEqual(len(paths), len(set(paths)))
-        self.assertEqual(set(paths), set(scanned))
-        self.assertEqual(len(rows), len(scanned))
-        self.assertGreater(len(scanned), 0)
+        self.assertEqual(len(rows), 20)
+        self.assertEqual(set(scanned) - set(expected), CHARACTERIZATION_MOCKS)
+        self.assertEqual(set(expected) - set(scanned), set())
+        self.assertEqual(len(expected), 18)
+        self.assertGreater(len(expected), 0)
 
     def test_every_row_has_one_allowed_disposition_and_no_blanks(self) -> None:
         with INVENTORY.open(encoding="utf-8", newline="") as handle:
@@ -236,17 +280,57 @@ class InventoryIntegrity(unittest.TestCase):
                 self.assertNotEqual(row["history_origin"], "none")
                 self.assertIn(row["path"], PRESERVATION.read_text(encoding="utf-8"))
 
+    def test_post_audit_retirements_name_replacements_and_drop_the_paths(self) -> None:
+        rows = _inventory_rows()
+        retirements = _retirements()
+        evidence = {
+            item["path"]: item["sha256"]
+            for item in json.loads(LINEAGE_EVIDENCE.read_text(encoding="utf-8"))["sources"]
+        }
+        retired_paths = []
+        for item in retirements["retired_importers"]:
+            retired_paths.append(item["path"])
+            self.assertTrue(item["canonical_replacement"].strip())
+            self.assertNotEqual(item["canonical_replacement"], item["path"])
+            self.assertTrue(item["reason"].strip())
+            self.assertEqual(item["reconciliation_order"], "CLIENT-RISK-DASHBOARD-RECONCILE-022")
+            self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
+            self.assertEqual(item["sha256"], evidence[item["path"]])
+            self.assertFalse((REPO / item["path"]).exists(), item["path"])
+            self.assertTrue((REPO / item["canonical_replacement"]).is_file())
+        self.assertEqual(len(retired_paths), len(set(retired_paths)))
+        reclassified = retirements["reclassified_importers"]
+        self.assertEqual(
+            [item["path"] for item in reclassified],
+            [
+                "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+                "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+                "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+            ],
+        )
+        for item in reclassified:
+            self.assertEqual(item["disposition"], "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED")
+            self.assertTrue((REPO / item["path"]).is_file())
+        scanned = {f"packages/client/src/{rel}" for rel in scan.axios_importers(SRC)}
+        self.assertTrue(set(item["path"] for item in reclassified) <= scanned)
+        self.assertTrue(set(retirements.get("post_audit_importers") or []).issubset(scanned))
+
     def test_unresolved_blocks_dependency_removal(self) -> None:
-        # One-directional: removing Axios requires zero UNRESOLVED rows. While
-        # Axios is still declared, any number (including zero, once the owner
-        # resolves every row) is allowed, so resolving rows never turns CI red.
+        # One-directional: removing Axios requires zero effective UNRESOLVED
+        # rows. The original inventory stays intact. After the risk-dashboard
+        # reconciliation, only the two Rosette Compare importers remain
+        # unresolved, so Axios stays declared.
         package = json.loads(PACKAGE.read_text(encoding="utf-8"))
         declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
-        with INVENTORY.open(encoding="utf-8", newline="") as handle:
-            rows = list(csv.DictReader(handle))
+        rows = _inventory_rows()
         unresolved = [row["path"] for row in rows if row["disposition"] == "UNRESOLVED"]
+        current = effective_unresolved(rows, _retirements())
+        self.assertEqual(current, ROSETTE_UNRESOLVED)
+        self.assertIn("axios", declared)
+        self.assertEqual(declared["axios"], "^1.21.0")
         if "axios" not in declared:
             self.assertEqual(unresolved, [], "a removal PR cannot contain UNRESOLVED")
+            self.assertEqual(current, [], "a removal PR cannot leave Rosette Compare unresolved")
 
     def test_cli_writes_only_the_requested_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -422,42 +422,23 @@ describe('February 22 navigation and filters', () => {
     mounted.app.unmount()
   })
 
-  it('writes untrimmed query values and does not clear or refresh on filter edits', async () => {
-    const mounted = await mountWithRouter(() => {
-      const filters = useRiskFilters()
-      const details = useRiskBucketDetails({ jobFilter: filters.jobFilter })
-      const buckets = useRiskBuckets({
-        laneFilter: filters.laneFilter,
-        presetFilter: filters.presetFilter,
-        since: filters.since,
-        until: filters.until,
-      })
-      return { filters, details, buckets }
-    })
-    vi.mocked(axios.get).mockResolvedValue({ data: DETAIL_ROWS })
-    await mounted.result.details.loadBucketDetails(plainBucket())
-    const callsAfterDetails = vi.mocked(axios.get).mock.calls.length
-
-    mounted.result.filters.laneFilter.value = '  Rosette  '
-    mounted.result.filters.presetFilter.value = '   '
-    mounted.result.filters.jobFilter.value = ' job-7 '
+  it('trims query values and omits whitespace-only keys without changing the refs', async () => {
+    const mounted = await mountWithRouter(() => useRiskFilters())
+    const filters = mounted.result
+    filters.laneFilter.value = '  Rosette  '
+    filters.presetFilter.value = '   '
+    filters.jobFilter.value = ' job-7 '
+    filters.since.value = ` ${WINDOW_SINCE} `
+    filters.until.value = '   '
     await settleNavigation()
+    expect(filters.laneFilter.value).toBe('  Rosette  ')
+    expect(filters.since.value).toBe(` ${WINDOW_SINCE} `)
     expect(mounted.router.currentRoute.value.query).toEqual({
-      lane: '  Rosette  ',
-      preset: '   ',
-      job_hint: ' job-7 ',
+      lane: 'Rosette',
+      job_hint: 'job-7',
+      since: WINDOW_SINCE,
     })
-    expect(mounted.result.details.selectedBucket.value).toEqual(plainBucket())
-    expect(vi.mocked(axios.get).mock.calls.length).toBe(callsAfterDetails)
-
-    mounted.result.filters.since.value = ` ${WINDOW_SINCE} `
-    mounted.result.filters.until.value = ''
-    await settleNavigation()
-    expect(mounted.router.currentRoute.value.query.since).toBe(` ${WINDOW_SINCE} `)
-    expect(mounted.result.details.selectedBucket.value).not.toBeNull()
-    expect(vi.mocked(axios.get).mock.calls.map((call) => call[0])).not.toContain(
-      '/api/compare/risk_aggregate',
-    )
+    expect(axios.get).not.toHaveBeenCalled()
     mounted.app.unmount()
   })
 })
