@@ -90,6 +90,11 @@ jobs:
       - name: Client Risk Dashboard Lineage Evidence (CLIENT-RISK-DASHBOARD-LINEAGE-021)
         run: |
           python -m pytest scripts/ci/test_client_risk_dashboard_lineage.py -v
+      # CLIENT-ROSETTE-COMPARE-RECONCILE-023. Nothing collects scripts/ci wholesale,
+      # so this evidence test has to be named here or it never runs.
+      - name: Client Rosette Compare Lineage Evidence (CLIENT-ROSETTE-COMPARE-RECONCILE-023)
+        run: |
+          python -m pytest scripts/ci/test_client_rosette_compare_lineage.py -v
       - name: Manifest discipline bleed-stop (ratchet, not full certification)
         run: |
           cd services/api

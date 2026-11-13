@@ -1,7 +1,10 @@
 {
   "order_id": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
   "merge_commit": "pending-owner-merge",
-  "note": "The original 20-row AXIOS_IMPORT_INVENTORY.csv is unchanged. Current importers are that inventory minus retired_importers plus post_audit_importers.",
+  "note": "The original 20-row AXIOS_IMPORT_INVENTORY.csv is unchanged. Current importers are that inventory minus retired_importers plus post_audit_importers. CLIENT-ROSETTE-COMPARE-RECONCILE-023 retired the panel's direct Axios import and reclassified useRosetteCompareApi.ts. The panel file remains.",
+  "subsequent_orders": [
+    "CLIENT-ROSETTE-COMPARE-RECONCILE-023"
+  ],
   "retired_importers": [
     {
       "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
@@ -16,6 +19,14 @@
       "canonical_replacement": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
       "reconciliation_order": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
       "reason": "February 19 export importer. The canonical export composable is useRiskExports.ts in the February 22 directory."
+    },
+    {
+      "path": "packages/client/src/components/art/RosetteComparePanel.vue",
+      "sha256": "37d4b02e3bdb25820b7701ad111d9c97289fcdfd276164284d98ac550fb802fc",
+      "canonical_replacement": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "reconciliation_order": "CLIENT-ROSETTE-COMPARE-RECONCILE-023",
+      "reason": "Direct Axios calls for the four Rosette baseline and diff operations moved into the canonical composable. The panel file remains the presentation layer and no longer imports Axios.",
+      "file_retained": true
     }
   ],
   "reclassified_importers": [
@@ -33,6 +44,11 @@
       "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
       "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
       "reason": "Canonical bucket-detail client for the unrouted Risk Dashboard."
+    },
+    {
+      "path": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
+      "reason": "Canonical Rosette baseline and diff client. RosetteComparePanel.vue calls it and is not registered in the router."
     }
   ],
   "post_audit_importers": []
