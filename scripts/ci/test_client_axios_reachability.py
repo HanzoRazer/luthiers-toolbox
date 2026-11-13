@@ -27,10 +27,11 @@ ROSETTE_UNRESOLVED = [
     "packages/client/src/components/art/RosetteComparePanel.vue",
     "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
 ]
-# Characterization specs mock Axios. They are not rows in the 20-row audit.
+# Specs that import Axios only to mock it. They are not rows in the 20-row audit.
 CHARACTERIZATION_MOCKS = {
     "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
     "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+    "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
 }
 PACKAGE = REPO / "packages" / "client" / "package.json"
 SRC = REPO / "packages" / "client" / "src"

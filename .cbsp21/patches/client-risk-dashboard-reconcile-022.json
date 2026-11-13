@@ -197,7 +197,7 @@
     },
     {
       "path": "scripts/ci/test_client_axios_reachability.py",
-      "intent": "Expects 18 production Axios importers and leaves Rosette Compare as the unresolved pair.",
+      "intent": "Expects 18 production Axios importers and leaves Rosette Compare as the unresolved pair. Lists riskDashboardRequestOrder.spec.ts with the specs that import Axios only to mock it.",
       "risk": "low",
       "behavior_change": "None at runtime; CI evidence test only."
     },
