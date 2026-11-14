@@ -23,12 +23,14 @@ PRESERVATION = INVENTORY_DIR / "PRESERVATION_MAP.md"
 LINEAGE_EVIDENCE = (
     REPO / "docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/evidence.json"
 )
-ROSETTE_UNRESOLVED = [
-    "packages/client/src/components/art/RosetteComparePanel.vue",
-    "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
-]
+PANEL_IMPORTER = "packages/client/src/components/art/RosetteComparePanel.vue"
+CANONICAL_ROSETTE = "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+# SHA-256 of the panel while it still imported Axios. The file remains; the import does not.
+PANEL_AXIOS_SHA256 = "37d4b02e3bdb25820b7701ad111d9c97289fcdfd276164284d98ac550fb802fc"
 # Specs that import Axios only to mock it. They are not rows in the 20-row audit.
 CHARACTERIZATION_MOCKS = {
+    "packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts",
+    "packages/client/src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts",
     "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
     "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
     "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
@@ -260,7 +262,7 @@ class InventoryIntegrity(unittest.TestCase):
         self.assertEqual(len(rows), 20)
         self.assertEqual(set(scanned) - set(expected), CHARACTERIZATION_MOCKS)
         self.assertEqual(set(expected) - set(scanned), set())
-        self.assertEqual(len(expected), 18)
+        self.assertEqual(len(expected), 17)
         self.assertGreater(len(expected), 0)
 
     def test_every_row_has_one_allowed_disposition_and_no_blanks(self) -> None:
@@ -293,11 +295,21 @@ class InventoryIntegrity(unittest.TestCase):
             self.assertTrue(item["canonical_replacement"].strip())
             self.assertNotEqual(item["canonical_replacement"], item["path"])
             self.assertTrue(item["reason"].strip())
-            self.assertEqual(item["reconciliation_order"], "CLIENT-RISK-DASHBOARD-RECONCILE-022")
             self.assertRegex(item["sha256"], r"^[0-9a-f]{64}$")
+            self.assertTrue((REPO / item["canonical_replacement"]).is_file())
+            if item["path"] == PANEL_IMPORTER:
+                self.assertEqual(item["reconciliation_order"], "CLIENT-ROSETTE-COMPARE-RECONCILE-023")
+                self.assertEqual(item["sha256"], PANEL_AXIOS_SHA256)
+                self.assertEqual(item["canonical_replacement"], CANONICAL_ROSETTE)
+                panel = (REPO / item["path"]).read_text(encoding="utf-8")
+                self.assertNotIn("from 'axios'", panel)
+                self.assertNotIn('from "axios"', panel)
+                self.assertNotRegex(panel, r"\baxios\.")
+                self.assertIn("useRosetteCompareApi", panel)
+                continue
+            self.assertEqual(item["reconciliation_order"], "CLIENT-RISK-DASHBOARD-RECONCILE-022")
             self.assertEqual(item["sha256"], evidence[item["path"]])
             self.assertFalse((REPO / item["path"]).exists(), item["path"])
-            self.assertTrue((REPO / item["canonical_replacement"]).is_file())
         self.assertEqual(len(retired_paths), len(set(retired_paths)))
         reclassified = retirements["reclassified_importers"]
         self.assertEqual(
@@ -306,6 +318,7 @@ class InventoryIntegrity(unittest.TestCase):
                 "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
                 "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
                 "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+                CANONICAL_ROSETTE,
             ],
         )
         for item in reclassified:
@@ -317,15 +330,16 @@ class InventoryIntegrity(unittest.TestCase):
 
     def test_unresolved_blocks_dependency_removal(self) -> None:
         # One-directional: removing Axios requires zero effective UNRESOLVED
-        # rows. The original inventory stays intact. After the risk-dashboard
-        # reconciliation, only the two Rosette Compare importers remain
-        # unresolved, so Axios stays declared.
+        # rows. The original inventory stays intact. Rosette Compare is no
+        # longer unresolved in the overlay. The raw CSV still marks that pair
+        # UNRESOLVED, so the removal branch below still fails a deletion.
+        # Dormant-preserve importers also remain. Axios stays declared.
         package = json.loads(PACKAGE.read_text(encoding="utf-8"))
         declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
         rows = _inventory_rows()
         unresolved = [row["path"] for row in rows if row["disposition"] == "UNRESOLVED"]
         current = effective_unresolved(rows, _retirements())
-        self.assertEqual(current, ROSETTE_UNRESOLVED)
+        self.assertEqual(current, [])
         self.assertIn("axios", declared)
         self.assertEqual(declared["axios"], "^1.21.0")
         if "axios" not in declared:

@@ -143,34 +143,10 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import axios from "axios";
-
-interface GeometryPayload {
-  [key: string]: any;
-}
-
-interface BaselineSummary {
-  id: string;
-  name: string;
-  lane: string;
-  created_at: string;
-}
-
-interface DiffStats {
-  baseline_path_count: number;
-  current_path_count: number;
-  added_paths: number;
-  removed_paths: number;
-  unchanged_paths: number;
-}
-
-interface DiffOut {
-  baseline_id: string;
-  lane: string;
-  stats: DiffStats;
-  baseline_geometry?: GeometryPayload;
-  current_geometry?: GeometryPayload;
-}
+import {
+  useRosetteCompareApi,
+  type GeometryPayload,
+} from "./rosette-compare/useRosetteCompareApi";
 
 const props = defineProps<{
   currentGeometry: GeometryPayload | null;
@@ -181,17 +157,22 @@ const emit = defineEmits<{
   (e: "update:job-id", val: string): void;
 }>();
 
-const lane = "rosette";
+const {
+  baselines,
+  diffStats,
+  baselineGeometry,
+  loadBaselines,
+  saveBaseline: persistBaseline,
+  loadBaselineGeometry,
+  runDiff: requestDiff,
+  clearDiff,
+} = useRosetteCompareApi();
 
 const baselineName = ref("");
-const baselines = ref<BaselineSummary[]>([]);
 const selectedBaselineId = ref<string | null>(null);
 const selectedBaseline = computed(() =>
   baselines.value.find((b) => b.id === selectedBaselineId.value) || null
 );
-
-const diffStats = ref<DiffStats | null>(null);
-const baselineGeometry = ref<GeometryPayload | null>(null);
 
 // Phase 27.1: job ID for logging into risk/job snapshots
 // Phase 27.2: Synced with parent component
@@ -213,64 +194,31 @@ function formatDate(dt: string): string {
   }
 }
 
-async function loadBaselines() {
-  try {
-    const res = await axios.get<BaselineSummary[]>("/api/compare/baselines", {
-      params: { lane },
-    });
-    baselines.value = res.data;
-  } catch (err) {
-    console.error("Failed to load baselines", err);
-  }
-}
-
 async function saveBaseline() {
   if (!baselineName.value || !props.currentGeometry) return;
-
-  try {
-    const payload = {
-      name: baselineName.value,
-      lane,
-      geometry: props.currentGeometry,
-    };
-    const res = await axios.post("/api/compare/baselines", payload);
-    await loadBaselines();
-    selectedBaselineId.value = res.data.id;
-  } catch (err) {
-    console.error("Failed to save baseline", err);
-  }
+  const id = await persistBaseline(baselineName.value, props.currentGeometry);
+  if (id) selectedBaselineId.value = id;
 }
 
 async function runDiff() {
   if (!selectedBaselineId.value || !props.currentGeometry) return;
 
-  try {
-    const payload: any = {
-      baseline_id: selectedBaselineId.value,
-      lane,
-      current_geometry: props.currentGeometry,
-    };
+  const baselineId = selectedBaselineId.value;
+  const currentGeometry = props.currentGeometry;
 
-    // Phase 27.1: Include job_id for risk logging
-    if (jobId.value.trim()) {
-      payload.job_id = jobId.value.trim();
-      localStorage.setItem("ltb:compare:lastJobId", payload.job_id);
-      // Phase 27.2: Emit to parent
-      emit("update:job-id", payload.job_id);
-    }
-
-    // Phase 27.4: Include preset for risk logging
-    if (preset.value.trim()) {
-      payload.preset = preset.value.trim();
-    }
-
-    const res = await axios.post<DiffOut>("/api/compare/diff", payload);
-    diffStats.value = res.data.stats;
-    baselineGeometry.value = res.data.baseline_geometry || null;
-    drawCanvases(res.data.current_geometry || props.currentGeometry || null);
-  } catch (err) {
-    console.error("Failed to run diff", err);
+  // Phase 27.1 / 27.2: store and emit the trimmed job id before the request.
+  if (jobId.value.trim()) {
+    const trimmedJob = jobId.value.trim();
+    localStorage.setItem("ltb:compare:lastJobId", trimmedJob);
+    emit("update:job-id", trimmedJob);
   }
+
+  const result = await requestDiff(baselineId, currentGeometry, {
+    jobId: jobId.value,
+    preset: preset.value,
+  });
+  if (!result || selectedBaselineId.value !== baselineId) return;
+  drawCanvases(result.current_geometry || props.currentGeometry || null);
 }
 
 /**
@@ -308,8 +256,7 @@ function drawGeometryOnCanvas(
   geometry: GeometryPayload | null,
   defaultStroke: string
 ) {
-  if (!canvas || !geometry) return;
-  const paths = geometry.paths || geometry.loops || [];
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -319,6 +266,13 @@ function drawGeometryOnCanvas(
   ctx.save();
   ctx.fillStyle = "#f9fafb";
   ctx.fillRect(0, 0, w, h);
+
+  // No geometry: leave the canvas blank rather than keep the previous drawing.
+  if (!geometry) {
+    ctx.restore();
+    return;
+  }
+  const paths = geometry.paths || geometry.loops || [];
 
   // compute bounding box
   let minX = Infinity,
@@ -412,9 +366,12 @@ watch(
   }
 );
 
+// A comparison describes the geometry it was run against. When the current
+// geometry changes, drop a pending comparison and remove the shown statistics.
 watch(
   () => props.currentGeometry,
   () => {
+    clearDiff();
     drawCanvases();
   },
   { deep: true }
@@ -423,18 +380,14 @@ watch(
 watch(
   () => selectedBaselineId.value,
   async () => {
-    if (!selectedBaselineId.value) {
-      baselineGeometry.value = null;
-      drawCanvases();
-      return;
-    }
-    try {
-      const res = await axios.get(`/api/compare/baselines/${selectedBaselineId.value}`);
-      baselineGeometry.value = res.data.geometry;
-      drawCanvases();
-    } catch (err) {
-      console.error("Failed to load baseline geometry", err);
-    }
+    const requestedId = selectedBaselineId.value;
+    // loadBaselineGeometry synchronously drops any comparison for another
+    // baseline and the other baseline's geometry, so draw that cleared state now.
+    const pending = loadBaselineGeometry(requestedId ?? "");
+    drawCanvases();
+    const geometry = await pending;
+    if (!requestedId || selectedBaselineId.value !== requestedId || geometry == null) return;
+    drawCanvases();
   }
 );
 </script>

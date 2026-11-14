@@ -1,0 +1,135 @@
+{
+  "order_id": "CLIENT-ROSETTE-COMPARE-RECONCILE-023",
+  "base_sha": "158dde45b80dc33658c6995cbd9c1bdfd7117232",
+  "authority": "NONE",
+  "chosen_baseline": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+  "canonical_client": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+  "presentation": "packages/client/src/components/art/RosetteComparePanel.vue",
+  "disposition": "DORMANT_PRESERVE — CANONICAL_BUT_UNROUTED",
+  "routing_status": "UNROUTED",
+  "axios_status": "RETAINED",
+  "axios_declared": "^1.21.0",
+  "importers": {
+    "before": 18,
+    "after": 17
+  },
+  "inventory_sha256": "8fd2500b9d35bf38566dfa62db8ee2785562f449a0417e764492131c645d1092",
+  "inventory_note": "AXIOS_IMPORT_INVENTORY.csv is unchanged. The panel retirement and the composable reclassification are in POST_AUDIT_RETIREMENTS.json.",
+  "contract_comparison": "The panel and the composable already issued the same four methods, URLs, payloads, trim rules, and response fields. Adoption did not require a backend change. encodeURIComponent is a no-op for the UUID ids the baseline route returns.",
+  "findings": [
+    {
+      "id": "ROSETTE-C01",
+      "status": "resolved",
+      "summary": "RosetteComparePanel.vue duplicated the four Axios calls already extracted in useRosetteCompareApi.ts. The composable is now the only client. The panel keeps selection, drawing, localStorage, and job-id emission."
+    },
+    {
+      "id": "ROSETTE-C02",
+      "status": "resolved",
+      "summary": "A diff pending when the baseline selection or current geometry changed still committed its diffStats and baseline geometry in the composable, while the panel declined to draw it, so the shown statistics could describe a baseline that was no longer selected. Loading another baseline and clearDiff() now drop the pending diff and remove shown diff state. A shared error generation also let a newer request of one kind erase or suppress another kind's failure; errors are now owned per operation."
+    }
+  ],
+  "operations": [
+    {
+      "name": "loadBaselines",
+      "method": "GET",
+      "url": "/api/compare/baselines",
+      "params": {"lane": "rosette"}
+    },
+    {
+      "name": "saveBaseline",
+      "method": "POST",
+      "url": "/api/compare/baselines",
+      "body": ["name", "lane", "geometry"],
+      "name_trimmed": false,
+      "then": "loadBaselines",
+      "returns": "id"
+    },
+    {
+      "name": "loadBaselineGeometry",
+      "method": "GET",
+      "url": "/api/compare/baselines/{id}",
+      "url_encoding": "encodeURIComponent",
+      "stores": "geometry"
+    },
+    {
+      "name": "runDiff",
+      "method": "POST",
+      "url": "/api/compare/diff",
+      "body": ["baseline_id", "lane", "current_geometry"],
+      "trimmed_optional": ["job_id", "preset"],
+      "omit_when_blank": ["job_id", "preset"]
+    }
+  ],
+  "replacement": {
+    "retired_importer": "packages/client/src/components/art/RosetteComparePanel.vue",
+    "canonical_client": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+    "presentation": "packages/client/src/components/art/RosetteComparePanel.vue"
+  },
+  "not_equivalent": [
+    "packages/client/src/composables/useCompareState.ts",
+    "packages/client/src/components/compare/CompareBaselinePicker.vue",
+    "packages/client/src/components/compare/CompareDiffViewer.vue"
+  ],
+  "non_goals": [
+    "axios removal",
+    "archive copy of dormant modules",
+    "risk dashboard reconciliation",
+    "router registration",
+    "backend contract change",
+    "replacing these calls with /api/compare/lab",
+    "CAM, readiness, approval, or manufacturing authority"
+  ],
+  "source_hashes": [
+    {
+      "path": "packages/client/src/components/art/RosetteComparePanel.vue",
+      "sha256": "6565e31023a7d934db2f6382c5a2bc455624f1968aa14eadc2a4416eabc86edb",
+      "historical_sha256": "37d4b02e3bdb25820b7701ad111d9c97289fcdfd276164284d98ac550fb802fc",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "sha256": "5dbcbe05750485ce6670401bcf9242ad933908436e6131fc9a68aeea0ef94d31",
+      "historical_sha256": "1e12557982dbc655697aaab494fc6d09b0a22dd1a3c20de1be9aca3ba79c8f68",
+      "status": "edited"
+    },
+    {
+      "path": "packages/client/src/components/art/rosette-compare/index.ts",
+      "sha256": "4aa66802d5e5559a8bb6b9be35eeeefd2d15ab39bf20b1f8926133991af51347",
+      "historical_sha256": "4aa66802d5e5559a8bb6b9be35eeeefd2d15ab39bf20b1f8926133991af51347",
+      "status": "unchanged"
+    },
+    {
+      "path": "packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts",
+      "sha256": "ba210f76da016bc45eca587baf03fe74fd434d920283bc14490bd6c16d6459f3",
+      "status": "added"
+    },
+    {
+      "path": "packages/client/src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts",
+      "sha256": "bab153e98539806eb71bc473ee3b2adabeeb820aed1a7a7a00d6964db98ce584",
+      "status": "added"
+    }
+  ],
+  "verification": {
+    "commands": [
+      "cd packages/client && npx vitest run src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts src/components/art/__tests__/RosetteComparePanel.spec.ts",
+      "cd packages/client && npm test",
+      "cd packages/client && npm run build",
+      "cd packages/client && NODE_OPTIONS=--max-old-space-size=6144 npm run type-check",
+      "cd packages/client && npm run lint:report -- --output-file /tmp/eslint.json",
+      "python3 scripts/ci/check_client_type_check_ratchet.py --log /tmp/vue-tsc.log --baseline scripts/ci/client_type_check_baseline.json",
+      "python3 scripts/ci/check_client_lint_ratchet.py --report /tmp/eslint.json --baseline scripts/ci/client_lint_baseline.json",
+      "python3 -m pytest scripts/ci/test_client_rosette_compare_lineage.py scripts/ci/test_client_axios_reachability.py -q",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <diff>",
+      "python3 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD"
+    ],
+    "results": {
+      "focused_vitest": "48 passed (27 API, 21 panel). 15 of the 16 tests added for ROSETTE-C02 fail against head 7319dd02.",
+      "client_vitest": "870 passed, 17 todo, 1 skipped file at 7319dd02 (CI). After ROSETTE-C02, local Windows run: 879 passed, 17 todo; router/index.spec.ts timed out under full-suite load and passes alone; nodeEngineFloor.spec.ts is not collected on this machine (SyntaxError, file untouched by this PR).",
+      "type_check": "87 errors, ceiling 87, none in files this order edits",
+      "lint": "34 errors (ceiling 34), 6967 warnings (ceiling 6971). Ceiling not lowered.",
+      "production_build": "succeeded. Built JS has no axios, no /api/compare/baselines, and no RosetteComparePanel.",
+      "lineage_pytest": "scripts/ci/test_client_rosette_compare_lineage.py and test_client_axios_reachability.py passed",
+      "cbsp21": "coverage 100%. Ownership tests 36 passed. API complexity, file size, bare-except, fence, and duplication gates passed without a baseline bump."
+    }
+  }
+}

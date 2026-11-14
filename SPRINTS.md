@@ -15,7 +15,9 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **Consciously deferred:** choosing the surviving rosette-compare baseline client; copying dormant modules to an archive; moving any live call onto `api()`; removing the dependency. None of that is authorized by the evidence record. The raw-Axios fence in `FENCE_REGISTRY.json` stays.
 
-**Follow-up (2026-11-13):** `CLIENT-RISK-DASHBOARD-RECONCILE-022` retired the two February 19 risk importers and reclassified the three February 22 importers as canonical but unrouted. The original 20-row inventory is unchanged. Current importers: 18. Rosette Compare is the remaining unresolved lineage cluster. Axios stays at `^1.21.0`. Overlay: `docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json`.
+**Follow-up (2026-11-13):** `CLIENT-RISK-DASHBOARD-RECONCILE-022` retired the two February 19 risk importers and reclassified the three February 22 importers as canonical but unrouted. The original 20-row inventory is unchanged. Current importers after that order: 18. Overlay: `docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json`.
+
+**Follow-up (2026-11-13, CLIENT-ROSETTE-COMPARE-RECONCILE-023):** Rosette Compare is closed. `useRosetteCompareApi.ts` is the canonical baseline/diff client. `RosetteComparePanel.vue` no longer imports Axios and stays unrouted. Production Axios importers: 17. Axios consolidation remains incomplete because dormant-preserve importers still exist. Axios stays at `^1.21.0`. Record: `docs/investigations/client-rosette-compare-reconcile-023/README.md`.
 
 ---
 
@@ -38,7 +40,19 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **Resolved:** `RISK-L01` trimmed query values, `RISK-L02` clear the selected bucket when lane, preset, or job changes, and `RISK-L03` clear and refresh once when since or until changes. The February 19 cluster is preserved by hash and Git history and is removed from production. Record: `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md` and `docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md`.
 
-**Still blocking Axios retirement:** Rosette Compare. The panel and `useRosetteCompareApi.ts` are the only unresolved Axios-lineage cluster. This order does not choose that baseline and does not remove Axios.
+**Still blocking Axios retirement:** dormant-preserve importers. `CLIENT-ROSETTE-COMPARE-RECONCILE-023` closed Rosette Compare after this order: the composable is the canonical unrouted client, and the panel no longer imports Axios. This risk-dashboard order did not remove Axios. Axios consolidation remains incomplete.
+
+---
+
+## CLIENT-ROSETTE-COMPARE-RECONCILE-023 — Rosette Compare client (closed 2026-11-13)
+
+**Status:** Closed. `packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts` is the canonical baseline and diff client. `RosetteComparePanel.vue` remains the presentation layer and no longer imports Axios. The panel stays unrouted. No backend contract changed. `/api/compare/lab` is not a replacement.
+
+**Preserved calls:** `GET /api/compare/baselines`, `POST /api/compare/baselines`, `GET /api/compare/baselines/{id}`, and `POST /api/compare/diff`. Blank job ids and presets stay omitted. Nonblank ones stay trimmed. Local storage and `update:job-id` stay in the panel.
+
+**Axios:** one direct importer retired, 18 → 17. The dependency stays at `^1.21.0`. Axios consolidation remains incomplete because dormant-preserve importers still exist. The original 20-row inventory was not rewritten.
+
+**Record:** `docs/investigations/client-rosette-compare-reconcile-023/README.md`.
 
 ---
 
