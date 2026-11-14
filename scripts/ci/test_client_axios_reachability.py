@@ -346,6 +346,25 @@ class InventoryIntegrity(unittest.TestCase):
             self.assertEqual(unresolved, [], "a removal PR cannot contain UNRESOLVED")
             self.assertEqual(current, [], "a removal PR cannot leave Rosette Compare unresolved")
 
+    def test_post_482_pins_seventeen_importers_without_requiring_removal(self) -> None:
+        # CLIENT-AXIOS-DORMANT-PRESERVATION-024. PR #482 left 17 production
+        # importers and zero effective UNRESOLVED rows. Preservation copies
+        # those files. It does not require them to leave the production tree.
+        rows = _inventory_rows()
+        retirements = _retirements()
+        expected = expected_importers(rows, retirements)
+        self.assertEqual(len(expected), 17)
+        self.assertEqual(effective_unresolved(rows, retirements), [])
+        for path in expected:
+            self.assertTrue((REPO / path).is_file(), path)
+        package = json.loads(PACKAGE.read_text(encoding="utf-8"))
+        declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
+        self.assertEqual(declared.get("axios"), "^1.21.0")
+        self.assertIn(
+            "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+            expected,
+        )
+
     def test_cli_writes_only_the_requested_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             src = Path(tmp) / "src"

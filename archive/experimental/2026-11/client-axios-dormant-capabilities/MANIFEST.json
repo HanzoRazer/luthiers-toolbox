@@ -1,0 +1,2404 @@
+{
+  "archive_id": "client-axios-dormant-capabilities",
+  "axios_declared": "^1.21.0",
+  "axios_removal_authorized": false,
+  "clusters": [
+    "ai-advisory",
+    "art-presets-jobs",
+    "cam-insights",
+    "cam-utility-clients",
+    "risk-dashboard-canonical",
+    "rosette-compare-canonical",
+    "rosette-history"
+  ],
+  "dormant_preserve_means_safe_to_delete": false,
+  "effective_unresolved": [],
+  "exclusions": [
+    {
+      "capability_cluster": "art-presets-jobs",
+      "kind": "caller",
+      "path": "packages/client/src/components/art/index.ts",
+      "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived."
+    },
+    {
+      "capability_cluster": "art-presets-jobs",
+      "kind": "dependency",
+      "path": "packages/client/src/composables/useConfirm.ts",
+      "reason": "Shared confirm dialog used by live screens. ArtPresetManager.vue is archived. The helper is not an art-preset contract."
+    },
+    {
+      "capability_cluster": "cam-insights",
+      "kind": "dependency",
+      "path": "packages/client/src/services/apiBase.ts",
+      "reason": "Shared api() helper imported by CamJobInsightsPanel.vue. The panel is archived so the per-job URL stays next to the list client. The helper is live infrastructure."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/components/cam/composables/index.ts",
+      "reason": "Re-exports the job-int history composables together with CamPipeline and CamIssues composables the pipeline runner evaluates. It adds no Axios call. Copying the barrel would mix live pipeline exports into this archive. The job-int callers are archived."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/components/cam/composables/useJobIntHistoryClone.ts",
+      "reason": "Imports jobIntHistoryTypes for the clone modal and does not call api/job_int.ts. The Axios callers are useJobIntHistoryLoad.ts and useJobIntHistoryActions.ts."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/components/cam/composables/useJobIntHistoryState.ts",
+      "reason": "Imports jobIntHistoryTypes for history state and does not call api/job_int.ts."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/components/cam/composables/useJobIntHistoryStats.ts",
+      "reason": "Imports jobIntHistoryTypes for history stats and does not call api/job_int.ts."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/components/toolbox/ArtStudioCAM.vue",
+      "reason": "Unmounted shell that mounts BackplotGcode.vue and AdaptiveBench.vue beside other toolbox tools. Those two callers are archived. The shell is not an Axios importer."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue",
+      "reason": "Imports TelemetryMetricsPanel.vue for display and does not import api/sawLab.ts. The panel's type import is archived with the saw client."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "caller",
+      "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+      "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+    },
+    {
+      "capability_cluster": "cam-utility-clients",
+      "kind": "dependency",
+      "path": "packages/client/src/sdk/rmos/runs.ts",
+      "reason": "useSawRiskActions imports addOverride from the live RMOS SDK. The SDK is not the saw Axios client. The composable is archived."
+    },
+    {
+      "capability_cluster": "risk-dashboard-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+      "reason": "Characterization spec. It mounts RiskDashboardCrossLab.vue and mocks Axios. It is not a production capability and is not one of the 17 importers."
+    },
+    {
+      "capability_cluster": "risk-dashboard-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+      "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+    },
+    {
+      "capability_cluster": "risk-dashboard-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+      "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+    },
+    {
+      "capability_cluster": "risk-dashboard-canonical",
+      "kind": "dependency",
+      "path": "packages/client/src/components/ui/index.ts",
+      "reason": "Shared UI barrel. RiskDashboardCrossLab.vue imports SavedViewsPanel from it. The risk Axios composables and the Bucket types are archived. The UI kit is not the risk contract."
+    },
+    {
+      "capability_cluster": "risk-dashboard-canonical",
+      "kind": "dependency",
+      "path": "packages/client/src/utils/downloadBlob.ts",
+      "reason": "Shared download helper used by live labs. useRiskExports.ts is archived."
+    },
+    {
+      "capability_cluster": "rosette-compare-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts",
+      "reason": "Characterization spec. It mounts RosetteComparePanel.vue and mocks Axios. It is not a production capability and is not one of the 17 importers."
+    },
+    {
+      "capability_cluster": "rosette-compare-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts",
+      "reason": "Characterization spec. It imports Axios only to mock the canonical client. It is not a production capability and is not one of the 17 importers."
+    },
+    {
+      "capability_cluster": "rosette-compare-canonical",
+      "kind": "caller",
+      "path": "packages/client/src/views/ArtStudioUnified.vue",
+      "reason": "Unrouted shell that mounts the canonical panel and RosetteCompareHistory.vue. Archiving it here would mix baseline/diff with /api/compare/history."
+    },
+    {
+      "capability_cluster": "rosette-history",
+      "kind": "caller",
+      "path": "packages/client/src/views/ArtStudioUnified.vue",
+      "reason": "Unrouted shell that mounts RosetteCompareHistory.vue and the canonical RosetteComparePanel.vue. Archiving it here would mix /api/compare/history with the baseline/diff contract."
+    },
+    {
+      "capability_cluster": "rosette-history",
+      "kind": "dependency",
+      "path": "packages/client/src/utils/downloadBlob.ts",
+      "reason": "Shared download helper used by live labs. The compare-history actions composable is archived."
+    }
+  ],
+  "files": [
+    {
+      "archive_path": "source/packages/client/src/api/job_int.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job-int/log",
+        "GET /api/cam/job-int/log/{runId}",
+        "POST /api/cam/job-int/favorites/{runId}"
+      ],
+      "git_blob": "c43f09b3ecc5aa55c9d4fa77681df65601e92588",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/jobIntHistoryTypes.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/api/job_int.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": true
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/api/job_int.ts"
+      ],
+      "sha256": "43224ce728af2c1b21c310603c3ffc976eebd44cd8d877fb184bfe2293421707",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/api/n15.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /api/cam/gcode/plot.svg",
+        "POST /api/cam/gcode/estimate",
+        "POST /api/cam/gcode/save_temp"
+      ],
+      "git_blob": "f15af7e62d3a9929b45fa84e3cbe88ee3785fe6f",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/toolbox/BackplotGcode.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/api/n15.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/api/n15.ts"
+      ],
+      "sha256": "3dcb00f1763a4ff6413b3ce2393cce644a1f10880d3936ac1cff2daa7db81645",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/api/n16.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /cam/adaptive2/offset_spiral.svg",
+        "POST /cam/adaptive2/trochoid_corners.svg"
+      ],
+      "git_blob": "fcedf052d912356b45c4ae9064e96444b186467a",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/toolbox/AdaptiveBench.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/api/n16.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/api/n16.ts"
+      ],
+      "sha256": "ebc703ecf74a126b6346361b94bde1a256af78fe50919daaa8631860cd82b300",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/api/sawLab.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "a17ab28788d68d1da2feb9a5eb5c69527bab4a59",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/api/sawLab.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "3e7b7beee2ef38a0ca63cc5ead7ce6bd1e7f0101d717dd86c6397e641a5ce935",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/ai/AiAdvisoryPanel.vue",
+      "capability_cluster": "ai-advisory",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /ai/advisories/request"
+      ],
+      "git_blob": "375f8dca468b2ce0be0f7727ed40cf6290a11975",
+      "known_callers": [],
+      "original_path": "packages/client/src/components/ai/AiAdvisoryPanel.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "panel",
+      "serves": [
+        "packages/client/src/components/ai/aiAdvisoryApi.ts"
+      ],
+      "sha256": "65290de04b3846ec6dfd4bdf4357a645e31e43dae2a5979bccea4fe51a4419bb",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/ai/aiAdvisoryApi.ts",
+      "capability_cluster": "ai-advisory",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /ai/advisories/request"
+      ],
+      "git_blob": "afea7822e658d136dda94771107cdc531b900b31",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/stores/aiAdvisoryStore.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/ai/aiAdvisoryApi.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/components/ai/aiAdvisoryApi.ts"
+      ],
+      "sha256": "dc9de52ed7c5f935de82bf12450606f0369ee6dbb496e7f4d0e68b3a12595eab",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/ArtPresetSelector.vue",
+      "capability_cluster": "art-presets-jobs",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/presets"
+      ],
+      "git_blob": "c73cb8aab782074e4c1e288a8ef084ec58de9ba0",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/index.ts",
+          "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived."
+        }
+      ],
+      "original_path": "packages/client/src/components/art/ArtPresetSelector.vue",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/components/art/ArtPresetSelector.vue"
+      ],
+      "sha256": "8473e441894c0ae24f4da6463f1c047f5949df23bc4b2d7303e57287327a49af",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/RosetteCompareHistory.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "a319ee9320f1caa3ca9f8e9710ac657cd010e1f7",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/ArtStudioUnified.vue",
+          "reason": "Unrouted shell that mounts RosetteCompareHistory.vue and the canonical RosetteComparePanel.vue. Archiving it here would mix /api/compare/history with the baseline/diff contract."
+        }
+      ],
+      "original_path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "b3968a61ae3368b66bce81319710baab4ddaec07d57219bf5de51a429ac784d5",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/RosetteComparePanel.vue",
+      "capability_cluster": "rosette-compare-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/baselines",
+        "POST /api/compare/baselines",
+        "GET /api/compare/baselines/{id}",
+        "POST /api/compare/diff"
+      ],
+      "git_blob": "9cdad40690be37128a95886c879ea78754fe3f49",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts",
+          "reason": "Characterization spec. It mounts RosetteComparePanel.vue and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/ArtStudioUnified.vue",
+          "reason": "Unrouted shell that mounts the canonical panel and RosetteCompareHistory.vue. Archiving it here would mix baseline/diff with /api/compare/history."
+        }
+      ],
+      "original_path": "packages/client/src/components/art/RosetteComparePanel.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+      ],
+      "sha256": "6565e31023a7d934db2f6382c5a2bc455624f1968aa14eadc2a4416eabc86edb",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette-compare/index.ts",
+      "capability_cluster": "rosette-compare-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/baselines",
+        "POST /api/compare/baselines",
+        "GET /api/compare/baselines/{id}",
+        "POST /api/compare/diff"
+      ],
+      "git_blob": "a0f7570eaf7e582fd89c07f93808aada4f258b90",
+      "known_callers": [],
+      "original_path": "packages/client/src/components/art/rosette-compare/index.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "barrel",
+      "serves": [
+        "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+      ],
+      "sha256": "4aa66802d5e5559a8bb6b9be35eeeefd2d15ab39bf20b1f8926133991af51347",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "capability_cluster": "rosette-compare-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/baselines",
+        "POST /api/compare/baselines",
+        "GET /api/compare/baselines/{id}",
+        "POST /api/compare/diff"
+      ],
+      "git_blob": "67d33fe600f9c867f40dad826c6c16aa604c5e07",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteComparePanel.vue",
+          "reason": ""
+        },
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts",
+          "reason": "Characterization spec. It imports Axios only to mock the canonical client. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette-compare/index.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/art/rosette-compare/useRosetteCompareCanvas.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+      ],
+      "sha256": "5dbcbe05750485ce6670401bcf9242ad933908436e6131fc9a68aeea0ef94d31",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette-compare/useRosetteCompareCanvas.ts",
+      "capability_cluster": "rosette-compare-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/baselines",
+        "POST /api/compare/baselines",
+        "GET /api/compare/baselines/{id}",
+        "POST /api/compare/diff"
+      ],
+      "git_blob": "e8e7b039cfe7858e9451078590a45abb6d74a9b2",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette-compare/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette-compare/useRosetteCompareCanvas.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+      ],
+      "sha256": "fc76ab61ebf8190deda7c9ab4a3b55bb49a715c46c2e616bb8ae1e2192c4ba71",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "f2a19ce8e733812c06c7bae1fe079d2e00b28bdf",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "9d5de4c5f4ad145d073a20bb8b942d8e6cc9d549f713ec07c97e9e703f3ebeef",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/HistoryTable.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "a888b6ddfa544a9690c9af7c1f6b2f0fa38c75c5",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/HistoryTable.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "ccacdaf5e9c2b77ae4d3a5b7710714a2add041877b69771ddec29aa9d6475e8a",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "5cbb23ccf7aaaab0cfb66d71f6bd7ab6d24e7de5",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "1b8b89b6fe029f7b85e3fd7b59edbc16f8a1c5cf90583921c110fdd68717fed1",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "582632d006de4b0f02c249e14627f7de58ce1b8e",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "62087aefe3c6ab2b44669988e0aac2a853b0a946cb7a9e117c58b2651aa80af7",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "f3aeb40e2e70418290ee80630f003d3bd5517868",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/art/RosetteCompareHistory.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "barrel",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "28cfbc9dc12d375506a2619c48d869a0c5886e37dceb9aad7ff4c9ef041a7772",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/rosetteCompareTypes.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "bd9fd2a21556daae16f0f6a6355a534734747f54",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type+value",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/rosetteCompareTypes.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "bc018536ffb42e91845ecd3d0d62593557e845ae26039084f4ad21aaf7da612a",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "d041a5cc81f57e3f9330aaf6058c5e5e1dcf3712",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "d2ce049091b316f75a80c7d017dae68bb085f90f59e9eb10ac6e49e4292e1d1a",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "78a9836f4df8449971abd705a689994e6ecdfbc9",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "4556404d08e50c0c2b27bc46fbfa9c8b81704f22e8e0dd15134a4cae6e7d7538",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "8a5dbfa60aa2456358f8c8f2db7a921a4c8ff863",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "a103234044d7b44139ac9cc52aed5a4fa718adaa1a906cfe5a32381138ebbc35",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "b1b7c9667ce4f4d101fc4d73c41ba884738c2790",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "8fe77212119cb3acc39db7e9584bb942ea8352bae1589e1c16eb358ff0db99ed",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/compare/history"
+      ],
+      "git_blob": "2bd28fb1d0f37e2fc53e07e590a94eec27179762",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts"
+      ],
+      "sha256": "36bc7717848adba40b7eeeb18204c25583e95d33acd3cffd17c80aa8000e60e9",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/cam/CamJobInsightsPanel.vue",
+      "capability_cluster": "cam-insights",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job_log/insights/{jobId}"
+      ],
+      "git_blob": "ebc4e273f3cb1f984624c4a42b2bc05e8f2d3449",
+      "known_callers": [],
+      "original_path": "packages/client/src/components/cam/CamJobInsightsPanel.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "competing-client",
+      "serves": [
+        "packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue"
+      ],
+      "sha256": "b531f567fd929dc1fc97dcf4e2ad14ff7e44bf970d8b4857b4293a2c639e239c",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue",
+      "capability_cluster": "cam-insights",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job_log/insights"
+      ],
+      "git_blob": "352cda626fa3d973b0aeb22077bd346a2be7df58",
+      "known_callers": [],
+      "original_path": "packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue"
+      ],
+      "sha256": "870a072a02d510c7c90d31e121a34166fd0537f97e261770b3779ad7b18095de",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/cam/composables/jobIntHistoryTypes.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job-int/log",
+        "GET /api/cam/job-int/log/{runId}",
+        "POST /api/cam/job-int/favorites/{runId}"
+      ],
+      "git_blob": "85f04610cd93e83ef0a50e2dd7f4461d69f2b3e6",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/cam/composables/index.ts",
+          "reason": "Re-exports the job-int history composables together with CamPipeline and CamIssues composables the pipeline runner evaluates. It adds no Axios call. Copying the barrel would mix live pipeline exports into this archive. The job-int callers are archived."
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+          "reason": ""
+        },
+        {
+          "included": "excluded",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryClone.ts",
+          "reason": "Imports jobIntHistoryTypes for the clone modal and does not call api/job_int.ts. The Axios callers are useJobIntHistoryLoad.ts and useJobIntHistoryActions.ts."
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+          "reason": ""
+        },
+        {
+          "included": "excluded",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryState.ts",
+          "reason": "Imports jobIntHistoryTypes for history state and does not call api/job_int.ts."
+        },
+        {
+          "included": "excluded",
+          "kinds": "type",
+          "path": "packages/client/src/components/cam/composables/useJobIntHistoryStats.ts",
+          "reason": "Imports jobIntHistoryTypes for history stats and does not call api/job_int.ts."
+        }
+      ],
+      "original_path": "packages/client/src/components/cam/composables/jobIntHistoryTypes.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": true
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/job_int.ts"
+      ],
+      "sha256": "ed6c188ad1ab942b4cf6fa4f71d1a30e5b893b3a105a553a1674a018457e64d8",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job-int/log",
+        "GET /api/cam/job-int/log/{runId}",
+        "POST /api/cam/job-int/favorites/{runId}"
+      ],
+      "git_blob": "d08107386b7fe6c10f2ee79d9a53e5a0244928f3",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/cam/composables/index.ts",
+          "reason": "Re-exports the job-int history composables together with CamPipeline and CamIssues composables the pipeline runner evaluates. It adds no Axios call. Copying the barrel would mix live pipeline exports into this archive. The job-int callers are archived."
+        }
+      ],
+      "original_path": "packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": true
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/api/job_int.ts"
+      ],
+      "sha256": "84c21acd58c00727d456318e8f7ce4c352cbf63aea9b2937f745432b17a80262",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/cam/job-int/log",
+        "GET /api/cam/job-int/log/{runId}",
+        "POST /api/cam/job-int/favorites/{runId}"
+      ],
+      "git_blob": "1bdbce39b821c86aee24ef92104d0ae33fb96792",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/components/cam/composables/index.ts",
+          "reason": "Re-exports the job-int history composables together with CamPipeline and CamIssues composables the pipeline runner evaluates. It adds no Axios call. Copying the barrel would mix live pipeline exports into this archive. The job-int callers are archived."
+        }
+      ],
+      "original_path": "packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": true
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/api/job_int.ts"
+      ],
+      "sha256": "cde5f47713c9caf534ef09c15c19c836ac4b03b2a32e85facd424aed69d04a61",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/dashboard/BucketDetailsPanel.vue",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "1b2fcb5ac22a51b210583a467c03e6cb4b2ac7ea",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport+reexport-type",
+          "path": "packages/client/src/components/dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/dashboard/BucketDetailsPanel.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "751ceb970f8f5902292bc4795373ccaae2533406a25844bb9cbd99e4f8787eae",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/dashboard/BucketsTable.vue",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "3c28a970b47bc1f18b2d383792a9855e87652e04",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport+reexport-type",
+          "path": "packages/client/src/components/dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/dashboard/BucketsTable.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "a3a7f979ea2ee811d36be5ef6dd4683843f5e52d550c836945719ae8adbc7ddd",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/dashboard/FiltersBar.vue",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "af17bad2e2ca1aaaff5c5bd385f304a84a8ca511",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport+reexport-type",
+          "path": "packages/client/src/components/dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/dashboard/FiltersBar.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "f393fa3d1d7f88fd5397383f2889caaad6aad1bbc5be4a51a4f5ac4d42978d17",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/dashboard/index.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "bc34cc02c574b40c245d58124f11fa68c269cbcd",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/components/dashboard/index.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-barrel",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "02e1fb2d8d0e543ea834c65a2b3e9fa940e23e2b7908bc54fb093ccdf21280f4",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/toolbox/AdaptiveBench.vue",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /cam/adaptive2/offset_spiral.svg",
+        "POST /cam/adaptive2/trochoid_corners.svg"
+      ],
+      "git_blob": "5ca541c1cb56cfe2bca97a8ee2c5002dd967d163",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/components/toolbox/ArtStudioCAM.vue",
+          "reason": "Unmounted shell that mounts BackplotGcode.vue and AdaptiveBench.vue beside other toolbox tools. Those two callers are archived. The shell is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/components/toolbox/AdaptiveBench.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/api/n16.ts"
+      ],
+      "sha256": "ec774b8598119a4429d29b853b00ae2bcac98baa1afacd5401fd857b327f48da",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/components/toolbox/BackplotGcode.vue",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /api/cam/gcode/plot.svg",
+        "POST /api/cam/gcode/estimate",
+        "POST /api/cam/gcode/save_temp"
+      ],
+      "git_blob": "9241bada4461e69d7215418cf566cc4d0893098e",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/components/toolbox/ArtStudioCAM.vue",
+          "reason": "Unmounted shell that mounts BackplotGcode.vue and AdaptiveBench.vue beside other toolbox tools. Those two callers are archived. The shell is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/components/toolbox/BackplotGcode.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/api/n15.ts"
+      ],
+      "sha256": "5efb9fcd42428fc0bd763e5989d8a0922f8ded7ef94ab6f21baefc06adcf9ac4",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/stores/aiAdvisoryStore.ts",
+      "capability_cluster": "ai-advisory",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "POST /ai/advisories/request"
+      ],
+      "git_blob": "27514ee34c83ead69129f3baeddbc5e776d0fae2",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/components/ai/AiAdvisoryPanel.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/stores/aiAdvisoryStore.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/components/ai/aiAdvisoryApi.ts"
+      ],
+      "sha256": "8fd66f4d8b1a01239314ba821a944acf41aec2e6b33ac83050bd21483d49f7b4",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/ArtJobDetail.vue",
+      "capability_cluster": "art-presets-jobs",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/jobs/{jobId}"
+      ],
+      "git_blob": "5e654fd96c38f8e52f14ce53b3e52194b4d142a3",
+      "known_callers": [],
+      "original_path": "packages/client/src/views/ArtJobDetail.vue",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/ArtJobDetail.vue"
+      ],
+      "sha256": "34a2ec37dad2336062e2bdf7d06ddadf2da87098740843b6a2282eba90d17805",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/ArtJobTimeline.vue",
+      "capability_cluster": "art-presets-jobs",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/jobs",
+        "GET /api/cam/risk/reports_index"
+      ],
+      "git_blob": "1e6f2072bf28eb651f6d033f9ea55e1ba9e9b60f",
+      "known_callers": [],
+      "original_path": "packages/client/src/views/ArtJobTimeline.vue",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/ArtJobTimeline.vue"
+      ],
+      "sha256": "2294023a67974a962c4550dec57cd92ff53ff1b005ec725f6451d7920c92d0c7",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/ArtPresetManager.vue",
+      "capability_cluster": "art-presets-jobs",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/presets",
+        "POST /api/art/presets",
+        "DELETE /api/art/presets/{id}"
+      ],
+      "git_blob": "adbd393bc05e305bdda93ed66eec840ae1aa8b70",
+      "known_callers": [],
+      "original_path": "packages/client/src/views/ArtPresetManager.vue",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/ArtPresetManager.vue"
+      ],
+      "sha256": "ed48da14fbf4f0e9f8e781593ed3ab04e26bf79b0ed1400cf5607aeca8d56479",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/ArtStudioRosetteCompare.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "accffe1c3a9c2091759ef8fa1a724a51010b139a",
+      "known_callers": [],
+      "original_path": "packages/client/src/views/ArtStudioRosetteCompare.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "67444e99d8129be7546a5a2b651631b99855e4d016969b674681345937da42b7",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "24473af5a9f5741f6b89743248cd37d680b0be48",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/__tests__/RiskDashboardCrossLab.spec.ts",
+          "reason": "Characterization spec. It mounts RiskDashboardCrossLab.vue and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        }
+      ],
+      "original_path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "03ae8d1b450dfc1cf89516aad3b1d112b6a540a58d5d5717e722a326f28d1e28",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/index.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "f9a40cf8fd17f387a367c6bb2cac1dd6d94cf021",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/RiskDashboardCrossLab.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/index.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "barrel",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "7e13aaf2e29a44c9ca0ed21b6a9f58a12d3094c4ee6983b8ad76e7a2815fe1ab",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "cb9ccb5e491fc2e7708c3fdf8307213a59323a21",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "c478a4e2b5995bbdf845953ee5242ffa38b67601e3ee3ce5434d12ac33a1695a",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_bucket_detail"
+      ],
+      "git_blob": "f291bbcf30a288bb7bbdd8d3736faf671cfd6002",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "5755f47f0a239ac15e32f210f2757b47da89204cd3d9274909f93abb2e2f1e6d",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate"
+      ],
+      "git_blob": "357d3edc08a83bd5579031c0247e883834afbbe7",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "99b3f676f7907a5f24207e3235bdcb6cda190c02346861c678dd79aca5596ec5",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "c417183f33d617193c63322cc172947486d62894",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardRequestOrder.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "d60cf4c30b686a9ad4eaf546d79645fc3c7be5acc0af28b7797e7d672c409482",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "be7236b7aeeae6437709db92663f3897c2b5caab",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "d85ec303a67e1b20e37191005077a9a5515c86798d5cb8bf8daf277c5685991c",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "capability_cluster": "risk-dashboard-canonical",
+      "disposition": "DORMANT_PRESERVE \u2014 CANONICAL_BUT_UNROUTED",
+      "endpoint_inventory": [
+        "GET /api/compare/risk_aggregate",
+        "GET /api/compare/risk_bucket_detail",
+        "GET /api/compare/risk_bucket_export",
+        "GET /api/compare/risk_bucket_export?format=json",
+        "GET /api/compare/risk_bucket_report",
+        "GET /api/compare/risk_snapshot"
+      ],
+      "git_blob": "b134621d5f0fd613cd80d60c8d6ae09c737affdc",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/art/risk-dashboard/__tests__/riskDashboardDecomposed.spec.ts",
+          "reason": "Characterization spec. It imports the risk composables and mocks Axios. It is not a production capability and is not one of the 17 importers."
+        },
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/art/risk-dashboard/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+        "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts"
+      ],
+      "sha256": "b18d464ee2ceed84ebc1c1c83f12e23aed54cba2fc38344dce454dd622bb75a3",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/CompareDiffSummary.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "7b94736399330c9908018c5c23cfdaf6b21ea99e",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/ArtStudioRosetteCompare.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/CompareDiffSummary.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "e7d67cfca50ff67701108504922ea526311140d56cf2ca1379c31b1dc1835ba5",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "4b23877351828b472e2087f0881b0c7226361894",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/ArtStudioRosetteCompare.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "3fff141afb790862484544e7bef04f6f21edd2e5486119b2a6f3b21e2853fc1e",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "cbd6ce949e8b29f134f8308cb44c7a7de4de98cc",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "7644279e96b474584f609f036743be9dd760250cf7ed03906e90b31e4cbafe5c",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "47acf415a62dbfd7a29c61796f8ea208122aabe1",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "view-part",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "9365bdcdfc80b6f5ab01e4450aeb24f4e5ccbb6b84131bb870ed8a0d785fe087",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/index.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "5f998d51b630230901710c305b60db5359aaff0b",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "value",
+          "path": "packages/client/src/views/ArtStudioRosetteCompare.vue",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/index.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "barrel",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "41a173c823aa6929acf1c770526160ed1c6d9c54880dc643f40ce180a67bba15",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "4d458619d126a8b668535357bd57da375c35c432",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
+          "reason": ""
+        },
+        {
+          "included": "archived",
+          "kinds": "type",
+          "path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "aab0871f98db229380cab1399bf31e44a96a47104eea1a974420c060045b0913",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot"
+      ],
+      "git_blob": "e497f0f23581ce582a02bb17ea27f35dd2b8d978",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "ed634fb823c4f7fc5784b46416c9250a1125ed2b15e1a1a0812646b92226e4c3",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "6565cfff41f2537a4a8f2c509a5a0f6b750de4ae",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "dc6014e34c0fc000f339a72f6ccf9447ed98c6ce6d3c0996bc00990f7747e744",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "a82ffddab3a195d63888e1449939fde6fc52350c",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
+      "reachability": {
+        "axios_importer": true,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "importer",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "c3667a09d7a0f4bc636f5c7fe64a77552c64137cb7cf5eb4c4f1d7886f14a813",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "40c00d06e2693faecac403a242428f863569fa7e",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "b6a29b34f27f1a59767694c3c068d46a311f7f4576b22ef371ffed2f6e76888a",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
+      "capability_cluster": "rosette-history",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/art/rosette/jobs",
+        "POST /api/art/rosette/compare",
+        "POST /api/art/rosette/compare/snapshot",
+        "GET /api/art/rosette/compare/snapshots",
+        "GET /api/art/rosette/compare/export_csv"
+      ],
+      "git_blob": "3e6abd3ce63abae2169e308fa03440af97be1621",
+      "known_callers": [
+        {
+          "included": "archived",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/rosette_compare/composables/index.ts",
+          "reason": ""
+        }
+      ],
+      "original_path": "packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller-support",
+      "serves": [
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+        "packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts"
+      ],
+      "sha256": "e1bb3077564000d288c16038132bb040451b84fff77cbb79103c3028721a67f7",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "7b0fe9fb7e65eecbadea0c065af05940cb1628e6",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "value",
+          "path": "packages/client/src/views/saw_lab_dashboard/RunDetailModal.vue",
+          "reason": "Imports TelemetryMetricsPanel.vue for display and does not import api/sawLab.ts. The panel's type import is archived with the saw client."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "0304a8ffbbacbbbedc14468336725ebfce4dd2987bda7e0f7ca9754c96d756a5",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "f706ac57a25da67b2e37d453c3ee24469ab559a2",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+          "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "aa22d4b74352bcb6fe866261f79c5046609a66e6877d1c4ded5517e043683f62",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "5498940a3dc248d0ebe6a03763f4b9ecf036a5d9",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+          "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "e08dfe0599214b0ba1ad4c8677336d5adefdb80596bb0b0f478710784c80c613",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "77a13e4b8f3a81f68f9aba2b6029dab028cc0d67",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+          "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "12fd2f15a2f3dc92dd7afa80cb791bcddca24f4b6604403df55ac29fb39879ae",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "4414503613cbe4a8bb42a7009777c6f8792a3c65",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+          "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "b3e8ea2e6392353a70010ff940a4daa8496c7b793378da6db54b877060af9844",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    },
+    {
+      "archive_path": "source/packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts",
+      "capability_cluster": "cam-utility-clients",
+      "disposition": "DORMANT_PRESERVE",
+      "endpoint_inventory": [
+        "GET /api/dashboard/saw/runs",
+        "GET /api/dashboard/saw/health",
+        "POST /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs",
+        "GET /api/joblog/saw_runs/{id}",
+        "PUT /api/joblog/saw_runs/{id}/status",
+        "POST /api/joblog/saw_runs/{id}/telemetry",
+        "GET /api/joblog/saw_runs/{id}/telemetry",
+        "POST /api/learn/ingest",
+        "GET /api/learn/health"
+      ],
+      "git_blob": "ea032831b40de628983770689aaa9046d4462199",
+      "known_callers": [
+        {
+          "included": "excluded",
+          "kinds": "reexport",
+          "path": "packages/client/src/views/saw_lab_dashboard/composables/index.ts",
+          "reason": "Re-exports the archived saw-dashboard composables and does not import api/sawLab.ts. SawLabDashboard.vue is unmounted and is not an Axios importer."
+        }
+      ],
+      "original_path": "packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts",
+      "reachability": {
+        "axios_importer": false,
+        "binding_reachable": false,
+        "evaluated_reachable": false
+      },
+      "role": "type-caller",
+      "serves": [
+        "packages/client/src/api/sawLab.ts"
+      ],
+      "sha256": "7e137eccff5195291acf656f7705dd456ba76c1c0f45aa4164866b2a0fa6b2ed",
+      "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+    }
+  ],
+  "importer_count": 17,
+  "inventory_sha256": "8fd2500b9d35bf38566dfa62db8ee2785562f449a0417e764492131c645d1092",
+  "order_id": "CLIENT-AXIOS-DORMANT-PRESERVATION-024",
+  "production_files_retired": false,
+  "source_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+}
