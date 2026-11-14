@@ -1,10 +1,29 @@
 {
   "order_id": "CLIENT-RISK-DASHBOARD-RECONCILE-022",
   "merge_commit": "pending-owner-merge",
-  "note": "The original 20-row AXIOS_IMPORT_INVENTORY.csv is unchanged. Current importers are that inventory minus retired_importers plus post_audit_importers. CLIENT-ROSETTE-COMPARE-RECONCILE-023 retired the panel's direct Axios import and reclassified useRosetteCompareApi.ts. The panel file remains.",
+  "note": "The original 20-row AXIOS_IMPORT_INVENTORY.csv is unchanged. Current importers are that inventory minus retired_importers plus post_audit_importers. CLIENT-ROSETTE-COMPARE-RECONCILE-023 retired the panel's direct Axios import and reclassified useRosetteCompareApi.ts. The panel file remains. CLIENT-AXIOS-DORMANT-PRESERVATION-024 copied the remaining dormant clusters and did not retire any production file.",
   "subsequent_orders": [
-    "CLIENT-ROSETTE-COMPARE-RECONCILE-023"
+    "CLIENT-ROSETTE-COMPARE-RECONCILE-023",
+    "CLIENT-AXIOS-DORMANT-PRESERVATION-024"
   ],
+  "preservation": {
+    "order_id": "CLIENT-AXIOS-DORMANT-PRESERVATION-024",
+    "rosette_compare_merge_commit": "cfaf07751110d99b3539647e877c2ffd80f4f29c",
+    "production_files_retired": false,
+    "axios_removal_authorized": false,
+    "archive": "archive/experimental/2026-11/client-axios-dormant-capabilities",
+    "ledger": "docs/investigations/client-axios-dormant-preservation-024/PRESERVATION_LEDGER.csv",
+    "note": "DORMANT_PRESERVE is not deletion authority. The archive is provenance for later migrate, retire, or remove orders. Production files stay in place, including the four CANONICAL_BUT_UNROUTED importers.",
+    "clusters": [
+      "ai-advisory",
+      "art-presets-jobs",
+      "cam-insights",
+      "cam-utility-clients",
+      "risk-dashboard-canonical",
+      "rosette-compare-canonical",
+      "rosette-history"
+    ]
+  },
   "retired_importers": [
     {
       "path": "packages/client/src/views/art/composables/useRiskBuckets.ts",
