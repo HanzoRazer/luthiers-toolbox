@@ -3,7 +3,7 @@
  * RosetteComparePanel.vue is the only presentation caller. The four requests
  * keep the panel's methods, URLs, payloads, trimming, and response fields.
  */
-import { ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import axios from 'axios'
 
 export interface GeometryPayload {
@@ -43,6 +43,8 @@ export interface UseRosetteCompareApiOptions {
 const BASELINES_URL = '/api/compare/baselines'
 const DIFF_URL = '/api/compare/diff'
 
+type Operation = 'list' | 'save' | 'geometry' | 'diff'
+
 export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) {
   const lane = options.lane || 'rosette'
 
@@ -50,17 +52,50 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
   const diffStats = ref<DiffStats | null>(null)
   const baselineGeometry = ref<GeometryPayload | null>(null)
   const loading = ref(false)
-  const error = ref('')
+
+  // Errors are owned per operation. Starting an operation clears only its own
+  // error, and a stale request is judged only by its own operation's generation,
+  // so a newer request of one kind can neither erase nor suppress the failure of
+  // another kind. `error` shows the most recent failure that is still standing.
+  const errors = reactive<Record<Operation, { message: string; seq: number }>>({
+    list: { message: '', seq: 0 },
+    save: { message: '', seq: 0 },
+    geometry: { message: '', seq: 0 },
+    diff: { message: '', seq: 0 }
+  })
+  let errorSeq = 0
+  const error = computed(() => {
+    let latest = { message: '', seq: 0 }
+    for (const entry of Object.values(errors)) {
+      if (entry.message && entry.seq > latest.seq) latest = entry
+    }
+    return latest.message
+  })
+
+  function setError(op: Operation, message: string): void {
+    errors[op].message = message
+    errors[op].seq = message ? ++errorSeq : 0
+  }
 
   // Overlapping calls, including saveBaseline's nested reload, share one depth
   // so an inner finally cannot report loading as finished while the outer call
-  // is still running. Each list, geometry, and diff call also takes a generation.
-  // Only the newest generation for that operation may write its state or error.
+  // is still running. Each operation also takes a generation. Only the newest
+  // generation for that operation may write its state or error.
   let loadingDepth = 0
   let listGeneration = 0
+  let saveGeneration = 0
   let geometryGeneration = 0
   let diffGeneration = 0
-  let errorGeneration = 0
+
+  // A diff result describes one baseline and one current geometry. Once either
+  // changes, the pending request must be dropped and the shown result removed.
+  let pendingDiffBaselineId: string | null = null
+  let shownDiffBaselineId: string | null = null
+  let diffCommits = 0
+  // Which baseline baselineGeometry currently shows, and the last plain (not
+  // diff-colored) geometry loaded, so clearing a comparison can restore it.
+  let displayedBaselineId: string | null = null
+  let plainBaseline: { id: string; geometry: GeometryPayload | null } | null = null
 
   function beginLoading(): void {
     loadingDepth += 1
@@ -72,11 +107,30 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
     loading.value = loadingDepth > 0
   }
 
+  /**
+   * Drop any pending comparison and remove the shown one. Call this whenever the
+   * current geometry changes; loadBaselineGeometry calls it when the baseline
+   * changes. A diff-colored baseline geometry is replaced by the plain geometry
+   * of the same baseline when it is known, otherwise by null.
+   */
+  function clearDiff(): void {
+    diffGeneration += 1
+    pendingDiffBaselineId = null
+    diffStats.value = null
+    setError('diff', '')
+    if (shownDiffBaselineId !== null) {
+      const id = shownDiffBaselineId
+      shownDiffBaselineId = null
+      if (displayedBaselineId === id) {
+        baselineGeometry.value = plainBaseline?.id === id ? plainBaseline.geometry : null
+      }
+    }
+  }
+
   async function loadBaselines(): Promise<void> {
     const listGen = ++listGeneration
-    const errorGen = ++errorGeneration
     beginLoading()
-    error.value = ''
+    setError('list', '')
     try {
       const res = await axios.get<BaselineSummary[]>(BASELINES_URL, {
         params: { lane }
@@ -84,9 +138,9 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
       if (listGen !== listGeneration) return
       baselines.value = res.data
     } catch (err) {
-      if (listGen !== listGeneration || errorGen !== errorGeneration) return
+      if (listGen !== listGeneration) return
       console.error('Failed to load baselines', err)
-      error.value = 'Failed to load baselines'
+      setError('list', 'Failed to load baselines')
     } finally {
       endLoading()
     }
@@ -95,9 +149,9 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
   async function saveBaseline(name: string, geometry: GeometryPayload): Promise<string | null> {
     if (!name || !geometry) return null
 
-    const errorGen = ++errorGeneration
+    const saveGen = ++saveGeneration
     beginLoading()
-    error.value = ''
+    setError('save', '')
     try {
       const payload = {
         name,
@@ -108,9 +162,9 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
       await loadBaselines()
       return res.data?.id ?? null
     } catch (err) {
-      if (errorGen !== errorGeneration) return null
+      if (saveGen !== saveGeneration) return null
       console.error('Failed to save baseline', err)
-      error.value = 'Failed to save baseline'
+      setError('save', 'Failed to save baseline')
       return null
     } finally {
       endLoading()
@@ -119,25 +173,41 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
 
   async function loadBaselineGeometry(baselineId: string): Promise<GeometryPayload | null> {
     const geometryGen = ++geometryGeneration
-    if (!baselineId) {
-      baselineGeometry.value = null
-      return null
-    }
+    setError('geometry', '')
 
-    const errorGen = ++errorGeneration
-    error.value = ''
+    // A comparison against any other baseline no longer matches the selection.
+    if (
+      (pendingDiffBaselineId !== null && pendingDiffBaselineId !== baselineId) ||
+      (shownDiffBaselineId !== null && shownDiffBaselineId !== baselineId)
+    ) {
+      clearDiff()
+    }
+    // Never leave another baseline's geometry under this selection while it
+    // loads, or after it fails to load.
+    if (displayedBaselineId !== baselineId) {
+      baselineGeometry.value = null
+      displayedBaselineId = null
+    }
+    if (!baselineId) return null
+
+    const commitsAtStart = diffCommits
     try {
       const res = await axios.get<{ geometry?: GeometryPayload | null }>(
         `${BASELINES_URL}/${encodeURIComponent(baselineId)}`
       )
       if (geometryGen !== geometryGeneration) return null
       const geometry = res.data.geometry ?? null
+      plainBaseline = { id: baselineId, geometry }
+      // A comparison for this baseline landed while the plain geometry was in
+      // flight. Its colored geometry is newer, so it stays on screen.
+      if (diffCommits !== commitsAtStart && shownDiffBaselineId === baselineId) return null
       baselineGeometry.value = geometry
+      displayedBaselineId = baselineId
       return geometry
     } catch (err) {
-      if (geometryGen !== geometryGeneration || errorGen !== errorGeneration) return null
+      if (geometryGen !== geometryGeneration) return null
       console.error('Failed to load baseline geometry', err)
-      error.value = 'Failed to load baseline geometry'
+      setError('geometry', 'Failed to load baseline geometry')
       return null
     }
   }
@@ -150,9 +220,9 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
     if (!baselineId || !currentGeometry) return null
 
     const diffGen = ++diffGeneration
-    const errorGen = ++errorGeneration
+    pendingDiffBaselineId = baselineId
     beginLoading()
-    error.value = ''
+    setError('diff', '')
     try {
       const payload: {
         baseline_id: string
@@ -176,6 +246,10 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
 
       const res = await axios.post<DiffOut>(DIFF_URL, payload)
       if (diffGen !== diffGeneration) return null
+      pendingDiffBaselineId = null
+      shownDiffBaselineId = baselineId
+      displayedBaselineId = baselineId
+      diffCommits += 1
       diffStats.value = res.data.stats
       baselineGeometry.value = res.data.baseline_geometry || null
 
@@ -185,9 +259,10 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
 
       return res.data
     } catch (err) {
-      if (diffGen !== diffGeneration || errorGen !== errorGeneration) return null
+      if (diffGen !== diffGeneration) return null
+      pendingDiffBaselineId = null
       console.error('Failed to run diff', err)
-      error.value = 'Failed to run diff'
+      setError('diff', 'Failed to run diff')
       return null
     } finally {
       endLoading()
@@ -203,6 +278,7 @@ export function useRosetteCompareApi(options: UseRosetteCompareApiOptions = {}) 
     loadBaselines,
     saveBaseline,
     loadBaselineGeometry,
-    runDiff
+    runDiff,
+    clearDiff
   }
 }

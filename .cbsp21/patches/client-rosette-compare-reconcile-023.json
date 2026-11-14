@@ -6,7 +6,7 @@
   "title": "fix(client): adopt the Rosette Compare baseline client",
   "intent": "Make useRosetteCompareApi.ts the only Axios client for the four Rosette baseline and diff calls, and keep RosetteComparePanel.vue as the unrouted presentation layer. Axios stays installed. No backend, route, archive, or manufacturing-authority change.",
   "change_type": "fix",
-  "behavior_change": "The panel now calls useRosetteCompareApi for GET/POST /api/compare/baselines, GET /api/compare/baselines/{id}, and POST /api/compare/diff. Payloads, the rosette lane, job-id and preset trimming, localStorage, and update:job-id stay as they were. A stale list, geometry, or diff response cannot overwrite a newer result, and clearing the selection drops a pending geometry response. The baseline id is encodeURIComponent'd; UUID ids are unchanged. The panel no longer imports Axios.",
+  "behavior_change": "The panel now calls useRosetteCompareApi for GET/POST /api/compare/baselines, GET /api/compare/baselines/{id}, and POST /api/compare/diff. Payloads, the rosette lane, job-id and preset trimming, localStorage, and update:job-id stay as they were. A stale list, geometry, or diff response cannot overwrite a newer result, and clearing the selection drops a pending geometry response. Changing or clearing the baseline, or changing the current geometry, drops a pending diff and removes shown diff statistics, so statistics never describe a baseline or geometry other than the ones on screen. Errors are tracked per operation; a null geometry clears its canvas. The baseline id is encodeURIComponent'd; UUID ids are unchanged. The panel no longer imports Axios.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
@@ -96,7 +96,7 @@
       "path": "packages/client/src/components/art/RosetteComparePanel.vue",
       "intent": "Presentation layer. Drops Axios and uses useRosetteCompareApi. Keeps selection, drawing, localStorage, and job-id emission.",
       "risk": "low",
-      "behavior_change": "Save still selects the returned id. Compare still draws the returned geometry. A stale geometry or diff response is not drawn. The component stays unrouted."
+      "behavior_change": "Save still selects the returned id. Compare still draws the returned geometry. A stale geometry or diff response is not drawn. Changing the current geometry calls clearDiff(), and a selection change blanks the previous baseline at once, so shown statistics always match the selected baseline and current geometry. A null geometry clears its canvas. The component stays unrouted."
     },
     {
       "path": "packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts",
@@ -114,7 +114,7 @@
       "path": "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
       "intent": "Canonical four-operation client. Encodes the baseline id and drops a response that is no longer current.",
       "risk": "low",
-      "behavior_change": "Successful calls keep the same URLs, payloads, and response fields. An older response no longer overwrites a newer baseline list, geometry, diff, error, or loading flag."
+      "behavior_change": "Successful calls keep the same URLs, payloads, and response fields. An older response no longer overwrites a newer baseline list, geometry, diff, error, or loading flag. Loading another baseline, or clearDiff(), drops a pending diff and removes shown diff state. Errors are owned per operation, so one operation cannot erase or suppress another operation's failure."
     },
     {
       "path": "scripts/ci/test_client_axios_reachability.py",

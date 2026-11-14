@@ -19,7 +19,11 @@ The panel and the composable already used the same four backend calls. Adoption 
 | `loadBaselineGeometry` | GET | `/api/compare/baselines/{id}` | Id is `encodeURIComponent`'d. Stores `geometry`. |
 | `runDiff` | POST | `/api/compare/diff` | `baseline_id`, `lane`, `current_geometry`. Blank `job_id` and `preset` omitted. Nonblank values trimmed. |
 
-A later response for an older list, geometry, or diff request does not overwrite the newer state, error, or loading flag. Clearing the selected id invalidates a pending geometry response. `saveBaseline`'s nested reload does not clear `loading` while the save is still in flight.
+A later response for an older list, save, geometry, or diff request does not overwrite the newer state, error, or loading flag. Clearing the selected id invalidates a pending geometry response. `saveBaseline`'s nested reload does not clear `loading` while the save is still in flight.
+
+A comparison belongs to one baseline and one current geometry. Requesting another baseline (or clearing the selection) drops a pending diff, removes the shown statistics, and removes the previous baseline's geometry at once, so a late diff cannot leave statistics for a baseline that is no longer selected. When the current geometry changes, the panel calls `clearDiff()`, which does the same and restores the plain baseline geometry in place of the diff coloring. A diff that lands while the same baseline's plain geometry is still loading keeps its colored geometry. A null geometry now clears its canvas instead of leaving the previous drawing.
+
+Errors are owned per operation. Starting an operation clears only its own error, and a stale request is judged only against its own operation's generation, so a newer request of one kind can neither erase nor suppress another kind's failure. `error` shows the most recent failure that is still standing.
 
 ## Importers
 

@@ -403,4 +403,125 @@ describe('RosetteComparePanel', () => {
     expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('')
     wrapper.unmount()
   })
+  function gateDiff() {
+    const gate = deferred<{ data: unknown }>()
+    vi.mocked(axios.post).mockImplementationOnce(() => gate.promise as never)
+    return gate
+  }
+
+  const STALE_DIFF = {
+    data: {
+      baseline_id: 'base-a',
+      lane: 'rosette',
+      stats: DIFF_STATS,
+      baseline_geometry: GEOM_B,
+      current_geometry: DIFF_CURRENT,
+    },
+  }
+
+  it('does not show a pending comparison after the baseline changes', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    const gate = gateDiff()
+    await button(wrapper, 'Compare').trigger('click')
+    await chooseBaseline(wrapper, 'base-b')
+    const before = strokes.length
+
+    gate.resolve(STALE_DIFF)
+    await flushPromises()
+
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    expect(strokes.slice(before)).toEqual([])
+    // Any later redraw shows Beta's own geometry, not the stale comparison.
+    await wrapper.setProps({ currentGeometry: NEXT_GEOMETRY })
+    await flushPromises()
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    expect(strokes.slice(before)).toContain('#ef4444')
+    expect(strokes.slice(before)).not.toContain('#22c55e')
+    wrapper.unmount()
+  })
+
+  it('does not show a pending comparison after the baseline is cleared', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    const gate = gateDiff()
+    await button(wrapper, 'Compare').trigger('click')
+    await chooseBaseline(wrapper, '')
+    const before = strokes.length
+
+    gate.resolve(STALE_DIFF)
+    await flushPromises()
+
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    expect(strokes.slice(before)).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('removes shown statistics when the baseline changes', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    await button(wrapper, 'Compare').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toMatch(/Baseline paths:\s*4/)
+
+    await chooseBaseline(wrapper, 'base-b')
+
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    wrapper.unmount()
+  })
+
+  it('does not show a pending comparison after the current geometry changes', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    const gate = gateDiff()
+    await button(wrapper, 'Compare').trigger('click')
+    await wrapper.setProps({ currentGeometry: NEXT_GEOMETRY })
+    await flushPromises()
+    const before = strokes.length
+
+    gate.resolve(STALE_DIFF)
+    await flushPromises()
+
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    expect(strokes.slice(before)).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('removes shown statistics when the current geometry changes', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    await button(wrapper, 'Compare').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toMatch(/Baseline paths:\s*4/)
+    const before = strokes.length
+
+    await wrapper.setProps({ currentGeometry: NEXT_GEOMETRY })
+    await flushPromises()
+
+    expect(wrapper.text()).not.toMatch(/Baseline paths:/)
+    // The baseline canvas returns to Alpha's own geometry, not the diff coloring.
+    expect(strokes.slice(before)).toContain('#22c55e')
+    expect(strokes.slice(before)).not.toContain('#ef4444')
+    wrapper.unmount()
+  })
+
+  it('blanks the baseline canvas when the selection is cleared', async () => {
+    const wrapper = await mountPanel()
+    await chooseBaseline(wrapper, 'base-a')
+    const baselineCanvas = wrapper.findAll('canvas')[0].element
+    const cleared: HTMLCanvasElement[] = []
+    HTMLCanvasElement.prototype.getContext = vi.fn(function (this: HTMLCanvasElement) {
+      return {
+        ...ctx,
+        clearRect: () => {
+          cleared.push(this)
+        },
+      } as unknown as CanvasRenderingContext2D
+    }) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+    await chooseBaseline(wrapper, '')
+
+    expect(cleared).toContain(baselineCanvas)
+    wrapper.unmount()
+  })
 })

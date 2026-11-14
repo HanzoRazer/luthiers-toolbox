@@ -397,4 +397,162 @@ describe('useRosetteCompareApi', () => {
     expect(api.error.value).toBe('Failed to save baseline')
     expect(api.loading.value).toBe(false)
   })
+  it('drops a pending diff when the baseline changes and keeps the new baseline geometry', async () => {
+    const diffGate = deferred<{ data: DiffOut }>()
+    vi.mocked(axios.post).mockReturnValueOnce(diffGate.promise)
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    const seen: DiffOut[] = []
+    const api = useRosetteCompareApi({ onDiffComplete: (result) => seen.push(result) })
+
+    const pending = api.runDiff('baseline-a', GEOMETRY)
+    expect(await api.loadBaselineGeometry('baseline-b')).toEqual(GEOMETRY)
+    diffGate.resolve({ data: diffBody({ baseline_id: 'baseline-a' }) })
+
+    expect(await pending).toBeNull()
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toEqual(GEOMETRY)
+    expect(seen).toEqual([])
+    expect(api.loading.value).toBe(false)
+    expect(api.error.value).toBe('')
+  })
+
+  it('drops a pending diff when the baseline is cleared', async () => {
+    const diffGate = deferred<{ data: DiffOut }>()
+    vi.mocked(axios.post).mockReturnValueOnce(diffGate.promise)
+    const api = useRosetteCompareApi()
+
+    const pending = api.runDiff('baseline-a', GEOMETRY)
+    expect(await api.loadBaselineGeometry('')).toBeNull()
+    diffGate.resolve({ data: diffBody({ baseline_id: 'baseline-a' }) })
+
+    expect(await pending).toBeNull()
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toBeNull()
+    expect(api.loading.value).toBe(false)
+  })
+
+  it('drops a pending diff failure after the baseline changes', async () => {
+    const diffGate = deferred<{ data: DiffOut }>()
+    vi.mocked(axios.post).mockReturnValueOnce(diffGate.promise)
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    const api = useRosetteCompareApi()
+
+    const pending = api.runDiff('baseline-a', GEOMETRY)
+    await api.loadBaselineGeometry('baseline-b')
+    diffGate.reject(new Error('late'))
+
+    expect(await pending).toBeNull()
+    expect(api.error.value).toBe('')
+    expect(console.error).not.toHaveBeenCalled()
+  })
+
+  it('removes a shown diff as soon as another baseline is requested', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: diffBody({ baseline_id: 'baseline-a' }) })
+    const geometryGate = deferred<{ data: { geometry: GeometryPayload } }>()
+    vi.mocked(axios.get).mockReturnValueOnce(geometryGate.promise)
+    const api = useRosetteCompareApi()
+    await api.runDiff('baseline-a', GEOMETRY)
+    expect(api.diffStats.value).toEqual(STATS)
+
+    const loading = api.loadBaselineGeometry('baseline-b')
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toBeNull()
+
+    geometryGate.reject(new Error('geometry down'))
+    expect(await loading).toBeNull()
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toBeNull()
+  })
+
+  it('drops a pending diff when clearDiff is called for a changed current geometry', async () => {
+    const diffGate = deferred<{ data: DiffOut }>()
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    vi.mocked(axios.post).mockReturnValueOnce(diffGate.promise)
+    const api = useRosetteCompareApi()
+    await api.loadBaselineGeometry('baseline-1')
+
+    const pending = api.runDiff('baseline-1', GEOMETRY)
+    api.clearDiff()
+    diffGate.resolve({ data: diffBody() })
+
+    expect(await pending).toBeNull()
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toEqual(GEOMETRY)
+    expect(api.loading.value).toBe(false)
+  })
+
+  it('restores the plain baseline geometry when a shown diff is cleared', async () => {
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: diffBody({ baseline_geometry: OTHER_GEOMETRY }) })
+    const api = useRosetteCompareApi()
+    await api.loadBaselineGeometry('baseline-1')
+    await api.runDiff('baseline-1', GEOMETRY)
+    expect(api.baselineGeometry.value).toEqual(OTHER_GEOMETRY)
+
+    api.clearDiff()
+
+    expect(api.diffStats.value).toBeNull()
+    expect(api.baselineGeometry.value).toEqual(GEOMETRY)
+  })
+
+  it('keeps a diff that lands before the plain geometry of the same baseline', async () => {
+    const geometryGate = deferred<{ data: { geometry: GeometryPayload } }>()
+    vi.mocked(axios.get).mockReturnValueOnce(geometryGate.promise)
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: diffBody({ baseline_geometry: OTHER_GEOMETRY }) })
+    const api = useRosetteCompareApi()
+
+    const loading = api.loadBaselineGeometry('baseline-1')
+    await api.runDiff('baseline-1', GEOMETRY)
+    geometryGate.resolve({ data: { geometry: GEOMETRY } })
+
+    expect(await loading).toBeNull()
+    expect(api.diffStats.value).toEqual(STATS)
+    expect(api.baselineGeometry.value).toEqual(OTHER_GEOMETRY)
+    api.clearDiff()
+    expect(api.baselineGeometry.value).toEqual(GEOMETRY)
+  })
+
+  it('keeps a save failure that resolves after a later geometry load started', async () => {
+    const saveGate = deferred<{ data: { id: string } }>()
+    vi.mocked(axios.post).mockReturnValueOnce(saveGate.promise)
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    const api = useRosetteCompareApi()
+
+    const saving = api.saveBaseline('Name', GEOMETRY)
+    await api.loadBaselineGeometry('baseline-1')
+    saveGate.reject(new Error('save down'))
+
+    expect(await saving).toBeNull()
+    expect(api.error.value).toBe('Failed to save baseline')
+    expect(console.error).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not let a successful request of one kind erase a standing failure of another', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(new Error('list down'))
+      .mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    const api = useRosetteCompareApi()
+    await api.loadBaselines()
+    await api.loadBaselineGeometry('baseline-1')
+
+    expect(api.error.value).toBe('Failed to load baselines')
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: [BASELINE] })
+    await api.loadBaselines()
+    expect(api.error.value).toBe('')
+  })
+
+  it('shows the most recent standing failure across operations', async () => {
+    vi.mocked(axios.get)
+      .mockRejectedValueOnce(new Error('list down'))
+      .mockRejectedValueOnce(new Error('geometry down'))
+    const api = useRosetteCompareApi()
+    await api.loadBaselines()
+    await api.loadBaselineGeometry('baseline-1')
+    expect(api.error.value).toBe('Failed to load baseline geometry')
+
+    vi.mocked(axios.get).mockResolvedValueOnce({ data: { geometry: GEOMETRY } })
+    await api.loadBaselineGeometry('baseline-1')
+    expect(api.error.value).toBe('Failed to load baselines')
+  })
 })

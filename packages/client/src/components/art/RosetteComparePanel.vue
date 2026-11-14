@@ -165,6 +165,7 @@ const {
   saveBaseline: persistBaseline,
   loadBaselineGeometry,
   runDiff: requestDiff,
+  clearDiff,
 } = useRosetteCompareApi();
 
 const baselineName = ref("");
@@ -255,8 +256,7 @@ function drawGeometryOnCanvas(
   geometry: GeometryPayload | null,
   defaultStroke: string
 ) {
-  if (!canvas || !geometry) return;
-  const paths = geometry.paths || geometry.loops || [];
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
@@ -266,6 +266,13 @@ function drawGeometryOnCanvas(
   ctx.save();
   ctx.fillStyle = "#f9fafb";
   ctx.fillRect(0, 0, w, h);
+
+  // No geometry: leave the canvas blank rather than keep the previous drawing.
+  if (!geometry) {
+    ctx.restore();
+    return;
+  }
+  const paths = geometry.paths || geometry.loops || [];
 
   // compute bounding box
   let minX = Infinity,
@@ -359,9 +366,12 @@ watch(
   }
 );
 
+// A comparison describes the geometry it was run against. When the current
+// geometry changes, drop a pending comparison and remove the shown statistics.
 watch(
   () => props.currentGeometry,
   () => {
+    clearDiff();
     drawCanvases();
   },
   { deep: true }
@@ -371,13 +381,12 @@ watch(
   () => selectedBaselineId.value,
   async () => {
     const requestedId = selectedBaselineId.value;
-    if (!requestedId) {
-      await loadBaselineGeometry("");
-      drawCanvases();
-      return;
-    }
-    const geometry = await loadBaselineGeometry(requestedId);
-    if (selectedBaselineId.value !== requestedId || geometry == null) return;
+    // loadBaselineGeometry synchronously drops any comparison for another
+    // baseline and the other baseline's geometry, so draw that cleared state now.
+    const pending = loadBaselineGeometry(requestedId ?? "");
+    drawCanvases();
+    const geometry = await pending;
+    if (!requestedId || selectedBaselineId.value !== requestedId || geometry == null) return;
     drawCanvases();
   }
 );
