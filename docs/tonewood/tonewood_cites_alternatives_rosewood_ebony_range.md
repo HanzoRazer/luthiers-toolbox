@@ -6,6 +6,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This document draws on the **368 CIRAD taxa** whose mean density falls in the rosewood-to-ebony band (1,311 specimens). Goes far beyond Pau Ferro and Katalox.
 
 ---
@@ -18,8 +20,8 @@ Statuses corrected 2026-11-14 against Species+ — see [CITES_STATUS.md](CITES_S
 
 | Species | Trade Name | Density | Status |
 |---------|-----------|:-------:|--------|
-| *Dalbergia nigra* | Brazilian Rosewood | 835 | **Appendix I** — effectively banned |
-| *Dalbergia latifolia* | East Indian Rosewood | 830 | Appendix II — regulated |
+| *Dalbergia nigra* | Brazilian Rosewood | 944 | **Appendix I** — effectively banned |
+| *Dalbergia latifolia* | East Indian Rosewood | 885 | Appendix II — regulated |
 | *Dalbergia retusa* | Cocobolo | 1,095 | Appendix II — restricted |
 | *Dalbergia melanoxylon* | African Blackwood | 1,270 | Appendix II — restricted |
 | *Dalbergia cochinchinensis* | Siamese Rosewood | 1,035 | Appendix II — not I; annotation routes it to #4, likely no instrument exemption |
@@ -164,7 +166,7 @@ Australian and plantation options:
 |---------|:-------:|:-----:|-----------|--------|
 | **Pau Ferro** | 880 | 2,030 | "As close to rosewood as possible without being Dalbergia" | **Primary substitute** |
 | **Katalox** | 1,050 | 3,650 | Bright, bell-like — hardest non-ebony | Ebony substitute |
-| **Jatoba** | 910 | 2,690 | Warm, solid; between maple and rosewood | Budget rosewood |
+| **Jatoba** | 861 | 2,360 | Warm, solid; between maple and rosewood | Budget rosewood |
 | **Chechen** | 880 | 994 ᵉ | "Caribbean Rosewood" — regal color | Figured alternative |
 | **Bocote** | 850 | 2,200 | Bold figure; balanced tone | Decorative |
 | **Ziricote** | 815 | 1,900 | "Brazilian looks with Macassar overtones" | Premium figured |
@@ -195,7 +197,7 @@ Australian and plantation options:
 | Species | Density | Notes |
 |---------|:-------:|-------|
 | **Macacauba** | 950 | "Unique sound" — bright colors; backs/sides |
-| **Goncalo Alves (Tigerwood)** | 905 | Between rosewood and Koa tonally |
+| **Goncalo Alves (Tigerwood)** | 1001 | Between rosewood and Koa tonally |
 | **Curupay** | 1,025 | "Patagonian Rosewood" — NOT true rosewood |
 | **Mora** | 1,015 | CIRAD: 1 *M. excelsa* + 10 *M. paraensis* specimens ("39" was the S column, corrected 2026-11-15, C-10); consistent |
 | **Angelim Vermelho** | 1,070 | *Dinizia excelsa*; known timber |
@@ -208,7 +210,7 @@ Australian and plantation options:
 | Species | Density | Notes |
 |---------|:-------:|-------|
 | **Australian Blackwood** | 640 | "Punchy bottom, mid/high of mahogany" — Koa comparison |
-| **Jarrah** | 835 | "As nice as ebony, better than rosewood" for durability |
+| **Jarrah** | 845 | "As nice as ebony, better than rosewood" for durability |
 | **Merbau** | 830 | Warm, rich |
 | **Spotted Gum** | 940 | Dense eucalypt |
 | **Grey Ironbark** | 1,130 | Extremely dense |
@@ -285,10 +287,10 @@ Most-sampled region in CIRAD for this density range:
 | Priority | Species | Density | Why |
 |:--------:|---------|:-------:|-----|
 | 1 | **Pau Ferro** | 880 | Drop-in replacement |
-| 2 | **Jatoba** | 910 | Budget; similar hardness |
+| 2 | **Jatoba** | 861 | Budget; similar hardness |
 | 3 | **Chechen** | 880 | "Caribbean Rosewood" |
 | 4 | **Panga Panga** | 870 | Wenge cousin; dark |
-| 5 | **Goncalo Alves** | 905 | Figured |
+| 5 | **Goncalo Alves** | 1001 | Figured |
 | 6 | **Keranji** | 1,090 | Asian Dialium; underexplored |
 
 ### For African Ebony (Fretboard)
@@ -297,10 +299,10 @@ Most-sampled region in CIRAD for this density range:
 |:--------:|---------|:-------:|-----|
 | 1 | **Katalox** | 1,050 | Hardest; bright |
 | 2 | **Rocklite** | — | Engineered; consistent |
-| 3 | **Ipe** | 1,100 | Extreme hardness — ⚠ **CITES Appendix II since 2024-11-25 (#17)**, not CITES-free |
+| 3 | **Ipe** | 1,119 | Extreme hardness — ⚠ **CITES Appendix II since 2024-11-25 (#17)**, not CITES-free |
 | 4 | **Mopane** | 1,075 | Woodwind industry adoption |
-| 5 | **Bulletwood** | 1,080 | Very dense; *Manilkara* |
-| 6 | **Jarrah** | 835 | "As nice as ebony" per builders |
+| 5 | **Bulletwood** | 1,059 | Very dense; *Manilkara* |
+| 6 | **Jarrah** | 845 | "As nice as ebony" per builders |
 | 7 | **Camelthorn** | 1,200+ | Namibian extreme |
 
 ### For African Blackwood (Extreme Applications)
@@ -322,7 +324,7 @@ Most-sampled region in CIRAD for this density range:
 | 2 | **Kingwood** | 1,200 | Violet color *(CITES II)* |
 | 3 | **Macacauba** | 950 | Bright colors |
 | 4 | **Bloodwood** | 1,050 | Vivid red |
-| 5 | **Goncalo Alves** | 905 | Tiger stripe figure |
+| 5 | **Goncalo Alves** | 1001 | Tiger stripe figure |
 
 ---
 
@@ -332,10 +334,10 @@ For bridges and nuts where energy transfer matters:
 
 | Species | MOE (GPa) | Density | Notes |
 |---------|:---------:|:-------:|-------|
-| **Greenheart** | 24.64 | 1,010 | Highest in database |
+| **Greenheart** | 22.4 | 1,010 | Highest in database |
 | **Wamara** | 24.38 | 1,080 | *Swartzia panacoco* |
 | **Snakewood** | 23.20 | 1,210 | Exotic figure |
-| **Bulletwood** | 23.06 | 1,080 | Very stiff |
+| **Bulletwood** | 23.8 | 1,059 | Very stiff |
 | **Cumaru** | 22.33 | 1,085 | Known; hard — ⚠ CITES Appendix II since 2024-11-25 (#17) |
 | **Bloodwood** | 20.78 | 1,050 | Vivid red |
 | **Marblewood** | 19.43 | 1,005 | Figured |
@@ -347,15 +349,15 @@ For bridges and nuts where energy transfer matters:
 
 | Species | Density | MOE | Notes |
 |---------|:-------:|:---:|-------|
-| **Live Oak** | 1,000 | 13.52 | SE United States; curved grain |
+| **Live Oak** | 986 | 13.7 | SE United States; curved grain |
 | **Osage Orange** | 855 | 11.64 | Brilliant yellow; abundant |
-| **Black Locust** | 770 | 14.14 | Rot-resistant |
+| **Black Locust** | 773 | 14.14 | Rot-resistant |
 | **Persimmon** | 835 | 13.86 | Traditional; fine-grained |
 | **Honey Mesquite** | 950 | 11.58 | **Invasive** — ecological benefit |
 | **Texas Ebony** | 965 | 16.54 | Not true ebony; legume |
 | **Dogwood** | 815 | 13.26 | Hard; fine-grained |
 
-**The Texas Trio:** Honey Mesquite (950), Texas Ebony (965), and Live Oak (1,000) span 950–1,000 kg/m³ with no restrictions.
+**The Texas Trio:** Honey Mesquite (950), Texas Ebony (965), and Live Oak (986, FPL GTR-282) span 950–986 kg/m³ with no restrictions.
 
 ---
 

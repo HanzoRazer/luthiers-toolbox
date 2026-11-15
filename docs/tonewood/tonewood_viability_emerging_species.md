@@ -3,6 +3,8 @@
 > **Generated:** 2026-04-27
 > **Purpose:** Evaluate six emerging/alternative species for lutherie adoption
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 ---
 
 ## Executive Summary
@@ -26,22 +28,24 @@
 |----------|:-----:|:--------------:|:--------:|:------------:|:---------:|:--------:|
 | **Scientific Name** | *Khaya spp.* | *Pterocarpus soyauxii* | *Albizia coriaria* | *Platanus occidentalis* | *Albizia saman* | *Parashorea malaanonan* |
 | **Family** | Meliaceae | Fabaceae | Fabaceae | Platanaceae | Fabaceae | Dipterocarpaceae |
-| **SG** | 0.50 | 0.74 | 0.76 | 0.55 | 0.60 | 0.39–0.67 |
-| **Density (kg/m³)** | 530 | 745 | 764 | 545 | 600 | 390–670 |
-| **Janka (lbf)** | 830 | 731 | ~1,800 † | 410 | 490 | 589–932 |
-| **MOE (GPa)** | — | 13.07 | ~14.5 † | 9.79 | 7.92 | 8.9–13.95 |
-| **MOR (MPa)** | — | 126.7 | ~120 † | 69.0 | 65.7 | 75–97 |
+| **SG** | 0.44 | 0.74 | 0.76 | 0.49 | 0.60 | 0.39–0.67 |
+| **Density (kg/m³)** | 497 | 745 | 764 | 549 | 600 | 390–670 |
+| **Janka (lbf)** | 832 | 1,710 | ~1,800 † | 764 | 490 | 589–932 |
+| **MOE (GPa)** | 9.7 | 13.07 | ~14.5 † | 9.8 | 7.92 | 8.9–13.95 |
+| **MOR (MPa)** | 73.8 | 126.7 | ~120 † | 69.0 | 65.7 | 75–97 |
 | **Grain** | Interlocked | Straight to interlocked | Interlocked | Interlocked | Interlocked | Interlocked |
 
 > † Mugavu values estimated from SG correlation — measured data needed.
+>
+> **Corrected 2026-11-15 (C-11):** Khaya and American Sycamore values are FPL GTR-282 (Khaya speed of sound, impedance and E/ρ computed from them). African Padauk Janka is 1,710 lbf (Wood Database); the earlier 731 was the density regression. Bagtikan ranges are unchanged and unsourced.
 
 ### Acoustic Properties
 
 | Property | Khaya | African Padauk | Mugavu † | Am. Sycamore | Monkeypod | Bagtikan |
 |----------|:-----:|:--------------:|:--------:|:------------:|:---------:|:--------:|
-| **Speed of Sound (m/s)** | — | 4,189 | ~4,358 † | 4,238 | 3,633 | 4,100–4,600 |
-| **Acoustic Impedance (×10⁶)** | — | 3.12 | ~3.33 † | 2.31 | 2.18 | 2.0–2.8 |
-| **E/ρ Ratio** | — | 17.5 | ~19.0 † | 18.0 | 13.2 | 16.5–22.8 |
+| **Speed of Sound (m/s)** | 4,419 | 4,189 | ~4,358 † | 4,226 | 3,633 | 4,100–4,600 |
+| **Acoustic Impedance (×10⁶)** | 2.19 | 3.12 | ~3.33 † | 2.32 | 2.18 | 2.0–2.8 |
+| **E/ρ Ratio** | 19.5 | 17.5 | ~19.0 † | 17.9 | 13.2 | 16.5–22.8 |
 | **Tone Character** | Mahogany-like, slightly brighter | Warm, balanced, rosewood-like | Unknown — needs testing | Warm, open, airy | Neutral, low sustain | Neutral, bland |
 
 > Speed of sound: c = √(E/ρ); Impedance: Z = ρ × c
@@ -50,7 +54,7 @@
 
 | Factor | Khaya | African Padauk | Mugavu | Am. Sycamore | Monkeypod | Bagtikan |
 |--------|:-----:|:--------------:|:------:|:------------:|:---------:|:--------:|
-| **CITES Status** | **App II** (#17, African pop., 2023) | **App II** (#17, African *Pterocarpus*, 2023) | Not listed | Not listed | Not listed | Not checked |
+| **CITES Status** | **App II** (#17, African pop., 2023) | **App II** (#17, African *Pterocarpus*, 2023) | Not listed | Not listed | Not listed | Not listed; not EU-listed (checked 2026-11-15) |
 | **Conservation** | Sustainable | Not threatened | Abundant | Abundant | Abundant | Least Concern (IUCN 2019) |
 | **Supply Region** | West/Central Africa | Central/West Africa | East Africa | Eastern US | Tropics worldwide | Malaysia (Sabah) |
 | **Export Infrastructure** | Established | Established | Emerging (furniture) | Domestic | Established | Established ("White Seraya") |
@@ -145,7 +149,7 @@
 | **Weaknesses** | **High variability** — density spans 390–670 kg/m³ (72% range), requiring individual blank grading; lower-end specimens too soft; Philippines population is threatened (don't source there); tonally described as "balanced and bland" |
 | **Best Applications** | Back/sides, body — mahogany weight class when properly graded (select 550+ kg/m³) |
 | **CNC Behavior** | Easy — similar to softer mahoganies; low burn/tearout risk |
-| **Sourcing** | **Malaysia/Sabah only** as "White Seraya" — avoid Philippine sources where population is stressed |
+| **Sourcing** | **Malaysia/Sabah only** as "White Seraya" — avoid Philippine sources where population is stressed. Check the botanical name on the paperwork: "white lauan / white seraya" is also used for *Pentacme contorta*, which is EU Annex D since 2026-06-29 (Bagtikan, *Parashorea malaanonan*, is not listed) — see [CITES_STATUS.md](CITES_STATUS.md) |
 | **Tone Profile** | Neutral, balanced, moderate sustain — functional but unremarkable; similar to light red meranti family |
 | **Recommendation** | **Viable if graded carefully.** Source from Malaysian suppliers as White Seraya. Reject blanks below 550 kg/m³. Not a standout tonewood, but a workable mahogany-class option with established supply. |
 

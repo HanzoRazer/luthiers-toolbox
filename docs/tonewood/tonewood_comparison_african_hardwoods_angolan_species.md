@@ -1,5 +1,7 @@
 # African Hardwoods: Angolan & East African Species Reference
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 **Version:** 1.3.0  
 **Species count:** 17  
 **Last updated:** 2026-05-07  
@@ -29,20 +31,20 @@
 | 3 | **Panga Panga** | *Millettia stuhlmannii* | 0.88 | 880 | 2160 | 4.0 | 6.9 | EU D |
 | 4 | **Chanfuta** | *Afzelia quanzensis* | 0.83 | 830 | 2210 | 2.6 | 4.1 | App II |
 | 5 | **Doussie** | *Afzelia bipindensis* | 0.83 | 830 | 2430 | 3.0 | 4.4 | App II |
-| 6 | **Banga Wanga** | *Amblygonocarpus andongensis* | 0.77 | 770 | ~1800 | 3.5 † | 5.5 † | — |
-| 7 | **Mugavu** | *Albizia coriaria* | 0.76 | 764 | ~1800 | 3.8 † | 6.2 † | — |
-| 8 | **Sapele / Undianuno** | *Entandrophragma cylindricum* | 0.64 | 640 | 1410 | 4.6 | 7.4 | EU D |
+| 6 | **Banga Wanga** | *Amblygonocarpus andongensis* | 0.77 | 770 | ~1800 | — | — | — |
+| 7 | **Mugavu** | *Albizia coriaria* | 0.76 | 764 | ~1800 | — | — | — |
+| 8 | **Sapele / Undianuno** | *Entandrophragma cylindricum* | 0.60 | 672 | 1506 | 4.6 | 7.4 | EU D |
 | 9 | **Kibaba / Tiama** | *Entandrophragma angolense* | 0.58 | 580 | 940 | 5.2 | 7.6 | EU D |
 | 10 | **Sipo / Utile** | *Entandrophragma utile* | 0.59 | 590 | 1130 | 4.8 | 6.4 | EU D |
 | 11 | **African Walnut** | *Lovoa trichilioides* | 0.53 | 530 | 940 | 3.5 | 6.0 | — |
-| 12 | **Longhi (white)** | *Gambeya africana* | 0.56 | 560 | ~1300 | 4.2 † | 7.0 † | — |
-| 13 | **Longhi (red)** | *Gambeya lacourtiana* | 0.59 | 590 | ~1400 | 4.5 † | 7.3 † | — |
-| 14 | **Mukulungu** | *Autranella congolensis* | 0.87 | 870 | 2500 | 5.0 † | 8.2 † | — |
-| 15 | **Mvule / Iroko** | *Milicia excelsa* | 0.64 | 660 | 1260 | 3.2 | 4.6 | — |
-| 16 | **Ovangkol / Shedua** | *Guibourtia ehie* | 0.82 | 825 | 1360 | 4.3 | 8.3 | — |
+| 12 | **Longhi (white)** | *Gambeya africana* | 0.56 | 560 | ~1300 | — | — | — |
+| 13 | **Longhi (red)** | *Gambeya lacourtiana* | 0.59 | 590 | ~1400 | — | — | — |
+| 14 | **Mukulungu** | *Autranella congolensis* | 0.87 | 870 | 2500 | — | — | — |
+| 15 | **Mvule / Iroko** | *Milicia excelsa* | 0.57 | 639 | 1259 | 2.8 | 3.8 | — |
+| 16 | **Ovangkol / Shedua** | *Guibourtia ehie* | 0.72 | 809 | 1330 | 4.5 | 8.2 | — |
 | 17 | **Wenge** | *Millettia laurentii* | 0.87 | 870 | 1930 | 4.8 | 8.1 | — |
 
-> † Estimated from SG correlation  
+> Shrinkage cells marked † were estimated from specific gravity; the wood data policy forbids that, so they were removed on 2026-11-15 (C-11). "~" Janka values are still SG-correlation estimates.  
 > App II = CITES Appendix II · EU D = not CITES-listed, EU monitoring Annex D only (corrected 2026-11-14; the earlier "Prop II at CoP20" was wrong — the *Entandrophragma* proposal was postponed to CoP21, 2028; see [CITES_STATUS.md](CITES_STATUS.md))  
 > Units: Density kg/m³ · Janka lbf · Shrinkage %
 
@@ -185,9 +187,9 @@
 | Specific Gravity | 0.77 |
 | Density | 770 kg/m³ |
 | Janka Hardness | ~1800 lbf / ~8010 N † |
-| Shrinkage (radial) | 3.5% † |
-| Shrinkage (tangential) | 5.5% † |
-| T/R Ratio | 1.6 † |
+| Shrinkage (radial) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| Shrinkage (tangential) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| T/R Ratio | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
 | Grain | — |
 | Workability | — |
 | Resinous | No |
@@ -198,7 +200,7 @@
 
 **Notes:** Central/East African hardwood in the transitional density band between mahogany and rosewood weights. Limited lutherie documentation. The common name "Scotsman's Rattle" refers to the seed pods. Requires acoustic characterization before lutherie positioning can be confirmed.
 
-> † All values estimated from SG correlation
+> † Estimated from SG correlation (Janka only; the SG-based shrinkage estimates were removed 2026-11-15 under the wood data policy)
 
 ---
 
@@ -212,9 +214,9 @@
 | Specific Gravity | 0.76 |
 | Density | 764 kg/m³ |
 | Janka Hardness | ~1800 lbf / ~8000 N † |
-| Shrinkage (radial) | 3.8% † |
-| Shrinkage (tangential) | 6.2% † |
-| T/R Ratio | 1.6 † |
+| Shrinkage (radial) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| Shrinkage (tangential) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| T/R Ratio | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
 | Grain | interlocked |
 | Workability | moderate — interlocked grain requires sharp tooling |
 | Resinous | No |
@@ -223,9 +225,9 @@
 | Tone Character | *(needs acoustic testing — positioned between Sapele and Bubinga)* |
 | Sustainability | Abundant — not CITES listed, East African supply growing |
 
-**Notes:** Strategic emerging tonewood. At 764 kg/m³, sits between Sapele (640) and Bubinga (890) — denser than mahogany alternatives, lighter than rosewoods. East African luthiers already use Mugavu as a mahogany replacement — this is established regional practice, not speculation. European furniture export channels exist and could pivot to tonewood grading. The highest-priority data gap is acoustic characterization (speed of sound, impedance).
+**Notes:** Strategic emerging tonewood. At 764 kg/m³, sits between Sapele (672) and Bubinga (869) — denser than mahogany alternatives, lighter than rosewoods. East African luthiers already use Mugavu as a mahogany replacement — this is established regional practice, not speculation. European furniture export channels exist and could pivot to tonewood grading. The highest-priority data gap is acoustic characterization (speed of sound, impedance).
 
-> † Estimated from SG correlation
+> † Estimated from SG correlation (Janka only; the SG-based shrinkage estimates were removed 2026-11-15 under the wood data policy)
 
 ---
 
@@ -236,9 +238,9 @@
 
 | Property | Value |
 |----------|-------|
-| Specific Gravity | 0.64 |
-| Density | 640 kg/m³ |
-| Janka Hardness | 1410 lbf / 6270 N |
+| Specific Gravity | 0.60 |
+| Density | 672 kg/m³ |
+| Janka Hardness | 1506 lbf / 6700 N |
 | Shrinkage (radial) | 4.6% |
 | Shrinkage (tangential) | 7.4% |
 | T/R Ratio | 1.6 |
@@ -339,9 +341,9 @@
 | Specific Gravity | 0.56 |
 | Density | 560 kg/m³ |
 | Janka Hardness | ~1300 lbf / ~5780 N † |
-| Shrinkage (radial) | 4.2% † |
-| Shrinkage (tangential) | 7.0% † |
-| T/R Ratio | 1.7 † |
+| Shrinkage (radial) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| Shrinkage (tangential) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| T/R Ratio | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
 | Grain | fine, even texture |
 | Workability | good |
 | Resinous | No |
@@ -352,7 +354,7 @@
 
 **Notes:** Medium-density Sapotaceae from West/Central Africa. Formerly classified as *Chrysophyllum africanum*. Fine, even grain makes it suitable for applications requiring uniform texture. Acoustic properties uncharacterized — needs tap-tone testing.
 
-> † Estimated from SG correlation
+> † Estimated from SG correlation (Janka only; the SG-based shrinkage estimates were removed 2026-11-15 under the wood data policy)
 
 ---
 
@@ -366,9 +368,9 @@
 | Specific Gravity | 0.59 |
 | Density | 590 kg/m³ |
 | Janka Hardness | ~1400 lbf / ~6230 N † |
-| Shrinkage (radial) | 4.5% † |
-| Shrinkage (tangential) | 7.3% † |
-| T/R Ratio | 1.6 † |
+| Shrinkage (radial) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| Shrinkage (tangential) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| T/R Ratio | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
 | Grain | fine, even texture |
 | Workability | good |
 | Resinous | No |
@@ -379,7 +381,7 @@
 
 **Notes:** Slightly denser sibling of White Longhi. Reddish-brown heartwood. Same family (Sapotaceae) and similar working properties. "Longhi" is the collective Angolan trade name for both *Gambeya* species.
 
-> † Estimated from SG correlation
+> † Estimated from SG correlation (Janka only; the SG-based shrinkage estimates were removed 2026-11-15 under the wood data policy)
 
 ---
 
@@ -393,9 +395,9 @@
 | Specific Gravity | 0.87 |
 | Density | 870 kg/m³ |
 | Janka Hardness | 2500 lbf / 11120 N |
-| Shrinkage (radial) | 5.0% † |
-| Shrinkage (tangential) | 8.2% † |
-| T/R Ratio | 1.6 † |
+| Shrinkage (radial) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| Shrinkage (tangential) | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
+| T/R Ratio | — (SG-based estimate removed 2026-11-15; measured value not yet sourced) |
 | Grain | interlocked |
 | Workability | moderate — hard, requires sharp carbide |
 | Resinous | No |
@@ -406,7 +408,7 @@
 
 **Notes:** Heavyweight Sapotaceae from Central/West Africa. Very durable heartwood, used for bridges, railway sleepers and hydraulic works. Among the denser species here (870 kg/m³; African Blackwood at 1,270 and Panga Panga at 880 are denser) (corrected 2026-11-14, see `VERIFICATION_LOG.md`). (The earlier "Class 5" was wrong: in EN 350, class 5 means *not durable*.) Primarily a construction timber, but hardness and durability suit high-wear applications like fretboards and bridges. Not typically selected for acoustic applications.
 
-> † Estimated from SG correlation
+> † Estimated from SG correlation (Janka only; the SG-based shrinkage estimates were removed 2026-11-15 under the wood data policy)
 
 ---
 
@@ -417,9 +419,9 @@
 
 | Property | Value |
 |----------|-------|
-| Specific Gravity | 0.64 |
-| Density | 660 kg/m³ |
-| Janka Hardness | 1260 lbf / 5610 N |
+| Specific Gravity | 0.57 |
+| Density | 639 kg/m³ |
+| Janka Hardness | 1259 lbf / 5600 N |
 | Shrinkage (radial) | 2.8–3.5% |
 | Shrinkage (tangential) | 3.8–5.4% |
 | T/R Ratio | 1.4–1.5 |
@@ -431,7 +433,7 @@
 | Tone Character | warm, balanced — often compared to teak, stable tonal character |
 | Sustainability | Not CITES listed — IUCN Lower Risk/near threatened (1998 assessment) |
 
-**Notes:** The premier "African Teak" — widely used as a teak substitute for exterior applications due to exceptional dimensional stability and durability. At 660 kg/m³, sits in the Sapele/mahogany weight range. The very low T/R ratio (1.4) means minimal warping — excellent for necks. "Mvule" is the Swahili/Kenyan name; "Iroko" is the international trade name; "Kambala" is used in some Angolan markets. Dust can be sensitizing — use extraction. Contains calcium carbonate deposits (stone) that can chip carbide.
+**Notes:** The premier "African Teak" — widely used as a teak substitute for exterior applications due to exceptional dimensional stability and durability. At 639 kg/m³, sits in the Sapele/mahogany weight range. The very low T/R ratio (1.4) means minimal warping — excellent for necks. "Mvule" is the Swahili/Kenyan name; "Iroko" is the international trade name; "Kambala" is used in some Angolan markets. Dust can be sensitizing — use extraction. Contains calcium carbonate deposits (stone) that can chip carbide.
 
 ---
 
@@ -442,13 +444,13 @@
 
 | Property | Value |
 |----------|-------|
-| Specific Gravity | 0.82 |
-| Density | 825 kg/m³ |
-| Janka Hardness | 1360 lbf / 6050 N |
-| Modulus of Elasticity | 18.6 GPa |
-| Modulus of Rupture | 140.3 MPa |
-| Shrinkage (radial) | 4.3% |
-| Shrinkage (tangential) | 8.3% |
+| Specific Gravity | 0.72 |
+| Density | 809 kg/m³ |
+| Janka Hardness | 1330 lbf / 5900 N (Wood Database; FPL has none) |
+| Modulus of Elasticity | 17.7 GPa |
+| Modulus of Rupture | 116.5 MPa |
+| Shrinkage (radial) | 4.5% |
+| Shrinkage (tangential) | 8.2% |
 | T/R Ratio | 1.9 |
 | Grain | interlocked, often figured |
 | Workability | moderate — interlocked grain prone to tearout |

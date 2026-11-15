@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 (472 species) + `luthier_tonewood_reference.json` v1.0.0
 > **Generated:** 2026-03-10
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 ---
 
 ## Physical Properties
@@ -10,15 +12,15 @@
 | Property | Black Cherry | Honduran Mahogany | American Black Walnut | Honey Mesquite | American Sycamore |
 |----------|:---:|:---:|:---:|:---:|:---:|
 | **Scientific Name** | *Prunus serotina* | *Swietenia macrophylla* | *Juglans nigra* | *Prosopis glandulosa* | *Platanus occidentalis* |
-| **Specific Gravity** | 0.53 | 0.52 | 0.56 | 0.86 | 0.55 |
-| **Density (kg/m³)** | 560 | 545 | 610 | 950 | 545 |
-| **Janka Hardness (lbf)** | 950 | 800 | 1,010 | 2,345 | 410 |
-| **Janka Hardness (N)** | 4,226 | 3,558 | 4,493 | 10,431 | 1,824 |
+| **Specific Gravity** | 0.50 | 0.47 | 0.55 | 0.86 | 0.49 |
+| **Density (kg/m³)** | 560 | 529 | 616 | 950 | 549 |
+| **Janka Hardness (lbf)** | 944 | 809 | 1,012 | 2,345 | 764 |
+| **Janka Hardness (N)** | 4,200 | 3,600 | 4,500 | 10,431 | 3,400 |
 | **Grain** | Straight, fine | Interlocked | Straight to figured | Interlocked, wildly figured | Interlocked, lace-like ray fleck on quartersawn |
 | **Workability** | Excellent | Excellent | Excellent | Difficult — very hard, dulls cutters | Good — tears on interlocked grain, clean on quartersawn |
 | **Resinous** | No | No | No | No | No |
-| **Contraction Radial (%)** | 4.19 | 4.41 | 4.30 | — | 5.0 |
-| **Contraction Tangential (%)** | 8.09 | 8.41 | 8.29 | — | 8.4 |
+| **Contraction Radial (%)** | 3.7 | 3.0 | 5.5 | — | 5.0 |
+| **Contraction Tangential (%)** | 7.1 | 4.1 | 7.8 | — | 8.4 |
 
 ---
 
@@ -26,13 +28,15 @@
 
 | Property | Black Cherry | Honduran Mahogany | American Black Walnut | Honey Mesquite | American Sycamore |
 |----------|:---:|:---:|:---:|:---:|:---:|
-| **Speed of Sound (m/s)** | 4,276 | 4,687 | 4,312 | 3,491 | 4,238 † |
-| **Acoustic Impedance (10⁶ kg/m²s)** | 2.39 | 2.55 | 2.63 | 3.32 | 2.31 † |
-| **Modulus of Elasticity (GPa)** | 10.24 | 11.97 | 11.34 | 11.58 | 9.79 |
-| **Modulus of Rupture (MPa)** | 78.0 | 98.4 | 90.7 | 117.0 | 69.0 |
+| **Speed of Sound (m/s)** | 4,289 | 4,414 | 4,339 | 3,491 | 4,226 † |
+| **Acoustic Impedance (10⁶ kg/m²s)** | 2.40 | 2.33 | 2.67 | 3.32 | 2.32 † |
+| **Modulus of Elasticity (GPa)** | 10.3 | 10.3 | 11.6 | 11.58 | 9.8 |
+| **Modulus of Rupture (MPa)** | 85.0 | 79.3 | 101.0 | 117.0 | 69.0 |
 | **Tone Character** | Warm, sweet mids — similar to mahogany | Warm, balanced, good sustain | Warm, rich mids, mahogany-like | Bright, crystalline highs, strong sustain — rosewood-like but more percussive | Warm, open, airy — light body with pronounced mids, low damping |
 
-> † American Sycamore speed of sound and acoustic impedance computed from MOE and density: c = √(E/ρ) = √(9.79×10⁹ / 545) ≈ 4,238 m/s; Z = ρ × c = 545 × 4,238 ≈ 2.31 × 10⁶ kg/m²s.
+> † American Sycamore speed of sound and acoustic impedance computed from MOE and density: c = √(E/ρ) = √(9.8×10⁹ / 549) ≈ 4,226 m/s; Z = ρ × c = 549 × 4,226 ≈ 2.32 × 10⁶ kg/m²s.
+>
+> **Corrected 2026-11-15 (C-11):** density, Janka, shrinkage, MOE and MOR for cherry, mahogany, walnut and sycamore are now FPL GTR-282 values (Tables 4-3, 4-4, 5-3a, 5-5a; density at 12% MC by FPL Eq. 4-14); speed of sound and impedance are recomputed from them. Honey mesquite is not in FPL and is unchanged.
 
 ---
 
@@ -100,11 +104,11 @@
 
 ### The Warm-Mid Cluster: Cherry, Mahogany, Walnut
 
-Cherry, mahogany, and walnut form a tonal cluster — all three sit in the "warm, mid-focused" zone with very similar density (545–610 kg/m³), acoustic impedance (2.39–2.63), and MOE (10.2–12.0 GPa). They share excellent workability and standard CNC parameters.
+Cherry, mahogany, and walnut form a tonal cluster — all three sit in the "warm, mid-focused" zone with similar density (529–616 kg/m³), acoustic impedance (2.33–2.67), and MOE (10.3–11.6 GPa). They share excellent workability and standard CNC parameters.
 
-- **Honduran Mahogany** is the benchmark tonewood of the group. Highest speed of sound (4,687 m/s) and highest MOE (11.97 GPa); Honey Mesquite has the highest MOR (117 vs 98.4 MPa) (corrected 2026-11-14, see `VERIFICATION_LOG.md`). The classic Les Paul body wood. CITES-listed — availability is tightening and pricing reflects it.
-- **American Black Walnut** is the closest mahogany substitute by the numbers. Marginally denser and harder, with a slightly richer mid emphasis. Best overall machining profile of the five (lowest combined burn + tearout tendency). Domestically abundant and sustainable.
-- **Black Cherry** leans sweeter and softer than the other two. Lowest MOR (78 MPa) makes it the least structurally rigid of the group. Burn-prone with dull tooling but tearout risk is minimal thanks to its fine, straight grain. The darkening patina is a finish consideration.
+- **Honduran Mahogany** is the benchmark tonewood of the group. It has the highest speed of sound (4,414 m/s) because it is the lightest, not the stiffest: walnut (11.6 GPa) and mesquite (11.58) have a higher MOE than mahogany (10.3), and its MOR (79.3 MPa) is the second-lowest here (corrected 2026-11-14 and 2026-11-15, see `VERIFICATION_LOG.md`). The classic Les Paul body wood. CITES-listed — availability is tightening and pricing reflects it.
+- **American Black Walnut** is the closest mahogany substitute by the numbers. Denser (616 vs 529 kg/m³), harder (1,012 vs 809 lbf) and stiffer, with a slightly richer mid emphasis. Best overall machining profile of the five (lowest combined burn + tearout tendency). Domestically abundant and sustainable.
+- **Black Cherry** leans sweeter than the other two. Its strength (MOR 85 MPa) sits between mahogany (79.3) and walnut (101), and it is harder than mahogany (944 vs 809 lbf). Burn-prone with dull tooling but tearout risk is minimal thanks to its fine, straight grain. The darkening patina is a finish consideration.
 
 ### The Outlier: Honey Mesquite
 
@@ -118,9 +122,9 @@ The tradeoff: stunning wildly figured grain, a brilliant and unique tonal finger
 
 American Sycamore (*Platanus occidentalis*) enters this comparison as an exploratory species — currently uncharacterized for lutherie in the tonewood reference but with physical properties that warrant investigation.
 
-At 545 kg/m³ and Janka 410 lbf, sycamore is the softest and lightest wood in this comparison — matching mahogany's density exactly but with roughly half the hardness. The computed speed of sound (4,238 m/s) and acoustic impedance (2.31) place it just below cherry in the warm-mid cluster, suggesting a similar tonal family: warm, open, and airy with pronounced mids.
+At 549 kg/m³ and Janka 764 lbf, sycamore is the softest wood in this comparison and close to mahogany in both density (549 vs 529) and hardness (764 vs 809). (The earlier "Janka 410 — roughly half the hardness" was wrong; FPL measures 764 lbf.) The computed speed of sound (4,226 m/s) and acoustic impedance (2.32) place it just below cherry in the warm-mid cluster, suggesting a similar tonal family: warm, open, and airy with pronounced mids.
 
-The low MOE (9.79 GPa) and MOR (69.0 MPa) — the weakest structural numbers in this set — indicate a flexible, resonant body that would favor fundamental emphasis over overtone complexity. This profile is characteristic of soundboard-weight tonewoods rather than back/side stock, though the density is appropriate for either role in steel-string acoustic construction.
+The low MOE (9.8 GPa) and MOR (69.0 MPa) — the weakest structural numbers in this set — indicate a flexible, resonant body that would favor fundamental emphasis over overtone complexity. This profile is characteristic of soundboard-weight tonewoods rather than back/side stock, though the density is appropriate for either role in steel-string acoustic construction.
 
 The quartersawn face is where sycamore becomes visually distinctive: prominent medullary rays produce a lace-like fleck pattern unique among North American hardwoods. This figure is often compared to European plane (*Platanus acerifolia*), which has a long history in European instrument making.
 

@@ -7,6 +7,8 @@
 
 > **Status: CANONICAL (designated 2026-11-14, `VERIFICATION_LOG.md` C-09).** This is the library's main extreme-density comparison. The overlapping [annotated summary](tonewood_comparison_extreme_density_annotated.md) is secondary and is kept only for its thermal-property and CNC-machining tables.
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This comparison catalogs woods in the African Blackwood density class (≥950 kg/m³) — the extreme-density species that produce "glassy," "steely," or "bell-like" tonal character due to high acoustic impedance and low internal damping.
 
 ---
@@ -53,7 +55,7 @@ These are the benchmark "glassy" woods — the species all others are compared a
 
 ### Notes
 
-**Macassar Ebony** (*Diospyros celebica*): The hardest wood in the registry (Janka 3,220). Striped figuring. Indonesian origin. Vulnerable conservation status.
+**Macassar Ebony** (*Diospyros celebica*): Very hard (Janka 3,220, unsourced; not the hardest — FPL measures lignum vitae at 4,496 and ipe at 3,687). Striped figuring. Indonesian origin. Vulnerable conservation status.
 
 **Cocobolo** (*Dalbergia retusa*): The only rosewood that reaches this density class. Exceptional tonal complexity — "warm" despite high density due to oil content affecting damping. CITES Appendix II.
 
@@ -67,14 +69,14 @@ Proven in lutherie applications, well-documented working properties.
 
 | Species | Density | Janka | MOE | Tone Character | Typical Uses |
 |---------|:-------:|:-----:|:---:|----------------|--------------|
-| **Ipe (Brazilian Walnut)** | 1,100 | 3,510 | 16.70 | Bright, bell-like, extreme sustain | Bridge, accent |
+| **Ipe (Brazilian Walnut)** | 1,119 | 3,687 | 21.6 | Bright, bell-like, extreme sustain | Bridge, accent |
 | **Katalox (Mexican Ebony)** | 1,050 | 3,650 | — | Bright, bell-like — ebony alternative | Fretboard, bridge |
 
 ### Notes
 
-**Ipe** (*Handroanthus spp.*): Hardest wood in this comparison (Janka 3,510). "Bell-like, extreme sustain" — the ultimate glassy character. South American. Commonly used for decking; lutherie use is secondary.
+**Ipe** (*Handroanthus spp.*): Second-hardest wood in this comparison (Janka 3,687, FPL GTR-282; lignum vitae is harder at 4,496). "Bell-like, extreme sustain" — the ultimate glassy character. South American. Commonly used for decking; lutherie use is secondary.
 
-**Katalox** (*Swartzia cubensis*): Often marketed as "Mexican Ebony" despite being unrelated to *Diospyros*. The hardest of all (Janka 3,650). Central American. Not CITES-listed — a viable ebony alternative.
+**Katalox** (*Swartzia cubensis*): Often marketed as "Mexican Ebony" despite being unrelated to *Diospyros*. Very hard (Janka 3,650, unsourced; below FPL's lignum vitae and ipe). Central American. Not CITES-listed — a viable ebony alternative.
 
 ---
 
@@ -85,7 +87,7 @@ Growing adoption, some builder experience, acoustic properties documented or inf
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
 | **African Blackwood** | 1,270 | 1,960 ᵉ | 17.95 | *Dalbergia melanoxylon* | East Africa |
-| **Lignum Vitae** | 1,260 | 1,932 ᵉ | 17.11 | *Guaiacum officinale* | Caribbean, C. America |
+| **Lignum Vitae** | 1,260 | 4,496 | 17.11 | *Guaiacum officinale* | Caribbean, C. America |
 | **Leadwood** | 1,220 | 1,820 ᵉ | 17.20 | *Combretum imberbe* | Southern Africa |
 | **Snakewood** | 1,210 | 1,792 ᵉ | 23.20 | *Brosimum guianense* | South America |
 | **Pau Santo** | 1,115 | 1,541 ᵉ | 17.85 | — | Brazil |
@@ -96,7 +98,7 @@ Growing adoption, some builder experience, acoustic properties documented or inf
 | **Siamese Rosewood** | 1,035 | 1,342 ᵉ | 16.38 | *Dalbergia cochinchinensis* | SE Asia |
 | **Curupay** | 1,025 | 1,318 ᵉ | 18.04 | *Anadenanthera colubrina* | South America |
 | **Mora** | 1,015 | 1,295 ᵉ | 19.24 | *Mora excelsa* | South America |
-| **Greenheart** | 1,010 | 1,283 ᵉ | 24.64 | *Chlorocardium rodiei* | Guyana |
+| **Greenheart** | 1,010 | 2,360 | 22.4 | *Chlorocardium rodiei* | Guyana |
 | **Marblewood** | 1,005 | 1,271 ᵉ | 19.43 | *Marmaroxylon racemosum* | South America |
 | **Olive** | 980 | 1,213 ᵉ | 12.39 | *Olea europaea* | Mediterranean |
 | **Black Palm** | 970 | 1,191 ᵉ | 15.60 | *Borassus flabellifer* | SE Asia, Africa |
@@ -108,7 +110,7 @@ Growing adoption, some builder experience, acoustic properties documented or inf
 
 **Snakewood** (*Brosimum guianense*): Exceptionally high MOE (23.20 GPa) — the stiffest emerging species. Distinctive snakeskin figuring. Extremely expensive. Used for violin bows, not guitars.
 
-**Greenheart** (*Chlorocardium rodiei*): Highest MOE in the emerging tier (24.64 GPa). Guyanese. Exceptional stiffness-to-weight ratio. Used in marine applications; lutherie potential unexplored.
+**Greenheart** (*Chlorocardium rodiei*): High MOE (22.4 GPa, FPL GTR-282; the earlier 24.64 was unsourced). Guyanese. Exceptional stiffness-to-weight ratio. Used in marine applications; lutherie potential unexplored.
 
 **Mopane** (*Colophospermum mopane*): Southern African. Lower MOE (13.22) despite high density — may have different acoustic character (more damped?). Used in African instrument making.
 
@@ -150,7 +152,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 |---------|:-------:|:-----:|:---:|-----------------|--------|
 | **Amazon Rosewood** | 1,085 | 1,465 ᵉ | 12.90 | — | South America |
 | **Australian Buloke** | 1,085 | 1,465 ᵉ | 18.50 | *Allocasuarina luehmannii* | Australia |
-| **Bulletwood** | 1,080 | 1,452 ᵉ | 23.06 | — | South America |
+| **Bulletwood** | 1,059 | 3,192 | 23.8 | — | South America |
 | **Wamara** | 1,080 | 1,452 ᵉ | 24.38 | — | South America |
 | **Yellow Box** | 1,075 | 1,440 ᵉ | 14.00 | — | Australia |
 | **Angelim Vermelho** | 1,070 | 1,428 ᵉ | 19.39 | — | South America |
@@ -162,7 +164,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | **Pau Rosa** | 1,030 | 1,330 ᵉ | 17.10 | — | Brazil |
 | **Nandubay** | 1,015 | 1,295 ᵉ | 9.79 | — | South America |
 | **Chichipate** | 1,005 | 1,271 ᵉ | 20.39 | — | Central America |
-| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | *Quercus virginiana* | SE United States |
+| **Live Oak** | 986 | 1,260 ᵉ | 13.7 | *Quercus virginiana* | SE United States |
 | **Sneezewood** | 1,000 | 1,260 ᵉ | 17.70 | — | Southern Africa |
 
 ### High-End Candidates (950–999 kg/m³)
@@ -197,7 +199,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | Bloodwood | 1,050 | Vivid red; high MOE |
 | Brazilwood | 1,050 | Historic bow wood; CITES |
 | Mora | 1,015 | Guyanese; high MOE |
-| Greenheart | 1,010 | Highest MOE (24.64) |
+| Greenheart | 1,010 | High MOE (22.4, FPL) |
 | Marblewood | 1,005 | Distinctive figuring |
 
 ### Australia — Eucalyptus & Acacia Density
@@ -232,11 +234,11 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | Species | Density | Notes |
 |---------|:-------:|-------|
 | Black Ironwood | 1,355 | Florida/Caribbean; second densest |
-| Ipe | 1,100 | Brazilian Walnut; hardest |
+| Ipe | 1,119 | Brazilian Walnut; second-hardest (FPL) |
 | Katalox | 1,050 | Mexican Ebony; ebony alternative |
 | Sapodilla | 1,040 | Central American |
 | Chichipate | 1,005 | Central American |
-| Live Oak | 1,000 | SE United States |
+| Live Oak | 986 | SE United States |
 | Texas Ebony | 965 | Only domestic US extreme-density |
 
 ### Asia
@@ -257,10 +259,10 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Species | Density | MOE | Specific Modulus (E/ρ) | Est. Speed of Sound (m/s) | Est. Impedance (10⁶) |
 |---------|:-------:|:---:|:----------------------:|:-------------------------:|:--------------------:|
-| **Greenheart** | 1,010 | 24.64 | 24.4 | 4,940 | 4.99 |
+| **Greenheart** | 1,010 | 22.4 | 22.2 | 4,709 | 4.76 |
 | **Wamara** | 1,080 | 24.38 | 22.6 | 4,750 | 5.13 |
 | **Snakewood** | 1,210 | 23.20 | 19.2 | 4,380 | 5.30 |
-| **Bulletwood** | 1,080 | 23.06 | 21.4 | 4,620 | 4.99 |
+| **Bulletwood** | 1,059 | 23.8 | 22.5 | 4,740 | 5.02 |
 | **Cumaru** | 1,085 | 22.33 | 20.6 | 4,536 | 4.92 |
 | **Waddywood** | 1,430 | 21.50 | 15.0 | 3,878 | 5.55 |
 | **Bloodwood** | 1,050 | 20.78 | 19.8 | 4,448 | 4.67 |
@@ -272,11 +274,13 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Rank | Species | MOE (GPa) | Density | Impedance |
 |:----:|---------|:---------:|:-------:|:---------:|
-| 1 | Greenheart | 24.64 | 1,010 | 4.99 |
-| 2 | Wamara | 24.38 | 1,080 | 5.13 |
+| 1 | Wamara | 24.38 | 1,080 | 5.13 |
+| 2 | Bulletwood | 23.8 | 1,059 | 5.02 |
 | 3 | Snakewood | 23.20 | 1,210 | 5.30 |
-| 4 | Bulletwood | 23.06 | 1,080 | 4.99 |
+| 4 | Greenheart | 22.4 | 1,010 | 4.76 |
 | 5 | Cumaru | 22.33 | 1,085 | 4.92 |
+
+Bulletwood and Greenheart MOE are FPL GTR-282 (Table 5-5a); the others are unsourced database values (corrected 2026-11-15: Greenheart was ranked first on an unsourced 24.64 GPa).
 
 ### Impedance Champions (Highest Z = ρc)
 
@@ -286,7 +290,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | 2 | Snakewood | 5.30 | 1,210 | 23.20 |
 | 3 | Black Ironwood | 5.27 | 1,355 | 20.46 |
 | 4 | Wamara | 5.13 | 1,080 | 24.38 |
-| 5 | Greenheart | 4.99 | 1,010 | 24.64 |
+| 5 | Bulletwood | 5.02 | 1,059 | 23.8 |
 
 **Interpretation:** Higher impedance = more energy reflection = more "ring" and overtone retention = more "glassy" character. All species above 4.5 × 10⁶ kg/m²s should exhibit the glassy signature.
 
@@ -298,8 +302,8 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
-| 1 | **Katalox** | Hardest (3,650 Janka); ebony alternative; not CITES |
-| 2 | **Ipe** | Second hardest (3,510); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
+| 1 | **Katalox** | Very hard (3,650 Janka, unsourced — below lignum vitae 4,496 and ipe 3,687, both FPL-measured); ebony alternative; not CITES |
+| 2 | **Ipe** | Second hardest here (3,687, FPL); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 3 | **Macassar Ebony** | Traditional; defined tone |
 | 4 | **African Ebony** | Traditional benchmark (but endangered) |
 | 5 | **Texas Ebony** | Domestic US; no restrictions |
@@ -308,11 +312,11 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
-| 1 | **Ipe** | Bell-like sustain; highest hardness — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
+| 1 | **Ipe** | Bell-like sustain; second-hardest here (3,687, FPL) — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 2 | **Katalox** | Maximum energy transfer |
 | 3 | **Snakewood** | Extreme stiffness (MOE 23.2) |
 | 4 | **Cocobolo** | Complex tone; traditional |
-| 5 | **Greenheart** | Highest MOE overall (24.64) |
+| 5 | **Greenheart** | High MOE (22.4, FPL) |
 
 ### Accent/Decorative (visual + tonal)
 
@@ -328,11 +332,11 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Species | Density | MOE | Why Investigate |
 |---------|:-------:|:---:|-----------------|
-| **Greenheart** | 1,010 | 24.64 | Highest MOE; could exceed ebony performance |
-| **Wamara** | 1,080 | 24.38 | Second highest MOE; unknown tonally |
+| **Greenheart** | 1,010 | 22.4 | High MOE (FPL); could exceed ebony performance |
+| **Wamara** | 1,080 | 24.38 | Highest MOE here (unsourced); unknown tonally |
 | **Australian Buloke** | 1,085 | 18.50 | Hardest Australian; sustainable |
 | **Gidgee** | 1,150 | 18.50 | Australian Acacia; very dense |
-| **Live Oak** | 1,000 | 13.52 | Domestic US; abundant |
+| **Live Oak** | 986 | 13.7 | Domestic US; abundant |
 
 ---
 
@@ -382,7 +386,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 The database reveals that extreme-density tonewoods are **severely under-characterized**. For every African Ebony or Cocobolo, there are 8-10 unexplored species with similar or superior physical properties.
 
 **Highest-priority candidates for characterization:**
-1. **Greenheart** — highest MOE (24.64), should outperform ebony
+1. **Greenheart** — high MOE (22.4, FPL), should outperform ebony
 2. **Australian Buloke** — sustainable domestic alternative
 3. **Texas Ebony** — US domestic, no restrictions
 4. **Gidgee** — Australian Acacia, very dense

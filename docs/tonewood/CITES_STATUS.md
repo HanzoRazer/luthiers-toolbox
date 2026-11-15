@@ -4,6 +4,7 @@
 > **Use:** this is the single CITES reference for `docs/tonewood/`. Other documents should point here, not restate a status. Re-check before buying or shipping: listings change at every CITES Conference of the Parties (CoP).
 > **Not legal advice.** Permits depend on your country and shipment; confirm with your national CITES authority.
 
+
 ## How to read this
 
 - **Appendix I** — commercial trade in wild specimens essentially prohibited.
@@ -50,6 +51,8 @@
 | *Entandrophragma* spp. | Sapele, Sipo/Utile, Tiama, Kosipo, Kibaba | **Not listed**; **EU Annex D** | — | EU 2026-06-29 | 67253 |
 | *Aucoumea klaineana* | Okoume | **Not listed**; EU Annex D | — | EU 2026-06-29 | 99793 |
 | *Millettia stuhlmannii* | Panga panga | **Not listed**; EU Annex D | — | EU 2026-06-29 | 99786 |
+| *Shorea* s.l. — *Shorea, Rubroshorea, Anthoshorea, Richetia, Doona, Pentacme, Neohopea* spp. | Meranti, lauan, balau, white lauan | **Not listed**; **EU Annex D** (genus listings, Reg. (EU) 2026/1383) | — | EU 2026-06-29 | 107194 (*Anthoshorea agamae*; checked 2026-11-15) |
+| *Parashorea malaanonan* | Bagtikan, white seraya | **Not listed**; not EU-listed (*Parashorea* is not among the Annex D genera) | — | — | not in Species+ (checked 2026-11-15) |
 | *Milicia excelsa* | Iroko, Mvule | **Not listed** | — | — | not in Species+ |
 | *Millettia laurentii* | Wenge | **Not listed** | — | — | not in Species+ |
 | *Acacia koa* | Koa | **Not listed** | — | — | not in Species+ |

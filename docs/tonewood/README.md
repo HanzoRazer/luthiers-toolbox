@@ -70,4 +70,6 @@ Comparative analyses of wood species for lutherie applications.
 ## Tools
 
 - `scripts/gen_cirad_high_density_catalog.py` — regenerates the CIRAD high-density catalog from the CSV
+- `scripts/check_tonewood_fpl_values.py` — checks density, SG (G₁₂), Janka, MOE, MOR, shrinkage, sound speed, impedance, E/ρ and radiation ratio against FPL GTR-282 for the ~100 species it maps (strict, `--fix` rewrites numbers only). Species FPL does not cover are not checked, and neither is prose (see `VERIFICATION_LOG.md`, C-11)
+- `scripts/extract_fpl_gtr282_tables.py` — rebuilds `docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv` from the FPL PDFs
 - `scripts/check_tonewood_cirad_citations.py` — checks CIRAD D12/N citations against the CSV (`--fix` rewrites mismatches). Coverage is partial: only table rows that name an italic binomial and give a single D12 value, plus "N specimens" written exactly that way. Ranges and prose counts such as "39 CIRAD specimens" are not checked, so "0 mismatches" is not a full audit (see `VERIFICATION_LOG.md`, C-05 and C-10)
