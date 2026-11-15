@@ -35,4 +35,14 @@ python3 scripts/investigations/client_axios_preservation.py \
   --verify
 ```
 
-`--dry-run` writes nothing and is plan-only; it refuses `--verify` and `--write-manifest`. `--verify` rejects symlinks, junctions, and hard-linked aliases of production files under `source/`. The tool does not delete production files, and it refuses an archive destination inside `packages/client/src`.
+`--dry-run` writes nothing and is plan-only; it refuses `--verify` and `--write-manifest`. The tool does not delete production files, and it refuses an archive destination inside `packages/client/src`.
+
+Write policy:
+
+- **Copy creates new entries only.** Any existing destination under `source/` is refused, never overwritten or replaced. Re-copying needs an empty archive root. To rewrite only the manifest of an existing archive, run `--write-manifest --verify`, which skips the copy.
+- **Directories are created one level at a time.** Every existing directory from the archive root down to the destination is checked first, and each new one is checked right after it is created. A symlink, junction, or reparse point stops the copy before anything is created through it.
+- **Files are published without opening the destination.** Bytes go to an exclusively created, randomly named temporary file, which is then installed with an operation that never replaces an existing entry (`link` on POSIX, `rename` on Windows).
+- **`MANIFEST.json` may be replaced**, by rename only, and only when the existing manifest is an independent regular file.
+- **`--verify` requires independent copies.** It rejects any link or reparse point under `source/`, and any archive file whose hard-link count is not 1, even when its bytes match.
+
+Residual: the directory walk is check-then-descend, not handle-relative (`openat`/`O_DIRECTORY`), so a concurrent local process that swaps a checked directory for a link between the check and the next step is out of scope.

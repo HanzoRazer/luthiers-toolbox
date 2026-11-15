@@ -242,7 +242,7 @@ class Integrity(unittest.TestCase):
             src = root / "source.txt"
             dest = root / "nested" / "copy.txt"
             src.write_bytes(raw)
-            tool.copy_bytes(src, dest)
+            tool.copy_bytes(src, dest, root=root)
             self.assertEqual(dest.read_bytes(), raw)
             self.assertEqual(tool.sha256_bytes(dest.read_bytes()), tool.sha256_bytes(raw))
 
@@ -401,7 +401,31 @@ class Tamper(unittest.TestCase):
                 self.skipTest(f"hard link across this temp dir unavailable: {exc}")
             with self.assertRaises(tool.PreservationError) as caught:
                 tool.verify_archive(REPO, clone, _plan())
-            self.assertIn("aliases production", str(caught.exception))
+            self.assertIn("hard links", str(caught.exception))
+
+    def test_hard_linked_entry_to_unrelated_identical_file_is_rejected(self) -> None:
+        # Same bytes, same hashes, but not an independent copy: st_nlink == 2.
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            external = Path(tmp) / "external_copy"
+            external.write_bytes(entry.read_bytes())
+            entry.unlink()
+            os.link(external, entry)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("hard links", str(caught.exception))
+
+    def test_symlinked_manifest_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            outside = Path(tmp) / "outside_manifest.json"
+            outside.write_bytes((clone / "MANIFEST.json").read_bytes())
+            (clone / "MANIFEST.json").unlink()
+            _symlink_or_skip(self, clone / "MANIFEST.json", outside)
+            with self.assertRaises(tool.PreservationError):
+                tool.verify_archive(REPO, clone, _plan())
 
     def test_copy_refuses_to_write_through_a_destination_symlink(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -413,7 +437,7 @@ class Tamper(unittest.TestCase):
             victim.write_bytes(b"keep")
             _symlink_or_skip(self, dest, victim)
             with self.assertRaises(tool.PreservationError):
-                tool.copy_bytes(src, dest)
+                tool.copy_bytes(src, dest, root=root)
             self.assertEqual(victim.read_bytes(), b"keep")
 
     def test_copy_refuses_a_symlinked_source(self) -> None:
@@ -424,7 +448,224 @@ class Tamper(unittest.TestCase):
             real.write_bytes(b"x")
             _symlink_or_skip(self, link, real)
             with self.assertRaises(tool.PreservationError):
-                tool.copy_bytes(link, root / "out.txt")
+                tool.copy_bytes(link, root / "out.txt", root=root)
+
+
+def _dir_link_or_skip(test: unittest.TestCase, kind: str, link: Path, target: Path) -> None:
+    """Make ``link`` a directory symlink or (Windows) junction pointing at ``target``."""
+    if kind == "symlink":
+        _symlink_or_skip(test, link, target, directory=True)
+        return
+    if os.name != "nt":
+        test.skipTest("junctions are Windows-only")
+    import _winapi  # noqa: PLC0415 - Windows-only
+
+    _winapi.CreateJunction(str(target), str(link))
+
+
+FAKE_FILES = (
+    "packages/client/src/a/b/one.ts",
+    "packages/client/src/a/b/two.ts",
+)
+
+
+def _fake_repo(root: Path) -> tuple[Path, list[dict]]:
+    """A throwaway production tree. Link tests must never point at the real checkout."""
+    repo = root / "repo"
+    for index, rel in enumerate(FAKE_FILES):
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"export const v{index} = {index}\r\n".encode("utf-8"))
+    return repo, [{"original_path": rel} for rel in FAKE_FILES]
+
+
+def _tree(path: Path) -> list[str]:
+    return sorted(p.relative_to(path).as_posix() for p in path.rglob("*"))
+
+
+class Publication(unittest.TestCase):
+    """copy_closure must not create or write anything outside the archive tree."""
+
+    def test_source_dir_symlink_with_missing_descendants_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            outside = root / "outside"
+            archive.mkdir()
+            outside.mkdir()
+            _dir_link_or_skip(self, "symlink", archive / "source", outside)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("link", str(caught.exception))
+            self.assertEqual(_tree(outside), [])
+
+    def _deeper_parent_link(self, kind: str) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            outside = root / "outside"
+            outside.mkdir()
+            (archive / "source/packages/client").mkdir(parents=True)
+            _dir_link_or_skip(self, kind, archive / "source/packages/client/src", outside)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("link", str(caught.exception))
+            self.assertEqual(_tree(outside), [])
+
+    def test_deeper_parent_symlink_is_refused(self) -> None:
+        self._deeper_parent_link("symlink")
+
+    def test_deeper_parent_junction_is_refused(self) -> None:
+        self._deeper_parent_link("junction")
+
+    def _existing_hard_link(self, target_of: str) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            if target_of == "own-source":
+                target = repo / FAKE_FILES[0]
+            elif target_of == "other-production":
+                target = repo / FAKE_FILES[1]
+            else:
+                target = root / "external.ts"
+                target.write_bytes((repo / FAKE_FILES[0]).read_bytes())
+            before = {p: p.read_bytes() for p in [*(repo / rel for rel in FAKE_FILES), target]}
+            os.link(target, dest)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("existing destination", str(caught.exception))
+            for path, data in before.items():
+                self.assertEqual(path.read_bytes(), data, path)
+            self.assertEqual(os.lstat(target).st_nlink, 2)
+
+    def test_existing_dest_hard_linked_to_its_own_production_source_is_refused(self) -> None:
+        self._existing_hard_link("own-source")
+
+    def test_existing_dest_hard_linked_to_another_production_file_is_refused(self) -> None:
+        self._existing_hard_link("other-production")
+
+    def test_existing_dest_hard_linked_to_external_identical_file_is_refused(self) -> None:
+        self._existing_hard_link("external")
+
+    def test_existing_ordinary_destination_is_refused_and_left_unchanged(self) -> None:
+        # Documented policy: copy never overwrites or replaces an existing entry.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            dest.write_bytes(b"stale")
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("existing destination", str(caught.exception))
+            self.assertEqual(dest.read_bytes(), b"stale")
+
+    def test_dangling_destination_symlink_is_refused_and_creates_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            missing = root / "would_be_created.ts"
+            _symlink_or_skip(self, dest, missing)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_closure(repo, archive, files)
+            self.assertFalse(os.path.lexists(missing))
+
+    def _race(self, plant: str) -> None:
+        """Plant an entry at dest AFTER the existence pre-check, before install.
+
+        This isolates the install step: it must refuse without replacing or
+        writing through the planted entry, and must leave no temp file behind.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            directory = root / "archive"
+            directory.mkdir()
+            dest = directory / "entry.ts"
+            victim = root / "victim.ts"
+            original = tool._create_exclusive_temp
+
+            def planting(directory_arg: Path, stem: str, data: bytes) -> Path:
+                made = original(directory_arg, stem, data)
+                if plant == "dangling-symlink":
+                    _symlink_or_skip(self, dest, victim)
+                elif plant == "hard-link":
+                    victim.write_bytes(b"keep")
+                    os.link(victim, dest)
+                else:
+                    dest.write_bytes(b"keep")
+                return made
+
+            tool._create_exclusive_temp = planting
+            try:
+                with self.assertRaises(tool.PreservationError) as caught:
+                    tool.publish_new_file(dest, b"new")
+            finally:
+                tool._create_exclusive_temp = original
+            self.assertIn("existing destination", str(caught.exception))
+            if plant == "dangling-symlink":
+                self.assertFalse(os.path.lexists(victim))
+            elif plant == "hard-link":
+                self.assertEqual(victim.read_bytes(), b"keep")
+            else:
+                self.assertEqual(dest.read_bytes(), b"keep")
+            self.assertEqual([p.name for p in directory.iterdir() if p.name.endswith(".partial")], [])
+
+    def test_install_refuses_dangling_symlink_planted_after_check(self) -> None:
+        self._race("dangling-symlink")
+
+    def test_install_refuses_hard_link_planted_after_check(self) -> None:
+        self._race("hard-link")
+
+    def test_install_refuses_regular_file_planted_after_check(self) -> None:
+        self._race("regular")
+
+    def test_write_manifest_refuses_symlinked_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "archive"
+            archive.mkdir()
+            victim = root / "victim.json"
+            victim.write_bytes(b"keep")
+            _symlink_or_skip(self, archive / "MANIFEST.json", victim)
+            with self.assertRaises(tool.PreservationError):
+                tool.write_manifest(archive, "{}\n")
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_write_manifest_refuses_hard_linked_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "archive"
+            archive.mkdir()
+            victim = root / "victim.json"
+            victim.write_bytes(b"keep")
+            os.link(victim, archive / "MANIFEST.json")
+            with self.assertRaises(tool.PreservationError):
+                tool.write_manifest(archive, "{}\n")
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_clean_archive_creation_and_verification_pass(self) -> None:
+        plan = _plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "fresh" / "archive"
+            tool.copy_closure(REPO, archive, list(plan["files"]))
+            tool.write_manifest(archive, tool.render_manifest(plan))
+            tool.write_manifest(archive, tool.render_manifest(plan))  # replace is allowed for the manifest
+            tool.verify_archive(REPO, archive, plan)
+            for item in plan["files"]:
+                self.assertEqual(os.lstat(archive / item["archive_path"]).st_nlink, 1)
+            self.assertEqual(
+                sorted(p.name for p in archive.iterdir()),
+                ["MANIFEST.json", "source"],
+            )
 
 
 class Closure(unittest.TestCase):

@@ -15,6 +15,8 @@ import csv
 import hashlib
 import json
 import os
+import secrets
+import stat
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -529,19 +531,167 @@ def assert_no_link_in_chain(path: Path, stop: Path) -> None:
         current = current.parent
 
 
-def copy_bytes(src: Path, dest: Path) -> None:
-    """Write dest as the raw bytes of src. Line endings and encoding are kept.
+def _assert_real_dir(path: Path) -> None:
+    """``path`` exists (lstat) and is a directory that is not a link or reparse point."""
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError as exc:
+        raise PreservationError(f"missing archive directory: {path}") from exc
+    if _is_link(path) or not stat.S_ISDIR(st.st_mode):
+        raise PreservationError(f"refusing link or non-directory in archive path: {path}")
 
-    Refuses a symlinked source and a pre-existing symlinked destination, so the
-    write can neither read through nor write through a link.
+
+def _assert_independent_file(path: Path) -> None:
+    """``path`` is a regular file, not a link or reparse point, with exactly one hard link."""
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError as exc:
+        raise PreservationError(f"missing archive file: {path}") from exc
+    if _is_link(path) or not stat.S_ISREG(st.st_mode):
+        raise PreservationError(f"archive entry is not a regular file: {path}")
+    if st.st_nlink != 1:
+        raise PreservationError(
+            f"archive entry has {st.st_nlink} hard links and is not an independent copy: {path}"
+        )
+
+
+def ensure_dir_under(root: Path, target: Path) -> None:
+    """Create ``target`` beneath ``root`` one level at a time.
+
+    ``root`` is created if missing (its own ancestors are the caller's chosen
+    location, outside the archive) and must then be a real directory. Below
+    ``root``, every existing component is checked with lstat and must be a real
+    directory: no symlink, junction, or reparse point. Each missing component is
+    created with a single ``os.mkdir`` and checked immediately. This never uses
+    ``Path.mkdir(parents=True)`` below ``root``, because that follows linked
+    ancestors and would create directories outside the archive.
     """
-    if _is_link(src):
-        raise PreservationError(f"refusing to copy from a link: {src}")
-    if _is_link(dest):
-        raise PreservationError(f"refusing to write through a link: {dest}")
+    try:
+        rel = target.relative_to(root)
+    except ValueError as exc:
+        raise PreservationError(f"{target} is not beneath archive root {root}") from exc
+    if any(part in {"..", "."} for part in rel.parts):
+        raise PreservationError(f"refusing relative component in archive path: {target}")
+    if not os.path.lexists(root):
+        os.makedirs(root)
+    _assert_real_dir(root)
+    current = root
+    for part in rel.parts:
+        current = current / part
+        if os.path.lexists(current):
+            _assert_real_dir(current)
+        else:
+            os.mkdir(current)
+            _assert_real_dir(current)
+
+
+def _unlink_quietly(path: Path) -> None:
+    try:
+        os.unlink(path)
+    except OSError:
+        pass
+
+
+def _create_exclusive_temp(directory: Path, stem: str, data: bytes) -> Path:
+    """Write ``data`` to a new, randomly named file in ``directory``.
+
+    The name is unpredictable and is created with ``O_CREAT | O_EXCL``. Windows
+    has no ``O_NOFOLLOW`` and its exclusive create follows a dangling symlink, so
+    exclusive creation is never applied to the final destination name. It is
+    applied only to this temporary name, which an attacker cannot pre-plant.
+    """
+    _assert_real_dir(directory)
+    tmp = directory / f".{stem}.{secrets.token_hex(16)}.partial"
+    if os.path.lexists(tmp):
+        raise PreservationError(f"temporary name collision: {tmp}")
+    flags = (
+        os.O_WRONLY
+        | os.O_CREAT
+        | os.O_EXCL
+        | getattr(os, "O_BINARY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
+    fd = os.open(tmp, flags, 0o644)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        _assert_independent_file(tmp)
+    except BaseException:
+        _unlink_quietly(tmp)
+        raise
+    return tmp
+
+
+def publish_new_file(dest: Path, data: bytes) -> None:
+    """Publish ``data`` at ``dest``, which must not exist. Never opens ``dest``.
+
+    The bytes go to an exclusively created temporary file, which is then
+    installed with an operation that never replaces an existing entry:
+    ``os.link`` on POSIX and ``os.rename`` on Windows. Both fail if anything
+    exists at ``dest``: a regular file, a hard link to another file, a junction,
+    or a symlink, dangling or not. Nothing is written through a pre-existing
+    entry. The result must be a regular file with exactly one link.
+    """
+    if os.path.lexists(dest):
+        raise PreservationError(
+            f"refusing existing destination {dest}; copy publishes into new paths only"
+        )
+    tmp = _create_exclusive_temp(dest.parent, dest.name, data)
+    try:
+        if os.name == "nt":
+            os.rename(tmp, dest)  # MoveFileEx without REPLACE_EXISTING
+        else:
+            os.link(tmp, dest, follow_symlinks=False)  # link(2): EEXIST, never follows dest
+            os.unlink(tmp)
+    except FileExistsError as exc:
+        _unlink_quietly(tmp)
+        raise PreservationError(
+            f"refusing existing destination {dest}; copy publishes into new paths only"
+        ) from exc
+    except BaseException:
+        _unlink_quietly(tmp)
+        raise
+    _assert_independent_file(dest)
+
+
+def copy_bytes(src: Path, dest: Path, *, root: Path) -> None:
+    """Publish ``dest`` (beneath ``root``) as the raw bytes of ``src``.
+
+    Line endings and encoding are kept. The source must be a regular file and
+    not a link. Directories from ``root`` to ``dest.parent`` are created with
+    ``ensure_dir_under``. ``dest`` must not exist: any existing destination is
+    refused, never overwritten or replaced.
+    """
+    if _is_link(src) or not src.is_file():
+        raise PreservationError(f"refusing to copy from a link or non-file: {src}")
     data = src.read_bytes()
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(data)
+    ensure_dir_under(root, dest.parent)
+    publish_new_file(dest, data)
+    if dest.read_bytes() != data:
+        raise PreservationError(f"copy diverged for {dest}")
+
+
+def write_manifest(archive_root: Path, text: str) -> None:
+    """Replace ``MANIFEST.json`` without writing through whatever is there now.
+
+    An existing manifest must be an independent regular file. The new content is
+    published to an exclusively created temporary file and renamed over the
+    entry. A rename replaces the directory entry and never writes into a link
+    target.
+    """
+    ensure_dir_under(archive_root, archive_root)
+    manifest_path = archive_root / "MANIFEST.json"
+    if os.path.lexists(manifest_path):
+        _assert_independent_file(manifest_path)
+    tmp = _create_exclusive_temp(archive_root, "MANIFEST.json", text.encode("utf-8"))
+    try:
+        os.replace(tmp, manifest_path)
+    except BaseException:
+        _unlink_quietly(tmp)
+        raise
+    _assert_independent_file(manifest_path)
 
 
 def git_blob_sha1(data: bytes) -> str:
@@ -1074,18 +1224,19 @@ def _selected_files(plan: dict, cluster_id: str | None) -> list[dict]:
 
 
 def copy_closure(repo: Path, archive_root: Path, files: list[dict]) -> None:
+    """Publish each file under ``archive_root/source/``.
+
+    Policy: copy creates new archive entries only. Any existing destination is
+    refused (never overwritten or replaced). To rewrite only the manifest of an
+    existing archive, use ``--write-manifest --verify``, which skips the copy.
+    """
     assert_archive_destination(repo, archive_root)
     for item in files:
         src = repo / item["original_path"]
         dest = archive_root / "source" / item["original_path"]
         if _inside(dest, repo / CLIENT_SRC):
             raise PreservationError(f"refusing to write {dest} inside production client source")
-        if dest.parent.exists():
-            assert_no_link_in_chain(dest.parent, archive_root)
-        elif archive_root.exists():
-            assert_no_link_in_chain(archive_root, archive_root)
-        copy_bytes(src, dest)
-        assert_no_link_in_chain(dest, archive_root)
+        copy_bytes(src, dest, root=archive_root)
         if dest.read_bytes() != src.read_bytes():
             raise PreservationError(f"copy diverged for {item['original_path']}")
         if os.path.samefile(dest, src):
@@ -1096,6 +1247,7 @@ def verify_archive(repo: Path, archive_root: Path, plan: dict) -> None:
     manifest_path = archive_root / "MANIFEST.json"
     if not manifest_path.is_file():
         raise PreservationError(f"missing {manifest_path}")
+    _assert_independent_file(manifest_path)
     rendered = render_manifest(plan)
     if manifest_path.read_text(encoding="utf-8") != rendered:
         again = render_manifest(plan)
@@ -1126,6 +1278,9 @@ def verify_archive(repo: Path, archive_root: Path, plan: dict) -> None:
         raise PreservationError(f"archive file set mismatch missing={missing} extra={extra}")
     for rel in on_disk:
         item = declared[rel]
+        # st_nlink == 1: a hard link to ANY file (production or external) is not
+        # an independent copy, even when its bytes match.
+        _assert_independent_file(archive_root / rel)
         archived = (archive_root / rel).read_bytes()
         original_path = repo / item["original_path"]
         if os.path.samefile(archive_root / rel, original_path):
@@ -1200,9 +1355,7 @@ def main(argv: list[str] | None = None) -> int:
             text = render_manifest(full)
             if text != render_manifest(full):
                 raise PreservationError("manifest rendering is not byte-stable")
-            manifest_path = archive_root / "MANIFEST.json"
-            manifest_path.parent.mkdir(parents=True, exist_ok=True)
-            manifest_path.write_text(text, encoding="utf-8", newline="\n")
+            write_manifest(archive_root, text)
         if args.verify:
             verify_archive(repo, archive_root, build_plan(repo, inventory, None))
             print("verify: ok")
