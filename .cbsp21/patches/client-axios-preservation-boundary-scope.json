@@ -1,0 +1,55 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_AXIOS_PRESERVATION_BOUNDARY_SCOPE",
+  "title": "fix(ci): scope the Axios preservation boundary test to changes that edit the preservation",
+  "intent": "After PR #483 merged, Boundary.test_production_client_router_and_inventory_are_unchanged diffed every PR against origin/main and allow-listed only #483's own paths, so every later PR failed API Tests (first hit: PR #484 on .cbsp21/patches/tonewood-verification-001.json). Keep the guard for changes that edit the preservation; skip it with a stated reason otherwise.",
+  "change_type": "ci",
+  "behavior_change": "CI only. The boundary test applies only when the change set touches a preservation-owned path. No production code, client, route, dependency or archive byte changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "scripts/ci/test_client_axios_preservation.py",
+      ".cbsp21/patches/client-axios-preservation-boundary-scope.json"
+    ],
+    "files_expected_to_change": [
+      "scripts/ci/test_client_axios_preservation.py",
+      ".cbsp21/patches/client-axios-preservation-boundary-scope.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) Boundary now diffs against the merge-base (not the working tree vs origin/main), returns out-of-scope when no OWNED_PREFIXES path is touched, allows any .cbsp21/patches/ per-PR manifest, and checks package.json, package-lock.json, router/index.ts and the inventory CSV by name in the change set instead of comparing raw bytes to origin/main (raw bytes failed under Windows autocrlf). Two fixture tests pin both directions. (2) this manifest.",
+    "why_not_redundant": "Without it API Tests is red for every PR that is not #483, including Dependabot bumps of packages/client/package.json."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 -m pytest scripts/ci/test_client_axios_preservation.py -q -> 43 passed",
+      "throwaway worktree: this fix merged with origin/docs/tonewood-verification-001 -> boundary test SKIPPED (out of scope), suite green",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files scripts/ci/test_client_axios_preservation.py .cbsp21/patches/client-axios-preservation-boundary-scope.json"
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/test_client_axios_preservation.py",
+      "intent": "Scope the boundary test to preservation-editing change sets; pin both directions with fixtures.",
+      "scan_targets": ["scripts/ci/test_client_axios_preservation.py"],
+      "risk": "low",
+      "behavior_change": "CI only"
+    },
+    {
+      "path": ".cbsp21/patches/client-axios-preservation-boundary-scope.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "scan_targets": [".cbsp21/patches/client-axios-preservation-boundary-scope.json"],
+      "risk": "low",
+      "behavior_change": "none - CI/review metadata only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-15-AXIOS-PRESERVATION-BOUNDARY-SCOPE",
+    "risk_summary": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+    "findings": [],
+    "acknowledged": false,
+    "acknowledgement_notes": ""
+  }
+}

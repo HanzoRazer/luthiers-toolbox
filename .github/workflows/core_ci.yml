@@ -81,6 +81,11 @@ jobs:
       - name: Client Axios Reachability Evidence Tests
         run: |
           python -m pytest scripts/ci/test_client_axios_reachability.py -v
+      # CLIENT-AXIOS-DORMANT-PRESERVATION-024. Nothing collects scripts/ci wholesale,
+      # so this preservation test has to be named here or it never runs.
+      - name: Client Axios Dormant Preservation (CLIENT-AXIOS-DORMANT-PRESERVATION-024)
+        run: |
+          python -m pytest scripts/ci/test_client_axios_preservation.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api
