@@ -86,6 +86,11 @@ jobs:
       - name: Client Axios Dormant Preservation (CLIENT-AXIOS-DORMANT-PRESERVATION-024)
         run: |
           python -m pytest scripts/ci/test_client_axios_preservation.py -v
+      # Policy examples in CLAUDE.md and the wood-species template must match the FPL
+      # table they cite (VERIFICATION_LOG C-13). Nothing collects scripts/ci wholesale.
+      - name: Policy FPL Example Provenance
+        run: |
+          python -m pytest scripts/ci/test_policy_fpl_examples.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api
