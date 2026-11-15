@@ -89,7 +89,7 @@ def main():
     w("> **Source:** CIRAD Wood Density Database (Vieilledent et al. 2018), "
       "`docs/reference/cirad-density/Cirad-wood-density-database.csv`")
     w("> **Regenerated:** 2026-11-14 by `scripts/gen_cirad_high_density_catalog.py` (replaces the 2026-06-22 hand-built version)")
-    w("> **Related:** `tonewood_comparison_extreme_density_annotated.md`, `VERIFICATION_LOG.md`\n")
+    w("> **Related:** `tonewood_comparison_extreme_density_glassy_character.md`, `VERIFICATION_LOG.md`\n")
     w(f"**{len(sel)} taxa across {len(fams)} families** have a **mean** D12 ≥ {THRESHOLD} g/cm³ "
       f"over all their CIRAD specimens ({len(taxa)} taxa in the file).\n")
     w("> **Correction (2026-11-14).** The previous version listed 217 taxa. It selected each taxon by "

@@ -24,8 +24,8 @@ Comparative analyses of wood species for lutherie applications.
 
 | Document | Focus |
 |----------|-------|
-| [tonewood_comparison_extreme_density_annotated.md](tonewood_comparison_extreme_density_annotated.md) | 27 species ≥1,000 kg/m³ — property, thermal and CNC tables (overlaps the glassy-character doc) |
-| [tonewood_comparison_extreme_density_glassy_character.md](tonewood_comparison_extreme_density_glassy_character.md) | 65 species ≥950 kg/m³ — "glassy" tone physics, high-impedance woods |
+| [tonewood_comparison_extreme_density_glassy_character.md](tonewood_comparison_extreme_density_glassy_character.md) | **Canonical** — 65 species ≥950 kg/m³: tiers, regional summary, acoustics, recommendations, CIRAD cross-reference |
+| [tonewood_comparison_extreme_density_annotated.md](tonewood_comparison_extreme_density_annotated.md) | *Secondary* — kept for thermal and CNC-machining tables only; its rankings are superseded |
 | [tonewood_comparison_blackwoods_african_vs_malaysian.md](tonewood_comparison_blackwoods_african_vs_malaysian.md) | African (1,270) vs "Malaysian" (640) — glassy vs warm; Malaysian identity unverified |
 
 ### Families

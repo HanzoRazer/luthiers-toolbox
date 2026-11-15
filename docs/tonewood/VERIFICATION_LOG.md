@@ -111,6 +111,10 @@ Checked against Species+, the official CITES database (UNEP-WCMC), with IUCN cat
   - The radiation-ratio gap was overstated ("11–13", "a third lower"); corrected to 10.7–13 and 20–35%.
 - Typos fixed ("silica inclite", "calcium carbite") and leftover AI-session text removed from the Mugavu document.
 
+### C-09 — Canonical extreme-density document (resolves O-05)
+
+Owner decision 2026-11-14: keep one document as canonical rather than merge. `tonewood_comparison_extreme_density_glassy_character.md` is **canonical**: it covers more species (65 from 950 kg/m³ vs 27 from 1,000) and has the regional summary and fuller CIRAD section. `tonewood_comparison_extreme_density_annotated.md` is **secondary**: kept for its thermal and CNC-machining tables, with its tiers, rankings and recommendations marked superseded. Both docs carry a status banner, and the README index lists them that way. Ipe recommendations in both now carry its CITES Appendix II status (since 2024-11-25).
+
 ---
 
 ## Open issues (not fixed in this tranche)
@@ -121,7 +125,7 @@ Checked against Species+, the official CITES database (UNEP-WCMC), with IUCN cat
 | **O-02** | No per-value source attribution in any of the 16 documents, which the CLAUDE.md wood data policy requires | Rebuild the tables with source columns; start with the most-used species |
 | **O-03** | MOE values in `wood_species.json` carry no `_source` field (e.g. Iroko 10.9, Wenge 14.75), so computed sound speeds inherit the gap | Attribute or re-source each MOE |
 | **O-04** | Shrinkage values in `tonewood_comparison_acoustic_top_woods.md` (e.g. W. Red Cedar 4.43/7.69) look inconsistent with FPL; the angolan document estimates shrinkage from SG (†), which the policy forbids | Check against FPL Table 5-3 / Wood Database; remove the † estimates |
-| **O-05** | Two overlapping documents, `extreme_density_annotated` and `extreme_density_glassy_character`, give different thresholds, tiers and bridge rankings; `blackwoods_african_vs_malaysian` repeats a section of the acacia document | **Owner decision:** merge, or keep one as canonical |
+| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document | Owner decision on the blackwoods document |
 | **O-06** | Value disagreements between documents and the JSON: Ovangkol (825/1,360 vs 810/1,890), Guanacaste Janka (470 vs 276), Granadillo MOE (~14.5 vs null), Padauk Janka (731 vs 1,725) | Resolve each against a source |
 | **O-07** | Sitka and Engelmann radiation ratios are "estimated from similar species" in two documents | Use published MOE values with attribution |
 | **O-08** | No measured damping data for any species; tone descriptions are unsourced forum and builder quotes | Literature damping values (e.g. CIRAD vibration studies) or the `luthier-acoustics-data` measurements |

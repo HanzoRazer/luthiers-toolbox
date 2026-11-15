@@ -5,6 +5,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **Status: CANONICAL (designated 2026-11-14, `VERIFICATION_LOG.md` C-09).** This is the library's main extreme-density comparison. The overlapping [annotated summary](tonewood_comparison_extreme_density_annotated.md) is secondary and is kept only for its thermal-property and CNC-machining tables.
+
 This comparison catalogs woods in the African Blackwood density class (≥950 kg/m³) — the extreme-density species that produce "glassy," "steely," or "bell-like" tonal character due to high acoustic impedance and low internal damping.
 
 ---
@@ -297,7 +299,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | Priority | Species | Why |
 |:--------:|---------|-----|
 | 1 | **Katalox** | Hardest (3,650 Janka); ebony alternative; not CITES |
-| 2 | **Ipe** | Second hardest (3,510); extreme sustain |
+| 2 | **Ipe** | Second hardest (3,510); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 3 | **Macassar Ebony** | Traditional; defined tone |
 | 4 | **African Ebony** | Traditional benchmark (but endangered) |
 | 5 | **Texas Ebony** | Domestic US; no restrictions |
@@ -306,7 +308,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
-| 1 | **Ipe** | Bell-like sustain; highest hardness |
+| 1 | **Ipe** | Bell-like sustain; highest hardness — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 2 | **Katalox** | Maximum energy transfer |
 | 3 | **Snakewood** | Extreme stiffness (MOE 23.2) |
 | 4 | **Cocobolo** | Complex tone; traditional |

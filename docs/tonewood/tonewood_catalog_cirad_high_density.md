@@ -2,7 +2,7 @@
 
 > **Source:** CIRAD Wood Density Database (Vieilledent et al. 2018), `docs/reference/cirad-density/Cirad-wood-density-database.csv`
 > **Regenerated:** 2026-11-14 by `scripts/gen_cirad_high_density_catalog.py` (replaces the 2026-06-22 hand-built version)
-> **Related:** `tonewood_comparison_extreme_density_annotated.md`, `VERIFICATION_LOG.md`
+> **Related:** `tonewood_comparison_extreme_density_glassy_character.md`, `VERIFICATION_LOG.md`
 
 **157 taxa across 34 families** have a **mean** D12 ≥ 0.95 g/cm³ over all their CIRAD specimens (1010 taxa in the file).
 

@@ -5,6 +5,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **Status: SECONDARY (designated 2026-11-14, `VERIFICATION_LOG.md` C-09).** The canonical extreme-density comparison is [tonewood_comparison_extreme_density_glassy_character.md](tonewood_comparison_extreme_density_glassy_character.md) (65 species from 950 kg/m³). This document is kept for its **Thermal Properties** and **CNC Machining** tables, which the canonical document does not have. Its tiers, rankings and recommendations are superseded. Where the two disagree (threshold 1,000 vs 950 kg/m³; tier assignments; bridge priority; fifth fretboard choice), follow the canonical document.
+
 This comparison catalogs the "glassy character" tonewoods — species at or above African Blackwood density (1,270 kg/m³) and the broader extreme-density band (≥1,000 kg/m³). Includes full physical, acoustic, thermal, and CNC properties.
 
 ---
@@ -249,12 +251,14 @@ The CIRAD database (4,022 specimens, 872 species) confirms densities and identif
 
 ## Recommendations
 
+> **Superseded** — use the recommendations in the canonical [glassy-character document](tonewood_comparison_extreme_density_glassy_character.md#recommendations-by-application).
+
 ### For Fretboards (Hardness + Stability)
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
 | 1 | **Katalox** | Hardest (3,650 Janka); not CITES; ebony alternative |
-| 2 | **Ipe** | Second hardest (3,510); extreme sustain |
+| 2 | **Ipe** | Second hardest (3,510); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 3 | **African Ebony** | Traditional benchmark (but endangered) |
 | 4 | **Macassar Ebony** | Striped figuring; premium |
 | 5 | **Greenheart** | Highest MOE; unexplored potential |
@@ -266,7 +270,7 @@ The CIRAD database (4,022 specimens, 872 species) confirms densities and identif
 | 1 | **Greenheart** | Highest MOE (24.64) = maximum energy transfer |
 | 2 | **Wamara** | Second highest MOE (24.38) |
 | 3 | **Snakewood** | Third highest MOE (23.20); visual appeal |
-| 4 | **Ipe** | Bell-like sustain; hardest |
+| 4 | **Ipe** | Bell-like sustain; hardest — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 5 | **Cocobolo** | Complex tone; traditional |
 
 ### Unexplored High-Potential
