@@ -70,25 +70,31 @@ For species with genus-level confusion or trade name ambiguity:
 
 All numerical fields require `_source` attribution.
 
+Example: sugar maple, every value from FPL GTR-282 (shrinkage Table 4-3, p. 4-8; the rest Table 5-3a, 12% MC;
+density = 1000 × G₁₂ × 1.12, FPL Eq. 4-14; lbf = N / 4.448). `scripts/ci/test_policy_fpl_examples.py` checks each
+FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv`.
+
 ```json
 "physical": {
-  "density_kg_m3": 745,
-  "_density_source": "wood_database_meier",
+  "density_kg_m3": 706,
+  "_density_source": "FPL_GTR282_table_5-3a",
   
-  "contraction_tangential_pct": 5.0,
-  "contraction_radial_pct": 3.1,
+  "contraction_tangential_pct": 9.9,
+  "contraction_radial_pct": 4.8,
   "_shrinkage_tangential_source": "FPL_GTR282_table_4-3",
   "_shrinkage_radial_source": "FPL_GTR282_table_4-3",
   
-  "modulus_of_elasticity_gpa": 13.07,
-  "modulus_of_rupture_mpa": 126.7,
-  "_mechanical_source": "wood_database_meier",
+  "modulus_of_elasticity_gpa": 12.6,
+  "modulus_of_rupture_mpa": 109.0,
+  "_mechanical_source": "FPL_GTR282_table_5-3a",
   
-  "janka_hardness_lbf": 1725,
-  "janka_hardness_n": 7672,
+  "janka_hardness_lbf": 1439,
+  "janka_hardness_n": 6400,
+  "_hardness_source": "FPL_GTR282_table_5-3a",
   
-  "specific_gravity": 0.74,
-  "_specific_gravity_caveat": "CIRAD reports range X-Y; per-flitch measurement recommended"
+  "specific_gravity": 0.63,
+  "_specific_gravity_source": "FPL_GTR282_table_5-3a",
+  "_specific_gravity_caveat": "G12: ovendry weight, volume at 12% MC (FPL footnote b); per-flitch measurement recommended"
 }
 ```
 
