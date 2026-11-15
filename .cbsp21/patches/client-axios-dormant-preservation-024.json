@@ -1,0 +1,583 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_AXIOS_DORMANT_PRESERVATION_024",
+  "title": "docs(client): preserve dormant Axios capabilities without removing them",
+  "intent": "Copy the 17 remaining production Axios importers and their caller/type closure into an archive with provenance. Do not remove Axios, do not route dormant components, and do not change production client source.",
+  "change_type": "docs",
+  "behavior_change": "CI only. core_ci.yml runs scripts/ci/test_client_axios_preservation.py. No client runtime, route, dependency, CAM, or readiness change.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".github/workflows/core_ci.yml",
+      "SPRINTS.md",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities",
+      "docs/investigations/client-axios-dormant-preservation-024",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      "scripts/ci/test_client_axios_preservation.py",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/investigations/client_axios_preservation.py"
+    ],
+    "files_expected_to_change": [
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/CAPABILITY_INDEX.md",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/ENDPOINT_MATRIX.csv",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/MANIFEST.json",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/README.md",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/job_int.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/n15.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/n16.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/sawLab.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/ai/aiAdvisoryApi.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/ai/AiAdvisoryPanel.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/ArtPresetSelector.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/rosetteCompareTypes.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/HistoryTable.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/RosetteCompareHistory.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/index.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/RosetteComparePanel.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/useRosetteCompareCanvas.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/CamJobInsightsPanel.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/jobIntHistoryTypes.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/BucketDetailsPanel.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/BucketsTable.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/FiltersBar.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/index.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/toolbox/AdaptiveBench.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/toolbox/BackplotGcode.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/stores/aiAdvisoryStore.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtJobDetail.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtJobTimeline.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtPresetManager.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/index.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtStudioRosetteCompare.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/CompareDiffSummary.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/index.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts",
+      "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue",
+      "docs/investigations/client-axios-dormant-preservation-024/PRESERVATION_LEDGER.csv",
+      "docs/investigations/client-axios-dormant-preservation-024/README.md",
+      "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/test_client_axios_preservation.py",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/investigations/client_axios_preservation.py",
+      "SPRINTS.md"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Adds a byte-identical archive of the dormant Axios capability closure, a read-only preservation utility, preservation tests, an overlay note for the PR #482 merge, and a sprint registration. Production client source, package.json, the lockfile, and the router are unchanged.",
+    "why_not_redundant": "The production bundle containing no Axios is not a deletion decision. The unresolved lineage is closed, and the remaining dormant clients are the sole callers of live routes. The archive keeps those contracts, callers, and types so a later order can migrate, retire, or remove one cluster at a time."
+  },
+  "verification": {
+    "commands_run": [
+      "python3 scripts/investigations/client_axios_preservation.py --repo-root . --inventory docs/investigations/client-axios-reachability-020_2026-11-10/AXIOS_IMPORT_INVENTORY.csv --dry-run",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_client_axios_preservation.py scripts/ci/test_client_axios_reachability.py -q",
+      "python3 scripts/ci/check_cbsp21_gate.py --changed-files <this diff>",
+      "npm run type-check, lint:report, test, and build in packages/client"
+    ]
+  },
+  "files": [
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/CAPABILITY_INDEX.md",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/ENDPOINT_MATRIX.csv",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/MANIFEST.json",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/README.md",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/job_int.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/n15.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/n16.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/api/sawLab.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/ai/aiAdvisoryApi.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/ai/AiAdvisoryPanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/ArtPresetSelector.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/index.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/rosetteCompareTypes.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/HistoryTable.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/RosetteCompareHistory.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/index.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/RosetteComparePanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/art/rosette-compare/useRosetteCompareCanvas.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/CamJobInsightsPanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/jobIntHistoryTypes.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/useJobIntHistoryActions.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/cam/composables/useJobIntHistoryLoad.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/BucketDetailsPanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/BucketsTable.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/FiltersBar.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/dashboard/index.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/toolbox/AdaptiveBench.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/components/toolbox/BackplotGcode.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/stores/aiAdvisoryStore.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtJobDetail.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtJobTimeline.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtPresetManager.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/RiskDashboardCrossLab.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/index.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/riskFormatters.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskFilters.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/art/risk-dashboard/useRiskNavigation.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/ArtStudioRosetteCompare.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/CompareDiffSummary.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/index.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/sawRiskStyles.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardFilters.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboardModals.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawDashboard.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/composables/useSawRiskActions.ts",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "archive/experimental/2026-11/client-axios-dormant-capabilities/source/packages/client/src/views/saw_lab_dashboard/TelemetryMetricsPanel.vue",
+      "intent": "Byte-identical preservation copy or its provenance record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-dormant-preservation-024/PRESERVATION_LEDGER.csv",
+      "intent": "Preservation ledger and investigation record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-dormant-preservation-024/README.md",
+      "intent": "Preservation ledger and investigation record.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+      "intent": "Record PR #482 merge and preservation references. Do not retire production files.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run the preservation tests in core CI.",
+      "risk": "low",
+      "behavior_change": "CI runs scripts/ci/test_client_axios_preservation.py. No product behavior."
+    },
+    {
+      "path": "scripts/ci/test_client_axios_preservation.py",
+      "intent": "Pin archive completeness, hashes, caller closure, and unchanged production files.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/ci/test_client_axios_reachability.py",
+      "intent": "Pin 17 production importers and zero unresolved rows without requiring removal.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "scripts/investigations/client_axios_preservation.py",
+      "intent": "Read-only preservation utility. Copies bytes only to an explicit archive destination.",
+      "risk": "low",
+      "behavior_change": "none"
+    },
+    {
+      "path": "SPRINTS.md",
+      "intent": "Close the unresolved-lineage phase and register dormant preservation. Axios removal stays unauthorized.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-14-CLIENT-AXIOS-DORMANT-PRESERVATION-024",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Archive copies and a read-only scanner. No client runtime, route, dependency, CAM, or readiness change."
+  }
+}

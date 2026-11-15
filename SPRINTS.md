@@ -1,5 +1,5 @@
 # The Production Shop — Sprint Registry
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 Maintained by: Ross Echols (HanzoRazer)
 Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
@@ -18,6 +18,8 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 **Follow-up (2026-11-13):** `CLIENT-RISK-DASHBOARD-RECONCILE-022` retired the two February 19 risk importers and reclassified the three February 22 importers as canonical but unrouted. The original 20-row inventory is unchanged. Current importers after that order: 18. Overlay: `docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json`.
 
 **Follow-up (2026-11-13, CLIENT-ROSETTE-COMPARE-RECONCILE-023):** Rosette Compare is closed. `useRosetteCompareApi.ts` is the canonical baseline/diff client. `RosetteComparePanel.vue` no longer imports Axios and stays unrouted. Production Axios importers: 17. Axios consolidation remains incomplete because dormant-preserve importers still exist. Axios stays at `^1.21.0`. Record: `docs/investigations/client-rosette-compare-reconcile-023/README.md`.
+
+**Follow-up (2026-11-14, CLIENT-AXIOS-DORMANT-PRESERVATION-024):** The unresolved-lineage phase is closed. PR #482 is on main at `cfaf07751110d99b3539647e877c2ffd80f4f29c`. Seventeen production Axios importers remain, and the overlay has zero effective UNRESOLVED rows. Dormant capabilities now have byte-identical copies under `archive/experimental/2026-11/client-axios-dormant-capabilities/`. Production files stay. Axios removal remains unauthorized. Axios stays at `^1.21.0`.
 
 ---
 
@@ -40,7 +42,7 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 
 **Resolved:** `RISK-L01` trimmed query values, `RISK-L02` clear the selected bucket when lane, preset, or job changes, and `RISK-L03` clear and refresh once when since or until changes. The February 19 cluster is preserved by hash and Git history and is removed from production. Record: `docs/investigations/client-risk-dashboard-lineage-021_2026-11-10/DECISION.md` and `docs/investigations/client-risk-dashboard-reconcile-022_2026-11-13/README.md`.
 
-**Still blocking Axios retirement:** dormant-preserve importers. `CLIENT-ROSETTE-COMPARE-RECONCILE-023` closed Rosette Compare after this order: the composable is the canonical unrouted client, and the panel no longer imports Axios. This risk-dashboard order did not remove Axios. Axios consolidation remains incomplete.
+**Still blocking Axios retirement:** dormant-preserve importers. `CLIENT-ROSETTE-COMPARE-RECONCILE-023` closed Rosette Compare after this order: the composable is the canonical unrouted client, and the panel no longer imports Axios. `CLIENT-AXIOS-DORMANT-PRESERVATION-024` copied those dormant clusters for later adjudication. It did not remove production files. Axios removal remains unauthorized.
 
 ---
 
@@ -53,6 +55,20 @@ Maintenance discipline: docs/SPRINTS_MAINTENANCE.md
 **Axios:** one direct importer retired, 18 → 17. The dependency stays at `^1.21.0`. Axios consolidation remains incomplete because dormant-preserve importers still exist. The original 20-row inventory was not rewritten.
 
 **Record:** `docs/investigations/client-rosette-compare-reconcile-023/README.md`.
+
+---
+
+## CLIENT-AXIOS-DORMANT-PRESERVATION-024 — Dormant Axios preservation (registered 2026-11-14)
+
+**Status:** Preservation and classification. Not dependency removal. Not feature activation. The unresolved-lineage phase is closed by PR #482, merge `cfaf07751110d99b3539647e877c2ffd80f4f29c`.
+
+**Census on that merge:** 17 production Axios importers. Zero effective UNRESOLVED rows. `useRosetteCompareApi.ts` and the three February 22 risk composables are canonical and unrouted. Axios stays at `^1.21.0`.
+
+**Archive:** `archive/experimental/2026-11/client-axios-dormant-capabilities/`. Copies are byte-identical. Production files are not retired. DORMANT_PRESERVE does not mean safe to delete. A preserved cluster may stay in the production tree until a later ruling. The five dormant clusters and the two canonical-but-unrouted clusters are separate. They are not one deletion.
+
+**Axios removal remains unauthorized.** No importer was routed. No backend route, CAM authority, readiness state, or manufacturing behavior changed.
+
+**Record:** `docs/investigations/client-axios-dormant-preservation-024/README.md` and `PRESERVATION_LEDGER.csv`. Overlay: `docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json`.
 
 ---
 

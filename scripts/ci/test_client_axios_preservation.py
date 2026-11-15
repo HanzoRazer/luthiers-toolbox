@@ -1,0 +1,778 @@
+#!/usr/bin/env python3
+"""Preservation tests for CLIENT-AXIOS-DORMANT-PRESERVATION-024.
+
+The archive is provenance. These tests do not require a production file to
+be deleted, and they do not treat a missing backend route as deletion authority.
+"""
+from __future__ import annotations
+
+import csv
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+SCRIPT = REPO / "scripts" / "investigations" / "client_axios_preservation.py"
+INVENTORY = (
+    REPO
+    / "docs/investigations/client-axios-reachability-020_2026-11-10/AXIOS_IMPORT_INVENTORY.csv"
+)
+OVERLAY = INVENTORY.with_name("POST_AUDIT_RETIREMENTS.json")
+ARCHIVE = REPO / "archive/experimental/2026-11/client-axios-dormant-capabilities"
+LEDGER = REPO / "docs/investigations/client-axios-dormant-preservation-024/PRESERVATION_LEDGER.csv"
+INDEX = ARCHIVE / "CAPABILITY_INDEX.md"
+MATRIX = ARCHIVE / "ENDPOINT_MATRIX.csv"
+PACKAGE = REPO / "packages" / "client" / "package.json"
+LOCK = REPO / "packages" / "client" / "package-lock.json"
+SRC = REPO / "packages" / "client" / "src"
+sys.path.insert(0, str(SCRIPT.parent))
+import client_axios_preservation as tool  # noqa: E402
+
+SOURCE_COMMIT = "cfaf07751110d99b3539647e877c2ffd80f4f29c"
+CANONICAL = "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts"
+ALLOWED_PREFIXES = (
+    "archive/experimental/2026-11/client-axios-dormant-capabilities/",
+    "docs/investigations/client-axios-dormant-preservation-024/",
+    "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+    "scripts/investigations/client_axios_preservation.py",
+    "scripts/ci/test_client_axios_preservation.py",
+    "scripts/ci/test_client_axios_reachability.py",
+    ".github/workflows/core_ci.yml",
+    "SPRINTS.md",
+    ".cbsp21/patches/client-axios-dormant-preservation-024.json",
+)
+
+
+CLUSTER_IDS = [
+    "ai-advisory",
+    "art-jobs",
+    "art-presets",
+    "art-rosette-job-history",
+    "cam-insights",
+    "cam-utility-clients",
+    "risk-dashboard-canonical",
+    "rosette-compare-canonical",
+    "rosette-compare-history",
+]
+# Owner-ruled boundaries (PR #483 review): preset selection/CRUD is not job
+# detail/timeline, and /api/compare/history is not /api/art/rosette/*.
+SPLIT_BOUNDARIES = {
+    "art-presets": {
+        "components/art/ArtPresetSelector.vue",
+        "views/ArtPresetManager.vue",
+    },
+    "art-jobs": {
+        "views/ArtJobDetail.vue",
+        "views/ArtJobTimeline.vue",
+    },
+}
+SPLIT_PREFIXES = {
+    "rosette-compare-history": (
+        "components/art/RosetteCompareHistory.vue",
+        "components/art/rosette_compare_history/",
+    ),
+    "art-rosette-job-history": (
+        "views/ArtStudioRosetteCompare.vue",
+        "views/rosette_compare/",
+    ),
+}
+RETIRED_CLUSTER_IDS = ("art-presets-jobs", "rosette-history")
+
+
+def _plan() -> dict:
+    if not hasattr(_plan, "cached"):
+        _plan.cached = tool.build_plan(REPO, INVENTORY, None)  # type: ignore[attr-defined]
+    return _plan.cached  # type: ignore[attr-defined]
+
+
+def _git_bytes(rel: str) -> bytes:
+    return subprocess.check_output(["git", "show", f"origin/main:{rel}"], cwd=REPO)
+
+
+class EntryCensus(unittest.TestCase):
+    def test_seventeen_importers_and_no_unresolved(self) -> None:
+        plan = _plan()
+        self.assertEqual(plan["importer_count"], 17)
+        self.assertEqual(plan["effective_unresolved"], [])
+        self.assertEqual(plan["axios_declared"], "^1.21.0")
+        self.assertEqual(plan["source_commit"], SOURCE_COMMIT)
+        self.assertIn(CANONICAL, plan["importers"])
+        self.assertFalse(plan["production_files_retired"])
+        self.assertFalse(plan["axios_removal_authorized"])
+        self.assertFalse(plan["dormant_preserve_means_safe_to_delete"])
+        client_text = "\n".join(
+            path.read_text(encoding="utf-8", errors="surrogateescape")
+            for path in SRC.rglob("*")
+            if path.is_file() and path.suffix in {".ts", ".vue", ".js", ".mjs", ".cjs"}
+        )
+        self.assertNotIn("archive/experimental", client_text)
+
+    def test_each_importer_is_in_exactly_one_cluster(self) -> None:
+        owners: dict[str, str] = {}
+        for item in _plan()["files"]:
+            if item["role"] != "importer":
+                continue
+            self.assertNotIn(item["original_path"], owners)
+            owners[item["original_path"]] = item["capability_cluster"]
+        self.assertEqual(set(owners), set(_plan()["importers"]))
+        self.assertEqual(len(owners), 17)
+
+    def test_inventory_hash_is_the_committed_blob_not_working_tree_bytes(self) -> None:
+        # core.autocrlf rewrites the working tree on Windows; the manifest must not follow it.
+        rel = INVENTORY.relative_to(REPO).as_posix()
+        committed = subprocess.check_output(["git", "cat-file", "blob", f"{SOURCE_COMMIT}:{rel}"], cwd=REPO)
+        self.assertEqual(_plan()["inventory_sha256"], tool.sha256_bytes(committed))
+
+    def test_cluster_ids_are_pinned(self) -> None:
+        self.assertEqual(_plan()["clusters"], CLUSTER_IDS)
+        overlay = json.loads(OVERLAY.read_text(encoding="utf-8"))
+        self.assertEqual(overlay["preservation"]["clusters"], CLUSTER_IDS)
+
+    def test_split_clusters_keep_owner_ruled_boundaries(self) -> None:
+        by_cluster: dict[str, set[str]] = {}
+        for item in _plan()["files"]:
+            rel = item["original_path"][len("packages/client/src/"):]
+            by_cluster.setdefault(item["capability_cluster"], set()).add(rel)
+        for cluster_id, expected in SPLIT_BOUNDARIES.items():
+            self.assertEqual(by_cluster[cluster_id], expected, cluster_id)
+        for cluster_id, prefixes in SPLIT_PREFIXES.items():
+            files = by_cluster[cluster_id]
+            self.assertTrue(files)
+            for rel in files:
+                self.assertTrue(rel.startswith(prefixes), f"{rel} in {cluster_id}")
+            for other, other_files in by_cluster.items():
+                if other == cluster_id:
+                    continue
+                for rel in other_files:
+                    self.assertFalse(
+                        rel.startswith(prefixes),
+                        f"{rel} belongs in {cluster_id}, found in {other}",
+                    )
+        with MATRIX.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        for row in rows:
+            if row["contract"] == "rosette-compare-history":
+                self.assertEqual(row["cluster"], "rosette-compare-history")
+                self.assertEqual(row["endpoint"], "/api/compare/history")
+            if row["contract"] == "art-rosette-history":
+                self.assertEqual(row["cluster"], "art-rosette-job-history")
+                self.assertTrue(row["endpoint"].startswith("/api/art/rosette/"), row["endpoint"])
+            if row["cluster"] == "art-presets":
+                self.assertTrue(row["endpoint"].startswith("/api/art/presets"), row["endpoint"])
+            if row["cluster"] == "art-jobs":
+                self.assertNotIn("/api/art/presets", row["endpoint"])
+
+    def test_human_records_name_every_cluster_and_no_retired_id(self) -> None:
+        readmes = [ARCHIVE / "README.md", LEDGER.with_name("README.md")]
+        for path in readmes:
+            text = path.read_text(encoding="utf-8")
+            for cluster_id in CLUSTER_IDS:
+                self.assertIn(f"`{cluster_id}`", text, f"{path}: {cluster_id}")
+            for retired in RETIRED_CLUSTER_IDS:
+                self.assertNotIn(f"`{retired}`", text, f"{path} still names {retired}")
+        index = INDEX.read_text(encoding="utf-8").splitlines()
+        headings = [line[3:] for line in index if line.startswith("## ")]
+        self.assertEqual([h for h in headings if h != "Distinct contracts"], CLUSTER_IDS)
+
+    def test_overlay_records_preservation_and_does_not_retire_production(self) -> None:
+        before = json.loads(_git_bytes(OVERLAY.relative_to(REPO).as_posix()))
+        after = json.loads(OVERLAY.read_text(encoding="utf-8"))
+        self.assertEqual(before["retired_importers"], after["retired_importers"])
+        self.assertEqual(before["reclassified_importers"], after["reclassified_importers"])
+        self.assertEqual(before["post_audit_importers"], after["post_audit_importers"])
+        preserved = after["preservation"]
+        self.assertEqual(preserved["rosette_compare_merge_commit"], SOURCE_COMMIT)
+        self.assertFalse(preserved["production_files_retired"])
+        self.assertFalse(preserved["axios_removal_authorized"])
+        retired = {item["path"] for item in after["retired_importers"]}
+        for path in _plan()["importers"]:
+            self.assertNotIn(path, retired)
+            self.assertTrue((REPO / path).is_file())
+        self.assertEqual(
+            [item["path"] for item in after["reclassified_importers"]],
+            [
+                "packages/client/src/views/art/risk-dashboard/useRiskBuckets.ts",
+                "packages/client/src/views/art/risk-dashboard/useRiskExports.ts",
+                "packages/client/src/views/art/risk-dashboard/useRiskBucketDetails.ts",
+                CANONICAL,
+            ],
+        )
+
+
+class Integrity(unittest.TestCase):
+    def test_archive_matches_source_manifest_and_git_blob(self) -> None:
+        tool.verify_archive(REPO, ARCHIVE, _plan())
+        manifest = json.loads((ARCHIVE / "MANIFEST.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest, json.loads(tool.render_manifest(_plan())))
+        for item in manifest["files"]:
+            original = (REPO / item["original_path"]).read_bytes()
+            archived = (ARCHIVE / item["archive_path"]).read_bytes()
+            self.assertEqual(archived, original)
+            self.assertEqual(tool.sha256_bytes(archived), item["sha256"])
+            self.assertEqual(tool.git_blob_sha1(archived), item["git_blob"])
+            self.assertEqual(item["source_commit"], SOURCE_COMMIT)
+            blob = subprocess.check_output(
+                ["git", "rev-parse", f"{SOURCE_COMMIT}:{item['original_path']}"],
+                cwd=REPO,
+                text=True,
+            ).strip()
+            self.assertEqual(blob, item["git_blob"])
+
+    def test_manifest_is_byte_stable(self) -> None:
+        plan = _plan()
+        self.assertEqual(tool.render_manifest(plan), tool.render_manifest(plan))
+        self.assertEqual(tool.render_endpoint_matrix(), tool.render_endpoint_matrix())
+        self.assertEqual(tool.render_ledger(plan), tool.render_ledger(plan))
+        self.assertEqual(tool.render_capability_index(plan), tool.render_capability_index(plan))
+        self.assertEqual((ARCHIVE / "CAPABILITY_INDEX.md").read_text(encoding="utf-8"), tool.render_capability_index(plan))
+        self.assertEqual(MATRIX.read_text(encoding="utf-8"), tool.render_endpoint_matrix())
+        self.assertEqual(LEDGER.read_text(encoding="utf-8"), tool.render_ledger(plan))
+
+    def test_crlf_and_non_ascii_keep_original_bytes(self) -> None:
+        raw = "café line\r\nsecond\r\n".encode("utf-8")
+        self.assertIn(b"\r\n", raw)
+        self.assertIn("é".encode("utf-8"), raw)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src = root / "source.txt"
+            dest = root / "nested" / "copy.txt"
+            src.write_bytes(raw)
+            tool.copy_bytes(src, dest, root=root)
+            self.assertEqual(dest.read_bytes(), raw)
+            self.assertEqual(tool.sha256_bytes(dest.read_bytes()), tool.sha256_bytes(raw))
+
+    def test_dry_run_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "archive"
+            before = list(Path(tmp).rglob("*"))
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--repo-root",
+                    str(REPO),
+                    "--inventory",
+                    str(INVENTORY),
+                    "--archive-root",
+                    str(dest),
+                    "--dry-run",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("dry-run: no files written", completed.stdout)
+            self.assertFalse(dest.exists())
+            self.assertEqual(list(Path(tmp).rglob("*")), before)
+
+    def test_dry_run_refuses_verify_and_write_manifest(self) -> None:
+        for flag in ("--verify", "--write-manifest"):
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--repo-root",
+                    str(REPO),
+                    "--inventory",
+                    str(INVENTORY),
+                    "--archive-root",
+                    str(ARCHIVE),
+                    "--dry-run",
+                    flag,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 2, completed.stdout)
+            self.assertIn("plan-only", completed.stderr)
+
+    def test_missing_path_and_ambiguous_path_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(tool.PreservationError) as missing:
+                tool._validate_closure(Path(tmp), tool.clusters())
+            self.assertIn("missing path", str(missing.exception))
+        with self.assertRaises(tool.PreservationError) as ambiguous:
+            tool.assert_no_ambiguous_paths(["packages/client/src/api/n15.ts", "packages/client/src/api/n15.ts"])
+        self.assertIn("ambiguous", str(ambiguous.exception))
+
+    def test_archive_inside_client_source_is_rejected_and_not_created(self) -> None:
+        dest = SRC / "__preservation_reject_destination"
+        self.assertFalse(dest.exists())
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--repo-root",
+                str(REPO),
+                "--inventory",
+                str(INVENTORY),
+                "--archive-root",
+                str(dest),
+                "--dry-run",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 2, completed.stdout)
+        self.assertIn("inside production client source", completed.stderr)
+        self.assertFalse(dest.exists())
+
+    def test_write_without_destination_is_rejected(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--repo-root",
+                str(REPO),
+                "--inventory",
+                str(INVENTORY),
+                "--write-manifest",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 2, completed.stdout)
+        self.assertIn("without --archive-root", completed.stderr)
+
+
+def _clone_archive(dest: Path) -> Path:
+    shutil.copytree(ARCHIVE, dest)
+    return dest
+
+
+def _symlink_or_skip(test: unittest.TestCase, link: Path, target: Path, *, directory: bool = False) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=directory)
+    except (OSError, NotImplementedError) as exc:
+        test.skipTest(f"symlinks unavailable here: {exc}")
+
+
+class Tamper(unittest.TestCase):
+    """Verification must fail when an archive entry is not an independent copy."""
+
+    def _entry(self) -> dict:
+        return _plan()["files"][0]
+
+    def test_clean_clone_verifies(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            tool.verify_archive(REPO, clone, _plan())
+
+    def test_symlinked_entry_to_production_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            entry.unlink()
+            _symlink_or_skip(self, entry, REPO / item["original_path"])
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("link", str(caught.exception))
+
+    def test_symlinked_directory_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            parent = (clone / item["archive_path"]).parent
+            shutil.rmtree(parent)
+            _symlink_or_skip(self, parent, (REPO / item["original_path"]).parent, directory=True)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("link", str(caught.exception))
+
+    def test_hard_linked_alias_of_production_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            entry.unlink()
+            try:
+                os.link(REPO / item["original_path"], entry)
+            except OSError as exc:
+                self.skipTest(f"hard link across this temp dir unavailable: {exc}")
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("hard links", str(caught.exception))
+
+    def test_hard_linked_entry_to_unrelated_identical_file_is_rejected(self) -> None:
+        # Same bytes, same hashes, but not an independent copy: st_nlink == 2.
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            external = Path(tmp) / "external_copy"
+            external.write_bytes(entry.read_bytes())
+            entry.unlink()
+            os.link(external, entry)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("hard links", str(caught.exception))
+
+    def test_symlinked_manifest_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            outside = Path(tmp) / "outside_manifest.json"
+            outside.write_bytes((clone / "MANIFEST.json").read_bytes())
+            (clone / "MANIFEST.json").unlink()
+            _symlink_or_skip(self, clone / "MANIFEST.json", outside)
+            with self.assertRaises(tool.PreservationError):
+                tool.verify_archive(REPO, clone, _plan())
+
+    def test_copy_refuses_to_write_through_a_destination_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src = root / "src.txt"
+            victim = root / "victim.txt"
+            dest = root / "dest.txt"
+            src.write_bytes(b"new")
+            victim.write_bytes(b"keep")
+            _symlink_or_skip(self, dest, victim)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_bytes(src, dest, root=root)
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_copy_refuses_a_symlinked_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            real = root / "real.txt"
+            link = root / "link.txt"
+            real.write_bytes(b"x")
+            _symlink_or_skip(self, link, real)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_bytes(link, root / "out.txt", root=root)
+
+
+def _dir_link_or_skip(test: unittest.TestCase, kind: str, link: Path, target: Path) -> None:
+    """Make ``link`` a directory symlink or (Windows) junction pointing at ``target``."""
+    if kind == "symlink":
+        _symlink_or_skip(test, link, target, directory=True)
+        return
+    if os.name != "nt":
+        test.skipTest("junctions are Windows-only")
+    import _winapi  # noqa: PLC0415 - Windows-only
+
+    _winapi.CreateJunction(str(target), str(link))
+
+
+FAKE_FILES = (
+    "packages/client/src/a/b/one.ts",
+    "packages/client/src/a/b/two.ts",
+)
+
+
+def _fake_repo(root: Path) -> tuple[Path, list[dict]]:
+    """A throwaway production tree. Link tests must never point at the real checkout."""
+    repo = root / "repo"
+    for index, rel in enumerate(FAKE_FILES):
+        path = repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(f"export const v{index} = {index}\r\n".encode("utf-8"))
+    return repo, [{"original_path": rel} for rel in FAKE_FILES]
+
+
+def _tree(path: Path) -> list[str]:
+    return sorted(p.relative_to(path).as_posix() for p in path.rglob("*"))
+
+
+class Publication(unittest.TestCase):
+    """copy_closure must not create or write anything outside the archive tree."""
+
+    def test_source_dir_symlink_with_missing_descendants_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            outside = root / "outside"
+            archive.mkdir()
+            outside.mkdir()
+            _dir_link_or_skip(self, "symlink", archive / "source", outside)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("link", str(caught.exception))
+            self.assertEqual(_tree(outside), [])
+
+    def _deeper_parent_link(self, kind: str) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            outside = root / "outside"
+            outside.mkdir()
+            (archive / "source/packages/client").mkdir(parents=True)
+            _dir_link_or_skip(self, kind, archive / "source/packages/client/src", outside)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("link", str(caught.exception))
+            self.assertEqual(_tree(outside), [])
+
+    def test_deeper_parent_symlink_is_refused(self) -> None:
+        self._deeper_parent_link("symlink")
+
+    def test_deeper_parent_junction_is_refused(self) -> None:
+        self._deeper_parent_link("junction")
+
+    def _existing_hard_link(self, target_of: str) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            if target_of == "own-source":
+                target = repo / FAKE_FILES[0]
+            elif target_of == "other-production":
+                target = repo / FAKE_FILES[1]
+            else:
+                target = root / "external.ts"
+                target.write_bytes((repo / FAKE_FILES[0]).read_bytes())
+            before = {p: p.read_bytes() for p in [*(repo / rel for rel in FAKE_FILES), target]}
+            os.link(target, dest)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("existing destination", str(caught.exception))
+            for path, data in before.items():
+                self.assertEqual(path.read_bytes(), data, path)
+            self.assertEqual(os.lstat(target).st_nlink, 2)
+
+    def test_existing_dest_hard_linked_to_its_own_production_source_is_refused(self) -> None:
+        self._existing_hard_link("own-source")
+
+    def test_existing_dest_hard_linked_to_another_production_file_is_refused(self) -> None:
+        self._existing_hard_link("other-production")
+
+    def test_existing_dest_hard_linked_to_external_identical_file_is_refused(self) -> None:
+        self._existing_hard_link("external")
+
+    def test_existing_ordinary_destination_is_refused_and_left_unchanged(self) -> None:
+        # Documented policy: copy never overwrites or replaces an existing entry.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            dest.write_bytes(b"stale")
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.copy_closure(repo, archive, files)
+            self.assertIn("existing destination", str(caught.exception))
+            self.assertEqual(dest.read_bytes(), b"stale")
+
+    def test_dangling_destination_symlink_is_refused_and_creates_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, files = _fake_repo(root)
+            archive = root / "archive"
+            dest = archive / "source" / FAKE_FILES[0]
+            dest.parent.mkdir(parents=True)
+            missing = root / "would_be_created.ts"
+            _symlink_or_skip(self, dest, missing)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_closure(repo, archive, files)
+            self.assertFalse(os.path.lexists(missing))
+
+    def _race(self, plant: str) -> None:
+        """Plant an entry at dest AFTER the existence pre-check, before install.
+
+        This isolates the install step: it must refuse without replacing or
+        writing through the planted entry, and must leave no temp file behind.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            directory = root / "archive"
+            directory.mkdir()
+            dest = directory / "entry.ts"
+            victim = root / "victim.ts"
+            original = tool._create_exclusive_temp
+
+            def planting(directory_arg: Path, stem: str, data: bytes) -> Path:
+                made = original(directory_arg, stem, data)
+                if plant == "dangling-symlink":
+                    _symlink_or_skip(self, dest, victim)
+                elif plant == "hard-link":
+                    victim.write_bytes(b"keep")
+                    os.link(victim, dest)
+                else:
+                    dest.write_bytes(b"keep")
+                return made
+
+            tool._create_exclusive_temp = planting
+            try:
+                with self.assertRaises(tool.PreservationError) as caught:
+                    tool.publish_new_file(dest, b"new")
+            finally:
+                tool._create_exclusive_temp = original
+            self.assertIn("existing destination", str(caught.exception))
+            if plant == "dangling-symlink":
+                self.assertFalse(os.path.lexists(victim))
+            elif plant == "hard-link":
+                self.assertEqual(victim.read_bytes(), b"keep")
+            else:
+                self.assertEqual(dest.read_bytes(), b"keep")
+            self.assertEqual([p.name for p in directory.iterdir() if p.name.endswith(".partial")], [])
+
+    def test_install_refuses_dangling_symlink_planted_after_check(self) -> None:
+        self._race("dangling-symlink")
+
+    def test_install_refuses_hard_link_planted_after_check(self) -> None:
+        self._race("hard-link")
+
+    def test_install_refuses_regular_file_planted_after_check(self) -> None:
+        self._race("regular")
+
+    def test_write_manifest_refuses_symlinked_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "archive"
+            archive.mkdir()
+            victim = root / "victim.json"
+            victim.write_bytes(b"keep")
+            _symlink_or_skip(self, archive / "MANIFEST.json", victim)
+            with self.assertRaises(tool.PreservationError):
+                tool.write_manifest(archive, "{}\n")
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_write_manifest_refuses_hard_linked_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "archive"
+            archive.mkdir()
+            victim = root / "victim.json"
+            victim.write_bytes(b"keep")
+            os.link(victim, archive / "MANIFEST.json")
+            with self.assertRaises(tool.PreservationError):
+                tool.write_manifest(archive, "{}\n")
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_clean_archive_creation_and_verification_pass(self) -> None:
+        plan = _plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "fresh" / "archive"
+            tool.copy_closure(REPO, archive, list(plan["files"]))
+            tool.write_manifest(archive, tool.render_manifest(plan))
+            tool.write_manifest(archive, tool.render_manifest(plan))  # replace is allowed for the manifest
+            tool.verify_archive(REPO, archive, plan)
+            for item in plan["files"]:
+                self.assertEqual(os.lstat(archive / item["archive_path"]).st_nlink, 1)
+            self.assertEqual(
+                sorted(p.name for p in archive.iterdir()),
+                ["MANIFEST.json", "source"],
+            )
+
+
+class Closure(unittest.TestCase):
+    def test_direct_callers_are_archived_or_excluded(self) -> None:
+        plan = _plan()
+        archived = {item["original_path"] for item in plan["files"]}
+        excluded = {
+            (item["capability_cluster"], item["path"])
+            for item in plan["exclusions"]
+            if item["kind"] == "caller"
+        }
+        for item in plan["files"]:
+            for caller in item["known_callers"]:
+                path = caller["path"]
+                if path in archived and any(
+                    other["original_path"] == path and other["capability_cluster"] == item["capability_cluster"]
+                    for other in plan["files"]
+                ):
+                    self.assertEqual(caller["included"], "archived")
+                    continue
+                self.assertEqual(caller["included"], "excluded")
+                self.assertTrue(caller["reason"].strip())
+                self.assertIn((item["capability_cluster"], path), excluded)
+
+    def test_endpoint_matrix_covers_axios_operations_and_distinct_contracts(self) -> None:
+        with MATRIX.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        with INVENTORY.open(encoding="utf-8", newline="") as handle:
+            inventory = list(csv.DictReader(handle))
+        by_path: dict[str, list[dict[str, str]]] = {}
+        for row in rows:
+            by_path.setdefault(row["production_path"], []).append(row)
+            self.assertEqual(row["deletion_authority"], "false")
+            if row["canonical_production_path"]:
+                self.assertTrue((REPO / row["canonical_production_path"]).is_file(), row["canonical_production_path"])
+        current = set(_plan()["importers"])
+        for item in inventory:
+            if item["path"] not in current:
+                continue
+            endpoints = {row["endpoint"] for row in by_path[item["path"]]}
+            for literal in (part.strip() for part in item["endpoint_literals"].split(";")):
+                self.assertTrue(
+                    any(literal == endpoint or endpoint.startswith(literal) for endpoint in endpoints),
+                    f"{item['path']} missing {literal}",
+                )
+        contracts = {row["contract"] for row in rows}
+        self.assertIn("compare-lab", contracts)
+        self.assertIn("rosette-baseline-diff", contracts)
+        self.assertIn("rosette-compare-history", contracts)
+        self.assertIn("art-rosette-history", contracts)
+        lab_paths = {row["production_path"] for row in rows if row["contract"] == "compare-lab"}
+        self.assertIn("packages/client/src/composables/useCompareState.ts", lab_paths)
+        self.assertNotIn(CANONICAL, lab_paths)
+        history_paths = {row["production_path"] for row in rows if row["contract"] == "rosette-compare-history"}
+        baseline_paths = {row["production_path"] for row in rows if row["contract"] == "rosette-baseline-diff"}
+        self.assertTrue(history_paths.isdisjoint(baseline_paths))
+        self.assertEqual(
+            tool.preservation_status_for_route(False),
+            "PRESERVED_COPY_PRODUCTION_RETAINED",
+        )
+        self.assertEqual(
+            tool.preservation_status_for_route(None),
+            tool.preservation_status_for_route(True),
+        )
+
+    def test_ledger_has_one_row_per_importer(self) -> None:
+        with LEDGER.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual([row["path"] for row in rows], _plan()["importers"])
+        for row in rows:
+            self.assertEqual(row["preservation_status"], "PRESERVED_COPY_PRODUCTION_RETAINED")
+            self.assertIn(row["path"], row["archive_closure"].split(";"))
+            self.assertTrue(row["next_adjudication"].strip())
+            if "CANONICAL_BUT_UNROUTED" in row["disposition"]:
+                self.assertTrue((REPO / row["path"]).is_file())
+
+
+class Boundary(unittest.TestCase):
+    def test_production_client_router_and_inventory_are_unchanged(self) -> None:
+        changed = subprocess.check_output(
+            ["git", "diff", "--name-only", "origin/main"],
+            cwd=REPO,
+            text=True,
+        ).splitlines()
+        untracked = subprocess.check_output(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            cwd=REPO,
+            text=True,
+        ).splitlines()
+        touched = changed + untracked
+        for path in touched:
+            self.assertTrue(
+                any(path == prefix or path.startswith(prefix) for prefix in ALLOWED_PREFIXES),
+                path,
+            )
+        self.assertEqual(PACKAGE.read_bytes(), _git_bytes("packages/client/package.json"))
+        self.assertEqual(LOCK.read_bytes(), _git_bytes("packages/client/package-lock.json"))
+        self.assertEqual(
+            (SRC / "router/index.ts").read_bytes(),
+            _git_bytes("packages/client/src/router/index.ts"),
+        )
+        self.assertEqual(INVENTORY.read_bytes(), _git_bytes(INVENTORY.relative_to(REPO).as_posix()))
+        self.assertFalse(any(path.startswith("packages/client/") for path in touched))
+        self.assertTrue(INDEX.is_file())
+        self.assertIn(SOURCE_COMMIT, INDEX.read_text(encoding="utf-8"))
+        self.assertIn("does not mean safe to delete", (ARCHIVE / "README.md").read_text(encoding="utf-8"))
+
+
+if __name__ == "__main__":
+    unittest.main()
