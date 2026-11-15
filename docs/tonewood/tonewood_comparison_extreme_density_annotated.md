@@ -7,6 +7,8 @@
 
 > **Status: SECONDARY (designated 2026-11-14, `VERIFICATION_LOG.md` C-09).** The canonical extreme-density comparison is [tonewood_comparison_extreme_density_glassy_character.md](tonewood_comparison_extreme_density_glassy_character.md) (65 species from 950 kg/m³). This document is kept for its **Thermal Properties** and **CNC Machining** tables, which the canonical document does not have. Its tiers, rankings and recommendations are superseded. Where the two disagree (threshold 1,000 vs 950 kg/m³; tier assignments; bridge priority; fifth fretboard choice), follow the canonical document.
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This comparison catalogs the "glassy character" tonewoods — species at or above African Blackwood density (1,270 kg/m³) and the broader extreme-density band (≥1,000 kg/m³). Includes full physical, acoustic, thermal, and CNC properties.
 
 ---
@@ -37,7 +39,7 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 |---------|:-------:|:-----:|:---:|----------------|--------------|
 | **Macassar Ebony** | 1,120 | 3,220 | — | Bright, defined | Fretboard, bridge, decorative |
 | **Cocobolo** | 1,095 | 2,960 | — | Warm, rich, complex — finest rosewoods | Body top, back/sides, fretboard, bridge |
-| **Ipe (Brazilian Walnut)** | 1,100 | 3,510 | 16.70 | Bright, bell-like, extreme sustain | Bridge, accent |
+| **Ipe (Brazilian Walnut)** | 1,119 | 3,687 | 21.6 | Bright, bell-like, extreme sustain | Bridge, accent |
 | **Katalox (Mexican Ebony)** | 1,050 | 3,650 | — | Bright, bell-like — ebony alternative | Fretboard, bridge |
 | **African Ebony** | 1,030 | 3,080 | — | Bright, articulate, percussive | Fretboard, bridge, nuts |
 
@@ -46,7 +48,7 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Species | Density | Janka | MOE | Region | Status |
 |---------|:-------:|:-----:|:---:|--------|--------|
 | **African Blackwood** | 1,270 | 1,960 ᵉ | 17.95 | East Africa | The benchmark |
-| **Lignum Vitae** | 1,260 | 1,932 ᵉ | 17.11 | Caribbean | Traditional; oily |
+| **Lignum Vitae** | 1,260 | 4,496 | 17.11 | Caribbean | Traditional; oily |
 | **Leadwood** | 1,220 | 1,820 ᵉ | 17.20 | Southern Africa | Heavy; slow growth |
 | **Snakewood** | 1,210 | 1,792 ᵉ | 23.20 | South America | Exotic figuring |
 | **Pau Santo** | 1,115 | 1,541 ᵉ | 17.85 | Brazil | Limited data |
@@ -55,7 +57,7 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | **Bloodwood** | 1,050 | 1,379 ᵉ | 20.78 | South America | Vivid red |
 | **Pink Ivory** | 1,035 | 1,342 ᵉ | 15.12 | Southern Africa | Pink/red; rare |
 | **Siamese Rosewood** | 1,035 | 1,342 ᵉ | 16.38 | SE Asia | CITES II (not I) |
-| **Greenheart** | 1,010 | 1,283 ᵉ | 24.64 | Guyana | Highest MOE |
+| **Greenheart** | 1,010 | 2,360 | 22.4 | Guyana | High MOE (FPL) |
 | **Marblewood** | 1,005 | 1,271 ᵉ | 19.43 | South America | Distinctive veining |
 
 ### Tier 3: High-Potential Unexplored
@@ -66,9 +68,9 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | **Black Ironwood** | 1,355 | 2,210 ᵉ | 20.46 | Florida/Caribbean | US domestic option |
 | **Gidgee** | 1,150 | 1,631 ᵉ | 18.50 | Australia | Acacia; sustainable |
 | **Australian Buloke** | 1,085 | 1,465 ᵉ | 18.50 | Australia | Hardest Australian |
-| **Wamara** | 1,080 | 1,452 ᵉ | 24.38 | South America | Second highest MOE |
-| **Bulletwood** | 1,080 | 1,452 ᵉ | 23.06 | South America | Very stiff |
-| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | SE United States | Domestic; abundant |
+| **Wamara** | 1,080 | 1,452 ᵉ | 24.38 | South America | Highest MOE here (unsourced) |
+| **Bulletwood** | 1,059 | 3,192 | 23.8 | South America | Very stiff |
+| **Live Oak** | 986 | 1,260 ᵉ | 13.7 | SE United States | Domestic; abundant |
 
 ---
 
@@ -79,18 +81,18 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Waddywood | — | 1.43 | 1,430 | 2,441 ᵉ | 10,858 | 21.50 | 150.0 |
 | Black Ironwood | — | 1.35 | 1,355 | 2,210 ᵉ | 9,831 | 20.46 | 125.5 |
 | **African Blackwood** | *Dalbergia melanoxylon* | 1.27 | 1,270 | 1,960 ᵉ | 8,719 | 17.95 | 213.6 |
-| Lignum Vitae | *Guaiacum officinale* | 1.26 | 1,260 | 1,932 ᵉ | 8,594 | 17.11 | 125.4 |
+| Lignum Vitae | *Guaiacum officinale* | 1.26 | 1,260 | 4,496 | 20,000 | 17.11 | 125.4 |
 | Leadwood | *Combretum imberbe* | 1.22 | 1,220 | 1,820 ᵉ | 8,096 | 17.20 | 144.5 |
 | Snakewood | *Brosimum guianense* | 1.21 | 1,210 | 1,792 ᵉ | 7,971 | 23.20 | 164.6 |
 | Gidgee | — | 1.15 | 1,150 | 1,631 ᵉ | 7,254 | 18.50 | 135.0 |
 | **Macassar Ebony** | *Diospyros celebica* | 1.09 | 1,120 | 3,220 | 14,323 | — | — |
 | Pau Santo | — | 1.11 | 1,115 | 1,541 ᵉ | 6,854 | 17.85 | 127.4 |
-| **Ipe** | *Handroanthus spp.* | 1.08 | 1,100 | 3,510 | 15,613 | 16.70 | — |
+| **Ipe** | *Handroanthus spp.* | 1.00 | 1,119 | 3,687 | 16,400 | 21.6 | — |
 | **Cocobolo** | *Dalbergia retusa* | 1.10 | 1,095 | 2,960 | 13,167 | — | — |
 | Cumaru | *Dipteryx odorata* | 1.08 | 1,085 | 1,465 ᵉ | 6,515 | 22.33 | 175.3 |
 | Australian Buloke | *Allocasuarina luehmannii* | 1.08 | 1,085 | 1,465 ᵉ | 6,515 | 18.50 | 125.0 |
 | Wamara | — | 1.08 | 1,080 | 1,452 ᵉ | 6,458 | 24.38 | 148.5 |
-| Bulletwood | — | 1.08 | 1,080 | 1,452 ᵉ | 6,458 | 23.06 | 168.7 |
+| Bulletwood | — | 0.95 | 1,059 | 3,192 | 14,200 | 23.8 | 188.2 |
 | Mopane | *Colophospermum mopane* | 1.07 | 1,075 | 1,440 ᵉ | 6,405 | 13.22 | 137.5 |
 | Bloodwood | *Brosimum rubescens* | 1.05 | 1,050 | 1,379 ᵉ | 6,133 | 20.78 | 147.0 |
 | **Katalox** | *Swartzia cubensis* | 1.05 | 1,050 | 3,650 | 16,236 | — | — |
@@ -99,10 +101,10 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Siamese Rosewood | *Dalbergia cochinchinensis* | 1.03 | 1,035 | 1,342 ᵉ | 5,969 | 16.38 | 132.4 |
 | **African Ebony** | *Diospyros crassiflora* | 1.03 | 1,030 | 3,080 | 13,701 | — | — |
 | Curupay | *Anadenanthera colubrina* | 1.02 | 1,025 | 1,318 ᵉ | 5,862 | 18.04 | 130.0 |
-| Mora | *Mora excelsa* | 1.01 | 1,015 | 1,295 ᵉ | 5,760 | 19.24 | 138.6 |
-| Greenheart | *Chlorocardium rodiei* | 1.01 | 1,010 | 1,283 ᵉ | 5,706 | 24.64 | 181.4 |
+| Greenheart | *Chlorocardium rodiei* | 1.01 | 1,010 | 2,360 | 10,500 | 22.4 | 171.7 |
 | Marblewood | *Marmaroxylon racemosum* | 1.00 | 1,005 | 1,271 ᵉ | 5,653 | 19.43 | 138.0 |
-| Live Oak | *Quercus virginiana* | 1.00 | 1,000 | 1,260 ᵉ | 5,604 | 13.52 | 102.0 |
+| Live Oak | *Quercus virginiana* | 0.88 | 986 | 1,260 ᵉ | 5,604 | 13.7 | 127.0 |
+| Mora | *Mora excelsa* | 0.88 | 985 | 2,293 | 10,200 | 20.4 | 152.4 |
 
 ---
 
@@ -110,17 +112,17 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 
 | Species | Density | MOE | Specific Modulus (E/ρ) | Speed of Sound (m/s) | Acoustic Impedance (×10⁶) |
 |---------|:-------:|:---:|:----------------------:|:--------------------:|:-------------------------:|
-| **Greenheart** | 1,010 | 24.64 | 24.4 | 4,940 | 4.99 |
+| **Greenheart** | 1,010 | 22.4 | 22.2 | 4,709 | 4.76 |
 | **Wamara** | 1,080 | 24.38 | 22.6 | 4,752 | 5.13 |
 | **Snakewood** | 1,210 | 23.20 | 19.2 | 4,379 | 5.30 |
-| **Bulletwood** | 1,080 | 23.06 | 21.4 | 4,622 | 4.99 |
+| **Bulletwood** | 1,059 | 23.8 | 22.5 | 4,740 | 5.02 |
 | **Cumaru** | 1,085 | 22.33 | 20.6 | 4,536 | 4.92 |
 | **Waddywood** | 1,430 | 21.50 | 15.0 | 3,878 | 5.55 |
 | **Bloodwood** | 1,050 | 20.78 | 19.8 | 4,448 | 4.67 |
 | **Black Ironwood** | 1,355 | 20.46 | 15.1 | 3,886 | 5.27 |
+| **Mora** | 985 | 20.4 | 20.7 | 4,552 | 4.48 |
 | **Brazilwood** | 1,050 | 20.20 | 19.2 | 4,386 | 4.61 |
 | **Marblewood** | 1,005 | 19.43 | 19.3 | 4,397 | 4.42 |
-| **Mora** | 1,015 | 19.24 | 19.0 | 4,354 | 4.42 |
 | Australian Buloke | 1,085 | 18.50 | 17.1 | 4,130 | 4.48 |
 | Gidgee | 1,150 | 18.50 | 16.1 | 4,011 | 4.61 |
 | Curupay | 1,025 | 18.04 | 17.6 | 4,195 | 4.30 |
@@ -128,19 +130,19 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Pau Santo | 1,115 | 17.85 | 16.0 | 4,002 | 4.46 |
 | Leadwood | 1,220 | 17.20 | 14.1 | 3,755 | 4.58 |
 | Lignum Vitae | 1,260 | 17.11 | 13.6 | 3,686 | 4.64 |
-| **Ipe** | 1,100 | 16.70 | 15.2 | 3,897 | 4.29 |
+| **Ipe** | 1,119 | 21.6 | 19.3 | 4,393 | 4.92 |
 | Siamese Rosewood | 1,035 | 16.38 | 15.8 | 3,978 | 4.12 |
 | Pink Ivory | 1,035 | 15.12 | 14.6 | 3,822 | 3.96 |
-| Live Oak | 1,000 | 13.52 | 13.5 | 3,677 | 3.68 |
+| Live Oak | 986 | 13.7 | 13.9 | 3,728 | 3.67 |
 | Mopane | 1,075 | 13.22 | 12.3 | 3,507 | 3.77 |
 
 ### Acoustic Ranking
 
 **Stiffness Champions (Highest MOE):**
-1. Greenheart — 24.64 GPa
-2. Wamara — 24.38 GPa
+1. Wamara — 24.38 GPa
+2. Bulletwood — 23.8 GPa (FPL)
 3. Snakewood — 23.20 GPa
-4. Bulletwood — 23.06 GPa
+4. Greenheart — 22.4 GPa (FPL)
 5. Cumaru — 22.33 GPa
 
 **Impedance Champions (Maximum "Ring"):**
@@ -148,7 +150,7 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 2. Snakewood — 5.30 ×10⁶
 3. Black Ironwood — 5.27 ×10⁶
 4. Wamara — 5.13 ×10⁶
-5. Greenheart / Bulletwood — 4.99 ×10⁶
+5. Bulletwood — 5.02 ×10⁶
 
 ---
 
@@ -203,8 +205,8 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Species | Burn Risk | Tearout Risk | Dust Hazard | Notes |
 |---------|:---------:|:------------:|:-----------:|-------|
 | **Macassar Ebony** | High | High | High | Hardest ebony; extreme tool wear |
-| **Ipe** | High | High | High | Hardest in comparison; carbide only |
-| **Katalox** | High | High | High | Hardest overall (scale 1.04) |
+| **Ipe** | High | High | High | Second-hardest here (3,687, FPL); carbide only |
+| **Katalox** | High | High | High | Highest machining-difficulty scale (1.04) |
 | **Cocobolo** | High | Medium | High | Oily; gums tooling; sensitizing dust |
 | **African Ebony** | High | Medium | High | Traditional; endangered |
 | **African Blackwood** | Medium | Medium | High | Benchmark; manageable with care |
@@ -257,32 +259,32 @@ The CIRAD database (4,022 specimens, 872 species) confirms densities and identif
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
-| 1 | **Katalox** | Hardest (3,650 Janka); not CITES; ebony alternative |
-| 2 | **Ipe** | Second hardest (3,510); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
+| 1 | **Katalox** | Very hard (3,650 Janka, unsourced — below lignum vitae 4,496 and ipe 3,687, both FPL-measured); not CITES; ebony alternative |
+| 2 | **Ipe** | Second hardest here (3,687, FPL); extreme sustain — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 3 | **African Ebony** | Traditional benchmark (but endangered) |
 | 4 | **Macassar Ebony** | Striped figuring; premium |
-| 5 | **Greenheart** | Highest MOE; unexplored potential |
+| 5 | **Greenheart** | High MOE (22.4, FPL); unexplored potential |
 
 ### For Bridges (Energy Transfer)
 
 | Priority | Species | Why |
 |:--------:|---------|-----|
-| 1 | **Greenheart** | Highest MOE (24.64) = maximum energy transfer |
-| 2 | **Wamara** | Second highest MOE (24.38) |
-| 3 | **Snakewood** | Third highest MOE (23.20); visual appeal |
-| 4 | **Ipe** | Bell-like sustain; hardest — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
+| 1 | **Wamara** | Highest MOE here (24.38, unsourced) |
+| 2 | **Snakewood** | High MOE (23.20, unsourced); visual appeal |
+| 3 | **Greenheart** | High MOE (22.4, FPL) = strong energy transfer |
+| 4 | **Ipe** | Bell-like sustain; second-hardest here (3,687, FPL) — ⚠ CITES App II since 2024-11-25 (#17), see [CITES_STATUS.md](CITES_STATUS.md) |
 | 5 | **Cocobolo** | Complex tone; traditional |
 
 ### Unexplored High-Potential
 
 | Species | Density | MOE | Why Investigate |
 |---------|:-------:|:---:|-----------------|
-| **Greenheart** | 1,010 | 24.64 | Highest stiffness; should outperform ebony |
+| **Greenheart** | 1,010 | 22.4 | High stiffness (FPL); should outperform ebony |
 | **Wamara** | 1,080 | 24.38 | Second highest stiffness; unknown tonally |
 | **Australian Buloke** | 1,085 | 18.50 | Hardest Australian; sustainable domestic |
 | **Black Ironwood** | 1,355 | 20.46 | Florida/Caribbean domestic; extremely dense |
 | **Gidgee** | 1,150 | 18.50 | Australian Acacia; very dense |
-| **Live Oak** | 1,000 | 13.52 | SE US domestic; abundant |
+| **Live Oak** | 986 | 13.7 | SE US domestic; abundant |
 
 ---
 
@@ -314,7 +316,7 @@ The CIRAD database (4,022 specimens, 872 species) confirms densities and identif
 **50 species** in the database exceed 1,000 kg/m³. Only **5 are established tonewoods**. The remaining 45 represent massive untapped potential.
 
 **Key findings:**
-1. **Greenheart** (MOE 24.64) and **Wamara** (MOE 24.38) are stiffer than any characterized tonewood — they should theoretically outperform ebony for energy transfer
+1. **Wamara** (MOE 24.38, unsourced), **Bulletwood** (23.8, FPL) and **Greenheart** (22.4, FPL) are stiffer than any characterized tonewood — they should theoretically outperform ebony for energy transfer
 2. **Australian species** (Buloke, Gidgee, Waddywood) offer sustainable domestic alternatives to African woods
 3. **Black Ironwood** is a Florida/Caribbean option denser than African Blackwood
 4. The **primary tonewoods** (Macassar Ebony, Cocobolo, African Ebony) are missing MOE data — a critical gap for acoustic modeling

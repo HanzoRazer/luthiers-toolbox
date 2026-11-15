@@ -75,13 +75,15 @@ All species records in `wood_species.json` and consumers (e.g., `wood_movement_c
 published references. Attribution is per-field, not per-species.
 
 **Source priority (tangential/radial shrinkage):**
-1. **FPL GTR-282 (2021) Table 5-3** — for North American species in this table
+1. **FPL GTR-282 (2021) Table 4-3** (domestic woods) **or Table 4-4** (imported woods) — for species in
+   those tables
 2. **Wood Database (Eric Meier, wood-database.com)** — for tropical species not in FPL,
    with URL attribution
 3. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
 
 **Source priority (density):**
-1. **FPL GTR-282** — for species in FPL tables
+1. **FPL GTR-282** — specific gravity from Tables 5-3a, 5-4a or 5-5a, converted to density at 12% MC
+   (FPL Eq. 4-14), for species in those tables
 2. **CIRAD wood-density-database (2018)** — for tropical species; density only,
    NOT tangential/radial shrinkage (CIRAD provides volumetric, not breakdown)
 3. **Wood Database** — fallback when neither FPL nor CIRAD has the species
@@ -95,22 +97,33 @@ published references. Attribution is per-field, not per-species.
 ```json
 {
   "physical": {
-    "density_kg_m3": 705,
-    "_density_source": "FPL_GTR282_table_5-3",
+    "density_kg_m3": 706,
+    "_density_source": "FPL_GTR282_table_5-3a",
     "contraction_tangential_pct": 9.9,
-    "_shrinkage_tangential_source": "FPL_GTR282_table_5-3",
-    "_shrinkage_tangential_table_row": "p.5-7",
+    "_shrinkage_tangential_source": "FPL_GTR282_table_4-3",
+    "_shrinkage_tangential_table_row": "p.4-8",
     "contraction_radial_pct": 4.8,
-    "_shrinkage_radial_source": "FPL_GTR282_table_5-3"
+    "_shrinkage_radial_source": "FPL_GTR282_table_4-3"
   }
 }
 ```
 
 **Valid source values:**
-- `FPL_GTR282_table_5-3` — FPL Wood Handbook 2021, Table 5-3
+- `FPL_GTR282_table_4-3` — FPL Wood Handbook 2021, Table 4-3 (shrinkage, domestic woods)
+- `FPL_GTR282_table_4-4` — FPL Wood Handbook 2021, Table 4-4 (shrinkage, imported woods)
+- `FPL_GTR282_table_5-3a` — FPL Wood Handbook 2021, Table 5-3a (strength, US woods, metric)
+- `FPL_GTR282_table_5-4a` — FPL Wood Handbook 2021, Table 5-4a (mechanical, Canadian woods, metric)
+- `FPL_GTR282_table_5-5a` — FPL Wood Handbook 2021, Table 5-5a (mechanical, other imported woods, metric)
 - `wood_database_meier` — wood-database.com (include URL in `_source_url` field)
 - `CIRAD_2018` — CIRAD wood density database (density/volumetric only)
 - `unknown_legacy` — unverified value, flagged for follow-up
+- `FPL_GTR282_table_5-3` — **DEPRECATED 2026-11-15; do not use.** It names Table 5-3, the strength
+  table, but was prescribed for shrinkage, which is in Tables 4-3 and 4-4. It is not redefined:
+  a value carrying it must be re-attributed to the table it actually came from
+  (`docs/tonewood/VERIFICATION_LOG.md`, O-10 / C-13).
+
+The example above is sugar maple: Table 4-3 (p. 4-8) radial 4.8 / tangential 9.9; Table 5-3a
+G₁₂ 0.63 → 1000 × 0.63 × 1.12 = 706 kg/m³. Extracted tables: `docs/reference/fpl-gtr282/`.
 
 **Calculator behavior for unknown species:**
 - `wood_movement_calc.py`: raise `ValueError` listing supported species

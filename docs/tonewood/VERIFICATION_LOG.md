@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
 
 ## Why this log exists
 
@@ -18,6 +18,13 @@ python scripts/gen_cirad_high_density_catalog.py . docs/tonewood/tonewood_catalo
 
 # C-01, C-03, C-04, C-05: every CIRAD D12 / N citation in docs/tonewood vs the CSV
 python scripts/check_tonewood_cirad_citations.py        # expect: "0 mismatches", exit 0
+
+# C-11: density, SG, Janka, MOE, MOR, shrinkage and derived values vs FPL GTR-282 (strict)
+python scripts/check_tonewood_fpl_values.py --summary   # expect: "119 aliases resolve; 640 cells checked, 0 mismatches", exit 0
+
+# C-11: regenerate the FPL reference CSV (needs the two FPL PDFs and pdfplumber; see docs/reference/fpl-gtr282/README.md).
+# Refuses PDFs whose SHA-256 differs from the documented one; exits 1 on any parse problem or control character.
+python scripts/extract_fpl_gtr282_tables.py <pdf dir> docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv
 ```
 
 C-02 (estimated Janka) is reproduced by computing `0.00355 × density^1.85` and comparing it with each Janka value. The formula is `janka_from_density` in `scripts/bulk_import_wood_species.py`.
@@ -128,23 +135,67 @@ A review of PR #484 found four defects, three of them introduced or left behind 
 
 Re-check: `grep -rn "39 CIRAD\|before CoP20" docs/tonewood` finds only this log and `CITES_STATUS.md`; no other prose "N CIRAD specimens" claim remains; the checker still reports 0 mismatches.
 
-## Open issues (not fixed in this tranche)
+### C-11 — FPL GTR-282 values for the species it covers (tranche 2, 2026-11-15)
+
+**New reference.** `docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv` holds FPL GTR-282 (2021) Tables 4-3, 4-4 (shrinkage), 5-3a, 5-4a and 5-5a (mechanical, metric), extracted by `scripts/extract_fpl_gtr282_tables.py` with source-PDF SHA-256s. It was cross-checked against FPL's own inch-pound tables: 1,390 of 1,397 values agree; the 7 others are FPL's own inconsistencies (listed in its README).
+
+**New check.** `scripts/check_tonewood_fpl_values.py` maps 119 document species names to FPL rows (unambiguous identities only; every one must resolve, C-12) and checks every density, SG, Janka, MOE, MOR, shrinkage, sound-speed, impedance, E/ρ and radiation-ratio cell for them. The check is strict: such a cell must equal the FPL value at display precision, so it can be attributed to FPL. After the C-12 fixes, 640 cells are checked with 0 mismatches; 9 cells that hold a range are listed rather than compared. About 1,300 property cells belong to species FPL does not cover and are not checked.
+
+**Corrections.** `--fix` rewrote 418 cells in 12 documents. The acoustic top-woods document was corrected by hand first and agrees with the checker. Prose that quoted the old numbers was rewritten by hand; a scan of non-table lines for every replaced number then found only unchanged values and thresholds. Conventions: density is at 12% MC by FPL Eq. 4-14 (ρ = 1000·G₁₂·1.12; for Table 5-5a species, G₁₂ from basic SG by Eqs. 4-9 and 4-11); Janka is FPL side hardness; MOE is not shear-corrected (FPL footnote c).
+
+Findings, by the size of the change:
+
+- **Janka estimates replaced by measurements (O-01, partly).** 32 ᵉ regression values are now FPL side hardness: the hickories (pignut 902 → 2,136 lbf), the red and white oaks (pin oak 617 → 1,506), ashes, birches, elms, tupelos, honey locust, lignum vitae (1,932 → 4,496), bulletwood (1,452 → 3,192), greenheart (1,283 → 2,360), Alaskan yellow cedar (343 → 585). American sycamore was 410 lbf without a ᵉ mark; FPL gives 764.
+- **Rankings that changed.** Lignum vitae (4,496), not Katalox or Ipe, is the hardest wood in the extreme-density documents. East Indian rosewood is harder than Brazilian (3,170 vs 2,720 lbf). Greenheart is not the stiffest wood (Wamara, bulletwood and snakewood rank above it). On E/ρ, Douglas-fir moves from last to second among top woods and Honduran mahogany from second to second-lowest.
+- **Honduran mahogany** (5 documents): MOE 11.97 → 10.3 GPa, MOR 98.4 → 79.3 MPa, density 545 → 529, shrinkage 4.41/8.41 → 3.0/4.1. It is no longer the stiffest wood in the mahogany/koa and cherry/walnut comparisons.
+- **Unsourced "contraction" rows** (e.g. Western Red Cedar 4.43/7.69 against FPL 2.4/5.0) replaced by FPL shrinkage (O-04).
+- **Sitka and Engelmann MOE** filled from FPL (10.8 and 8.9 GPa). Engelmann's 5,090 m/s, "estimated from similar species", is 4,765 (O-07). The cypress brief's uncited "published" radiation ratios for both are now computed.
+- **SG-based shrinkage estimates removed** (O-04): 10 † cells in the Angolan summary table and 15 † rows in its species profiles (Banga Wanga, Mugavu, Longhi white and red, Mukulungu).
+- **O-06 resolved except Granadillo.** Ovangkol Janka is 1,330 lbf (Wood Database; FPL has none); the documents had 1,890 and 1,360. Guanacaste 470 lbf (Wood Database) is right; the JSON's 276 is wrong. African padauk 731 → 1,710 lbf (Wood Database; 731 was the unflagged regression value). Granadillo (*Platymiscium yucatanum*) MOE ~14.5 has no source: neither FPL nor the Wood Database has that species.
+- **O-09 resolved.** Bagtikan (*Parashorea malaanonan*) is not in Species+, so it is neither CITES- nor EU-listed. The same lookup found an EU Annex D listing, effective 2026-06-29 (Reg. (EU) 2026/1383), of seven *Shorea* s.l. genera (meranti, lauan, balau, and *Pentacme contorta*, which shares Bagtikan's "white lauan / white seraya" trade name). It is added to `CITES_STATUS.md`.
+- **Stale CITES text found on the way.** The Mugavu document still called Khaya "sustainable … no restrictions" in three places, and listed Utile as "Unknown". Both corrected.
+
+Not done: specific gravity and density for species FPL does not cover, and FPL values in `wood_species.json` (still reported, not changed here).
+
+### C-12 — Review fixes to tranche 2 (2026-11-15)
+
+A review of PR #486 found that the C-11 checker's "0 mismatches" did not cover everything it claimed to:
+
+- **Extractor wrote a control character into two species names.** The cleanup `re.sub(r"([a-z])spp\.", …)` had the byte `\x01` where the back-reference `\1` belonged. It dropped the last letter of the genus and inserted the byte: `Mora (Mor\x01 spp.)`, `Cuangare (Dialyanther\x01 spp.)` — 24 CSV rows. Fixed and regenerated; the extractor now rejects any output cell containing a control character. No value changed, only those two names.
+- **The checker silently skipped every Mora cell.** The `mora` alias named `Mora (Mora spp.)`, which was not in the corrupted CSV, and a missing row read as "no FPL data" rather than as an error. With the CSV fixed, 18 Mora cells in 3 documents mismatched: density 1,015 → 985 kg/m³, MOE 19.24 → 20.4 GPa, MOR 138.6 → 152.4 MPa, SG 1.01 → 0.88, Janka 1,295 ᵉ (an estimate) → 2,293 lbf / 10,200 N, and the derived values. The rosewood-range document attributed 1,015 to CIRAD, but its own CIRAD rows (1.05 for 1 *M. excelsa*, mean 1.02 for 10 *M. paraensis*) do not give 1,015 either. Mora rows were re-sorted where tables are ordered by density or MOE. Now every alias must name a row that exists in the CSV (with radial and tangential shrinkage where a shrinkage table is named), or the checker exits 1 before checking anything.
+- **Range cells were dropped silently.** A cell like `400–450 kg/m³` was neither checked nor counted. They are now counted and listed with whether the FPL value falls inside. 12 were found for mapped species; 3 excluded the FPL value (Andiroba 650–700 twice, FPL 645; Khaya 550–690, FPL 497) and were replaced. The other 9 contain the FPL value and are left as ranges.
+- **`--fix` exited 0 without re-checking.** It now checks again after rewriting and exits 1 if any mismatch remains.
+- **The extractor did not check its input.** It printed the PDFs' SHA-256 but read whatever files it was given. It now refuses PDFs whose hash differs from the documented one.
+- **Also corrected:** the rosewood-range document called Greenheart (22.4 GPa) "highest in database" in a table where Wamara, Bulletwood and Snakewood are stiffer.
+
+Re-run result: 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells not compared (all contain the FPL value); 1,299 property cells skipped (species not mapped to FPL).
+
+### C-13 — FPL source labels made table-specific (owner ruling, 2026-11-15; resolves O-10)
+
+The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength) but was prescribed for shrinkage, which GTR-282 gives in Tables 4-3 and 4-4. Per the owner's ruling it is replaced by `FPL_GTR282_table_4-3`, `_4-4`, `_5-3a`, `_5-4a` and `_5-5a` in `CLAUDE.md` and `docs/process/wood_species_update_template.md`. The old label is listed as deprecated, not redefined. No record in `wood_species.json` or any code uses it (`git grep`), so nothing needed re-attribution. The CLAUDE.md example is now traceable: sugar maple, Table 4-3 p. 4-8 (4.8 / 9.9) and Table 5-3a G₁₂ 0.63 → 706 kg/m³ (it said 705 and "p.5-7").
+
+Not changed: the template's example shrinkage (5.0 / 3.1) matches no row of Table 4-3 or 4-4; it is an illustration, not a record.
+
+## Open issues
 
 | ID | Issue | What fixing it needs |
 |---|---|---|
-| **O-01** | 148 marked ᵉ Janka values (and 422 in `wood_species.json`) still have no measured replacement | A sourced measurement per species (Wood Database, FPL, ITTO) with attribution |
-| **O-02** | No per-value source attribution in any of the 16 documents, which the CLAUDE.md wood data policy requires | Rebuild the tables with source columns; start with the most-used species |
-| **O-03** | MOE values in `wood_species.json` carry no `_source` field (e.g. Iroko 10.9, Wenge 14.75), so computed sound speeds inherit the gap | Attribute or re-source each MOE |
-| **O-04** | Shrinkage values in `tonewood_comparison_acoustic_top_woods.md` (e.g. W. Red Cedar 4.43/7.69) look inconsistent with FPL; the angolan document estimates shrinkage from SG (†), which the policy forbids | Check against FPL Table 5-3 / Wood Database; remove the † estimates |
-| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document | Owner decision on the blackwoods document |
-| **O-06** | Value disagreements between documents and the JSON: Ovangkol (825/1,360 vs 810/1,890), Guanacaste Janka (470 vs 276), Granadillo MOE (~14.5 vs null), Padauk Janka (731 vs 1,725) | Resolve each against a source |
-| **O-07** | Sitka and Engelmann radiation ratios are "estimated from similar species" in two documents | Use published MOE values with attribution |
+| **O-01** | 32 ᵉ Janka values replaced by FPL measurements (C-11); 138 ᵉ markers remain (species FPL lacks), and 422 regression values remain in `wood_species.json` | Wood Database or ITTO measurements for the species FPL lacks |
+| **O-02** | Per-value attribution: values for FPL-covered species are now attributable to FPL through the C-11 checker, but no document has source columns, and most values for other species are unsourced | Source columns, starting with the most-used species |
+| **O-03** | MOE values in `wood_species.json` still carry no `_source` field; the documents now use FPL MOE for FPL species, so they disagree with the JSON (e.g. Honduran mahogany 10.3 vs 11.97) | Attribute or re-source each MOE in the JSON |
+| **O-04** | ~~Shrinkage in the top-woods document; † estimates in the Angolan document~~ — resolved by C-11 | — |
+| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document. Owner ruling 2026-11-15: keep both for now; a separate reconciliation order will keep the Acacia-family document as the common reference and rewrite the blackwoods document as a focused comparison of its distinct material, with cross-links and provenance | Separate reconciliation order |
+| **O-06** | Resolved by C-11 except **Granadillo** (*Platymiscium yucatanum*) MOE ~14.5 (and its 925 kg/m³ / 2,790 lbf): no source found in FPL or the Wood Database | A published value for *P. yucatanum* |
+| **O-07** | ~~Sitka and Engelmann estimated radiation ratios~~ — resolved by C-11 | — |
 | **O-08** | No measured damping data for any species; tone descriptions are unsourced forum and builder quotes | Literature damping values (e.g. CIRAD vibration studies) or the `luthier-acoustics-data` measurements |
-| **O-09** | Bagtikan CITES status not checked | One Species+ lookup |
+| **O-09** | ~~Bagtikan CITES status~~ — resolved by C-11 (not CITES- or EU-listed) | — |
+| **O-10** | ~~CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table~~ — resolved by C-13 (table-specific labels; old label deprecated) | — |
+| **O-11** | Specific gravity basis is unstated in every document. FPL species now show G₁₂; other species' SG has an unknown basis, sometimes in the same row | State the basis per value, or drop SG where density is given |
 
 ## Findings outside `docs/tonewood/` (reported, not changed here)
 
 - `wood_species.json`:
+  - Disagrees with FPL GTR-282 for the species in C-11, e.g. Honduran mahogany MOE 11.97 (FPL 10.3), Guanacaste Janka 276 (Wood Database 470), Ovangkol Janka 1,890 (Wood Database 1,330).
   - 422 of 473 Janka values are the density regression (see C-02). Its `_meta` says estimates are "flagged with _note fields", but these Janka values are not flagged.
   - **31 species** contain mojibake: double-encoded UTF-8 such as "â€”" for an em dash. Examples: `cedar_western_red`, `cocobolo`, `koa`, `rosewood_brazilian`, `walnut_black`.
   - Kiaat, Doussie, Sipo (as an ID), Banga Wanga, Mugavu, Kibaba, Longhi and Mukulungu are absent, although the documents discuss them.

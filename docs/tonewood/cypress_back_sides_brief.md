@@ -2,6 +2,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 *Executive brief · data from the repo tonewood database (no per-value source recorded; corrected 2026-11-14, see `VERIFICATION_LOG.md`) + computed acoustic figures · construction reference: 580 mm flat-back plan (Y. Fesselier)*
 
 ## Bottom line
@@ -16,7 +18,7 @@
 
 | Wood | Botanical | Density (kg/m³) | Janka (lbf) | MOE (GPa) | MOR (MPa) | Sound speed *c* (m/s) | Radiation ratio *R*[^4] |
 |---|---|--:|--:|--:|--:|--:|--:|
-| **Bald Cypress** ✅ | *Taxodium distichum* | 510 | 510 | **9.93** | 73.1 | 4413 | **8.65** |
+| **Bald Cypress** ✅ | *Taxodium distichum* | 515 | 517 | **9.9** | 73.0 | 4384 | **8.51** |
 | Monterey Cypress | *Hesperocyparis macrocarpa* | 515 | 369 ᵉ | 7.81 | 81.2 | 3894 | 7.56 |
 | Mediterranean ("Spanish") Cypress | *Cupressus sempervirens* | 535 | 396 ᵉ | 5.28 | 44.6 | 3142 | 5.87 |
 
@@ -28,15 +30,15 @@ The top does the radiating, so it **must** be a true top wood — never cypress.
 
 | Top wood | Density (kg/m³) | MOE (GPa) | Sound speed *c* (m/s) | Radiation ratio *R* | Voice |
 |---|--:|--:|--:|--:|---|
-| Western Red Cedar | 370 | 7.78 | 4586 | **12.39** | Warm, immediate, quick response |
+| Western Red Cedar | 358 | 7.7 | 4635 | **12.93** | Warm, immediate, quick response |
 | European Spruce (Alpine) | 405 | 9.5 | 4843 | **11.96** | Balanced, refined |
-| Adirondack / Red Spruce | 435 | 11.2 | 5074 | **11.66** | Powerful, high headroom |
-| Redwood (old growth) | 420 | 8.55 | 4512 | **10.74** | Warm, complex |
-| Sitka Spruce | 425 | *(DB gap)*[^7] | — | ~12 *(published)* | Bright, punchy, standard |
-| Engelmann Spruce | 385 | *(DB gap)*[^7] | — | ~13 *(published)* | Light, responsive, sweet |
-| **Bald Cypress (for contrast)** ❌ | 510 | 9.93 | 4413 | **~8.6** | *Reflector, not radiator — top-DISQUALIFIED* |
+| Adirondack / Red Spruce | 448 | 11.4 | 5044 | **11.26** | Powerful, high headroom |
+| Redwood (old growth) | 448 | 9.2 | 4532 | **10.12** | Warm, complex |
+| Sitka Spruce | 448 | 10.8[^7] | 4910 | **10.96** | Bright, punchy, standard |
+| Engelmann Spruce | 392 | 8.9[^7] | 4765 | **12.16** | Light, responsive, sweet |
+| **Bald Cypress (for contrast)** ❌ | 515 | 9.9 | 4384 | **8.51** | *Reflector, not radiator — top-DISQUALIFIED* |
 
-**Read:** the recommended tops sit at *R* ≈ **10.7–13**; cypress is ≈ **8.6** — about 20–35% lower. That gap is precisely why cypress goes on the **back/sides** and spruce/cedar goes on **top**.
+**Read:** the recommended tops sit at *R* ≈ **10.1–12.9**; cypress is ≈ **8.5** — about 16–34% lower. That gap is precisely why cypress goes on the **back/sides** and spruce/cedar goes on **top**.
 
 ---
 
@@ -80,9 +82,9 @@ The top does the radiating, so it **must** be a true top wood — never cypress.
 
 [^5]: **Character-not-efficiency:** Mediterranean cypress (*R* = 5.87) is the historic flamenco wood despite the lowest *R* — confirming back/sides are chosen for voice, weight, workability, and tradition.
 
-[^6]: **Hard rule:** cypress *R* ≈ 8.6 vs. real tops at 10.7–13 → cypress is a poor radiator and must not be used for the soundboard.
+[^6]: **Hard rule:** cypress *R* ≈ 8.5 vs. real tops at 10.1–12.9 → cypress is a poor radiator and must not be used for the soundboard.
 
-[^7]: **DB gap:** Sitka and Engelmann spruce have incomplete acoustic fields in the repo database; *R* ≈ 12–13 shown is from standard published values, not the DB — flagged rather than fabricated.
+[^7]: **Sitka and Engelmann MOE** are from FPL GTR-282 Table 5-3a (12% MC); the repo database still lacks them. *c* and *R* are computed from them. The earlier "*R* ≈ 12–13 from standard published values" had no citation and overstated Sitka (corrected 2026-11-15, C-11). For every species here except European Spruce, density, MOE, *c* and *R* now follow FPL (density at 12% MC by FPL Eq. 4-14); European Spruce is not in FPL and is unsourced.
 
 [^8]: **Excluded — carved archtop mandolins/guitars:** these need a *carved* dense, stiff hardwood back (maple). Cypress (soft, low-density) can't hold a carved arch or give archtop projection. The title's "flat/round-back" qualifier is deliberate.
 

@@ -6,6 +6,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This document covers **about 70 North American species**, organized by family and application. The earlier figure of "172 American species in the database" could not be traced: `wood_species.json` has no origin field to count by (corrected 2026-11-14, see `VERIFICATION_LOG.md`). Every wood here grows in North America.
 
 ---
@@ -41,22 +43,22 @@ The benchmark American tonewood for back/sides:
 
 ### The Hickory Genus (*Carya*)
 
-Hickory spans 675–835 kg/m³ — from walnut-weight to rosewood-weight:
+Hickory spans 672–840 kg/m³ — from walnut-weight to rosewood-weight:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **Pignut Hickory** | 835 | 902 ᵉ | 15.59 | **Rosewood-range**; highest density |
-| **Mockernut Hickory** | 815 | 863 ᵉ | 15.31 | Rosewood-range |
-| **Shagbark Hickory** | 800 | 834 ᵉ | 14.90 | Rosewood-range; classic |
-| **Shellbark Hickory** | 770 | 777 ᵉ | 13.03 | Upper mahogany |
-| **Pecan** | 735 | 713 ᵉ | 11.93 | Mid-range; *C. illinoinensis* |
-| **Bitternut Hickory** | 735 | 713 ᵉ | 12.35 | = Pecan density |
-| **Water Hickory** | 690 | 634 ᵉ | 13.93 | Walnut-adjacent |
-| **Nutmeg Hickory** | 675 | 609 ᵉ | 11.72 | Lightest hickory |
+| **Pignut Hickory** | 840 | 2136 | 15.59 | **Rosewood-range**; highest density |
+| **Mockernut Hickory** | 806 | 1978 | 15.31 | Rosewood-range |
+| **Shagbark Hickory** | 806 | 1888 | 14.90 | Rosewood-range; classic |
+| **Shellbark Hickory** | 773 | 1821 | 13.03 | Upper mahogany |
+| **Pecan** | 739 | 1821 | 11.93 | Mid-range; *C. illinoinensis* |
+| **Bitternut Hickory** | 739 | 713 ᵉ | 12.35 | = Pecan density |
+| **Water Hickory** | 694 | 634 ᵉ | 13.93 | Walnut-adjacent |
+| **Nutmeg Hickory** | 672 | 609 ᵉ | 11.72 | Lightest hickory |
 
 **CIRAD data:** *Carya sp* from USA measured at D12 0.85 (850 kg/m³) — confirms the denser hickories reach rosewood territory.
 
-**Key insight:** Pignut and Shagbark hickory (800–835) approach Pau Ferro (880) and Jatoba (910) in density (corrected 2026-11-14, see `VERIFICATION_LOG.md`). They belong in the rosewood-alternatives discussion.
+**Key insight:** Pignut, Mockernut and Shagbark hickory (806–840) approach Pau Ferro (880) and Jatoba (861) in density (corrected 2026-11-14 and, from FPL GTR-282, 2026-11-15; see `VERIFICATION_LOG.md`). They belong in the rosewood-alternatives discussion.
 
 ### Pecan (*Carya illinoinensis*)
 
@@ -71,13 +73,13 @@ Botanically a hickory — and the most *available* one, thanks to orchard cultiv
 | Tone class | Walnut-to-hickory | Warm with hickory firmness |
 | Availability | **Excellent** | Orchard-salvage + lumber trade |
 
-Pecan appears in the hickory table above (it *is* a hickory), but earns its own callout for one practical reason: it is by far the easiest *Carya* to source. Pecan-orchard removals and the pecan lumber trade make it far more available than the wild hickories, at a density (735) that sits neatly between Black Walnut (610) and the rosewood-weight pignut/shagbark (800–835) — a warm-but-firm back/sides candidate that is actually easy to buy.
+Pecan appears in the hickory table above (it *is* a hickory), but earns its own callout for one practical reason: it is by far the easiest *Carya* to source. Pecan-orchard removals and the pecan lumber trade make it far more available than the wild hickories, at a density (739) that sits neatly between Black Walnut (616) and the rosewood-weight pignut/mockernut/shagbark (806–840) — a warm-but-firm back/sides candidate that is actually easy to buy.
 
 ### Butternut (*Juglans cinerea*)
 
 | Property | Value |
 |----------|:-----:|
-| Density | 430 kg/m³ |
+| Density | 426 kg/m³ |
 | Character | Lightweight walnut relative |
 | Notes | Soft; "white walnut" |
 
@@ -91,14 +93,14 @@ Dense, ring-porous, traditional:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **White Oak** | 770 | 1,360 | 15.26 | Classic; high tannin |
-| **Swamp White Oak** | 765 | 767 ᵉ | 13.99 | Wetland species |
-| **Chestnut Oak** | 750 | 740 ᵉ | 11.00 | Appalachian |
-| **Swamp Chestnut Oak** | 780 | 795 ᵉ | 12.09 | Southern |
+| **White Oak** | 762 | 1,349 | 12.3 | Classic; high tannin |
+| **Swamp White Oak** | 806 | 1619 | 14.1 | Wetland species |
+| **Chestnut Oak** | 739 | 1124 | 11.00 | Appalachian |
+| **Swamp Chestnut Oak** | 750 | 1236 | 12.2 | Southern |
 | **Oregon White Oak** | 815 | 863 ᵉ | 7.51 | Pacific Northwest |
-| **Live Oak** | **1,000** | 1,260 ᵉ | 13.52 | **Densest US oak** |
+| **Live Oak** | **986** | 1,260 ᵉ | 13.7 | **Densest US oak** |
 
-**Live Oak** (*Quercus virginiana*) at 1,000 kg/m³ is the standout — dense enough for the ebony-range discussion.
+**Live Oak** (*Quercus virginiana*) at 986 kg/m³ is the standout — dense enough for the ebony-range discussion.
 
 ### Red Oak Group
 
@@ -106,19 +108,19 @@ Slightly less dense, more porous:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **Northern Red Oak** | 700 | 1,290 | 13.82 | Most common |
-| **Cherrybark Oak** | 785 | 805 ᵉ | 15.70 | High MOE |
-| **Southern Red Oak** | 675 | 609 ᵉ | 10.20 | Lower density |
-| **Willow Oak** | 770 | 777 ᵉ | 12.44 | Fine-grained |
-| **Pin Oak** | 680 | 617 ᵉ | — | Urban tree |
+| **Northern Red Oak** | 706 | 1,281 | 12.5 | Most common |
+| **Cherrybark Oak** | 762 | 1484 | 15.70 | High MOE |
+| **Southern Red Oak** | 661 | 1057 | 10.3 | Lower density |
+| **Willow Oak** | 773 | 1461 | 13.1 | Fine-grained |
+| **Pin Oak** | 706 | 1506 | — | Urban tree |
 
-**Builder feedback:** "Red oak produces warm bass similar to rosewood, but without Brazilian's overtones or reverb." In this table white oak (770) is denser than northern red oak (700) (corrected 2026-11-14, see `VERIFICATION_LOG.md`).
+**Builder feedback:** "Red oak produces warm bass similar to rosewood, but without Brazilian's overtones or reverb." In this table white oak (762) is denser than northern red oak (706) (corrected 2026-11-14, see `VERIFICATION_LOG.md`).
 
 ### Chestnut & Beech
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **American Beech** | 720 | 1,300 | — | Hard; steam-bends well |
+| **American Beech** | 717 | 1,304 | — | Hard; steam-bends well |
 | **Sweet Chestnut** (*Castanea sativa*) | 590 | 475 ᵉ | 8.61 | European species, not American chestnut (*C. dentata*); reclaimed "wormy chestnut" is American |
 
 ---
@@ -152,7 +154,7 @@ The electric guitar neck standard:
 
 | Species | Density | Janka | Notes |
 |---------|:-------:|:-----:|-------|
-| **Black Maple** | 640 | 552 ᵉ | Between hard/soft |
+| **Black Maple** | 638 | 1169 | Between hard/soft |
 | **Pacific Maple** | 605 | 497 ᵉ | West Coast bigleaf |
 | **Norway Maple** | 645 | 560 ᵉ | Introduced; common |
 
@@ -175,12 +177,12 @@ The Fender body wood:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **White Ash** | 670 | 1,320 | — | Baseball bats; heavier |
-| **Green Ash** | 640 | 552 ᵉ | 11.40 | Common |
-| **Blue Ash** | 640 | 552 ᵉ | 9.66 | Rare |
-| **Oregon Ash** | 610 | 505 ᵉ | 9.38 | Pacific Northwest |
+| **White Ash** | 672 | 1,326 | — | Baseball bats; heavier |
+| **Green Ash** | 627 | 1191 | 11.40 | Common |
+| **Blue Ash** | 650 | 552 ᵉ | 9.66 | Rare |
+| **Oregon Ash** | 616 | 1169 | 9.38 | Pacific Northwest |
 | **Pumpkin Ash** | 575 | 452 ᵉ | 8.76 | Wetland |
-| **Black Ash** | 545 | 403 | — | Basket wood |
+| **Black Ash** | 549 | 854 | — | Basket wood |
 
 **Emerald Ash Borer crisis:** Ash populations are declining across eastern US. Salvage wood is increasingly available.
 
@@ -190,9 +192,9 @@ The Fender body wood:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **Sweet Birch** | 735 | 713 ᵉ | 14.97 | Black birch; wintergreen scent |
-| **Yellow Birch** | 690 | 1,260 | — | Classic cabinet wood |
-| **Paper Birch** | 610 | 505 ᵉ | 10.97 | White bark |
+| **Sweet Birch** | 728 | 1461 | 14.97 | Black birch; wintergreen scent |
+| **Yellow Birch** | 694 | 1,259 | — | Classic cabinet wood |
+| **Paper Birch** | 616 | 899 | 10.97 | White bark |
 | **Alaska Paper Birch** | 610 | 505 ᵉ | 13.10 | Northern variant |
 
 ### American Hornbeam (*Carpinus caroliniana*)
@@ -244,8 +246,8 @@ The American body wood:
 
 | Property | Value |
 |----------|:-----:|
-| Density | 755 kg/m³ |
-| Janka | 749 lbf |
+| Density | 719 kg/m³ |
+| Janka | 1574 lbf |
 | MOE | 11.24 GPa |
 | Notes | Thorny; less common |
 
@@ -398,15 +400,15 @@ Elms are defined by **interlocked grain** — the source of their legendary toug
 
 | Species | Density | Janka | MOE | MOR | Notes |
 |---------|:-------:|:-----:|:---:|:---:|-------|
-| **American Elm** (*U. americana*) | 560 | 431 ᵉ | 9.24 | 81.4 | Classic; declining (Dutch elm disease) |
-| **Red / Slippery Elm** (*U. rubra*) | 600 | 490 ᵉ | 10.28 | 89.7 | Warmer color |
+| **American Elm** (*U. americana*) | 560 | 832 | 9.24 | 81.0 | Classic; declining (Dutch elm disease) |
+| **Red / Slippery Elm** (*U. rubra*) | 594 | 854 | 10.28 | 90.0 | Warmer color |
 | **Cedar Elm** (*U. crassifolia*) | 655 | 576 ᵉ | 10.21 | 93.1 | Texas / South-Central |
 | **Winged Elm** (*U. alata*) | 675 | 609 ᵉ | 11.38 | 102.1 | Highest-MOE domestic elm |
-| **Rock Elm** (*U. thomasii*) | 755 | 749 ᵉ | 10.62 | 102.1 | **Densest US elm**; upper-Koa range |
+| **Rock Elm** (*U. thomasii*) | 706 | 749 ᵉ | 10.62 | 102.0 | **Densest US elm**; upper-Koa range |
 
 **Key points:**
 - **Steam-bending:** the interlocked grain that resists splitting also bends without cracking — an unusual and useful profile for back/sides.
-- **Rock Elm** (755) reaches the upper-mahogany/Koa tier — the densest and toughest of the group.
+- **Rock Elm** (706) reaches the upper-mahogany/Koa tier — the densest and toughest of the group.
 - **American Elm** is in decline from Dutch elm disease, so much market elm is salvage — the same salvage story as ash (EAB).
 - Untested as a tonewood; the toughness-plus-bendability combination is worth trialing.
 
@@ -433,8 +435,8 @@ Trade names: "satin walnut," "redgum," "sap gum."
 
 | Species | Density | Janka | MOE | MOR | Notes |
 |---------|:-------:|:-----:|:---:|:---:|-------|
-| **Black Tupelo / Blackgum** (*N. sylvatica*) | 545 | 410 ᵉ | 8.19 | 65.5 | Fine, uniform texture |
-| **Water Tupelo** (*N. aquatica*) | 550 | 417 ᵉ | 8.62 | 66.5 | Swamp-native; light |
+| **Black Tupelo / Blackgum** (*N. sylvatica*) | 560 | 809 | 8.3 | 66.0 | Fine, uniform texture |
+| **Water Tupelo** (*N. aquatica*) | 560 | 877 | 8.7 | 66.0 | Swamp-native; light |
 
 **Character:** *Nyssa* is famous for fine, uniform texture and interlocked grain — tough, hard to split, and a prized carving timber. Low stiffness (MOE ~8–9 GPa) makes it a body/back candidate rather than a top or structural wood. Experimental for lutherie.
 
@@ -481,7 +483,7 @@ The acoustic guitar top standard:
 
 | Property | Value |
 |----------|:-----:|
-| Density | 430 kg/m³ |
+| Density | 482 kg/m³ |
 | Character | Between spruce and cedar |
 | Source | Oregon coast |
 
@@ -518,11 +520,11 @@ The acoustic guitar top standard:
 | Species | Density | Best For |
 |---------|:-------:|----------|
 | Catalpa | 420 | Back/sides, necks |
-| Sassafras | 480 | Bodies, back/sides |
-| Butternut | 430 | Lightweight bodies |
+| Sassafras | 515 | Bodies, back/sides |
+| Butternut | 426 | Lightweight bodies |
 | Swamp Ash | 480 | Electric bodies |
 | **Chinaberry** | 500 | **Meliaceae family — unexplored** |
-| Black Ash | 545 | Lighter alternative |
+| Black Ash | 549 | Lighter alternative |
 
 ### Tier 2: Mahogany Range (500–650 kg/m³)
 
@@ -530,17 +532,17 @@ The acoustic guitar top standard:
 
 | Species | Density | Best For |
 |---------|:-------:|----------|
-| **Bald Cypress** | 510 | **Flamenco-style back/sides alternative — dry, percussive** |
-| Sweetgum | 545 | Back/sides (warp-prone; use quartersawn) |
-| Black Tupelo / Blackgum | 545 | Body, back/sides (experimental) |
-| American Sycamore | 545 | Back/sides, experimental tops |
-| Water Tupelo | 550 | Body, back/sides (experimental) |
+| **Bald Cypress** | 515 | **Flamenco-style back/sides alternative — dry, percussive** |
+| Sweetgum | 582 | Back/sides (warp-prone; use quartersawn) |
+| Black Tupelo / Blackgum | 560 | Body, back/sides (experimental) |
+| American Sycamore | 549 | Back/sides, experimental tops |
+| Water Tupelo | 560 | Body, back/sides (experimental) |
 | Black Cherry | 560 | Body, back/sides |
 | American Elm | 560 | Back/sides (tough; bends well) |
 | London Plane | 560 | Back/sides (naturalized; lacewood figure) |
-| Red / Slippery Elm | 600 | Back/sides (tough; bends well) |
-| Black Walnut | 610 | Back/sides, bodies |
-| Soft Maple | 610 | Bodies |
+| Red / Slippery Elm | 594 | Back/sides (tough; bends well) |
+| Black Walnut | 616 | Back/sides, bodies |
+| Soft Maple | 605 | Bodies |
 | **Red Mulberry** | 640 | **Moraceae family — related to Osage Orange** |
 
 ### Tier 3: Upper Mahogany / Koa Range (650–800 kg/m³)
@@ -551,12 +553,12 @@ The acoustic guitar top standard:
 |---------|:-------:|----------|
 | Cedar Elm | 655 | Back/sides (tough; bends well) |
 | Winged Elm | 675 | Back/sides (highest-MOE elm) |
-| Hard Maple | 705 | Necks, tops |
-| Pecan | 735 | Back/sides |
-| Rock Elm | 755 | Back/sides (densest US elm) |
-| White Oak | 770 | Back/sides |
-| Black Locust | 770 | Back/sides (rosewood-like) |
-| Shagbark Hickory | 800 | Back/sides |
+| Hard Maple | 706 | Necks, tops |
+| Pecan | 739 | Back/sides |
+| Rock Elm | 706 | Back/sides (densest US elm) |
+| White Oak | 762 | Back/sides |
+| Black Locust | 773 | Back/sides (rosewood-like) |
+| Shagbark Hickory | 806 | Back/sides |
 
 ### Tier 4: Rosewood Range (800–1,000 kg/m³)
 
@@ -564,21 +566,21 @@ The acoustic guitar top standard:
 
 | Species | Density | Best For |
 |---------|:-------:|----------|
-| Pignut Hickory | 835 | Back/sides |
+| Pignut Hickory | 840 | Back/sides |
 | Persimmon | 835 | Fretboard, bridge |
 | Dogwood | 815 | Fretboard (small blanks) |
 | Osage Orange | 855 | Bridge, accent |
 | Honey Mesquite | 950 | Body, fretboard, bridge |
 | Texas Ebony | 965 | Fretboard, bridge |
-| Live Oak | 1,000 | Fretboard, bridge |
+| Live Oak | 986 | Fretboard, bridge |
 
-### Tier 5: Ebony Range (1,000+ kg/m³)
+### Tier 5: Ebony Range (1,000+ kg/m³ — no domestic species reaches it; the nearest are 950–986)
 
 *Ebony substitutes:*
 
 | Species | Density | Best For |
 |---------|:-------:|----------|
-| Live Oak | 1,000 | Fretboard, bridge |
+| Live Oak | 986 | Fretboard, bridge |
 | Texas Ebony | 965 | Fretboard, bridge |
 | Honey Mesquite | 950 | Near-ebony applications |
 
@@ -586,13 +588,13 @@ The acoustic guitar top standard:
 
 ## Part XIII: The "Texas Trio" — Best Domestic Dense Options
 
-Three Texas/Southwest species cover 950–1,000 kg/m³:
+Three Texas/Southwest species cover 950–986 kg/m³:
 
 | Species | Density | Janka | MOE | Status |
 |---------|:-------:|:-----:|:---:|--------|
 | **Honey Mesquite** | 950 | 2,345 | 11.58 | Invasive — harvest beneficial |
 | **Texas Ebony** | 965 | 1,179 ᵉ | 16.54 | Native; not restricted |
-| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | Abundant SE US |
+| **Live Oak** | 986 | 1,260 ᵉ | 13.7 | Abundant SE US |
 
 **Combined range:** These three span the entire rosewood-to-ebony bridge zone with zero import issues.
 
@@ -605,14 +607,14 @@ For bridges and structural applications:
 | Species | MOE (GPa) | Density | Notes |
 |---------|:---------:|:-------:|-------|
 | **Texas Ebony** | 16.54 | 965 | Stiffest American hardwood |
-| **Cherrybark Oak** | 15.70 | 785 | High MOE oak |
-| **Pignut Hickory** | 15.59 | 835 | Dense hickory |
-| **Mockernut Hickory** | 15.31 | 815 | Dense hickory |
-| **White Oak** | 15.26 | 770 | Classic |
-| **Sweet Birch** | 14.97 | 735 | Wintergreen birch |
-| **Shagbark Hickory** | 14.90 | 800 | Classic hickory |
-| **Black Locust** | 14.14 | 770 | Rosewood-like |
-| **Water Hickory** | 13.93 | 690 | Lighter hickory |
+| **Cherrybark Oak** | 15.70 | 762 | High MOE oak |
+| **Pignut Hickory** | 15.59 | 840 | Dense hickory |
+| **Mockernut Hickory** | 15.31 | 806 | Dense hickory |
+| **White Oak** | 12.3 | 762 | Classic |
+| **Sweet Birch** | 14.97 | 728 | Wintergreen birch |
+| **Shagbark Hickory** | 14.90 | 806 | Classic hickory |
+| **Black Locust** | 14.14 | 773 | Rosewood-like |
+| **Water Hickory** | 13.93 | 694 | Lighter hickory |
 | **Persimmon** | 13.86 | 835 | American ebony cousin |
 
 ---
@@ -693,19 +695,19 @@ Most abundant selection:
 
 **About 70 North American species** covered. Key findings:
 
-1. **Juglandaceae family** (walnut + hickory) spans 430–835 kg/m³ — from lightweight to rosewood-range
-2. **Pignut/Shagbark hickory** at 800–835 kg/m³ belong in rosewood discussions
+1. **Juglandaceae family** (walnut + hickory) spans 430–840 kg/m³ — from lightweight to rosewood-range
+2. **Pignut/Mockernut/Shagbark hickory** at 806–840 kg/m³ belong in rosewood discussions
 3. **Persimmon** is the main American *Diospyros* — a domestic ebony cousin
 4. **Chinaberry** is the most widespread wild **Meliaceae** (mahogany family) — invasive, unexplored for lutherie
 5. **Red Mulberry** and **Osage Orange** are both Moraceae — same family, similar potential
 6. **Black Locust** is "rosewood-like with high density and low damping" — and invasive
-7. **The Texas Trio** (Mesquite, Texas Ebony, Live Oak) covers 950–1,000 kg/m³
+7. **The Texas Trio** (Mesquite, Texas Ebony, Live Oak) covers 950–986 kg/m³
 8. **Catalpa and Sassafras** are proven mahogany alternatives
 9. **Bald Cypress** is a domestic alternative to the traditional flamenco cypress (*Cupressus sempervirens*) — dry, percussive, snappy
 10. **American Sycamore** (and its naturalized cousin **London Plane**) offer dramatic lacewood figure at mahogany weight
 11. **Texas Ebony** has the highest MOE (16.54 GPa) of any American hardwood
-12. **Pecan** is the most *available* hickory (orchard salvage) — warm, firm, mid-density (735)
-13. **Elm** (Ulmaceae) pairs unusual toughness with excellent steam-bending; **Rock Elm** (755) is the densest, reaching the upper-mahogany/Koa tier
+12. **Pecan** is the most *available* hickory (orchard salvage) — warm, firm, mid-density (739)
+13. **Elm** (Ulmaceae) pairs unusual toughness with excellent steam-bending; **Rock Elm** (706) is the densest, reaching the upper-mahogany/Koa tier
 14. **Sweetgum** and **Tupelo/Blackgum** — the true North American "gums" (not eucalyptus) — are abundant, cheap, mahogany-weight, and underexplored
 
 No imports required. Every wood here grows in North America.

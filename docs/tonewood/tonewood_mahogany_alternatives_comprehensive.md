@@ -4,6 +4,8 @@
 > **Generated:** 2026-06-22
 > **Purpose:** Deep-dive alternatives beyond "the usual suspects"
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This document goes beyond Sapele and Khaya to survey the **404 CIRAD taxa** (1,740 specimens) with a mean density in this range, plus emerging alternatives that luthiers are actually discovering.
 
 ---
@@ -99,8 +101,8 @@ Sapele has evolved from budget alternative to respected tonewood:
 
 | Property | Honduran Mahogany | Sapele |
 |----------|:-----------------:|:------:|
-| Density (kg/m³) | 545 | 640 |
-| Janka (lbf) | 800 | 1,360 |
+| Density (kg/m³) | 529 | 672 |
+| Janka (lbf) | 809 | 1,506 |
 | Character | Warm, balanced | Warm + bright top-end |
 | Sustainability | CITES II | Protected harvest |
 
@@ -150,7 +152,7 @@ Sapele has evolved from budget alternative to respected tonewood:
 
 | Property | Value |
 |----------|:-----:|
-| Density | ~480 kg/m³ |
+| Density | 515 kg/m³ |
 | Character | Similar to Catalpa and Swamp Ash |
 | Notable Use | Fender Eric Johnson "Virginia" Strat |
 | Workability | Excellent — cuts, machines, sands nicely |
@@ -175,8 +177,8 @@ Sapele has evolved from budget alternative to respected tonewood:
 
 | Property | Value |
 |----------|:-----:|
-| Density | 770 kg/m³ |
-| Janka | 1,700 lbf |
+| Density | 773 kg/m³ |
+| Janka | 1,709 lbf |
 | Character | Bright, focused |
 | Advantage | Extremely rot-resistant; domestic; abundant |
 
@@ -244,7 +246,7 @@ Jacaranda is beautiful, lightweight, and completely unexplored for guitars.
 
 | Species | Density | Notes |
 |---------|:-------:|-------|
-| **Andiroba** | 650–700 | *Carapa guianensis* — 150+ CIRAD specimens |
+| **Andiroba** | 645 | *Carapa guianensis* — FPL GTR-282 (was 650–700); 150+ CIRAD specimens |
 | **Freijo** | 550 | *Cordia goeldiana* — mahogany substitute |
 | **Imbuia** | 660 | *Ocotea porosa* — Brazilian walnut |
 | **Louro** | 550–650 | *Ocotea* spp. — multiple species |
@@ -256,7 +258,7 @@ Jacaranda is beautiful, lightweight, and completely unexplored for guitars.
 | **Niangon** | 600 | *Heritiera utilis* — softer; less figure |
 | **Tiama** | 550–600 | *Entandrophragma angolense* — lighter Entandrophragma |
 | **Sipo** | 670 | *E. utile* — **closest to true mahogany** |
-| **Avodire** | 500 | *Turraeanthus africana* — blonde; light |
+| **Avodire** | 579 | *Turraeanthus africana* — blonde; light |
 | **Bossé** | 690 | *Guarea cedrata/thompsonii* — underexplored |
 
 ### Asia
@@ -265,7 +267,7 @@ Jacaranda is beautiful, lightweight, and completely unexplored for guitars.
 |---------|:-------:|-------|
 | **Teak** | 630–700 | *Tectona grandis* — oily; durable |
 | **Nyatoh** | 550–700 | *Palaquium* spp. — multiple species |
-| **Meranti** | 400–700 | *Shorea* spp. — huge variation |
+| **Meranti** | 400–700 | *Shorea* spp. — huge variation; not CITES-listed, **EU Annex D** since 2026-06-29 (see [CITES_STATUS.md](CITES_STATUS.md)) |
 
 ---
 
@@ -291,9 +293,9 @@ For builders seeking weight relief without chambering:
 | Priority | Species | Density | Why |
 |:--------:|---------|:-------:|-----|
 | 1 | **Sipo** | 670 | Timber industry says "closest to genuine mahogany" |
-| 2 | **Sapele** | 640 | Proven; slightly brighter |
+| 2 | **Sapele** | 672 | Proven; slightly brighter |
 | 3 | **Urban Ash** | 550 | Taylor-validated; domestic (CA) |
-| 4 | **Andiroba** | 650–700 | 150+ CIRAD specimens; consistent |
+| 4 | **Andiroba** | 645 | FPL GTR-282 (was 650–700); 150+ CIRAD specimens |
 | 5 | **Khaya ivorensis** | 500–550 | Classic "African Mahogany" |
 
 ### For Honduran Mahogany (Neck)
@@ -301,8 +303,8 @@ For builders seeking weight relief without chambering:
 | Priority | Species | Density | Why |
 |:--------:|---------|:-------:|-----|
 | 1 | **Spanish Cedar** | 450–500 | Traditional classical necks; consistent |
-| 2 | **Sapele** | 640 | Stiff; stable |
-| 3 | **Khaya** | 550–690 | Various species available |
+| 2 | **Sapele** | 672 | Stiff; stable |
+| 3 | **Khaya** | 497 | FPL GTR-282, *Khaya* spp. (was 550–690); various species available |
 | 4 | **Catalpa** | 420 | Domestic; resonant |
 
 ### For Lightweight Bodies
@@ -310,9 +312,9 @@ For builders seeking weight relief without chambering:
 | Priority | Species | Density | Why |
 |:--------:|---------|:-------:|-----|
 | 1 | **Paulownia** | 300 | Suhr/Fender use; ultralight |
-| 2 | **Okoume** | 430 | PRS-proven; mahogany-adjacent |
-| 3 | **Spanish Cedar** | 480 | Aromatic; workable |
-| 4 | **Sassafras** | 480 | Domestic; Eric Johnson signature |
+| 2 | **Okoume** | 396 | PRS-proven; mahogany-adjacent |
+| 3 | **Spanish Cedar** | 489 | Aromatic; workable |
+| 4 | **Sassafras** | 515 | Domestic; Eric Johnson signature |
 
 ---
 

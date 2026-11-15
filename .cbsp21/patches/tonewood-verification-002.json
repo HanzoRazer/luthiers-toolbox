@@ -1,0 +1,222 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TONEWOOD_VERIFICATION_002",
+  "title": "docs(tonewood): FPL GTR-282 values for covered species (tranche 2)",
+  "intent": "Tranche 2 of the tonewood library verification: add FPL GTR-282 (2021) shrinkage and mechanical tables as a reference, check every density/SG/Janka/MOE/MOR/shrinkage and derived acoustic value for FPL-covered species against it strictly, correct the documents and the prose built on the old numbers, and resolve open issues O-04, O-06 (except Granadillo), O-07 and O-09. Includes the review fixes recorded as C-12 (extractor control-character defect, strict alias resolution, range reporting, --fix re-check, PDF hash validation). Also applies the owner's source-label ruling (C-13): table-specific FPL_GTR282_table_4-3/4-4/5-3a/5-4a/5-5a labels in CLAUDE.md and the wood-species update template, with FPL_GTR282_table_5-3 deprecated, not redefined.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation (including the CLAUDE.md data-policy source labels), a reference CSV, and two standalone scripts under scripts/ that the application does not import. wood_species.json and every other data file, route, schema and workflow are untouched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/tonewood-verification-002.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/reference/fpl-gtr282/README.md",
+      "docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
+      "docs/tonewood/CITES_STATUS.md",
+      "docs/tonewood/README.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md",
+      "scripts/check_tonewood_fpl_values.py",
+      "scripts/extract_fpl_gtr282_tables.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/tonewood-verification-002.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/reference/fpl-gtr282/README.md",
+      "docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
+      "docs/tonewood/CITES_STATUS.md",
+      "docs/tonewood/README.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md",
+      "scripts/check_tonewood_fpl_values.py",
+      "scripts/extract_fpl_gtr282_tables.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "docs/reference/fpl-gtr282 (CSV + README with SHA-256 provenance); scripts/extract_fpl_gtr282_tables.py; scripts/check_tonewood_fpl_values.py; 640 checked cells in 13 docs now equal FPL (418 + 18 rewritten by --fix, 3 out-of-range ranges and the top-woods doc by hand), prose claims rewritten where the numbers changed rankings; CITES_STATUS.md adds Bagtikan (not listed) and the 2026 EU Annex D Shorea s.l. listing; VERIFICATION_LOG.md C-11, C-12 and updated open issues. CLAUDE.md and docs/process/wood_species_update_template.md: FPL source labels are table-specific; the old FPL_GTR282_table_5-3 is deprecated (no data record used it).",
+    "why_not_redundant": "Tranche 1 left FPL-covered species on unsourced or regression values (e.g. pignut hickory Janka 902 vs FPL 2,136 lbf; mahogany MOE 11.97 vs 10.3) and several rankings were wrong as a result. The checker makes the FPL attribution re-runnable."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 scripts/extract_fpl_gtr282_tables.py <pdfs> docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv -> both SHA-256 ok; 4-3:115, 4-4:82, 5-3a:113, 5-4a:27, 5-5a:75 species, 0 problems, 0 control bytes, exit 0",
+      "metric vs FPL inch-pound twins (5-3b/5-4b/5-5b): 1,397 values checked, 1,390 agree; 7 are FPL-internal inconsistencies (listed in the README)",
+      "py -3.11 scripts/check_tonewood_fpl_values.py --summary -> 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells not compared (0 exclude the FPL value); 1299 skipped (species not mapped), exit 0",
+      "py -3.11 scripts/check_tonewood_cirad_citations.py -> 0 mismatches",
+      "stale-number scan of non-table lines for every replaced value -> only unchanged values and thresholds remain",
+      "Species+ (speciesplus.net search API): Parashorea / malaanonan -> 0 records; Dipterocarpaceae -> 186 species in 7 genera, cites_listing NC, eu_listing D (Reg. (EU) 2026/1383, effective 2026-06-29)",
+      "wood-database.com: ovangkol Janka 1,330 lbf; guanacaste 470 lbf; african-padauk 1,710 lbf; no page for Platymiscium yucatanum",
+      "negative control: extractor with one byte appended to 62244.pdf -> SHA-256 MISMATCH, no CSV written, exit 1",
+      "negative control: checker with the mora alias pointed at 'Mora (Mor spp.)' -> 'no FPL row', nothing checked, exit 1",
+      "negative control: --fix with a no-op rewriter and a perturbed FPL value -> re-check reports 7 mismatches, exit 1; docs byte-identical",
+      "git grep FPL_GTR282_table_5-3 -> only CLAUDE.md, the template, and the docs that describe the deprecation; 0 uses in wood_species.json or code"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/tonewood-verification-002.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Data policy: FPL source labels made table-specific (4-3, 4-4, 5-3a, 5-4a, 5-5a); FPL_GTR282_table_5-3 deprecated, not redefined; example made traceable (owner ruling, VERIFICATION_LOG C-13).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/process/wood_species_update_template.md",
+      "intent": "Same label change in the wood-species update template (owner ruling, VERIFICATION_LOG C-13).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/reference/fpl-gtr282/README.md",
+      "intent": "FPL GTR-282 (2021) species tables extracted from the public-domain PDFs, with provenance and validation notes.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
+      "intent": "FPL GTR-282 (2021) species tables extracted from the public-domain PDFs, with provenance and validation notes.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/CITES_STATUS.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/README.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/cypress_back_sides_brief.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_viability_emerging_species.md",
+      "intent": "FPL GTR-282 values for FPL-covered species, prose corrected to match, CITES/EU status fixes; see docs/tonewood/VERIFICATION_LOG.md C-11.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "scripts/check_tonewood_fpl_values.py",
+      "intent": "Standalone strict checker (and --fix) for FPL-covered species values in docs/tonewood; not imported by the application.",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "scripts/extract_fpl_gtr282_tables.py",
+      "intent": "Standalone extractor that rebuilds the FPL reference CSV from the PDFs (needs pdfplumber; not imported by the application).",
+      "risk": "low",
+      "behavior_change": "None (documentation / standalone script)."
+    }
+  ]
+}

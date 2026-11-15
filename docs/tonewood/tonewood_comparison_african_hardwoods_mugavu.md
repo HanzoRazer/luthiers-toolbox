@@ -5,6 +5,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This comparison covers the African hardwood spectrum for body/back-sides use, from lightweight Khaya through heavyweight Bubinga, with Mugavu (Albizia coriaria) as a strategic emerging alternative. Honduran Mahogany is included as the benchmark reference.
 
 ---
@@ -13,13 +15,13 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 
 | Species | Relevance | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|:---------:|:---:|:---:|----------------|----------------|
-| **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
-| **African Mahogany (Khaya)** | Primary | 530 | 830 | Similar to Honduran, slightly brighter | Sustainable alternative |
+| **Honduran Mahogany** | Primary | 529 | 809 | Warm, balanced, good sustain | CITES Appendix II |
+| **African Mahogany (Khaya)** | Primary | 497 | 832 | Similar to Honduran, slightly brighter | CITES Appendix II (#17, since 2023) |
 | **Utile** | Exploratory | 635 | 544 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
-| **Sapele** | Established | 640 | 1,510 | Like mahogany but brighter, good midrange definition | Sustainable — most common alternative |
+| **Sapele** | Established | 672 | 1,506 | Like mahogany but brighter, good midrange definition | Sustainable — most common alternative |
 | **Mugavu** | Emerging | 764 | ~1,800 † | *(not yet characterized — acoustic testing needed)* | Abundant — not CITES-listed |
-| **Ovangkol (Shedua)** | Established | 810 | 1,890 | Warm, complex — rosewood family character | Not threatened |
-| **Bubinga** | Established | 890 | 2,410 | Warm, rich bass, articulate mids — prized for bass guitars | CITES Appendix II since 2017 |
+| **Ovangkol (Shedua)** | Established | 809 | 1,330 | Warm, complex — rosewood family character | Not threatened |
+| **Bubinga** | Established | 869 | 2,698 | Warm, rich bass, articulate mids — prized for bass guitars | CITES Appendix II since 2017 |
 
 > † Mugavu Janka estimated from SG correlation; measured value needed.
 
@@ -31,15 +33,15 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Scientific Name** | *Swietenia macrophylla* | *Khaya spp.* | *Entandrophragma utile* | *Entandrophragma cylindricum* | *Albizia coriaria* | *Guibourtia ehie* | *Guibourtia demeusei* |
 | **Family** | Meliaceae | Meliaceae | Meliaceae | Meliaceae | Fabaceae | Fabaceae | Fabaceae |
-| **Specific Gravity** | 0.52 | 0.50 | 0.64 | 0.62 | 0.76 | 0.78 | 0.86 |
-| **Density (kg/m³)** | 545 | 530 | 635 | 640 | 764 | 810 | 890 |
-| **Janka Hardness (lbf)** | 800 | 830 | 544 | 1,510 | ~1,800 † | 1,890 | 2,410 |
-| **Janka Hardness (N)** | 3,558 | 3,692 | 2,420 | 6,715 | ~8,000 † | 8,407 | 10,720 |
+| **Specific Gravity** | 0.47 | 0.44 | 0.64 | 0.60 | 0.76 | 0.72 | 0.78 |
+| **Density (kg/m³)** | 529 | 497 | 635 | 672 | 764 | 809 | 869 |
+| **Janka Hardness (lbf)** | 809 | 832 | 544 | 1,506 | ~1,800 † | 1,330 | 2,698 |
+| **Janka Hardness (N)** | 3,600 | 3,700 | 2,420 | 6,700 | ~8,000 † | 5,900 | 12,000 |
 | **Grain** | Interlocked | Interlocked | — | Interlocked, ribbon figure | Interlocked | Interlocked, figured | Interlocked, pommelé |
 | **Workability** | Excellent | Good | — | Good — some tearout | Moderate — interlocked grain | Moderate — tearout prone | Moderate — hard but clean |
 | **Resinous** | No | No | No | No | No | No | No |
-| **Contraction Radial (%)** | 4.41 | — | — | 4.43 | — | — | — |
-| **Contraction Tangential (%)** | 8.41 | — | — | 8.42 | — | — | — |
+| **Contraction Radial (%)** | 3.0 | — | — | 4.6 | — | — | — |
+| **Contraction Tangential (%)** | 4.1 | — | — | 7.4 | — | — | — |
 
 > † Mugavu physical properties from East African forestry data (SG 0.76, 764 kg/m³). Janka estimated via SG correlation — measured value needed.
 
@@ -49,11 +51,11 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 
 | Property | Honduran Mahogany | Khaya | Utile | Sapele | Mugavu † | Ovangkol | Bubinga |
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Modulus of Elasticity (GPa)** | 11.97 | — | 11.65 | 12.04 | ~14.5 † | 18.6 | 18.41 |
-| **Modulus of Rupture (MPa)** | 98.4 | — | 103.8 | 99.4 | ~120 † | 140.3 | 168.3 |
-| **E/ρ Ratio (stiffness-to-weight)** | 22.0 | — | 18.3 | 18.8 | ~19.0 † | 23.0 | 20.7 |
-| **Speed of Sound (m/s)** ‡ | 4,687 | — | 4,283 | 4,337 | ~4,358 † | 4,793 | 4,548 |
-| **Acoustic Impedance (10⁶ kg/m²s)** ‡ | 2.55 | — | 2.72 | 2.78 | ~3.33 † | 3.88 | 4.05 |
+| **Modulus of Elasticity (GPa)** | 10.3 | — | 11.65 | 12.5 | ~14.5 † | 17.7 | 17.1 |
+| **Modulus of Rupture (MPa)** | 79.3 | — | 103.8 | 105.5 | ~120 † | 116.5 | 155.8 |
+| **E/ρ Ratio (stiffness-to-weight)** | 19.5 | — | 18.3 | 18.6 | ~19.0 † | 21.9 | 19.7 |
+| **Speed of Sound (m/s)** ‡ | 4,414 | — | 4,283 | 4,311 | ~4,358 † | 4,679 | 4,435 |
+| **Acoustic Impedance (10⁶ kg/m²s)** ‡ | 2.33 | — | 2.72 | 2.90 | ~3.33 † | 3.78 | 3.86 |
 | **Tone Character** | Warm, balanced, sustain | Slightly brighter mahogany | — | Brighter, midrange definition | *(needs characterization)* | Warm, complex, rosewood-like | Warm, rich bass, articulate mids |
 
 > ‡ Speed of sound computed: c = √(E/ρ); Acoustic impedance: Z = ρ × c.
@@ -123,7 +125,7 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 |----------|:---|:---|:---|:---|:---|:---|:---|
 | **Guitar Relevance** | Primary | Primary | Exploratory | Established | Emerging | Established | Established |
 | **Typical Uses** | Body, neck, back/sides | Body, neck | — | Body, neck, back/sides | Body, back/sides | Back/sides, body | Body top, body, back/sides, neck laminate |
-| **Sustainability** | CITES Appendix II | Sustainable alternative | — | Sustainable — most common alternative | Abundant — not CITES | Not threatened | CITES Appendix II since 2017 |
+| **Sustainability** | CITES Appendix II | CITES Appendix II (#17, 2023) | — | Sustainable — most common alternative | Abundant — not CITES | Not threatened | CITES Appendix II since 2017 |
 
 ---
 
@@ -131,7 +133,7 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 
 ### The Density Spectrum
 
-These seven species span a 360 kg/m³ density range — from lightweight Khaya (530) to heavyweight Bubinga (890). This isn't just weight; it's a tonal gradient:
+These seven species span a 372 kg/m³ density range — from lightweight Khaya (497) to heavyweight Bubinga (869). This isn't just weight; it's a tonal gradient:
 
 | Density Band | Species | Tonal Character |
 |-------------|---------|-----------------|
@@ -142,9 +144,9 @@ These seven species span a 360 kg/m³ density range — from lightweight Khaya (
 
 ### The Mahogany Replacements: Khaya vs Sapele
 
-**African Mahogany (Khaya)** is the closest drop-in replacement for Honduran Mahogany by physical properties — nearly identical density (530 vs 545 kg/m³), matching Janka hardness (830 vs 800), and "similar to Honduran, slightly brighter" tone character. Khaya is actually a Swietenia relative (same family: Meliaceae), which explains the similarity. The sustainability advantage is clear: Khaya is sustainable while Honduran is CITES II.
+**African Mahogany (Khaya)** is the closest drop-in replacement for Honduran Mahogany by physical properties — similar density (497 vs 529 kg/m³), matching Janka hardness (832 vs 809; FPL GTR-282), and "similar to Honduran, slightly brighter" tone character. Khaya is actually a Swietenia relative (same family: Meliaceae), which explains the similarity. There is no CITES advantage: African *Khaya* has been Appendix II since 2023 (#17), like Honduran mahogany (#6) — see [CITES_STATUS.md](CITES_STATUS.md) (corrected 2026-11-15).
 
-**Sapele** is the industry-standard mahogany alternative and for good reason — abundant supply, established sustainability, and predictable working properties. At 640 kg/m³, it's 17% denser than Honduran, which shifts the voice: "like mahogany but brighter, good midrange definition." The ribbon figure is visually distinctive. Trade-off: higher tearout tendency (0.50) on that interlocked grain.
+**Sapele** is the industry-standard mahogany alternative and for good reason — abundant supply, established sustainability, and predictable working properties. At 672 kg/m³, it's about 27% denser than Honduran (529), which shifts the voice: "like mahogany but brighter, good midrange definition." The ribbon figure is visually distinctive. Trade-off: higher tearout tendency (0.50) on that interlocked grain.
 
 ### The Mugavu Opportunity
 
@@ -156,13 +158,13 @@ These seven species span a 360 kg/m³ density range — from lightweight Khaya (
 - **Abundant East African supply** — Uganda, Kenya, Tanzania
 - **Existing export infrastructure** — European furniture market already uses it
 
-The acoustic profile is the critical unknown. The estimated impedance (~3.33 × 10⁶ kg/m²s) positions it between Sapele (2.78) and Ovangkol (3.88), suggesting a voice that bridges mahogany warmth and rosewood complexity.
+The acoustic profile is the critical unknown. The estimated impedance (~3.33 × 10⁶ kg/m²s) positions it between Sapele (2.90) and Ovangkol (3.78), suggesting a voice that bridges mahogany warmth and rosewood complexity.
 
 **Regional validation exists:** East African luthiers already use Mugavu as a mahogany replacement. The working properties are documented — interlocked grain requires sharp tooling and climb cuts, similar to Sapele.
 
 ### The Fabaceae Woods: Ovangkol and Bubinga
 
-**Ovangkol** and **Bubinga** are both *Guibourtia* species (Fabaceae family), and their tonal character reflects that lineage — "warm, complex, rosewood family character." They're denser, stiffer (MOE 18.4–18.6 GPa vs mahogany's 12.0 GPa), and produce instruments with more projection and sustain.
+**Ovangkol** and **Bubinga** are both *Guibourtia* species (Fabaceae family), and their tonal character reflects that lineage — "warm, complex, rosewood family character." They're denser, stiffer (MOE 17.1–17.7 GPa vs mahogany's 10.3 GPa, FPL GTR-282), and produce instruments with more projection and sustain.
 
 Bubinga's CITES Appendix II listing (2017) is the complication: permits are needed for raw wood and blanks, although finished instruments, parts and accessories are exempt under annotation #15 (see [CITES_STATUS.md](CITES_STATUS.md)). Ovangkol remains unlisted and is the practical alternative for that density/tone profile.
 
@@ -170,11 +172,11 @@ Bubinga's CITES Appendix II listing (2017) is the complication: permits are need
 
 | Species | E/ρ Ratio | Interpretation |
 |---------|:---------:|----------------|
-| **Ovangkol** | 23.0 | Highest — most efficient energy transfer per gram |
-| **Honduran Mahogany** | 22.0 | Benchmark — classic mahogany efficiency |
-| **Bubinga** | 20.7 | High absolute stiffness, but density costs efficiency |
+| **Ovangkol** | 21.9 | Highest — most efficient energy transfer per gram |
+| **Bubinga** | 19.7 | High absolute stiffness, but density costs efficiency |
+| **Honduran Mahogany** | 19.5 | Benchmark — classic mahogany efficiency |
 | **Mugavu** | ~19.0 † | Competitive — similar to heavier mahoganies |
-| **Sapele** | 18.8 | Good — the workhorse alternative |
+| **Sapele** | 18.6 | Good — the workhorse alternative |
 | **Utile** | 18.3 | Lower — softer despite medium density |
 
 Ovangkol's high E/ρ ratio explains its rosewood-like character — it moves energy efficiently despite the mass. Mugavu's estimated ratio suggests it could compete in this tier with proper selection.
@@ -185,11 +187,11 @@ Ovangkol's high E/ρ ratio explains its rosewood-like character — it moves ene
 |---------|--------|------------------|
 | **Honduran Mahogany** | CITES Appendix II | Export permits required, supply tightening |
 | **Bubinga** | CITES Appendix II (2017) | Same paperwork burden as Honduran |
-| **Khaya** | Sustainable | No restrictions, certified stock available |
+| **Khaya** | CITES Appendix II (#17, since 2023) | Permits for logs, sawn wood and blanks; finished instruments not covered (corrected 2026-11-15) |
 | **Sapele** | Sustainable | Industry standard, FSC-certified supply common |
 | **Ovangkol** | Not threatened | No restrictions |
 | **Mugavu** | Abundant | Not CITES-listed, East African supply is growing |
-| **Utile** | Unknown | Insufficient data |
+| **Utile** | Not CITES-listed; EU Annex D | EU import monitoring only (corrected 2026-11-15) |
 
 The regulatory trajectory is clear: traditional species face increasing restriction. Mugavu's unlisted status is a strategic advantage that will appreciate as CITES coverage expands.
 

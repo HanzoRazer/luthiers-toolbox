@@ -5,6 +5,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This comparison covers the "warm-voiced" tonewood family: the benchmark Honduran Mahogany, premium Hawaiian Koa, and two abundant tropical alternatives (Monkeypod and Guanacaste) that occupy the tonal space between them.
 
 ---
@@ -13,7 +15,7 @@ This comparison covers the "warm-voiced" tonewood family: the benchmark Honduran
 
 | Species | Relevance | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|:---------:|:---:|:---:|----------------|----------------|
-| **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
+| **Honduran Mahogany** | Primary | 529 | 809 | Warm, balanced, good sustain | CITES Appendix II |
 | **Hawaiian Koa** | Primary | 625 | 1,170 | Warm, balanced, opens up with age | Limited — plantation increasing |
 | **Monkeypod** | Emerging | 600 | 490 ᵉ | Between Koa and Mahogany — warm, mellow, rich bass | Abundant |
 | **Guanacaste (Parota)** | Emerging | 440 | 470 | Between Mahogany and Koa — mellow, good bass | Abundant — not CITES |
@@ -39,18 +41,18 @@ Koa, Monkeypod, and Guanacaste are all legumes (Fabaceae) in the same subfamily 
 
 | Property | Honduran Mahogany | Hawaiian Koa | Monkeypod | Guanacaste |
 |----------|:---:|:---:|:---:|:---:|
-| **Specific Gravity** | 0.52 | 0.60 | 0.60 | 0.44 |
-| **Density (kg/m³)** | 545 | 625 | 600 | 440 |
-| **Janka Hardness (lbf)** | 800 | 1,170 | 490 | 470 |
-| **Janka Hardness (N)** | 3,558 | 5,204 | 2,180 | 2,091 |
-| **MOE (GPa)** | 11.97 | 10.37 | 7.92 | 8.46 |
-| **MOR (MPa)** | 98.4 | 87.0 | 65.7 | 59.6 |
+| **Specific Gravity** | 0.47 | 0.60 | 0.60 | 0.44 |
+| **Density (kg/m³)** | 529 | 625 | 600 | 440 |
+| **Janka Hardness (lbf)** | 809 | 1,170 | 490 | 470 |
+| **Janka Hardness (N)** | 3,600 | 5,204 | 2,180 | 2,091 |
+| **MOE (GPa)** | 10.3 | 10.37 | 7.92 | 8.46 |
+| **MOR (MPa)** | 79.3 | 87.0 | 65.7 | 59.6 |
 | **Grain** | Interlocked | Interlocked, highly figured | Interlocked | Slightly interlocked, coarse |
 | **Workability** | Excellent | Moderate | Easy | Excellent |
 
 ### Key Observations
 
-- **Mahogany** has the highest stiffness (MOE 11.97) and strength (MOR 98.4) — the structural benchmark
+- **Mahogany** and **Koa** have nearly the same stiffness (MOE 10.3 vs 10.37 GPa); Koa is stronger (MOR 87.0 vs 79.3 MPa). Mahogany's values are FPL GTR-282 (corrected 2026-11-15; the earlier 11.97 / 98.4 were unsourced). Koa, Monkeypod and Guanacaste are not in FPL and remain unsourced.
 - **Koa** is the densest and hardest — more mass = more sustain and projection
 - **Monkeypod** matches Koa's density but is much softer — creates warm, mellow character
 - **Guanacaste** is the lightest by far (440 kg/m³) — closest to softwood territory
@@ -61,9 +63,9 @@ Koa, Monkeypod, and Guanacaste are all legumes (Fabaceae) in the same subfamily 
 
 | Property | Honduran Mahogany | Hawaiian Koa | Monkeypod | Guanacaste |
 |----------|:---:|:---:|:---:|:---:|
-| **Speed of Sound (m/s)** † | 4,687 | 4,073 | 3,633 | 4,386 |
-| **Acoustic Impedance (×10⁶)** † | 2.55 | 2.55 | 2.18 | 1.93 |
-| **E/ρ Ratio (stiffness/weight)** | 22.0 | 16.6 | 13.2 | 19.2 |
+| **Speed of Sound (m/s)** † | 4,414 | 4,073 | 3,633 | 4,386 |
+| **Acoustic Impedance (×10⁶)** † | 2.33 | 2.55 | 2.18 | 1.93 |
+| **E/ρ Ratio (stiffness/weight)** | 19.5 | 16.6 | 13.2 | 19.2 |
 
 > † Speed of sound: c = √(E/ρ); Impedance: Z = ρ × c
 
@@ -71,7 +73,7 @@ Koa, Monkeypod, and Guanacaste are all legumes (Fabaceae) in the same subfamily 
 
 | Species | E/ρ Ratio | Interpretation |
 |---------|:---------:|----------------|
-| **Honduran Mahogany** | 22.0 | Highest efficiency — crisp, balanced response |
+| **Honduran Mahogany** | 19.5 | Highest efficiency — crisp, balanced response |
 | **Guanacaste** | 19.2 | Good efficiency despite low density |
 | **Hawaiian Koa** | 16.6 | Lower ratio — density adds sustain, not speed |
 | **Monkeypod** | 13.2 | Lowest — warm, mellow, less projection |
@@ -308,10 +310,10 @@ Guanacaste's low density (440 kg/m³) places it in softwood territory. How does 
 | Property | W. Red Cedar | Redwood | Sitka Spruce | **Guanacaste** | Granadillo |
 |----------|:------------:|:-------:|:------------:|:--------------:|:----------:|
 | **Category** | Softwood | Softwood | Softwood | **Hardwood** | Hardwood |
-| **Density (kg/m³)** | 370 | 420 | 425 | **440** | 925 |
-| **Janka (lbf)** | 350 | 420 | 510 | **470** | 2,790 |
-| **MOE (GPa)** | 7.78 | 8.55 | — | **8.46** | ~14.5 |
-| **MOR (MPa)** | 53.1 | 60.3 | — | **59.6** | 126.7 |
+| **Density (kg/m³)** | 358 | 448 | 448 | **440** | 925 |
+| **Janka (lbf)** | 360 | 472 | 517 | **470** | 2,790 |
+| **MOE (GPa)** | 7.7 | 9.2 | 10.8 | **8.46** | ~14.5 |
+| **MOR (MPa)** | 51.7 | 69.0 | 70.0 | **59.6** | 126.7 |
 | **Grain** | Straight | Straight, fine | Straight, tight | Interlocked, coarse | Straight, fine |
 | **Typical Use** | Soundboard | Soundboard | Soundboard | Body, back/sides | Fretboard, back/sides |
 | **Tone** | Warm, dark, immediate | Warm, dark, cedar-like | Versatile, strong fundamental | Warm, mellow, bass-forward | Warm, complex, rosewood-like |
@@ -322,13 +324,13 @@ Guanacaste's low density (440 kg/m³) places it in softwood territory. How does 
 
 | Species | Density | Category | Implication |
 |---------|:-------:|:--------:|-------------|
-| W. Red Cedar | 370 | Softwood | Lightest — classic soundboard |
-| Redwood | 420 | Softwood | Cedar-like, salvage only |
-| Sitka Spruce | 425 | Softwood | Industry-standard soundboard |
+| W. Red Cedar | 358 | Softwood | Lightest — classic soundboard |
 | **Guanacaste** | **440** | **Hardwood** | Hardwood warmth at softwood weight |
+| Redwood | 448 | Softwood | Cedar-like, salvage only |
+| Sitka Spruce | 448 | Softwood | Industry-standard soundboard |
 | Granadillo | 925 | Hardwood | 2× the mass — rosewood territory |
 
-Guanacaste slots right between the soundboard softwoods and traditional body hardwoods. It's only 3-19% heavier than the softwoods but brings hardwood characteristics:
+Guanacaste sits inside the soundboard-softwood range: lighter than redwood and Sitka (440 vs 448 kg/m³) and 23% heavier than Western Red Cedar (358), but with hardwood characteristics (softwood values from FPL GTR-282, corrected 2026-11-15; Guanacaste is not in FPL):
 - Interlocked grain (vs straight softwood grain)
 - Warmer mid-focused tone (vs bright/responsive softwood)
 - More durable (vs soft/dent-prone softwood)
@@ -337,12 +339,13 @@ Guanacaste slots right between the soundboard softwoods and traditional body har
 
 | Species | MOE (GPa) | E/ρ Ratio | Character |
 |---------|:---------:|:---------:|-----------|
-| W. Red Cedar | 7.78 | 21.0 | Immediate, dark |
-| Redwood | 8.55 | 20.4 | Cedar-like |
+| W. Red Cedar | 7.7 | 21.5 | Immediate, dark |
+| Redwood | 9.2 | 20.5 | Cedar-like |
+| Sitka Spruce | 10.8 | 24.1 | Reference soundboard |
 | **Guanacaste** | **8.46** | **19.2** | Mellow, warm |
 | Granadillo | ~14.5 | ~15.7 | Dense, complex |
 
-Guanacaste's MOE (8.46 GPa) is nearly identical to Redwood (8.55) — they share similar stiffness despite different categories.
+Guanacaste's MOE (8.46 GPa) sits between Western Red Cedar (7.7) and Redwood (9.2), well below Sitka (10.8).
 
 ### Application Comparison
 
@@ -363,38 +366,38 @@ Two cypress species provide additional context for Guanacaste's positioning:
 
 | Species | Category | Density | Janka | MOE | Tone/Use |
 |---------|:--------:|:-------:|:-----:|:---:|----------|
-| W. Red Cedar | Softwood | 370 | 350 | 7.78 | Soundboard — warm, dark |
-| Redwood | Softwood | 420 | 420 | 8.55 | Soundboard — cedar-like |
-| Sitka Spruce | Softwood | 425 | 510 | — | Soundboard — versatile |
+| W. Red Cedar | Softwood | 358 | 360 | 7.7 | Soundboard — warm, dark |
+| Redwood | Softwood | 448 | 472 | 9.2 | Soundboard — cedar-like |
+| Sitka Spruce | Softwood | 448 | 517 | 10.8 | Soundboard — versatile |
 | **Guanacaste** | **Hardwood** | **440** | **470** | **8.46** | **Body — warm, mellow** |
-| Alaskan Yellow Cedar | Softwood | 495 | 343 ᵉ | 9.79 | Exploratory — denser cedar |
-| Bald Cypress | Softwood | 510 | 510 | 9.93 | Flamenco soundboards |
+| Alaskan Yellow Cedar | Softwood | 493 | 585 | 9.8 | Exploratory — denser cedar |
+| Bald Cypress | Softwood | 515 | 517 | 9.9 | Flamenco soundboards |
 | Granadillo | Hardwood | 925 | 2,790 | ~14.5 | Fretboard — rosewood-like |
 
 ### Cypress Characteristics
 
 **Alaskan Yellow Cedar** (*Cupressus nootkatensis*):
-- Denser than Western Red Cedar (495 vs 370 kg/m³)
-- Higher stiffness (MOE 9.79 vs 7.78 GPa)
+- Denser than Western Red Cedar (493 vs 358 kg/m³)
+- Higher stiffness (MOE 9.8 vs 7.7 GPa)
 - Unexplored tonally — physical properties suggest a voice between cedar warmth and spruce clarity
 - Very low tearout tendency (0.23) makes it machine-friendly
 
 **Bald Cypress** (*Taxodium distichum*):
-- The densest softwood in this comparison (510 kg/m³)
+- The densest softwood in this comparison (515 kg/m³)
 - Traditionally used for **flamenco guitar soundboards**
-- Higher stiffness (MOE 9.93 GPa) = more percussive attack than cedar
+- Higher stiffness (MOE 9.9 GPa) = more percussive attack than cedar
 - Excellent dimensional stability (T/R ratio 1.6)
 - Straight grain, excellent workability
 
 ### Where Guanacaste Fits
 
-Guanacaste slots between the lightest softwoods and the cypresses:
+Guanacaste slots between Western Red Cedar and the redwood/spruce pair:
 
 ```
 Lightest ←—————————————————————————————————————————→ Densest
 
-W.R.Cedar — Redwood — Spruce — GUANACASTE — Yel.Cedar — Cypress — Granadillo
-   370        420       425       440          495        510        925
+W.R.Cedar — GUANACASTE — Redwood — Spruce — Yel.Cedar — Cypress — Granadillo
+   358          440         448       448       493         515        925
    
          ←— Soundboard woods —→  ←— Transition —→      ←— Body/Fretboard —→
 ```

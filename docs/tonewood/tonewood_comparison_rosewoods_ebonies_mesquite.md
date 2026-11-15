@@ -5,6 +5,8 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
+> **FPL GTR-282 values (corrected 2026-11-15, `VERIFICATION_LOG.md` C-11).** For species that FPL GTR-282 (2021) covers, density (at 12% MC), specific gravity (G₁₂), Janka, MOE, MOR and shrinkage in the tables are now FPL values, and sound speed, impedance and E/ρ are recomputed from them. `scripts/check_tonewood_fpl_values.py` lists the species mapped and checks every such cell. Values for other species are unchanged and mostly unsourced.
+
 This comparison groups two traditional fretboard/bridge rosewoods, three ebonies (two classic, one emerging regional), and honey mesquite as a domestic alternative bridging both families.
 
 ---
@@ -13,8 +15,8 @@ This comparison groups two traditional fretboard/bridge rosewoods, three ebonies
 
 | Species | Relevance | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|:---------:|:---:|:---:|----------------|----------------|
-| **Brazilian Rosewood** | Primary | 835 | 2,790 | Rich, complex, legendary | CITES Appendix I — highly restricted |
-| **East Indian Rosewood** | Primary | 830 | 2,440 | Warm, complex overtones, sustain | CITES regulated |
+| **Brazilian Rosewood** | Primary | 944 | 2,720 | Rich, complex, legendary | CITES Appendix I — highly restricted |
+| **East Indian Rosewood** | Primary | 885 | 3,170 | Warm, complex overtones, sustain | CITES regulated |
 | **African Ebony** | Primary | 1,030 | 3,080 | Bright, articulate, percussive | Endangered — use alternatives |
 | **Macassar Ebony** | Primary | 1,120 | 3,220 | Bright, defined | Vulnerable |
 | **Texas Ebony** | Emerging | 965 | 1,179 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
@@ -27,17 +29,17 @@ This comparison groups two traditional fretboard/bridge rosewoods, three ebonies
 | Property | Brazilian Rosewood | East Indian Rosewood | African Ebony | Macassar Ebony | Texas Ebony | Honey Mesquite |
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Scientific Name** | *Dalbergia nigra* | *Dalbergia latifolia* | *Diospyros crassiflora* | *Diospyros celebica* | *Ebenopsis ebano* | *Prosopis glandulosa* |
-| **Specific Gravity** | 0.82 | 0.80 | 1.03 | 1.09 | 0.96 | 0.86 |
-| **Density (kg/m³)** | 835 | 830 | 1,030 | 1,120 | 965 | 950 |
-| **Janka Hardness (lbf)** | 2,790 | 2,440 | 3,080 | 3,220 | 1,179 | 2,345 |
-| **Janka Hardness (N)** | 12,411 | 10,854 | 13,701 | 14,323 | 5,244 | 10,431 |
+| **Specific Gravity** | 0.84 | 0.79 | 1.03 | 1.09 | 0.96 | 0.86 |
+| **Density (kg/m³)** | 944 | 885 | 1,030 | 1,120 | 965 | 950 |
+| **Janka Hardness (lbf)** | 2,720 | 3,170 | 3,080 | 3,220 | 1,179 | 2,345 |
+| **Janka Hardness (N)** | 12,100 | 14,100 | 13,701 | 14,323 | 5,244 | 10,431 |
 | **Grain** | Interlocked | Interlocked | Straight | Striped | — | Interlocked, wildly figured |
 | **Workability** | Moderate | Moderate — oily, dulls tools | Difficult — very hard | Difficult | — | Difficult — very hard, dulls cutters |
 | **Resinous** | Yes | Yes | No | No | No | No |
-| **Contraction Radial (%)** | — | — | — | — | — | — |
-| **Contraction Tangential (%)** | — | — | — | — | — | — |
-| **MOE (GPa)** | — | — | — | — | 16.54 | 11.58 |
-| **MOR (MPa)** | — | — | — | — | 152.3 | 117.0 |
+| **Contraction Radial (%)** | 2.9 | 2.7 | — | — | — | — |
+| **Contraction Tangential (%)** | 4.6 | 5.8 | — | — | — | — |
+| **MOE (GPa)** | 13.0 | 12.3 | — | — | 16.54 | 11.58 |
+| **MOR (MPa)** | 131.0 | 116.5 | — | — | 152.3 | 117.0 |
 
 > **Note:** MOE/MOR data for the four primary species is absent from the main `wood_species.json` physical records. Texas Ebony and Honey Mesquite have structural data populated.
 
@@ -133,7 +135,7 @@ All six species generate substantially more cutting energy than standard body wo
 
 ### The Rosewood Pair
 
-Brazilian and East Indian rosewood are virtually identical in density (835 vs 830 kg/m³) and share interlocked, resinous grain. Brazilian is the harder of the two (Janka 2,790 vs 2,440) and carries the more legendary tonal reputation — "rich, complex, legendary" vs East Indian's "warm, complex overtones, sustain." Both are CITES-listed; Brazilian at Appendix I is effectively unobtainable for new instruments. East Indian remains the industry-standard rosewood for fretboards and back/sides but faces increasing regulation.
+Brazilian and East Indian rosewood are close in density (944 vs 885 kg/m³; Brazilian about 7% denser) and share interlocked, resinous grain. East Indian is the harder of the two (Janka 3,170 vs 2,720) — the earlier "Brazilian is harder, 2,790 vs 2,440" had it backwards; these are FPL GTR-282 measurements (corrected 2026-11-15). Brazilian is slightly stiffer (MOE 13.0 vs 12.3 GPa) and carries the more legendary tonal reputation — "rich, complex, legendary" vs East Indian's "warm, complex overtones, sustain." Both are CITES-listed; Brazilian at Appendix I is effectively unobtainable for new instruments. East Indian remains the industry-standard rosewood for fretboards and back/sides but faces increasing regulation.
 
 CNC behavior is similar — both require reduced chipload (0.65–0.70×), conservative DOC (3–4mm), high minimum RPM (16,000), and produce sensitizing dust. East Indian is marginally more forgiving across the board. Both are oily/resinous, which lubricates the cut but gums tooling.
 
@@ -168,8 +170,8 @@ Texas Ebony and Honey Mesquite are both North American species with no CITES res
 
 | Species | Missing Data |
 |---------|-------------|
-| **Brazilian Rosewood** | Speed of sound, acoustic impedance, MOE, MOR, contraction values |
-| **East Indian Rosewood** | Speed of sound, acoustic impedance, MOE, MOR, contraction values |
+| **Brazilian Rosewood** | Speed of sound, acoustic impedance (MOE, MOR and shrinkage now from FPL GTR-282) |
+| **East Indian Rosewood** | Speed of sound, acoustic impedance (MOE, MOR and shrinkage now from FPL GTR-282) |
 | **African Ebony** | Speed of sound, acoustic impedance, MOE, MOR, contraction values |
 | **Macassar Ebony** | Speed of sound, acoustic impedance, MOE, MOR, contraction values |
 | **Texas Ebony** | Grain description, workability, tone character, typical uses, sustainability, machining notes |
