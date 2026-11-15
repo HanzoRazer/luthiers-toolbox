@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + `luthier_tonewood_reference.json` v1.0.0
 > **Generated:** 2026-04-27
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison covers the African hardwood spectrum for body/back-sides use, from lightweight Khaya through heavyweight Bubinga, with Mugavu (Albizia coriaria) as a strategic emerging alternative. Honduran Mahogany is included as the benchmark reference.
 
 ---
@@ -13,7 +15,7 @@ This comparison covers the African hardwood spectrum for body/back-sides use, fr
 |---------|:---------:|:---:|:---:|----------------|----------------|
 | **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
 | **African Mahogany (Khaya)** | Primary | 530 | 830 | Similar to Honduran, slightly brighter | Sustainable alternative |
-| **Utile** | Exploratory | 635 | 544 | *(not yet characterized)* | *(not yet characterized)* |
+| **Utile** | Exploratory | 635 | 544 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
 | **Sapele** | Established | 640 | 1,510 | Like mahogany but brighter, good midrange definition | Sustainable — most common alternative |
 | **Mugavu** | Emerging | 764 | ~1,800 † | *(not yet characterized — acoustic testing needed)* | Abundant — not CITES-listed |
 | **Ovangkol (Shedua)** | Established | 810 | 1,890 | Warm, complex — rosewood family character | Not threatened |
@@ -150,7 +152,7 @@ These seven species span a 360 kg/m³ density range — from lightweight Khaya (
 
 - **19% denser than Sapele** — more mass, more sustain potential
 - **14% lighter than Bubinga** — easier to work, lighter instruments
-- **Not CITES-listed** — no paperwork burden, simpler export
+- **Not CITES-listed** — no permit burden for export (*Albizia* is not among the listed taxa in [CITES_STATUS.md](CITES_STATUS.md); a 2026-11-14 edit wrongly gave Mugavu African *Khaya*'s Appendix II listing — reverted 2026-11-15, C-10)
 - **Abundant East African supply** — Uganda, Kenya, Tanzania
 - **Existing export infrastructure** — European furniture market already uses it
 
@@ -162,7 +164,7 @@ The acoustic profile is the critical unknown. The estimated impedance (~3.33 × 
 
 **Ovangkol** and **Bubinga** are both *Guibourtia* species (Fabaceae family), and their tonal character reflects that lineage — "warm, complex, rosewood family character." They're denser, stiffer (MOE 18.4–18.6 GPa vs mahogany's 12.0 GPa), and produce instruments with more projection and sustain.
 
-Bubinga's CITES Appendix II listing (2017) is the complication. Documentation requirements add friction to every transaction. Ovangkol remains unlisted and is the practical alternative for that density/tone profile.
+Bubinga's CITES Appendix II listing (2017) is the complication: permits are needed for raw wood and blanks, although finished instruments, parts and accessories are exempt under annotation #15 (see [CITES_STATUS.md](CITES_STATUS.md)). Ovangkol remains unlisted and is the practical alternative for that density/tone profile.
 
 ### The Stiffness-to-Weight Picture
 
@@ -195,7 +197,7 @@ The regulatory trajectory is clear: traditional species face increasing restrict
 
 ## The Mugavu Pipeline: Next Steps
 
-The memory from the previous session identified Mugavu as a strategic target. The pipeline to production:
+Mugavu is a strategic target for this project. The pipeline to production:
 
 ### 1. Acoustic Characterization (Highest Priority)
 
@@ -245,7 +247,7 @@ Mugavu is the highest-priority data gap — the entire positioning depends on ac
 
 ## Key Takeaways
 
-1. **Khaya is the closest Honduran Mahogany replacement** — nearly identical properties, no CITES burden.
+1. **Khaya is the closest Honduran Mahogany replacement** — nearly identical properties. Note it is CITES Appendix II too (#17, since 2023), like Honduran mahogany (#6).
 
 2. **Sapele is the industry workhorse** — proven, available, sustainable, slightly brighter than mahogany.
 

@@ -1,22 +1,22 @@
 # Mahogany Alternatives: Comprehensive Guide (450–700 kg/m³)
 
-> **Sources:** CIRAD Wood Density Database (1,740 species in range), Web research 2025-2026, `wood_species.json`
+> **Sources:** CIRAD Wood Density Database (404 taxa / 1,740 specimens in range — corrected 2026-11-14, see `VERIFICATION_LOG.md` C-03), Web research 2025-2026, `wood_species.json`
 > **Generated:** 2026-06-22
 > **Purpose:** Deep-dive alternatives beyond "the usual suspects"
 
-This document goes beyond Sapele and Khaya to catalog **1,740 CIRAD species** and emerging alternatives that luthiers are actually discovering.
+This document goes beyond Sapele and Khaya to survey the **404 CIRAD taxa** (1,740 specimens) with a mean density in this range, plus emerging alternatives that luthiers are actually discovering.
 
 ---
 
 ## The Problem with "Usual Suspects"
 
-Most mahogany-alternative guides list the same 5-6 species:
+Most mahogany-alternative guides list the same handful of species:
 - Sapele
 - Khaya (African Mahogany)
 - Nato
 - Meranti
 
-These are fine woods, but they represent **less than 1%** of available species in the mahogany density range (450–700 kg/m³). CIRAD documents **1,740 species** in this band across **45+ families**.
+These are fine woods, but they represent **less than 1%** of available species in the mahogany density range (450–700 kg/m³). CIRAD holds **404 taxa** with a mean D12 in this band, across **64 families** (1,740 individual specimens fall in the band; the earlier "1,740 species" counted specimens).
 
 ---
 
@@ -37,7 +37,7 @@ These are the closest genetic relatives to true mahogany, all from the Meliaceae
 | Species | Trade Name | D12 | Specimens | Origin | Notes |
 |---------|-----------|:---:|:---------:|--------|-------|
 | *Entandrophragma cylindricum* | **Sapele** | 0.66–0.70 | 200+ | West/Central Africa | Industry standard; slightly harder than mahogany; ribbon figure |
-| *Entandrophragma utile* | **Sipo/Utile** | 0.67 | 39 | West/Central Africa | **Closest to true mahogany** per timber industry; more uniform |
+| *Entandrophragma utile* | **Sipo/Utile** | 0.62 | 9 | West/Central Africa | **Closest to true mahogany** per timber industry; more uniform |
 | *Entandrophragma candollei* | **Kosipo** | 0.68–0.70 | 50+ | West/Central Africa | Heavier than Sapele; less figure |
 | *Entandrophragma angolense* | **Tiama/Gedu Nohor** | 0.55–0.60 | — | West Africa | Lighter; more like Cuban mahogany |
 | *Entandrophragma excelsum* | — | 0.50 | — | Burundi | Lightweight variant |
@@ -48,10 +48,10 @@ These are the closest genetic relatives to true mahogany, all from the Meliaceae
 
 | Species | D12 | Specimens | Origin | Notes |
 |---------|:---:|:---------:|--------|-------|
-| *Khaya senegalensis* | 0.69 | 50+ | Senegal, French Guiana | Dry-zone species; harder |
-| *Khaya grandifoliola* | 0.67 | 31 | Ivory Coast | Large-leaf; common substitute |
+| *Khaya senegalensis* | 0.76 | 50+ | Senegal, French Guiana | Dry-zone species; harder |
+| *Khaya grandifoliola* | 0.67 | 5 | Ivory Coast | Large-leaf; common substitute |
 | *Khaya ivorensis* | 0.50–0.55 | 20+ | Ivory Coast, Gabon | Lighter; closer to Cuban density |
-| *Khaya anthotheca* | 0.55 | — | East Africa | White mahogany |
+| *Khaya anthotheca* | 0.61 | — | East Africa | White mahogany |
 
 **Builder note:** "Khaya ivorensis is very much like Genuine Mahogany in both tone and look... a tad heavier but makes a great guitar." — Forum consensus
 
@@ -62,7 +62,7 @@ Underexplored genus with **excellent density match**:
 | Species | D12 | Specimens | Origin | Notes |
 |---------|:---:|:---------:|--------|-------|
 | *Carapa guianensis* | 0.65–0.70 | 150+ | Brazil, French Guiana | **Andiroba** — massive specimen count; very consistent |
-| *Carapa procera* | 0.67 | 24 | French Guiana | Similar to above |
+| *Carapa procera* | 0.73 | 5 | French Guiana | Similar to above |
 
 **Why this matters:** Carapa has more CIRAD specimens than any other Meliaceae genus except Entandrophragma. It's well-characterized, consistent, and available — yet rarely discussed for guitars.
 
@@ -72,8 +72,8 @@ Underexplored genus with **excellent density match**:
 |---------|:---:|--------|-------|
 | *Guarea thompsonii* | 0.69 | Ivory Coast | "Bossé" — underexplored |
 | *Guarea gomma* | 0.69 | French Guiana | South American Guarea |
-| *Lovoa trichilioides* | 0.50 | Ivory Coast | "African Walnut" — lighter, figured |
-| *Turraeanthus africana* | 0.50 | Ivory Coast | "Avodire" — blonde, light |
+| *Lovoa trichilioides* | 0.53 | Ivory Coast | "African Walnut" — lighter, figured |
+| *Turraeanthus africana* | 0.58 | Ivory Coast | "Avodire" — blonde, light |
 | *Cedrela odorata* | 0.45–0.50 | Central America | **Spanish Cedar** — traditional classical necks |
 
 ---
@@ -104,16 +104,16 @@ Sapele has evolved from budget alternative to respected tonewood:
 | Character | Warm, balanced | Warm + bright top-end |
 | Sustainability | CITES II | Protected harvest |
 
-### Okoume/Ayous: The Lightweight Revolution
+### Okoume: The Lightweight Revolution
 
 | Property | Value | Notes |
 |----------|:-----:|-------|
-| Trade Names | Okoume, Ayous, Abachi, African Whitewood | Same species: *Aucoumea klaineana* |
-| Density | 380–430 kg/m³ | Lighter than basswood |
+| Trade Names | Okoume, Gaboon | *Aucoumea klaineana* (Burseraceae). **Not** Ayous/Abachi/Obeche, which is *Triplochiton scleroxylon* (Malvaceae), a different tree (corrected 2026-11-14) |
+| Density | ~430–445 kg/m³ | Comparable to basswood (415); CIRAD mean D12 0.44 |
 | Character | Mahogany-like but brighter | Similar to Korina |
 | Users | PRS, Shergold, Burns (1970s) | Historically "budget" — now reconsidered |
 
-**CIRAD data:** D12 0.49–0.50 with excellent consistency across 50+ specimens from Gabon/Congo.
+**CIRAD data:** mean D12 0.44 over 13 specimens from Gabon and Congo, range 0.32–0.55 — wide variation, so weigh boards individually. (Corrected 2026-11-14; the earlier "0.49–0.50, 50+ specimens" does not match the CIRAD file.) For comparison, Ayous/Obeche (*Triplochiton scleroxylon*): mean D12 0.38 over 24 specimens.
 
 ### Paulownia: The Ultralight Contender
 
@@ -191,7 +191,7 @@ Denser than typical mahogany but domestic and sustainable.
 | Species | D12 | Origin | Notes |
 |---------|:---:|--------|-------|
 | *Terminalia superba* | 0.64–0.69 | West Africa | "Limba/Korina" — classic LP Special wood |
-| *Terminalia catappa* | 0.68 | Caribbean | Sea Almond — coastal |
+| *Terminalia catappa* | 0.53 | Caribbean | Sea Almond — coastal |
 | *Terminalia mantaly* | 0.65–0.69 | Madagascar | Unexplored |
 | *Terminalia ivorensis* | 0.50 | Ivory Coast | "Framire" — lighter |
 
@@ -201,8 +201,8 @@ Denser than typical mahogany but domestic and sustainable.
 
 | Species | D12 | Origin | Notes |
 |---------|:---:|--------|-------|
-| *Dacryodes buettneri* | 0.68 | Congo, Gabon | "Ozigo" — underexplored |
-| *Dacryodes excelsa* | 0.66 | Guadeloupe | Caribbean; aromatic |
+| *Dacryodes buettneri* | 0.59 | Congo, Gabon | "Ozigo" — underexplored |
+| *Dacryodes excelsa* | 0.60 | Guadeloupe | Caribbean; aromatic |
 | *Canarium madagascariense* | 0.65–0.67 | Madagascar | Unexplored |
 | *Protium* spp. | 0.65–0.69 | South America | Copal relatives |
 
@@ -276,7 +276,7 @@ For builders seeking weight relief without chambering:
 | Species | D12 | Family | Origin | Notes |
 |---------|:---:|--------|--------|-------|
 | **Paulownia** | 0.30 | Paulowniaceae | Asia | Ultralight; 2 lb bodies |
-| **Okoume** | 0.49 | Burseraceae | Gabon | PRS uses extensively |
+| **Okoume** | 0.44 | Burseraceae | Gabon, Congo | PRS uses extensively |
 | **Jacaranda** | 0.45–0.54 | Bignoniaceae | South America | Beautiful; unexplored |
 | **Spanish Cedar** | 0.45–0.50 | Meliaceae | Central America | Traditional classical necks |
 | **Avodire** | 0.50 | Meliaceae | West Africa | Blonde mahogany family |

@@ -102,8 +102,8 @@
 
 Cherry, mahogany, and walnut form a tonal cluster — all three sit in the "warm, mid-focused" zone with very similar density (545–610 kg/m³), acoustic impedance (2.39–2.63), and MOE (10.2–12.0 GPa). They share excellent workability and standard CNC parameters.
 
-- **Honduran Mahogany** is the benchmark tonewood of the group. Highest speed of sound (4,687 m/s) and strongest MOE/MOR. The classic Les Paul body wood. CITES-listed — availability is tightening and pricing reflects it.
-- **American Black Walnut** is the closest mahogany substitute by the numbers. Marginally denser and harder, with a slightly richer mid emphasis. Best overall machining profile of the four (lowest combined burn + tearout tendency). Domestically abundant and sustainable.
+- **Honduran Mahogany** is the benchmark tonewood of the group. Highest speed of sound (4,687 m/s) and highest MOE (11.97 GPa); Honey Mesquite has the highest MOR (117 vs 98.4 MPa) (corrected 2026-11-14, see `VERIFICATION_LOG.md`). The classic Les Paul body wood. CITES-listed — availability is tightening and pricing reflects it.
+- **American Black Walnut** is the closest mahogany substitute by the numbers. Marginally denser and harder, with a slightly richer mid emphasis. Best overall machining profile of the five (lowest combined burn + tearout tendency). Domestically abundant and sustainable.
 - **Black Cherry** leans sweeter and softer than the other two. Lowest MOR (78 MPa) makes it the least structurally rigid of the group. Burn-prone with dull tooling but tearout risk is minimal thanks to its fine, straight grain. The darkening patina is a finish consideration.
 
 ### The Outlier: Honey Mesquite

@@ -3,6 +3,10 @@
 > **Source:** `wood_species.json` v4.0.0
 > **Generated:** 2026-06-22
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
+> **Identity caution (added 2026-11-14, `VERIFICATION_LOG.md` C-07).** No source in this repo establishes that "Malaysian Blackwood" is *Acacia melanoxylon*. Every "Malaysian" value here is the Tasmanian Blackwood record from `wood_species.json` (e.g. MOE 11.82 GPa), so it describes *A. melanoxylon* in general, not Malaysian-grown stock. Plantation acacia in Malaysia is widely reported to be mainly *A. mangium* and its hybrids; confirm the species with the supplier before relying on these numbers.
+
 This comparison addresses a common point of confusion: African Blackwood and Malaysian Blackwood share a trade name but are **botanically unrelated species** with dramatically different physical properties and tonal characteristics.
 
 ---
@@ -11,7 +15,7 @@ This comparison addresses a common point of confusion: African Blackwood and Mal
 
 | Species | Family | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|--------|:---:|:---:|----------------|----------------|
-| **African Blackwood** | Dalbergia (rosewood) | 1,270 | 1,960 | Glassy, steely, focused, low damping | Endangered — CITES Appendix II |
+| **African Blackwood** | Dalbergia (rosewood) | 1,270 | 1,960 ᵉ | Glassy, steely, focused, low damping | IUCN Near Threatened (2020); CITES App II, instruments exempt (#15) |
 | **Malaysian Blackwood** | Acacia | 640 | 1,160 | Warm, balanced, opens up with age | Sustainable — plantation-grown |
 
 **Key insight:** These woods are not variants of the same species. They occupy opposite ends of the density spectrum and behave acoustically like different instrument classes.
@@ -180,7 +184,7 @@ African Blackwood generates **more than twice the cutting energy** and routes mo
 | **Guitar Relevance** | Emerging | Established |
 | **Typical Uses** | Fretboard, bridge, nuts, wind instruments | Body, back/sides |
 | **Tone Character** | *(not yet characterized in DB)* | Warm, balanced, opens up with age — koa alternative |
-| **Sustainability** | CITES Appendix II — increasingly restricted | Sustainable — plantation-grown in Tasmania/Australia |
+| **Sustainability** | CITES Appendix II via *Dalbergia* spp. — finished instruments, parts and accessories exempt (#15); raw wood needs permits (see [CITES_STATUS.md](CITES_STATUS.md)) | Sustainable — plantation-grown in Tasmania/Australia |
 | **Builder Notes** | Traditional clarinet/oboe wood; extreme density limits guitar use | Increasingly popular as koa prices rise |
 
 ---

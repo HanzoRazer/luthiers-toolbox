@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + luthier research
 > **Generated:** 2026-04-27
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison covers the "warm-voiced" tonewood family: the benchmark Honduran Mahogany, premium Hawaiian Koa, and two abundant tropical alternatives (Monkeypod and Guanacaste) that occupy the tonal space between them.
 
 ---
@@ -13,7 +15,7 @@ This comparison covers the "warm-voiced" tonewood family: the benchmark Honduran
 |---------|:---------:|:---:|:---:|----------------|----------------|
 | **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
 | **Hawaiian Koa** | Primary | 625 | 1,170 | Warm, balanced, opens up with age | Limited — plantation increasing |
-| **Monkeypod** | Emerging | 600 | 490 | Between Koa and Mahogany — warm, mellow, rich bass | Abundant |
+| **Monkeypod** | Emerging | 600 | 490 ᵉ | Between Koa and Mahogany — warm, mellow, rich bass | Abundant |
 | **Guanacaste (Parota)** | Emerging | 440 | 470 | Between Mahogany and Koa — mellow, good bass | Abundant — not CITES |
 
 ---
@@ -365,7 +367,7 @@ Two cypress species provide additional context for Guanacaste's positioning:
 | Redwood | Softwood | 420 | 420 | 8.55 | Soundboard — cedar-like |
 | Sitka Spruce | Softwood | 425 | 510 | — | Soundboard — versatile |
 | **Guanacaste** | **Hardwood** | **440** | **470** | **8.46** | **Body — warm, mellow** |
-| Alaskan Yellow Cedar | Softwood | 495 | 343 | 9.79 | Exploratory — denser cedar |
+| Alaskan Yellow Cedar | Softwood | 495 | 343 ᵉ | 9.79 | Exploratory — denser cedar |
 | Bald Cypress | Softwood | 510 | 510 | 9.93 | Flamenco soundboards |
 | Granadillo | Hardwood | 925 | 2,790 | ~14.5 | Fretboard — rosewood-like |
 

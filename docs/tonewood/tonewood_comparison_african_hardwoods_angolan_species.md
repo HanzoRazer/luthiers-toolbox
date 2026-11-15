@@ -25,15 +25,15 @@
 | # | Species | Scientific Name | SG | Density | Janka | Shrink R | Shrink T | CITES |
 |--:|---------|-----------------|:--:|:-------:|:-----:|:--------:|:--------:|:-----:|
 | 1 | **African Blackwood** | *Dalbergia melanoxylon* | 1.27 | 1270 | 3670 | 2.9 | 4.2 | App II |
-| 2 | **Kiaat / Muninga** | *Pterocarpus angolensis* | 0.62 | 620 | 1430 | 4.6 | 5.8 | — |
-| 3 | **Panga Panga** | *Millettia stuhlmannii* | 0.88 | 880 | 2160 | 4.0 | 6.9 | — |
-| 4 | **Chanfuta** | *Afzelia quanzensis* | 0.83 | 830 | 2210 | 2.6 | 4.1 | — |
-| 5 | **Doussie** | *Afzelia bipindensis* | 0.83 | 830 | 2430 | 3.0 | 4.4 | — |
+| 2 | **Kiaat / Muninga** | *Pterocarpus angolensis* | 0.62 | 620 | 1430 | 4.6 | 5.8 | App II |
+| 3 | **Panga Panga** | *Millettia stuhlmannii* | 0.88 | 880 | 2160 | 4.0 | 6.9 | EU D |
+| 4 | **Chanfuta** | *Afzelia quanzensis* | 0.83 | 830 | 2210 | 2.6 | 4.1 | App II |
+| 5 | **Doussie** | *Afzelia bipindensis* | 0.83 | 830 | 2430 | 3.0 | 4.4 | App II |
 | 6 | **Banga Wanga** | *Amblygonocarpus andongensis* | 0.77 | 770 | ~1800 | 3.5 † | 5.5 † | — |
 | 7 | **Mugavu** | *Albizia coriaria* | 0.76 | 764 | ~1800 | 3.8 † | 6.2 † | — |
-| 8 | **Sapele / Undianuno** | *Entandrophragma cylindricum* | 0.64 | 640 | 1410 | 4.6 | 7.4 | App II |
-| 9 | **Kibaba / Tiama** | *Entandrophragma angolense* | 0.58 | 580 | 940 | 5.2 | 7.6 | Prop II |
-| 10 | **Sipo / Utile** | *Entandrophragma utile* | 0.59 | 590 | 1130 | 4.8 | 6.4 | Prop II |
+| 8 | **Sapele / Undianuno** | *Entandrophragma cylindricum* | 0.64 | 640 | 1410 | 4.6 | 7.4 | EU D |
+| 9 | **Kibaba / Tiama** | *Entandrophragma angolense* | 0.58 | 580 | 940 | 5.2 | 7.6 | EU D |
+| 10 | **Sipo / Utile** | *Entandrophragma utile* | 0.59 | 590 | 1130 | 4.8 | 6.4 | EU D |
 | 11 | **African Walnut** | *Lovoa trichilioides* | 0.53 | 530 | 940 | 3.5 | 6.0 | — |
 | 12 | **Longhi (white)** | *Gambeya africana* | 0.56 | 560 | ~1300 | 4.2 † | 7.0 † | — |
 | 13 | **Longhi (red)** | *Gambeya lacourtiana* | 0.59 | 590 | ~1400 | 4.5 † | 7.3 † | — |
@@ -43,7 +43,7 @@
 | 17 | **Wenge** | *Millettia laurentii* | 0.87 | 870 | 1930 | 4.8 | 8.1 | — |
 
 > † Estimated from SG correlation  
-> Prop II = Proposed CITES Appendix II at CoP20 (November 2025)  
+> App II = CITES Appendix II · EU D = not CITES-listed, EU monitoring Annex D only (corrected 2026-11-14; the earlier "Prop II at CoP20" was wrong — the *Entandrophragma* proposal was postponed to CoP21, 2028; see [CITES_STATUS.md](CITES_STATUS.md))  
 > Units: Density kg/m³ · Janka lbf · Shrinkage %
 
 ---
@@ -69,7 +69,7 @@
 | CNC Risks | Burn: medium, Tearout: low, Dust: high |
 | Guitar Uses | fretboard, bridge, turning, wind instruments |
 | Tone Character | bright, clear, sustaining — the benchmark ebony alternative |
-| Sustainability | **CITES Appendix II** — regulated trade |
+| Sustainability | **CITES Appendix II** (*Dalbergia* spp., annotation #15: finished instruments, parts and accessories exempt; raw wood and blanks need permits); IUCN Near Threatened (2020) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** The densest and hardest African tonewood. Traditional material for clarinets and oboes. In guitars, used for high-end fretboards and bridges where maximum hardness is required. East African origin (Tanzania, Mozambique). High oil content affects gluing — surface prep critical.
 
@@ -94,7 +94,7 @@
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | body, back/sides, neck |
 | Tone Character | warm, resonant, rosewood-adjacent — brighter than true rosewoods |
-| Sustainability | Not CITES listed — supply tightening in some regions |
+| Sustainability | **CITES Appendix II** — African *Pterocarpus* populations, annotation #17 (logs, sawn wood, veneer; blanks covered), since 2023-02-23 — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** Premier East African rosewood alternative. Well-established in South African guitar building. The interlocked grain produces attractive ribbon figure. Heartwood ranges from golden brown to dark reddish brown with darker streaks. Works similarly to mahogany but denser. "Muncuba" is the Angolan trade name.
 
@@ -119,7 +119,7 @@
 | CNC Risks | Burn: low, Tearout: low, Dust: medium |
 | Guitar Uses | fretboard, bridge, body, accents |
 | Tone Character | dense, percussive, wenge-like — strong attack, clear sustain |
-| Sustainability | Not CITES listed |
+| Sustainability | Not CITES-listed; **EU Annex D** (monitoring) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** Visually and physically similar to Wenge (*Millettia laurentii*) but from a different species. East African origin (Tanzania, Mozambique). Excellent fretboard wood — hard enough for wear resistance, stable enough for climate changes. The high density produces percussive attack well-suited to electric guitar and bass.
 
@@ -144,9 +144,9 @@
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | body, back/sides |
 | Tone Character | warm, balanced, mahogany-family character with more mass |
-| Sustainability | Not CITES listed |
+| Sustainability | **CITES Appendix II** — African *Afzelia*, annotation #17, since 2023-02-23 — see [CITES_STATUS.md](CITES_STATUS.md) |
 
-**Notes:** East African *Afzelia* with excellent dimensional stability — among the lowest shrinkage values in this group. The low T/R ratio (1.6) means minimal warping and cupping. Denser than true mahoganies (830 vs 545 kg/m³) so better suited to solid-body electrics than acoustics. Contains silica inclite — carbide tooling mandatory.
+**Notes:** East African *Afzelia* with excellent dimensional stability — among the lowest shrinkage values in this group. The low T/R ratio (1.6) means minimal warping and cupping. Denser than true mahoganies (830 vs 545 kg/m³) so better suited to solid-body electrics than acoustics. Contains silica inclusions — carbide tooling mandatory.
 
 ---
 
@@ -169,7 +169,7 @@
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | body, back/sides, structural |
 | Tone Character | similar to Chanfuta — warm, projecting |
-| Sustainability | Not CITES listed |
+| Sustainability | **CITES Appendix II** — African *Afzelia*, annotation #17, since 2023-02-23 — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** West/Central African *Afzelia*, virtually identical to Chanfuta in properties. Slightly harder (Janka 2430 vs 2210). Same silica content and carbide requirement. Interchangeable with Chanfuta for lutherie applications. Class 1 durability — historically used for marine and exterior applications.
 
@@ -248,7 +248,7 @@
 | CNC Risks | Burn: medium, Tearout: medium, Dust: medium |
 | Guitar Uses | body, neck, back/sides, tops |
 | Tone Character | like mahogany but brighter, good midrange definition |
-| Sustainability | **CITES Appendix II** — sustainable supply, paperwork required |
+| Sustainability | Not CITES-listed; **EU Annex D** (monitoring); IUCN Vulnerable (1998) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** Industry-standard mahogany alternative. The workhorse African tonewood. Ribbon figure from interlocked grain is visually distinctive. "Undianuno" is the Angolan/Portuguese trade name — same species as Sapele. 17% denser than Honduran Mahogany, which shifts the voice brighter.
 
@@ -273,9 +273,9 @@
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | back/sides, body |
 | Tone Character | warm, similar to Utile — softer mahogany character |
-| Sustainability | **Proposed CITES Appendix II** (CoP20, November 2025) |
+| Sustainability | Not CITES-listed; **EU Annex D** (monitoring). The EU's *Entandrophragma* proposal was postponed to CoP21 (2028) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
-**Notes:** Sapele's lighter, softer sibling. The least exploited *Entandrophragma*, which preserved supply. At 580 kg/m³ and Janka 940, it's closer to Utile than Sapele in hardness. "Kibaba" is the Angolan trade name. **Acquire stock before CoP20** — all *Entandrophragma* species proposed for Appendix II listing.
+**Notes:** Sapele's lighter, softer sibling. The least exploited *Entandrophragma*, which preserved supply. At 580 kg/m³ and Janka 940, it's closer to Utile than Sapele in hardness. "Kibaba" is the Angolan trade name. Not CITES-listed; EU Annex D only. The EU's *Entandrophragma* proposal was postponed to CoP21 (2028), so there is no listing deadline to buy ahead of (obsolete "acquire stock before CoP20" advice removed 2026-11-15, C-10 — see [CITES_STATUS.md](CITES_STATUS.md)).
 
 ---
 
@@ -298,7 +298,7 @@
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium |
 | Guitar Uses | neck, back/sides, body |
 | Tone Character | mahogany-like, slightly softer than Sapele |
-| Sustainability | **Proposed CITES Appendix II** (CoP20, November 2025) |
+| Sustainability | Not CITES-listed; **EU Annex D** (monitoring); IUCN Vulnerable (1998) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
 **Notes:** Mid-weight *Entandrophragma*. Less ribbon figure than Sapele. The low T/R ratio (1.3) makes it dimensionally stable. Traditional mahogany substitute in furniture and boatbuilding. "Sipo" is the primary trade name in European markets.
 
@@ -404,7 +404,7 @@
 | Tone Character | *(not yet characterized — utility-grade positioning)* |
 | Sustainability | Not CITES listed |
 
-**Notes:** Heavyweight Sapotaceae from Central/West Africa. Class 5 durability — marine-rated, used for bridges, railway sleepers, hydraulic works. The highest density in this comparison (870 kg/m³). Primarily a construction timber, but hardness and durability suit high-wear applications like fretboards and bridges. Not typically selected for acoustic applications.
+**Notes:** Heavyweight Sapotaceae from Central/West Africa. Very durable heartwood, used for bridges, railway sleepers and hydraulic works. Among the denser species here (870 kg/m³; African Blackwood at 1,270 and Panga Panga at 880 are denser) (corrected 2026-11-14, see `VERIFICATION_LOG.md`). (The earlier "Class 5" was wrong: in EN 350, class 5 means *not durable*.) Primarily a construction timber, but hardness and durability suit high-wear applications like fretboards and bridges. Not typically selected for acoustic applications.
 
 > † Estimated from SG correlation
 
@@ -424,12 +424,12 @@
 | Shrinkage (tangential) | 3.8–5.4% |
 | T/R Ratio | 1.4–1.5 |
 | Grain | interlocked |
-| Workability | good — some calcium carbite deposits can dull tools |
+| Workability | good — some calcium carbonate deposits can dull tools |
 | Resinous | No |
 | CNC Risks | Burn: low, Tearout: medium, Dust: medium (sensitizing) |
 | Guitar Uses | body, neck, back/sides |
 | Tone Character | warm, balanced — often compared to teak, stable tonal character |
-| Sustainability | Not CITES listed — IUCN Near Threatened |
+| Sustainability | Not CITES listed — IUCN Lower Risk/near threatened (1998 assessment) |
 
 **Notes:** The premier "African Teak" — widely used as a teak substitute for exterior applications due to exceptional dimensional stability and durability. At 660 kg/m³, sits in the Sapele/mahogany weight range. The very low T/R ratio (1.4) means minimal warping — excellent for necks. "Mvule" is the Swahili/Kenyan name; "Iroko" is the international trade name; "Kambala" is used in some Angolan markets. Dust can be sensitizing — use extraction. Contains calcium carbonate deposits (stone) that can chip carbide.
 
@@ -481,7 +481,7 @@
 | CNC Risks | Burn: medium, Tearout: high, Dust: high (sensitizing, splinters) |
 | Guitar Uses | fretboard, neck, body, accent |
 | Tone Character | bright, percussive, excellent sustain — stiff and articulate |
-| Sustainability | **IUCN Endangered** — not CITES listed but declining |
+| Sustainability | **IUCN Endangered** (1998 assessment) — not CITES-listed |
 
 **Notes:** The benchmark African fretboard/neck wood. Extremely stiff (high MOE), which translates to exceptional sustain and articulate attack. Warwick, Ibanez, and others use Wenge necks extensively. Straight grain is visually striking — dark brown/black with lighter streaks. **Caution:** coarse texture splinters easily, dust is highly sensitizing. Glue adhesion can be poor — surface prep critical. IUCN Endangered due to habitat loss — consider Panga Panga as alternative (same genus, similar properties, not endangered).
 
@@ -491,9 +491,11 @@
 
 | Status | Species | Action Required |
 |--------|---------|-----------------|
-| **Appendix II (current)** | African Blackwood, Sapele, Khaya (African Mahogany) | Export permits required |
-| **Proposed Appendix II (CoP20)** | Kibaba, Sipo, all *Entandrophragma* | Acquire stock before November 2025 |
-| **Not listed** | All others in this comparison | No trade restrictions |
+| **Appendix II (current)** | African Blackwood (instruments exempt, #15); Kiaat, Chanfuta, Doussie (#17, African *Pterocarpus*/*Afzelia*); Khaya | Export permits for logs, sawn wood, veneer and blanks |
+| **EU Annex D only (not CITES)** | Sapele, Kibaba, Sipo (all *Entandrophragma*), Panga Panga | EU import monitoring; no CITES permit. A CITES proposal for *Entandrophragma* is targeted at CoP21 (2028) |
+| **Not listed** | Banga Wanga, Mugavu, African Walnut, Longhi, Mukulungu, Iroko, Ovangkol, Wenge | No CITES restrictions |
+
+> **Corrected 2026-11-14** against Species+ — see [CITES_STATUS.md](CITES_STATUS.md). The earlier table put Sapele in Appendix II, called *Entandrophragma* "proposed at CoP20", and missed the 2023 listings of African *Pterocarpus* and *Afzelia*.
 
 > **Note:** Khaya spp. (African Mahogany) added to Appendix II on 2023-02-23 with annotation #17. Not covered in this comparison but relevant for sourcing decisions.
 
@@ -516,24 +518,24 @@
 
 | Species | Missing Data |
 |---------|-------------|
-| **African Blackwood** | MOE, MOR, speed of sound, acoustic impedance |
+| **African Blackwood** | Source attribution for database MOE 17.95 / MOR 213.6 (computed c = 3,760 m/s); measured damping |
 | **Kiaat** | MOE, MOR, speed of sound, acoustic impedance |
-| **Panga Panga** | MOE, MOR, speed of sound, acoustic impedance |
-| **Chanfuta** | MOE, MOR, speed of sound, acoustic impedance |
+| **Panga Panga** | Source attribution for database MOE 15.73 / MOR 131.2 (computed c = 4,252 m/s); measured damping |
+| **Chanfuta** | Source attribution for database MOE 11.75 / MOR 109.0 (computed c = 3,751 m/s); measured damping |
 | **Doussie** | MOE, MOR, speed of sound, acoustic impedance |
 | **Banga Wanga** | ALL properties estimated — full characterization needed |
 | **Mugavu** | MOE, MOR, acoustic properties, Janka (measured) |
 | **Sapele** | speed of sound, acoustic impedance |
 | **Kibaba** | acoustic properties, CNC parameters |
 | **Sipo** | speed of sound, acoustic impedance |
-| **African Walnut** | MOE, MOR, speed of sound, acoustic impedance |
+| **African Walnut** | Source attribution for database MOE 9.24 / MOR 84.5 (computed c = 4,137 m/s); measured damping |
 | **Longhi (both)** | ALL acoustic properties, Janka (measured) |
 | **Mukulungu** | MOE, MOR, acoustic properties |
-| **Mvule / Iroko** | MOE, MOR, speed of sound, acoustic impedance |
+| **Mvule / Iroko** | Source attribution for database MOE 10.9 / MOR 97.1 (computed c = 4,064 m/s); measured damping |
 | **Ovangkol** | speed of sound, acoustic impedance |
-| **Wenge** | MOE, MOR, speed of sound, acoustic impedance |
+| **Wenge** | Source attribution for database MOE 14.75 / MOR 136.9 (computed c = 4,118 m/s); measured damping |
 
-**Priority:** Acoustic characterization (speed of sound, impedance) is missing for all species. Without measured values, tonal positioning relies on density-based estimates.
+**Status (corrected 2026-11-14, see `VERIFICATION_LOG.md`):** `wood_species.json` holds MOE/MOR for 9 of these species (the six above plus Sapele, Sipo/Utile and Ovangkol), so speed of sound c = √(E/ρ) can be computed for them, but none of those MOE values carries a source field. Kiaat, Doussie, Banga Wanga, Mugavu, Kibaba, Longhi and Mukulungu are not in the database at all. **Priority:** measured acoustic characterization (speed of sound, damping) is still missing for all species. Without measured values, tonal positioning relies on density-based estimates.
 
 ---
 
@@ -548,5 +550,5 @@
 | PROTA/PlantUse | Vernacular names, distribution |
 | ITTO Tropical Timber | Trade names, applications |
 | CITES Checklist (2026-04-30) | Current listings |
-| CITES CoP20 Proposals | Proposed listings |
+| CITES CoP20 Proposals | Proposed listings (no *Entandrophragma* proposal — see [CITES_STATUS.md](CITES_STATUS.md)) |
 | East African Forestry Data | Mugavu SG/density verification |

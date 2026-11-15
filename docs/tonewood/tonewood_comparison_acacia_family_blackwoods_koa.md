@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + `tonewood_viability_emerging_species.md`
 > **Generated:** 2026-06-22
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison covers the Acacia and Albizia genera tonewoods — closely related Fabaceae that share the "warm, balanced" tonal signature. Includes Hawaiian Koa, Tasmanian/Malaysian/Australian Blackwood, Monkeypod, Mugavu, and African relatives. These are the woods Rory McGuinness described as having "that fundamental and very direct powerful tone... but with more warmth behind it" compared to African Blackwood (a Dalbergia, not an Acacia).
 
 ---
@@ -14,7 +16,7 @@ The trade names are confusing. Here's what's actually what:
 | Trade Name | Scientific Name | Region | Notes |
 |------------|-----------------|--------|-------|
 | **Tasmanian Blackwood** | *Acacia melanoxylon* | Tasmania, SE Australia | The canonical species |
-| **Malaysian Blackwood** | *Acacia melanoxylon* | Planted in Malaysia | Same species, different origin |
+| **Malaysian Blackwood** | *Acacia melanoxylon* (unverified) | Planted in Malaysia | Identity unconfirmed — see note in the Malaysian Blackwood section |
 | **Australian Blackwood** | *Acacia melanoxylon* (likely) | Mainland Australia | Same species, regional variant |
 | **Hawaiian Koa** | *Acacia koa* | Hawaii | Endemic cousin species |
 | **Mangium** | *Acacia mangium* | SE Asia, Pacific | Plantation timber, lighter |
@@ -29,8 +31,8 @@ The trade names are confusing. Here's what's actually what:
 |---------|-----------------|:---:|:---:|:---:|----------------|
 | **Hawaiian Koa** | *Acacia koa* | 625 | 1,170 | Primary | Warm, balanced, opens up with age like rosewood |
 | **Tasmanian Blackwood** | *Acacia melanoxylon* | 640 | 1,160 | Established | Warm, balanced, opens up with age — koa alternative |
-| **Australian Blackwood** | *(likely A. melanoxylon)* | 640 | 552 | Emerging | *(not yet characterized)* |
-| **Mangium** | *Acacia mangium* | 585 | 467 | Exploratory | *(not yet characterized)* |
+| **Australian Blackwood** | *(likely A. melanoxylon)* | 640 | 552 ᵉ | Emerging | *(not yet characterized)* |
+| **Mangium** | *Acacia mangium* | 585 | 467 ᵉ | Exploratory | *(not yet characterized)* |
 
 **The pattern:** All four species cluster in the 585–640 kg/m³ density range — about half the density of African Blackwood (1,270 kg/m³). This is the material basis for the "warmth" that builders describe.
 
@@ -151,6 +153,8 @@ All four species fall in the moderate cutting energy range (0.45–0.57 J/mm³) 
 ---
 
 ## The "Malaysian Blackwood" Question
+
+> **Identity caution (added 2026-11-14, `VERIFICATION_LOG.md` C-07).** No source in this repo establishes that "Malaysian Blackwood" is *Acacia melanoxylon*. Every "Malaysian" value here is the Tasmanian Blackwood record from `wood_species.json` (e.g. MOE 11.82 GPa), so it describes *A. melanoxylon* in general, not Malaysian-grown stock. Plantation acacia in Malaysia is widely reported to be mainly *A. mangium* and its hybrids; confirm the species with the supplier before relying on these numbers.
 
 Rory McGuinness described Malaysian Blackwood as having:
 
