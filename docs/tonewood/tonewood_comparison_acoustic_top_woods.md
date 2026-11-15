@@ -1,6 +1,6 @@
 # Tonewood Comparison: Acoustic Guitar Top Woods
 
-> **Source:** `wood_species.json` v4.0.0 + `luthier_tonewood_reference.json` v1.0.0
+> **Source:** `wood_species.json` v4.0.0 + `luthier_tonewood_reference.json` v1.0.0. **Corrected 2026-11-15 (C-11):** specific gravity, density, Janka, shrinkage, MOE, MOR, E/ρ, sound speed and impedance now come from FPL GTR-282 (2021) — see [FPL values](#fpl-values) below. Machining and tone rows are unchanged and unsourced.
 > **Generated:** 2026-04-09
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
@@ -11,17 +11,17 @@ This comparison covers the primary and alternative soundboard woods for acoustic
 
 ## At a Glance
 
-| Species | Relevance | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
+| Species | Relevance | Density at 12% MC (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|:---------:|:---:|:---:|----------------|----------------|
-| **Sitka Spruce** | Primary | 425 | 510 | Versatile, strong fundamental | Sustainable |
-| **Adirondack Spruce** | Primary | 435 | 560 | Powerful, headroom, loud — the pre-war dreadnought tonewood | Limited supply — slow-growing |
-| **Engelmann Spruce** | Primary | 385 | 390 | Warm, responsive, lower overtones than Sitka | Sustainable |
-| **Western Red Cedar** | Primary | 370 | 350 | Warm, dark, immediate response | Sustainable |
-| **Alaskan Yellow Cedar** | Exploratory | 495 | 343 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
-| **Redwood (Old Growth)** | Established | 420 | 420 | Warm, dark, cedar-like response | Old growth restricted — salvage only |
-| **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
-| **Hard Maple** | Primary | 705 | 1,450 | Bright, articulate, snappy | Sustainable |
-| **Douglas-Fir** | Established | 530 | 660 | Strong, clear, good for steel-string | Sustainable, abundant |
+| **Sitka Spruce** | Primary | 448 | 517 | Versatile, strong fundamental | Sustainable |
+| **Adirondack Spruce** | Primary | 448 | 495 | Powerful, headroom, loud — the pre-war dreadnought tonewood | Limited supply — slow-growing |
+| **Engelmann Spruce** | Primary | 392 | 393 | Warm, responsive, lower overtones than Sitka | Sustainable |
+| **Western Red Cedar** | Primary | 358 | 360 | Warm, dark, immediate response | Sustainable |
+| **Alaskan Yellow Cedar** | Exploratory | 493 | 585 | *(not yet characterized)* | *(not yet characterized)* |
+| **Redwood (Old Growth)** | Established | 448 | 472 | Warm, dark, cedar-like response | Old growth restricted — salvage only |
+| **Honduran Mahogany** | Primary | 529 | 809 | Warm, balanced, good sustain | CITES Appendix II |
+| **Hard Maple** | Primary | 706 | 1,439 | Bright, articulate, snappy | Sustainable |
+| **Douglas-Fir** | Established | 538 | 719 | Strong, clear, good for steel-string | Sustainable, abundant |
 
 ---
 
@@ -30,15 +30,16 @@ This comparison covers the primary and alternative soundboard woods for acoustic
 | Property | Sitka Spruce | Adirondack Spruce | Engelmann Spruce | W. Red Cedar | Yellow Cedar | Redwood | Mahogany | Hard Maple | Douglas-Fir |
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Scientific Name** | *Picea sitchensis* | *Picea rubens* | *Picea engelmannii* | *Thuja plicata* | *Cupressus nootkatensis* | *Sequoia sempervirens* | *Swietenia macrophylla* | *Acer saccharum* | *Pseudotsuga menziesii* |
-| **Specific Gravity** | 0.42 | 0.43 | 0.37 | 0.33 | 0.49 | 0.41 | 0.52 | 0.66 | 0.51 |
-| **Density (kg/m³)** | 425 | 435 | 385 | 370 | 495 | 420 | 545 | 705 | 530 |
-| **Janka Hardness (lbf)** | 510 | 560 | 390 | 350 | 343 | 420 | 800 | 1,450 | 660 |
-| **Janka Hardness (N)** | 2,269 | 2,491 | 1,735 | 1,557 | 1,526 | 1,868 | 3,558 | 6,450 | 2,936 |
+| **Specific Gravity (G₁₂)** | 0.40 | 0.40 | 0.35 | 0.32 | 0.44 | 0.40 | 0.47 | 0.63 | 0.48 |
+| **Density at 12% MC (kg/m³)** | 448 | 448 | 392 | 358 | 493 | 448 | 529 | 706 | 538 |
+| **Janka Hardness (lbf)** | 517 | 495 | 393 | 360 | 585 | 472 | 809 | 1,439 | 719 |
+| **Janka Hardness (N)** | 2,300 | 2,200 | 1,750 | 1,600 | 2,600 | 2,100 | 3,600 | 6,400 | 3,200 |
 | **Grain** | Straight, tight | Straight, tight | Straight, fine | Straight | — | Straight, fine | Interlocked | Straight to figured | Straight, pronounced rings |
 | **Workability** | Good — soft | Good | Good — very soft | Excellent — very soft | — | Excellent | Excellent | Moderate — hard on tools | Good |
 | **Resinous** | Yes | Yes | Yes | Yes | Yes | No | No | No | Yes |
-| **Contraction Radial (%)** | — | 3.0 | — | 4.43 | — | 4.28 | 4.41 | 4.82 | 4.18 |
-| **Contraction Tangential (%)** | — | 6.9 | — | 7.69 | — | 7.81 | 8.41 | 8.73 | 8.05 |
+| **Shrinkage Radial, green→ovendry (%)** | 4.3 | 3.8 | 3.8 | 2.4 | 2.8 | 2.6 | 3.0 | 4.8 | 4.8 |
+| **Shrinkage Tangential, green→ovendry (%)** | 7.5 | 7.8 | 7.1 | 5.0 | 6.0 | 4.4 | 4.1 | 9.9 | 7.6 |
+| **Shrinkage Volumetric, green→ovendry (%)** | 11.5 | 11.8 | 11.0 | 6.8 | 9.2 | 6.8 | 7.8 | 14.7 | 12.4 |
 
 ---
 
@@ -46,14 +47,14 @@ This comparison covers the primary and alternative soundboard woods for acoustic
 
 | Property | Sitka Spruce | Adirondack Spruce | Engelmann Spruce | W. Red Cedar | Yellow Cedar | Redwood | Mahogany | Hard Maple | Douglas-Fir |
 |----------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Modulus of Elasticity (GPa)** | — | 11.2 | — | 7.78 | 9.79 | 8.55 | 11.97 | 13.49 | 10.0 |
-| **Modulus of Rupture (MPa)** | — | 74.0 | — | 53.1 | 76.6 | 60.3 | 98.4 | 118.5 | 75.3 |
-| **E/ρ Ratio (stiffness-to-weight)** | — | 25.7 | — | 21.0 | 19.8 | 20.4 | 22.0 | 19.1 | 18.9 |
-| **Speed of Sound (m/s)** † | 5,070 | 5,075 | 5,090 | 4,588 | 4,447 | 4,511 | 4,687 | 4,376 | 4,344 |
-| **Acoustic Impedance (10⁶ kg/m²s)** † | 2.15 | 2.21 | 1.96 | 1.70 | 2.20 | 1.89 | 2.55 | 3.09 | 2.30 |
+| **Modulus of Elasticity, 12% MC (GPa)** | 10.8 | 11.4 | 8.9 | 7.7 | 9.8 | 9.2 | 10.3 | 12.6 | 13.4 |
+| **Modulus of Rupture, 12% MC (MPa)** | 70.0 | 74.0 | 64.0 | 51.7 | 77.0 | 69.0 | 79.3 | 109.0 | 85.0 |
+| **E/ρ Ratio (stiffness-to-weight)** | 24.1 | 25.4 | 22.7 | 21.5 | 19.9 | 20.5 | 19.5 | 17.9 | 24.9 |
+| **Speed of Sound (m/s)** † | 4,910 | 5,044 | 4,765 | 4,635 | 4,459 | 4,532 | 4,414 | 4,226 | 4,993 |
+| **Acoustic Impedance (10⁶ kg/m²s)** † | 2.20 | 2.26 | 1.87 | 1.66 | 2.20 | 2.03 | 2.33 | 2.98 | 2.68 |
 | **Tone Character** | Versatile, strong fundamental | Powerful, headroom, loud | Warm, responsive, lower overtones | Warm, dark, immediate response | — | Warm, dark, cedar-like | Warm, balanced, sustain | Bright, articulate, snappy | Strong, clear |
 
-> † Speed of sound and acoustic impedance computed from MOE and density: c = √(E/ρ); Z = ρ × c. Where MOE is missing, values estimated from similar species in the database.
+> † Computed, not measured: c = √(E/ρ), Z = ρ × c, from the FPL MOE and density at 12% MC. No value is estimated from a similar species any more (the earlier Sitka and Engelmann figures were, and Engelmann's 5,090 m/s was overstated). FPL's MOE is from a center-loaded beam and is not shear-corrected; FPL notes it "can be increased by 10%", which would raise c by about 5%. The ranking is unaffected.
 
 ---
 
@@ -127,31 +128,31 @@ This comparison covers the primary and alternative soundboard woods for acoustic
 
 The three spruces represent the core of acoustic guitar soundboard selection, each with distinct characteristics:
 
-**Sitka Spruce** is the industry workhorse — the most widely used soundboard wood in modern production. Its density (425 kg/m³) and stiffness place it squarely in the middle of the spruce range, delivering a versatile tone with strong fundamental response. It handles both fingerstyle and flatpicking well, making it the safest default choice. Abundant and sustainable from Pacific Northwest forests.
+**Sitka Spruce** is the industry workhorse — the most widely used soundboard wood in modern production. Its density (448 kg/m³) and stiffness (MOE 10.8 GPa) place it between Engelmann and Adirondack, delivering a versatile tone with strong fundamental response. It handles both fingerstyle and flatpicking well, making it the safest default choice. Abundant and sustainable from Pacific Northwest forests.
 
-**Adirondack Spruce** (Red Spruce) is the premium choice — the "pre-war dreadnought tonewood" that powered the golden age Martin guitars. At 435 kg/m³ and MOE 11.2 GPa, it's the stiffest and densest of the North American spruces, delivering more headroom and volume before compression. The tradeoff: limited supply from slow-growing Appalachian forests means higher cost and less consistency in selection.
+**Adirondack Spruce** (Red Spruce) is the premium choice — the "pre-war dreadnought tonewood" that powered the golden age Martin guitars. At MOE 11.4 GPa it is the stiffest spruce in FPL's tables, at the same specific gravity as Sitka (0.40, 448 kg/m³) — so it is stiffer, not heavier, delivering more headroom and volume before compression. The tradeoff: limited supply from slow-growing Appalachian forests means higher cost and less consistency in selection.
 
-**Engelmann Spruce** is the lightest and softest spruce in this comparison (385 kg/m³, Janka 390). This translates to a warmer, more responsive sound with lower overtones — the fingerstyle player's spruce. Its fragility demands light cuts during machining (tearout tendency 0.65, the highest in this group). Sustainable supply from Rocky Mountain forests.
+**Engelmann Spruce** is the lightest and softest spruce in this comparison (392 kg/m³, Janka 393, MOE 8.9 GPa). This translates to a warmer, more responsive sound with lower overtones — the fingerstyle player's spruce. Its fragility demands light cuts during machining (tearout tendency 0.65, the highest in this group). Sustainable supply from Rocky Mountain forests.
 
 ### The Cedar Family: Warmth and Immediacy
 
-**Western Red Cedar** is the primary alternative to spruce, offering a fundamentally different tonal character. At 370 kg/m³ and MOE 7.78 GPa, it's the lightest and least stiff top wood in this comparison. The result: warm, dark tone with immediate response — the soundboard speaks quickly without the "breaking in" period that spruce often requires. Classical and fingerstyle builders favor cedar for its responsiveness at lighter touch. Very soft (Janka 350) — use light clamping pressure and sharp tools.
+**Western Red Cedar** is the primary alternative to spruce, offering a fundamentally different tonal character. At 358 kg/m³ and MOE 7.7 GPa, it's the lightest and least stiff top wood in this comparison. The result: warm, dark tone with immediate response — the soundboard speaks quickly without the "breaking in" period that spruce often requires. Classical and fingerstyle builders favor cedar for its responsiveness at lighter touch. Very soft (Janka 360) — use light clamping pressure and sharp tools.
 
-**Alaskan Yellow Cedar** (*Cupressus nootkatensis*) is an exploratory species that deserves more attention. Despite the name, it's not a true cedar but a cypress. At 495 kg/m³, it's significantly denser than Western Red Cedar — closer to Douglas-fir territory. The MOE (9.79 GPa) is higher than Western Red Cedar but lower than the spruces. The database lacks tone characterization, but the physical properties suggest a voice between cedar's warmth and spruce's clarity. Low tearout tendency (0.23) makes it machine-friendly. Supply is limited; climate change is affecting northern stands.
+**Alaskan Yellow Cedar** (*Cupressus nootkatensis*) is an exploratory species that deserves more attention. Despite the name, it's not a true cedar but a cypress. At 493 kg/m³, it's significantly denser than Western Red Cedar — closer to Douglas-fir territory. Its MOE (9.8 GPa) is above Western Red Cedar and Engelmann but below Sitka and Adirondack, and it is harder than any spruce here (Janka 585; the earlier 343 was a density-regression estimate). The database lacks tone characterization, but the physical properties suggest a voice between cedar's warmth and spruce's clarity. Low tearout tendency (0.23) makes it machine-friendly. Supply is limited; climate change is affecting northern stands.
 
 ### Redwood: The Cedar Cousin
 
-**Redwood** (Old Growth) is tonally similar to Western Red Cedar — "warm, dark, cedar-like response" — but with slightly different physical properties. At 420 kg/m³ and MOE 8.55 GPa, it sits between cedar and the lighter spruces. The non-resinous nature (unlike the spruces and cedars) simplifies finishing. The critical constraint is availability: new-growth redwood lacks the tight grain structure of old-growth; salvage and reclaimed sources are the only responsible options for instrument-grade stock.
+**Redwood** (Old Growth) is tonally similar to Western Red Cedar — "warm, dark, cedar-like response" — but with slightly different physical properties. At 448 kg/m³ (the same as Sitka) and MOE 9.2 GPa, it is as dense as Sitka but less stiff — between cedar and the spruces in stiffness. The non-resinous nature (unlike the spruces and cedars) simplifies finishing. The critical constraint is availability: new-growth redwood lacks the tight grain structure of old-growth; salvage and reclaimed sources are the only responsible options for instrument-grade stock.
 
 ### The Outliers: Mahogany, Maple, and Douglas-Fir
 
 These three species are not traditional soundboard woods but see use in specific applications:
 
-**Honduran Mahogany** as a soundboard is unconventional but has a devoted following. At 545 kg/m³, it's 30% denser than Sitka spruce — the resulting top is warmer, with less treble sparkle and more mid-focused tone. Mahogany-top guitars (like the Martin 00-15M) have a distinctly "woody" voice. The high MOE (11.97 GPa) provides structural rigidity despite the softwood-like workability. CITES Appendix II listing affects availability.
+**Honduran Mahogany** as a soundboard is unconventional but has a devoted following. At 529 kg/m³, it's about 18% denser than Sitka spruce — the resulting top is warmer, with less treble sparkle and more mid-focused tone. Mahogany-top guitars (like the Martin 00-15M) have a distinctly "woody" voice. Its MOE (10.3 GPa) is slightly below Sitka's, so it is not stiffer than spruce, only heavier (the earlier 11.97 GPa was unsourced). CITES Appendix II listing affects availability.
 
-**Hard Maple** as a top wood appears primarily on archtop jazz guitars and some solid-body electrics. At 705 kg/m³ and Janka 1,450, it's by far the heaviest and hardest species in this comparison. The high MOE (13.49 GPa) and low acoustic impedance relative to weight produce a bright, articulate, snappy tone with strong attack. CNC machining requires caution: burn tendency 0.60 is the highest in this group — keep feeds up and tools sharp.
+**Hard Maple** as a top wood appears primarily on archtop jazz guitars and some solid-body electrics. At 706 kg/m³ and Janka 1,439, it's by far the heaviest and hardest species in this comparison. Its MOE (12.6 GPa) is high, but so is its density: it has the lowest E/ρ (17.9) and the highest acoustic impedance (2.98) here, which go with a bright, articulate, snappy tone with strong attack. CNC machining requires caution: burn tendency 0.60 is the highest in this group — keep feeds up and tools sharp.
 
-**Douglas-Fir** is an established but underrated top wood, favored by some builders for steel-string flattops. At 530 kg/m³ and MOE 10.0 GPa, it's stiffer and denser than the spruces but lighter than mahogany — a structural middle ground. The pronounced growth rings create visual distinction. Tone is described as "strong, clear, good for steel-string" — more headroom than cedar, warmer than maple. Abundant and sustainable supply from Pacific Northwest forests.
+**Douglas-Fir** is an established but underrated top wood, favored by some builders for steel-string flattops. At 538 kg/m³ and MOE 13.4 GPa, it is the stiffest species in this comparison and about as dense as mahogany. Its E/ρ (24.9) is second only to Adirondack — the earlier "lowest ratio" came from an unsourced MOE of 10.0 GPa. The pronounced growth rings create visual distinction. Tone is described as "strong, clear, good for steel-string" — more headroom than cedar, warmer than maple. Abundant and sustainable supply from Pacific Northwest forests.
 
 ### Stiffness-to-Weight: The Key Soundboard Metric
 
@@ -159,15 +160,17 @@ For soundboard selection, the stiffness-to-weight ratio (E/ρ) is more relevant 
 
 | Species | E/ρ Ratio | Interpretation |
 |---------|:---------:|----------------|
-| **Adirondack Spruce** | 25.7 | Highest — maximum headroom per gram |
-| **Honduran Mahogany** | 22.0 | High for a hardwood — surprisingly efficient |
-| **Western Red Cedar** | 21.0 | Good ratio despite low absolute MOE |
-| **Redwood** | 20.4 | Cedar-like efficiency |
-| **Alaskan Yellow Cedar** | 19.8 | Lower than expected — denser cedar |
-| **Hard Maple** | 19.1 | Dense wood, moderate efficiency |
-| **Douglas-Fir** | 18.9 | Heaviest softwood, lowest ratio |
+| **Adirondack Spruce** | 25.4 | Highest — maximum headroom per gram |
+| **Douglas-Fir** | 24.9 | Second — stiffest wood here, at a softwood density |
+| **Sitka Spruce** | 24.1 | High — the reference soundboard |
+| **Engelmann Spruce** | 22.7 | Below the other spruces — lower MOE |
+| **Western Red Cedar** | 21.5 | Good ratio despite low absolute MOE |
+| **Redwood** | 20.5 | Cedar-like efficiency |
+| **Alaskan Yellow Cedar** | 19.9 | Lower — denser cedar |
+| **Honduran Mahogany** | 19.5 | Low — heavier than spruce for less stiffness |
+| **Hard Maple** | 17.9 | Lowest — dense |
 
-The spruces and cedar dominate this metric, which explains their historical dominance as soundboard species. Mahogany's competitive E/ρ ratio (22.0) explains why it works as a top wood despite its hardwood classification.
+E/ρ is MOE (GPa) divided by density at 12% MC (g/cm³), both from FPL GTR-282. The spruces and Douglas-fir lead; the cedars and redwood sit in the middle. Mahogany (19.5) is second-lowest, so E/ρ does **not** explain why mahogany tops work — they are a voicing choice (a darker, mid-focused top), not an efficiency one. (Corrected 2026-11-15: the earlier table had no Sitka or Engelmann values, ranked Douglas-fir last and mahogany second, all from unsourced MOE values.)
 
 ### Player-Centric Selection Guide
 
@@ -187,12 +190,34 @@ The spruces and cedar dominate this metric, which explains their historical domi
 
 | Species | Missing Data |
 |---------|-------------|
-| **Sitka Spruce** | MOE, MOR, contraction values |
-| **Engelmann Spruce** | MOE, MOR, contraction values |
 | **Alaskan Yellow Cedar** | Grain description, workability, tone character, typical uses, sustainability |
 | **All species** | Speed of sound, acoustic impedance (computed, not measured) |
 
-Sitka and Engelmann spruce — two of the most important commercial tonewoods — lack MOE/MOR data in the physical properties. This is a significant gap given their primary status.
+The Sitka and Engelmann MOE, MOR and shrinkage gaps are filled from FPL GTR-282 (2026-11-15). Those values are still missing from `wood_species.json`, which this document no longer reads them from.
+
+---
+
+<a id="fpl-values"></a>
+## FPL values: sources and derivations
+
+Added 2026-11-15 (C-11). Every value comes from `docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv` (FPL GTR-282, 2021). Mechanical values are at 12% moisture content.
+
+| Species | FPL mechanical row | FPL shrinkage row |
+|---|---|---|
+| Sitka Spruce | 5-3a Spruce, Sitka | 4-3 Spruce, Sitka |
+| Adirondack Spruce | 5-3a Spruce, Red | 4-3 Spruce, Red |
+| Engelmann Spruce | 5-3a Spruce, Engelmann | 4-3 Spruce, Engelmann |
+| Western Red Cedar | 5-3a Cedar, Western redcedar | 4-3 Cedar, Western redcedar |
+| Alaskan Yellow Cedar | 5-3a Cedar, Yellow | 4-3 Cedar, Yellow |
+| Redwood | 5-3a Redwood, Old-growth | 4-3 Redwood, Old growth |
+| Honduran Mahogany | 5-5a Mahogany, true (*Swietenia macrophylla*) | 4-4 Mahogany, true |
+| Hard Maple | 5-3a Maple, Sugar | 4-3 Maple, Sugar |
+| Douglas-Fir | 5-3a Douglas-fir, Coast | 4-3 Douglas-fir, Coast |
+
+- **Janka** is FPL's side hardness at 12% MC, converted at 1 lbf = 4.448 N.
+- **Density at 12% MC** is FPL Eq. 4-14, ρ₁₂ = 1000 × G₁₂ × 1.12, with G₁₂ from Table 5-3a. Table 5-5a gives mahogany only basic specific gravity (G_b = 0.45), so its G₁₂ = 0.472 comes from FPL Eqs. 4-9 and 4-11 (S₁₂ = 7.8 × (1 − 12/30), MC_fs = 30%).
+- **Shrinkage** is green to ovendry. The earlier "Contraction" rows (e.g. Western Red Cedar 4.43/7.69, against FPL's 2.4/5.0) had no source and were replaced.
+- **MOE** in FPL comes from small clear specimens, which are stiffer than typical guitar stock with runout. Use these values to compare species, not to predict one board.
 
 ---
 
@@ -206,8 +231,8 @@ Sitka and Engelmann spruce — two of the most important commercial tonewoods �
 
 4. **Alaskan Yellow Cedar is worth investigating** — denser than Western Red, lower tearout, unexplored tonal territory.
 
-5. **Mahogany tops work** — the E/ρ ratio explains why; expect a warmer, mid-focused voice.
+5. **Mahogany tops are a voicing choice** — E/ρ is second-lowest here (19.5), so expect a warmer, mid-focused voice, not more efficiency.
 
-6. **Douglas-Fir is underrated** — abundant, sustainable, clear tone; consider for production instruments.
+6. **Douglas-Fir is underrated** — stiffest wood here with the second-highest E/ρ (24.9); abundant, sustainable, clear tone; consider for production instruments.
 
 7. **Hard Maple is for archtops** — too heavy and bright for flattops, but perfect for carved-top jazz guitars.
