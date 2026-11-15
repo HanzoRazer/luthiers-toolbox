@@ -42,7 +42,7 @@ Long format: `table, species, condition, property, value, origin`.
 - **Side hardness is the Janka test** (load perpendicular to grain), in newtons. 1 lbf = 4.448 N.
 - **Specific gravity basis:** ovendry weight and volume green or at 12% MC (footnote b). This is not density at 12% MC, so do not compare it directly with CIRAD's D12.
 - **MOE** comes from a center-loaded beam with a 14:1 span-to-depth ratio. FPL says it "can be increased by 10%" to correct for shear deflection (footnote c). The CSV has the printed value, without the 10%.
-- **Shrinkage table numbers.** In GTR-282 the shrinkage tables are 4-3 and 4-4. The CLAUDE.md source label `FPL_GTR282_table_5-3` points at Table 5-3, which is the strength table.
+- **Source labels.** Cite the exact table: `FPL_GTR282_table_4-3`, `_4-4` (shrinkage), `_5-3a`, `_5-4a`, `_5-5a` (mechanical). The old label `FPL_GTR282_table_5-3` named the strength table but was used for shrinkage; it is deprecated (CLAUDE.md, 2026-11-15), not redefined.
 
 ## Validation
 

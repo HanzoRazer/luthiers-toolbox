@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11 and its review fixes C-12, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
 
 ## Why this log exists
 
@@ -170,6 +170,12 @@ A review of PR #486 found that the C-11 checker's "0 mismatches" did not cover e
 
 Re-run result: 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells not compared (all contain the FPL value); 1,299 property cells skipped (species not mapped to FPL).
 
+### C-13 — FPL source labels made table-specific (owner ruling, 2026-11-15; resolves O-10)
+
+The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength) but was prescribed for shrinkage, which GTR-282 gives in Tables 4-3 and 4-4. Per the owner's ruling it is replaced by `FPL_GTR282_table_4-3`, `_4-4`, `_5-3a`, `_5-4a` and `_5-5a` in `CLAUDE.md` and `docs/process/wood_species_update_template.md`. The old label is listed as deprecated, not redefined. No record in `wood_species.json` or any code uses it (`git grep`), so nothing needed re-attribution. The CLAUDE.md example is now traceable: sugar maple, Table 4-3 p. 4-8 (4.8 / 9.9) and Table 5-3a G₁₂ 0.63 → 706 kg/m³ (it said 705 and "p.5-7").
+
+Not changed: the template's example shrinkage (5.0 / 3.1) matches no row of Table 4-3 or 4-4; it is an illustration, not a record.
+
 ## Open issues
 
 | ID | Issue | What fixing it needs |
@@ -178,12 +184,12 @@ Re-run result: 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cel
 | **O-02** | Per-value attribution: values for FPL-covered species are now attributable to FPL through the C-11 checker, but no document has source columns, and most values for other species are unsourced | Source columns, starting with the most-used species |
 | **O-03** | MOE values in `wood_species.json` still carry no `_source` field; the documents now use FPL MOE for FPL species, so they disagree with the JSON (e.g. Honduran mahogany 10.3 vs 11.97) | Attribute or re-source each MOE in the JSON |
 | **O-04** | ~~Shrinkage in the top-woods document; † estimates in the Angolan document~~ — resolved by C-11 | — |
-| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document | Owner decision on the blackwoods document |
+| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document. Owner ruling 2026-11-15: keep both for now; a separate reconciliation order will keep the Acacia-family document as the common reference and rewrite the blackwoods document as a focused comparison of its distinct material, with cross-links and provenance | Separate reconciliation order |
 | **O-06** | Resolved by C-11 except **Granadillo** (*Platymiscium yucatanum*) MOE ~14.5 (and its 925 kg/m³ / 2,790 lbf): no source found in FPL or the Wood Database | A published value for *P. yucatanum* |
 | **O-07** | ~~Sitka and Engelmann estimated radiation ratios~~ — resolved by C-11 | — |
 | **O-08** | No measured damping data for any species; tone descriptions are unsourced forum and builder quotes | Literature damping values (e.g. CIRAD vibration studies) or the `luthier-acoustics-data` measurements |
 | **O-09** | ~~Bagtikan CITES status~~ — resolved by C-11 (not CITES- or EU-listed) | — |
-| **O-10** | The CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table. In GTR-282 the shrinkage tables are 4-3 and 4-4 | Owner decision: correct the label in the policy |
+| **O-10** | ~~CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table~~ — resolved by C-13 (table-specific labels; old label deprecated) | — |
 | **O-11** | Specific gravity basis is unstated in every document. FPL species now show G₁₂; other species' SG has an unknown basis, sometimes in the same row | State the basis per value, or drop SG where density is given |
 
 ## Findings outside `docs/tonewood/` (reported, not changed here)

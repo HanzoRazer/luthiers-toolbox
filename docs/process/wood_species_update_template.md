@@ -77,8 +77,8 @@ All numerical fields require `_source` attribution.
   
   "contraction_tangential_pct": 5.0,
   "contraction_radial_pct": 3.1,
-  "_shrinkage_tangential_source": "FPL_GTR282_table_5-3",
-  "_shrinkage_radial_source": "FPL_GTR282_table_5-3",
+  "_shrinkage_tangential_source": "FPL_GTR282_table_4-3",
+  "_shrinkage_radial_source": "FPL_GTR282_table_4-3",
   
   "modulus_of_elasticity_gpa": 13.07,
   "modulus_of_rupture_mpa": 126.7,
@@ -93,13 +93,17 @@ All numerical fields require `_source` attribution.
 ```
 
 **Source priority**:
-1. FPL GTR-282 Table 5-3 — North American species (shrinkage, MOE, MOR, density)
+1. FPL GTR-282 — shrinkage from Tables 4-3 (domestic) / 4-4 (imported); specific gravity (→ density), MOE, MOR
+   and Janka (side hardness) from Tables 5-3a (US), 5-4a (Canadian), 5-5a (other imported). Cite the exact table
 2. Wood Database (Eric Meier) — Tropical species, comprehensive properties
 3. CIRAD — Tropical species density, volumetric shrinkage
 4. Gore & Gilet — Lutherie-specific validation
 
 **Valid _source values**:
-- `"FPL_GTR282_table_5-3"` — USDA Forest Products Lab
+- `"FPL_GTR282_table_4-3"`, `"FPL_GTR282_table_4-4"` — FPL GTR-282 shrinkage tables
+- `"FPL_GTR282_table_5-3a"`, `"FPL_GTR282_table_5-4a"`, `"FPL_GTR282_table_5-5a"` — FPL GTR-282 mechanical tables (metric)
+- `"FPL_GTR282_table_5-3"` — **deprecated 2026-11-15, do not use**: it names the strength table but was used for
+  shrinkage. Not redefined; re-attribute any value carrying it to the table it came from (see CLAUDE.md)
 - `"wood_database_meier"` — wood-database.com
 - `"CIRAD_2018"` — CIRAD wood density database
 - `"unknown_legacy"` — Unverified, flagged for follow-up

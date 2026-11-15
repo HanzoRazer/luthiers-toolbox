@@ -4,13 +4,15 @@
   "coverage_min": 0.95,
   "patch_id": "TONEWOOD_VERIFICATION_002",
   "title": "docs(tonewood): FPL GTR-282 values for covered species (tranche 2)",
-  "intent": "Tranche 2 of the tonewood library verification: add FPL GTR-282 (2021) shrinkage and mechanical tables as a reference, check every density/SG/Janka/MOE/MOR/shrinkage and derived acoustic value for FPL-covered species against it strictly, correct the documents and the prose built on the old numbers, and resolve open issues O-04, O-06 (except Granadillo), O-07 and O-09. Includes the review fixes recorded as C-12 (extractor control-character defect, strict alias resolution, range reporting, --fix re-check, PDF hash validation).",
+  "intent": "Tranche 2 of the tonewood library verification: add FPL GTR-282 (2021) shrinkage and mechanical tables as a reference, check every density/SG/Janka/MOE/MOR/shrinkage and derived acoustic value for FPL-covered species against it strictly, correct the documents and the prose built on the old numbers, and resolve open issues O-04, O-06 (except Granadillo), O-07 and O-09. Includes the review fixes recorded as C-12 (extractor control-character defect, strict alias resolution, range reporting, --fix re-check, PDF hash validation). Also applies the owner's source-label ruling (C-13): table-specific FPL_GTR282_table_4-3/4-4/5-3a/5-4a/5-5a labels in CLAUDE.md and the wood-species update template, with FPL_GTR282_table_5-3 deprecated, not redefined.",
   "change_type": "docs",
-  "behavior_change": "none - documentation, a reference CSV, and two standalone scripts under scripts/ that the application does not import. wood_species.json and every other data file, route, schema and workflow are untouched.",
+  "behavior_change": "none - documentation (including the CLAUDE.md data-policy source labels), a reference CSV, and two standalone scripts under scripts/ that the application does not import. wood_species.json and every other data file, route, schema and workflow are untouched.",
   "risk_level": "low",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/tonewood-verification-002.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
       "docs/reference/fpl-gtr282/README.md",
       "docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
       "docs/tonewood/CITES_STATUS.md",
@@ -34,6 +36,8 @@
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/tonewood-verification-002.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
       "docs/reference/fpl-gtr282/README.md",
       "docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
       "docs/tonewood/CITES_STATUS.md",
@@ -57,7 +61,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "docs/reference/fpl-gtr282 (CSV + README with SHA-256 provenance); scripts/extract_fpl_gtr282_tables.py; scripts/check_tonewood_fpl_values.py; 640 checked cells in 13 docs now equal FPL (418 + 18 rewritten by --fix, 3 out-of-range ranges and the top-woods doc by hand), prose claims rewritten where the numbers changed rankings; CITES_STATUS.md adds Bagtikan (not listed) and the 2026 EU Annex D Shorea s.l. listing; VERIFICATION_LOG.md C-11, C-12 and updated open issues.",
+    "what_changed": "docs/reference/fpl-gtr282 (CSV + README with SHA-256 provenance); scripts/extract_fpl_gtr282_tables.py; scripts/check_tonewood_fpl_values.py; 640 checked cells in 13 docs now equal FPL (418 + 18 rewritten by --fix, 3 out-of-range ranges and the top-woods doc by hand), prose claims rewritten where the numbers changed rankings; CITES_STATUS.md adds Bagtikan (not listed) and the 2026 EU Annex D Shorea s.l. listing; VERIFICATION_LOG.md C-11, C-12 and updated open issues. CLAUDE.md and docs/process/wood_species_update_template.md: FPL source labels are table-specific; the old FPL_GTR282_table_5-3 is deprecated (no data record used it).",
     "why_not_redundant": "Tranche 1 left FPL-covered species on unsourced or regression values (e.g. pignut hickory Janka 902 vs FPL 2,136 lbf; mahogany MOE 11.97 vs 10.3) and several rankings were wrong as a result. The checker makes the FPL attribution re-runnable."
   },
   "verification": {
@@ -71,7 +75,8 @@
       "wood-database.com: ovangkol Janka 1,330 lbf; guanacaste 470 lbf; african-padauk 1,710 lbf; no page for Platymiscium yucatanum",
       "negative control: extractor with one byte appended to 62244.pdf -> SHA-256 MISMATCH, no CSV written, exit 1",
       "negative control: checker with the mora alias pointed at 'Mora (Mor spp.)' -> 'no FPL row', nothing checked, exit 1",
-      "negative control: --fix with a no-op rewriter and a perturbed FPL value -> re-check reports 7 mismatches, exit 1; docs byte-identical"
+      "negative control: --fix with a no-op rewriter and a perturbed FPL value -> re-check reports 7 mismatches, exit 1; docs byte-identical",
+      "git grep FPL_GTR282_table_5-3 -> only CLAUDE.md, the template, and the docs that describe the deprecation; 0 uses in wood_species.json or code"
     ]
   },
   "files": [
@@ -80,6 +85,18 @@
       "intent": "Per-PR CBSP21 manifest.",
       "risk": "low",
       "behavior_change": "None (documentation / standalone script)."
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Data policy: FPL source labels made table-specific (4-3, 4-4, 5-3a, 5-4a, 5-5a); FPL_GTR282_table_5-3 deprecated, not redefined; example made traceable (owner ruling, VERIFICATION_LOG C-13).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/process/wood_species_update_template.md",
+      "intent": "Same label change in the wood-species update template (owner ruling, VERIFICATION_LOG C-13).",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
     },
     {
       "path": "docs/reference/fpl-gtr282/README.md",
