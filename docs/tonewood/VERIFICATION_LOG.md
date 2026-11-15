@@ -117,6 +117,17 @@ Owner decision 2026-11-14: keep one document as canonical rather than merge. `to
 
 ---
 
+### C-10 — Review fixes to this tranche (2026-11-15)
+
+A review of PR #484 found four defects, three of them introduced or left behind by the corrections above:
+
+- **Mugavu given Khaya's CITES listing.** The C-06 edit to `tonewood_comparison_african_hardwoods_mugavu.md` replaced a correct "Not CITES-listed" bullet for Mugavu (*Albizia coriaria*) with African *Khaya*'s Appendix II (#17) text. The same document (summary and properties tables) and the Angolan document's status table already said "not listed". Reverted.
+- **"Acquire stock before CoP20"** survived in the Kibaba notes of `tonewood_comparison_african_hardwoods_angolan_species.md`, right under the corrected status line. Removed; the sources table now notes that CoP20 had no *Entandrophragma* proposal.
+- **Mora "39 CIRAD specimens"** (two places in `tonewood_cites_alternatives_rosewood_ebony_range.md`). 39 is the S (fibre saturation) value of the single *Mora excelsa* row, not a count. CIRAD holds 1 *M. excelsa* and 10 *M. paraensis* specimens.
+- **README overstated the checker.** It said the script checks "every" D12/N citation. It checks only table rows with an italic binomial and a single D12 value, plus "N specimens" written exactly that way, which is why the Mora count got through. The README now states the limit.
+
+Re-check: `grep -rn "39 CIRAD\|before CoP20" docs/tonewood` finds only this log and `CITES_STATUS.md`; no other prose "N CIRAD specimens" claim remains; the checker still reports 0 mismatches.
+
 ## Open issues (not fixed in this tranche)
 
 | ID | Issue | What fixing it needs |

@@ -152,7 +152,7 @@ These seven species span a 360 kg/m³ density range — from lightweight Khaya (
 
 - **19% denser than Sapele** — more mass, more sustain potential
 - **14% lighter than Bubinga** — easier to work, lighter instruments
-- **CITES Appendix II** (African *Khaya*, annotation #17, since 2023-02-23) — permits needed for logs, sawn wood and blanks; finished instruments not covered — see [CITES_STATUS.md](CITES_STATUS.md) (corrected 2026-11-14)
+- **Not CITES-listed** — no permit burden for export (*Albizia* is not among the listed taxa in [CITES_STATUS.md](CITES_STATUS.md); a 2026-11-14 edit wrongly gave Mugavu African *Khaya*'s Appendix II listing — reverted 2026-11-15, C-10)
 - **Abundant East African supply** — Uganda, Kenya, Tanzania
 - **Existing export infrastructure** — European furniture market already uses it
 

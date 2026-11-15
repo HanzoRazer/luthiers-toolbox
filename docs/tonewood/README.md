@@ -70,4 +70,4 @@ Comparative analyses of wood species for lutherie applications.
 ## Tools
 
 - `scripts/gen_cirad_high_density_catalog.py` — regenerates the CIRAD high-density catalog from the CSV
-- `scripts/check_tonewood_cirad_citations.py` — checks every CIRAD D12/N citation in this folder against the CSV (`--fix` rewrites mismatches)
+- `scripts/check_tonewood_cirad_citations.py` — checks CIRAD D12/N citations against the CSV (`--fix` rewrites mismatches). Coverage is partial: only table rows that name an italic binomial and give a single D12 value, plus "N specimens" written exactly that way. Ranges and prose counts such as "39 CIRAD specimens" are not checked, so "0 mismatches" is not a full audit (see `VERIFICATION_LOG.md`, C-05 and C-10)

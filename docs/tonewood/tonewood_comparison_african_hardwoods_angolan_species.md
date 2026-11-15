@@ -275,7 +275,7 @@
 | Tone Character | warm, similar to Utile — softer mahogany character |
 | Sustainability | Not CITES-listed; **EU Annex D** (monitoring). The EU's *Entandrophragma* proposal was postponed to CoP21 (2028) — see [CITES_STATUS.md](CITES_STATUS.md) |
 
-**Notes:** Sapele's lighter, softer sibling. The least exploited *Entandrophragma*, which preserved supply. At 580 kg/m³ and Janka 940, it's closer to Utile than Sapele in hardness. "Kibaba" is the Angolan trade name. **Acquire stock before CoP20** — all *Entandrophragma* species proposed for Appendix II listing.
+**Notes:** Sapele's lighter, softer sibling. The least exploited *Entandrophragma*, which preserved supply. At 580 kg/m³ and Janka 940, it's closer to Utile than Sapele in hardness. "Kibaba" is the Angolan trade name. Not CITES-listed; EU Annex D only. The EU's *Entandrophragma* proposal was postponed to CoP21 (2028), so there is no listing deadline to buy ahead of (obsolete "acquire stock before CoP20" advice removed 2026-11-15, C-10 — see [CITES_STATUS.md](CITES_STATUS.md)).
 
 ---
 
@@ -550,5 +550,5 @@
 | PROTA/PlantUse | Vernacular names, distribution |
 | ITTO Tropical Timber | Trade names, applications |
 | CITES Checklist (2026-04-30) | Current listings |
-| CITES CoP20 Proposals | Proposed listings |
+| CITES CoP20 Proposals | Proposed listings (no *Entandrophragma* proposal — see [CITES_STATUS.md](CITES_STATUS.md)) |
 | East African Forestry Data | Mugavu SG/density verification |
