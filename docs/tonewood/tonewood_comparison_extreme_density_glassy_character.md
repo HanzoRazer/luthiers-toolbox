@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0
 > **Generated:** 2026-06-22
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison catalogs woods in the African Blackwood density class (≥950 kg/m³) — the extreme-density species that produce "glassy," "steely," or "bell-like" tonal character due to high acoustic impedance and low internal damping.
 
 ---
@@ -80,23 +82,23 @@ Growing adoption, some builder experience, acoustic properties documented or inf
 
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
-| **African Blackwood** | 1,270 | 1,960 | 17.95 | *Dalbergia melanoxylon* | East Africa |
-| **Lignum Vitae** | 1,260 | 1,932 | 17.11 | *Guaiacum officinale* | Caribbean, C. America |
-| **Leadwood** | 1,220 | 1,820 | 17.20 | *Combretum imberbe* | Southern Africa |
-| **Snakewood** | 1,210 | 1,792 | 23.20 | *Brosimum guianense* | South America |
-| **Pau Santo** | 1,115 | 1,541 | 17.85 | — | Brazil |
-| **Cumaru** | 1,085 | 1,465 | 22.33 | *Dipteryx odorata* | South America |
-| **Mopane** | 1,075 | 1,440 | 13.22 | *Colophospermum mopane* | Southern Africa |
-| **Bloodwood** | 1,050 | 1,379 | 20.78 | *Brosimum rubescens* | South America |
-| **Pink Ivory** | 1,035 | 1,342 | 15.12 | *Berchemia zeyheri* | Southern Africa |
-| **Siamese Rosewood** | 1,035 | 1,342 | 16.38 | *Dalbergia cochinchinensis* | SE Asia |
-| **Curupay** | 1,025 | 1,318 | 18.04 | *Anadenanthera colubrina* | South America |
-| **Mora** | 1,015 | 1,295 | 19.24 | *Mora excelsa* | South America |
-| **Greenheart** | 1,010 | 1,283 | 24.64 | *Chlorocardium rodiei* | Guyana |
-| **Marblewood** | 1,005 | 1,271 | 19.43 | *Marmaroxylon racemosum* | South America |
-| **Olive** | 980 | 1,213 | 12.39 | *Olea europaea* | Mediterranean |
-| **Black Palm** | 970 | 1,191 | 15.60 | *Borassus flabellifer* | SE Asia, Africa |
-| **Texas Ebony** | 965 | 1,179 | 16.54 | *Ebenopsis ebano* | Texas, Mexico |
+| **African Blackwood** | 1,270 | 1,960 ᵉ | 17.95 | *Dalbergia melanoxylon* | East Africa |
+| **Lignum Vitae** | 1,260 | 1,932 ᵉ | 17.11 | *Guaiacum officinale* | Caribbean, C. America |
+| **Leadwood** | 1,220 | 1,820 ᵉ | 17.20 | *Combretum imberbe* | Southern Africa |
+| **Snakewood** | 1,210 | 1,792 ᵉ | 23.20 | *Brosimum guianense* | South America |
+| **Pau Santo** | 1,115 | 1,541 ᵉ | 17.85 | — | Brazil |
+| **Cumaru** | 1,085 | 1,465 ᵉ | 22.33 | *Dipteryx odorata* | South America |
+| **Mopane** | 1,075 | 1,440 ᵉ | 13.22 | *Colophospermum mopane* | Southern Africa |
+| **Bloodwood** | 1,050 | 1,379 ᵉ | 20.78 | *Brosimum rubescens* | South America |
+| **Pink Ivory** | 1,035 | 1,342 ᵉ | 15.12 | *Berchemia zeyheri* | Southern Africa |
+| **Siamese Rosewood** | 1,035 | 1,342 ᵉ | 16.38 | *Dalbergia cochinchinensis* | SE Asia |
+| **Curupay** | 1,025 | 1,318 ᵉ | 18.04 | *Anadenanthera colubrina* | South America |
+| **Mora** | 1,015 | 1,295 ᵉ | 19.24 | *Mora excelsa* | South America |
+| **Greenheart** | 1,010 | 1,283 ᵉ | 24.64 | *Chlorocardium rodiei* | Guyana |
+| **Marblewood** | 1,005 | 1,271 ᵉ | 19.43 | *Marmaroxylon racemosum* | South America |
+| **Olive** | 980 | 1,213 ᵉ | 12.39 | *Olea europaea* | Mediterranean |
+| **Black Palm** | 970 | 1,191 ᵉ | 15.60 | *Borassus flabellifer* | SE Asia, Africa |
+| **Texas Ebony** | 965 | 1,179 ᵉ | 16.54 | *Ebenopsis ebano* | Texas, Mexico |
 
 ### Notable Emerging Species
 
@@ -120,63 +122,63 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
-| **Waddywood** | 1,430 | 2,441 | 21.50 | — | Australia |
-| **Black Ironwood** | 1,355 | 2,210 | 20.46 | — | Florida, Caribbean |
-| **Soto** | 1,280 | 1,989 | 15.69 | — | South America |
-| **Itin** | 1,275 | 1,974 | 17.38 | — | South America |
-| **Endra Endra** | 1,240 | 1,875 | 20.69 | — | — |
-| **Willow Leaf Red Quebracho** | 1,210 | 1,792 | 15.12 | — | South America |
-| **Quebracho** | 1,205 | 1,779 | 14.58 | — | South America |
-| **Argentine Lignum Vitae** | 1,200 | 1,765 | 18.05 | — | Argentina |
+| **Waddywood** | 1,430 | 2,441 ᵉ | 21.50 | — | Australia |
+| **Black Ironwood** | 1,355 | 2,210 ᵉ | 20.46 | — | Florida, Caribbean |
+| **Soto** | 1,280 | 1,989 ᵉ | 15.69 | — | South America |
+| **Itin** | 1,275 | 1,974 ᵉ | 17.38 | — | South America |
+| **Endra Endra** | 1,240 | 1,875 ᵉ | 20.69 | — | — |
+| **Willow Leaf Red Quebracho** | 1,210 | 1,792 ᵉ | 15.12 | — | South America |
+| **Quebracho** | 1,205 | 1,779 ᵉ | 14.58 | — | South America |
+| **Argentine Lignum Vitae** | 1,200 | 1,765 ᵉ | 18.05 | — | Argentina |
 
 ### Very Dense (1,100–1,199 kg/m³)
 
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
-| **Brown Ebony** | 1,160 | 1,658 | 18.70 | — | — |
-| **Gidgee** | 1,150 | 1,631 | 18.50 | — | Australia |
-| **Coolibah** | 1,130 | 1,579 | 17.24 | — | Australia |
-| **Gray Box** | 1,120 | 1,553 | 18.01 | — | Australia |
-| **Preciosa** | 1,100 | 1,502 | 17.56 | — | — |
-| **Yellow Lapacho** | 1,100 | 1,502 | 15.53 | — | South America |
+| **Brown Ebony** | 1,160 | 1,658 ᵉ | 18.70 | — | — |
+| **Gidgee** | 1,150 | 1,631 ᵉ | 18.50 | — | Australia |
+| **Coolibah** | 1,130 | 1,579 ᵉ | 17.24 | — | Australia |
+| **Gray Box** | 1,120 | 1,553 ᵉ | 18.01 | — | Australia |
+| **Preciosa** | 1,100 | 1,502 ᵉ | 17.56 | — | — |
+| **Yellow Lapacho** | 1,100 | 1,502 ᵉ | 15.53 | — | South America |
 
 ### Dense (1,000–1,099 kg/m³)
 
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
-| **Amazon Rosewood** | 1,085 | 1,465 | 12.90 | — | South America |
-| **Australian Buloke** | 1,085 | 1,465 | 18.50 | *Allocasuarina luehmannii* | Australia |
-| **Bulletwood** | 1,080 | 1,452 | 23.06 | — | South America |
-| **Wamara** | 1,080 | 1,452 | 24.38 | — | South America |
-| **Yellow Box** | 1,075 | 1,440 | 14.00 | — | Australia |
-| **Angelim Vermelho** | 1,070 | 1,428 | 19.39 | — | South America |
-| **Ekki** | 1,065 | 1,415 | 18.99 | — | West Africa |
-| **Burmese Blackwood** | 1,060 | 1,403 | 11.03 | — | Myanmar |
-| **Brazilwood** | 1,050 | 1,379 | 20.20 | *Paubrasilia echinata* | Brazil |
-| **Raspberry Jam** | 1,040 | 1,354 | 18.50 | — | Australia |
-| **Sapodilla** | 1,040 | 1,354 | 20.41 | — | Central America |
-| **Pau Rosa** | 1,030 | 1,330 | 17.10 | — | Brazil |
-| **Nandubay** | 1,015 | 1,295 | 9.79 | — | South America |
-| **Chichipate** | 1,005 | 1,271 | 20.39 | — | Central America |
-| **Live Oak** | 1,000 | 1,260 | 13.52 | *Quercus virginiana* | SE United States |
-| **Sneezewood** | 1,000 | 1,260 | 17.70 | — | Southern Africa |
+| **Amazon Rosewood** | 1,085 | 1,465 ᵉ | 12.90 | — | South America |
+| **Australian Buloke** | 1,085 | 1,465 ᵉ | 18.50 | *Allocasuarina luehmannii* | Australia |
+| **Bulletwood** | 1,080 | 1,452 ᵉ | 23.06 | — | South America |
+| **Wamara** | 1,080 | 1,452 ᵉ | 24.38 | — | South America |
+| **Yellow Box** | 1,075 | 1,440 ᵉ | 14.00 | — | Australia |
+| **Angelim Vermelho** | 1,070 | 1,428 ᵉ | 19.39 | — | South America |
+| **Ekki** | 1,065 | 1,415 ᵉ | 18.99 | — | West Africa |
+| **Burmese Blackwood** | 1,060 | 1,403 ᵉ | 11.03 | — | Myanmar |
+| **Brazilwood** | 1,050 | 1,379 ᵉ | 20.20 | *Paubrasilia echinata* | Brazil |
+| **Raspberry Jam** | 1,040 | 1,354 ᵉ | 18.50 | — | Australia |
+| **Sapodilla** | 1,040 | 1,354 ᵉ | 20.41 | — | Central America |
+| **Pau Rosa** | 1,030 | 1,330 ᵉ | 17.10 | — | Brazil |
+| **Nandubay** | 1,015 | 1,295 ᵉ | 9.79 | — | South America |
+| **Chichipate** | 1,005 | 1,271 ᵉ | 20.39 | — | Central America |
+| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | *Quercus virginiana* | SE United States |
+| **Sneezewood** | 1,000 | 1,260 ᵉ | 17.70 | — | Southern Africa |
 
 ### High-End Candidates (950–999 kg/m³)
 
 | Species | Density | Janka | MOE | Scientific Name | Region |
 |---------|:-------:|:-----:|:---:|-----------------|--------|
-| **Jucaro** | 990 | 1,236 | 16.42 | — | Caribbean |
-| **Smooth Barked Apple** | 990 | 1,236 | 16.00 | — | Australia |
-| **Lancewood** | 980 | 1,213 | 20.00 | — | — |
-| **East African Olive** | 975 | 1,202 | 17.77 | — | East Africa |
-| **East Indian Satinwood** | 970 | 1,191 | 14.01 | — | India, Sri Lanka |
-| **Beefwood** | 965 | 1,179 | 14.00 | — | Australia |
-| **Boxwood** | 965 | 1,179 | 12.27 | *Buxus sempervirens* | Europe, W. Asia |
-| **Holm Oak** | 960 | 1,168 | 13.41 | — | Mediterranean |
-| **Pink Lapacho** | 960 | 1,168 | 19.13 | — | South America |
-| **Tambootie** | 955 | 1,157 | 9.08 | — | Southern Africa |
-| **Lemon Scented Gum** | 950 | 1,146 | 16.66 | — | Australia |
-| **Macacauba** | 950 | 1,146 | 19.56 | — | South America |
+| **Jucaro** | 990 | 1,236 ᵉ | 16.42 | — | Caribbean |
+| **Smooth Barked Apple** | 990 | 1,236 ᵉ | 16.00 | — | Australia |
+| **Lancewood** | 980 | 1,213 ᵉ | 20.00 | — | — |
+| **East African Olive** | 975 | 1,202 ᵉ | 17.77 | — | East Africa |
+| **East Indian Satinwood** | 970 | 1,191 ᵉ | 14.01 | — | India, Sri Lanka |
+| **Beefwood** | 965 | 1,179 ᵉ | 14.00 | — | Australia |
+| **Boxwood** | 965 | 1,179 ᵉ | 12.27 | *Buxus sempervirens* | Europe, W. Asia |
+| **Holm Oak** | 960 | 1,168 ᵉ | 13.41 | — | Mediterranean |
+| **Pink Lapacho** | 960 | 1,168 ᵉ | 19.13 | — | South America |
+| **Tambootie** | 955 | 1,157 ᵉ | 9.08 | — | Southern Africa |
+| **Lemon Scented Gum** | 950 | 1,146 ᵉ | 16.66 | — | Australia |
+| **Macacauba** | 950 | 1,146 ᵉ | 19.56 | — | South America |
 
 ---
 
@@ -241,7 +243,7 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 |---------|:-------:|-------|
 | Lignum Vitae | 1,260 | Caribbean origin, Asian cultivation |
 | Burmese Blackwood | 1,060 | Myanmar; lower MOE |
-| Siamese Rosewood | 1,035 | CITES Appendix I |
+| Siamese Rosewood | 1,035 | CITES Appendix II (not I) |
 | Black Palm | 970 | SE Asia, Africa |
 | East Indian Satinwood | 970 | India, Sri Lanka |
 
@@ -393,54 +395,58 @@ The "African Blackwood class" is not a single species — it's a physical proper
 
 The CIRAD wood density database (Vieilledent et al. 2018) provides measured D12 values for 4,022 specimens across 872 species. Cross-referencing identifies additional ultra-dense species not in the primary wood database.
 
-### CIRAD Ultra-Dense Species (D12 ≥ 1.20 g/cm³)
+### CIRAD Ultra-Dense Candidates
+
+> Taxa were originally picked because one specimen reached D12 ≥ 1.20. The D12 column now shows the **mean over all CIRAD specimens** (corrected 2026-11-14, `VERIFICATION_LOG.md` C-05), so several fall below 1.20.
 
 | D12 | Taxa | Family | Region | Notes |
 |:---:|------|--------|--------|-------|
-| **1.33** | *Chrysophyllum prieurii* | Sapotaceae | French Guiana | Ties African Blackwood for densest |
-| **1.33** | *Dalbergia melanoxylon* | Leguminosae | Tanzania, Senegal | **African Blackwood** — confirmed |
+| **1.20** | *Chrysophyllum prieurii* | Sapotaceae | French Guiana | Heaviest single CIRAD specimen (1.33), but mean of 4 is 1.20 |
+| **1.29** | *Dalbergia melanoxylon* | Leguminosae | Tanzania, Senegal | **African Blackwood** — 2 specimens (1.25, 1.33); consistent with database 1,270 |
 | 1.32 | *Mezilaurus sp* | Lauraceae | Brazil | Unexplored |
-| 1.31 | *Bocoa prouacensis* | Leguminosae | French Guiana | 8 specimens, consistent |
-| 1.29 | *Brosimum rubescens* | Moraceae | Brazil | **Bloodwood** — confirmed |
-| 1.29 | *Swartzia panacoco* | Leguminosae | Brazil | 6 specimens; Wamara relative |
+| 1.22 | *Bocoa prouacensis* | Leguminosae | French Guiana | 11 specimens, consistent |
+| 1.10 | *Brosimum rubescens* | Moraceae | Brazil | **Bloodwood** — mean of 7 is 1.10 (range 0.97–1.29); database 1,050 |
+| 1.20 | *Swartzia panacoco* | Leguminosae | Brazil | 10 specimens; Wamara relative |
 | 1.28 | *Humbertia madagascariensis* | Convolvulaceae | Madagascar | Unique family |
 | 1.24 | *Platymiscium trinitatis* | Leguminosae | Brazil | Related to Granadillo |
-| 1.23 | *Erythrophleum chlorostachys* | Leguminosae | Australia | **Ironwood** — unexplored |
-| 1.23 | *Licaria canella* | Lauraceae | Brazil | Cinnamon family |
-| 1.22 | *Aniba canellila* | Lauraceae | Brazil | Rosewood oil tree |
-| 1.21 | *Acacia shirleyi* | Leguminosae | Australia | **Shirley's Wattle** — unexplored |
+| 1.20 | *Erythrophleum chlorostachys* | Leguminosae | Australia | **Ironwood** — unexplored |
+| 1.05 | *Licaria canella* | Lauraceae | Brazil | Cinnamon family |
+| 1.12 | *Aniba canellila* | Lauraceae | Brazil | Rosewood oil tree |
+| 1.17 | *Acacia shirleyi* | Leguminosae | Australia | **Shirley's Wattle** — unexplored |
 | 1.21 | *Gymnostoma nodiflorum* | Casuarinaceae | New Caledonia | She-oak relative |
 | 1.20 | *Swartzia ingaefolia* | Leguminosae | Brazil | Katalox relative |
 
-### CIRAD Family Distribution (≥950 kg/m³)
+### CIRAD Family Distribution (mean D12 ≥ 0.95)
 
-| Family | Species Count | Max D12 | Key Genera |
+Counts follow the regenerated `tonewood_catalog_cirad_high_density.md` (corrected 2026-11-14, `VERIFICATION_LOG.md` C-05).
+
+| Family | Taxa | Highest mean D12 | Key Genera |
 |--------|:-------------:|:-------:|------------|
-| **Leguminosae** | 64 | 1.33 | Dalbergia, Swartzia, Bocoa, Dipteryx, Hymenaea |
-| **Sapotaceae** | 27 | 1.33 | Chrysophyllum, Manilkara |
-| **Myrtaceae** | 17 | 1.13 | Eucalyptus |
-| **Chrysobalanaceae** | 12 | 1.13 | Licania |
-| **Lecythidaceae** | 10 | 1.14 | Lecythis, Eschweilera |
-| **Lauraceae** | 8 | 1.32 | Mezilaurus, Licaria, Aniba |
-| **Bignoniaceae** | 5 | 1.19 | Handroanthus (Ipe), Tabebuia |
-| **Casuarinaceae** | 4 | 1.21 | Gymnostoma, Allocasuarina |
+| **Leguminosae** | 44 | 1.29 | Dalbergia, Swartzia, Bocoa, Dipteryx, Hymenaea |
+| **Sapotaceae** | 24 | 1.20 | Chrysophyllum, Manilkara |
+| **Myrtaceae** | 9 | 1.10 | Eucalyptus, Xanthomyrtus |
+| **Chrysobalanaceae** | 11 | 1.13 | Licania |
+| **Lecythidaceae** | 9 | 1.14 | Lecythis, Eschweilera |
+| **Lauraceae** | 7 | 1.31 | Mezilaurus, Licaria, Aniba |
+| **Bignoniaceae** | 4 | 1.14 | Phyllarthron, Handroanthus (Ipe) |
+| **Casuarinaceae** | 2 | 1.21 | Gymnostoma, Casuarina |
 
 ### High-Priority CIRAD Candidates for Lutherie Investigation
 
 | Species | D12 | Family | Why Investigate |
 |---------|:---:|--------|-----------------|
-| *Bocoa prouacensis* | 1.31 | Leguminosae | 8 specimens, consistent density; French Guiana supply |
-| *Swartzia panacoco* | 1.29 | Leguminosae | Wamara relative; known timber trade |
-| *Erythrophleum chlorostachys* | 1.23 | Leguminosae | Australian domestic; no CITES |
-| *Acacia shirleyi* | 1.21 | Leguminosae | Australian domestic; sustainable |
+| *Bocoa prouacensis* | 1.22 | Leguminosae | 11 specimens, consistent density; French Guiana supply |
+| *Swartzia panacoco* | 1.20 | Leguminosae | Wamara relative; known timber trade |
+| *Erythrophleum chlorostachys* | 1.20 | Leguminosae | Australian domestic; no CITES |
+| *Acacia shirleyi* | 1.17 | Leguminosae | Australian domestic; sustainable |
 | *Platymiscium trinitatis* | 1.24 | Leguminosae | Granadillo relative; known fretboard use |
-| *Licaria canella* | 1.23 | Lauraceae | Brazilian; laurel family (aromatic) |
+| *Licaria canella* | 1.05 | Lauraceae | Brazilian; laurel family (aromatic) |
 
 ### CIRAD vs Wood Database Comparison
 
 | Metric | CIRAD (≥950 kg/m³) | Wood Database (≥950 kg/m³) |
 |--------|:------------------:|:--------------------------:|
-| Total taxa | 217 | 65 |
+| Total taxa | 157 (by mean; 217 if any one specimen counts) | 65 |
 | With measured data | 217 | 65 |
 | Lutherie-characterized | ~5 | 22 |
 | Leguminosae species | 64 | ~15 |

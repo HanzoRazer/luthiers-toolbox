@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + `luthier_tonewood_reference.json` v1.0.0
 > **Generated:** 2026-04-09
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison covers the primary and alternative soundboard woods for acoustic guitars: three spruces (Sitka, Adirondack, Engelmann), two cedars (Western Red, Alaskan Yellow), redwood, and three unconventional top choices (mahogany, maple, Douglas-fir).
 
 ---
@@ -15,7 +17,7 @@ This comparison covers the primary and alternative soundboard woods for acoustic
 | **Adirondack Spruce** | Primary | 435 | 560 | Powerful, headroom, loud — the pre-war dreadnought tonewood | Limited supply — slow-growing |
 | **Engelmann Spruce** | Primary | 385 | 390 | Warm, responsive, lower overtones than Sitka | Sustainable |
 | **Western Red Cedar** | Primary | 370 | 350 | Warm, dark, immediate response | Sustainable |
-| **Alaskan Yellow Cedar** | Exploratory | 495 | 343 | *(not yet characterized)* | *(not yet characterized)* |
+| **Alaskan Yellow Cedar** | Exploratory | 495 | 343 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
 | **Redwood (Old Growth)** | Established | 420 | 420 | Warm, dark, cedar-like response | Old growth restricted — salvage only |
 | **Honduran Mahogany** | Primary | 545 | 800 | Warm, balanced, good sustain | CITES Appendix II |
 | **Hard Maple** | Primary | 705 | 1,450 | Bright, articulate, snappy | Sustainable |

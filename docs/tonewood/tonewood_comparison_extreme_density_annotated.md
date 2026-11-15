@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + CIRAD Wood Density Database (Vieilledent et al. 2018)
 > **Generated:** 2026-06-22
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison catalogs the "glassy character" tonewoods — species at or above African Blackwood density (1,270 kg/m³) and the broader extreme-density band (≥1,000 kg/m³). Includes full physical, acoustic, thermal, and CNC properties.
 
 ---
@@ -41,30 +43,30 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 
 | Species | Density | Janka | MOE | Region | Status |
 |---------|:-------:|:-----:|:---:|--------|--------|
-| **African Blackwood** | 1,270 | 1,960 | 17.95 | East Africa | The benchmark |
-| **Lignum Vitae** | 1,260 | 1,932 | 17.11 | Caribbean | Traditional; oily |
-| **Leadwood** | 1,220 | 1,820 | 17.20 | Southern Africa | Heavy; slow growth |
-| **Snakewood** | 1,210 | 1,792 | 23.20 | South America | Exotic figuring |
-| **Pau Santo** | 1,115 | 1,541 | 17.85 | Brazil | Limited data |
-| **Cumaru** | 1,085 | 1,465 | 22.33 | South America | Very stiff |
-| **Mopane** | 1,075 | 1,440 | 13.22 | Southern Africa | African instruments |
-| **Bloodwood** | 1,050 | 1,379 | 20.78 | South America | Vivid red |
-| **Pink Ivory** | 1,035 | 1,342 | 15.12 | Southern Africa | Pink/red; rare |
-| **Siamese Rosewood** | 1,035 | 1,342 | 16.38 | SE Asia | CITES I |
-| **Greenheart** | 1,010 | 1,283 | 24.64 | Guyana | Highest MOE |
-| **Marblewood** | 1,005 | 1,271 | 19.43 | South America | Distinctive veining |
+| **African Blackwood** | 1,270 | 1,960 ᵉ | 17.95 | East Africa | The benchmark |
+| **Lignum Vitae** | 1,260 | 1,932 ᵉ | 17.11 | Caribbean | Traditional; oily |
+| **Leadwood** | 1,220 | 1,820 ᵉ | 17.20 | Southern Africa | Heavy; slow growth |
+| **Snakewood** | 1,210 | 1,792 ᵉ | 23.20 | South America | Exotic figuring |
+| **Pau Santo** | 1,115 | 1,541 ᵉ | 17.85 | Brazil | Limited data |
+| **Cumaru** | 1,085 | 1,465 ᵉ | 22.33 | South America | Very stiff |
+| **Mopane** | 1,075 | 1,440 ᵉ | 13.22 | Southern Africa | African instruments |
+| **Bloodwood** | 1,050 | 1,379 ᵉ | 20.78 | South America | Vivid red |
+| **Pink Ivory** | 1,035 | 1,342 ᵉ | 15.12 | Southern Africa | Pink/red; rare |
+| **Siamese Rosewood** | 1,035 | 1,342 ᵉ | 16.38 | SE Asia | CITES II (not I) |
+| **Greenheart** | 1,010 | 1,283 ᵉ | 24.64 | Guyana | Highest MOE |
+| **Marblewood** | 1,005 | 1,271 ᵉ | 19.43 | South America | Distinctive veining |
 
 ### Tier 3: High-Potential Unexplored
 
 | Species | Density | Janka | MOE | Region | Why Investigate |
 |---------|:-------:|:-----:|:---:|--------|-----------------|
-| **Waddywood** | 1,430 | 2,441 | 21.50 | Australia | Densest in database |
-| **Black Ironwood** | 1,355 | 2,210 | 20.46 | Florida/Caribbean | US domestic option |
-| **Gidgee** | 1,150 | 1,631 | 18.50 | Australia | Acacia; sustainable |
-| **Australian Buloke** | 1,085 | 1,465 | 18.50 | Australia | Hardest Australian |
-| **Wamara** | 1,080 | 1,452 | 24.38 | South America | Second highest MOE |
-| **Bulletwood** | 1,080 | 1,452 | 23.06 | South America | Very stiff |
-| **Live Oak** | 1,000 | 1,260 | 13.52 | SE United States | Domestic; abundant |
+| **Waddywood** | 1,430 | 2,441 ᵉ | 21.50 | Australia | Densest in database |
+| **Black Ironwood** | 1,355 | 2,210 ᵉ | 20.46 | Florida/Caribbean | US domestic option |
+| **Gidgee** | 1,150 | 1,631 ᵉ | 18.50 | Australia | Acacia; sustainable |
+| **Australian Buloke** | 1,085 | 1,465 ᵉ | 18.50 | Australia | Hardest Australian |
+| **Wamara** | 1,080 | 1,452 ᵉ | 24.38 | South America | Second highest MOE |
+| **Bulletwood** | 1,080 | 1,452 ᵉ | 23.06 | South America | Very stiff |
+| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | SE United States | Domestic; abundant |
 
 ---
 
@@ -72,33 +74,33 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 
 | Species | Scientific Name | SG | Density | Janka (lbf) | Janka (N) | MOE (GPa) | MOR (MPa) |
 |---------|-----------------|:--:|:-------:|:-----------:|:---------:|:---------:|:---------:|
-| Waddywood | — | 1.43 | 1,430 | 2,441 | 10,858 | 21.50 | 150.0 |
-| Black Ironwood | — | 1.35 | 1,355 | 2,210 | 9,831 | 20.46 | 125.5 |
-| **African Blackwood** | *Dalbergia melanoxylon* | 1.27 | 1,270 | 1,960 | 8,719 | 17.95 | 213.6 |
-| Lignum Vitae | *Guaiacum officinale* | 1.26 | 1,260 | 1,932 | 8,594 | 17.11 | 125.4 |
-| Leadwood | *Combretum imberbe* | 1.22 | 1,220 | 1,820 | 8,096 | 17.20 | 144.5 |
-| Snakewood | *Brosimum guianense* | 1.21 | 1,210 | 1,792 | 7,971 | 23.20 | 164.6 |
-| Gidgee | — | 1.15 | 1,150 | 1,631 | 7,254 | 18.50 | 135.0 |
+| Waddywood | — | 1.43 | 1,430 | 2,441 ᵉ | 10,858 | 21.50 | 150.0 |
+| Black Ironwood | — | 1.35 | 1,355 | 2,210 ᵉ | 9,831 | 20.46 | 125.5 |
+| **African Blackwood** | *Dalbergia melanoxylon* | 1.27 | 1,270 | 1,960 ᵉ | 8,719 | 17.95 | 213.6 |
+| Lignum Vitae | *Guaiacum officinale* | 1.26 | 1,260 | 1,932 ᵉ | 8,594 | 17.11 | 125.4 |
+| Leadwood | *Combretum imberbe* | 1.22 | 1,220 | 1,820 ᵉ | 8,096 | 17.20 | 144.5 |
+| Snakewood | *Brosimum guianense* | 1.21 | 1,210 | 1,792 ᵉ | 7,971 | 23.20 | 164.6 |
+| Gidgee | — | 1.15 | 1,150 | 1,631 ᵉ | 7,254 | 18.50 | 135.0 |
 | **Macassar Ebony** | *Diospyros celebica* | 1.09 | 1,120 | 3,220 | 14,323 | — | — |
-| Pau Santo | — | 1.11 | 1,115 | 1,541 | 6,854 | 17.85 | 127.4 |
+| Pau Santo | — | 1.11 | 1,115 | 1,541 ᵉ | 6,854 | 17.85 | 127.4 |
 | **Ipe** | *Handroanthus spp.* | 1.08 | 1,100 | 3,510 | 15,613 | 16.70 | — |
 | **Cocobolo** | *Dalbergia retusa* | 1.10 | 1,095 | 2,960 | 13,167 | — | — |
-| Cumaru | *Dipteryx odorata* | 1.08 | 1,085 | 1,465 | 6,515 | 22.33 | 175.3 |
-| Australian Buloke | *Allocasuarina luehmannii* | 1.08 | 1,085 | 1,465 | 6,515 | 18.50 | 125.0 |
-| Wamara | — | 1.08 | 1,080 | 1,452 | 6,458 | 24.38 | 148.5 |
-| Bulletwood | — | 1.08 | 1,080 | 1,452 | 6,458 | 23.06 | 168.7 |
-| Mopane | *Colophospermum mopane* | 1.07 | 1,075 | 1,440 | 6,405 | 13.22 | 137.5 |
-| Bloodwood | *Brosimum rubescens* | 1.05 | 1,050 | 1,379 | 6,133 | 20.78 | 147.0 |
+| Cumaru | *Dipteryx odorata* | 1.08 | 1,085 | 1,465 ᵉ | 6,515 | 22.33 | 175.3 |
+| Australian Buloke | *Allocasuarina luehmannii* | 1.08 | 1,085 | 1,465 ᵉ | 6,515 | 18.50 | 125.0 |
+| Wamara | — | 1.08 | 1,080 | 1,452 ᵉ | 6,458 | 24.38 | 148.5 |
+| Bulletwood | — | 1.08 | 1,080 | 1,452 ᵉ | 6,458 | 23.06 | 168.7 |
+| Mopane | *Colophospermum mopane* | 1.07 | 1,075 | 1,440 ᵉ | 6,405 | 13.22 | 137.5 |
+| Bloodwood | *Brosimum rubescens* | 1.05 | 1,050 | 1,379 ᵉ | 6,133 | 20.78 | 147.0 |
 | **Katalox** | *Swartzia cubensis* | 1.05 | 1,050 | 3,650 | 16,236 | — | — |
-| Brazilwood | *Paubrasilia echinata* | 1.05 | 1,050 | 1,379 | 6,133 | 20.20 | 145.0 |
-| Pink Ivory | *Berchemia zeyheri* | 1.03 | 1,035 | 1,342 | 5,969 | 15.12 | 118.6 |
-| Siamese Rosewood | *Dalbergia cochinchinensis* | 1.03 | 1,035 | 1,342 | 5,969 | 16.38 | 132.4 |
+| Brazilwood | *Paubrasilia echinata* | 1.05 | 1,050 | 1,379 ᵉ | 6,133 | 20.20 | 145.0 |
+| Pink Ivory | *Berchemia zeyheri* | 1.03 | 1,035 | 1,342 ᵉ | 5,969 | 15.12 | 118.6 |
+| Siamese Rosewood | *Dalbergia cochinchinensis* | 1.03 | 1,035 | 1,342 ᵉ | 5,969 | 16.38 | 132.4 |
 | **African Ebony** | *Diospyros crassiflora* | 1.03 | 1,030 | 3,080 | 13,701 | — | — |
-| Curupay | *Anadenanthera colubrina* | 1.02 | 1,025 | 1,318 | 5,862 | 18.04 | 130.0 |
-| Mora | *Mora excelsa* | 1.01 | 1,015 | 1,295 | 5,760 | 19.24 | 138.6 |
-| Greenheart | *Chlorocardium rodiei* | 1.01 | 1,010 | 1,283 | 5,706 | 24.64 | 181.4 |
-| Marblewood | *Marmaroxylon racemosum* | 1.00 | 1,005 | 1,271 | 5,653 | 19.43 | 138.0 |
-| Live Oak | *Quercus virginiana* | 1.00 | 1,000 | 1,260 | 5,604 | 13.52 | 102.0 |
+| Curupay | *Anadenanthera colubrina* | 1.02 | 1,025 | 1,318 ᵉ | 5,862 | 18.04 | 130.0 |
+| Mora | *Mora excelsa* | 1.01 | 1,015 | 1,295 ᵉ | 5,760 | 19.24 | 138.6 |
+| Greenheart | *Chlorocardium rodiei* | 1.01 | 1,010 | 1,283 ᵉ | 5,706 | 24.64 | 181.4 |
+| Marblewood | *Marmaroxylon racemosum* | 1.00 | 1,005 | 1,271 ᵉ | 5,653 | 19.43 | 138.0 |
+| Live Oak | *Quercus virginiana* | 1.00 | 1,000 | 1,260 ᵉ | 5,604 | 13.52 | 102.0 |
 
 ---
 
@@ -234,14 +236,14 @@ The CIRAD database (4,022 specimens, 872 species) confirms densities and identif
 
 | CIRAD D12 | Species | Family | Country | Notes |
 |:---------:|---------|--------|---------|-------|
-| **1.33** | *Chrysophyllum prieurii* | Sapotaceae | French Guiana | Ties African Blackwood |
-| **1.33** | *Dalbergia melanoxylon* | Leguminosae | Tanzania | **African Blackwood confirmed** |
+| **1.20** | *Chrysophyllum prieurii* | Sapotaceae | French Guiana | Heaviest single CIRAD specimen (1.33), but mean of 4 is 1.20 |
+| **1.29** | *Dalbergia melanoxylon* | Leguminosae | Tanzania | **African Blackwood** — 2 specimens (1.25, 1.33); consistent with database 1,270 |
 | 1.32 | *Mezilaurus sp* | Lauraceae | Brazil | Unexplored laurel |
-| 1.31 | *Bocoa prouacensis* | Leguminosae | French Guiana | 8 specimens; consistent |
-| 1.29 | *Brosimum rubescens* | Moraceae | Brazil | **Bloodwood confirmed** |
-| 1.29 | *Swartzia panacoco* | Leguminosae | Brazil | Wamara relative |
-| 1.23 | *Erythrophleum chlorostachys* | Leguminosae | Australia | Ironwood — unexplored |
-| 1.21 | *Acacia shirleyi* | Leguminosae | Australia | Shirley's Wattle — unexplored |
+| 1.22 | *Bocoa prouacensis* | Leguminosae | French Guiana | 11 specimens; consistent |
+| 1.10 | *Brosimum rubescens* | Moraceae | Brazil | **Bloodwood** — mean of 7 is 1.10 (range 0.97–1.29); database 1,050 |
+| 1.20 | *Swartzia panacoco* | Leguminosae | Brazil | Wamara relative |
+| 1.20 | *Erythrophleum chlorostachys* | Leguminosae | Australia | Ironwood — unexplored |
+| 1.17 | *Acacia shirleyi* | Leguminosae | Australia | Shirley's Wattle — unexplored |
 
 ---
 

@@ -1,10 +1,12 @@
 # American Hardwoods: Comprehensive Tonewood Guide
 
-> **Sources:** `wood_species.json` v4.0.0 (172 American species), CIRAD, Web research 2025-2026
+> **Sources:** `wood_species.json` v4.0.0, CIRAD, Web research 2025-2026
 > **Generated:** 2026-06-22
 > **Purpose:** Complete domestic alternative guide — no imports required
 
-This document catalogs **172 American species** from the wood database, organized by family and application. Every wood here grows in North America.
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
+This document covers **about 70 North American species**, organized by family and application. The earlier figure of "172 American species in the database" could not be traced: `wood_species.json` has no origin field to count by (corrected 2026-11-14, see `VERIFICATION_LOG.md`). Every wood here grows in North America.
 
 ---
 
@@ -43,18 +45,18 @@ Hickory spans 675–835 kg/m³ — from walnut-weight to rosewood-weight:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **Pignut Hickory** | 835 | 902 | 15.59 | **Rosewood-range**; highest density |
-| **Mockernut Hickory** | 815 | 863 | 15.31 | Rosewood-range |
-| **Shagbark Hickory** | 800 | 834 | 14.90 | Rosewood-range; classic |
-| **Shellbark Hickory** | 770 | 777 | 13.03 | Upper mahogany |
-| **Pecan** | 735 | 713 | 11.93 | Mid-range; *C. illinoinensis* |
-| **Bitternut Hickory** | 735 | 713 | 12.35 | = Pecan density |
-| **Water Hickory** | 690 | 634 | 13.93 | Walnut-adjacent |
-| **Nutmeg Hickory** | 675 | 609 | 11.72 | Lightest hickory |
+| **Pignut Hickory** | 835 | 902 ᵉ | 15.59 | **Rosewood-range**; highest density |
+| **Mockernut Hickory** | 815 | 863 ᵉ | 15.31 | Rosewood-range |
+| **Shagbark Hickory** | 800 | 834 ᵉ | 14.90 | Rosewood-range; classic |
+| **Shellbark Hickory** | 770 | 777 ᵉ | 13.03 | Upper mahogany |
+| **Pecan** | 735 | 713 ᵉ | 11.93 | Mid-range; *C. illinoinensis* |
+| **Bitternut Hickory** | 735 | 713 ᵉ | 12.35 | = Pecan density |
+| **Water Hickory** | 690 | 634 ᵉ | 13.93 | Walnut-adjacent |
+| **Nutmeg Hickory** | 675 | 609 ᵉ | 11.72 | Lightest hickory |
 
 **CIRAD data:** *Carya sp* from USA measured at D12 0.85 (850 kg/m³) — confirms the denser hickories reach rosewood territory.
 
-**Key insight:** Pignut and Shagbark hickory are denser than Pau Ferro (880) and approach Jatoba (910). They belong in the rosewood-alternatives discussion.
+**Key insight:** Pignut and Shagbark hickory (800–835) approach Pau Ferro (880) and Jatoba (910) in density (corrected 2026-11-14, see `VERIFICATION_LOG.md`). They belong in the rosewood-alternatives discussion.
 
 ### Pecan (*Carya illinoinensis*)
 
@@ -90,11 +92,11 @@ Dense, ring-porous, traditional:
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
 | **White Oak** | 770 | 1,360 | 15.26 | Classic; high tannin |
-| **Swamp White Oak** | 765 | 767 | 13.99 | Wetland species |
-| **Chestnut Oak** | 750 | 740 | 11.00 | Appalachian |
-| **Swamp Chestnut Oak** | 780 | 795 | 12.09 | Southern |
-| **Oregon White Oak** | 815 | 863 | 7.51 | Pacific Northwest |
-| **Live Oak** | **1,000** | 1,260 | 13.52 | **Densest US oak** |
+| **Swamp White Oak** | 765 | 767 ᵉ | 13.99 | Wetland species |
+| **Chestnut Oak** | 750 | 740 ᵉ | 11.00 | Appalachian |
+| **Swamp Chestnut Oak** | 780 | 795 ᵉ | 12.09 | Southern |
+| **Oregon White Oak** | 815 | 863 ᵉ | 7.51 | Pacific Northwest |
+| **Live Oak** | **1,000** | 1,260 ᵉ | 13.52 | **Densest US oak** |
 
 **Live Oak** (*Quercus virginiana*) at 1,000 kg/m³ is the standout — dense enough for the ebony-range discussion.
 
@@ -105,19 +107,19 @@ Slightly less dense, more porous:
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
 | **Northern Red Oak** | 700 | 1,290 | 13.82 | Most common |
-| **Cherrybark Oak** | 785 | 805 | 15.70 | High MOE |
-| **Southern Red Oak** | 675 | 609 | 10.20 | Lower density |
-| **Willow Oak** | 770 | 777 | 12.44 | Fine-grained |
-| **Pin Oak** | 680 | 617 | — | Urban tree |
+| **Cherrybark Oak** | 785 | 805 ᵉ | 15.70 | High MOE |
+| **Southern Red Oak** | 675 | 609 ᵉ | 10.20 | Lower density |
+| **Willow Oak** | 770 | 777 ᵉ | 12.44 | Fine-grained |
+| **Pin Oak** | 680 | 617 ᵉ | — | Urban tree |
 
-**Builder feedback:** "Red oak produces warm bass similar to rosewood, but without Brazilian's overtones or reverb." White oak is lighter than red oak despite higher Janka.
+**Builder feedback:** "Red oak produces warm bass similar to rosewood, but without Brazilian's overtones or reverb." In this table white oak (770) is denser than northern red oak (700) (corrected 2026-11-14, see `VERIFICATION_LOG.md`).
 
-### American Chestnut & Beech
+### Chestnut & Beech
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
 | **American Beech** | 720 | 1,300 | — | Hard; steam-bends well |
-| **Sweet Chestnut** | 590 | 475 | 8.61 | Wormy chestnut prized |
+| **Sweet Chestnut** (*Castanea sativa*) | 590 | 475 ᵉ | 8.61 | European species, not American chestnut (*C. dentata*); reclaimed "wormy chestnut" is American |
 
 ---
 
@@ -150,9 +152,9 @@ The electric guitar neck standard:
 
 | Species | Density | Janka | Notes |
 |---------|:-------:|:-----:|-------|
-| **Black Maple** | 640 | 552 | Between hard/soft |
-| **Pacific Maple** | 605 | 497 | West Coast bigleaf |
-| **Norway Maple** | 645 | 560 | Introduced; common |
+| **Black Maple** | 640 | 552 ᵉ | Between hard/soft |
+| **Pacific Maple** | 605 | 497 ᵉ | West Coast bigleaf |
+| **Norway Maple** | 645 | 560 ᵉ | Introduced; common |
 
 ---
 
@@ -174,10 +176,10 @@ The Fender body wood:
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
 | **White Ash** | 670 | 1,320 | — | Baseball bats; heavier |
-| **Green Ash** | 640 | 552 | 11.40 | Common |
-| **Blue Ash** | 640 | 552 | 9.66 | Rare |
-| **Oregon Ash** | 610 | 505 | 9.38 | Pacific Northwest |
-| **Pumpkin Ash** | 575 | 452 | 8.76 | Wetland |
+| **Green Ash** | 640 | 552 ᵉ | 11.40 | Common |
+| **Blue Ash** | 640 | 552 ᵉ | 9.66 | Rare |
+| **Oregon Ash** | 610 | 505 ᵉ | 9.38 | Pacific Northwest |
+| **Pumpkin Ash** | 575 | 452 ᵉ | 8.76 | Wetland |
 | **Black Ash** | 545 | 403 | — | Basket wood |
 
 **Emerald Ash Borer crisis:** Ash populations are declining across eastern US. Salvage wood is increasingly available.
@@ -188,10 +190,10 @@ The Fender body wood:
 
 | Species | Density | Janka | MOE | Notes |
 |---------|:-------:|:-----:|:---:|-------|
-| **Sweet Birch** | 735 | 713 | 14.97 | Black birch; wintergreen scent |
+| **Sweet Birch** | 735 | 713 ᵉ | 14.97 | Black birch; wintergreen scent |
 | **Yellow Birch** | 690 | 1,260 | — | Classic cabinet wood |
-| **Paper Birch** | 610 | 505 | 10.97 | White bark |
-| **Alaska Paper Birch** | 610 | 505 | 13.10 | Northern variant |
+| **Paper Birch** | 610 | 505 ᵉ | 10.97 | White bark |
+| **Alaska Paper Birch** | 610 | 505 ᵉ | 13.10 | Northern variant |
 
 ### American Hornbeam (*Carpinus caroliniana*)
 
@@ -292,7 +294,7 @@ The American body wood:
 | Character | Related to Osage Orange | Same family |
 | Availability | Common | Native forest tree |
 
-**Note:** Red Mulberry is the only *Morus* native to North America. White Mulberry (*M. alba*) is Asian-origin but widely naturalized.
+**Note:** Red Mulberry is the main native *Morus*; Texas mulberry (*M. microphylla*) is also native to the Southwest (corrected 2026-11-14, see `VERIFICATION_LOG.md`). White Mulberry (*M. alba*) is Asian-origin but widely naturalized.
 
 ---
 
@@ -309,7 +311,7 @@ The American body wood:
 | Origin | Asia | Introduced as ornamental |
 | Character | Lightweight, workable | Untested for lutherie |
 
-**Key insight:** Chinaberry is the only **Meliaceae family member** growing wild in North America — a domestic mahogany-family tree. Its invasive status means harvesting is ecologically beneficial (same argument as mesquite). D12 range of 0.50 places it lighter than Honduran Mahogany (0.55) but in the same acoustic territory. Unexplored for lutherie.
+**Key insight:** Chinaberry is the most widespread **Meliaceae family member** growing wild in North America (West Indies mahogany, *Swietenia mahagoni*,, is native to south Florida) (corrected 2026-11-14, see `VERIFICATION_LOG.md`) — a domestic mahogany-family tree. Its invasive status means harvesting is ecologically beneficial (same argument as mesquite). D12 range of 0.50 places it lighter than Honduran Mahogany (0.55) but in the same acoustic territory. Unexplored for lutherie.
 
 ---
 
@@ -347,7 +349,7 @@ The American body wood:
 | Family | **Diospyros** — same as ebony | American ebony relative |
 | Traditional Use | Golf club heads | Dense, shock-resistant |
 
-**Key insight:** Persimmon is the **only American Diospyros** — a domestic ebony cousin.
+**Key insight:** Persimmon is the main **American Diospyros** — a domestic ebony cousin (Texas persimmon, *D. texana*, is also native but grows as a small tree) (corrected 2026-11-14, see `VERIFICATION_LOG.md`).
 
 ### Dogwood (*Cornus florida*)
 
@@ -396,11 +398,11 @@ Elms are defined by **interlocked grain** — the source of their legendary toug
 
 | Species | Density | Janka | MOE | MOR | Notes |
 |---------|:-------:|:-----:|:---:|:---:|-------|
-| **American Elm** (*U. americana*) | 560 | 431 | 9.24 | 81.4 | Classic; declining (Dutch elm disease) |
-| **Red / Slippery Elm** (*U. rubra*) | 600 | 490 | 10.28 | 89.7 | Warmer color |
-| **Cedar Elm** (*U. crassifolia*) | 655 | 576 | 10.21 | 93.1 | Texas / South-Central |
-| **Winged Elm** (*U. alata*) | 675 | 609 | 11.38 | 102.1 | Highest-MOE domestic elm |
-| **Rock Elm** (*U. thomasii*) | 755 | 749 | 10.62 | 102.1 | **Densest US elm**; upper-Koa range |
+| **American Elm** (*U. americana*) | 560 | 431 ᵉ | 9.24 | 81.4 | Classic; declining (Dutch elm disease) |
+| **Red / Slippery Elm** (*U. rubra*) | 600 | 490 ᵉ | 10.28 | 89.7 | Warmer color |
+| **Cedar Elm** (*U. crassifolia*) | 655 | 576 ᵉ | 10.21 | 93.1 | Texas / South-Central |
+| **Winged Elm** (*U. alata*) | 675 | 609 ᵉ | 11.38 | 102.1 | Highest-MOE domestic elm |
+| **Rock Elm** (*U. thomasii*) | 755 | 749 ᵉ | 10.62 | 102.1 | **Densest US elm**; upper-Koa range |
 
 **Key points:**
 - **Steam-bending:** the interlocked grain that resists splitting also bends without cracking — an unusual and useful profile for back/sides.
@@ -431,8 +433,8 @@ Trade names: "satin walnut," "redgum," "sap gum."
 
 | Species | Density | Janka | MOE | MOR | Notes |
 |---------|:-------:|:-----:|:---:|:---:|-------|
-| **Black Tupelo / Blackgum** (*N. sylvatica*) | 545 | 410 | 8.19 | 65.5 | Fine, uniform texture |
-| **Water Tupelo** (*N. aquatica*) | 550 | 417 | 8.62 | 66.5 | Swamp-native; light |
+| **Black Tupelo / Blackgum** (*N. sylvatica*) | 545 | 410 ᵉ | 8.19 | 65.5 | Fine, uniform texture |
+| **Water Tupelo** (*N. aquatica*) | 550 | 417 ᵉ | 8.62 | 66.5 | Swamp-native; light |
 
 **Character:** *Nyssa* is famous for fine, uniform texture and interlocked grain — tough, hard to split, and a prized carving timber. Low stiffness (MOE ~8–9 GPa) makes it a body/back candidate rather than a top or structural wood. Experimental for lutherie.
 
@@ -498,12 +500,12 @@ The acoustic guitar top standard:
 | Density | 510 kg/m³ | Heavier than spruce |
 | Janka | 510 lbf | Soft |
 | MOE | 9.93 GPa | Moderate |
-| Tone | "Dry, percussive, bright" | **Quintessential flamenco tonewood** |
+| Tone | "Dry, percussive, bright" | Cypress family; flamenco-style use |
 | Uses | Back/sides | Not a top wood |
 | Rot-resistance | Excellent | Swamp-native |
 | Source | Southeastern US swamps | Louisiana, Florida |
 
-**Key insight:** Bald Cypress is the traditional flamenco back/sides wood — dry, snappy attack with minimal sustain. It's a conifer (softwood) but used for body work, not tops.
+**Key insight:** The traditional flamenco back/sides wood is Spanish/Mediterranean cypress (*Cupressus sempervirens*), not Bald Cypress. Bald Cypress is a domestic cypress-family alternative with a similar dry, snappy attack (corrected 2026-11-14, see `VERIFICATION_LOG.md`). It's a conifer (softwood) but used for body work, not tops.
 
 ---
 
@@ -528,7 +530,7 @@ The acoustic guitar top standard:
 
 | Species | Density | Best For |
 |---------|:-------:|----------|
-| **Bald Cypress** | 510 | **Flamenco back/sides — dry, percussive** |
+| **Bald Cypress** | 510 | **Flamenco-style back/sides alternative — dry, percussive** |
 | Sweetgum | 545 | Back/sides (warp-prone; use quartersawn) |
 | Black Tupelo / Blackgum | 545 | Body, back/sides (experimental) |
 | American Sycamore | 545 | Back/sides, experimental tops |
@@ -589,8 +591,8 @@ Three Texas/Southwest species cover 950–1,000 kg/m³:
 | Species | Density | Janka | MOE | Status |
 |---------|:-------:|:-----:|:---:|--------|
 | **Honey Mesquite** | 950 | 2,345 | 11.58 | Invasive — harvest beneficial |
-| **Texas Ebony** | 965 | 1,179 | 16.54 | Native; not restricted |
-| **Live Oak** | 1,000 | 1,260 | 13.52 | Abundant SE US |
+| **Texas Ebony** | 965 | 1,179 ᵉ | 16.54 | Native; not restricted |
+| **Live Oak** | 1,000 | 1,260 ᵉ | 13.52 | Abundant SE US |
 
 **Combined range:** These three span the entire rosewood-to-ebony bridge zone with zero import issues.
 
@@ -689,17 +691,17 @@ Most abundant selection:
 
 ## Summary
 
-**172 American species** in the database. Key findings:
+**About 70 North American species** covered. Key findings:
 
 1. **Juglandaceae family** (walnut + hickory) spans 430–835 kg/m³ — from lightweight to rosewood-range
 2. **Pignut/Shagbark hickory** at 800–835 kg/m³ belong in rosewood discussions
-3. **Persimmon** is the only American *Diospyros* — a domestic ebony cousin
-4. **Chinaberry** is the only domestic **Meliaceae** (mahogany family) — invasive, unexplored for lutherie
+3. **Persimmon** is the main American *Diospyros* — a domestic ebony cousin
+4. **Chinaberry** is the most widespread wild **Meliaceae** (mahogany family) — invasive, unexplored for lutherie
 5. **Red Mulberry** and **Osage Orange** are both Moraceae — same family, similar potential
 6. **Black Locust** is "rosewood-like with high density and low damping" — and invasive
 7. **The Texas Trio** (Mesquite, Texas Ebony, Live Oak) covers 950–1,000 kg/m³
 8. **Catalpa and Sassafras** are proven mahogany alternatives
-9. **Bald Cypress** is the traditional flamenco back/sides wood — dry, percussive, snappy
+9. **Bald Cypress** is a domestic alternative to the traditional flamenco cypress (*Cupressus sempervirens*) — dry, percussive, snappy
 10. **American Sycamore** (and its naturalized cousin **London Plane**) offer dramatic lacewood figure at mahogany weight
 11. **Texas Ebony** has the highest MOE (16.54 GPa) of any American hardwood
 12. **Pecan** is the most *available* hickory (orchard salvage) — warm, firm, mid-density (735)

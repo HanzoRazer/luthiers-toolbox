@@ -50,7 +50,7 @@
 
 | Factor | Khaya | African Padauk | Mugavu | Am. Sycamore | Monkeypod | Bagtikan |
 |--------|:-----:|:--------------:|:------:|:------------:|:---------:|:--------:|
-| **CITES Status** | Not listed | Not listed | Not listed | Not listed | Not listed | Not listed |
+| **CITES Status** | **App II** (#17, African pop., 2023) | **App II** (#17, African *Pterocarpus*, 2023) | Not listed | Not listed | Not listed | Not checked |
 | **Conservation** | Sustainable | Not threatened | Abundant | Abundant | Abundant | Least Concern (IUCN 2019) |
 | **Supply Region** | West/Central Africa | Central/West Africa | East Africa | Eastern US | Tropics worldwide | Malaysia (Sabah) |
 | **Export Infrastructure** | Established | Established | Emerging (furniture) | Domestic | Established | Established ("White Seraya") |
@@ -66,7 +66,7 @@
 
 | Aspect | Assessment |
 |--------|------------|
-| **Strengths** | Closest physical match to Honduran Mahogany (density 530 vs 545); same botanical family (Meliaceae); established supply chain; no CITES restrictions; "similar to Honduran, slightly brighter" tone |
+| **Strengths** | Closest physical match to Honduran Mahogany (density 530 vs 545); same botanical family (Meliaceae); established supply chain; CITES Appendix II since 2023 (#17 — blanks need permits; corrected 2026-11-14); "similar to Honduran, slightly brighter" tone |
 | **Weaknesses** | Missing MOE/MOR data in database; slightly more variable than Honduran |
 | **Best Applications** | Body, neck — direct 1:1 Honduran replacement |
 | **CNC Behavior** | Standard mahogany parameters; hardness scale 0.42; medium tearout risk on interlocked grain |

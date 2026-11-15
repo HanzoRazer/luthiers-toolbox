@@ -1,0 +1,209 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TONEWOOD_VERIFICATION_001",
+  "title": "docs(tonewood): verify and correct the tonewood reference library (tranche 1)",
+  "intent": "Correct verifiable errors in the 16 docs/tonewood/ documents and record each check so it can be re-run: CIRAD figures that did not match the CIRAD CSV, density-regression Janka values presented as measurements, stale/wrong CITES statuses, wrong botanical identities, inflated species counts and internal contradictions. Adds a verified CITES reference and a verification log with open issues.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation plus two standalone doc scripts under scripts/ that the application does not import. No code path, schema, route, workflow or data file (wood_species.json etc.) is touched.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      "docs/tonewood/README.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md",
+      "docs/tonewood/CITES_STATUS.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "scripts/check_tonewood_cirad_citations.py",
+      "scripts/gen_cirad_high_density_catalog.py",
+      ".cbsp21/patches/tonewood-verification-001.json"
+    ],
+    "files_expected_to_change": [
+      "docs/tonewood/README.md",
+      "docs/tonewood/cypress_back_sides_brief.md",
+      "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "docs/tonewood/tonewood_viability_emerging_species.md",
+      "docs/tonewood/CITES_STATUS.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "scripts/check_tonewood_cirad_citations.py",
+      "scripts/gen_cirad_high_density_catalog.py",
+      ".cbsp21/patches/tonewood-verification-001.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "(1) CIRAD high-density catalog regenerated with means (217 -> 157 taxa). (2) 65 + 58 CIRAD D12/N citations across 5 documents corrected to the CSV; checker now reports 0 mismatches. (3) 148 Janka cells equal to 0.00355*density^1.85 marked as estimates with a header note in 11 documents. (4) CITES statuses corrected against Species+ (Siamese rosewood App II not I; Entandrophragma not CITES-listed, EU Annex D; African Pterocarpus/Afzelia/Khaya App II since 2023; ipe/cumaru App II since 2024) and centralised in CITES_STATUS.md. (5) Botanical identity fixes (Ayous != Okoume, Sweet chestnut, fustic vs Osage, Malaysian Blackwood flagged). (6) Count, contradiction, typo and leaked-session-text fixes. (7) VERIFICATION_LOG.md and README status note.",
+    "why_not_redundant": "The library's README presented these documents as reference data; several figures were demonstrably wrong against the repo's own CIRAD file and the official CITES database. This fixes what can be verified now and records what cannot, instead of leaving wrong values in place."
+  },
+  "verification": {
+    "commands_run": [
+      "py -3.11 scripts/gen_cirad_high_density_catalog.py . docs/tonewood/tonewood_catalog_cirad_high_density.md -> taxa=1010 by_max=217 by_mean=157 families=34 single_specimen=65",
+      "py -3.11 scripts/check_tonewood_cirad_citations.py -> 0 mismatches, exit 0",
+      "Janka regression scan (0.00355*density^1.85, tol 3 lbf): 148 table cells marked; wood_species.json 422/473 values equal the regression",
+      "CITES: Species+ API records spot-checked (Entandrophragma NC/EU D; Paubrasilia echinata II; Dalbergia cochinchinensis II; Khaya II)",
+      "Documentation-only; no test suite affected",
+      "py -3.11 scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> to run in CI"
+    ]
+  },
+  "files": [
+    {
+      "path": "docs/tonewood/README.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/cypress_back_sides_brief.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_american_hardwoods_comprehensive.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_catalog_cirad_high_density.md",
+      "intent": "Regenerated from the CIRAD CSV using per-taxon means (was per-taxon maxima beside averaged Db/R); 217 -> 157 taxa.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_cites_alternatives_rosewood_ebony_range.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acoustic_top_woods.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_angolan_species.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_african_hardwoods_mugavu.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_cherry_mahogany_walnut_mesquite.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_annotated.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_extreme_density_glassy_character.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_mahogany_koa_family.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_rosewoods_ebonies_mesquite.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_mahogany_alternatives_comprehensive.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_viability_emerging_species.md",
+      "intent": "Verified corrections (CIRAD citations, estimated-Janka markers, CITES statuses, botanical identities, internal contradictions) per docs/tonewood/VERIFICATION_LOG.md.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/CITES_STATUS.md",
+      "intent": "New: single CITES reference for the library, verified against Species+ (official CITES database) with IUCN categories from iucnredlist.org.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "New: records every correction (C-01..C-08) with the check that found it and how to re-run it, plus open issues O-01..O-09.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "scripts/check_tonewood_cirad_citations.py",
+      "intent": "New doc checker: compares every CIRAD D12/N citation in docs/tonewood/*.md with the CSV; --fix rewrites mismatches. Not imported by the app.",
+      "risk": "low",
+      "behavior_change": "None (standalone doc tooling, not imported by the app)."
+    },
+    {
+      "path": "scripts/gen_cirad_high_density_catalog.py",
+      "intent": "New doc generator: rebuilds the CIRAD high-density catalog deterministically from docs/reference/cirad-density/*.csv. Not imported by the app.",
+      "risk": "low",
+      "behavior_change": "None (standalone doc tooling, not imported by the app)."
+    },
+    {
+      "path": ".cbsp21/patches/tonewood-verification-001.json",
+      "intent": "CBSP21 manifest for this patch.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    }
+  ]
+}

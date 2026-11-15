@@ -3,6 +3,8 @@
 > **Source:** `wood_species.json` v4.0.0 + `luthier_tonewood_reference.json` v1.0.0
 > **Generated:** 2026-03-10
 
+> **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
+
 This comparison groups two traditional fretboard/bridge rosewoods, three ebonies (two classic, one emerging regional), and honey mesquite as a domestic alternative bridging both families.
 
 ---
@@ -15,7 +17,7 @@ This comparison groups two traditional fretboard/bridge rosewoods, three ebonies
 | **East Indian Rosewood** | Primary | 830 | 2,440 | Warm, complex overtones, sustain | CITES regulated |
 | **African Ebony** | Primary | 1,030 | 3,080 | Bright, articulate, percussive | Endangered — use alternatives |
 | **Macassar Ebony** | Primary | 1,120 | 3,220 | Bright, defined | Vulnerable |
-| **Texas Ebony** | Emerging | 965 | 1,179 | *(not yet characterized)* | *(not yet characterized)* |
+| **Texas Ebony** | Emerging | 965 | 1,179 ᵉ | *(not yet characterized)* | *(not yet characterized)* |
 | **Honey Mesquite** | Emerging | 950 | 2,345 | Bright, crystalline highs, strong sustain — rosewood-like but more percussive | Abundant — invasive, harvest is ecologically beneficial |
 
 ---
