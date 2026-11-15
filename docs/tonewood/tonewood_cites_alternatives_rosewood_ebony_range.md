@@ -199,7 +199,7 @@ Australian and plantation options:
 | **Macacauba** | 950 | "Unique sound" — bright colors; backs/sides |
 | **Goncalo Alves (Tigerwood)** | 1001 | Between rosewood and Koa tonally |
 | **Curupay** | 1,025 | "Patagonian Rosewood" — NOT true rosewood |
-| **Mora** | 1,015 | CIRAD: 1 *M. excelsa* + 10 *M. paraensis* specimens ("39" was the S column, corrected 2026-11-15, C-10); consistent |
+| **Mora** | 985 | FPL GTR-282 Table 5-5a, *Mora* spp. (12% MC; was 1,015, unsourced). CIRAD: 1 *M. excelsa* (D12 1.05) + 10 *M. paraensis* (mean 1.02) specimens ("39" was the S column, corrected 2026-11-15, C-10) |
 | **Angelim Vermelho** | 1,070 | *Dinizia excelsa*; known timber |
 | **Sucupira** | 920 | Dark; traditional |
 | **Wamara** | 1,080 | *Swartzia panacoco*; highest MOE potential |
@@ -334,14 +334,14 @@ For bridges and nuts where energy transfer matters:
 
 | Species | MOE (GPa) | Density | Notes |
 |---------|:---------:|:-------:|-------|
-| **Greenheart** | 22.4 | 1,010 | Highest in database |
+| **Greenheart** | 22.4 | 1,010 | FPL; not the highest (Wamara, Bulletwood and Snakewood are stiffer) |
 | **Wamara** | 24.38 | 1,080 | *Swartzia panacoco* |
 | **Snakewood** | 23.20 | 1,210 | Exotic figure |
 | **Bulletwood** | 23.8 | 1,059 | Very stiff |
 | **Cumaru** | 22.33 | 1,085 | Known; hard — ⚠ CITES Appendix II since 2024-11-25 (#17) |
 | **Bloodwood** | 20.78 | 1,050 | Vivid red |
+| **Mora** | 20.4 | 985 | FPL GTR-282 Table 5-5a, *Mora* spp. (was 19.24 / 1,015, unsourced). CIRAD: 1 *M. excelsa* + 10 *M. paraensis* specimens ("39" was the S column, corrected 2026-11-15, C-10) |
 | **Marblewood** | 19.43 | 1,005 | Figured |
-| **Mora** | 19.24 | 1,015 | CIRAD: 1 *M. excelsa* + 10 *M. paraensis* specimens ("39" was the S column, corrected 2026-11-15, C-10) |
 
 ---
 

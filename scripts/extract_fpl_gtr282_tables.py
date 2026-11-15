@@ -17,7 +17,8 @@ Tables extracted (metric versions only):
 Rows are rebuilt from word coordinates, because plain-text extraction drops the
 indentation that marks a species as a member of a group ("Spruce" -> "Sitka").
 Every row must have exactly the cell count its table defines; anything else is
-reported and the script exits 1 rather than guessing.
+reported and the script exits 1 rather than guessing. The PDFs must match the
+SHA-256s in PDF_SHA256, and no output cell may contain a control character.
 
 Usage (needs pdfplumber, which is not a repo dependency):
   python scripts/extract_fpl_gtr282_tables.py <dir with 62243.pdf, 62244.pdf> <out.csv>
@@ -49,6 +50,13 @@ MECH_COLUMNS = {
     "5-5a": ["sg", "mor_kpa", "moe_mpa", "work_kj_m3", "comp_par_kpa", "shear_kpa",
              "side_hardness_n"],
 }
+# SHA-256 of the source PDFs this CSV was built from (also in docs/reference/fpl-gtr282/README.md).
+# A different file is refused: the table layout, and so the parse, is only validated for these.
+PDF_SHA256 = {
+    "62243.pdf": "8459aad8c6643e635f1d0c443f9e796e82ef8d650920d89838932bef8cd24880",
+    "62244.pdf": "724c99666ad364c4bd13022b5b1db09bb391166eace37bd920fee1f8d2d23204",
+}
+CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 SHRINK_COLUMNS = ["shrink_radial_pct", "shrink_tangential_pct", "shrink_volumetric_pct"]
 TITLES = {
     "4-3": r"Table 4.3\. Shrinkage values of domestic",
@@ -210,20 +218,30 @@ def extract(pdf_dir: Path) -> tuple[list[dict], list[str]]:
 
 def main(argv: list[str]) -> int:
     pdf_dir, out = Path(argv[1]), Path(argv[2])
+    bad_hash = False
+    for name, want in PDF_SHA256.items():
+        got = hashlib.sha256((pdf_dir / name).read_bytes()).hexdigest()
+        print(f"sha256 {name} {got} {'ok' if got == want else 'MISMATCH, expected ' + want}")
+        bad_hash |= got != want
+    if bad_hash:
+        print("refusing to extract: source PDF differs from the documented one")
+        return 1
     rows, problems = extract(pdf_dir)
     rows = [r for r in rows if r["value"] not in DASHES]
     for r in rows:
         r["value"] = r["value"].replace(",", "")
         # text-extraction artifacts only (words fused or split by kerning); FPL's own spellings are kept
-        r["species"] = re.sub(r"([a-z])spp\.", r" spp.", r["species"]).replace("Hackberr y", "Hackberry")
+        r["species"] = re.sub(r"([a-z])spp\.", r"\1 spp.", r["species"]).replace("Hackberr y", "Hackberry")
+    for r in rows:
+        for k, v in r.items():
+            if CONTROL.search(v):
+                problems.append(f"control character in {k}: {v!r}")
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["table", "species", "condition", "property", "value", "origin"],
                            lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
-    for name in ("62243.pdf", "62244.pdf"):
-        print(f"sha256 {name} {hashlib.sha256((pdf_dir / name).read_bytes()).hexdigest()}")
     species = {(r["table"], r["species"]) for r in rows}
     for key in TITLES:
         print(f"{key}: {sum(1 for t, _ in species if t == key)} species")

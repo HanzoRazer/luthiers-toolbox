@@ -27,7 +27,7 @@ The PDFs are not committed. To regenerate (needs `pdfplumber`, which is not a re
 python scripts/extract_fpl_gtr282_tables.py <dir holding 62243.pdf and 62244.pdf> docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv
 ```
 
-The script rebuilds rows from word coordinates. Plain-text extraction loses the indentation that makes "Sitka" a member of the "Spruce" group, and layout mode shifts values between rows (it gave balsa a specific gravity of 0.42; the table says 0.16). Every row must have exactly its table's cell count, or the script reports it and exits 1.
+The script rebuilds rows from word coordinates. Plain-text extraction loses the indentation that makes "Sitka" a member of the "Spruce" group, and layout mode shifts values between rows (it gave balsa a specific gravity of 0.42; the table says 0.16). Every row must have exactly its table's cell count, or the script reports it and exits 1. It also exits 1, before extracting, if either PDF's SHA-256 differs from the table above, and after extracting if any output cell contains a control character (an earlier version wrote `\x01` into the Mora and Cuangare names; see `docs/tonewood/VERIFICATION_LOG.md` C-12).
 
 ## CSV format
 

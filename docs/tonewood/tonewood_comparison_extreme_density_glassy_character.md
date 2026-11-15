@@ -97,9 +97,9 @@ Growing adoption, some builder experience, acoustic properties documented or inf
 | **Pink Ivory** | 1,035 | 1,342 ᵉ | 15.12 | *Berchemia zeyheri* | Southern Africa |
 | **Siamese Rosewood** | 1,035 | 1,342 ᵉ | 16.38 | *Dalbergia cochinchinensis* | SE Asia |
 | **Curupay** | 1,025 | 1,318 ᵉ | 18.04 | *Anadenanthera colubrina* | South America |
-| **Mora** | 1,015 | 1,295 ᵉ | 19.24 | *Mora excelsa* | South America |
 | **Greenheart** | 1,010 | 2,360 | 22.4 | *Chlorocardium rodiei* | Guyana |
 | **Marblewood** | 1,005 | 1,271 ᵉ | 19.43 | *Marmaroxylon racemosum* | South America |
+| **Mora** | 985 | 2,293 | 20.4 | *Mora excelsa* | South America |
 | **Olive** | 980 | 1,213 ᵉ | 12.39 | *Olea europaea* | Mediterranean |
 | **Black Palm** | 970 | 1,191 ᵉ | 15.60 | *Borassus flabellifer* | SE Asia, Africa |
 | **Texas Ebony** | 965 | 1,179 ᵉ | 16.54 | *Ebenopsis ebano* | Texas, Mexico |
@@ -198,9 +198,9 @@ No documented lutherie use, but physical properties suggest potential. Sorted by
 | Cumaru | 1,085 | Emerging; very high MOE |
 | Bloodwood | 1,050 | Vivid red; high MOE |
 | Brazilwood | 1,050 | Historic bow wood; CITES |
-| Mora | 1,015 | Guyanese; high MOE |
 | Greenheart | 1,010 | High MOE (22.4, FPL) |
 | Marblewood | 1,005 | Distinctive figuring |
+| Mora | 985 | Guyanese; high MOE |
 
 ### Australia — Eucalyptus & Acacia Density
 

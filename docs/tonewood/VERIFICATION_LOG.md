@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11 and its review fixes C-12, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
 
 ## Why this log exists
 
@@ -20,9 +20,10 @@ python scripts/gen_cirad_high_density_catalog.py . docs/tonewood/tonewood_catalo
 python scripts/check_tonewood_cirad_citations.py        # expect: "0 mismatches", exit 0
 
 # C-11: density, SG, Janka, MOE, MOR, shrinkage and derived values vs FPL GTR-282 (strict)
-python scripts/check_tonewood_fpl_values.py --summary   # expect: "0 mismatches", exit 0
+python scripts/check_tonewood_fpl_values.py --summary   # expect: "119 aliases resolve; 640 cells checked, 0 mismatches", exit 0
 
-# C-11: regenerate the FPL reference CSV (needs the two FPL PDFs and pdfplumber; see docs/reference/fpl-gtr282/README.md)
+# C-11: regenerate the FPL reference CSV (needs the two FPL PDFs and pdfplumber; see docs/reference/fpl-gtr282/README.md).
+# Refuses PDFs whose SHA-256 differs from the documented one; exits 1 on any parse problem or control character.
 python scripts/extract_fpl_gtr282_tables.py <pdf dir> docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv
 ```
 
@@ -138,7 +139,7 @@ Re-check: `grep -rn "39 CIRAD\|before CoP20" docs/tonewood` finds only this log 
 
 **New reference.** `docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv` holds FPL GTR-282 (2021) Tables 4-3, 4-4 (shrinkage), 5-3a, 5-4a and 5-5a (mechanical, metric), extracted by `scripts/extract_fpl_gtr282_tables.py` with source-PDF SHA-256s. It was cross-checked against FPL's own inch-pound tables: 1,390 of 1,397 values agree; the 7 others are FPL's own inconsistencies (listed in its README).
 
-**New check.** `scripts/check_tonewood_fpl_values.py` maps about 100 document species names to FPL rows (unambiguous identities only) and checks every density, SG, Janka, MOE, MOR, shrinkage, sound-speed, impedance, E/ρ and radiation-ratio cell for them. The check is strict: such a cell must equal the FPL value at display precision, so it can be attributed to FPL. 619 cells are checked; 0 mismatch. About 1,300 property cells belong to species FPL does not cover and are not checked.
+**New check.** `scripts/check_tonewood_fpl_values.py` maps 119 document species names to FPL rows (unambiguous identities only; every one must resolve, C-12) and checks every density, SG, Janka, MOE, MOR, shrinkage, sound-speed, impedance, E/ρ and radiation-ratio cell for them. The check is strict: such a cell must equal the FPL value at display precision, so it can be attributed to FPL. After the C-12 fixes, 640 cells are checked with 0 mismatches; 9 cells that hold a range are listed rather than compared. About 1,300 property cells belong to species FPL does not cover and are not checked.
 
 **Corrections.** `--fix` rewrote 418 cells in 12 documents. The acoustic top-woods document was corrected by hand first and agrees with the checker. Prose that quoted the old numbers was rewritten by hand; a scan of non-table lines for every replaced number then found only unchanged values and thresholds. Conventions: density is at 12% MC by FPL Eq. 4-14 (ρ = 1000·G₁₂·1.12; for Table 5-5a species, G₁₂ from basic SG by Eqs. 4-9 and 4-11); Janka is FPL side hardness; MOE is not shear-corrected (FPL footnote c).
 
@@ -155,6 +156,19 @@ Findings, by the size of the change:
 - **Stale CITES text found on the way.** The Mugavu document still called Khaya "sustainable … no restrictions" in three places, and listed Utile as "Unknown". Both corrected.
 
 Not done: specific gravity and density for species FPL does not cover, and FPL values in `wood_species.json` (still reported, not changed here).
+
+### C-12 — Review fixes to tranche 2 (2026-11-15)
+
+A review of PR #486 found that the C-11 checker's "0 mismatches" did not cover everything it claimed to:
+
+- **Extractor wrote a control character into two species names.** The cleanup `re.sub(r"([a-z])spp\.", …)` had the byte `\x01` where the back-reference `\1` belonged. It dropped the last letter of the genus and inserted the byte: `Mora (Mor\x01 spp.)`, `Cuangare (Dialyanther\x01 spp.)` — 24 CSV rows. Fixed and regenerated; the extractor now rejects any output cell containing a control character. No value changed, only those two names.
+- **The checker silently skipped every Mora cell.** The `mora` alias named `Mora (Mora spp.)`, which was not in the corrupted CSV, and a missing row read as "no FPL data" rather than as an error. With the CSV fixed, 18 Mora cells in 3 documents mismatched: density 1,015 → 985 kg/m³, MOE 19.24 → 20.4 GPa, MOR 138.6 → 152.4 MPa, SG 1.01 → 0.88, Janka 1,295 ᵉ (an estimate) → 2,293 lbf / 10,200 N, and the derived values. The rosewood-range document attributed 1,015 to CIRAD, but its own CIRAD rows (1.05 for 1 *M. excelsa*, mean 1.02 for 10 *M. paraensis*) do not give 1,015 either. Mora rows were re-sorted where tables are ordered by density or MOE. Now every alias must name a row that exists in the CSV (with radial and tangential shrinkage where a shrinkage table is named), or the checker exits 1 before checking anything.
+- **Range cells were dropped silently.** A cell like `400–450 kg/m³` was neither checked nor counted. They are now counted and listed with whether the FPL value falls inside. 12 were found for mapped species; 3 excluded the FPL value (Andiroba 650–700 twice, FPL 645; Khaya 550–690, FPL 497) and were replaced. The other 9 contain the FPL value and are left as ranges.
+- **`--fix` exited 0 without re-checking.** It now checks again after rewriting and exits 1 if any mismatch remains.
+- **The extractor did not check its input.** It printed the PDFs' SHA-256 but read whatever files it was given. It now refuses PDFs whose hash differs from the documented one.
+- **Also corrected:** the rosewood-range document called Greenheart (22.4 GPa) "highest in database" in a table where Wamara, Bulletwood and Snakewood are stiffer.
+
+Re-run result: 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells not compared (all contain the FPL value); 1,299 property cells skipped (species not mapped to FPL).
 
 ## Open issues
 

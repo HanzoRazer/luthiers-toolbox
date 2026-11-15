@@ -246,7 +246,7 @@ Jacaranda is beautiful, lightweight, and completely unexplored for guitars.
 
 | Species | Density | Notes |
 |---------|:-------:|-------|
-| **Andiroba** | 650–700 | *Carapa guianensis* — 150+ CIRAD specimens |
+| **Andiroba** | 645 | *Carapa guianensis* — FPL GTR-282 (was 650–700); 150+ CIRAD specimens |
 | **Freijo** | 550 | *Cordia goeldiana* — mahogany substitute |
 | **Imbuia** | 660 | *Ocotea porosa* — Brazilian walnut |
 | **Louro** | 550–650 | *Ocotea* spp. — multiple species |
@@ -295,7 +295,7 @@ For builders seeking weight relief without chambering:
 | 1 | **Sipo** | 670 | Timber industry says "closest to genuine mahogany" |
 | 2 | **Sapele** | 672 | Proven; slightly brighter |
 | 3 | **Urban Ash** | 550 | Taylor-validated; domestic (CA) |
-| 4 | **Andiroba** | 650–700 | 150+ CIRAD specimens; consistent |
+| 4 | **Andiroba** | 645 | FPL GTR-282 (was 650–700); 150+ CIRAD specimens |
 | 5 | **Khaya ivorensis** | 500–550 | Classic "African Mahogany" |
 
 ### For Honduran Mahogany (Neck)
@@ -304,7 +304,7 @@ For builders seeking weight relief without chambering:
 |:--------:|---------|:-------:|-----|
 | 1 | **Spanish Cedar** | 450–500 | Traditional classical necks; consistent |
 | 2 | **Sapele** | 672 | Stiff; stable |
-| 3 | **Khaya** | 550–690 | Various species available |
+| 3 | **Khaya** | 497 | FPL GTR-282, *Khaya* spp. (was 550–690); various species available |
 | 4 | **Catalpa** | 420 | Domestic; resonant |
 
 ### For Lightweight Bodies

@@ -23,7 +23,12 @@ FPL-derived values (all at 12% moisture content unless noted):
 Usage:
   python scripts/check_tonewood_fpl_values.py            # report, exit 1 on mismatch
   python scripts/check_tonewood_fpl_values.py --summary  # counts only
-  python scripts/check_tonewood_fpl_values.py --fix      # rewrite mismatched cells (numbers only)
+  python scripts/check_tonewood_fpl_values.py --fix      # rewrite mismatched cells (numbers only),
+                                                         # then check again; exit 1 if any remain
+
+Exit 1 also when an ALIASES entry names an FPL row that is not in the CSV. Cells that
+hold a range ("10.5-12.0") are not compared; they are counted and listed, never dropped
+silently.
 
 Checking is strict: for a species mapped to FPL, every recognised cell must equal the
 FPL value at display precision (no tolerance), so each such cell can be attributed to
@@ -167,22 +172,40 @@ PROPS = [  # (regex on the row/column label, property key); first match wins
 ]
 INPUTS = ("sg", "density", "janka_lbf", "janka_n", "moe", "mor", "radial", "tangential")
 DERIVED = ("c", "z", "erho", "r")
-# relative tolerance, except shrinkage (absolute, percentage points)
-TOL = {"sg": 0.0, "density": 0.05, "janka_n": 0.06, "janka_lbf": 0.06, "moe": 0.05, "mor": 0.05,
-       "radial": 0.051, "tangential": 0.051, "c": 0.015, "z": 0.02, "erho": 0.02, "r": 0.02}
 DECIMALS = {"sg": 2, "density": 0, "janka_lbf": 0, "janka_n": 0, "moe": 1, "mor": 1, "radial": 1, "tangential": 1,
             "c": 0, "z": 2, "erho": 1, "r": 2}
 
 
-def fpl_values() -> dict[str, dict[str, float]]:
+def load_fpl() -> dict[tuple[str, str], dict[tuple[str, str], float]]:
     raw: dict[tuple[str, str], dict[tuple[str, str], float]] = defaultdict(dict)
     with FPL.open(encoding="utf-8") as fh:
         for r in csv.DictReader(fh):
             raw[(r["table"], r["species"])][(r["condition"], r["property"])] = float(r["value"])
+    return dict(raw)
+
+
+def unresolved_aliases(raw: dict[tuple[str, str], dict]) -> list[str]:
+    """Every FPL row an alias names must exist exactly, with the values the checker reads."""
+    bad = []
+    for name, (mt, ms, st, ss) in ALIASES.items():
+        if mt and (mt, ms) not in raw:
+            bad.append(f"{name!r}: no FPL row {mt} {ms!r}")
+        if st:
+            row = raw.get((st, ss))
+            if row is None:
+                bad.append(f"{name!r}: no FPL row {st} {ss!r}")
+            elif not {("green_to_ovendry", "shrink_radial_pct"), ("green_to_ovendry", "shrink_tangential_pct")} <= set(row):
+                bad.append(f"{name!r}: FPL row {st} {ss!r} lacks radial/tangential shrinkage")
+        if not mt and not st:
+            bad.append(f"{name!r}: maps to no FPL table")
+    return bad
+
+
+def fpl_values(raw: dict[tuple[str, str], dict[tuple[str, str], float]]) -> dict[str, dict[str, float]]:
     out: dict[str, dict[str, float]] = {}
     for name, (mt, ms, st, ss) in ALIASES.items():
         v: dict[str, float] = {}
-        shrink = raw.get((st, ss), {}) if st else {}
+        shrink = raw[(st, ss)] if st else {}
         if shrink:
             v["radial"] = shrink[("green_to_ovendry", "shrink_radial_pct")]
             v["tangential"] = shrink[("green_to_ovendry", "shrink_tangential_pct")]
@@ -231,6 +254,11 @@ def numbers(cell: str) -> list[re.Match]:
     if re.search(r"\d\s*[–-]\s*\d", masked):   # a range: not checked
         return []
     return list(NUMTOK.finditer(masked))
+
+
+def is_range(cell: str) -> bool:
+    masked = re.sub(r"\[\^[^\]]*\]", " ", cell)
+    return bool(re.search(r"\d\s*[–-]\s*\d", masked))
 
 
 def value_of(cell: str, key: str) -> float | None:
@@ -319,6 +347,7 @@ def replace_value(c: Cell, ref: float) -> str:
 
 def run(fpl: dict[str, dict[str, float]], fix: bool):
     results = []  # (doc, line, species, key, doc value, FPL value, ok)
+    ranges = []   # (doc, line, species, key, cell text): mapped species, recognised property, a range
     unmapped = 0
     for path in sorted(DOCS.glob("*.md")):
         if path.name in SKIP_DOCS:
@@ -353,6 +382,10 @@ def run(fpl: dict[str, dict[str, float]], fix: bool):
                 ref = derived(c.key, rho, moe)
             else:
                 continue
+            if is_range(c.text):
+                lo, hi = sorted(float(x.replace(",", "")) for x in re.findall(r"\d[\d,]*\.?\d*", c.text)[:2])
+                ranges.append((path.name, c.line + 1, c.species, c.key, c.text, ref, lo <= ref <= hi))
+                continue
             val = value_of(c.text, c.key)
             if val is None:
                 continue
@@ -369,26 +402,41 @@ def run(fpl: dict[str, dict[str, float]], fix: bool):
                 parts[col + 1] = f"{lead}{new}{trail}"
                 lines[ln] = "|".join(parts)
             path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return results, unmapped
+    return results, ranges, unmapped
 
 
 def main(argv: list[str]) -> int:
-    fpl = fpl_values()
+    raw = load_fpl()
+    bad_alias = unresolved_aliases(raw)
+    if bad_alias:
+        for b in bad_alias:
+            print("ALIAS", b)
+        print(f"{len(bad_alias)} aliases do not resolve to an FPL row; nothing checked")
+        return 1
+    fpl = fpl_values(raw)
     fix = "--fix" in argv
-    results, unmapped = run(fpl, fix)
+    if fix:
+        results, _, _ = run(fpl, True)
+        print(f"--fix rewrote {sum(1 for r in results if not r[6])} cells; checking again")
+    results, ranges, unmapped = run(fpl, False)
     bad = [r for r in results if not r[6]]
     if "--summary" not in argv:
         for name, ln, sp, key, val, ref, _ in bad:
             print(f"{name}:{ln} {sp} {key}: doc {val:g} vs FPL {ref:.4g}")
+        for name, ln, sp, key, text, ref, inside in ranges:
+            where = "inside" if inside else "OUTSIDE"
+            print(f"{name}:{ln} {sp} {key}: range {text!r} not compared (FPL {ref:.4g} {where})")
     by_key = defaultdict(lambda: [0, 0])
     for r in results:
         by_key[r[3]][0] += 1
         by_key[r[3]][1] += (not r[6])
-    verb = "fixed" if fix else "mismatches"
-    print(f"{len(results)} cells checked, {len(bad)} {verb}; {unmapped} property cells skipped (species not mapped to FPL)")
+    print(f"{len(ALIASES)} aliases resolve; {len(results)} cells checked, {len(bad)} mismatches; "
+          f"{len(ranges)} range cells for mapped species not compared "
+          f"({sum(1 for r in ranges if not r[6])} exclude the FPL value); "
+          f"{unmapped} property cells skipped (species not mapped to FPL)")
     for k, (n, b) in sorted(by_key.items()):
         print(f"  {k}: {n} checked, {b} mismatched")
-    return 1 if bad and not fix else 0
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":

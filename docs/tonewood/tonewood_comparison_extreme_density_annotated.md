@@ -101,10 +101,10 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | Siamese Rosewood | *Dalbergia cochinchinensis* | 1.03 | 1,035 | 1,342 ᵉ | 5,969 | 16.38 | 132.4 |
 | **African Ebony** | *Diospyros crassiflora* | 1.03 | 1,030 | 3,080 | 13,701 | — | — |
 | Curupay | *Anadenanthera colubrina* | 1.02 | 1,025 | 1,318 ᵉ | 5,862 | 18.04 | 130.0 |
-| Mora | *Mora excelsa* | 1.01 | 1,015 | 1,295 ᵉ | 5,760 | 19.24 | 138.6 |
 | Greenheart | *Chlorocardium rodiei* | 1.01 | 1,010 | 2,360 | 10,500 | 22.4 | 171.7 |
 | Marblewood | *Marmaroxylon racemosum* | 1.00 | 1,005 | 1,271 ᵉ | 5,653 | 19.43 | 138.0 |
 | Live Oak | *Quercus virginiana* | 0.88 | 986 | 1,260 ᵉ | 5,604 | 13.7 | 127.0 |
+| Mora | *Mora excelsa* | 0.88 | 985 | 2,293 | 10,200 | 20.4 | 152.4 |
 
 ---
 
@@ -120,9 +120,9 @@ When builders describe tone as **glassy, steely, bell-like, piano-like**, they h
 | **Waddywood** | 1,430 | 21.50 | 15.0 | 3,878 | 5.55 |
 | **Bloodwood** | 1,050 | 20.78 | 19.8 | 4,448 | 4.67 |
 | **Black Ironwood** | 1,355 | 20.46 | 15.1 | 3,886 | 5.27 |
+| **Mora** | 985 | 20.4 | 20.7 | 4,552 | 4.48 |
 | **Brazilwood** | 1,050 | 20.20 | 19.2 | 4,386 | 4.61 |
 | **Marblewood** | 1,005 | 19.43 | 19.3 | 4,397 | 4.42 |
-| **Mora** | 1,015 | 19.24 | 19.0 | 4,354 | 4.42 |
 | Australian Buloke | 1,085 | 18.50 | 17.1 | 4,130 | 4.48 |
 | Gidgee | 1,150 | 18.50 | 16.1 | 4,011 | 4.61 |
 | Curupay | 1,025 | 18.04 | 17.6 | 4,195 | 4.30 |
