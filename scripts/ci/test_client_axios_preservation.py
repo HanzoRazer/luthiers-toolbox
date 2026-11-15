@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -44,6 +46,42 @@ ALLOWED_PREFIXES = (
     "SPRINTS.md",
     ".cbsp21/patches/client-axios-dormant-preservation-024.json",
 )
+
+
+CLUSTER_IDS = [
+    "ai-advisory",
+    "art-jobs",
+    "art-presets",
+    "art-rosette-job-history",
+    "cam-insights",
+    "cam-utility-clients",
+    "risk-dashboard-canonical",
+    "rosette-compare-canonical",
+    "rosette-compare-history",
+]
+# Owner-ruled boundaries (PR #483 review): preset selection/CRUD is not job
+# detail/timeline, and /api/compare/history is not /api/art/rosette/*.
+SPLIT_BOUNDARIES = {
+    "art-presets": {
+        "components/art/ArtPresetSelector.vue",
+        "views/ArtPresetManager.vue",
+    },
+    "art-jobs": {
+        "views/ArtJobDetail.vue",
+        "views/ArtJobTimeline.vue",
+    },
+}
+SPLIT_PREFIXES = {
+    "rosette-compare-history": (
+        "components/art/RosetteCompareHistory.vue",
+        "components/art/rosette_compare_history/",
+    ),
+    "art-rosette-job-history": (
+        "views/ArtStudioRosetteCompare.vue",
+        "views/rosette_compare/",
+    ),
+}
+RETIRED_CLUSTER_IDS = ("art-presets-jobs", "rosette-history")
 
 
 def _plan() -> dict:
@@ -83,6 +121,63 @@ class EntryCensus(unittest.TestCase):
             owners[item["original_path"]] = item["capability_cluster"]
         self.assertEqual(set(owners), set(_plan()["importers"]))
         self.assertEqual(len(owners), 17)
+
+    def test_inventory_hash_is_the_committed_blob_not_working_tree_bytes(self) -> None:
+        # core.autocrlf rewrites the working tree on Windows; the manifest must not follow it.
+        rel = INVENTORY.relative_to(REPO).as_posix()
+        committed = subprocess.check_output(["git", "cat-file", "blob", f"{SOURCE_COMMIT}:{rel}"], cwd=REPO)
+        self.assertEqual(_plan()["inventory_sha256"], tool.sha256_bytes(committed))
+
+    def test_cluster_ids_are_pinned(self) -> None:
+        self.assertEqual(_plan()["clusters"], CLUSTER_IDS)
+        overlay = json.loads(OVERLAY.read_text(encoding="utf-8"))
+        self.assertEqual(overlay["preservation"]["clusters"], CLUSTER_IDS)
+
+    def test_split_clusters_keep_owner_ruled_boundaries(self) -> None:
+        by_cluster: dict[str, set[str]] = {}
+        for item in _plan()["files"]:
+            rel = item["original_path"][len("packages/client/src/"):]
+            by_cluster.setdefault(item["capability_cluster"], set()).add(rel)
+        for cluster_id, expected in SPLIT_BOUNDARIES.items():
+            self.assertEqual(by_cluster[cluster_id], expected, cluster_id)
+        for cluster_id, prefixes in SPLIT_PREFIXES.items():
+            files = by_cluster[cluster_id]
+            self.assertTrue(files)
+            for rel in files:
+                self.assertTrue(rel.startswith(prefixes), f"{rel} in {cluster_id}")
+            for other, other_files in by_cluster.items():
+                if other == cluster_id:
+                    continue
+                for rel in other_files:
+                    self.assertFalse(
+                        rel.startswith(prefixes),
+                        f"{rel} belongs in {cluster_id}, found in {other}",
+                    )
+        with MATRIX.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        for row in rows:
+            if row["contract"] == "rosette-compare-history":
+                self.assertEqual(row["cluster"], "rosette-compare-history")
+                self.assertEqual(row["endpoint"], "/api/compare/history")
+            if row["contract"] == "art-rosette-history":
+                self.assertEqual(row["cluster"], "art-rosette-job-history")
+                self.assertTrue(row["endpoint"].startswith("/api/art/rosette/"), row["endpoint"])
+            if row["cluster"] == "art-presets":
+                self.assertTrue(row["endpoint"].startswith("/api/art/presets"), row["endpoint"])
+            if row["cluster"] == "art-jobs":
+                self.assertNotIn("/api/art/presets", row["endpoint"])
+
+    def test_human_records_name_every_cluster_and_no_retired_id(self) -> None:
+        readmes = [ARCHIVE / "README.md", LEDGER.with_name("README.md")]
+        for path in readmes:
+            text = path.read_text(encoding="utf-8")
+            for cluster_id in CLUSTER_IDS:
+                self.assertIn(f"`{cluster_id}`", text, f"{path}: {cluster_id}")
+            for retired in RETIRED_CLUSTER_IDS:
+                self.assertNotIn(f"`{retired}`", text, f"{path} still names {retired}")
+        index = INDEX.read_text(encoding="utf-8").splitlines()
+        headings = [line[3:] for line in index if line.startswith("## ")]
+        self.assertEqual([h for h in headings if h != "Distinct contracts"], CLUSTER_IDS)
 
     def test_overlay_records_preservation_and_does_not_retire_production(self) -> None:
         before = json.loads(_git_bytes(OVERLAY.relative_to(REPO).as_posix()))
@@ -176,6 +271,28 @@ class Integrity(unittest.TestCase):
             self.assertFalse(dest.exists())
             self.assertEqual(list(Path(tmp).rglob("*")), before)
 
+    def test_dry_run_refuses_verify_and_write_manifest(self) -> None:
+        for flag in ("--verify", "--write-manifest"):
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--repo-root",
+                    str(REPO),
+                    "--inventory",
+                    str(INVENTORY),
+                    "--archive-root",
+                    str(ARCHIVE),
+                    "--dry-run",
+                    flag,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 2, completed.stdout)
+            self.assertIn("plan-only", completed.stderr)
+
     def test_missing_path_and_ambiguous_path_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(tool.PreservationError) as missing:
@@ -225,6 +342,89 @@ class Integrity(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 2, completed.stdout)
         self.assertIn("without --archive-root", completed.stderr)
+
+
+def _clone_archive(dest: Path) -> Path:
+    shutil.copytree(ARCHIVE, dest)
+    return dest
+
+
+def _symlink_or_skip(test: unittest.TestCase, link: Path, target: Path, *, directory: bool = False) -> None:
+    try:
+        link.symlink_to(target, target_is_directory=directory)
+    except (OSError, NotImplementedError) as exc:
+        test.skipTest(f"symlinks unavailable here: {exc}")
+
+
+class Tamper(unittest.TestCase):
+    """Verification must fail when an archive entry is not an independent copy."""
+
+    def _entry(self) -> dict:
+        return _plan()["files"][0]
+
+    def test_clean_clone_verifies(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            tool.verify_archive(REPO, clone, _plan())
+
+    def test_symlinked_entry_to_production_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            entry.unlink()
+            _symlink_or_skip(self, entry, REPO / item["original_path"])
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("link", str(caught.exception))
+
+    def test_symlinked_directory_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            parent = (clone / item["archive_path"]).parent
+            shutil.rmtree(parent)
+            _symlink_or_skip(self, parent, (REPO / item["original_path"]).parent, directory=True)
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("link", str(caught.exception))
+
+    def test_hard_linked_alias_of_production_is_rejected(self) -> None:
+        item = self._entry()
+        with tempfile.TemporaryDirectory() as tmp:
+            clone = _clone_archive(Path(tmp) / "archive")
+            entry = clone / item["archive_path"]
+            entry.unlink()
+            try:
+                os.link(REPO / item["original_path"], entry)
+            except OSError as exc:
+                self.skipTest(f"hard link across this temp dir unavailable: {exc}")
+            with self.assertRaises(tool.PreservationError) as caught:
+                tool.verify_archive(REPO, clone, _plan())
+            self.assertIn("aliases production", str(caught.exception))
+
+    def test_copy_refuses_to_write_through_a_destination_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src = root / "src.txt"
+            victim = root / "victim.txt"
+            dest = root / "dest.txt"
+            src.write_bytes(b"new")
+            victim.write_bytes(b"keep")
+            _symlink_or_skip(self, dest, victim)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_bytes(src, dest)
+            self.assertEqual(victim.read_bytes(), b"keep")
+
+    def test_copy_refuses_a_symlinked_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            real = root / "real.txt"
+            link = root / "link.txt"
+            real.write_bytes(b"x")
+            _symlink_or_skip(self, link, real)
+            with self.assertRaises(tool.PreservationError):
+                tool.copy_bytes(link, root / "out.txt")
 
 
 class Closure(unittest.TestCase):

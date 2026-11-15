@@ -14,6 +14,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -198,20 +199,18 @@ def _clusters() -> tuple[Cluster, ...]:
             ("/api/compare/", "/api/art/"),
         ),
         Cluster(
-            "art-presets-jobs",
-            "Preset selector, preset CRUD, job detail, and the job timeline. One commercial/art workflow. The timeline's reports_index GET stays here and is not a risk-dashboard /api/compare/risk_* call.",
+            "art-presets",
+            "Preset selection and preset CRUD on /api/art/presets. The read-only selector and the CRUD manager share one endpoint family. This cluster is not the art job detail/timeline capability.",
             DORMANT,
-            "Decide later whether to adopt the selector, the manager, job detail, or the timeline. The art component barrel was not archived because it also re-exports live studio components.",
+            "Decide later whether to adopt the selector, the manager, or both. The selector does not replace preset CRUD. The art component barrel was not archived because it also re-exports live studio components.",
             (
                 _file(SELECTOR, "importer", SELECTOR),
                 _file(MANAGER, "importer", MANAGER),
-                _file(JOB_DETAIL, "importer", JOB_DETAIL),
-                _file(TIMELINE, "importer", TIMELINE),
             ),
             (
                 Exclusion(
                     _p("components/art/index.ts"),
-                    "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived.",
+                    "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this capability. The selector source is archived.",
                     "caller",
                 ),
                 Exclusion(
@@ -220,7 +219,32 @@ def _clusters() -> tuple[Cluster, ...]:
                     "dependency",
                 ),
             ),
-            ("/api/compare/risk_", "/api/compare/baselines", "/api/compare/history", "/api/compare/diff"),
+            (
+                "/api/art/jobs",
+                "/api/cam/risk/reports_index",
+                "/api/compare/risk_",
+                "/api/compare/baselines",
+                "/api/compare/history",
+                "/api/compare/diff",
+            ),
+        ),
+        Cluster(
+            "art-jobs",
+            "Art job detail and the art job timeline on /api/art/jobs. The timeline's reports_index GET stays here and is not a risk-dashboard /api/compare/risk_* call. This cluster is not preset selection or preset CRUD.",
+            DORMANT,
+            "Decide later whether to adopt job detail, the timeline, or both. The timeline's /api/cam/risk/reports_index GET is part of this capability, not the risk dashboard.",
+            (
+                _file(JOB_DETAIL, "importer", JOB_DETAIL),
+                _file(TIMELINE, "importer", TIMELINE),
+            ),
+            (),
+            (
+                "/api/art/presets",
+                "/api/compare/risk_",
+                "/api/compare/baselines",
+                "/api/compare/history",
+                "/api/compare/diff",
+            ),
         ),
         Cluster(
             "cam-insights",
@@ -241,10 +265,10 @@ def _clusters() -> tuple[Cluster, ...]:
             ("/api/cam/job_log/insights/${", "/api/compare/"),
         ),
         Cluster(
-            "rosette-history",
-            "Two dormant history contracts in one preservation cluster: GET /api/compare/history, and the art-rosette job compare history. Neither is the canonical baseline/diff client.",
+            "rosette-compare-history",
+            "GET /api/compare/history and the RosetteCompareHistory view. Not the canonical baseline/diff client, not /api/compare/lab, and not the art-rosette job compare history.",
             DORMANT,
-            "Review /api/compare/history and the art-rosette snapshot history as separate contracts. Do not treat either as useRosetteCompareApi.ts, and do not treat /api/compare/lab as either of them.",
+            "Review /api/compare/history on its own. Do not treat it as useRosetteCompareApi.ts, as /api/compare/lab, or as the /api/art/rosette/* history.",
             (
                 _file(HISTORY_ACTIONS, "importer", *history_cmp),
                 _file("components/art/rosette_compare_history/composables/rosetteCompareTypes.ts", "type", *history_cmp),
@@ -258,18 +282,6 @@ def _clusters() -> tuple[Cluster, ...]:
                 _file("components/art/rosette_compare_history/PairStatsBadges.vue", "view-part", *history_cmp),
                 _file("components/art/rosette_compare_history/HistoryTable.vue", "view-part", *history_cmp),
                 _file("components/art/RosetteCompareHistory.vue", "view", *history_cmp),
-                _file(ART_ACTIONS, "importer", *history_art),
-                _file(ART_HISTORY, "importer", *history_art),
-                _file("views/rosette_compare/composables/rosetteCompareTypes.ts", "type", *history_art),
-                _file("views/rosette_compare/composables/index.ts", "barrel", *history_art),
-                _file("views/rosette_compare/composables/useRosetteCompareState.ts", "caller-support", *history_art),
-                _file("views/rosette_compare/composables/useRosetteComparePaths.ts", "caller-support", *history_art),
-                _file("views/rosette_compare/composables/useRosetteCompareHelpers.ts", "caller-support", *history_art),
-                _file("views/rosette_compare/CompareDiffSummary.vue", "view-part", *history_art),
-                _file("views/rosette_compare/CompareHistorySidebar.vue", "view-part", *history_art),
-                _file("views/rosette_compare/compare_history/RiskMetricsBar.vue", "view-part", *history_art),
-                _file("views/rosette_compare/compare_history/SnapshotCard.vue", "view-part", *history_art),
-                _file("views/ArtStudioRosetteCompare.vue", "view", *history_art),
             ),
             (
                 Exclusion(
@@ -283,7 +295,29 @@ def _clusters() -> tuple[Cluster, ...]:
                     "dependency",
                 ),
             ),
-            ("/api/compare/baselines", "/api/compare/diff", "/api/compare/lab"),
+            ("/api/compare/baselines", "/api/compare/diff", "/api/compare/lab", "/api/art/rosette"),
+        ),
+        Cluster(
+            "art-rosette-job-history",
+            "Art-rosette job compare and snapshot history on /api/art/rosette/*, with the ArtStudioRosetteCompare view. Not GET /api/compare/history and not the canonical baseline/diff client.",
+            DORMANT,
+            "Review the /api/art/rosette/* job compare and snapshot history on its own. Do not treat it as /api/compare/history, /api/compare/diff, or /api/compare/lab.",
+            (
+                _file(ART_ACTIONS, "importer", *history_art),
+                _file(ART_HISTORY, "importer", *history_art),
+                _file("views/rosette_compare/composables/rosetteCompareTypes.ts", "type", *history_art),
+                _file("views/rosette_compare/composables/index.ts", "barrel", *history_art),
+                _file("views/rosette_compare/composables/useRosetteCompareState.ts", "caller-support", *history_art),
+                _file("views/rosette_compare/composables/useRosetteComparePaths.ts", "caller-support", *history_art),
+                _file("views/rosette_compare/composables/useRosetteCompareHelpers.ts", "caller-support", *history_art),
+                _file("views/rosette_compare/CompareDiffSummary.vue", "view-part", *history_art),
+                _file("views/rosette_compare/CompareHistorySidebar.vue", "view-part", *history_art),
+                _file("views/rosette_compare/compare_history/RiskMetricsBar.vue", "view-part", *history_art),
+                _file("views/rosette_compare/compare_history/SnapshotCard.vue", "view-part", *history_art),
+                _file("views/ArtStudioRosetteCompare.vue", "view", *history_art),
+            ),
+            (),
+            ("/api/compare/",),
         ),
         Cluster(
             "rosette-compare-canonical",
@@ -417,21 +451,21 @@ def _operations() -> tuple[dict[str, str], ...]:
         row("cam-utility-clients", "job-int", JOB, "GET", "/api/cam/job-int/log/{runId}", "axios", "true", note_keep),
         row("cam-utility-clients", "job-int", JOB, "POST", "/api/cam/job-int/favorites/{runId}", "axios", "true", "Not /api/jobint/favorites/{runId}."),
         row("ai-advisory", "ai-advisory", ADVISORY, "POST", "/ai/advisories/request", "axios", "true", note_keep),
-        row("art-presets-jobs", "art-presets", SELECTOR, "GET", "/api/art/presets", "axios", "true", "Read-only picker. Does not replace preset CRUD."),
-        row("art-presets-jobs", "art-presets", MANAGER, "GET", "/api/art/presets", "axios", "true", "CRUD list."),
-        row("art-presets-jobs", "art-presets", MANAGER, "POST", "/api/art/presets", "axios", "true", "CRUD create."),
-        row("art-presets-jobs", "art-presets", MANAGER, "DELETE", "/api/art/presets/{id}", "axios", "true", "CRUD delete."),
-        row("art-presets-jobs", "art-jobs", JOB_DETAIL, "GET", "/api/art/jobs/{jobId}", "axios", "true", note_keep),
-        row("art-presets-jobs", "art-jobs", TIMELINE, "GET", "/api/art/jobs", "axios", "true", note_keep),
-        row("art-presets-jobs", "art-jobs", TIMELINE, "GET", "/api/cam/risk/reports_index", "axios", "true", "Timeline's second GET. Not the risk-dashboard /api/compare/risk_* family."),
+        row("art-presets", "art-presets", SELECTOR, "GET", "/api/art/presets", "axios", "true", "Read-only picker. Does not replace preset CRUD."),
+        row("art-presets", "art-presets", MANAGER, "GET", "/api/art/presets", "axios", "true", "CRUD list."),
+        row("art-presets", "art-presets", MANAGER, "POST", "/api/art/presets", "axios", "true", "CRUD create."),
+        row("art-presets", "art-presets", MANAGER, "DELETE", "/api/art/presets/{id}", "axios", "true", "CRUD delete."),
+        row("art-jobs", "art-jobs", JOB_DETAIL, "GET", "/api/art/jobs/{jobId}", "axios", "true", note_keep),
+        row("art-jobs", "art-jobs", TIMELINE, "GET", "/api/art/jobs", "axios", "true", note_keep),
+        row("art-jobs", "art-jobs", TIMELINE, "GET", "/api/cam/risk/reports_index", "axios", "true", "Timeline's second GET. Not the risk-dashboard /api/compare/risk_* family."),
         row("cam-insights", "cam-insights-list", INSIGHTS, "GET", "/api/cam/job_log/insights", "axios", "true", "List. Not the per-job URL."),
         row("cam-insights", "cam-insights-job", INSIGHTS_JOB, "GET", "/api/cam/job_log/insights/{jobId}", "api()", "true", "Competing client. Uses api(), not Axios. Not a substitute for the list."),
-        row("rosette-history", "rosette-compare-history", HISTORY_ACTIONS, "GET", "/api/compare/history", "axios", "true", "Distinct from baseline/diff and from /api/compare/lab."),
-        row("rosette-history", "art-rosette-history", ART_ACTIONS, "GET", "/api/art/rosette/jobs", "axios", "true", "Art-rosette job compare. Not /api/compare/history."),
-        row("rosette-history", "art-rosette-history", ART_ACTIONS, "POST", "/api/art/rosette/compare", "axios", "true", "Art-rosette job compare. Not /api/compare/diff."),
-        row("rosette-history", "art-rosette-history", ART_ACTIONS, "POST", "/api/art/rosette/compare/snapshot", "axios", "true", note_keep),
-        row("rosette-history", "art-rosette-history", ART_HISTORY, "GET", "/api/art/rosette/compare/snapshots", "axios", "true", note_keep),
-        row("rosette-history", "art-rosette-history", ART_HISTORY, "GET", "/api/art/rosette/compare/export_csv", "window.open", "true", "Browser open, not an Axios call. Part of the same history composable."),
+        row("rosette-compare-history", "rosette-compare-history", HISTORY_ACTIONS, "GET", "/api/compare/history", "axios", "true", "Distinct from baseline/diff and from /api/compare/lab."),
+        row("art-rosette-job-history", "art-rosette-history", ART_ACTIONS, "GET", "/api/art/rosette/jobs", "axios", "true", "Art-rosette job compare. Not /api/compare/history."),
+        row("art-rosette-job-history", "art-rosette-history", ART_ACTIONS, "POST", "/api/art/rosette/compare", "axios", "true", "Art-rosette job compare. Not /api/compare/diff."),
+        row("art-rosette-job-history", "art-rosette-history", ART_ACTIONS, "POST", "/api/art/rosette/compare/snapshot", "axios", "true", note_keep),
+        row("art-rosette-job-history", "art-rosette-history", ART_HISTORY, "GET", "/api/art/rosette/compare/snapshots", "axios", "true", note_keep),
+        row("art-rosette-job-history", "art-rosette-history", ART_HISTORY, "GET", "/api/art/rosette/compare/export_csv", "window.open", "true", "Browser open, not an Axios call. Part of the same history composable."),
         row("rosette-compare-canonical", "rosette-baseline-diff", CANONICAL_API, "GET", "/api/compare/baselines", "axios", "true", "Canonical list.", _p(CANONICAL_API)),
         row("rosette-compare-canonical", "rosette-baseline-diff", CANONICAL_API, "POST", "/api/compare/baselines", "axios", "true", "Canonical save.", _p(CANONICAL_API)),
         row("rosette-compare-canonical", "rosette-baseline-diff", CANONICAL_API, "GET", "/api/compare/baselines/{id}", "axios", "true", "Canonical geometry. Id is encodeURIComponent'd.", _p(CANONICAL_API)),
@@ -465,8 +499,46 @@ def operations() -> tuple[dict[str, str], ...]:
     return _operations()
 
 
+def _is_link(path: Path) -> bool:
+    """True for a symlink, or a Windows junction / mount-point reparse point."""
+    if path.is_symlink():
+        return True
+    is_junction = getattr(path, "is_junction", None)  # Python 3.12+
+    if is_junction is not None and is_junction():
+        return True
+    try:
+        attrs = getattr(os.lstat(path), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attrs & 0x400)  # FILE_ATTRIBUTE_REPARSE_POINT
+
+
+def assert_no_link_in_chain(path: Path, stop: Path) -> None:
+    """Reject ``path`` if it, or any ancestor up to and including ``stop``, is a link.
+
+    A preserved copy must be an independent file. A symlinked entry, a symlinked
+    parent directory, or a junction would let the archive alias production
+    source, and a write through one would land outside the archive.
+    """
+    current = path
+    while True:
+        if _is_link(current):
+            raise PreservationError(f"refusing link in archive path: {current}")
+        if current == stop or current.parent == current:
+            return
+        current = current.parent
+
+
 def copy_bytes(src: Path, dest: Path) -> None:
-    """Write dest as the raw bytes of src. Line endings and encoding are kept."""
+    """Write dest as the raw bytes of src. Line endings and encoding are kept.
+
+    Refuses a symlinked source and a pre-existing symlinked destination, so the
+    write can neither read through nor write through a link.
+    """
+    if _is_link(src):
+        raise PreservationError(f"refusing to copy from a link: {src}")
+    if _is_link(dest):
+        raise PreservationError(f"refusing to write through a link: {dest}")
     data = src.read_bytes()
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
@@ -706,6 +778,22 @@ def _endpoint_inventory(path: str, serves: tuple[str, ...]) -> list[str]:
     ]
 
 
+def inventory_sha256(repo: Path, inventory_path: Path) -> str:
+    """SHA-256 of the inventory as committed at SOURCE_COMMIT.
+
+    Working-tree bytes depend on core.autocrlf, so hashing them makes the
+    manifest platform-dependent (a Windows checkout writes CRLF and the hash
+    no longer matches CI). The committed blob is the record. The working tree
+    must match it up to line endings, or the plan is refused.
+    """
+    rel = inventory_path.resolve().relative_to(repo.resolve()).as_posix()
+    committed = _git_bytes(repo, SOURCE_COMMIT, rel)
+    working = inventory_path.read_bytes()
+    if working.replace(b"\r\n", b"\n") != committed.replace(b"\r\n", b"\n"):
+        raise PreservationError(f"inventory differs from {SOURCE_COMMIT}:{rel} beyond line endings")
+    return sha256_bytes(committed)
+
+
 def build_plan(repo: Path, inventory_path: Path, cluster_id: str | None) -> dict:
     if not inventory_path.is_file():
         raise PreservationError(f"missing inventory {inventory_path}")
@@ -840,7 +928,7 @@ def build_plan(repo: Path, inventory_path: Path, cluster_id: str | None) -> dict
         "files": files,
         "importer_count": len(importers),
         "importers": importers,
-        "inventory_sha256": sha256_bytes(inventory_path.read_bytes()),
+        "inventory_sha256": inventory_sha256(repo, inventory_path),
         "order_id": ORDER_ID,
         "production_files_retired": False,
         "selected_cluster": cluster_id or "",
@@ -992,9 +1080,16 @@ def copy_closure(repo: Path, archive_root: Path, files: list[dict]) -> None:
         dest = archive_root / "source" / item["original_path"]
         if _inside(dest, repo / CLIENT_SRC):
             raise PreservationError(f"refusing to write {dest} inside production client source")
+        if dest.parent.exists():
+            assert_no_link_in_chain(dest.parent, archive_root)
+        elif archive_root.exists():
+            assert_no_link_in_chain(archive_root, archive_root)
         copy_bytes(src, dest)
+        assert_no_link_in_chain(dest, archive_root)
         if dest.read_bytes() != src.read_bytes():
             raise PreservationError(f"copy diverged for {item['original_path']}")
+        if os.path.samefile(dest, src):
+            raise PreservationError(f"archive copy aliases production for {item['original_path']}")
 
 
 def verify_archive(repo: Path, archive_root: Path, plan: dict) -> None:
@@ -1009,11 +1104,21 @@ def verify_archive(repo: Path, archive_root: Path, plan: dict) -> None:
         raise PreservationError("MANIFEST.json does not match the current plan")
     source_root = archive_root / "source"
     declared = {item["archive_path"]: item for item in plan["files"]}
-    on_disk = sorted(
-        path.relative_to(archive_root).as_posix()
-        for path in source_root.rglob("*")
-        if path.is_file()
-    )
+    assert_no_link_in_chain(source_root, archive_root)
+    # os.walk with followlinks=False sees a linked directory as a name, not a
+    # tree; every name is checked so no link (file or directory) is accepted.
+    links: list[str] = []
+    on_disk_paths: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(source_root, followlinks=False):
+        for name in dirnames + filenames:
+            candidate = Path(dirpath) / name
+            if _is_link(candidate):
+                links.append(candidate.relative_to(archive_root).as_posix())
+            elif name in filenames:
+                on_disk_paths.append(candidate)
+    if links:
+        raise PreservationError("archive contains links, not independent copies: " + ", ".join(sorted(links)))
+    on_disk = sorted(path.relative_to(archive_root).as_posix() for path in on_disk_paths)
     expected = sorted(item["archive_path"] for item in plan["files"])
     if on_disk != expected:
         missing = sorted(set(expected) - set(on_disk))
@@ -1022,7 +1127,10 @@ def verify_archive(repo: Path, archive_root: Path, plan: dict) -> None:
     for rel in on_disk:
         item = declared[rel]
         archived = (archive_root / rel).read_bytes()
-        original = (repo / item["original_path"]).read_bytes()
+        original_path = repo / item["original_path"]
+        if os.path.samefile(archive_root / rel, original_path):
+            raise PreservationError(f"archive entry aliases production file {item['original_path']}")
+        original = original_path.read_bytes()
         if archived != original:
             raise PreservationError(f"archived bytes differ from production for {item['original_path']}")
         if sha256_bytes(archived) != item["sha256"]:
@@ -1070,6 +1178,10 @@ def main(argv: list[str] | None = None) -> int:
             assert_archive_destination(repo, archive_root)
         else:
             archive_root = None
+        if args.dry_run and (args.verify or args.write_manifest):
+            raise PreservationError(
+                "--dry-run is plan-only; it cannot be combined with --verify or --write-manifest"
+            )
         if args.write_manifest and cluster_id:
             raise PreservationError("refusing to write a partial manifest for one cluster")
         if (args.write_manifest or args.verify or (archive_root and not args.dry_run)) and archive_root is None:

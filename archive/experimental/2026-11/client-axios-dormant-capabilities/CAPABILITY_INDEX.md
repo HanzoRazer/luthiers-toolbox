@@ -20,24 +20,56 @@ Archived files:
 - `packages/client/src/components/ai/aiAdvisoryApi.ts` (importer). binding_reachable=false, evaluated_reachable=false.
 - `packages/client/src/stores/aiAdvisoryStore.ts` (caller). binding_reachable=false, evaluated_reachable=false.
 
-## art-presets-jobs
+## art-jobs
 
-Preset selector, preset CRUD, job detail, and the job timeline. One commercial/art workflow. The timeline's reports_index GET stays here and is not a risk-dashboard /api/compare/risk_* call.
+Art job detail and the art job timeline on /api/art/jobs. The timeline's reports_index GET stays here and is not a risk-dashboard /api/compare/risk_* call. This cluster is not preset selection or preset CRUD.
 
 Disposition: DORMANT_PRESERVE.
-Next adjudication: Decide later whether to adopt the selector, the manager, job detail, or the timeline. The art component barrel was not archived because it also re-exports live studio components.
+Next adjudication: Decide later whether to adopt job detail, the timeline, or both. The timeline's /api/cam/risk/reports_index GET is part of this capability, not the risk dashboard.
+
+Archived files:
+
+- `packages/client/src/views/ArtJobDetail.vue` (importer). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/ArtJobTimeline.vue` (importer). binding_reachable=false, evaluated_reachable=false.
+
+## art-presets
+
+Preset selection and preset CRUD on /api/art/presets. The read-only selector and the CRUD manager share one endpoint family. This cluster is not the art job detail/timeline capability.
+
+Disposition: DORMANT_PRESERVE.
+Next adjudication: Decide later whether to adopt the selector, the manager, or both. The selector does not replace preset CRUD. The art component barrel was not archived because it also re-exports live studio components.
 
 Archived files:
 
 - `packages/client/src/components/art/ArtPresetSelector.vue` (importer). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/ArtJobDetail.vue` (importer). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/ArtJobTimeline.vue` (importer). binding_reachable=false, evaluated_reachable=false.
 - `packages/client/src/views/ArtPresetManager.vue` (importer). binding_reachable=false, evaluated_reachable=false.
 
 Left in production, with a reason:
 
-- `packages/client/src/components/art/index.ts` (caller). Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived.
+- `packages/client/src/components/art/index.ts` (caller). Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this capability. The selector source is archived.
 - `packages/client/src/composables/useConfirm.ts` (dependency). Shared confirm dialog used by live screens. ArtPresetManager.vue is archived. The helper is not an art-preset contract.
+
+## art-rosette-job-history
+
+Art-rosette job compare and snapshot history on /api/art/rosette/*, with the ArtStudioRosetteCompare view. Not GET /api/compare/history and not the canonical baseline/diff client.
+
+Disposition: DORMANT_PRESERVE.
+Next adjudication: Review the /api/art/rosette/* job compare and snapshot history on its own. Do not treat it as /api/compare/history, /api/compare/diff, or /api/compare/lab.
+
+Archived files:
+
+- `packages/client/src/views/ArtStudioRosetteCompare.vue` (view). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/CompareDiffSummary.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/CompareHistorySidebar.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/index.ts` (barrel). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts` (type). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts` (importer). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts` (importer). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
+- `packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
 
 ## cam-insights
 
@@ -141,12 +173,12 @@ Left in production, with a reason:
 - `packages/client/src/components/art/rosette-compare/__tests__/useRosetteCompareApi.spec.ts` (caller). Characterization spec. It imports Axios only to mock the canonical client. It is not a production capability and is not one of the 17 importers.
 - `packages/client/src/components/art/__tests__/RosetteComparePanel.spec.ts` (caller). Characterization spec. It mounts RosetteComparePanel.vue and mocks Axios. It is not a production capability and is not one of the 17 importers.
 
-## rosette-history
+## rosette-compare-history
 
-Two dormant history contracts in one preservation cluster: GET /api/compare/history, and the art-rosette job compare history. Neither is the canonical baseline/diff client.
+GET /api/compare/history and the RosetteCompareHistory view. Not the canonical baseline/diff client, not /api/compare/lab, and not the art-rosette job compare history.
 
 Disposition: DORMANT_PRESERVE.
-Next adjudication: Review /api/compare/history and the art-rosette snapshot history as separate contracts. Do not treat either as useRosetteCompareApi.ts, and do not treat /api/compare/lab as either of them.
+Next adjudication: Review /api/compare/history on its own. Do not treat it as useRosetteCompareApi.ts, as /api/compare/lab, or as the /api/art/rosette/* history.
 
 Archived files:
 
@@ -162,18 +194,6 @@ Archived files:
 - `packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
 - `packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
 - `packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/ArtStudioRosetteCompare.vue` (view). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/CompareDiffSummary.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/CompareHistorySidebar.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue` (view-part). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/index.ts` (barrel). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts` (type). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts` (importer). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts` (importer). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
-- `packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts` (caller-support). binding_reachable=false, evaluated_reachable=false.
 
 Left in production, with a reason:
 

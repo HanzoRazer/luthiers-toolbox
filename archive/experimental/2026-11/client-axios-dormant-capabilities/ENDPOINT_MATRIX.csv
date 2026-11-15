@@ -1,12 +1,17 @@
 cluster,contract,production_path,method,endpoint,transport,archived,deletion_authority,canonical_production_path,notes
 ai-advisory,ai-advisory,packages/client/src/components/ai/aiAdvisoryApi.ts,POST,/ai/advisories/request,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
-art-presets-jobs,art-jobs,packages/client/src/views/ArtJobTimeline.vue,GET,/api/art/jobs,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
-art-presets-jobs,art-jobs,packages/client/src/views/ArtJobDetail.vue,GET,/api/art/jobs/{jobId},axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
-art-presets-jobs,art-jobs,packages/client/src/views/ArtJobTimeline.vue,GET,/api/cam/risk/reports_index,axios,true,false,,Timeline's second GET. Not the risk-dashboard /api/compare/risk_* family.
-art-presets-jobs,art-presets,packages/client/src/views/ArtPresetManager.vue,DELETE,/api/art/presets/{id},axios,true,false,,CRUD delete.
-art-presets-jobs,art-presets,packages/client/src/components/art/ArtPresetSelector.vue,GET,/api/art/presets,axios,true,false,,Read-only picker. Does not replace preset CRUD.
-art-presets-jobs,art-presets,packages/client/src/views/ArtPresetManager.vue,GET,/api/art/presets,axios,true,false,,CRUD list.
-art-presets-jobs,art-presets,packages/client/src/views/ArtPresetManager.vue,POST,/api/art/presets,axios,true,false,,CRUD create.
+art-jobs,art-jobs,packages/client/src/views/ArtJobTimeline.vue,GET,/api/art/jobs,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
+art-jobs,art-jobs,packages/client/src/views/ArtJobDetail.vue,GET,/api/art/jobs/{jobId},axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
+art-jobs,art-jobs,packages/client/src/views/ArtJobTimeline.vue,GET,/api/cam/risk/reports_index,axios,true,false,,Timeline's second GET. Not the risk-dashboard /api/compare/risk_* family.
+art-presets,art-presets,packages/client/src/views/ArtPresetManager.vue,DELETE,/api/art/presets/{id},axios,true,false,,CRUD delete.
+art-presets,art-presets,packages/client/src/components/art/ArtPresetSelector.vue,GET,/api/art/presets,axios,true,false,,Read-only picker. Does not replace preset CRUD.
+art-presets,art-presets,packages/client/src/views/ArtPresetManager.vue,GET,/api/art/presets,axios,true,false,,CRUD list.
+art-presets,art-presets,packages/client/src/views/ArtPresetManager.vue,POST,/api/art/presets,axios,true,false,,CRUD create.
+art-rosette-job-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts,GET,/api/art/rosette/compare/export_csv,window.open,true,false,,"Browser open, not an Axios call. Part of the same history composable."
+art-rosette-job-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts,GET,/api/art/rosette/compare/snapshots,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
+art-rosette-job-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,GET,/api/art/rosette/jobs,axios,true,false,,Art-rosette job compare. Not /api/compare/history.
+art-rosette-job-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,POST,/api/art/rosette/compare,axios,true,false,,Art-rosette job compare. Not /api/compare/diff.
+art-rosette-job-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,POST,/api/art/rosette/compare/snapshot,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
 cam-insights,cam-insights-job,packages/client/src/components/cam/CamJobInsightsPanel.vue,GET,/api/cam/job_log/insights/{jobId},api(),true,false,,"Competing client. Uses api(), not Axios. Not a substitute for the list."
 cam-insights,cam-insights-list,packages/client/src/components/cam/CamJobInsightsSummaryPanel.vue,GET,/api/cam/job_log/insights,axios,true,false,,List. Not the per-job URL.
 cam-utility-clients,adaptive-api-prefix,packages/client/src/components/toolbox/adaptive-bench/useAdaptiveBenchActions.ts,POST,/api/cam/adaptive2/bench,api(),false,false,,Extra bench route on the competing client. api/n16.ts does not call it.
@@ -44,9 +49,4 @@ rosette-compare-canonical,rosette-baseline-diff,packages/client/src/components/a
 rosette-compare-canonical,rosette-baseline-diff,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,GET,/api/compare/baselines/{id},axios,true,false,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,Canonical geometry. Id is encodeURIComponent'd.
 rosette-compare-canonical,rosette-baseline-diff,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,POST,/api/compare/baselines,axios,true,false,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,Canonical save.
 rosette-compare-canonical,rosette-baseline-diff,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,POST,/api/compare/diff,axios,true,false,packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts,Canonical diff. Not /api/compare/lab and not /api/compare/history.
-rosette-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts,GET,/api/art/rosette/compare/export_csv,window.open,true,false,,"Browser open, not an Axios call. Part of the same history composable."
-rosette-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts,GET,/api/art/rosette/compare/snapshots,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
-rosette-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,GET,/api/art/rosette/jobs,axios,true,false,,Art-rosette job compare. Not /api/compare/history.
-rosette-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,POST,/api/art/rosette/compare,axios,true,false,,Art-rosette job compare. Not /api/compare/diff.
-rosette-history,art-rosette-history,packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts,POST,/api/art/rosette/compare/snapshot,axios,true,false,,Route presence was not re-litigated. Absence would not authorize deletion.
-rosette-history,rosette-compare-history,packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts,GET,/api/compare/history,axios,true,false,,Distinct from baseline/diff and from /api/compare/lab.
+rosette-compare-history,rosette-compare-history,packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts,GET,/api/compare/history,axios,true,false,,Distinct from baseline/diff and from /api/compare/lab.

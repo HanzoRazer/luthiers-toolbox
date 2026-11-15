@@ -16,12 +16,14 @@
     "note": "DORMANT_PRESERVE is not deletion authority. The archive is provenance for later migrate, retire, or remove orders. Production files stay in place, including the four CANONICAL_BUT_UNROUTED importers.",
     "clusters": [
       "ai-advisory",
-      "art-presets-jobs",
+      "art-jobs",
+      "art-presets",
+      "art-rosette-job-history",
       "cam-insights",
       "cam-utility-clients",
       "risk-dashboard-canonical",
       "rosette-compare-canonical",
-      "rosette-history"
+      "rosette-compare-history"
     ]
   },
   "retired_importers": [

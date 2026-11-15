@@ -14,12 +14,14 @@ Axios stays installed at `^1.21.0`. This directory does not remove the dependenc
 
 - `MANIFEST.json` records original path, SHA-256, Git blob, source commit, cluster, callers, endpoints, and reachability for every copied file.
 - `CAPABILITY_INDEX.md` is the cluster narrative, including callers and dependencies that stayed in production and why.
-- `ENDPOINT_MATRIX.csv` lists each Axios operation and the contracts that must stay distinct (`/api/compare/lab`, Rosette baseline/diff, Rosette history).
+- `ENDPOINT_MATRIX.csv` lists each Axios operation and the contracts that must stay distinct (`/api/compare/lab`, Rosette baseline/diff, `/api/compare/history`, `/api/art/rosette/*` job history).
 - `source/` repeats the original relative paths.
 
 The four canonical-but-unrouted importers are included with that disposition. Their production files are not retired.
 
-`useRosetteCompareApi.ts` is the baseline/diff client. It is a different contract from `GET /api/compare/history` and from the art-rosette job compare history.
+`useRosetteCompareApi.ts` is the baseline/diff client. It is a different contract from `GET /api/compare/history` (cluster `rosette-compare-history`) and from the art-rosette job compare history (cluster `art-rosette-job-history`).
+
+Clusters: `ai-advisory`, `art-jobs`, `art-presets`, `art-rosette-job-history`, `cam-insights`, `cam-utility-clients`, `risk-dashboard-canonical`, `rosette-compare-canonical`, `rosette-compare-history`. Each is a separate adjudication unit.
 
 ## Verify
 
@@ -33,4 +35,4 @@ python3 scripts/investigations/client_axios_preservation.py \
   --verify
 ```
 
-`--dry-run` writes nothing. The tool does not delete production files, and it refuses an archive destination inside `packages/client/src`.
+`--dry-run` writes nothing and is plan-only; it refuses `--verify` and `--write-manifest`. `--verify` rejects symlinks, junctions, and hard-linked aliases of production files under `source/`. The tool does not delete production files, and it refuses an archive destination inside `packages/client/src`.

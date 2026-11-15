@@ -4,24 +4,26 @@
   "axios_removal_authorized": false,
   "clusters": [
     "ai-advisory",
-    "art-presets-jobs",
+    "art-jobs",
+    "art-presets",
+    "art-rosette-job-history",
     "cam-insights",
     "cam-utility-clients",
     "risk-dashboard-canonical",
     "rosette-compare-canonical",
-    "rosette-history"
+    "rosette-compare-history"
   ],
   "dormant_preserve_means_safe_to_delete": false,
   "effective_unresolved": [],
   "exclusions": [
     {
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-presets",
       "kind": "caller",
       "path": "packages/client/src/components/art/index.ts",
-      "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived."
+      "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this capability. The selector source is archived."
     },
     {
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-presets",
       "kind": "dependency",
       "path": "packages/client/src/composables/useConfirm.ts",
       "reason": "Shared confirm dialog used by live screens. ArtPresetManager.vue is archived. The helper is not an art-preset contract."
@@ -129,13 +131,13 @@
       "reason": "Unrouted shell that mounts the canonical panel and RosetteCompareHistory.vue. Archiving it here would mix baseline/diff with /api/compare/history."
     },
     {
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "kind": "caller",
       "path": "packages/client/src/views/ArtStudioUnified.vue",
       "reason": "Unrouted shell that mounts RosetteCompareHistory.vue and the canonical RosetteComparePanel.vue. Archiving it here would mix /api/compare/history with the baseline/diff contract."
     },
     {
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "kind": "dependency",
       "path": "packages/client/src/utils/downloadBlob.ts",
       "reason": "Shared download helper used by live labs. The compare-history actions composable is archived."
@@ -367,7 +369,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/ArtPresetSelector.vue",
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-presets",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/presets"
@@ -378,7 +380,7 @@
           "included": "excluded",
           "kinds": "reexport",
           "path": "packages/client/src/components/art/index.ts",
-          "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this workflow. The selector source is archived."
+          "reason": "Only direct caller of ArtPresetSelector.vue, and it also re-exports ArtStudioRosette, ArtStudioInlay, ArtStudioBracing, ConfidenceBadge, and ConfidenceDetails. Those exports are not this capability. The selector source is archived."
         }
       ],
       "original_path": "packages/client/src/components/art/ArtPresetSelector.vue",
@@ -396,7 +398,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/RosetteCompareHistory.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -570,7 +572,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/GlobalSparklines.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -599,7 +601,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/HistoryTable.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -628,7 +630,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/PairStatsBadges.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -657,7 +659,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/PresetSparklines.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -686,7 +688,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/index.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -715,7 +717,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/rosetteCompareTypes.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -774,7 +776,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareActions.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -803,7 +805,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteComparePresets.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -832,7 +834,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareSparklines.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -861,7 +863,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareState.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -890,7 +892,7 @@
     },
     {
       "archive_path": "source/packages/client/src/components/art/rosette_compare_history/composables/useRosetteCompareStats.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "rosette-compare-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/compare/history"
@@ -1344,7 +1346,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/ArtJobDetail.vue",
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-jobs",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/jobs/{jobId}"
@@ -1366,7 +1368,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/ArtJobTimeline.vue",
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-jobs",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/jobs",
@@ -1389,7 +1391,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/ArtPresetManager.vue",
-      "capability_cluster": "art-presets-jobs",
+      "capability_cluster": "art-presets",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/presets",
@@ -1413,7 +1415,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/ArtStudioRosetteCompare.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1776,7 +1778,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/CompareDiffSummary.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1810,7 +1812,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/CompareHistorySidebar.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1844,7 +1846,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/compare_history/RiskMetricsBar.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1878,7 +1880,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/compare_history/SnapshotCard.vue",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1912,7 +1914,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/index.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -1946,7 +1948,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/rosetteCompareTypes.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -2004,7 +2006,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareActions.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -2036,7 +2038,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHelpers.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -2070,7 +2072,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareHistory.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/compare/snapshots",
@@ -2101,7 +2103,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteComparePaths.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
@@ -2135,7 +2137,7 @@
     },
     {
       "archive_path": "source/packages/client/src/views/rosette_compare/composables/useRosetteCompareState.ts",
-      "capability_cluster": "rosette-history",
+      "capability_cluster": "art-rosette-job-history",
       "disposition": "DORMANT_PRESERVE",
       "endpoint_inventory": [
         "GET /api/art/rosette/jobs",
