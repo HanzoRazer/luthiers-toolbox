@@ -27,8 +27,6 @@ ARCHIVE = REPO / "archive/experimental/2026-11/client-axios-dormant-capabilities
 LEDGER = REPO / "docs/investigations/client-axios-dormant-preservation-024/PRESERVATION_LEDGER.csv"
 INDEX = ARCHIVE / "CAPABILITY_INDEX.md"
 MATRIX = ARCHIVE / "ENDPOINT_MATRIX.csv"
-PACKAGE = REPO / "packages" / "client" / "package.json"
-LOCK = REPO / "packages" / "client" / "package-lock.json"
 SRC = REPO / "packages" / "client" / "src"
 sys.path.insert(0, str(SCRIPT.parent))
 import client_axios_preservation as tool  # noqa: E402
@@ -44,7 +42,23 @@ ALLOWED_PREFIXES = (
     "scripts/ci/test_client_axios_reachability.py",
     ".github/workflows/core_ci.yml",
     "SPRINTS.md",
-    ".cbsp21/patches/client-axios-dormant-preservation-024.json",
+    ".cbsp21/patches/",
+)
+# Paths this preservation owns. The boundary below is a statement about a
+# change that edits the preservation; a PR that touches none of these is
+# outside its scope (it ran against every later PR once #483 merged).
+OWNED_PREFIXES = (
+    "archive/experimental/2026-11/client-axios-dormant-capabilities/",
+    "docs/investigations/client-axios-dormant-preservation-024/",
+    "docs/investigations/client-axios-reachability-020_2026-11-10/POST_AUDIT_RETIREMENTS.json",
+    "scripts/investigations/client_axios_preservation.py",
+    "scripts/ci/test_client_axios_preservation.py",
+)
+PROTECTED_PATHS = (
+    "packages/client/package.json",
+    "packages/client/package-lock.json",
+    "packages/client/src/router/index.ts",
+    "docs/investigations/client-axios-reachability-020_2026-11-10/AXIOS_IMPORT_INVENTORY.csv",
 )
 
 
@@ -743,32 +757,59 @@ class Closure(unittest.TestCase):
                 self.assertTrue((REPO / row["path"]).is_file())
 
 
+def _changed_since_merge_base() -> list[str]:
+    base = subprocess.check_output(
+        ["git", "merge-base", "origin/main", "HEAD"], cwd=REPO, text=True
+    ).strip()
+    changed = subprocess.check_output(
+        ["git", "diff", "--name-only", base], cwd=REPO, text=True
+    ).splitlines()
+    untracked = subprocess.check_output(
+        ["git", "ls-files", "--others", "--exclude-standard"], cwd=REPO, text=True
+    ).splitlines()
+    return changed + untracked
+
+
+def _under(path: str, prefixes: tuple[str, ...]) -> bool:
+    return any(path == prefix or path.startswith(prefix) for prefix in prefixes)
+
+
+def _boundary_violations(touched: list[str]) -> list[str] | None:
+    """None when the change set does not edit the preservation at all."""
+    if not any(_under(path, OWNED_PREFIXES) for path in touched):
+        return None
+    return sorted(
+        path
+        for path in touched
+        if not _under(path, ALLOWED_PREFIXES)
+        or path in PROTECTED_PATHS
+        or path.startswith("packages/client/")
+    )
+
+
 class Boundary(unittest.TestCase):
-    def test_production_client_router_and_inventory_are_unchanged(self) -> None:
-        changed = subprocess.check_output(
-            ["git", "diff", "--name-only", "origin/main"],
-            cwd=REPO,
-            text=True,
-        ).splitlines()
-        untracked = subprocess.check_output(
-            ["git", "ls-files", "--others", "--exclude-standard"],
-            cwd=REPO,
-            text=True,
-        ).splitlines()
-        touched = changed + untracked
-        for path in touched:
-            self.assertTrue(
-                any(path == prefix or path.startswith(prefix) for prefix in ALLOWED_PREFIXES),
-                path,
+    def test_scope_ignores_unrelated_change_sets(self) -> None:
+        # The PR #484 shape: docs + its own CBSP21 manifest, no preservation path.
+        self.assertIsNone(
+            _boundary_violations(
+                [".cbsp21/patches/tonewood-verification-001.json", "docs/tonewood/README.md"]
             )
-        self.assertEqual(PACKAGE.read_bytes(), _git_bytes("packages/client/package.json"))
-        self.assertEqual(LOCK.read_bytes(), _git_bytes("packages/client/package-lock.json"))
-        self.assertEqual(
-            (SRC / "router/index.ts").read_bytes(),
-            _git_bytes("packages/client/src/router/index.ts"),
         )
-        self.assertEqual(INVENTORY.read_bytes(), _git_bytes(INVENTORY.relative_to(REPO).as_posix()))
-        self.assertFalse(any(path.startswith("packages/client/") for path in touched))
+        self.assertIsNone(_boundary_violations(["packages/client/package.json"]))
+        self.assertIsNone(_boundary_violations([]))
+
+    def test_scope_rejects_preservation_bundled_with_production(self) -> None:
+        archive = "archive/experimental/2026-11/client-axios-dormant-capabilities/README.md"
+        self.assertEqual(_boundary_violations([archive, ".cbsp21/patches/x.json"]), [])
+        for extra in (*PROTECTED_PATHS, "packages/client/src/api/n15.ts", "docs/tonewood/README.md"):
+            self.assertEqual(_boundary_violations([archive, extra]), [extra], extra)
+
+    def test_preservation_change_leaves_production_client_router_and_inventory_alone(self) -> None:
+        touched = _changed_since_merge_base()
+        violations = _boundary_violations(touched)
+        if violations is None:
+            self.skipTest("change set does not edit the preservation; boundary out of scope")
+        self.assertEqual(violations, [])
         self.assertTrue(INDEX.is_file())
         self.assertIn(SOURCE_COMMIT, INDEX.read_text(encoding="utf-8"))
         self.assertIn("does not mean safe to delete", (ARCHIVE / "README.md").read_text(encoding="utf-8"))
