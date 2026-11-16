@@ -5,7 +5,7 @@
 
 > **ᵉ Estimated Janka (added 2026-11-14).** Values marked ᵉ equal the bulk-import regression `Janka ≈ 0.00355 × density^1.85` (`scripts/bulk_import_wood_species.py`), not a hardness test. They rise smoothly with density, so they cannot rank species of similar density, and they can be far below published measurements for the hardest woods. Treat them as placeholders. See `VERIFICATION_LOG.md` (C-02).
 
-This comparison covers the Acacia and Albizia genera tonewoods — closely related Fabaceae that share the "warm, balanced" tonal signature. Includes Hawaiian Koa, Tasmanian/Malaysian/Australian Blackwood, Monkeypod, Mugavu, and African relatives. These are the woods Rory McGuinness described as having "that fundamental and very direct powerful tone... but with more warmth behind it" compared to African Blackwood (a Dalbergia, not an Acacia).
+This comparison covers the Acacia and Albizia genera tonewoods — closely related Fabaceae that share the "warm, balanced" tonal signature. Includes Hawaiian Koa, Tasmanian Blackwood, Australian Blackwood, the unverified trade name Malaysian Blackwood, Monkeypod, Mugavu, and African relatives. These are the woods Rory McGuinness described as having "that fundamental and very direct powerful tone... but with more warmth behind it" compared to African Blackwood (a Dalbergia, not an Acacia).
 
 ---
 
@@ -21,7 +21,13 @@ The trade names are confusing. Here's what's actually what:
 | **Hawaiian Koa** | *Acacia koa* | Hawaii | Endemic cousin species |
 | **Mangium** | *Acacia mangium* | SE Asia, Pacific | Plantation timber, lighter |
 
-**Key insight:** Tasmanian, Malaysian, and Australian Blackwood are all *Acacia melanoxylon*. They are the same species grown in different regions. The database lists them separately because sourcing region can affect density and figure.
+**Key insight:** Tasmanian Blackwood is *Acacia melanoxylon*. Australian Blackwood is recorded as likely the same species (see the table). "Malaysian Blackwood" is not established as *A. melanoxylon*; the name is unverified (see The "Malaysian Blackwood" Question). The database lists the three trade names separately because a sourcing region can affect density and figure when the species really is the same. African Blackwood is not part of that identity question: it is a *Dalbergia*.
+
+---
+
+## Focused comparisons
+
+African Blackwood versus the trade name Malaysian Blackwood is not a ranking inside this family. African Blackwood is *Dalbergia melanoxylon*, not an Acacia. The side-by-side properties, instrument-use notes, sourcing and regulatory distinctions, and evidence gaps for that pair are in [African Blackwood vs Malaysian Blackwood](tonewood_comparison_blackwoods_african_vs_malaysian.md). This document keeps the family survey and does not take those comparison rankings back in.
 
 ---
 
@@ -164,17 +170,9 @@ compared to African Blackwood's tendency to become:
 
 > "almost too steely"
 
-**The physics confirms this:**
+The numeric African-versus-Malaysian ranking is not repeated here. Density, impedance, damping, and the rest of that side-by-side stay in the focused comparison linked under Focused comparisons. This document's family-boundary contrasts with African Blackwood stay the rounded figures already printed in Acoustic Interpretation and in the family summaries.
 
-| Property | African Blackwood | Malaysian/Tasmanian Blackwood |
-|----------|:-----------------:|:-----------------------------:|
-| Density (kg/m³) | 1,270 | 640 |
-| Acoustic Impedance | ~4.78 | ~2.75 |
-| Damping | Very low | Moderate |
-| Overtone Retention | Strong | Attenuated |
-| Fundamental Emphasis | Less relative to overtones | More prominent |
-
-Malaysian Blackwood is simply *Acacia melanoxylon* grown in Malaysia. The tonal character Rory describes — powerful fundamental with warmth — is characteristic of the entire *A. melanoxylon* / *A. koa* family, not a unique property of Malaysian-sourced wood.
+The warmth in Rory's description — a powerful fundamental with more warmth than African Blackwood's steely tendency — is the character this document records for the *A. melanoxylon* and *A. koa* rows. It is not evidence that wood sold as Malaysian Blackwood is *A. melanoxylon*, and it is not a property shown here to be unique to Malaysian-grown wood. No source in this repo establishes that identity.
 
 ---
 
