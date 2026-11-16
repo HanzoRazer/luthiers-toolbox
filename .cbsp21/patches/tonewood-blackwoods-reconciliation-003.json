@@ -1,0 +1,108 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TONEWOOD_BLACKWOODS_RECONCILIATION_003",
+  "title": "docs(tonewood): reconcile African vs Malaysian blackwoods duplication (O-05)",
+  "intent": "Resolve O-05's remaining duplication by making tonewood_comparison_acacia_family_blackwoods_koa.md the shared Acacia-family reference and tonewood_comparison_blackwoods_african_vs_malaysian.md the focused African-versus-Malaysian comparison. Overlap was classified in a ledger before prose edits. Unique comparison material stays. No new scientific conclusion. This grants no purchasing, regulatory, engineering, or manufacturing authority and does not validate the measurements.",
+  "change_type": "docs",
+  "behavior_change": "none - documentation-only. No numerical-data authority change. No runtime, API, client, CAM, manufacturing, purchasing, or CITES authority change. wood_species.json is untouched. FPL policy examples and the extracted FPL source table are untouched.",
+  "risk_level": "low",
+  "constraints": {
+    "method": "overlap ledger: every original blackwoods section has one disposition (KEEP_COMPARISON, MOVE_TO_SHARED_REFERENCE, REPLACE_WITH_LINK, KEEP_WITH_CAVEAT, PRESERVE_HISTORICAL_ONLY, or REQUIRES_SEPARATE_VERIFICATION) recorded in docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md before the prose was treated as settled",
+    "tests": "scripts/ci/test_tonewood_blackwoods_reconciliation.py, named in core_ci.yml because scripts/ci is not collected wholesale. In-test fixtures plant a duplicate passage and a changed 17.95 without writing the repo. A cross-record check requires the log status line, the O-05 row, the C-09 heading, the reconciliation record and this manifest to agree that O-05 is resolved as duplication only; negative controls plant the old C-09 heading and two contradicting status statements taken from earlier wording. Identity-wording checks (owner review 2026-11-16): neither document may say 'botanically unrelated' or 'same species'; every table cell naming the Malaysian or Australian Blackwood species, genus or family must carry its caveat in the cell; the comparison's Scientific Name row must say the A. melanoxylon record is not confirmed as the traded wood's species. Planted controls restore each removed wording.",
+    "manual_checks": "citation strings were not retargeted; reciprocal markdown links were read in both documents; numeric tokens in the blackwoods document were compared with the pre-change text and none were removed",
+    "out_of_scope": [
+      "O-01 estimated Janka remaining",
+      "O-02 per-value attribution",
+      "O-03 wood_species.json MOE sources",
+      "O-06 Granadillo",
+      "O-08 damping",
+      "O-11 specific-gravity basis",
+      "CITES reclassification",
+      "Tonewood Profiler",
+      "Physical Engineering Mesh"
+    ]
+  },
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/tonewood-blackwoods-reconciliation-003.json",
+      ".github/workflows/core_ci.yml",
+      "docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "scripts/ci/test_tonewood_blackwoods_reconciliation.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/tonewood-blackwoods-reconciliation-003.json",
+      ".github/workflows/core_ci.yml",
+      "docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "scripts/ci/test_tonewood_blackwoods_reconciliation.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Blackwoods document restated as a focused comparison with purpose, identity table, unchanged property tables, use and regulatory notes, gaps, and a link to the Acacia-family document. Acacia document gains a Focused comparisons link, drops two sentences that asserted Malaysian Blackwood is Acacia melanoxylon, and drops the short ranking table whose figures already lived in the comparison. VERIFICATION_LOG marks O-05 resolved as duplication only. New structural test and investigation record. Review fix: the C-09 heading now says it resolved the extreme-density part of O-05, and the reconciliation record states O-05 as resolved as duplication only. Owner review 2026-11-16: trade-name identity wording corrected in both documents ('botanically unrelated species' -> different genera in the same family, Fabaceae; Australian 'Same species, regional variant' removed; both unresolved trade names 'provisionally mapped' to A. melanoxylon; caveat placed in the Malaysian scientific-name, family and genus table cells). Final SHA-256s re-recorded. No figure changed.",
+    "why_not_redundant": "O-05 still called the blackwoods document a repeat of the Acacia document, and the Acacia document still asserted an identity its own C-07 caution denies. No existing test checks the split, the reciprocal links, or that the withdrawn identity sentences stay withdrawn."
+  },
+  "verification": {
+    "commands_run": [
+      "services/api/.venv/bin/python scripts/ci/test_tonewood_blackwoods_reconciliation.py -> 17 passed",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_tonewood_blackwoods_reconciliation.py -v -> 17 passed",
+      "services/api/.venv/bin/python scripts/check_tonewood_fpl_values.py --summary -> 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells; 1295 skipped (was 1299; four unmapped cells left with the removed ranking table)",
+      "services/api/.venv/bin/python scripts/check_tonewood_cirad_citations.py -> 0 mismatches",
+      "numeric-token diff of the blackwoods document against HEAD before the edit -> 0 tokens removed",
+      "manual read of both citation lists and both reciprocal markdown links",
+      "o05_status_problems against origin/main's log -> 4 problems; against the PR's first head 2c00d691 -> 2 (C-09 heading, record wording); against the fixed tree -> 0",
+      "identity_wording_problems against the documents at 50ef9721 -> 9 problems (2 forbidden phrases, 7 uncaveated identity cells); against the final documents -> 0",
+      "final SHA-256 re-recorded: blackwoods 79aae5d8b3f32fd6ff6a356298fee7091a014510c3479eecd1b8cbe54d774ad5, acacia 941dfb61c1ab279576d05a392df1f966183fed3baa83603e75d46c46896ef242"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/tonewood-blackwoods-reconciliation-003.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Names scripts/ci/test_tonewood_blackwoods_reconciliation.py. Nothing collects scripts/ci wholesale. Existing steps stay in order.",
+      "risk": "low",
+      "behavior_change": "CI only: one additional test step."
+    },
+    {
+      "path": "docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md",
+      "intent": "Overlap ledger, dispositions, hashes, relocated material, and the statement that no measurement was revalidated. States O-05 as resolved as duplication only, matching the log. Final hashes re-recorded after the identity-wording correction; identity bullets updated.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "O-05 resolved as duplication only, not as scientific validation. C-09 heading narrowed to the extreme-density part of O-05 so no record credits C-09 with all of O-05. Records the identity-wording correction.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_acacia_family_blackwoods_koa.md",
+      "intent": "Shared Acacia-family reference. Adds the focused-comparison link. Withdraws two identity sentences and the duplicate ranking table. Does not import comparison rankings or change family-table numbers. Identity wording: Malaysian and Australian Blackwood 'provisionally mapped' to A. melanoxylon; unsourced 'Same species, regional variant' removed.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/tonewood_comparison_blackwoods_african_vs_malaysian.md",
+      "intent": "Focused African-versus-Malaysian comparison. Original tables and figures kept. Family survey replaced by a link. Research caveat kept. Identity wording: Fabaceae genera, not 'botanically unrelated'; Malaysian scientific-name, family and genus cells carry the reference-record caveat.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "scripts/ci/test_tonewood_blackwoods_reconciliation.py",
+      "intent": "Structural test: both docs, reciprocal links, headings, dispositions, hashes, O-05 only when structure holds, FPL examples untouched, planted duplicate and planted numeric controls. Cross-record O-05 status agreement check with three planted-contradiction controls. Identity-wording and in-table caveat checks with planted controls.",
+      "risk": "low",
+      "behavior_change": "None (test)."
+    }
+  ]
+}
