@@ -341,7 +341,7 @@ class InventoryIntegrity(unittest.TestCase):
         current = effective_unresolved(rows, _retirements())
         self.assertEqual(current, [])
         self.assertIn("axios", declared)
-        self.assertEqual(declared["axios"], "^1.21.0")
+        self.assertEqual(declared["axios"], "^1.21.1")
         if "axios" not in declared:
             self.assertEqual(unresolved, [], "a removal PR cannot contain UNRESOLVED")
             self.assertEqual(current, [], "a removal PR cannot leave Rosette Compare unresolved")
@@ -359,7 +359,7 @@ class InventoryIntegrity(unittest.TestCase):
             self.assertTrue((REPO / path).is_file(), path)
         package = json.loads(PACKAGE.read_text(encoding="utf-8"))
         declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
-        self.assertEqual(declared.get("axios"), "^1.21.0")
+        self.assertEqual(declared.get("axios"), "^1.21.1")
         self.assertIn(
             "packages/client/src/components/art/rosette-compare/useRosetteCompareApi.ts",
             expected,

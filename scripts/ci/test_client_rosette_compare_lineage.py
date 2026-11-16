@@ -223,7 +223,7 @@ def test_feature_stays_unrouted_and_axios_stays_declared() -> None:
         assert name not in router_text
     package = json.loads(PACKAGE.read_text(encoding="utf-8"))
     declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
-    assert declared["axios"] == "^1.21.0"
+    assert declared["axios"] == "^1.21.1"
     workflow = WORKFLOW.read_text(encoding="utf-8")
     assert "scripts/ci/test_client_rosette_compare_lineage.py" in workflow
     sprints = SPRINTS.read_text(encoding="utf-8")

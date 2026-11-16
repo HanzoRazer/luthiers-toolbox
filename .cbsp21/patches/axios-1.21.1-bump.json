@@ -1,0 +1,95 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "AXIOS_1_21_1_BUMP",
+  "title": "build(deps): bump axios from 1.21.0 to 1.21.1 in /packages/client",
+  "intent": "Dependabot currency with a transitive security fix. axios 1.21.1 raises its follow-redirects floor to ^1.16.2, and the lockfile resolves follow-redirects 1.16.3, which strips sensitive headers on cross-host redirects even when headers are passed as a flat array and escapes every regex syntax character in the host match. Production dependency, patch version inside the existing ^1 range. Manifest authored by hand: Dependabot cannot author one and CBSP21-NOBORROW-001 makes a borrowed one invalid.",
+  "change_type": "chore",
+  "behavior_change": "None in the shipped client. vite build of this PR's tree (on main 53a86f0b: supabase-js 2.119.0, @tailwindcss/postcss 4.3.5) and of main's tree (the same install with axios 1.21.0 + follow-redirects 1.16.0, the only two entries that differ) produced 199 files each, byte-identical (diff -rq empty); dist contains no axios version string, XSRF-TOKEN or follow-redirects. Axios ships zero bytes (see AXIOS_1_21_0_BUMP and CLIENT-AXIOS-REACHABILITY-020), and follow-redirects is reached only through axios's Node http adapter, which a browser build never includes. Effect is limited to Node-side tooling (vitest).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/axios-1.21.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/ci/test_client_rosette_compare_lineage.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/axios-1.21.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "scripts/ci/test_client_axios_reachability.py",
+      "scripts/ci/test_client_rosette_compare_lineage.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json declares axios ^1.21.1 (was ^1.21.0). package-lock.json = origin/main 53a86f0b's lockfile (406 entries, including #491 Tailwind/PostCSS 4.3.5 and #492 supabase-js 2.119.0) + the root axios range + two package entries: node_modules/axios 1.21.0 -> 1.21.1 (its follow-redirects range ^1.16.0 -> ^1.16.2) and node_modules/follow-redirects 1.16.0 -> 1.16.3. Two CI tests that pin the live declaration now expect ^1.21.1: test_client_axios_reachability.py (two assertions) and test_client_rosette_compare_lineage.py (one).",
+    "why_not_redundant": "Dependabot PR #490 failed API Tests, Core CI Summary and both CBSP21 gates: the pinned assertions expected ^1.21.0 and there was no manifest. The CI job stopped at the reachability step, so the lineage test's identical pin had not surfaced yet.",
+    "what_did_not_change": "No source file, no build/lint/test configuration, no other dependency. Lockfile peer flags stay as on main: Dependabot's regeneration flipped `peer` on 16 unchanged-version entries (npm-version churn), reverted per main's convention. The preservation archive's historical axios_declared ^1.21.0 is unchanged. The preservation tool's own live gate is NOT edited here: it is preservation-owned, and the boundary test forbids editing it together with package.json, so its fix (accept any ^1.x.y) went in separately as PR #495, merged as 324ccf7b before this PR's final merge of main."
+  },
+  "verification": {
+    "commands_run": [
+      "git merge origin/main into the Dependabot head 0ae998ec (3291df78), again after #495 (324ccf7b), and again after #491/#492 (53a86f0b); no force-push",
+      "lockfile JSON enumeration: Dependabot's 0ae998ec vs its base -> version moves exactly axios 1.21.0->1.21.1 and follow-redirects 1.16.0->1.16.3; 16 entries differed only in the `peer` flag (reverted)",
+      "conflict with #491/#492 resolved by rebuilding both files from origin/main 53a86f0b + only this PR's delta (package.json axios ^1.21.1; lockfile root axios range, node_modules/axios, node_modules/follow-redirects); main's node_modules/axios and node_modules/follow-redirects were confirmed unchanged since 324ccf7b; serializer round-trips main byte-for-byte; parsed comparison vs main: 406 -> 406 entries, exactly '', node_modules/axios, node_modules/follow-redirects differ",
+      "npm view: axios@1.21.1 and follow-redirects@1.16.3 dist.integrity == lockfile; axios published by GitHub Actions trusted publisher (OIDC), approver jasonsaayman, SLSA provenance v1, same path as 1.21.0; follow-redirects by the same maintainer as 1.16.0; no preinstall/install/postinstall in either",
+      "npm pack + diff: axios lib/ changes only dispatchRequest.js (response.duration timed with performance.now() when available, rounded) and env/data.js (VERSION); index.d.ts adds an optional config param to getAdapter. follow-redirects index.js: array-form headers normalized to an object before sensitive-header handling; escapeRegex escapes ^ [ ] { } |; README adds a maintenance-paused / funding notice",
+      "npm ci --ignore-scripts on the resolved tree -> axios 1.21.1, follow-redirects 1.16.3, supabase-js 2.119.0, @tailwindcss/postcss 4.3.5; package-lock.json SHA-256 identical before and after (efe5affb...)",
+      "vite build A/B on the resolved tree vs main's tree (npm i --no-save axios@1.21.0 follow-redirects@1.16.0) -> 199 files each, diff -rq empty",
+      "python -m pytest scripts/ci/test_client_axios_reachability.py -> 19 passed",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the five files>",
+      "git merge origin/main 324ccf7b (after #495); git diff --name-only origin/main...HEAD touches no OWNED_PREFIXES path, so the preservation boundary test is out of scope"
+    ],
+    "manual_verifications": [
+      "Lockfile enumerated by parsing both JSON trees, not by reading the diff view (PR #296 precedent).",
+      "The reported failure named two assertions; grep for ^1.21.0 found five more. Three are historical records of the preserved SOURCE_COMMIT (tool lines emitting axios_declared and the capability index; preservation test line 116) and must stay. Two read the live package.json: the lineage test (updated here) and the preservation tool's gate (separate PR, see what_did_not_change)."
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared production dependency patch bump inside the existing ^1 range.",
+      "risk": "low",
+      "behavior_change": "None in the shipped bundle (axios is tree-shaken out entirely)."
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump, rebuilt on current main with Dependabot's peer-flag churn reverted.",
+      "risk": "low",
+      "behavior_change": "Two movements: axios 1.21.0->1.21.1, follow-redirects 1.16.0->1.16.3 (security fix). No other entry differs from origin/main."
+    },
+    {
+      "path": "scripts/ci/test_client_axios_reachability.py",
+      "intent": "Two inventory assertions expect the live declaration ^1.21.1.",
+      "risk": "low",
+      "behavior_change": "CI only"
+    },
+    {
+      "path": "scripts/ci/test_client_rosette_compare_lineage.py",
+      "intent": "Unrouted-and-declared assertion expects the live declaration ^1.21.1.",
+      "risk": "low",
+      "behavior_change": "CI only"
+    },
+    {
+      "path": ".cbsp21/patches/axios-1.21.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "None. Governance metadata only."
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-16-AXIOS-1-21-1",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. Recorded, not acted on: follow-redirects' README now says maintenance is paused for lack of funding and security reports are best-effort; it reaches this repo only through axios's Node adapter, which the browser bundle excludes."
+  }
+}
