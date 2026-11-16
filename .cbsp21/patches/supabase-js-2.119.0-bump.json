@@ -1,0 +1,102 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "SUPABASE_JS_2_119_0_BUMP",
+  "title": "build(deps): bump @supabase/supabase-js from 2.118.0 to 2.119.0",
+  "intent": "Routine Dependabot currency, no advisory, plus one compensating client fix the bump makes necessary. @supabase/supabase-js 2.118.0 -> 2.119.0 in packages/client moves the whole @supabase family in lockstep. 2.119.0 (2026-11-04): postgrest per-request fetch option on .from(), realtime broadcast persistence and an error-message fix, storage exists()/upload-option fixes, auth deleteUser typing, and auth #2786 -- a `global` signOut() that fails on the server (offline, 5xx) now KEEPS the local session and returns { error } instead of clearing it. The app's only sign-out path (useAuthStore.signOut) ignored that return value, so on 2.119.0 a failed sign-out would leave the access token in storage while the UI showed the user as signed out. The store now falls back to signOut({ scope: 'local' }) on a global error, which is the library's own documented remedy. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001). Dependabot's 16 peer-flag-only lockfile entries are dropped per main's convention since #432 (ec88eedd).",
+  "change_type": "fix",
+  "behavior_change": "One intended runtime change, compensating for the library: when the server-side global sign-out fails, 'Sign out' now still removes this device's session (via a scope:'local' fallback) instead of leaving the token in storage. When the server is reachable, behavior is unchanged (one global sign-out request). Without this fix the bump itself would have been the behavior change: on 2.118.0 a failed global sign-out cleared the local session; on 2.119.0 it does not, and the store discarded the returned error. Lockfile audited against merge base bb90047e by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view. Entry count 405 before and 405 after; zero added, zero removed. Exactly six node_modules entries changed, the @supabase family 2.118.0 -> 2.119.0 in lockstep: auth-js, functions-js, postgrest-js, realtime-js, storage-js, supabase-js -- each changing only version, resolved and integrity, except supabase-js, whose `dependencies` map also changed; checked key by key (the #296 hiding place): same five keys, only the sibling pins 2.118.0 -> 2.119.0. The root entry differs in one key, dependencies.@supabase/supabase-js ^2.118.0 -> ^2.119.0. Zero non-@supabase entries touched after dropping Dependabot's 16 peer-flag-only flips (no version changed in any of them). engines.node is >=22.0.0 on all six packages both before and after: the client's declared ^20.19.0 || >=22.22.2 range admitting Node 20 is a PRE-EXISTING mismatch not introduced here; CI (node-version 22) and .nvmrc (22) already run a supported Node. Other 2.119.0 changes are unreachable: grep of packages/client/src finds no supabase.from/.storage/.channel/.rpc/.functions/auth.admin use; the app calls only getSession, onAuthStateChange, signInWithPassword, signUp, signInWithOAuth, signOut.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/supabase-js-2.119.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/stores/useAuthStore.ts",
+      "packages/client/src/stores/__tests__/useAuthStore.signOut.test.ts"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/supabase-js-2.119.0-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json",
+      "packages/client/src/stores/useAuthStore.ts",
+      "packages/client/src/stores/__tests__/useAuthStore.signOut.test.ts"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "package.json moves @supabase/supabase-js ^2.118.0 -> ^2.119.0 (one line). package-lock.json resolves the six-package @supabase family 2.118.0 -> 2.119.0 plus supabase-js's own sibling pins; no other movement (Dependabot's 16 peer-flag flips reverted to merge-base values). useAuthStore.signOut() now inspects the { error } returned by the default global signOut() and, on error, calls signOut({ scope: 'local' }); the local call removes the session before contacting the server, so it succeeds offline. A new vitest spec drives the real supabase-js client with substituted fetch and storage and asserts the persisted session and getAccessToken() after sign-out in three cases: server OK, offline, and 503.",
+    "why_not_redundant": "Dependabot currency, stated plainly; the store change is required for the bump to be safe, so it ships in the same PR rather than leaving a window where main runs 2.119.0 with the unhandled error. No existing manifest covers this diff; the prior family manifest (supabase-js-2.118.0-bump) would cover the two package files, and borrowing it is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head 3353fed8 failed because the PR declared no manifest of its own (cbsp21-patch-input: 'This PR declares no CBSP21 manifest of its own'); all other checks passed (trending SKIPPED)",
+      "lockfile audit (full-entry enumeration, not diff-reading) vs merge base bb90047e: entries 405 -> 405, version/root changes = 7 (root + six @supabase), added=0, removed=0; 16 peer-flag-only entries in the Dependabot commit, reverted; supabase-js dependencies map checked key by key",
+      "lockfile rebuild: merge-base lock + the 7 bump entries in merge-base key order, json.dumps(indent=2)+newline; merge-base round-trip asserted byte-exact first; diff vs merge base = 24 lines; npm ci installs it cleanly",
+      "supply-chain, all six moved packages at 2.119.0: npm registry dist.integrity equals lockfile integrity; resolved from registry.npmjs.org; publisher GitHubActions (npm OIDC trusted publishing); published 2026-11-04",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=@supabase/supabase-js@2.118.0 and @2.119.0 -> 0 and 0",
+      "library change read at source: diff of @supabase/auth-js 2.118.0 vs 2.119.0 src/GoTrueClient.ts _signOut -- 2.118.0 called removeCurrentSession() before returning a non-401/403/404 server error for global scope; 2.119.0 returns the error with the session retained",
+      "A/B control, UNFIXED store + new spec: on 2.119.0 offline and 503 sign-out leave getAccessToken() == 'test-access-token' (2 failed); on 2.118.0 the token is cleared (fails only the later local-fallback assertion) and the library-contract test flips -- the regression is caused by the bump",
+      "fixed store on 2.119.0: npx vitest run src/stores/__tests__/useAuthStore.signOut.test.ts -> 5 passed",
+      "consumer trace: sole client constructor src/auth/supabase.ts, reachable from src/main.ts; auth-only API surface; no postgrest/storage/rpc/functions/realtime/admin calls in src",
+      "client gates locally (Windows, Node 24): type-check ratchet 87 / ceiling 87 PASS; lint ratchet PASS (baseline not lowered -- never inside a dependency PR); npm test 885 passed, 17 todo, only nodeEngineFloor.spec.ts fails to parse locally (known Windows-only, green on CI, fails identically on main); npm run build OK",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the five files> -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base bb90047e --head HEAD -> PASS (selected this PR's own manifest)"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^2.118.0 -> ^2.119.0.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none by itself; see useAuthStore.ts",
+      "verification": ["full parse of both package.json trees -> one key changed"]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "six @supabase entries 2.118.0 -> 2.119.0 in lockstep; no movement outside the family; integrity matches the npm registry for all six; Dependabot peer-flag churn reverted",
+      "verification": ["lockfile entry enumeration -> non-@supabase touched = NONE"]
+    },
+    {
+      "path": "packages/client/src/stores/useAuthStore.ts",
+      "intent": "Compensate for supabase-js 2.119.0 global-signOut semantics: fall back to local scope when global sign-out returns an error.",
+      "scan_targets": ["packages/client/src/stores/useAuthStore.ts"],
+      "risk": "low",
+      "behavior_change": "On a failed global sign-out (offline, 5xx) the device's session is now removed instead of retained. Server-reachable path unchanged.",
+      "verification": ["useAuthStore.signOut.test.ts: offline and 503 cases fail on the unfixed store, pass on the fixed store"]
+    },
+    {
+      "path": "packages/client/src/stores/__tests__/useAuthStore.signOut.test.ts",
+      "intent": "First coverage of the sign-out path; drives the real supabase-js client and pins the 2.119.0 library contract the fallback depends on.",
+      "scan_targets": ["packages/client/src/stores/__tests__/useAuthStore.signOut.test.ts"],
+      "risk": "low",
+      "behavior_change": "none - test only"
+    },
+    {
+      "path": ".cbsp21/patches/supabase-js-2.119.0-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [".cbsp21/patches/supabase-js-2.119.0-bump.json"],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-16-SUPABASE",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump plus a contained client auth-store fix; no architectural surface. The lockfile moved nothing beyond the @supabase family -- enumerated, not assumed. The package is on a live path (client auth), and its 2.119.0 global-signOut change does reach the app; that is handled in useAuthStore.ts and covered by a spec that fails without the fix.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
