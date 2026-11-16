@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done; C-14 (sourced shrinkage for 10 species in `wood_species.json`, CIRAD Tropix added as a source) applied. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, O-11, and O-12 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
 
 ## Why this log exists
 
@@ -118,7 +118,7 @@ Checked against Species+, the official CITES database (UNEP-WCMC), with IUCN cat
   - The radiation-ratio gap was overstated ("11–13", "a third lower"); corrected to 10.7–13 and 20–35%.
 - Typos fixed ("silica inclite", "calcium carbite") and leftover AI-session text removed from the Mugavu document.
 
-### C-09 — Canonical extreme-density document (resolves O-05)
+### C-09 — Canonical extreme-density document (resolves the extreme-density part of O-05)
 
 Owner decision 2026-11-14: keep one document as canonical rather than merge. `tonewood_comparison_extreme_density_glassy_character.md` is **canonical**: it covers more species (65 from 950 kg/m³ vs 27 from 1,000) and has the regional summary and fuller CIRAD section. `tonewood_comparison_extreme_density_annotated.md` is **secondary**: kept for its thermal and CNC-machining tables, with its tiers, rankings and recommendations marked superseded. Both docs carry a status banner, and the README index lists them that way. Ipe recommendations in both now carry its CITES Appendix II status (since 2024-11-25).
 
@@ -176,6 +176,16 @@ The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength)
 
 **Follow-up correction (2026-11-15).** C-13 as merged (#486) left the template's example shrinkage at 5.0 / 3.1 under the new `FPL_GTR282_table_4-3` label, though Table 4-3 has no such row: a false provenance claim. The template example is now a complete sugar maple record from FPL, matching the CLAUDE.md example: shrinkage 9.9 / 4.8 (Table 4-3, p. 4-8); density 706 kg/m³, G₁₂ 0.63, MOE 12.6 GPa, MOR 109.0 MPa, Janka 6,400 N / 1,439 lbf (Table 5-3a). It had mixed 745 kg/m³, 13.07 GPa, 126.7 MPa and 1,725 lbf attributed to the Wood Database, from an unnamed species, and its Janka and SG had no source field. Neither example shows volumetric shrinkage, so nothing derived needed recomputing. `scripts/ci/test_policy_fpl_examples.py` (run in Core CI) now compares every FPL-attributed value in both examples with the extracted table, fails on a label that is deprecated, invalid, of the wrong table kind, or attached to nothing checkable, and has a negative control for the old 5.0 / 3.1 values.
 
+### Reconciliation — O-05 blackwoods duplication (TONEWOOD-BLACKWOODS-RECONCILIATION-003, 2026-11-16)
+
+Owner ruling 2026-11-15, carried out here. Both documents stay. `tonewood_comparison_acacia_family_blackwoods_koa.md` is the shared Acacia-family reference. `tonewood_comparison_blackwoods_african_vs_malaysian.md` is the focused African-versus-Malaysian comparison. Each links to the other.
+
+Two sentences in the Acacia document contradicted the C-07 caution in that same document: the nomenclature key insight said Tasmanian, Malaysian, and Australian Blackwood are all *Acacia melanoxylon*, and The "Malaysian Blackwood" Question said Malaysian Blackwood is simply *Acacia melanoxylon* grown in Malaysia. Those sentences were withdrawn. They were not replaced with a new identification. The short African-versus-Malaysian ranking table in that section was removed; the same figures already stood in the focused comparison, and the family document's own boundary figures were left as printed. No density, Janka, MOE, MOR, shrinkage, or derived figure was rewritten in either document. No measurement was independently revalidated.
+
+On owner review (2026-11-16) the trade-name identity wording was corrected in both documents: "botanically unrelated species" became different genera in the same family, Fabaceae, whose trade names do not establish species equivalence; Australian Blackwood's "Same species, regional variant" was removed and both unresolved trade names are "provisionally mapped" to *A. melanoxylon*; and every comparison-table cell naming the Malaysian column's species, genus or family now carries the reference-record caveat in the cell. No figure changed.
+
+This resolves the duplication left open under O-05 after C-09. It does not scientifically validate the figures, the Malaysian trade name, or any purchasing, regulatory, engineering, or manufacturing use. Record: `docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md`. Check: `scripts/ci/test_tonewood_blackwoods_reconciliation.py`. FPL re-check: 640 cells, 0 mismatches; skipped unmapped cells 1,299 → 1,295 because that removed table had four unmapped cells. CIRAD citations: 0 mismatches.
+
 ### C-14 — Shrinkage in `wood_species.json` for 10 species; CIRAD Tropix added as a source (owner approval, 2026-11-15)
 
 **New source.** CIRAD–ITTO **Tropix** publishes one PDF sheet per species (313 sheets in the 2026 index) with average values, including **total tangential and radial shrinkage** — the breakdown the CIRAD density database lacks. Its terms (tropix-online.com/legal) put content under CC BY but prohibit "any reuse or extraction, in whole or in part, of the site's databases", and the sheets say "All rights reserved". Owner ruling: use it **one sheet at a time, cited per value**, never bulk-extracted. It is now priority 2 for tangential/radial shrinkage in CLAUDE.md (after FPL, before the Wood Database), with source label `CIRAD_Tropix` plus the sheet URL and "last update" date per field.
@@ -213,7 +223,7 @@ After this change: 440 species have no tangential shrinkage, 8 are FPL, 2 Tropix
 | **O-02** | Per-value attribution: values for FPL-covered species are now attributable to FPL through the C-11 checker, but no document has source columns, and most values for other species are unsourced | Source columns, starting with the most-used species |
 | **O-03** | MOE values in `wood_species.json` still carry no `_source` field; the documents now use FPL MOE for FPL species, so they disagree with the JSON (e.g. Honduran mahogany 10.3 vs 11.97) | Attribute or re-source each MOE in the JSON |
 | **O-04** | ~~Shrinkage in the top-woods document; † estimates in the Angolan document~~ — resolved by C-11 | — |
-| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. Still open: `blackwoods_african_vs_malaysian` repeats a section of the acacia document. Owner ruling 2026-11-15: keep both for now; a separate reconciliation order will keep the Acacia-family document as the common reference and rewrite the blackwoods document as a focused comparison of its distinct material, with cross-links and provenance | Separate reconciliation order |
+| **O-05** | ~~Overlapping extreme-density documents~~ — resolved by C-09. ~~Blackwoods/acacia duplication~~ — resolved as duplication only by TONEWOOD-BLACKWOODS-RECONCILIATION-003 (2026-11-16). The Acacia-family document is the shared reference; the blackwoods document is the focused comparison. This does not scientifically validate the figures or the Malaysian trade name, and it grants no purchasing, regulatory, engineering, or manufacturing authority. Record: `docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md` | — |
 | **O-06** | Resolved by C-11 except **Granadillo** (*Platymiscium yucatanum*) MOE ~14.5 (and its 925 kg/m³ / 2,790 lbf): no source found in FPL or the Wood Database | A published value for *P. yucatanum* |
 | **O-07** | ~~Sitka and Engelmann estimated radiation ratios~~ — resolved by C-11 | — |
 | **O-08** | No measured damping data for any species; tone descriptions are unsourced forum and builder quotes | Literature damping values (e.g. CIRAD vibration studies) or the `luthier-acoustics-data` measurements |
