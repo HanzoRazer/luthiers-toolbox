@@ -15,6 +15,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import secrets
 import stat
 import subprocess
@@ -51,6 +52,26 @@ def preservation_status_for_route(route_found: bool | None) -> str:
 
 class PreservationError(RuntimeError):
     """The closure is not safe to copy."""
+
+
+AXIOS_DECLARED_RANGE = re.compile(r"\^1\.\d+\.\d+")
+
+
+def axios_declaration_problem(declared: dict[str, str]) -> str | None:
+    """Why the live declaration blocks preservation, or None.
+
+    The preservation needs Axios to stay declared: removal is not authorized. It does not
+    need one patch version. Pinning the exact range here meant every Dependabot bump had to
+    edit this file in the same change as packages/client/package.json, which the boundary
+    in test_client_axios_preservation.py forbids, so no bump could pass. The declaration at
+    SOURCE_COMMIT stays recorded, unchanged, as the manifest's "axios_declared".
+    """
+    value = declared.get("axios")
+    if value is None:
+        return "axios is not declared; removal is not authorized"
+    if not AXIOS_DECLARED_RANGE.fullmatch(value):
+        return f"axios declaration is {value!r}; expected a caret range on major version 1"
+    return None
 
 
 @dataclass(frozen=True)
@@ -991,8 +1012,9 @@ def build_plan(repo: Path, inventory_path: Path, cluster_id: str | None) -> dict
             raise PreservationError(f"canonical importer missing from overlay: {path}")
     package = json.loads((repo / "packages/client/package.json").read_text(encoding="utf-8"))
     declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
-    if declared.get("axios") != "^1.21.0":
-        raise PreservationError(f"axios declaration is {declared.get('axios')!r}")
+    problem = axios_declaration_problem(declared)
+    if problem:
+        raise PreservationError(problem)
     files: list[dict] = []
     for cluster in full:
         for item in cluster.files:
