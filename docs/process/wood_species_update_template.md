@@ -101,9 +101,11 @@ FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fp
 **Source priority**:
 1. FPL GTR-282 — shrinkage from Tables 4-3 (domestic) / 4-4 (imported); specific gravity (→ density), MOE, MOR
    and Janka (side hardness) from Tables 5-3a (US), 5-4a (Canadian), 5-5a (other imported). Cite the exact table
-2. Wood Database (Eric Meier) — Tropical species, comprehensive properties
-3. CIRAD — Tropical species density, volumetric shrinkage
-4. Gore & Gilet — Lutherie-specific validation
+2. CIRAD Tropix species sheets — tangential/radial shrinkage for species FPL lacks; one sheet at a time,
+   cited per value (sheet URL + "last update" date); never bulk-extracted (see CLAUDE.md)
+3. Wood Database (Eric Meier) — Tropical species, comprehensive properties
+4. CIRAD wood density database — Tropical species density, volumetric shrinkage
+5. Gore & Gilet — Lutherie-specific validation
 
 **Valid _source values**:
 - `"FPL_GTR282_table_4-3"`, `"FPL_GTR282_table_4-4"` — FPL GTR-282 shrinkage tables
@@ -112,6 +114,7 @@ FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fp
   shrinkage. Not redefined; re-attribute any value carrying it to the table it came from (see CLAUDE.md)
 - `"wood_database_meier"` — wood-database.com
 - `"CIRAD_2018"` — CIRAD wood density database
+- `"CIRAD_Tropix"` — CIRAD–ITTO Tropix species sheet (shrinkage); with `_shrinkage_<dir>_url` and `_shrinkage_<dir>_sheet_date`
 - `"unknown_legacy"` — Unverified, flagged for follow-up
 
 ### 5. Caveats Object
