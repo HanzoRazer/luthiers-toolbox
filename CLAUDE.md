@@ -77,15 +77,20 @@ published references. Attribution is per-field, not per-species.
 **Source priority (tangential/radial shrinkage):**
 1. **FPL GTR-282 (2021) Table 4-3** (domestic woods) **or Table 4-4** (imported woods) — for species in
    those tables
-2. **Wood Database (Eric Meier, wood-database.com)** — for tropical species not in FPL,
+2. **CIRAD Tropix species sheets (tropix.cirad.fr)** — for species not in FPL that have a sheet;
+   per value, with sheet URL and the sheet's "last update" date (owner approval 2026-11-15).
+   Read sheets one at a time and cite each value: the Tropix terms prohibit extracting the database
+   "in whole or in part", so never bulk-scrape it into this public repo
+3. **Wood Database (Eric Meier, wood-database.com)** — for tropical species in neither FPL nor Tropix,
    with URL attribution
-3. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
+4. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
 
 **Source priority (density):**
 1. **FPL GTR-282** — specific gravity from Tables 5-3a, 5-4a or 5-5a, converted to density at 12% MC
    (FPL Eq. 4-14), for species in those tables
 2. **CIRAD wood-density-database (2018)** — for tropical species; density only,
-   NOT tangential/radial shrinkage (CIRAD provides volumetric, not breakdown)
+   NOT tangential/radial shrinkage (this database gives volumetric only; for the breakdown
+   use CIRAD's Tropix sheets, above)
 3. **Wood Database** — fallback when neither FPL nor CIRAD has the species
 
 **Forbidden:**
@@ -116,6 +121,8 @@ published references. Attribution is per-field, not per-species.
 - `FPL_GTR282_table_5-5a` — FPL Wood Handbook 2021, Table 5-5a (mechanical, other imported woods, metric)
 - `wood_database_meier` — wood-database.com (include URL in `_source_url` field)
 - `CIRAD_2018` — CIRAD wood density database (density/volumetric only)
+- `CIRAD_Tropix` — CIRAD–ITTO Tropix species sheet (tangential/radial shrinkage). Record the
+  sheet URL in `_shrinkage_<dir>_url` and its "last update" date in `_shrinkage_<dir>_sheet_date`
 - `unknown_legacy` — unverified value, flagged for follow-up
 - `FPL_GTR282_table_5-3` — **DEPRECATED 2026-11-15; do not use.** It names Table 5-3, the strength
   table, but was prescribed for shrinkage, which is in Tables 4-3 and 4-4. It is not redefined:

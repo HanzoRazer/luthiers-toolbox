@@ -91,6 +91,11 @@ jobs:
       - name: Policy FPL Example Provenance
         run: |
           python -m pytest scripts/ci/test_policy_fpl_examples.py -v
+      # TONEWOOD-BLACKWOODS-RECONCILIATION-003. Nothing collects scripts/ci wholesale,
+      # so this structural check has to be named here or it never runs.
+      - name: Tonewood blackwoods reconciliation (TONEWOOD-BLACKWOODS-RECONCILIATION-003)
+        run: |
+          python -m pytest scripts/ci/test_tonewood_blackwoods_reconciliation.py -v
       - name: Cost Attribution Unit Tests
         run: |
           cd services/api
