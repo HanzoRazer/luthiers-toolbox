@@ -170,7 +170,28 @@ export const useAuthStore = defineStore("auth", () => {
     loading.value = true;
 
     try {
-      await supabase.auth.signOut();
+      // Default scope is `global` (end every session for this user). Since
+      // supabase-js 2.119.0 a failed global sign-out (offline, 5xx) KEEPS
+      // the local session and returns `{ error }` rather than throwing --
+      // the token would stay in storage, getAccessToken() would keep
+      // returning it, and initialize() would restore the user on reload.
+      // Fall back to `local`, which removes this device's session before it
+      // contacts the server, so "Sign out" always signs this device out.
+      const { error: globalError } = await supabase.auth.signOut();
+      if (globalError) {
+        console.warn(
+          "[auth] Global sign out failed; signing out this device only:",
+          globalError
+        );
+        const { error: localError } = await supabase.auth.signOut({
+          scope: "local",
+        });
+        if (localError) {
+          // Session is already removed locally; only server-side refresh
+          // token revocation failed (it expires on its own).
+          console.warn("[auth] Server-side token revocation failed:", localError);
+        }
+      }
       user.value = null;
       tierInfo.value = null;
     } catch (e) {
