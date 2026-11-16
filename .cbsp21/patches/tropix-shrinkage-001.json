@@ -25,16 +25,17 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "wood_species.json: contraction_tangential_pct / contraction_radial_pct (and Douglas-fir volumetric) for 10 species, each with per-field _shrinkage_<dir>_source plus FPL table row or Tropix sheet URL and sheet date; African padauk's combined _shrinkage_source key split into per-field keys. CLAUDE.md and the update template: CIRAD_Tropix added as shrinkage priority 2 with the no-bulk-extraction rule; CIRAD density-database line clarified. VERIFICATION_LOG: C-14 (before/FPL/Tropix/after table and findings) and O-12. Review fixes: Ovangkol table-row labels spell Guibourtia ehie and note FPL Table 4-4's own misprint (Guibourta, sic); the update template's source priority is split per property so density reads FPL, CIRAD density database, Wood Database, as in CLAUDE.md.",
+    "what_changed": "wood_species.json: contraction_tangential_pct / contraction_radial_pct (and Douglas-fir volumetric) for 10 species, each with per-field _shrinkage_<dir>_source plus FPL table row or Tropix sheet URL and sheet date; African padauk's combined _shrinkage_source key split into per-field keys. CLAUDE.md and the update template: CIRAD_Tropix added as shrinkage priority 2 with the no-bulk-extraction rule; CIRAD density-database line clarified. VERIFICATION_LOG: C-14 (before/FPL/Tropix/after table and findings) and O-12. Review fixes: Ovangkol table-row labels spell Guibourtia ehie and note FPL Table 4-4's own misprint (Guibourta, sic); the update template's source priority is split per property so density reads FPL, CIRAD density database, Wood Database, as in CLAUDE.md. Derived tr_ratio (tangential / radial; unsourced, read by no code) recomputed for khaya 1.66 -> 1.8, douglas_fir 1.6 -> 1.58, african_padauk 1.6 -> 1.56, which the new shrinkage values had made stale.",
     "why_not_redundant": "Four of these values had no source (ipe and purpleheart shared identical placeholder numbers), and the policy's FPL-first rule had not been applied to the JSON for species FPL Table 4-4 covers; C-11 fixed documents only and left the JSON unchanged."
   },
   "verification": {
     "commands_run": [
       "JSON round-trip check: json.dumps(indent=2, ensure_ascii=True) reproduces origin/main's file byte-for-byte before editing",
-      "scripted diff vs origin/main: 10 species changed; all non-shrinkage fields of all 473 records identical; _meta identical",
+      "scripted diff vs origin/main after merging main: 10 species changed; changed keys are only contraction_*_pct, _shrinkage_* provenance keys and tr_ratio; all other fields of all 473 records identical; _meta identical",
       "each FPL value read from docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv, same rows as scripts/check_tonewood_fpl_values.py aliases",
       "each Tropix value read from its own sheet PDF; St/Sr agrees with the sheet's printed ratio for all 11 sheets read",
-      "wood_movement_calc.get_shrinkage_data returns the new values for ipe, purpleheart, wenge, african_padauk, khaya, douglas_fir"
+      "wood_movement_calc.get_shrinkage_data returns the new values for ipe, purpleheart, wenge, african_padauk, khaya, douglas_fir",
+      "json.dumps(indent=2, ensure_ascii=True) round-trips the merged file byte-for-byte before the tr_ratio edit"
     ]
   },
   "files": [

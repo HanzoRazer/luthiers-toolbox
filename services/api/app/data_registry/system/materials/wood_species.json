@@ -1986,7 +1986,7 @@
         "contraction_volumetric_pct": 12.4,
         "_shrinkage_volumetric_source": "FPL_GTR282_table_4-3",
         "_shrinkage_volumetric_table_row": "Douglas-fir, Coast",
-        "tr_ratio": 1.6,
+        "tr_ratio": 1.58,
         "modulus_of_rupture_mpa": 86.2,
         "modulus_of_elasticity_gpa": 12.17,
         "_mechanical_source": "wood_database_meier"
@@ -3620,7 +3620,7 @@
         "contraction_volumetric_pct": 7.9,
         "_shrinkage_volumetric_source": "wood_database_meier",
         "_shrinkage_volumetric_url": "https://www.wood-database.com/african-padauk/",
-        "tr_ratio": 1.6
+        "tr_ratio": 1.56
       },
       "thermal": {
         "thermal_conductivity_w_per_mk": 0.3,
@@ -30745,7 +30745,7 @@
         "contraction_tangential_pct": 4.5,
         "_shrinkage_tangential_source": "FPL_GTR282_table_4-4",
         "_shrinkage_tangential_table_row": "Mahogany, African (Khaya spp.)",
-        "tr_ratio": 1.66,
+        "tr_ratio": 1.8,
         "modulus_of_rupture_mpa": 81.0,
         "modulus_of_elasticity_gpa": 10.1,
         "_mechanical_source": "wood_database_meier"
