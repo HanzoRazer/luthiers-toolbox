@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done. The corrections below are applied. Everything under **Open issues** is still wrong or unverified and is **not** fixed yet. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, and O-11 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
 
 ## Why this log exists
 
