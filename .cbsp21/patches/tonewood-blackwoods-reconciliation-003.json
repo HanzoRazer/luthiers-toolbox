@@ -10,7 +10,7 @@
   "risk_level": "low",
   "constraints": {
     "method": "overlap ledger: every original blackwoods section has one disposition (KEEP_COMPARISON, MOVE_TO_SHARED_REFERENCE, REPLACE_WITH_LINK, KEEP_WITH_CAVEAT, PRESERVE_HISTORICAL_ONLY, or REQUIRES_SEPARATE_VERIFICATION) recorded in docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md before the prose was treated as settled",
-    "tests": "scripts/ci/test_tonewood_blackwoods_reconciliation.py, named in core_ci.yml because scripts/ci is not collected wholesale. In-test fixtures plant a duplicate passage and a changed 17.95 without writing the repo.",
+    "tests": "scripts/ci/test_tonewood_blackwoods_reconciliation.py, named in core_ci.yml because scripts/ci is not collected wholesale. In-test fixtures plant a duplicate passage and a changed 17.95 without writing the repo. A cross-record check requires the log status line, the O-05 row, the C-09 heading, the reconciliation record and this manifest to agree that O-05 is resolved as duplication only; negative controls plant the old C-09 heading and two contradicting status statements taken from earlier wording.",
     "manual_checks": "citation strings were not retargeted; reciprocal markdown links were read in both documents; numeric tokens in the blackwoods document were compared with the pre-change text and none were removed",
     "out_of_scope": [
       "O-01 estimated Janka remaining",
@@ -45,17 +45,18 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "Blackwoods document restated as a focused comparison with purpose, identity table, unchanged property tables, use and regulatory notes, gaps, and a link to the Acacia-family document. Acacia document gains a Focused comparisons link, drops two sentences that asserted Malaysian Blackwood is Acacia melanoxylon, and drops the short ranking table whose figures already lived in the comparison. VERIFICATION_LOG marks O-05 resolved as duplication only. New structural test and investigation record.",
+    "what_changed": "Blackwoods document restated as a focused comparison with purpose, identity table, unchanged property tables, use and regulatory notes, gaps, and a link to the Acacia-family document. Acacia document gains a Focused comparisons link, drops two sentences that asserted Malaysian Blackwood is Acacia melanoxylon, and drops the short ranking table whose figures already lived in the comparison. VERIFICATION_LOG marks O-05 resolved as duplication only. New structural test and investigation record. Review fix: the C-09 heading now says it resolved the extreme-density part of O-05, and the reconciliation record states O-05 as resolved as duplication only.",
     "why_not_redundant": "O-05 still called the blackwoods document a repeat of the Acacia document, and the Acacia document still asserted an identity its own C-07 caution denies. No existing test checks the split, the reciprocal links, or that the withdrawn identity sentences stay withdrawn."
   },
   "verification": {
     "commands_run": [
-      "services/api/.venv/bin/python scripts/ci/test_tonewood_blackwoods_reconciliation.py -> 12 passed",
-      "services/api/.venv/bin/python -m pytest scripts/ci/test_tonewood_blackwoods_reconciliation.py -v -> 12 passed",
+      "services/api/.venv/bin/python scripts/ci/test_tonewood_blackwoods_reconciliation.py -> 14 passed",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_tonewood_blackwoods_reconciliation.py -v -> 14 passed",
       "services/api/.venv/bin/python scripts/check_tonewood_fpl_values.py --summary -> 119 aliases resolve; 640 cells checked, 0 mismatches; 9 range cells; 1295 skipped (was 1299; four unmapped cells left with the removed ranking table)",
       "services/api/.venv/bin/python scripts/check_tonewood_cirad_citations.py -> 0 mismatches",
       "numeric-token diff of the blackwoods document against HEAD before the edit -> 0 tokens removed",
-      "manual read of both citation lists and both reciprocal markdown links"
+      "manual read of both citation lists and both reciprocal markdown links",
+      "o05_status_problems against origin/main's log -> 4 problems; against the PR's first head 2c00d691 -> 2 (C-09 heading, record wording); against the fixed tree -> 0"
     ]
   },
   "files": [
@@ -73,13 +74,13 @@
     },
     {
       "path": "docs/investigations/tonewood-verification-003/BLACKWOODS_RECONCILIATION.md",
-      "intent": "Overlap ledger, dispositions, hashes, relocated material, and the statement that no measurement was revalidated.",
+      "intent": "Overlap ledger, dispositions, hashes, relocated material, and the statement that no measurement was revalidated. States O-05 as resolved as duplication only, matching the log.",
       "risk": "low",
       "behavior_change": "None (documentation)."
     },
     {
       "path": "docs/tonewood/VERIFICATION_LOG.md",
-      "intent": "O-05 resolved as duplication only, not as scientific validation.",
+      "intent": "O-05 resolved as duplication only, not as scientific validation. C-09 heading narrowed to the extreme-density part of O-05 so no record credits C-09 with all of O-05.",
       "risk": "low",
       "behavior_change": "None (documentation)."
     },
@@ -97,7 +98,7 @@
     },
     {
       "path": "scripts/ci/test_tonewood_blackwoods_reconciliation.py",
-      "intent": "Structural test: both docs, reciprocal links, headings, dispositions, hashes, O-05 only when structure holds, FPL examples untouched, planted duplicate and planted numeric controls.",
+      "intent": "Structural test: both docs, reciprocal links, headings, dispositions, hashes, O-05 only when structure holds, FPL examples untouched, planted duplicate and planted numeric controls. Cross-record O-05 status agreement check with three planted-contradiction controls.",
       "risk": "low",
       "behavior_change": "None (test)."
     }

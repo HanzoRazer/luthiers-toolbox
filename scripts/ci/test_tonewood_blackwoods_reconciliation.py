@@ -401,3 +401,53 @@ if __name__ == "__main__":
     import pytest
 
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+MANIFEST_REL = ".cbsp21/patches/tonewood-blackwoods-reconciliation-003.json"
+O05_CONTRADICTIONS = re.compile(r"\b(closed|deferred|still open|separate reconciliation order)\b", re.I)
+
+
+def o05_status_problems(log: str, record: str, manifest: str) -> list[str]:
+    """Every record that states O-05's status must say: resolved as duplication only.
+
+    C-09 resolved only the extreme-density part, so its heading may not claim all of
+    O-05. No record may call O-05 closed, deferred, or still open.
+    """
+    bad: list[str] = []
+    status = next((l for l in log.splitlines() if l.startswith("> **Status:**")), "")
+    if "O-05" not in status or "documentation structure only" not in status:
+        bad.append("log status line does not record O-05 as documentation-structure-only")
+    for line in log.splitlines():
+        if line.startswith("### ") and "O-05" in line and "resolves O-05)" in line:
+            bad.append(f"heading claims all of O-05: {line.strip()}")
+    if "resolved as duplication only" not in o05_line(log):
+        bad.append("O-05 table row does not say resolved as duplication only")
+    if "O-05 in `docs/tonewood/VERIFICATION_LOG.md` is resolved as duplication only" not in record:
+        bad.append("reconciliation record does not say O-05 is resolved as duplication only")
+    if "O-05 resolved as duplication only" not in manifest:
+        bad.append("CBSP21 manifest does not say O-05 resolved as duplication only")
+    for name, text in (("log", log), ("record", record), ("manifest", manifest)):
+        for line in text.splitlines():
+            if "O-05" in line and O05_CONTRADICTIONS.search(line):
+                bad.append(f"{name}: {line.strip()[:160]}")
+    return bad
+
+
+def test_o05_status_agrees_across_records() -> None:
+    log = LOG.read_text(encoding="utf-8")
+    record = RECORD.read_text(encoding="utf-8")
+    manifest = (ROOT / MANIFEST_REL).read_text(encoding="utf-8")
+    assert o05_status_problems(log, record, manifest) == []
+
+
+def test_planted_o05_status_contradictions_fail() -> None:
+    """Negative control: the wordings this PR replaced must each be caught."""
+    log = LOG.read_text(encoding="utf-8")
+    record = RECORD.read_text(encoding="utf-8")
+    manifest = (ROOT / MANIFEST_REL).read_text(encoding="utf-8")
+    old_heading = log.replace("(resolves the extreme-density part of O-05)", "(resolves O-05)")
+    assert any("heading claims all of O-05" in p for p in o05_status_problems(old_heading, record, manifest))
+    closed = record + "\nO-05 is closed in `VERIFICATION_LOG.md`.\n"
+    assert any(p.startswith("record:") for p in o05_status_problems(log, closed, manifest))
+    deferred = log + "\n| **O-05** note | Still open; separate reconciliation order |\n"
+    assert any(p.startswith("log:") for p in o05_status_problems(deferred, record, manifest))

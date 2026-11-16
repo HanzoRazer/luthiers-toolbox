@@ -35,7 +35,7 @@ The title was kept. It names the trade names being compared.
 
 `docs/investigations/` had no `tonewood-verification-*` directory. Tonewood verification 001 and 002 are CBSP21 patch ids. The living log is `docs/tonewood/VERIFICATION_LOG.md`. This file is the first directory in the `tonewood-verification-*` series the order named. It does not open a second investigation title, and it does not replace the log.
 
-`SPRINTS.md` was not edited. Tonewood verification 001, 002, and the C-13 follow-up are not indexed there. `docs/SPRINTS_MAINTENANCE.md` applies to sprints registered in that file. O-05 is closed in `VERIFICATION_LOG.md`.
+`SPRINTS.md` was not edited. Tonewood verification 001, 002, and the C-13 follow-up are not indexed there. `docs/SPRINTS_MAINTENANCE.md` applies to sprints registered in that file. In `VERIFICATION_LOG.md`, O-05 is resolved as duplication only (see the last section).
 
 ## Hashes
 

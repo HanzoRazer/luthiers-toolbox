@@ -118,7 +118,7 @@ Checked against Species+, the official CITES database (UNEP-WCMC), with IUCN cat
   - The radiation-ratio gap was overstated ("11–13", "a third lower"); corrected to 10.7–13 and 20–35%.
 - Typos fixed ("silica inclite", "calcium carbite") and leftover AI-session text removed from the Mugavu document.
 
-### C-09 — Canonical extreme-density document (resolves O-05)
+### C-09 — Canonical extreme-density document (resolves the extreme-density part of O-05)
 
 Owner decision 2026-11-14: keep one document as canonical rather than merge. `tonewood_comparison_extreme_density_glassy_character.md` is **canonical**: it covers more species (65 from 950 kg/m³ vs 27 from 1,000) and has the regional summary and fuller CIRAD section. `tonewood_comparison_extreme_density_annotated.md` is **secondary**: kept for its thermal and CNC-machining tables, with its tiers, rankings and recommendations marked superseded. Both docs carry a status banner, and the README index lists them that way. Ipe recommendations in both now carry its CITES Appendix II status (since 2024-11-25).
 
