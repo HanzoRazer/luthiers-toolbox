@@ -45,9 +45,9 @@ original_sha256_blackwoods: 3059c59a319073918a48d7948e3d18d2c9ecb13895f7aa464bb9
 
 original_sha256_acacia: e8998f6876a86d4ce2f4b5f1b2d2ff0a5f3ac511b4953f38635f4c8e54bdb7dd
 
-final_sha256_blackwoods: 7b55834aef9d7390ec4e42fcb98f83d89fd6d7da825d23e7a7d3ddcff60f3979
+final_sha256_blackwoods: 79aae5d8b3f32fd6ff6a356298fee7091a014510c3479eecd1b8cbe54d774ad5
 
-final_sha256_acacia: 5fe5e2131bbbb394d7e5cca15611b128de7eab589dac1c7e67514bee23db320f
+final_sha256_acacia: 941dfb61c1ab279576d05a392df1f966183fed3baa83603e75d46c46896ef242
 
 ## Heading overlap matrix
 
@@ -111,8 +111,8 @@ Notes on the rows that are not a straight keep:
 - Source and generated lines stay, including Generated 2026-06-22. They were not refreshed to look like a new data pull.
 - The Janka banner stays because 1,960 ᵉ is still in the glance and physical tables. The ᵉ marks were not added or removed.
 - The identity caution stays in full. The new role banner and the identity table point at the family document; they do not replace the caution.
-- The intro sentence that the two trade names are botanically unrelated species stays, and is immediately limited: the Malaysian column is the Tasmanian *A. melanoxylon* record, not a confirmed identification of wood sold under that trade name.
-- Not Actually Similar Woods stays, including the genus cells. A sentence above the properties says those cells name the record’s genus, not a confirmed trade-name identity.
+- The intro sentence that called the two trade names botanically unrelated species was corrected on review (owner, 2026-11-16): they are different genera in the same family, Fabaceae, and the trade names do not establish species equivalence. It is still immediately limited: the Malaysian column is the Tasmanian *A. melanoxylon* record, not a confirmed identification of wood sold under that trade name.
+- Not Actually Similar Woods stays. Its Malaysian genus cell, like the At a Glance family cell and the Physical Properties scientific-name and family cells, now carries the caveat in the table itself: reference record, trade-name identity not established (owner review, 2026-11-16).
 - Data Gaps to Address stays, including the African “sustainability status” cell. The known-gaps section says that cell is stale beside the CITES Appendix II annotation #15 sentence already in the lutherie table (C-06). Species+ was not queried again.
 - References stay, including the path `docs/audit-sources/tap_tone_pi/tap_tone_pi/materials/wood_species.json`. That path does not resolve in this checkout. It was not pointed at another file.
 
@@ -147,8 +147,8 @@ No citation was pointed at a new work. The Wood Database, Rory McGuinness, Bob T
 Left open on purpose:
 
 - What wood sold as Malaysian Blackwood is. This repo still has no source that it is *Acacia melanoxylon*. The caution’s report that plantation acacia in Malaysia is mainly *A. mangium* and its hybrids is unchanged and was not re-investigated.
-- The nomenclature table still says the Malaysian row’s region is “Planted in Malaysia” beside scientific name *Acacia melanoxylon* (unverified). That cell was not rewritten. The key insight and the C-07 caution govern how to read it.
-- Australian Blackwood remains “likely” *A. melanoxylon*. That qualifier was already in the table and was not strengthened or dropped.
+- The nomenclature table still says the Malaysian row’s region is “Planted in Malaysia” beside scientific name *Acacia melanoxylon* (unverified). Its notes cell now says the row is provisionally mapped to *A. melanoxylon* for comparison and the trade name’s botanical identity is not established (owner review, 2026-11-16).
+- Australian Blackwood was shown as “likely” *A. melanoxylon* with the note “Same species, regional variant”. No source in this repo establishes that, so on owner review (2026-11-16) the note was removed and both its rows and the key insight now say “provisionally mapped”, not established.
 - The reference path under `docs/audit-sources/tap_tone_pi/.../wood_species.json` still does not resolve here.
 
 ## What O-05 means after this order

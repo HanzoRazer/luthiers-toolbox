@@ -16,12 +16,12 @@ The trade names are confusing. Here's what's actually what:
 | Trade Name | Scientific Name | Region | Notes |
 |------------|-----------------|--------|-------|
 | **Tasmanian Blackwood** | *Acacia melanoxylon* | Tasmania, SE Australia | The canonical species |
-| **Malaysian Blackwood** | *Acacia melanoxylon* (unverified) | Planted in Malaysia | Identity unconfirmed — see note in the Malaysian Blackwood section |
-| **Australian Blackwood** | *Acacia melanoxylon* (likely) | Mainland Australia | Same species, regional variant |
+| **Malaysian Blackwood** | *Acacia melanoxylon* (unverified) | Planted in Malaysia | Provisionally mapped to *Acacia melanoxylon* for comparison; the Malaysian trade name's botanical identity is not established. See The "Malaysian Blackwood" Question |
+| **Australian Blackwood** | *Acacia melanoxylon* (provisional) | Mainland Australia | Provisionally mapped to *Acacia melanoxylon* for comparison; no source in this repo establishes the Australian trade name's botanical identity |
 | **Hawaiian Koa** | *Acacia koa* | Hawaii | Endemic cousin species |
 | **Mangium** | *Acacia mangium* | SE Asia, Pacific | Plantation timber, lighter |
 
-**Key insight:** Tasmanian Blackwood is *Acacia melanoxylon*. Australian Blackwood is recorded as likely the same species (see the table). "Malaysian Blackwood" is not established as *A. melanoxylon*; the name is unverified (see The "Malaysian Blackwood" Question). The database lists the three trade names separately because a sourcing region can affect density and figure when the species really is the same. African Blackwood is not part of that identity question: it is a *Dalbergia*.
+**Key insight:** Tasmanian Blackwood is *Acacia melanoxylon*. Australian Blackwood is provisionally mapped to *A. melanoxylon* (see the table); no source here establishes it. "Malaysian Blackwood" is not established as *A. melanoxylon*; the name is unverified (see The "Malaysian Blackwood" Question). The database lists the three trade names separately because a sourcing region can affect density and figure when the species is in fact shared. African Blackwood is not part of that identity question: it is a *Dalbergia*.
 
 ---
 
@@ -37,7 +37,7 @@ African Blackwood versus the trade name Malaysian Blackwood is not a ranking ins
 |---------|-----------------|:---:|:---:|:---:|----------------|
 | **Hawaiian Koa** | *Acacia koa* | 625 | 1,170 | Primary | Warm, balanced, opens up with age like rosewood |
 | **Tasmanian Blackwood** | *Acacia melanoxylon* | 640 | 1,160 | Established | Warm, balanced, opens up with age — koa alternative |
-| **Australian Blackwood** | *(likely A. melanoxylon)* | 640 | 552 ᵉ | Emerging | *(not yet characterized)* |
+| **Australian Blackwood** | *(provisionally A. melanoxylon; not established)* | 640 | 552 ᵉ | Emerging | *(not yet characterized)* |
 | **Mangium** | *Acacia mangium* | 585 | 467 ᵉ | Exploratory | *(not yet characterized)* |
 
 **The pattern:** All four species cluster in the 585–640 kg/m³ density range — about half the density of African Blackwood (1,270 kg/m³). This is the material basis for the "warmth" that builders describe.

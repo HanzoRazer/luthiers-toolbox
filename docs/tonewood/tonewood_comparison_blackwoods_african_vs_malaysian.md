@@ -13,9 +13,9 @@
 
 This document compares African Blackwood with the trade name Malaysian Blackwood. It is not the Acacia-family survey. Genera, the Koa and Mangium relatives, and the Albizia cousins stay in the shared reference linked above and again under Shared reference.
 
-This comparison addresses a common point of confusion: African Blackwood and Malaysian Blackwood share a trade name but are **botanically unrelated species** with dramatically different physical properties and tonal characteristics.
+This comparison addresses a common point of confusion: African Blackwood and Malaysian Blackwood share a trade name but are **different genera within the same botanical family, Fabaceae; the trade names do not establish species equivalence.** The two columns below differ sharply in physical properties and tonal characteristics.
 
-Read that sentence with the identity caution above. African Blackwood in these tables is *Dalbergia melanoxylon*. The Malaysian column is the Tasmanian Blackwood record (*Acacia melanoxylon*) from `wood_species.json`. That record is not an established identification of wood sold as Malaysian Blackwood. Where the column is that record, the two columns are not the same species. This page does not decide what a supplier's Malaysian Blackwood is.
+Read that sentence with the identity caution above. African Blackwood in these tables is *Dalbergia melanoxylon*. The Malaysian column is the Tasmanian Blackwood record (*Acacia melanoxylon*) from `wood_species.json`. That record is not an established identification of wood sold as Malaysian Blackwood. Where the column is that record, the two columns are different genera, *Dalbergia* and *Acacia*. This page does not decide what a supplier's Malaysian Blackwood is.
 
 The figures below are the figures already in this document before the reconciliation. None were recalculated. Estimated Janka values remain marked ᵉ. Derived acoustic figures remain estimates from `c = √(E/ρ)` and `Z = ρc`, as the tables already say.
 
@@ -37,9 +37,9 @@ The Malaysian column in every table below is the Tasmanian record named above. R
 | Species | Family | Density (kg/m³) | Janka (lbf) | Tone Character | Sustainability |
 |---------|--------|:---:|:---:|----------------|----------------|
 | **African Blackwood** | Dalbergia (rosewood) | 1,270 | 1,960 ᵉ | Glassy, steely, focused, low damping | IUCN Near Threatened (2020); CITES App II, instruments exempt (#15) |
-| **Malaysian Blackwood** | Acacia | 640 | 1,160 | Warm, balanced, opens up with age | Sustainable — plantation-grown |
+| **Malaysian Blackwood** | Acacia (reference record; trade-name identity not established) | 640 | 1,160 | Warm, balanced, opens up with age | Sustainable — plantation-grown |
 
-**Key insight:** These woods are not variants of the same species. They occupy opposite ends of the density spectrum and behave acoustically like different instrument classes. That statement is about the two columns as defined in Species and trade-name identity: *Dalbergia melanoxylon* beside the Tasmanian *A. melanoxylon* record. It is not a determination of wood sold under the Malaysian trade name.
+**Key insight:** These woods are in different genera, not variants of one wood. They occupy opposite ends of the density spectrum and behave acoustically like different instrument classes. That statement is about the two columns as defined in Species and trade-name identity: *Dalbergia melanoxylon* beside the Tasmanian *A. melanoxylon* record. It is not a determination of wood sold under the Malaysian trade name.
 
 ---
 
@@ -47,8 +47,8 @@ The Malaysian column in every table below is the Tasmanian record named above. R
 
 | Property | African Blackwood | Malaysian Blackwood | Ratio |
 |----------|:---:|:---:|:---:|
-| **Scientific Name** | *Dalbergia melanoxylon* | *Acacia melanoxylon* | — |
-| **Family** | Fabaceae (Dalbergia) | Fabaceae (Acacia) | — |
+| **Scientific Name** | *Dalbergia melanoxylon* | *A. melanoxylon* reference record — not confirmed as the traded wood's species | — |
+| **Family** | Fabaceae (Dalbergia) | Fabaceae (Acacia) — of the reference record | — |
 | **Specific Gravity** | 1.27 | 0.58 | **2.2×** |
 | **Density (kg/m³)** | 1,270 | 640 | **2.0×** |
 | **Janka Hardness (lbf)** | 1,960 | 1,160 | 1.7× |
@@ -222,7 +222,7 @@ Despite sharing the "blackwood" trade name:
 
 | Attribute | African Blackwood | Malaysian Blackwood |
 |-----------|-------------------|---------------------|
-| Genus | *Dalbergia* | *Acacia* |
+| Genus | *Dalbergia* | *Acacia* (reference record; trade-name identity not established) |
 | True rosewood family | **Yes** | No |
 | Density class | Extreme (sinks in water) | Moderate (floats) |
 | Traditional use | Wind instruments | Guitar back/sides |

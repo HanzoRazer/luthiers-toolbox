@@ -451,3 +451,90 @@ def test_planted_o05_status_contradictions_fail() -> None:
     assert any(p.startswith("record:") for p in o05_status_problems(log, closed, manifest))
     deferred = log + "\n| **O-05** note | Still open; separate reconciliation order |\n"
     assert any(p.startswith("log:") for p in o05_status_problems(deferred, record, manifest))
+
+
+# --- Trade-name identity wording (owner review, 2026-11-16) -------------------------------
+# "Malaysian Blackwood" and "Australian Blackwood" are trade names whose botanical identity
+# no source in this repo establishes. Neither document may call the blackwoods "botanically
+# unrelated" (Dalbergia and Acacia are both Fabaceae) or say "same species", and every table
+# cell that names the Malaysian column's species, genus or family must carry the caveat in
+# the cell itself, not only in nearby prose.
+
+FORBIDDEN_IDENTITY_PHRASES = ("botanically unrelated", "same species")
+IDENTITY_FIELDS = {"scientific name", "family", "genus"}
+UNRESOLVED_TRADE_NAMES = ("Malaysian Blackwood", "Australian Blackwood")
+CELL_CAVEAT = ("reference record", "record,", "unverified", "provisional", "not listed")
+
+
+def markdown_tables(text: str) -> list[list[list[str]]]:
+    tables, block = [], []
+    for line in text.splitlines() + [""]:
+        if line.lstrip().startswith("|"):
+            block.append(line)
+            continue
+        if block:
+            rows = [[c.strip() for c in row.strip().strip("|").split("|")] for row in block]
+            rows = [r for r in rows if not all(set(c) <= set(":- ") for c in r)]
+            if rows:
+                tables.append(rows)
+            block = []
+    return tables
+
+
+def plain(cell: str) -> str:
+    return cell.replace("*", "").strip().lower()
+
+
+def identity_wording_problems(black: str, acacia: str) -> list[str]:
+    bad = []
+    for name, text in (("blackwoods", black), ("acacia", acacia)):
+        for phrase in FORBIDDEN_IDENTITY_PHRASES:
+            if phrase in text.lower():
+                bad.append(f"{name}: says {phrase!r}")
+        for table in markdown_tables(text):
+            header = [plain(c) for c in table[0]]
+            # column-per-wood tables: Malaysian Blackwood is a column
+            for col, head in enumerate(header):
+                if head not in {t.lower() for t in UNRESOLVED_TRADE_NAMES}:
+                    continue
+                for row in table[1:]:
+                    if plain(row[0]) in IDENTITY_FIELDS and col < len(row):
+                        if not any(c in row[col].lower() for c in CELL_CAVEAT):
+                            bad.append(f"{name}: {table[0][col]} {row[0].replace('*', '')} cell lacks the caveat: {row[col]}")
+            # row-per-wood tables: Malaysian or Australian Blackwood is a row
+            for row in table[1:]:
+                if plain(row[0]) not in {t.lower() for t in UNRESOLVED_TRADE_NAMES}:
+                    continue
+                for col, head in enumerate(header):
+                    if col < len(row) and (head in IDENTITY_FIELDS or head in {"species", "scientific name"}):
+                        if col and not any(c in row[col].lower() for c in CELL_CAVEAT):
+                            bad.append(f"{name}: {row[0].replace('*', '')} {table[0][col]} cell lacks the caveat: {row[col]}")
+    return bad
+
+
+def test_identity_wording_is_not_overstated() -> None:
+    black = BLACK.read_text(encoding="utf-8")
+    acacia = ACACIA.read_text(encoding="utf-8")
+    assert identity_wording_problems(black, acacia) == []
+
+
+def test_identity_caveat_is_inside_the_comparison_table() -> None:
+    black = BLACK.read_text(encoding="utf-8")
+    rows = [r for t in markdown_tables(black) for r in t if plain(r[0]) == "scientific name"]
+    assert rows, "no Scientific Name row in the comparison"
+    assert all("not confirmed as the traded wood's species" in r[2] for r in rows), rows
+
+
+def test_planted_identity_overstatements_fail() -> None:
+    """Negative controls: each wording removed on review must be caught again."""
+    black = BLACK.read_text(encoding="utf-8")
+    acacia = ACACIA.read_text(encoding="utf-8")
+    cell = "*A. melanoxylon* reference record — not confirmed as the traded wood's species"
+    planted = black.replace(cell, "*Acacia melanoxylon*")
+    assert any("Scientific Name cell lacks the caveat" in p for p in identity_wording_problems(planted, acacia))
+    planted = black + "\nThey are botanically unrelated species.\n"
+    assert any("botanically unrelated" in p for p in identity_wording_problems(planted, acacia))
+    planted = acacia.replace("| Mainland Australia | Provisionally", "| Mainland Australia | Same species, regional variant. Provisionally")
+    assert any("same species" in p for p in identity_wording_problems(black, planted))
+    planted = acacia.replace("*Acacia melanoxylon* (provisional)", "*Acacia melanoxylon*")
+    assert any("Australian Blackwood" in p for p in identity_wording_problems(black, planted))
