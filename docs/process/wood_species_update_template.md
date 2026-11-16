@@ -98,12 +98,23 @@ FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fp
 }
 ```
 
-**Source priority**:
-1. FPL GTR-282 — shrinkage from Tables 4-3 (domestic) / 4-4 (imported); specific gravity (→ density), MOE, MOR
-   and Janka (side hardness) from Tables 5-3a (US), 5-4a (Canadian), 5-5a (other imported). Cite the exact table
-2. Wood Database (Eric Meier) — Tropical species, comprehensive properties
-3. CIRAD — Tropical species density, volumetric shrinkage
-4. Gore & Gilet — Lutherie-specific validation
+**Source priority** (same order as CLAUDE.md, per property):
+
+*Tangential/radial shrinkage*
+1. FPL GTR-282 Tables 4-3 (domestic) / 4-4 (imported). Cite the exact table
+2. CIRAD Tropix species sheets — for species FPL lacks; one sheet at a time, cited per value
+   (sheet URL + "last update" date); never bulk-extracted (see CLAUDE.md)
+3. Wood Database (Eric Meier) — for species in neither FPL nor Tropix
+4. `unknown_legacy` — untraceable, flagged for follow-up
+
+*Density*
+1. FPL GTR-282 — specific gravity from Tables 5-3a (US), 5-4a (Canadian), 5-5a (other imported), converted to
+   density at 12% MC (FPL Eq. 4-14)
+2. CIRAD wood density database (2018) — tropical species; density and volumetric shrinkage only
+3. Wood Database — when neither FPL nor CIRAD has the species
+
+*Mechanical (MOE, MOR, Janka side hardness)*: FPL Tables 5-3a / 5-4a / 5-5a first, then the Wood Database.
+Gore & Gilet — lutherie-specific validation, not a primary value source.
 
 **Valid _source values**:
 - `"FPL_GTR282_table_4-3"`, `"FPL_GTR282_table_4-4"` — FPL GTR-282 shrinkage tables
@@ -112,6 +123,7 @@ FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fp
   shrinkage. Not redefined; re-attribute any value carrying it to the table it came from (see CLAUDE.md)
 - `"wood_database_meier"` — wood-database.com
 - `"CIRAD_2018"` — CIRAD wood density database
+- `"CIRAD_Tropix"` — CIRAD–ITTO Tropix species sheet (shrinkage); with `_shrinkage_<dir>_url` and `_shrinkage_<dir>_sheet_date`
 - `"unknown_legacy"` — Unverified, flagged for follow-up
 
 ### 5. Caveats Object

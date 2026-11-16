@@ -218,6 +218,24 @@ class EntryCensus(unittest.TestCase):
         )
 
 
+class AxiosDeclarationGate(unittest.TestCase):
+    # The live gate requires Axios to stay declared on major 1, not one patch version, so a
+    # Dependabot bump of packages/client never has to edit this preservation (Boundary below).
+    def test_accepts_patch_and_minor_bumps(self) -> None:
+        for value in ("^1.21.0", "^1.21.1", "^1.22.0"):
+            self.assertIsNone(tool.axios_declaration_problem({"axios": value}), value)
+
+    def test_rejects_removal_and_other_ranges(self) -> None:
+        self.assertIn("not declared", tool.axios_declaration_problem({}))
+        for value in ("^2.0.0", "*", "latest", "1.21.1", "~1.21.1", "^1.21", "^10.0.0"):
+            self.assertIsNotNone(tool.axios_declaration_problem({"axios": value}), value)
+
+    def test_live_tree_passes_the_gate(self) -> None:
+        package = json.loads((REPO / "packages/client/package.json").read_text(encoding="utf-8"))
+        declared = {**package.get("dependencies", {}), **package.get("devDependencies", {})}
+        self.assertIsNone(tool.axios_declaration_problem(declared))
+
+
 class Integrity(unittest.TestCase):
     def test_archive_matches_source_manifest_and_git_blob(self) -> None:
         tool.verify_archive(REPO, ARCHIVE, _plan())
