@@ -1,0 +1,74 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TROPIX_SHRINKAGE_001",
+  "title": "data(wood): sourced shrinkage for 10 species (FPL 4-3/4-4, CIRAD Tropix); add Tropix as a policy source",
+  "intent": "Replace unsourced or lower-priority tangential/radial shrinkage in wood_species.json for the 10 species that had a value and a CIRAD Tropix sheet under the same name (nine single-species sheets; Wenge's sheet covers a two-species trade group, M. laurentii and M. stuhlmannii), following the source priority in CLAUDE.md: FPL GTR-282 Tables 4-3/4-4 for the 8 species FPL covers, Tropix (owner-approved 2026-11-15, one sheet at a time, cited per value) for the 2 it does not. Adds CIRAD_Tropix to the data policy and update template.",
+  "change_type": "data",
+  "behavior_change": "wood_movement_calc results change for bubinga, jatoba, ipe, khaya, ovangkol, purpleheart, cedar_western_red, douglas_fir, african_padauk and wenge, because their shrinkage coefficients change (e.g. purpleheart tangential 9.61 -> 6.1 %, khaya 5.8 -> 4.5 %). No code, route or schema change; no other field or species changed.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/tropix-shrinkage-001.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/tropix-shrinkage-001.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "wood_species.json: contraction_tangential_pct / contraction_radial_pct (and Douglas-fir volumetric) for 10 species, each with per-field _shrinkage_<dir>_source plus FPL table row or Tropix sheet URL and sheet date; African padauk's combined _shrinkage_source key split into per-field keys. CLAUDE.md and the update template: CIRAD_Tropix added as shrinkage priority 2 with the no-bulk-extraction rule; CIRAD density-database line clarified. VERIFICATION_LOG: C-14 (before/FPL/Tropix/after table and findings) and O-12. Review fixes: Ovangkol table-row labels spell Guibourtia ehie and note FPL Table 4-4's own misprint (Guibourta, sic); the update template's source priority is split per property so density reads FPL, CIRAD density database, Wood Database, as in CLAUDE.md. Derived tr_ratio (tangential / radial; unsourced, read by no code) recomputed for khaya 1.66 -> 1.8, douglas_fir 1.6 -> 1.58, african_padauk 1.6 -> 1.56, which the new shrinkage values had made stale.",
+    "why_not_redundant": "Four of these values had no source (ipe and purpleheart shared identical placeholder numbers), and the policy's FPL-first rule had not been applied to the JSON for species FPL Table 4-4 covers; C-11 fixed documents only and left the JSON unchanged."
+  },
+  "verification": {
+    "commands_run": [
+      "JSON round-trip check: json.dumps(indent=2, ensure_ascii=True) reproduces origin/main's file byte-for-byte before editing",
+      "scripted diff vs origin/main after merging main: 10 species changed; changed keys are only contraction_*_pct, _shrinkage_* provenance keys and tr_ratio; all other fields of all 473 records identical; _meta identical",
+      "each FPL value read from docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv, same rows as scripts/check_tonewood_fpl_values.py aliases",
+      "each Tropix value read from its own sheet PDF; St/Sr agrees with the sheet's printed ratio for all 11 sheets read",
+      "wood_movement_calc.get_shrinkage_data returns the new values for ipe, purpleheart, wenge, african_padauk, khaya, douglas_fir",
+      "json.dumps(indent=2, ensure_ascii=True) round-trips the merged file byte-for-byte before the tr_ratio edit"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/tropix-shrinkage-001.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Data policy: CIRAD_Tropix as shrinkage source priority 2 (per value, one sheet at a time, never bulk-extracted); valid source value added; CIRAD density-database line clarified.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/process/wood_species_update_template.md",
+      "intent": "Template source priority split per property to match CLAUDE.md (shrinkage: FPL, Tropix, Wood Database; density: FPL, CIRAD density database, Wood Database); CIRAD_Tropix valid source value added.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "C-14 record of the 10 changes with FPL and Tropix cross-check values; O-12 open issue for the remaining unsourced and missing shrinkage values. Limitations stated explicitly: Douglas-fir Coast row for a generic record, Wenge trade-group sheet, Khaya least-conservative FPL values.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/wood_species.json",
+      "intent": "Sourced tangential/radial shrinkage for 10 species with per-field attribution.",
+      "risk": "medium",
+      "behavior_change": "Wood-movement results for these 10 species change with their shrinkage coefficients."
+    }
+  ],
+  "risk_rationale": "Medium data/provenance risk, low runtime risk: no code, route or schema changes, but wood-movement calculator outputs change for 10 species. Known limitations: douglas_fir is a generic record given FPL's Coast row; wenge is a single-species record given a two-species trade-group Tropix sheet; khaya takes policy-priority FPL values that are the least conservative of the three sources compared (FPL 4.5/2.5, Tropix 5.5/3.7, Wood Database 5.8/3.5)."
+}
