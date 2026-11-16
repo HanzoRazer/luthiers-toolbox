@@ -1,0 +1,82 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "KONVA_10_9_1_BUMP",
+  "title": "build(deps): bump konva from 10.9.0 to 10.9.1",
+  "intent": "Routine Dependabot currency, no advisory. konva 10.9.0 -> 10.9.1 in packages/client, a patch release (2026-10-31) of rendering fixes: TextPath gradients/patterns drawn in glyph 'style space', text underline/line-through colour when text has no fill, fill-pattern transform applied on each get instead of baked into the cached pattern, negative cornerRadius clamped to 0, and CSS filter-string fallbacks moved from a core lookup to registration by the filter modules. Authored by hand because Dependabot cannot author a manifest (CBSP21-NOBORROW-001). The Dependabot branch was based on bb90047e; origin/main (53a86f0b: #491 tailwind, #492 supabase, #495) was merged in without force-push and the two client files were re-resolved as main + the konva delta only, dropping Dependabot's 16 peer-flag-only lockfile flips per main's convention since #432 (ec88eedd).",
+  "change_type": "chore",
+  "behavior_change": "None observable on any path the app uses. Lockfile audited by parsing both package-lock.json trees and comparing every `packages` entry in full, not by reading the diff view: against origin/main 53a86f0b the lock moves exactly one node_modules entry, konva 10.9.0 -> 10.9.1 (version, resolved, integrity only; same key set, no dependency map), plus the root dependencies.konva range ^10.9.0 -> ^10.9.1. Entry count 405 -> 405; zero added, zero removed, zero other entries touched. Consumer trace from src/main.ts (static + dynamic imports, @/ alias): konva is LIVE via composables/useKonvaCanvas.ts <- views/cam/NeckView.vue <- router and composables/useWoodGrain.ts <- views/art-studio/InlayWorkspaceShell.vue <- router; composables/useExportDxf.ts and design-utilities/lutherie/neck/drawCamOverlay.ts (the only cornerRadius user, literal 2) are unreachable. No file uses TextPath, textDecoration, filter strings, Konva.Filters, Transformer or cache(). The changed fill-pattern and gradient code paths ARE reached (useWoodGrain fillPattern* and addEdgeShading fillLinearGradient*), but the new _styleTransform is only set by TextPath, so for Path shapes _toStyleSpace(p) returns p and the pattern matrix is built from the same ops. Confirmed empirically: draw-call trace A/B (every 2D-context call and property set on scene and hit canvases, Math.random seeded for hit colour keys) of the live routes' shape configurations -- Path with fill pattern including a setter-driven redraw, both edge-shading gradient Paths, dashed/closed Lines, Rect, Circle, Arc, rotated/offset/aligned Text -- is byte-identical between 10.9.0 and 10.9.1 (467 calls each).",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/konva-10.9.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/konva-10.9.1-bump.json",
+      "packages/client/package.json",
+      "packages/client/package-lock.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "packages/client/package.json moves konva ^10.9.0 -> ^10.9.1 (one line). package-lock.json moves node_modules/konva 10.9.0 -> 10.9.1 and the root range; nothing else. Against origin/main the PR diff is 5 lines across the two client files.",
+    "why_not_redundant": "Dependabot currency, stated plainly. No existing manifest covers this diff; the prior konva manifest (konva 10.9.0) would cover these two files, and borrowing it is what CBSP21-NOBORROW-001 refuses."
+  },
+  "verification": {
+    "commands_run": [
+      "failing-gate attribution: both CBSP21 gates on the Dependabot head d5c8f5ee failed because the PR declared no manifest of its own (cbsp21-patch-input: 'This PR declares no CBSP21 manifest of its own'); all other checks passed (trending SKIPPED)",
+      "lockfile audit (full-entry enumeration) of the Dependabot head vs its merge base bb90047e: 405 -> 405, version changes = root + konva only, plus 16 peer-flag-only entries (no version change) -- dropped",
+      "re-resolution after merging origin/main 53a86f0b: main's lock (round-trip asserted byte-exact) + the konva entry (same key order) + root range; diff vs origin/main = 5 lines; npm ci installs it cleanly",
+      "supply-chain: npm registry dist.integrity for konva@10.9.1 equals lockfile integrity; resolved from registry.npmjs.org; publisher lavrton (sole long-standing maintainer; konva has never shipped npm provenance, so its absence is not a regression); no install-time hooks (no preinstall/install/postinstall); published 2026-10-31",
+      "advisories: GitHub Advisory Database, ecosystem=npm, affects=konva@10.9.0 and @10.9.1 -> 0 and 0",
+      "source diff: npm pack konva@10.9.0 and @10.9.1, diff of lib/ (Context, Global, Node, Shape, Util, filters/*, shapes/Text, shapes/TextPath) read in full",
+      "reachability walk from src/main.ts: useKonvaCanvas (NeckView) and useWoodGrain (InlayWorkspaceShell) LIVE; useExportDxf and drawCamOverlay unreachable",
+      "draw-call trace A/B (happy-dom DOM, recording 2D context, both published lib/ builds): unseeded control 10.9.1 vs 10.9.1 differs only in 20 hit-canvas colour-key lines (Math.random); with Math.random seeded, 10.9.0 vs 10.9.1 traces are byte-identical, 467 calls each, including fill-pattern setTransform matrices before and after a setter update and both createLinearGradient calls",
+      "client gates locally (Windows, Node 24): type-check ratchet 87 / ceiling 87 PASS; lint ratchet PASS (baseline not lowered -- never inside a dependency PR); npm test 885 passed, 17 todo, only nodeEngineFloor.spec.ts fails to parse locally (known Windows-only, green on CI); npm run build OK",
+      "python scripts/ci/check_cbsp21_gate.py --changed-files <the three files> -> PASSED",
+      "python scripts/ci/check_cbsp21_patch_input.py --base origin/main --head HEAD -> PASS (selected this PR's own manifest)"
+    ]
+  },
+  "files": [
+    {
+      "path": "packages/client/package.json",
+      "intent": "Declared dependency bump, ^10.9.0 -> ^10.9.1.",
+      "scan_targets": ["packages/client/package.json"],
+      "risk": "low",
+      "behavior_change": "none",
+      "verification": ["diff vs origin/main -> one line"]
+    },
+    {
+      "path": "packages/client/package-lock.json",
+      "intent": "Resolved tree for the bump.",
+      "scan_targets": ["packages/client/package-lock.json"],
+      "risk": "low",
+      "behavior_change": "node_modules/konva 10.9.0 -> 10.9.1 only; integrity matches the npm registry; Dependabot peer-flag churn not carried",
+      "verification": ["lockfile entry enumeration vs origin/main -> only konva + root range"]
+    },
+    {
+      "path": ".cbsp21/patches/konva-10.9.1-bump.json",
+      "intent": "Per-PR CBSP21 patch manifest for this bump.",
+      "scan_targets": [".cbsp21/patches/konva-10.9.1-bump.json"],
+      "risk": "low",
+      "behavior_change": "none - governance manifest only"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-16-KONVA",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "Dependency bump; no architectural surface. Konva is on live routes (Neck CAM view, inlay workspace wood grain), and two changed konva code paths (fill pattern transform, fill linear gradient) are reached -- a seeded draw-call trace A/B of those routes' shape configurations is byte-identical across versions.",
+    "authority_model_changed": false,
+    "rmos_changed": false,
+    "production_routes_changed": false
+  }
+}
