@@ -180,7 +180,7 @@ The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength)
 
 **New source.** CIRAD–ITTO **Tropix** publishes one PDF sheet per species (313 sheets in the 2026 index) with average values, including **total tangential and radial shrinkage** — the breakdown the CIRAD density database lacks. Its terms (tropix-online.com/legal) put content under CC BY but prohibit "any reuse or extraction, in whole or in part, of the site's databases", and the sheets say "All rights reserved". Owner ruling: use it **one sheet at a time, cited per value**, never bulk-extracted. It is now priority 2 for tangential/radial shrinkage in CLAUDE.md (after FPL, before the Wood Database), with source label `CIRAD_Tropix` plus the sheet URL and "last update" date per field.
 
-**Scope.** The 10 species that already held a shrinkage value and have an exact-name Tropix sheet. Policy puts FPL first, and FPL Tables 4-3/4-4 cover 8 of them, so those 8 now carry FPL values (same rows as the C-11 checker's aliases); Tropix supplies only the 2 FPL lacks. Each sheet was read from its own PDF; every St/Sr pair agrees with the sheet's printed St/Sr ratio.
+**Scope.** The 10 species that already held a shrinkage value and have a Tropix sheet under the same name. Nine sheets cover one species; Wenge's covers a two-species trade group (see Findings). Policy puts FPL first, and FPL Tables 4-3/4-4 cover 8 of them, so those 8 now carry FPL values (same rows as the C-11 checker's aliases); Tropix supplies only the 2 FPL lacks. Each sheet was read from its own PDF; every St/Sr pair agrees with the sheet's printed St/Sr ratio.
 
 | Species (id) | Before: T / R (source) | FPL row | FPL T / R | Tropix T / R (sheet date) | Now |
 |---|---|---|---|---|---|
@@ -188,7 +188,7 @@ The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength)
 | `jatoba` | 8.86 / 5.01 (**none**) | 4-4 Courbaril (*Hymenaea courbaril*) | 8.5 / 4.5 | 7.5 / 3.9 (2025-10-22) | FPL |
 | `ipe` | 9.61 / 5.61 (**none**) | 4-4 Ipe (*Tabebuia* spp.) | 8.0 / 6.6 | 6.4 / 5.1 (2025-07-22) | FPL |
 | `khaya` | 5.8 / 3.5 (Wood Database) | 4-4 Mahogany, African (*Khaya* spp.) | 4.5 / 2.5 | 5.5 / 3.7 (2025-05-16) | FPL |
-| `ovangkol` | 8.3 / 4.3 (Wood Database) | 4-4 Ovangkol (*Guibourtia ehie*) | 8.2 / 4.5 | 8.0 / 3.9 (2024-04-24) | FPL |
+| `ovangkol` | 8.3 / 4.3 (Wood Database) | 4-4 Ovangkol (*Guibourtia ehie*; FPL prints *Guibourta*, sic) | 8.2 / 4.5 | 8.0 / 3.9 (2024-04-24) | FPL |
 | `purpleheart` | 9.61 / 5.61 (**none**) | 4-4 Purpleheart (*Peltogyne* spp.) | 6.1 / 3.2 | 6.7 / 4.4 (2024-01-17) | FPL |
 | `cedar_western_red` | 5.0 / 2.4 (Wood Database) | 4-3 Cedar, Western redcedar | 5.0 / 2.4 | 5.5 / 2.2 (2024-01-15) | FPL (re-attributed; values unchanged) |
 | `douglas_fir` | 7.3 / 4.5, vol. 11.6 (Wood Database) | 4-3 Douglas-fir, Coast | 7.6 / 4.8, vol. 12.4 | 6.9 / 4.7 (2023-10-30) | FPL, incl. volumetric |
@@ -198,9 +198,9 @@ The data policy's single label `FPL_GTR282_table_5-3` named Table 5-3 (strength)
 Findings:
 
 - **Ipe and purpleheart held identical placeholder values**: 9.61 / 5.61 shrinkage and 16.7 GPa MOE. Their real shrinkage differs (8.0 / 6.6 vs 6.1 / 3.2). The shared MOE is still in the JSON (O-03); FPL Table 5-5a gives purpleheart 15.7 GPa at 12% MC.
-- **Khaya disagrees across sources**: FPL 4.5 / 2.5, Tropix 5.5 / 3.7, Wood Database 5.8 / 3.5. FPL is used by policy; it is the low outlier, so movement calculations for Khaya are now the least conservative of the three.
-- **Wenge's sheet covers two species** (*Millettia laurentii* and *M. stuhlmannii*, panga panga). The JSON names *M. laurentii*; the Tropix values are for the trade group.
-- **Douglas-fir**: FPL has three rows (Coast, Interior north, Interior west). Coast is used, as in the C-11 checker; the old 7.3 / 4.5 matched none of them.
+- **Khaya disagrees across sources**: FPL 4.5 / 2.5, Tropix 5.5 / 3.7, Wood Database 5.8 / 3.5. FPL is used because policy puts it first; it is the low outlier, so movement calculations for Khaya are now the least conservative of the three. Known limitation, disclosed for owner acceptance.
+- **Wenge's sheet covers two species** (*Millettia laurentii* and *M. stuhlmannii*, panga panga). The JSON record names *M. laurentii* alone; the Tropix values are for the trade group, applied to a single-species record. Known limitation, accepted for this change.
+- **Douglas-fir**: FPL has three rows (Coast, Interior north, Interior west). The JSON has one generic `douglas_fir` record that does not say which variety it represents; the **Coast** row is used for it, as in the C-11 checker. Known limitation: Interior material may shrink differently. The old 7.3 / 4.5 matched none of the three rows.
 - Only shrinkage fields changed (scripted check: every other field of all 473 records is identical to `origin/main`). `wood_movement_calc.get_shrinkage_data` reads the new values; no test pins any of these species.
 
 After this change: 440 species have no tangential shrinkage, 8 are FPL, 2 Tropix, 14 Wood Database, and **9 remain unsourced** (`spruce_european`, `cedar_spanish`, `cherry_black`, `cypress_bald`, `oak_red`, `oak_white`, `spruce_white`, `tasmanian_blackwood`, `zebrawood`) — see O-12.

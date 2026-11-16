@@ -2610,10 +2610,10 @@
         "resinous": false,
         "contraction_radial_pct": 4.5,
         "_shrinkage_radial_source": "FPL_GTR282_table_4-4",
-        "_shrinkage_radial_table_row": "Ovangkol (Guibourta ehie)",
+        "_shrinkage_radial_table_row": "Ovangkol (Guibourtia ehie); FPL Table 4-4 prints the row as Guibourta ehie (sic)",
         "contraction_tangential_pct": 8.2,
         "_shrinkage_tangential_source": "FPL_GTR282_table_4-4",
-        "_shrinkage_tangential_table_row": "Ovangkol (Guibourta ehie)",
+        "_shrinkage_tangential_table_row": "Ovangkol (Guibourtia ehie); FPL Table 4-4 prints the row as Guibourta ehie (sic)",
         "modulus_of_rupture_mpa": 140.3,
         "modulus_of_elasticity_gpa": 18.6
       },
