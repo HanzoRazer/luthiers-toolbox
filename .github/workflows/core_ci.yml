@@ -76,6 +76,12 @@ jobs:
       - name: Client Type-Check Ratchet Parser Tests
         run: |
           python -m pytest scripts/ci/test_client_type_check_ratchet.py -v
+      # CLIENT-LINT-WARNING-CEILING-6967. Threshold and baseline-consistency
+      # tests for the lint ratchet. Nothing collects scripts/ci wholesale, so
+      # this has to be named here or it never runs.
+      - name: Client Lint Ratchet Threshold (CLIENT-LINT-WARNING-CEILING-6967)
+        run: |
+          python -m pytest scripts/ci/test_client_lint_ratchet.py -v
       # Axios reachability evidence tests. Pinned here for the same reason as
       # the type-check ratchet: nothing collects scripts/ci/ wholesale.
       - name: Client Axios Reachability Evidence Tests
