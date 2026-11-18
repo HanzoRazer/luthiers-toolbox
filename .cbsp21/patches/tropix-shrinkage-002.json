@@ -1,0 +1,59 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "TROPIX_SHRINKAGE_002",
+  "title": "data(wood): CIRAD Tropix shrinkage for 10 species that had none (batch 2)",
+  "intent": "Add tangential/radial shrinkage to 10 wood_species.json records that had no shrinkage value, from CIRAD Tropix species sheets (policy priority 2, added by PR #489), for species with no FPL GTR-282 Table 4-3/4-4 row. One sheet at a time, cited per value; each sheet's botanical list checked against the record's scientific name.",
+  "change_type": "data",
+  "behavior_change": "wood_movement_calc now returns results for cumaru, makore, bloodwood, yellowheart, tatajuba, mango, cerejeira, garapa, timborana and sucupira; it previously raised ValueError for them because they had no shrinkage (supported species 47 -> 57). No code, route or schema change; no existing value changed.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/tropix-shrinkage-002.json",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/tropix-shrinkage-002.json",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "wood_species.json: 10 records gain contraction_tangential_pct / contraction_radial_pct, each with _shrinkage_<dir>_source CIRAD_Tropix, _shrinkage_<dir>_url and _shrinkage_<dir>_sheet_date. VERIFICATION_LOG: C-15 (values, sheet dates, botanical lists, findings) and O-12 updated.",
+    "why_not_redundant": "These species had no shrinkage at all, so the wood-movement calculator could not be used for them; FPL Tables 4-3/4-4 do not cover them."
+  },
+  "verification": {
+    "commands_run": [
+      "json.dumps(indent=2, ensure_ascii=True) reproduces origin/main's wood_species.json byte-for-byte before editing",
+      "scripted diff vs origin/main: _meta and all other fields identical; only the 10 records changed, each only by adding 8 shrinkage/provenance keys; no existing key changed",
+      "each sheet's botanical list contains the record's species (asserted); St/Sr agrees with the sheet's printed ratio within rounding for all 10",
+      "FPL CSV checked: no Table 4-3/4-4 row for any of the 10 species (FPL 'Sucupira' is Diplotropis purpurea, not Bowdichia nitida)",
+      "wood_movement_calc.get_shrinkage_data returns the new values for all 10; list_species() = 57",
+      "py -3.11 -m pytest tests/test_wood_movement_calc.py tests/test_silent_fallback_elimination.py tests/test_finish_calc.py tests/test_inverse_brace_sizing.py tests/test_registry_endpoint_smoke.py: 96 passed",
+      "pytest scripts/ci/test_policy_fpl_examples.py: 6 passed"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/tropix-shrinkage-002.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "C-15 record of the 10 additions with sheet dates and botanical lists; snakewood exclusion (sheet is Zygia racemosa, record is Brosimum guianense); trade-group limitations; O-12 updated.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/wood_species.json",
+      "intent": "Tropix tangential/radial shrinkage with per-field attribution for 10 species that had none.",
+      "risk": "low",
+      "behavior_change": "wood_movement_calc accepts these 10 species instead of raising ValueError."
+    }
+  ],
+  "risk_rationale": "Low: additive data only, no existing value changed, no code change. Known limitations: cumaru, mango, sucupira and timborana take trade-group sheet averages applied to single-species records; Tropix values are averages, not per-board measurements."
+}
