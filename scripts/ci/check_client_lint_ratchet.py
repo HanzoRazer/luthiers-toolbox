@@ -23,7 +23,15 @@ Anti-"bless-the-void"
 ---------------------
 A gate that silently passes when its input is missing is worse than no gate.
 A missing, empty, malformed, or zero-file report exits non-zero rather than
-reporting a clean run.
+reporting a clean run. So does a missing or malformed baseline.
+
+Coverage floor
+--------------
+`files_linted` is a FLOOR. A run that lints fewer files than the baseline
+fails: a narrowed glob, a dropped --ext, or a new ignore can shed hundreds of
+files, and with them their warnings, so the totals would fall and the ratchet
+would pass while checking less. Deleting client files legitimately lowers the
+count too; then lower `files_linted` in the same PR, as for any other gain.
 
 Usage
 -----
@@ -43,6 +51,12 @@ SEV_WARNING = 1
 SEV_ERROR = 2
 
 DEFAULT_BASELINE = pathlib.Path(__file__).resolve().parent / "client_lint_baseline.json"
+
+# warnings_by_rule keeps only the top N rules. When the tree has more warning
+# rules than this, the map no longer sums to total_warnings.
+WARNINGS_BY_RULE_LIMIT = 25
+
+BASELINE_LIMITS = ("total_errors", "total_warnings", "files_linted")
 
 BASELINE_COMMENT = (
     "Regression ratchet for ESLint in packages/client. total_errors and total_warnings are "
@@ -109,8 +123,27 @@ def summarise(data: list) -> dict:
         "files_linted": len(data),
         "errors_by_rule": dict(sorted(err_by_rule.items(), key=lambda kv: (-kv[1], kv[0]))),
         "errors_by_file": dict(sorted(err_by_file.items())),
-        "warnings_by_rule": dict(sorted(warn_by_rule.items(), key=lambda kv: (-kv[1], kv[0]))[:25]),
+        "warnings_by_rule": dict(
+            sorted(warn_by_rule.items(), key=lambda kv: (-kv[1], kv[0]))[:WARNINGS_BY_RULE_LIMIT]
+        ),
     }
+
+
+def load_baseline(path: pathlib.Path) -> dict:
+    if not path.exists():
+        sys.exit(f"FAIL: baseline not found at {path}")
+    try:
+        base = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        sys.exit(f"FAIL: baseline at {path} is not valid JSON ({exc}).")
+    if not isinstance(base, dict):
+        sys.exit(f"FAIL: baseline at {path} must be a JSON object, got {type(base).__name__}.")
+    for key in BASELINE_LIMITS:
+        value = base.get(key)
+        # bool is an int subclass; true/false is not a count.
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            sys.exit(f"FAIL: baseline at {path} has no usable {key} (got {value!r}).")
+    return base
 
 
 def main() -> int:
@@ -133,12 +166,11 @@ def main() -> int:
         )
         return 0
 
-    if not args.baseline.exists():
-        sys.exit(f"FAIL: baseline not found at {args.baseline}")
-    base = json.loads(args.baseline.read_text(encoding="utf-8"))
-    max_e, max_w = int(base["total_errors"]), int(base["total_warnings"])
+    base = load_baseline(args.baseline)
+    max_e, max_w = base["total_errors"], base["total_warnings"]
+    min_files = base["files_linted"]
 
-    print(f"ESLint over {s['files_linted']} files")
+    print(f"ESLint over {s['files_linted']} files (floor {min_files})")
     print(f"  errors:   {s['total_errors']:>5}  (ceiling {max_e})")
     print(f"  warnings: {s['total_warnings']:>5}  (ceiling {max_w})")
 
@@ -170,6 +202,15 @@ def main() -> int:
         failed = True
         print(f"\nFAIL: warnings rose {max_w} -> {s['total_warnings']} (+{s['total_warnings'] - max_w}).")
 
+    if s["files_linted"] < min_files:
+        failed = True
+        print(
+            f"\nFAIL: linted files fell {min_files} -> {s['files_linted']} "
+            f"(-{min_files - s['files_linted']}). ESLint checked less of the tree, so lower totals "
+            "prove nothing. If client files were deleted on purpose, lower files_linted in "
+            f"{args.baseline.name} in the same PR; otherwise restore the lint file selection."
+        )
+
     if failed:
         print(
             "\nFix the new findings. Do NOT raise a ceiling to make this pass unless the "
@@ -182,6 +223,11 @@ def main() -> int:
             f"\nCounts fell (errors {max_e} -> {s['total_errors']}, "
             f"warnings {max_w} -> {s['total_warnings']}). "
             f"Please lower them in {args.baseline.name} to lock the gain in."
+        )
+    if s["files_linted"] > min_files:
+        print(
+            f"\nLinted files rose ({min_files} -> {s['files_linted']}). "
+            f"Raise files_linted in {args.baseline.name} to lock the coverage in."
         )
 
     print("\nPASS: lint ratchet holds.")
