@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from app.physical_engineering.build_witness.package import ingest_package, verify_package
-from tests.physical_engineering.pem_build_witness_fixture import write_valid
+from .pem_build_witness_fixture import write_valid
 
 ROOT = Path(__file__).resolve().parents[4]
 

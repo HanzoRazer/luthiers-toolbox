@@ -8,7 +8,7 @@ from pathlib import Path
 from app.physical_engineering.build_witness.analyze import analyze_package
 from app.physical_engineering.build_witness.package import PackageError, ingest_package, verify_package
 from app.physical_engineering.build_witness.paths import sha256_file
-from tests.physical_engineering.pem_build_witness_fixture import write_valid, write_wav
+from .pem_build_witness_fixture import write_valid, write_wav
 
 
 def _package(tmp_path: Path, **kwargs: object) -> Path:

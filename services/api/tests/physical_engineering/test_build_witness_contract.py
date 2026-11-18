@@ -21,7 +21,7 @@ from app.physical_engineering.build_witness.vocabulary import (
     NON_AUTHORITY_STATEMENT,
     PROHIBITED_STATES,
 )
-from tests.physical_engineering.pem_build_witness_fixture import clock, write_valid
+from .pem_build_witness_fixture import clock, write_valid
 
 SCHEMA_DIR = (
     Path(__file__).resolve().parents[2]
