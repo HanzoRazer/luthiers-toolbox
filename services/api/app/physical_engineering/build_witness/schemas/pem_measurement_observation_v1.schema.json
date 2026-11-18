@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pem_measurement_observation_v1.schema.json",
+  "title": "PEM measurement or derived observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["observation_id", "quantity", "measurement_source"],
+  "properties": {
+    "observation_id": {"type": "string"},
+    "quantity": {"type": "string"},
+    "value": {"type": ["string", "null"]},
+    "unit": {"type": ["string", "null"]},
+    "measurement_source": {
+      "enum": [
+        "DECLARED_BUILD_PROPERTY",
+        "DERIVED_FROM_CAPTURE",
+        "DIRECT_AUDIO_CAPTURE",
+        "DIRECT_DIMENSION_MEASUREMENT",
+        "DIRECT_INSTRUMENT_READING",
+        "DIRECT_MASS_MEASUREMENT",
+        "DIRECT_SENSOR_CAPTURE",
+        "IMPORTED_MEASUREMENT",
+        "OPERATOR_OBSERVATION"
+      ]
+    }
+  }
+}

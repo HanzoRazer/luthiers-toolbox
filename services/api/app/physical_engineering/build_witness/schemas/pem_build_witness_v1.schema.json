@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pem_build_witness_v1.schema.json",
+  "title": "PEM build-response witness manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_boundary_id",
+    "files",
+    "literature_reconciliation_status",
+    "schema_id",
+    "schema_version",
+    "states",
+    "witness_class",
+    "witness_id"
+  ],
+  "properties": {
+    "schema_id": {"const": "pem_build_witness"},
+    "schema_version": {"const": "1"},
+    "witness_id": {"type": "string"},
+    "witness_class": {"const": "BUILD_RESPONSE_WITNESS"},
+    "authority_boundary_id": {"const": "PEM-BUILD-WITNESS-001"},
+    "literature_reconciliation_status": {"const": "BLOCKED_BEFORE_PREFLIGHT"},
+    "states": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/state"}
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "byte_length", "media_type", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "byte_length": {"type": "integer", "minimum": 0},
+          "media_type": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "state": {
+      "enum": [
+        "BUILD_RESPONSE_OBSERVED",
+        "CALIBRATION_UNVERIFIED",
+        "CAPTURE_COMPLETE",
+        "CAPTURE_INCOMPLETE",
+        "INTEGRITY_VERIFIED",
+        "METHOD_REVIEW_PENDING",
+        "REFERENCE_COMPARISON_BLOCKED",
+        "SCIENTIFIC_INTERPRETATION_PENDING"
+      ]
+    }
+  }
+}

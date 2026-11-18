@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pem_test_protocol_v1.schema.json",
+  "title": "PEM build-response test protocol",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "preprocessing", "trial_count"],
+  "properties": {
+    "schema_id": {"const": "pem_test_protocol"},
+    "schema_version": {"const": "1"},
+    "preprocessing": {"const": "none"},
+    "trial_count": {"type": "integer", "minimum": 3},
+    "sample_rate_hz": {"type": ["integer", "null"]},
+    "bit_depth": {"type": ["integer", "null"]},
+    "channels": {"type": ["integer", "null"]}
+  }
+}
