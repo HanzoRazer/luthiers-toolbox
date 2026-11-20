@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done; C-14 (sourced shrinkage for 10 species in `wood_species.json`, CIRAD Tropix added as a source) applied. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, O-11, and O-12 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done; C-14 (sourced shrinkage for 10 species in `wood_species.json`, CIRAD Tropix added as a source) and C-15 (Tropix shrinkage for 10 species that had none, 2026-11-17) applied. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, O-11, and O-12 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
 
 ## Why this log exists
 
@@ -215,6 +215,33 @@ Findings:
 
 After this change: 440 species have no tangential shrinkage, 8 are FPL, 2 Tropix, 14 Wood Database, and **9 remain unsourced** (`spruce_european`, `cedar_spanish`, `cherry_black`, `cypress_bald`, `oak_red`, `oak_white`, `spruce_white`, `tasmanian_blackwood`, `zebrawood`) — see O-12.
 
+### C-15 — Tropix shrinkage for 10 species that had none (batch 2, 2026-11-17)
+
+**Scope.** Ten species with **no** shrinkage value, a Tropix sheet that names the record's species in its botanical list, and no row in FPL Tables 4-3/4-4 (so Tropix is the highest-priority source that covers them). Same method as C-14: one sheet at a time, read from its own PDF, cited per value (`CIRAD_Tropix` + sheet URL + "last update" date, per field). Each St/Sr pair agrees with the sheet's printed St/Sr ratio within its rounding. Only tangential and radial values are added; Tropix gives no total volumetric shrinkage, so none is added.
+
+| Species (id) | Record's species | Tropix sheet (botanical names listed) | Sheet date | T / R |
+|---|---|---|---|---|
+| `cumaru` | *Dipteryx odorata* | CUMARU / TONKA (*Dipteryx* group: *alata*, *micrantha*, *odorata*, *polyphylla*, *D.* p.p.) | 2025-08-11 | 7.7 / 5.5 |
+| `makore` | *Tieghmella heckelii* (sic) | MAKORE (*Tieghemella heckelii*) | 2023-05-22 | 7.5 / 5.8 |
+| `bloodwood` | *Brosimum rubescens* | MUIRAPIRANGA / BLOODWOOD (*B. rubescens*) | 2025-05-16 | 5.9 / 4.1 |
+| `yellowheart` | *Euxylophora paraensis* | YELLOWHEART (*E. paraensis*) | 2025-05-16 | 6.5 / 5.7 |
+| `tatajuba` | *Bagassa guianensis* | TATAJUBA (*B. guianensis*) | 2025-05-16 | 5.2 / 3.7 |
+| `mango` | *Mangifera indica* | MANGO / MACHANG (*Mangifera* group: *foetida*, *indica*, *laurina*, *M.* p.p.) | 2026-03-30 | 6.1 / 4.2 |
+| `cerejeira` | *Amburana cearensis* | CEREJEIRA (*A. cearensis*) | 2024-06-04 | 4.5 / 2.4 |
+| `garapa` | *Apuleia leiocarpa* | GARAPA (*A. leiocarpa*) | 2024-05-15 | 7.5 / 4.2 |
+| `timborana` | *Pseudopiptadenia suaveolens* | TIMBORANA (*P. suaveolens*, *P. psilostachya* and synonyms) | 2024-08-12 | 6.9 / 4.6 |
+| `sucupira` | *Bowdichia nitida* | SUCUPIRA (trade group: *Bowdichia nitida*, *Diplotropis martiusii*, *D. purpurea*) | 2024-08-01 | 7.0 / 4.9 |
+
+Findings:
+
+- **Snakewood excluded — botanical mismatch.** The record names *Brosimum guianense*; Tropix's SNAKEWOOD sheet is *Zygia racemosa* (syn. *Marmaroxylon racemosum*), a different genus and family. Not applied. Sucupira took its place.
+- **Trade-group sheets** (same limitation as Wenge in C-14): `cumaru` (five *Dipteryx* names), `mango` (three *Mangifera* species), `sucupira` (two genera) and `timborana` (two *Pseudopiptadenia* species) get group averages applied to single-species records.
+- **Sucupira and FPL.** FPL 4-4 has a "Sucupira" row, but for *Diplotropis purpurea* (7.0 / 4.6), not the record's *Bowdichia nitida*, so FPL does not cover this species and Tropix is used. The Tropix group includes *D. purpurea*; its tangential value matches FPL's and its radial value is 0.3 higher.
+- **Makore spelling.** The JSON's `scientific_name` is *Tieghmella heckelii*; the accepted spelling is *Tieghemella* (as on the Tropix sheet). Reported, not changed here.
+- **Behaviour change.** These 10 species had no shrinkage, so `wood_movement_calc` rejected them with `ValueError`; it now returns results for them (supported species 47 → 57). Scripted check: the only change in all 473 records is that these 10 gained the 8 shrinkage and provenance fields; nothing else changed.
+
+After this change: 430 species have no tangential shrinkage, 8 are FPL, 12 Tropix, 14 Wood Database, and 9 remain unsourced (O-12).
+
 ## Open issues
 
 | ID | Issue | What fixing it needs |
@@ -230,7 +257,7 @@ After this change: 440 species have no tangential shrinkage, 8 are FPL, 2 Tropix
 | **O-09** | ~~Bagtikan CITES status~~ — resolved by C-11 (not CITES- or EU-listed) | — |
 | **O-10** | ~~CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table~~ — resolved by C-13 (table-specific labels; old label deprecated) | — |
 | **O-11** | Specific gravity basis is unstated in every document. FPL species now show G₁₂; other species' SG has an unknown basis, sometimes in the same row | State the basis per value, or drop SG where density is given |
-| **O-12** | Shrinkage in `wood_species.json` (C-14): 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar). 440 species have no shrinkage value; 69 of them have an exact-name Tropix sheet. 14 values still cite the Wood Database, some for species FPL or Tropix covers | FPL re-sourcing for the FPL species; then Tropix one sheet at a time, by priority |
+| **O-12** | Shrinkage in `wood_species.json` (C-14, C-15): 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar). 430 species have no shrinkage value. Of these, several have an FPL 4-4 row and must take FPL first, including the established iroko, teak and merbau, and greenheart, imbuia, jarrah, mora and rubberwood. Others have only a Tropix sheet. 14 values still cite the Wood Database, some for species FPL or Tropix covers. `snakewood` has a same-name Tropix sheet for a different species (C-15) | FPL batch for the FPL-covered species; then Tropix one sheet at a time, with the sheet's botanical list checked against the record |
 
 ## Findings outside `docs/tonewood/` (reported, not changed here)
 
