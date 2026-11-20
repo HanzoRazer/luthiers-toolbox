@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pem_build_record_v1.schema.json",
+  "title": "PEM factual build record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "witness_id", "witness_class", "material_identity_statement"],
+  "properties": {
+    "schema_id": {"const": "pem_build_record"},
+    "schema_version": {"const": "1"},
+    "witness_id": {"type": "string"},
+    "witness_class": {"const": "BUILD_RESPONSE_WITNESS"},
+    "material_identity_statement": {"type": "string"},
+    "record_kind": {"enum": ["PHYSICAL_CAPTURE", "SYNTHETIC_FIXTURE"]}
+  }
+}

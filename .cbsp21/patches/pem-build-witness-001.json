@@ -1,0 +1,274 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "PEM-BUILD-WITNESS-001",
+  "title": "Add the build-response witness contract and CLI",
+  "intent": "Record the contract for one working instrument's physical evidence without treating whole-instrument measurements as intrinsic wood properties, and without opening literature comparison, scientific approval, production, CAM, or machine authority.",
+  "change_type": "feat",
+  "behavior_change": "Adds a library and five CLIs for an external evidence package. No API route, calculator, or existing evidence record changes.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/pem-build-witness-001.json",
+      "docs/investigations/pem-build-witness-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/pem-build-witness-001/README.md",
+      "scripts/analyze_build_response.py",
+      "scripts/create_build_witness.py",
+      "scripts/ingest_build_witness.py",
+      "scripts/render_build_witness_report.py",
+      "scripts/verify_build_witness.py",
+      "services/api/app/physical_engineering/build_witness/__init__.py",
+      "services/api/app/physical_engineering/build_witness/analyze.py",
+      "services/api/app/physical_engineering/build_witness/cli.py",
+      "services/api/app/physical_engineering/build_witness/findings.py",
+      "services/api/app/physical_engineering/build_witness/ids.py",
+      "services/api/app/physical_engineering/build_witness/package.py",
+      "services/api/app/physical_engineering/build_witness/paths.py",
+      "services/api/app/physical_engineering/build_witness/report.py",
+      "services/api/app/physical_engineering/build_witness/repository.py",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/templates.py",
+      "services/api/app/physical_engineering/build_witness/validate.py",
+      "services/api/app/physical_engineering/build_witness/validate_capture.py",
+      "services/api/app/physical_engineering/build_witness/validate_support.py",
+      "services/api/app/physical_engineering/build_witness/vocabulary.py",
+      "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
+      "services/api/tests/physical_engineering/test_build_witness_contract.py",
+      "services/api/tests/physical_engineering/test_build_witness_integrity.py",
+      "services/api/tests/physical_engineering/test_build_witness_measurements.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/pem-build-witness-001.json",
+      "docs/investigations/pem-build-witness-001/AUTHORITY_BOUNDARY.md",
+      "docs/investigations/pem-build-witness-001/README.md",
+      "scripts/analyze_build_response.py",
+      "scripts/create_build_witness.py",
+      "scripts/ingest_build_witness.py",
+      "scripts/render_build_witness_report.py",
+      "scripts/verify_build_witness.py",
+      "services/api/app/physical_engineering/build_witness/__init__.py",
+      "services/api/app/physical_engineering/build_witness/analyze.py",
+      "services/api/app/physical_engineering/build_witness/cli.py",
+      "services/api/app/physical_engineering/build_witness/findings.py",
+      "services/api/app/physical_engineering/build_witness/ids.py",
+      "services/api/app/physical_engineering/build_witness/package.py",
+      "services/api/app/physical_engineering/build_witness/paths.py",
+      "services/api/app/physical_engineering/build_witness/report.py",
+      "services/api/app/physical_engineering/build_witness/repository.py",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/templates.py",
+      "services/api/app/physical_engineering/build_witness/validate.py",
+      "services/api/app/physical_engineering/build_witness/validate_capture.py",
+      "services/api/app/physical_engineering/build_witness/validate_support.py",
+      "services/api/app/physical_engineering/build_witness/vocabulary.py",
+      "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
+      "services/api/tests/physical_engineering/test_build_witness_contract.py",
+      "services/api/tests/physical_engineering/test_build_witness_integrity.py",
+      "services/api/tests/physical_engineering/test_build_witness_measurements.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "Schemas, an unexported build-witness library, create/ingest/verify/analyze/report scripts, synthetic tests, and the investigation note. No real recording or photograph is committed.",
+    "why_not_redundant": "LtbStoredEvidenceArtifactV1 stores one proposal quantity. It is not a multi-file build-response package, and no existing contract classifies whole-instrument audio as BUILD_RESPONSE_WITNESS."
+  },
+  "verification": {
+    "commands_run": [
+      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 42 passed",
+      "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK",
+      "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
+      "python -m app.ci.check_bare_except -> OK",
+      "python -m app.ci.check_duplication --threshold 100 -> 71 clone groups",
+      "python -m app.ci.fence_checker_v2 -> passed",
+      "python scripts/check_protected_paths.py -> passed"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/pem-build-witness-001.json",
+      "intent": "Per-PR CBSP21 manifest for the build-response witness contract.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": "docs/investigations/pem-build-witness-001/AUTHORITY_BOUNDARY.md",
+      "intent": "Records the witness purpose, the uncaptured real build, and the authority boundary.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    },
+    {
+      "path": "docs/investigations/pem-build-witness-001/README.md",
+      "intent": "Records the witness purpose, the uncaptured real build, and the authority boundary.",
+      "risk": "low",
+      "behavior_change": "Documentation only."
+    },
+    {
+      "path": "scripts/analyze_build_response.py",
+      "intent": "Command-line entry point. No route is added.",
+      "risk": "low",
+      "behavior_change": "New CLI. It does not alter an existing command."
+    },
+    {
+      "path": "scripts/create_build_witness.py",
+      "intent": "Command-line entry point. No route is added.",
+      "risk": "low",
+      "behavior_change": "New CLI. It does not alter an existing command."
+    },
+    {
+      "path": "scripts/ingest_build_witness.py",
+      "intent": "Command-line entry point. No route is added.",
+      "risk": "low",
+      "behavior_change": "New CLI. It does not alter an existing command."
+    },
+    {
+      "path": "scripts/render_build_witness_report.py",
+      "intent": "Command-line entry point. No route is added.",
+      "risk": "low",
+      "behavior_change": "New CLI. It does not alter an existing command."
+    },
+    {
+      "path": "scripts/verify_build_witness.py",
+      "intent": "Command-line entry point. No route is added.",
+      "risk": "low",
+      "behavior_change": "New CLI. It does not alter an existing command."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/__init__.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/analyze.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/cli.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/findings.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/ids.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/package.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/paths.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/report.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/repository.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
+      "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
+      "risk": "low",
+      "behavior_change": "New schema. No existing schema is redefined."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
+      "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
+      "risk": "low",
+      "behavior_change": "New schema. No existing schema is redefined."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
+      "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
+      "risk": "low",
+      "behavior_change": "New schema. No existing schema is redefined."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
+      "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
+      "risk": "low",
+      "behavior_change": "New schema. No existing schema is redefined."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/templates.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/validate.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/validate_capture.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/validate_support.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/vocabulary.py",
+      "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
+      "risk": "low",
+      "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
+      "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
+      "risk": "low",
+      "behavior_change": "New tests."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_build_witness_contract.py",
+      "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
+      "risk": "low",
+      "behavior_change": "New tests."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_build_witness_integrity.py",
+      "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
+      "risk": "low",
+      "behavior_change": "New tests."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_build_witness_measurements.py",
+      "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
+      "risk": "low",
+      "behavior_change": "New tests."
+    }
+  ]
+}
