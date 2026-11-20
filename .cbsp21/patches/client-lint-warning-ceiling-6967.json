@@ -1,0 +1,95 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "CLIENT_LINT_WARNING_CEILING_6967",
+  "title": "chore(ci): lower client lint warning ceiling 6971 -> 6967",
+  "intent": "Lock the client ESLint warning ceiling to the count measured on current main (34 errors, 6967 warnings, 1486 files). The ceiling stayed at 6971 after the count fell, so four new warnings could land without failing the gate. Kept out of the dependency PRs per the standing ruling that a dependency bump must not move a lint ceiling. Governance-only: no source, lint rule, ignore, dependency, or lockfile change. Review fixes: files_linted is now enforced as a floor, so shrinking lint coverage cannot pass on lower totals; a missing, malformed or non-integer baseline fails with a stated reason instead of a traceback; the workflow path test reads the on.<event>.paths lists instead of searching text.",
+  "change_type": "chore",
+  "behavior_change": "CI only. The lint ratchet fails above 6967 warnings instead of above 6971, and still fails above 34 errors. Baseline regenerated with --write-baseline from two identical lint:report runs of origin/main 8692f1b4. Compared with the previous baseline, four values differ: total_warnings 6971 -> 6967; files_linted 1484 -> 1486; warnings_by_rule @typescript-eslint/no-explicit-any 960 -> 957; warnings_by_rule max-lines-per-function 138 -> 137. The per-rule warning counts sum to 6967 and the per-rule error counts sum to 34. total_errors, errors_by_rule, errors_by_file, every other warnings_by_rule entry, and _comment are unchanged. A focused test pins the 6967/6968 and 34/35 boundaries, the committed baseline's rule-count sums, and the existing client_lint_build.yml path filters. core_ci.yml names that test because nothing collects scripts/ci wholesale. The four-warning reduction is not from this patch. Full lint diffs attribute it to #481 (6971 -> 6968, three max-lines-per-function warnings that left with the deleted February 19 risk composables) and #482 (6968 -> 6967 net: no-explicit-any 960 -> 957 and max-lines-per-function 135 -> 137). #493 (eslint-plugin-vue 10.12.0 -> 10.12.1) and #494 (konva 10.9.0 -> 10.9.1) change zero lint messages. Review fixes change the checker: (1) files_linted is a floor; a run below it fails with 'linted files fell N -> M' even when both totals are under their ceilings; a run above it passes and asks for the floor to be raised. (2) load_baseline() fails closed with a FAIL message on a missing file, invalid JSON, a non-object, or a missing, negative, boolean or non-integer total_errors / total_warnings / files_linted. (3) The top-25 cap on warnings_by_rule is the named constant WARNINGS_BY_RULE_LIMIT; the test's rule-sum check treats a capped map as a lower bound instead of failing after a legitimate regeneration with more than 25 warning rules. Pass/fail on the two totals is unchanged.",
+  "risk_level": "low",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/client-lint-warning-ceiling-6967.json",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/client_lint_baseline.json",
+      "scripts/ci/test_client_lint_ratchet.py",
+      "scripts/ci/check_client_lint_ratchet.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/client-lint-warning-ceiling-6967.json",
+      ".github/workflows/core_ci.yml",
+      "scripts/ci/client_lint_baseline.json",
+      "scripts/ci/test_client_lint_ratchet.py",
+      "scripts/ci/check_client_lint_ratchet.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "client_lint_baseline.json: total_warnings 6971 -> 6967, files_linted 1484 -> 1486, no-explicit-any 960 -> 957, max-lines-per-function 138 -> 137. New scripts/ci/test_client_lint_ratchet.py. core_ci.yml gains one pytest step for that test. This manifest. check_client_lint_ratchet.py: files_linted floor, load_baseline() fail-closed validation, WARNINGS_BY_RULE_LIMIT constant.",
+    "why_not_redundant": "Without the lower ceiling the ratchet still tolerates four warnings of unnoticed regression. A ratchet only ratchets if the ceiling follows the measured count down. The test is what fails an inconsistent rule-count sum; the checker itself compares only the two totals. The file floor closes the gap where a narrowed lint selection lowers both totals and passes.",
+    "what_did_not_change": "Error ceiling 34 and its breakdowns. The type-check ceiling (87). client_lint_build.yml (both pull_request and push path filters already list the baseline and the ratchet script). No client source, no ESLint config or ignore, no dependency, no lockfile, no generated artifact. The checker's pass/fail rule for the two totals and its report validation are unchanged. SPRINTS.md is unchanged; completed ratchet orders are not an index that file requires."
+  },
+  "verification": {
+    "commands_run": [
+      "Branch cursor/client-lint-warning-ceiling-6967-6965 from origin/main 8692f1b4 (merge of #494). Both #493 merge 61beca87 and #494 merge 8692f1b4 are ancestors. gh/open-PR search: no open pull request.",
+      "packages/client: npm ci (Node v22.23.4). npm run lint:report twice. Normalized (severity, rule, path, line, column, message) tuples identical: 1486 files, 34 errors, 6967 warnings, 7001 messages. Per-rule warning counts (20 rules) sum to 6967. Per-rule and per-file error counts sum to 34.",
+      "check_client_lint_ratchet.py --report run1 --write-baseline and the same for run2 produced byte-identical baselines. Key diff versus the previous baseline is the four values named above.",
+      "Lint diff, same command, clean npm ci at each commit. eb24a99c (#480 merge, ceiling on main): 1487 files, 34 errors, 6971 warnings. 158dde45 (#481): 1483 files, 6968 warnings, only max-lines-per-function 138 -> 135. cfaf0775 (#482): 1485 files, 6967 warnings, no-explicit-any 960 -> 957 and max-lines-per-function 135 -> 137. 53a86f0b (#492), 99a58807 (#490, axios 1.21.1; eslint-plugin-vue still 10.12.0), 61beca87 (#493, plugin 10.12.1), and 8692f1b4 (#494) are message-identical to each other at 1486 files / 34 / 6967. #493 did not produce the reduction.",
+      "File set versus the #480 merge lint: six paths disappeared because #481 deleted the files (RiskDashboardCrossLabV2.vue, riskDashboardLegacy.spec.ts, composables/index.ts, useRiskBuckets.ts, useRiskExport.ts, useRiskFilters.ts). Five paths appeared (RosetteComparePanel.spec.ts, useRosetteCompareApi.spec.ts, RiskDashboardCrossLab.spec.ts, riskDashboardRequestOrder.spec.ts, useAuthStore.signOut.test.ts). 1487 - 6 + 5 = 1486. No surviving file left the lint set. .eslintrc.cjs is unchanged. The recorded 1484 was the pre-merge measurement; the three test files already on main at eb24a99c (riskDashboardLegacy.spec.ts, riskDashboardDecomposed.spec.ts, riskDashboardFixtures.ts) contribute 0 warnings, which is why 1487 files still totaled 6971.",
+      "Real report against the new baseline: PASS (warnings 6967, ceiling 6967). One injected warning: FAIL warnings rose 6967 -> 6968 (+1). One injected error: FAIL errors rose 34 -> 35 (+1).",
+      "services/api/.venv/bin/python -m pytest scripts/ci/test_client_lint_ratchet.py -q: 15 passed (before review fixes). Covered 6967 pass, 6968 fail, error 35 fail, missing/malformed/empty/zero-file inputs fail closed, committed rule-count sums, inconsistent sum rejected, reduced file count printed and not a totals failure, and both workflow path filters.",
+      "npm test (vitest run): 57 files passed, 1 skipped; 891 tests passed, 17 todo.",
+      "npm run type-check on the default Node heap aborted (exit 134, ~2GB old-space OOM). Same command with NODE_OPTIONS=--max-old-space-size=6144 exited 2 and check_client_type_check_ratchet.py reported vue-tsc errors 87, ceiling 87, PASS. No client source changed, so this is the existing ceiling.",
+      "npm run build on origin/main 8692f1b4 and on this tree: 199 dist files, sha256 lists identical.",
+      "Measured on Linux only. No second platform was run. Hosted lint-build uses ubuntu-latest, the same OS family as this measurement. No cross-platform discrepancy was observed because none could be.",
+      "Review fixes, Windows, py -3.11 -m pytest scripts/ci/test_client_lint_ratchet.py -q: 20 passed, 15 subtests passed. New: file floor at count passes, one file under fails with totals under ceiling, more files passes with a raise-the-floor note; malformed / non-object baseline and 15 bad-limit cases fail with a message and no traceback; writer caps warnings_by_rule at 25 and the sum check accepts it; workflow reader ignores commented-out paths and job steps. The two per-rule pins (957, 137) were dropped; the totals and the rule-sum check remain.",
+      "Negative controls, each reverted after: removing the floor check fails test_one_file_under_floor_fails_even_with_totals_under_ceiling; removing the JSON guard fails test_malformed_baseline_fails_closed; commenting out the pull_request baseline path in client_lint_build.yml fails test_baseline_and_ratchet_paths_trigger_lint_build. The original text-search test PASSED with that path commented out, so it could not detect a removed filter.",
+      "Hosted lint-build at 21a94856 printed 'ESLint over 1486 files', equal to files_linted, so the new floor passes at the base."
+    ]
+  },
+  "files": [
+    {
+      "path": "scripts/ci/client_lint_baseline.json",
+      "intent": "Lower the lint warning ceiling to the count measured on current main.",
+      "risk": "low",
+      "behavior_change": "Ratchet fails above 6967 warnings instead of above 6971. Error ceiling stays 34."
+    },
+    {
+      "path": "scripts/ci/check_client_lint_ratchet.py",
+      "intent": "Enforce files_linted as a floor and fail closed with a message on a bad baseline.",
+      "risk": "low",
+      "behavior_change": "Ratchet also fails when fewer files are linted than files_linted. Bad baselines exit 1 with FAIL text instead of a traceback. Totals logic unchanged."
+    },
+    {
+      "path": "scripts/ci/test_client_lint_ratchet.py",
+      "intent": "Pin the ceiling and file-floor boundaries, fail-closed baseline handling, the committed baseline's rule-count sums, and the lint-build path filters read structurally.",
+      "risk": "low",
+      "behavior_change": "Adds a CI test."
+    },
+    {
+      "path": ".github/workflows/core_ci.yml",
+      "intent": "Run the new lint-ratchet test. scripts/ci is not collected wholesale.",
+      "risk": "low",
+      "behavior_change": "Core CI runs one additional pytest file."
+    },
+    {
+      "path": ".cbsp21/patches/client-lint-warning-ceiling-6967.json",
+      "intent": "Per-PR CBSP21 patch manifest.",
+      "risk": "low",
+      "behavior_change": "none"
+    }
+  ],
+  "architecture_scan": {
+    "scan_id": "AS-2026-11-17-LINT-CEILING-6967",
+    "risk_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "findings": [],
+    "acknowledged": true,
+    "acknowledgement_notes": "CI baseline data, the lint ratchet checker and its test. No architectural surface."
+  },
+  "risk_rationale": "Low runtime risk: CI only, no client source. One new CI failure mode: the lint ratchet now fails when ESLint lints fewer files than files_linted (1486). A PR that deletes client files must lower files_linted in the same PR. Hosted lint-build on this branch measured 1486, so the floor holds at the base."
+}
