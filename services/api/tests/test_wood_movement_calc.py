@@ -248,10 +248,12 @@ class TestPhysicsValidation:
 
     def test_shrinkage_coefficients_realistic(self):
         """Shrinkage coefficients should be in realistic range."""
-        # Typical range: 0.001 to 0.004 per % MC
-        # Higher values (0.003+) are valid for high-shrinkage species like maple
+        # coefficient = total tangential shrinkage % / 3000. Published values span about
+        # 2.5-13% tangential (FPL GTR-282 Table 4-3: Pacific madrone 12.4, shellbark hickory
+        # 12.6, overcup oak 12.7; Table 4-4: karri 12.4), so the bound is 1.5-15% tangential.
+        # It catches unit and decimal-place errors, not species variation.
         for species, coeff in TANGENTIAL_SHRINKAGE.items():
-            assert 0.001 < coeff < 0.004, f"{species} coefficient {coeff} out of range"
+            assert 0.0005 < coeff < 0.005, f"{species} coefficient {coeff} out of range"
 
     def test_houston_scenario(self):
         """

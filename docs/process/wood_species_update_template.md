@@ -126,6 +126,10 @@ Gore & Gilet — lutherie-specific validation, not a primary value source.
 - `"CIRAD_Tropix"` — CIRAD–ITTO Tropix species sheet (shrinkage); with `_shrinkage_<dir>_url` and `_shrinkage_<dir>_sheet_date`
 - `"unknown_legacy"` — Unverified, flagged for follow-up
 
+**Optional per-field qualifiers** (shrinkage):
+- `_shrinkage_<dir>_approximate: true` — the source prints the value as approximate (e.g. "~4%" on wood-database.com)
+- `_shrinkage_caveat` — free-text limitation, e.g. values given for a subspecies
+
 ### 5. Caveats Object
 
 Typed caveats with semantic keys:
