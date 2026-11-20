@@ -2,7 +2,7 @@
 
 > **Started:** 2026-11-14 (TONEWOOD-VERIFY-001)
 > **Scope:** the 16 documents in `docs/tonewood/`, checked against the repo's own data files and, for CITES, the official Species+ database.
-> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done; C-14 (sourced shrinkage for 10 species in `wood_species.json`, CIRAD Tropix added as a source) and C-15 (Tropix shrinkage for 10 species that had none, 2026-11-17) applied. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, O-11, and O-12 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
+> **Status:** tranche 1 (C-01 to C-10) and tranche 2 (C-11, its review fixes C-12, and the source-label ruling C-13, 2026-11-15) done; C-14 (sourced shrinkage for 10 species in `wood_species.json`, CIRAD Tropix added as a source) and C-15 (Tropix shrinkage for 10 species that had none, 2026-11-17) and C-16 (shrinkage for 377 more species, FPL or Wood Database, 2026-11-19) applied. The corrections below are applied. Of the rows under **Open issues**, O-01, O-02, O-03, the Granadillo remainder of O-06, O-08, O-11, and O-12 are still unresolved. O-04, O-05, O-07, O-09, and O-10 are resolved and stay in that table. O-05's remaining blackwoods/acacia duplication was reconciled on 2026-11-16 (TONEWOOD-BLACKWOODS-RECONCILIATION-003): documentation structure only. The measurements were not revalidated.
 
 ## Why this log exists
 
@@ -242,6 +242,63 @@ Findings:
 
 After this change: 430 species have no tangential shrinkage, 8 are FPL, 12 Tropix, 14 Wood Database, and 9 remain unsourced (O-12).
 
+### C-16 — Shrinkage for 377 species that had none: FPL for 126, Wood Database for 251 (batch 3, 2026-11-19)
+
+**Owner ruling (2026-11-19).** The Wood Database is an approved source with the same credibility as the others. None of these sources measured the boards a builder will use. Owner GO: fill the empty shrinkage values from it, each cited to its own species page, with the source recorded per field.
+
+**Locating values.** An undated, unlicensed third-party bulk copy of wood-database.com (584 species; not committed to this repo) was used as an index of which page to cite and what it says.
+- **Fidelity.** A seeded random sample of 30 rows was compared with the live pages: all 30 matched numerically on tangential and radial shrinkage.
+- **Known faults of the copy:**
+  - It drops the site's "~" (approximate) marker.
+  - It leaves out values the site has. Cocobolo is blank in the copy but has a full line on its page, and 20 of the 30 sampled rows lack a volumetric value their page shows.
+- **Consequences:**
+  - Only tangential and radial values were imported; no volumetric.
+  - Every row whose values were whole numbers (18) was re-read from its live page. 13 are marked approximate there, and keyaki's values are for a subspecies; these carry `_shrinkage_<dir>_approximate: true` (and a `_shrinkage_caveat` for keyaki).
+  - Blanks in the copy were treated as unknown, not as absent.
+
+**Matching records to pages.**
+- 369 records matched through their own `_source_url`, which already cites that page; 12 more matched an unambiguous identical scientific name.
+- Four were **excluded** because the page describes a different species from the record:
+  - `narra`: record *Pterocarpus dalbergioides*, page *P. indicus*
+  - `partridgewood`: record *Caesalpinia granadillo*, page *Andira inermis*
+  - `tiete_rosewood`: record *Goniorrhachis marginata*, page *Guibourtia hymenaeifolia*
+  - `red_palm`: record *Cyrtostachys renda*, page *Cocos nucifera*
+- `english_elm` (record *Ulmus minor*, page *U. procera*) is included; *U. procera* is commonly treated within *U. minor*.
+
+**FPL first where FPL has the species.** 126 of the matched species have an FPL Table 4-3/4-4 row with both values. CLAUDE.md puts FPL first and the rows are already in `docs/reference/fpl-gtr282/`, so those 126 take FPL values (`_shrinkage_<dir>_source` + `_table_row`). 101 matched by name; a second pass found 25 filed under FPL group names (e.g. "Oak, white, Overcup", "Hickory, true, Shellbark", "Magnolia, Cucumbertree", "Cedar, Yellow" = Alaskan yellow cedar).
+- Iroko, teak and merbau are among them, as are the domestic ashes, maples, pines, firs, birches, elms and others.
+- Row choices follow name and synonym: *Chlorophora* = *Milicia*, *Ocotea rodiaei* = *Chlorocardium rodiei*, *Phoebe porosa* = *Ocotea porosa*, Azobe = ekki, Benge = mutenye, *Cybistax* = *Roseodendron* (primavera), Sucupira (*D. purpurea*) = tatabu.
+- `bulletwood` uses FPL's "Bulletwood" row, not its "Balata" row.
+- Kept on the Wood Database: `gray_birch` (FPL gives radial only), `coast_redwood` (FPL has separate old- and young-growth rows; the record does not say which).
+
+**FPL vs Wood Database on the 126 shared species: the cross-check the owner asked about.**
+- Agreement:
+  - Both values are identical in 98 of 126.
+  - Tangential is within 0.5 points in 119 of 126 and radial in 122 of 126.
+  - Tangential differs by more than 15% in only 4 species.
+- **Caveat:** identical values mostly mean the Wood Database reproduces FPL, so this is not 98 independent confirmations.
+
+The seven species differing by more than 0.5 points:
+
+| Species | FPL T / R | Wood Database T / R |
+|---|---|---|
+| `jarrah` | 11.0 / 7.7 | 9.4 / 6.3 |
+| `balsa` | 7.6 / 3.0 | 6.0 / 2.3 |
+| `iroko` | 3.8 / 2.8 | 4.8 / 3.3 |
+| `peroba_rosa` | 6.4 / 3.8 | 7.4 / 4.2 |
+| `okoume` | 6.1 / 4.1 | 7.1 / 4.6 |
+| `kempas` | 7.4 / 6.0 | 6.7 / 5.1 |
+| `greenheart` | 9.6 / 8.8 | 8.9 / 8.2 |
+
+Findings:
+
+- **Tropix priority not applied to 20 species.** These Wood Database-filled species also have a Tropix sheet, which CLAUDE.md ranks above the Wood Database: abura, araracanga, balau, beli, bosse, etimoe, freijo, guanacaste, idigbo, izombe, kosipo, lati, macacauba, mansonia, moabi, ohia, preciosa, pyinma, utile and wamara. They were filled under the owner's GO without reading those sheets. This is a deviation from the written priority, open as O-12.
+- **Duplicate records of one species** (`alder`/`red_alder`, `maple_soft`/`red_maple`, `pine_eastern_white`/`eastern_white_pine`) receive the same values. The duplication itself is reported, not fixed here.
+- **Behaviour change.** `wood_movement_calc` now returns results for these 377 species instead of raising `ValueError` (supported species 57 → 434). Scripted check against the parent commit: the only change in all 473 records is that these 377 gained shrinkage and provenance fields; nothing else changed.
+- **Test range widened.** `test_shrinkage_coefficients_realistic` required 3–12% tangential. Published FPL values exceed that (Pacific madrone 12.4, shellbark hickory 12.6, overcup oak 12.7, karri 12.4), as do Wood Database values for muninga (2.8) and mountain ash (13.0). The bound is now 1.5–15%, which still catches unit and decimal-place errors.
+
+After this change: 53 species have no tangential shrinkage, 134 are FPL (95 Table 4-3, 39 Table 4-4), 12 Tropix, 265 Wood Database, and 9 remain unsourced.
+
 ## Open issues
 
 | ID | Issue | What fixing it needs |
@@ -257,7 +314,7 @@ After this change: 430 species have no tangential shrinkage, 8 are FPL, 12 Tropi
 | **O-09** | ~~Bagtikan CITES status~~ — resolved by C-11 (not CITES- or EU-listed) | — |
 | **O-10** | ~~CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table~~ — resolved by C-13 (table-specific labels; old label deprecated) | — |
 | **O-11** | Specific gravity basis is unstated in every document. FPL species now show G₁₂; other species' SG has an unknown basis, sometimes in the same row | State the basis per value, or drop SG where density is given |
-| **O-12** | Shrinkage in `wood_species.json` (C-14, C-15): 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar). 430 species have no shrinkage value. Of these, several have an FPL 4-4 row and must take FPL first, including the established iroko, teak and merbau, and greenheart, imbuia, jarrah, mora and rubberwood. Others have only a Tropix sheet. 14 values still cite the Wood Database, some for species FPL or Tropix covers. `snakewood` has a same-name Tropix sheet for a different species (C-15) | FPL batch for the FPL-covered species; then Tropix one sheet at a time, with the sheet's botanical list checked against the record |
+| **O-12** | Shrinkage in `wood_species.json` (C-14 to C-16):<br>• 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar).<br>• 53 species have no shrinkage value, including the 4 excluded for species mismatch in C-16 and `snakewood` (C-15).<br>• 20 species take Wood Database values although a Tropix sheet exists (C-16).<br>• Some of the 14 older Wood Database values are for species FPL or Tropix covers. | FPL for the 6 unsourced FPL species; resolve the record identities of the 5 mismatched species; owner decision on whether the Tropix-over-Wood-Database priority still applies after the 2026-11-19 ruling |
 
 ## Findings outside `docs/tonewood/` (reported, not changed here)
 
