@@ -61,6 +61,8 @@ def _observations(package: Path, witness_id: str, requested: list[str]) -> dict:
         rows.extend(_trial_rows(witness_id, millis, inputs[index], audio, requested))
     rows.extend(_trial_rows(witness_id, millis, protocol["background_file"], background, {"noise_floor", "capture_duration"} & set(requested)))
     rows.extend(_across(witness_id, millis, inputs, trials, background, requested))
+    for row in rows:
+        row["session_id"] = build["session_id"]
     rows.sort(key=lambda item: (item["quantity"], item["raw_evidence_ref"]))
     scales = {audio["full_scale"] for audio in trials + [background]}
     if len(scales) != 1:

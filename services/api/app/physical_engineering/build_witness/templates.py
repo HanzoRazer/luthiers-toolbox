@@ -177,16 +177,45 @@ def write_blank_tree(root: Path, record: dict, protocol: dict, equipment_doc: di
     )
 
 
-_ENVIRONMENT_HEADER = (
-    "timestamp,phase,quantity,value,unit,device_id,calibration_status,"
-    "stabilization_duration_s,operator_note,missing_reason\n"
+# Column contracts for the two CSV records. The verifier requires the header
+# to equal these names in this order: no extra, missing, blank, duplicated, or
+# reordered column. Change them only with a schema_version bump.
+ENVIRONMENT_FIELDS = (
+    "timestamp",
+    "phase",
+    "quantity",
+    "value",
+    "unit",
+    "device_id",
+    "calibration_status",
+    "stabilization_duration_s",
+    "operator_note",
+    "missing_reason",
 )
 
-_MEASUREMENT_HEADER = (
-    "observation_id,witness_id,session_id,quantity,value,unit,measurement_source,"
-    "instrument_id,calibration_status,observed_at,raw_evidence_ref,note,missing_reason,"
-    "derived_from,algorithm_id,algorithm_version,algorithm_parameters,estimated\n"
+MEASUREMENT_FIELDS = (
+    "observation_id",
+    "witness_id",
+    "session_id",
+    "quantity",
+    "value",
+    "unit",
+    "measurement_source",
+    "instrument_id",
+    "calibration_status",
+    "observed_at",
+    "raw_evidence_ref",
+    "note",
+    "missing_reason",
+    "derived_from",
+    "algorithm_id",
+    "algorithm_version",
+    "algorithm_parameters",
+    "estimated",
 )
+
+_ENVIRONMENT_HEADER = ",".join(ENVIRONMENT_FIELDS) + "\n"
+_MEASUREMENT_HEADER = ",".join(MEASUREMENT_FIELDS) + "\n"
 
 _README = (
     "PEM-BUILD-WITNESS-001\n\n"

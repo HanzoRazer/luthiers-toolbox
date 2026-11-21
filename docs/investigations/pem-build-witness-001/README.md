@@ -50,6 +50,22 @@ Verifier exits: `0` intact and complete, `1` malformed or incomplete, `2` bytes 
 
 `analyze_build_response.py` runs only after exit `0`. It writes descriptive duration, level, spectral-peak, envelope-ratio, and repeatability figures under `derived/`. `--derive moe`, `--infer-species`, and `--compare-reference` exit `4` and write nothing.
 
+## What the verifier enforces
+
+Identity. `BUILD-RECORD.json` holds the witness and session ids. The verifier requires the same ids in:
+
+- `WITNESS-MANIFEST.json` `witness_id`
+- `TEST-PROTOCOL.json` `session_id`
+- every `MEASUREMENTS.csv` row, `witness_id` and `session_id`, nonblank
+
+`EQUIPMENT.json` and `ENVIRONMENT.csv` carry no ids in schema version 1. They are tied to the witness only by being listed and digested in its manifest.
+
+CSV records. `ENVIRONMENT.csv` and `MEASUREMENTS.csv` must be UTF-8 with strict quoting. The header must match the template's columns exactly, in order. Every data row must be as wide as the header. Any deviation rejects the whole file. The verifier does not repair a row and then check the repaired copy.
+
+Photographs. Each required photograph must be a different file that decodes as a complete PNG: valid chunk checksums from `IHDR` through `IEND`, and all pixel data present. This shows the file is an image. It does not show what the image depicts.
+
+Audio. The verifier accepts the protocol's declared rate, channel count, and 8/16/24/32-bit PCM. Analysis decodes each width at its own full scale and refuses multichannel captures.
+
 ## States
 
 A verified synthetic package can carry `INTEGRITY_VERIFIED` together with `BUILD_RESPONSE_OBSERVED`, `CALIBRATION_UNVERIFIED`, `METHOD_REVIEW_PENDING`, `REFERENCE_COMPARISON_BLOCKED`, and `SCIENTIFIC_INTERPRETATION_PENDING`. `INTEGRITY_VERIFIED` is a verifier result. The stored manifest is not allowed to claim it. It is not scientific approval.

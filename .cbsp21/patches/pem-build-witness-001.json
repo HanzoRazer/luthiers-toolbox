@@ -80,13 +80,14 @@
   },
   "verification": {
     "commands_run": [
-      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 42 passed",
+      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 60 passed, 1 skipped (Windows: case-collision test skips on a case-insensitive filesystem)",
+      "cd services/api && python -m pytest tests/ -q --no-cov -x (Windows) -> 2133 passed, 2 skipped, stopped at 1 failure outside this PR: tests/cam/test_translator_execution_quarantine.py::TestQuarantineIndex::test_get_latest_quarantine (no CAM/translator file in this diff; full suite is covered by hosted CI)",
       "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK",
       "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
       "python -m app.ci.check_bare_except -> OK",
-      "python -m app.ci.check_duplication --threshold 100 -> 71 clone groups",
-      "python -m app.ci.fence_checker_v2 -> passed",
-      "python scripts/check_protected_paths.py -> passed"
+      "python -m app.ci.check_duplication --threshold 100 -> OK, 0 clone groups within threshold",
+      "python -m app.ci.fence_checker_v2 -> exit 0",
+      "python scripts/check_protected_paths.py -> exit 0"
     ]
   },
   "files": [

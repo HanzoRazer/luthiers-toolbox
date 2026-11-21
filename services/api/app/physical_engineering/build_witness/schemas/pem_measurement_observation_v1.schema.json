@@ -4,9 +4,11 @@
   "title": "PEM measurement or derived observation",
   "type": "object",
   "additionalProperties": false,
-  "required": ["observation_id", "quantity", "measurement_source"],
+  "required": ["observation_id", "witness_id", "session_id", "quantity", "measurement_source"],
   "properties": {
     "observation_id": {"type": "string"},
+    "witness_id": {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"},
+    "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
     "quantity": {"type": "string"},
     "value": {"type": ["string", "null"]},
     "unit": {"type": ["string", "null"]},

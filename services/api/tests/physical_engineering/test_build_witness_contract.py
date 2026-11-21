@@ -338,3 +338,121 @@ def test_report_fields_cannot_add_report_lines(tmp_path: Path) -> None:
     assert "\n- CAM authority: open" not in text
     assert "<b>" not in text
     assert text.count("\n## Gates\n") == 1
+
+
+def _findings(package: Path) -> set[str]:
+    return {item["code"] for item in verify_package(package)["findings"]}
+
+
+def _rewrite_csv(package: Path, name: str, change) -> None:
+    path = package / name
+    lines = path.read_text(encoding="utf-8").splitlines()
+    path.write_text("\n".join(change(lines)) + "\n", encoding="utf-8")
+
+
+def test_csv_quoting_must_be_well_formed(tmp_path: Path) -> None:
+    package = tmp_path / "pkg"
+    write_valid(package)
+    _rewrite_csv(package, "MEASUREMENTS.csv", lambda lines: lines + ['"unterminated"tail,' + "," * 16])
+    ingest_package(package)
+    result = verify_package(package)
+    assert result["exit_code"] == 1
+    assert "csv_malformed" in {item["code"] for item in result["findings"]}
+
+
+def test_csv_header_must_equal_the_contract(tmp_path: Path) -> None:
+    def rename(old: str, new: str):
+        return lambda lines: [lines[0].replace(old, new, 1)] + lines[1:]
+
+    def swap(lines: list[str]) -> list[str]:
+        cells = lines[0].split(",")
+        cells[0], cells[1] = cells[1], cells[0]
+        return [",".join(cells)] + lines[1:]
+
+    cases = {
+        "missing": rename("device_id,", ""),
+        "blank": rename("device_id", ""),
+        "duplicate": rename("device_id", "unit"),
+        "unknown": rename("device_id", "device_serial"),
+        "reordered": swap,
+    }
+    for name, change in cases.items():
+        package = tmp_path / name
+        write_valid(package)
+        _rewrite_csv(package, "ENVIRONMENT.csv", change)
+        ingest_package(package)
+        codes = _findings(package)
+        assert "csv_header" in codes, name
+        # The document was rejected, not partially read.
+        assert "incomplete_temperature" in codes, name
+
+
+def test_csv_rows_must_match_the_header_width_and_are_not_repaired(tmp_path: Path) -> None:
+    for name, change in {
+        "short": lambda line: line.rsplit(",", 1)[0],
+        "long": lambda line: line + ",extra",
+    }.items():
+        package = tmp_path / name
+        write_valid(package)
+        _rewrite_csv(package, "MEASUREMENTS.csv", lambda lines, change=change: [lines[0], change(lines[1])] + lines[2:])
+        ingest_package(package)
+        codes = _findings(package)
+        assert "csv_row_width" in codes, name
+        # No row survives a width error, so the intact mass row is not used.
+        assert "missing_mass" in codes, name
+
+
+def test_every_measurement_must_name_the_witness_and_session(tmp_path: Path) -> None:
+    for column in ("witness_id", "session_id"):
+        package = tmp_path / column
+        ids = write_valid(package)
+        text = (package / "MEASUREMENTS.csv").read_text(encoding="utf-8")
+        lines = text.splitlines()
+        lines[1] = lines[1].replace(ids[column], "", 1)
+        (package / "MEASUREMENTS.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        ingest_package(package)
+        result = verify_package(package)
+        assert result["exit_code"] == 1, column
+        assert "identity_missing" in {item["code"] for item in result["findings"]}, column
+
+
+def test_photographs_must_decode_completely(tmp_path: Path) -> None:
+    import struct
+    import zlib
+
+    ihdr = struct.pack(">IIBBBBB", 64, 64, 8, 2, 0, 0, 0)
+    header_only = (
+        b"\x89PNG\r\n\x1a\n"
+        + struct.pack(">I", len(ihdr))
+        + b"IHDR"
+        + ihdr
+        + struct.pack(">I", zlib.crc32(b"IHDR" + ihdr))
+    )
+    valid = (tmp_path / "source.png")
+    write_valid(tmp_path / "source")
+    valid = (tmp_path / "source" / "raw" / "images" / "build-id.png").read_bytes()
+    bad_crc = bytearray(valid)
+    bad_crc[-20] ^= 0xFF  # inside the IDAT chunk, so its CRC no longer matches
+    for name, blob in {
+        "header24": header_only[:24],
+        "ihdr_only": header_only,
+        "no_iend": valid[:-12],
+        "bad_crc": bytes(bad_crc),
+    }.items():
+        package = tmp_path / name
+        write_valid(package)
+        (package / "raw" / "images" / "placement.png").write_bytes(blob)
+        ingest_package(package)
+        assert "invalid_photograph" in _findings(package), name
+
+
+def test_derived_rows_carry_the_session(tmp_path: Path) -> None:
+    from app.physical_engineering.build_witness.analyze import analyze_package
+
+    package = tmp_path / "pkg"
+    ids = write_valid(package)
+    ingest_package(package)
+    rows = analyze_package(package)["observations"]
+    assert rows
+    assert all(row["session_id"] == ids["session_id"] for row in rows)
+    assert all(row["witness_id"] == ids["witness_id"] for row in rows)

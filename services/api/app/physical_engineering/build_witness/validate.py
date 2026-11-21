@@ -11,9 +11,12 @@ import csv
 import json
 from pathlib import Path
 
+from PIL import Image
+
 from app.physical_engineering.build_witness.findings import Finding, finding
 from app.physical_engineering.build_witness.ids import is_identifier
 from app.physical_engineering.build_witness.paths import MANIFEST_NAME
+from app.physical_engineering.build_witness.templates import ENVIRONMENT_FIELDS, MEASUREMENT_FIELDS
 from app.physical_engineering.build_witness.validate_capture import (
     _calibration_unverified,
     _check_audio_rows,
@@ -63,8 +66,8 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
     build = _read_json(package / "BUILD-RECORD.json", findings)
     protocol = _read_json(package / "TEST-PROTOCOL.json", findings)
     equipment = _read_json(package / "EQUIPMENT.json", findings)
-    environment = _read_csv(package / "ENVIRONMENT.csv", findings)
-    measurements = _read_csv(package / "MEASUREMENTS.csv", findings)
+    environment = _read_csv(package / "ENVIRONMENT.csv", ENVIRONMENT_FIELDS, findings)
+    measurements = _read_csv(package / "MEASUREMENTS.csv", MEASUREMENT_FIELDS, findings)
     manifest = _read_optional_json(package / MANIFEST_NAME, findings)
     for document in (build, protocol, equipment, manifest):
         if isinstance(document, dict):
@@ -124,24 +127,61 @@ def _read_optional_json(path: Path, findings: list[Finding]) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _read_csv(path: Path, findings: list[Finding]) -> list[dict[str, str]]:
+def _read_csv(path: Path, fields: tuple[str, ...], findings: list[Finding]) -> list[dict[str, str]]:
+    """Rows of a CSV record, or no rows if the document breaks its contract.
+
+    Policy: UTF-8, strict quoting, a header equal to ``fields`` in order, and
+    every data row exactly as wide as the header. Completely empty lines are
+    skipped. Any other deviation rejects the whole document, so later checks
+    never evaluate a repaired copy that differs from the submitted bytes.
+    """
     if not path.is_file():
         findings.append(finding("malformed", "missing_policy", path.name + " is absent"))
         return []
     try:
         with path.open(encoding="utf-8", newline="") as handle:
-            rows = list(csv.DictReader(handle))
+            table = list(csv.reader(handle, strict=True))
     except OSError:
         findings.append(finding("io", "os_error", path.name))
         return []
-    except (UnicodeDecodeError, csv.Error):
-        findings.append(finding("malformed", "schema_version", path.name + " is not a UTF-8 CSV"))
+    except UnicodeDecodeError:
+        findings.append(finding("malformed", "csv_malformed", path.name + " is not UTF-8"))
         return []
-    # A row longer than the header stores its overflow as a list under None.
-    if any(None in row for row in rows):
-        findings.append(finding("malformed", "schema_version", path.name + " has a row longer than its header"))
-        rows = [{key: value for key, value in row.items() if key is not None} for row in rows]
-    return rows
+    except csv.Error as exc:
+        findings.append(finding("malformed", "csv_malformed", f"{path.name}: {exc}"))
+        return []
+    if not table:
+        findings.append(finding("malformed", "csv_header", path.name + " has no header"))
+        return []
+    header, body = table[0], table[1:]
+    if tuple(header) != fields:
+        findings.append(finding("malformed", "csv_header", f"{path.name}: {_header_problem(header, fields)}"))
+        return []
+    bad_lines = [index for index, row in enumerate(body, start=2) if row and len(row) != len(header)]
+    if bad_lines:
+        listed = ", ".join(str(index) for index in bad_lines[:10])
+        findings.append(
+            finding("malformed", "csv_row_width", f"{path.name}: rows {listed} do not have {len(header)} fields")
+        )
+        return []
+    return [dict(zip(header, row)) for row in body if row]
+
+
+def _header_problem(header: list[str], fields: tuple[str, ...]) -> str:
+    blank = [index + 1 for index, name in enumerate(header) if not name.strip()]
+    duplicated = sorted({name for name in header if name and header.count(name) > 1})
+    missing = [name for name in fields if name not in header]
+    unknown = [name for name in header if name and name not in fields]
+    parts = []
+    if blank:
+        parts.append("blank column " + ", ".join(str(index) for index in blank))
+    if duplicated:
+        parts.append("duplicated " + ", ".join(duplicated))
+    if missing:
+        parts.append("missing " + ", ".join(missing))
+    if unknown:
+        parts.append("unknown " + ", ".join(unknown))
+    return "; ".join(parts) or "columns are out of order"
 
 
 def _walk_authority(value: object, findings: list[Finding]) -> None:
@@ -312,17 +352,25 @@ def _photos(package: Path, record: dict, findings: list[Finding]) -> None:
 
 
 def _is_png(path: Path) -> bool:
-    """PNG signature followed by an IHDR chunk with nonzero dimensions.
+    """A complete PNG that decodes: every chunk CRC, IHDR through IEND, and
+    all pixel data. A signature and header alone are not an image.
 
     This checks the file is an image, not what it shows. Content review of a
     photograph is an operator task.
     """
     with path.open("rb") as handle:
-        head = handle.read(24)
-    if len(head) < 24 or head[:8] != _PNG_SIGNATURE or head[12:16] != b"IHDR":
+        if handle.read(8) != _PNG_SIGNATURE:
+            return False
+    try:
+        with Image.open(path) as image:
+            if image.format != "PNG":
+                return False
+            image.verify()  # chunk structure and CRCs through IEND
+        with Image.open(path) as image:
+            image.load()  # decompress every scanline
+            width, height = image.size
+    except (OSError, SyntaxError, ValueError, Image.DecompressionBombError):
         return False
-    width = int.from_bytes(head[16:20], "big")
-    height = int.from_bytes(head[20:24], "big")
     return width > 0 and height > 0
 
 
@@ -332,19 +380,27 @@ def _check_identity(
     measurements: list[dict[str, str]],
     findings: list[Finding],
 ) -> None:
-    """Every record in the package must name the same witness and session."""
+    """Bind the records that carry identifiers to this build.
+
+    Enforced: TEST-PROTOCOL.json ``session_id``, and ``witness_id`` plus
+    ``session_id`` on every MEASUREMENTS.csv row (required, nonblank, equal to
+    BUILD-RECORD.json). The manifest's ``witness_id`` is checked in package.py.
+    EQUIPMENT.json and ENVIRONMENT.csv carry no identifiers in schema version
+    1; they are bound only by sitting in a package whose manifest digests them.
+    """
     witness_id = build.get("witness_id")
     session_id = build.get("session_id")
     if protocol and protocol.get("session_id") != session_id:
         findings.append(finding("malformed", "identity_mismatch", "TEST-PROTOCOL.json session_id does not match the build record"))
-    # The observation schema does not require these columns, so a blank cell
-    # is unbound rather than wrong. A row that names another witness is wrong.
-    for row in measurements:
-        if (row.get("witness_id") and row["witness_id"] != witness_id) or (
-            row.get("session_id") and row["session_id"] != session_id
-        ):
+    for line, row in enumerate(measurements, start=2):
+        if not row.get("witness_id") or not row.get("session_id"):
             findings.append(
-                finding("malformed", "identity_mismatch", "MEASUREMENTS.csv row names a different witness or session")
+                finding("malformed", "identity_missing", f"MEASUREMENTS.csv row {line} has no witness_id or session_id")
+            )
+            return
+        if row["witness_id"] != witness_id or row["session_id"] != session_id:
+            findings.append(
+                finding("malformed", "identity_mismatch", f"MEASUREMENTS.csv row {line} names a different witness or session")
             )
             return
 

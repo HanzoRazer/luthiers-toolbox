@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import math
 import struct
 import wave
+import zlib
 from pathlib import Path
 
 from app.physical_engineering.build_witness.ids import new_id
@@ -21,11 +22,24 @@ from app.physical_engineering.build_witness.vocabulary import (
 )
 
 CLOCK = datetime(2026, 11, 18, 18, 0, tzinfo=timezone.utc)
-PNG = (
-    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-    b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0"
-    b"\x00\x00\x00\x03\x00\x01\x00\x05\xfe\xd4\xef\x00\x00\x00\x00IEND\xaeB`\x82"
-)
+def _png_chunk(kind: bytes, data: bytes) -> bytes:
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+
+def _png(width: int = 4, height: int = 4) -> bytes:
+    """A complete RGB PNG with valid CRCs. The verifier decodes photographs
+    fully, so the fixture must be a real image, not a header."""
+    scanline = b"\x00" + b"\x80\x40\x20" * width
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + _png_chunk(b"IHDR", header)
+        + _png_chunk(b"IDAT", zlib.compress(scanline * height))
+        + _png_chunk(b"IEND", b"")
+    )
+
+
+PNG = _png()
 
 
 class Factory:
