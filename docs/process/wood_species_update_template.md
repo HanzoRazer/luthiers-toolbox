@@ -98,14 +98,17 @@ FPL-attributed value here and in CLAUDE.md against `docs/reference/fpl-gtr282/fp
 }
 ```
 
-**Source priority** (same order as CLAUDE.md, per property):
+**Sources** (as in CLAUDE.md, per property):
 
-*Tangential/radial shrinkage*
-1. FPL GTR-282 Tables 4-3 (domestic) / 4-4 (imported). Cite the exact table
-2. CIRAD Tropix species sheets — for species FPL lacks; one sheet at a time, cited per value
-   (sheet URL + "last update" date); never bulk-extracted (see CLAUDE.md)
-3. Wood Database (Eric Meier) — for species in neither FPL nor Tropix
-4. `unknown_legacy` — untraceable, flagged for follow-up
+*Tangential/radial shrinkage* — approved sources have equal standing (owner rulings 2026-11-19/20); any
+one may supply a value, and a sourced value is not replaced only because another approved source covers
+the species. Where they differ by more than 0.5 points, record every source's value in
+`docs/tonewood/VERIFICATION_LOG.md`.
+- FPL GTR-282 Tables 4-3 (domestic) / 4-4 (imported). Cite the exact table and row
+- CIRAD Tropix species sheets — one sheet at a time, cited per value (sheet URL + "last update" date);
+  never bulk-extracted (see CLAUDE.md)
+- Wood Database (Eric Meier) — cited per value with the species page URL
+- `unknown_legacy` — not an approved source: untraceable, flagged for follow-up
 
 *Density*
 1. FPL GTR-282 — specific gravity from Tables 5-3a (US), 5-4a (Canadian), 5-5a (other imported), converted to

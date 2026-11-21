@@ -74,16 +74,22 @@ All species records in `wood_species.json` and consumers (e.g., `wood_movement_c
 `side_bending_calc.py`) must source shrinkage and density values from authoritative
 published references. Attribution is per-field, not per-species.
 
-**Source priority (tangential/radial shrinkage):**
-1. **FPL GTR-282 (2021) Table 4-3** (domestic woods) **or Table 4-4** (imported woods) — for species in
-   those tables
-2. **CIRAD Tropix species sheets (tropix.cirad.fr)** — for species not in FPL that have a sheet;
-   per value, with sheet URL and the sheet's "last update" date (owner approval 2026-11-15).
-   Read sheets one at a time and cite each value: the Tropix terms prohibit extracting the database
-   "in whole or in part", so never bulk-scrape it into this public repo
-3. **Wood Database (Eric Meier, wood-database.com)** — for tropical species in neither FPL nor Tropix,
-   with URL attribution
-4. **unknown_legacy** — values whose origin cannot be traced; flagged for follow-up
+**Approved sources (tangential/radial shrinkage) — equal standing, no ranking:**
+- **FPL GTR-282 (2021) Table 4-3** (domestic woods) **or Table 4-4** (imported woods), with table row
+- **CIRAD Tropix species sheets (tropix.cirad.fr)** — per value, with sheet URL and the sheet's
+  "last update" date (approved 2026-11-15). Read sheets one at a time and cite each value: the
+  Tropix terms prohibit extracting the database "in whole or in part", so never bulk-scrape it
+  into this public repo
+- **Wood Database (Eric Meier, wood-database.com)** — per value, with the species page URL
+
+Owner rulings 2026-11-19 (the Wood Database has the same credibility as the others; none of these
+sources measured the boards a builder will use) and 2026-11-20 (the ranking is dropped):
+- Any approved source may supply a value. A sourced value is not replaced only because another
+  approved source also covers the species.
+- Where approved sources differ by more than 0.5 percentage points on the same value, record every
+  source's value in `docs/tonewood/VERIFICATION_LOG.md` (e.g. khaya in C-14; seven species in C-16).
+- **unknown_legacy** is not an approved source: values whose origin cannot be traced, flagged for
+  follow-up.
 
 **Source priority (density):**
 1. **FPL GTR-282** — specific gravity from Tables 5-3a, 5-4a or 5-5a, converted to density at 12% MC
@@ -119,7 +125,8 @@ published references. Attribution is per-field, not per-species.
 - `FPL_GTR282_table_5-3a` — FPL Wood Handbook 2021, Table 5-3a (strength, US woods, metric)
 - `FPL_GTR282_table_5-4a` — FPL Wood Handbook 2021, Table 5-4a (mechanical, Canadian woods, metric)
 - `FPL_GTR282_table_5-5a` — FPL Wood Handbook 2021, Table 5-5a (mechanical, other imported woods, metric)
-- `wood_database_meier` — wood-database.com (include URL in `_source_url` field)
+- `wood_database_meier` — wood-database.com (page URL in `_shrinkage_<dir>_url` for shrinkage
+  values, `_source_url` for the record)
 - `CIRAD_2018` — CIRAD wood density database (density/volumetric only)
 - `CIRAD_Tropix` — CIRAD–ITTO Tropix species sheet (tangential/radial shrinkage). Record the
   sheet URL in `_shrinkage_<dir>_url` and its "last update" date in `_shrinkage_<dir>_sheet_date`

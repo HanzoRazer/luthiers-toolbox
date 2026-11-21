@@ -4,13 +4,14 @@
   "coverage_min": 0.95,
   "patch_id": "WOODDB_SHRINKAGE_003",
   "title": "data(wood): shrinkage for 377 species that had none (FPL 126, Wood Database 251)",
-  "intent": "Owner GO 2026-11-19: fill empty tangential/radial shrinkage in wood_species.json from the Wood Database, each value cited to its own species page with per-field source. Where FPL GTR-282 Tables 4-3/4-4 have the species (126), the FPL value is used per CLAUDE.md priority. Stacked on PR #497.",
+  "intent": "Owner GO 2026-11-19: fill empty tangential/radial shrinkage in wood_species.json from the Wood Database, each value cited to its own species page with per-field source. Where FPL GTR-282 Tables 4-3/4-4 have the species (126), the FPL value is used per CLAUDE.md priority. Stacked on PR #497. Owner decision 2026-11-20: the shrinkage source ranking is dropped (FPL, Tropix and Wood Database are approved sources of equal standing; disagreements over 0.5 points are recorded in VERIFICATION_LOG).",
   "change_type": "data",
   "behavior_change": "wood_movement_calc returns results for 377 more species instead of raising ValueError (supported species 57 -> 434). No code, route or schema change; no existing value changed.",
   "risk_level": "medium",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/wooddb-shrinkage-003.json",
+      "CLAUDE.md",
       "docs/process/wood_species_update_template.md",
       "docs/tonewood/VERIFICATION_LOG.md",
       "services/api/app/data_registry/system/materials/wood_species.json",
@@ -18,6 +19,7 @@
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/wooddb-shrinkage-003.json",
+      "CLAUDE.md",
       "docs/process/wood_species_update_template.md",
       "docs/tonewood/VERIFICATION_LOG.md",
       "services/api/app/data_registry/system/materials/wood_species.json",
@@ -25,7 +27,7 @@
     ]
   },
   "diff_articulation": {
-    "what_changed": "wood_species.json: 377 records gain contraction_tangential_pct / contraction_radial_pct with per-field provenance (FPL_GTR282_table_4-3/4-4 + table row for 126; wood_database_meier + page URL for 251; _approximate flag on 13 whose page prints '~'; subspecies caveat on keyaki). VERIFICATION_LOG: C-16 and O-12. Update template: documents the _approximate and _shrinkage_caveat qualifiers. Test: shrinkage-coefficient sanity bound widened to the published range (1.5-15% tangential).",
+    "what_changed": "wood_species.json: 377 records gain contraction_tangential_pct / contraction_radial_pct with per-field provenance (FPL_GTR282_table_4-3/4-4 + table row for 126; wood_database_meier + page URL for 251; _approximate flag on 13 whose page prints '~'; subspecies caveat on keyaki). VERIFICATION_LOG: C-16 and O-12. Update template: documents the _approximate and _shrinkage_caveat qualifiers. Test: shrinkage-coefficient sanity bound widened to the published range (1.5-15% tangential). CLAUDE.md + template: shrinkage source ranking replaced by equal-standing approved sources (C-17); wood_database_meier URL field corrected to _shrinkage_<dir>_url.",
     "why_not_redundant": "These 377 species had no shrinkage value, so the wood-movement calculator rejected them."
   },
   "verification": {
@@ -45,6 +47,12 @@
       "intent": "Per-PR CBSP21 manifest.",
       "risk": "low",
       "behavior_change": "None."
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Shrinkage sourcing policy: drop the FPL > Tropix > Wood Database ranking per owner decision 2026-11-20; record disagreements over 0.5 points; correct the wood_database_meier URL field.",
+      "risk": "low",
+      "behavior_change": "None (policy text). No data value changed."
     },
     {
       "path": "docs/process/wood_species_update_template.md",
@@ -71,5 +79,5 @@
       "behavior_change": "None (test bound only)."
     }
   ],
-  "risk_rationale": "Medium: additive data only, but large (377 records) and taken through a third-party bulk copy verified by a 30-row sample, not page by page. Known limitations: 20 species have a Tropix sheet that CLAUDE.md ranks above the Wood Database; 13 values are approximate at source; duplicate records of one species get identical values; 4 records with species mismatches were excluded rather than resolved."
+  "risk_rationale": "Medium: additive data only, but large (377 records) and taken through a third-party bulk copy verified by a 30-row sample, not page by page. Known limitations: 20 species with a Tropix sheet keep Wood Database values (ranking dropped by owner, C-17; sheets not read); 13 values are approximate at source; duplicate records of one species get identical values; 4 records with species mismatches were excluded rather than resolved."
 }
