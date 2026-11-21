@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
+from jsonschema import Draft202012Validator
+
 from app.physical_engineering.build_witness import templates
 from app.physical_engineering.build_witness.findings import Finding, exit_code, finding
 from app.physical_engineering.build_witness.ids import new_id
@@ -33,6 +35,8 @@ from app.physical_engineering.build_witness.vocabulary import (
 )
 
 _INSTRUMENT = __import__("re").compile(r"^[a-z][a-z0-9_]{0,63}$")
+_MANIFEST_SCHEMA = Path(__file__).with_name("schemas") / "pem_build_witness_v1.schema.json"
+_manifest_validator: Draft202012Validator | None = None
 
 
 class PackageError(Exception):
@@ -126,6 +130,7 @@ def verify_package(package: Path) -> dict:
     findings: list[Finding] = []
     docs: dict = {}
     files: list[str] = []
+    manifest_checked = False
     try:
         if package.is_symlink():
             findings.append(finding("integrity", "symlink_directory", "package root is a symlink"))
@@ -135,13 +140,22 @@ def verify_package(package: Path) -> dict:
             files = evidence_files(package)
             docs, loaded = load_package_docs(package)
             findings.extend(loaded)
-            findings.extend(_check_manifest(package, files))
+            manifest_findings = _check_manifest(package, files, docs)
+            findings.extend(manifest_findings)
+            manifest_checked = not manifest_findings
     except PathPolicyError as exc:
         findings.append(finding("integrity", exc.code, str(exc)))
     except OSError as exc:
         findings.append(finding("io", "os_error", str(exc)))
+    except Exception as exc:  # noqa: BLE001 - a verifier must not crash on package contents
+        # Fail closed: an input the checks did not anticipate is "could not
+        # be checked" (exit 3), never a pass and never a traceback.
+        findings.append(finding("io", "verifier_error", f"{type(exc).__name__}: {exc}"))
     code = exit_code(findings)
-    integrity_ok = not any(item.severity in {"integrity", "io"} for item in findings)
+    # INTEGRITY_VERIFIED requires a manifest that was present, well formed,
+    # bound to this record, and matched every file. Absent or unreadable
+    # manifests are not evidence of integrity.
+    integrity_ok = manifest_checked and not any(item.severity in {"integrity", "io"} for item in findings)
     states = _output_states(code, integrity_ok, _calibration_unverified(docs))
     witness_id = None
     record = docs.get("build")
@@ -185,18 +199,42 @@ def _calibration_unverified(docs: dict) -> bool:
     return bool(docs.get("calibration_unverified", True))
 
 
-def _check_manifest(package: Path, files: list[str]) -> list[Finding]:
+def _check_manifest(package: Path, files: list[str], docs: dict) -> list[Finding]:
     path = package / MANIFEST_NAME
     sums = package / SUMS_NAME
     if not path.is_file() or not sums.is_file():
         return [finding("malformed", "missing_manifest", "manifest or SHA256SUMS is absent")]
     try:
         manifest = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return [finding("malformed", "schema_version", "manifest is not JSON")]
+        sums_text = sums.read_text(encoding="utf-8")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return [finding("malformed", "schema_version", "manifest is not UTF-8 JSON")]
     if not isinstance(manifest, dict):
         return [finding("malformed", "schema_version", "manifest is not an object")]
-    return _compare_inventory(package, files, manifest, sums.read_text(encoding="utf-8"))
+    findings = _check_manifest_metadata(manifest, docs)
+    findings.extend(_compare_inventory(package, files, manifest, sums_text))
+    return findings
+
+
+def _check_manifest_metadata(manifest: dict, docs: dict) -> list[Finding]:
+    """Apply the published manifest schema and bind the manifest to the record.
+
+    A manifest that does not follow its own schema, or names a different
+    witness than BUILD-RECORD.json, does not establish integrity.
+    """
+    global _manifest_validator
+    if _manifest_validator is None:
+        schema = json.loads(_MANIFEST_SCHEMA.read_text(encoding="utf-8"))
+        _manifest_validator = Draft202012Validator(schema)
+    findings = []
+    for error in sorted(_manifest_validator.iter_errors(manifest), key=lambda item: list(item.absolute_path)):
+        where = "/".join(str(part) for part in error.absolute_path) or "(root)"
+        findings.append(finding("integrity", "manifest_schema", f"{where}: {error.message}"))
+    record = docs.get("build") if isinstance(docs.get("build"), dict) else {}
+    expected = record.get("witness_id")
+    if manifest.get("witness_id") != expected:
+        findings.append(finding("integrity", "identity_mismatch", "manifest witness_id does not match BUILD-RECORD.json"))
+    return findings
 
 
 def _compare_inventory(package: Path, files: list[str], manifest: dict, sums_text: str) -> list[Finding]:
@@ -287,8 +325,17 @@ def _locked(relative: str) -> bool:
 
 
 def _refuse_locked_rewrite(package: Path, files: list[str]) -> None:
-    previous = json.loads((package / MANIFEST_NAME).read_text(encoding="utf-8"))
-    old = {item["path"]: item["sha256"] for item in previous.get("files", []) if isinstance(item, dict)}
+    try:
+        previous = json.loads((package / MANIFEST_NAME).read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise PackageError("existing manifest is unreadable; locked evidence cannot be confirmed", 2) from exc
+    entries = previous.get("files") if isinstance(previous, dict) else None
+    if not isinstance(entries, list) or not all(
+        isinstance(item, dict) and isinstance(item.get("path"), str) and isinstance(item.get("sha256"), str)
+        for item in entries
+    ):
+        raise PackageError("existing manifest is malformed; locked evidence cannot be confirmed", 2)
+    old = {item["path"]: item["sha256"] for item in entries}
     for relative in files:
         if not _locked(relative):
             continue

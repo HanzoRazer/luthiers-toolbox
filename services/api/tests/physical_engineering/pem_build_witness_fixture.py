@@ -41,17 +41,29 @@ def clock() -> datetime:
     return CLOCK
 
 
-def write_wav(path: Path, *, amplitude: float, frames: int = 2048, rate: int = 8000, channels: int = 1) -> None:
+def write_wav(
+    path: Path,
+    *,
+    amplitude: float,
+    frames: int = 2048,
+    rate: int = 8000,
+    channels: int = 1,
+    width: int = 2,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    full = (1 << (8 * width - 1)) - 1
     payload = bytearray()
     for index in range(frames):
-        sample = int(round(amplitude * 32767 * math.sin(2 * math.pi * 125 * index / rate)))
-        sample = max(-32767, min(32767, sample))
-        frame = struct.pack("<h", sample)
+        sample = int(round(amplitude * full * math.sin(2 * math.pi * 125 * index / rate)))
+        sample = max(-full, min(full, sample))
+        if width == 1:
+            frame = struct.pack("<B", sample + 128)
+        else:
+            frame = sample.to_bytes(width, "little", signed=True)
         payload.extend(frame * channels)
     with wave.open(str(path), "w") as handle:
         handle.setnchannels(channels)
-        handle.setsampwidth(2)
+        handle.setsampwidth(width)
         handle.setframerate(rate)
         handle.writeframes(payload)
 

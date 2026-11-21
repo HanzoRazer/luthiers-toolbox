@@ -81,6 +81,8 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
         _check_build(package, build, findings)
     if isinstance(protocol, dict):
         _check_protocol(package, protocol, measurements, findings)
+    if isinstance(build, dict):
+        _check_identity(build, docs["protocol"], measurements, findings)
     if isinstance(equipment, dict):
         _check_equipment(equipment, docs["build"], findings)
     _check_environment(environment, findings)
@@ -100,8 +102,8 @@ def _read_json(path: Path, findings: list[Finding]) -> dict | None:
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        findings.append(finding("malformed", "schema_version", path.name + " is not JSON"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        findings.append(finding("malformed", "schema_version", path.name + " is not UTF-8 JSON"))
         return None
     if not isinstance(payload, dict):
         findings.append(finding("malformed", "schema_version", path.name + " is not an object"))
@@ -116,8 +118,8 @@ def _read_optional_json(path: Path, findings: list[Finding]) -> dict | None:
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        findings.append(finding("malformed", "schema_version", path.name + " is not JSON"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        findings.append(finding("malformed", "schema_version", path.name + " is not UTF-8 JSON"))
         return None
     return payload if isinstance(payload, dict) else None
 
@@ -128,10 +130,18 @@ def _read_csv(path: Path, findings: list[Finding]) -> list[dict[str, str]]:
         return []
     try:
         with path.open(encoding="utf-8", newline="") as handle:
-            return list(csv.DictReader(handle))
+            rows = list(csv.DictReader(handle))
     except OSError:
         findings.append(finding("io", "os_error", path.name))
         return []
+    except (UnicodeDecodeError, csv.Error):
+        findings.append(finding("malformed", "schema_version", path.name + " is not a UTF-8 CSV"))
+        return []
+    # A row longer than the header stores its overflow as a list under None.
+    if any(None in row for row in rows):
+        findings.append(finding("malformed", "schema_version", path.name + " has a row longer than its header"))
+        rows = [{key: value for key, value in row.items() if key is not None} for row in rows]
+    return rows
 
 
 def _walk_authority(value: object, findings: list[Finding]) -> None:
@@ -144,7 +154,7 @@ def _walk_authority(value: object, findings: list[Finding]) -> None:
 
 def _walk_dict(value: dict, findings: list[Finding]) -> None:
     for key, item in value.items():
-        if key in PROHIBITED_KEYS:
+        if isinstance(key, str) and key in PROHIBITED_KEYS:
             findings.append(finding("authority", "prohibited_key", key))
         if key == "witness_class":
             _witness_class(item, findings)
@@ -158,7 +168,7 @@ def _walk_dict(value: dict, findings: list[Finding]) -> None:
 def _witness_class(item: object, findings: list[Finding]) -> None:
     if item == WITNESS_CLASS:
         return
-    if item in PROHIBITED_STATES:
+    if isinstance(item, str) and item in PROHIBITED_STATES:
         findings.append(finding("authority", "prohibited_witness_class", str(item)))
         return
     findings.append(finding("malformed", "schema_version", "witness class is not BUILD_RESPONSE_WITNESS"))
@@ -166,7 +176,9 @@ def _witness_class(item: object, findings: list[Finding]) -> None:
 
 def _states(items: list, findings: list[Finding]) -> None:
     for item in items:
-        if item in PROHIBITED_STATES:
+        if not isinstance(item, str):
+            findings.append(finding("malformed", "schema_version", "state is not a string"))
+        elif item in PROHIBITED_STATES:
             findings.append(finding("authority", "prohibited_state", str(item)))
         elif item == INTEGRITY_VERIFIED:
             findings.append(finding("malformed", "self_certified_integrity", "integrity cannot be self-certified"))
@@ -189,7 +201,7 @@ def _check_build(package: Path, record: dict, findings: list[Finding]) -> None:
         findings.append(finding("malformed", "missing_policy", "authority boundary id"))
     if record.get("material_identity_statement") != MATERIAL_IDENTITY_STATEMENT:
         findings.append(finding("malformed", "missing_policy", "material identity statement"))
-    if record.get("record_kind") not in {"PHYSICAL_CAPTURE", "SYNTHETIC_FIXTURE"}:
+    if not isinstance(record.get("record_kind"), str) or record["record_kind"] not in {"PHYSICAL_CAPTURE", "SYNTHETIC_FIXTURE"}:
         findings.append(finding("malformed", "schema_version", "record_kind"))
     for key in ("witness_id", "build_id", "session_id"):
         if not is_identifier(record.get(key)):
@@ -251,7 +263,7 @@ def _materials(package: Path, record: dict, findings: list[Finding]) -> None:
 
 def _one_material(package: Path, material: dict, findings: list[Finding]) -> None:
     status = material.get("identity_status")
-    if status not in IDENTITY_STATUSES:
+    if not isinstance(status, str) or status not in IDENTITY_STATUSES:
         findings.append(finding("malformed", "schema_version", "identity_status"))
         return
     if status == "UNDECLARED" and not material.get("unknown_reason"):
@@ -278,14 +290,63 @@ def _attestation(record: dict, findings: list[Finding]) -> None:
         _parse_time(attestation["attested_at"], findings)
 
 
+_PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
 def _photos(package: Path, record: dict, findings: list[Finding]) -> None:
     refs = record.get("photograph_refs")
     if not isinstance(refs, list) or len(refs) < 2:
         findings.append(finding("malformed", "missing_photograph", "build and placement photographs are required"))
         return
+    seen: set[str] = set()
     for ref in refs:
         if not isinstance(ref, str) or not ref.endswith(".png") or not _exists(package, ref):
             findings.append(finding("malformed", "missing_photograph", "photograph missing"))
+            continue
+        if ref in seen:
+            findings.append(finding("malformed", "missing_photograph", "photograph listed twice: " + ref))
+            continue
+        seen.add(ref)
+        if not _is_png(package / ref):
+            findings.append(finding("malformed", "invalid_photograph", "not a PNG image: " + ref))
+
+
+def _is_png(path: Path) -> bool:
+    """PNG signature followed by an IHDR chunk with nonzero dimensions.
+
+    This checks the file is an image, not what it shows. Content review of a
+    photograph is an operator task.
+    """
+    with path.open("rb") as handle:
+        head = handle.read(24)
+    if len(head) < 24 or head[:8] != _PNG_SIGNATURE or head[12:16] != b"IHDR":
+        return False
+    width = int.from_bytes(head[16:20], "big")
+    height = int.from_bytes(head[20:24], "big")
+    return width > 0 and height > 0
+
+
+def _check_identity(
+    build: dict,
+    protocol: dict,
+    measurements: list[dict[str, str]],
+    findings: list[Finding],
+) -> None:
+    """Every record in the package must name the same witness and session."""
+    witness_id = build.get("witness_id")
+    session_id = build.get("session_id")
+    if protocol and protocol.get("session_id") != session_id:
+        findings.append(finding("malformed", "identity_mismatch", "TEST-PROTOCOL.json session_id does not match the build record"))
+    # The observation schema does not require these columns, so a blank cell
+    # is unbound rather than wrong. A row that names another witness is wrong.
+    for row in measurements:
+        if (row.get("witness_id") and row["witness_id"] != witness_id) or (
+            row.get("session_id") and row["session_id"] != session_id
+        ):
+            findings.append(
+                finding("malformed", "identity_mismatch", "MEASUREMENTS.csv row names a different witness or session")
+            )
+            return
 
 
 def _check_protocol(package: Path, protocol: dict, measurements: list[dict[str, str]], findings: list[Finding]) -> None:

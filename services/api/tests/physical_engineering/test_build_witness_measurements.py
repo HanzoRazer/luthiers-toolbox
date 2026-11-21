@@ -168,3 +168,81 @@ def _edit_trial(package: Path, key: str, value: str) -> None:
     protocol = json.loads((package / "TEST-PROTOCOL.json").read_text(encoding="utf-8"))
     protocol["trials"][0][key] = value
     (package / "TEST-PROTOCOL.json").write_text(json.dumps(protocol), encoding="utf-8")
+
+
+def _rewrite_audio(package: Path, *, width: int = 2, channels: int = 1) -> None:
+    protocol = json.loads((package / "TEST-PROTOCOL.json").read_text(encoding="utf-8"))
+    for index, trial in enumerate(protocol["trials"]):
+        write_wav(package / trial["file"], amplitude=0.40 + index * 0.05, width=width, channels=channels)
+    write_wav(package / protocol["background_file"], amplitude=0.01, width=width, channels=channels)
+    protocol["bit_depth"] = width * 8
+    protocol["channels"] = channels
+    (package / "TEST-PROTOCOL.json").write_text(json.dumps(protocol), encoding="utf-8")
+
+
+def test_every_accepted_pcm_width_is_decoded_at_its_own_scale(tmp_path: Path) -> None:
+    for width in (1, 2, 3, 4):
+        package = _package(tmp_path / f"w{width}")
+        _rewrite_audio(package, width=width)
+        ingest_package(package)
+        assert verify_package(package)["exit_code"] == 0
+        result = analyze_package(package)
+        assert result["algorithm_parameters"]["full_scale"] == (1 << (8 * width - 1)) - 1
+        rows = {
+            row["quantity"]: row["value"]
+            for row in result["observations"]
+            if row["raw_evidence_ref"].endswith("trial-1.wav")
+        }
+        assert rows["dominant_frequency_hz"] == "125.000000", width
+        assert abs(float(rows["peak_amplitude_ratio"]) - 0.40) < 0.01, width
+
+
+def test_multichannel_capture_verifies_but_analysis_refuses_it(tmp_path: Path) -> None:
+    package = _package(tmp_path)
+    _rewrite_audio(package, channels=2)
+    ingest_package(package)
+    assert verify_package(package)["exit_code"] == 0
+    try:
+        analyze_package(package)
+    except PackageError as exc:
+        assert exc.code == 1
+        assert "mono" in str(exc)
+    else:
+        raise AssertionError("a stereo capture was analyzed from one channel")
+    assert not (package / "derived" / "observations.json").exists()
+
+
+def test_trials_must_match_the_protocol_settings(tmp_path: Path) -> None:
+    package = _package(tmp_path)
+    protocol = json.loads((package / "TEST-PROTOCOL.json").read_text(encoding="utf-8"))
+    for trial in protocol["trials"]:
+        trial["microphone_position"] = "lower_bout_50cm"
+    (package / "TEST-PROTOCOL.json").write_text(json.dumps(protocol), encoding="utf-8")
+    ingest_package(package)
+    result = verify_package(package)
+    assert result["exit_code"] == 1
+    assert any(item["code"] == "trial_protocol_mismatch" for item in result["findings"])
+
+
+def test_trial_count_must_match_the_trials_listed(tmp_path: Path) -> None:
+    package = _package(tmp_path)
+    protocol = json.loads((package / "TEST-PROTOCOL.json").read_text(encoding="utf-8"))
+    protocol["trial_count"] = 7
+    (package / "TEST-PROTOCOL.json").write_text(json.dumps(protocol), encoding="utf-8")
+    ingest_package(package)
+    assert verify_package(package)["exit_code"] == 1
+
+
+def test_one_recording_cannot_count_as_several_trials(tmp_path: Path) -> None:
+    reused = _package(tmp_path / "reused")
+    protocol = json.loads((reused / "TEST-PROTOCOL.json").read_text(encoding="utf-8"))
+    for trial in protocol["trials"]:
+        trial["file"] = protocol["trials"][0]["file"]
+    (reused / "TEST-PROTOCOL.json").write_text(json.dumps(protocol), encoding="utf-8")
+    ingest_package(reused)
+    assert any(item["code"] == "duplicate_audio" for item in verify_package(reused)["findings"])
+    copied = _package(tmp_path / "copied")
+    first = copied / "raw" / "audio" / "fixed-tap__trial-1.wav"
+    (copied / "raw" / "audio" / "fixed-tap__trial-2.wav").write_bytes(first.read_bytes())
+    ingest_package(copied)
+    assert any(item["code"] == "duplicate_audio" for item in verify_package(copied)["findings"])

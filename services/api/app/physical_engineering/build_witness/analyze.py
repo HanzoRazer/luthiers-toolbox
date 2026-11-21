@@ -25,9 +25,6 @@ from app.physical_engineering.build_witness.vocabulary import (
     REFUSED_DERIVATIONS,
 )
 
-_FULL_SCALE = Decimal(32767)
-
-
 def analyze_package(
     package: Path,
     *,
@@ -65,9 +62,12 @@ def _observations(package: Path, witness_id: str, requested: list[str]) -> dict:
     rows.extend(_trial_rows(witness_id, millis, protocol["background_file"], background, {"noise_floor", "capture_duration"} & set(requested)))
     rows.extend(_across(witness_id, millis, inputs, trials, background, requested))
     rows.sort(key=lambda item: (item["quantity"], item["raw_evidence_ref"]))
+    scales = {audio["full_scale"] for audio in trials + [background]}
+    if len(scales) != 1:
+        raise PackageError("trial and background captures use different sample widths", 1)
     return {
         "algorithm_id": ALGORITHM_ID,
-        "algorithm_parameters": {"fft_size": FFT_SIZE, "full_scale": 32767, "window": "rectangular"},
+        "algorithm_parameters": {"fft_size": FFT_SIZE, "full_scale": scales.pop(), "window": "rectangular"},
         "algorithm_version": ALGORITHM_VERSION,
         "implementation": "python-stdlib-wave",
         "inputs": inputs,
@@ -81,7 +81,7 @@ def _observations(package: Path, witness_id: str, requested: list[str]) -> dict:
 def _trial_rows(witness_id: str, millis: int, relative: str, audio: dict, requested: set[str] | list[str]) -> list[dict]:
     rows = []
     wanted = set(requested)
-    peak, rms, clipped = _levels(audio["samples"])
+    peak, rms, clipped = _levels(audio)
     if "capture_duration" in wanted:
         rows.append(_row(witness_id, millis, "capture_duration_s", _duration(audio), "s", relative))
     if "peak_amplitude" in wanted:
@@ -97,7 +97,7 @@ def _trial_rows(witness_id: str, millis: int, relative: str, audio: dict, reques
         else:
             rows.append(_row(witness_id, millis, "dominant_frequency_hz", frequency, "Hz", relative))
     if "envelope_decay" in wanted:
-        decay = _envelope(audio["samples"])
+        decay = _envelope(audio)
         if decay is None:
             rows.append(_warning(witness_id, millis, "envelope_unsupported", relative))
         else:
@@ -110,7 +110,7 @@ def _trial_rows(witness_id: str, millis: int, relative: str, audio: dict, reques
 def _across(witness_id, millis, inputs, trials, background, requested) -> list[dict]:
     rows = []
     wanted = set(requested)
-    peaks = [_levels(audio["samples"])[0] for audio in trials]
+    peaks = [_levels(audio)[0] for audio in trials]
     if "trial_differences" in wanted and peaks:
         rows.append(
             _row(
@@ -136,8 +136,8 @@ def _across(witness_id, millis, inputs, trials, background, requested) -> list[d
                 )
             )
     if "capture_warnings" in wanted:
-        signal = _levels(trials[0]["samples"])[1]
-        noise = _levels(background["samples"])[1]
+        signal = _levels(trials[0])[1]
+        noise = _levels(background)[1]
         if Decimal(signal) < Decimal("0.01"):
             rows.append(_warning(witness_id, millis, "insufficient_signal", inputs[0]))
         if Decimal(noise) * 2 > Decimal(signal):
@@ -171,22 +171,53 @@ def _observation_id(witness_id: str, quantity: str, source: str, millis: int) ->
     return f"pem_observation_{millis}_{digest}"
 
 
+def _full_scale(width: int) -> int:
+    """Largest positive PCM code for a sample width in bytes."""
+    return (1 << (8 * width - 1)) - 1
+
+
+def _decode(raw: bytes, width: int, frames: int) -> list[int]:
+    """Signed integer samples of a mono PCM stream.
+
+    WAV stores 8-bit PCM unsigned with a 128 offset and wider PCM as
+    little-endian two's complement.
+    """
+    if width == 1:
+        return [byte - 128 for byte in raw[:frames]]
+    if width == 2:
+        return list(struct.unpack_from(f"<{frames}h", raw))
+    if width == 4:
+        return list(struct.unpack_from(f"<{frames}i", raw))
+    if width == 3:
+        return [int.from_bytes(raw[index : index + 3], "little", signed=True) for index in range(0, frames * 3, 3)]
+    raise PackageError(f"analysis does not support {width * 8}-bit PCM", 1)
+
+
 def _load(path: Path) -> dict:
     with wave.open(str(path), "rb") as handle:
         channels = handle.getnchannels()
-        raw = handle.readframes(handle.getnframes())
+        width = handle.getsampwidth()
         rate = handle.getframerate()
         frames = handle.getnframes()
-    samples = [struct.unpack_from("<h", raw, index * channels * 2)[0] for index in range(frames)]
-    return {"rate": rate, "samples": samples}
+        raw = handle.readframes(frames)
+    if channels != 1:
+        # Choosing one channel or mixing them would change what is measured.
+        # Refuse instead of reporting a figure for part of the capture.
+        raise PackageError(f"analysis supports mono captures only; {path.name} has {channels} channels", 1)
+    if len(raw) < frames * width:
+        raise PackageError(f"audio data is shorter than its header declares: {path.name}", 1)
+    return {"rate": rate, "samples": _decode(raw, width, frames), "full_scale": _full_scale(width)}
 
 
-def _levels(samples: list[int]) -> tuple[str, str, bool]:
+def _levels(audio: dict) -> tuple[str, str, bool]:
+    samples = audio["samples"]
+    full = audio["full_scale"]
+    scale = Decimal(full)
     peak = max(abs(sample) for sample in samples)
     square = sum(Decimal(sample) * Decimal(sample) for sample in samples) / Decimal(len(samples))
-    rms = square.sqrt() / _FULL_SCALE
-    clipped = any(sample >= 32767 or sample <= -32768 for sample in samples)
-    return (_quantize(Decimal(peak) / _FULL_SCALE), _quantize(rms), clipped)
+    rms = square.sqrt() / scale
+    clipped = any(sample >= full or sample <= -full - 1 for sample in samples)
+    return (_quantize(Decimal(peak) / scale), _quantize(rms), clipped)
 
 
 def _duration(audio: dict) -> str:
@@ -217,12 +248,13 @@ def _bin_power(window: list[int], bin_index: int) -> float:
     return real * real + imag * imag
 
 
-def _envelope(samples: list[int]) -> str | None:
+def _envelope(audio: dict) -> str | None:
+    samples = audio["samples"]
     half = len(samples) // 2
     if half < 2:
         return None
-    first = _levels(samples[:half])[1]
-    second = _levels(samples[half:])[1]
+    first = _levels({**audio, "samples": samples[:half]})[1]
+    second = _levels({**audio, "samples": samples[half:]})[1]
     if Decimal(first) == 0:
         return None
     return _quantize(Decimal(second) / Decimal(first))

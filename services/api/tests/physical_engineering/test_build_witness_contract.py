@@ -273,3 +273,68 @@ def _edit(path: Path, **changes: object) -> None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     payload.update(changes)
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_photographs_must_be_distinct_png_images(tmp_path: Path) -> None:
+    package = tmp_path / "bytes"
+    write_valid(package)
+    (package / "raw" / "images" / "placement.png").write_bytes(b"not an image")
+    ingest_package(package)
+    result = verify_package(package)
+    assert result["exit_code"] == 1
+    assert any(item["code"] == "invalid_photograph" for item in result["findings"])
+    twice = tmp_path / "twice"
+    write_valid(twice)
+    _edit(twice / "BUILD-RECORD.json", photograph_refs=["raw/images/build-id.png", "raw/images/build-id.png"])
+    ingest_package(twice)
+    assert verify_package(twice)["exit_code"] == 1
+
+
+def test_malformed_field_types_are_findings_not_crashes(tmp_path: Path) -> None:
+    cases = {
+        "witness_class": ("BUILD-RECORD.json", lambda d: d.update(witness_class=[])),
+        "record_kind": ("BUILD-RECORD.json", lambda d: d.update(record_kind=[])),
+        "identity_status": ("BUILD-RECORD.json", lambda d: d["top"].update(identity_status={})),
+        "states": ("BUILD-RECORD.json", lambda d: d.update(states=[[]])),
+        "trial_setting": ("TEST-PROTOCOL.json", lambda d: d["trials"][0].update(protocol_id=["fixed_tap"])),
+    }
+    for name, (document, change) in cases.items():
+        package = tmp_path / name
+        write_valid(package)
+        path = package / document
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        change(payload)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        assert verify_package(package)["exit_code"] == 1, name
+    for document, blob in (("MEASUREMENTS.csv", b"\xff\xfe bad"), ("EQUIPMENT.json", b'{"a": "\xff"}')):
+        package = tmp_path / ("bytes-" + document)
+        write_valid(package)
+        (package / document).write_bytes(blob)
+        assert verify_package(package)["exit_code"] == 1, document
+
+
+def test_records_must_name_the_same_witness_and_session(tmp_path: Path) -> None:
+    package = tmp_path / "protocol"
+    write_valid(package)
+    _edit(package / "TEST-PROTOCOL.json", session_id="pem_session_1_" + "0" * 32)
+    ingest_package(package)
+    assert any(item["code"] == "identity_mismatch" for item in verify_package(package)["findings"])
+    rows = tmp_path / "rows"
+    ids = write_valid(rows)
+    text = (rows / "MEASUREMENTS.csv").read_text(encoding="utf-8")
+    (rows / "MEASUREMENTS.csv").write_text(text.replace(ids["witness_id"], "pem_witness_1_" + "0" * 32), encoding="utf-8")
+    ingest_package(rows)
+    assert any(item["code"] == "identity_mismatch" for item in verify_package(rows)["findings"])
+
+
+def test_report_fields_cannot_add_report_lines(tmp_path: Path) -> None:
+    package = tmp_path / "pkg"
+    write_valid(package)
+    record = json.loads((package / "BUILD-RECORD.json").read_text(encoding="utf-8"))
+    record["top"]["trade_name"] = "Spruce\n\n## Gates\n\n- CAM authority: open <b>x</b>"
+    (package / "BUILD-RECORD.json").write_text(json.dumps(record), encoding="utf-8")
+    ingest_package(package)
+    text = render_package(package)
+    assert "\n- CAM authority: open" not in text
+    assert "<b>" not in text
+    assert text.count("\n## Gates\n") == 1

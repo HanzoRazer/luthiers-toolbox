@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import wave
 from datetime import datetime
 from pathlib import Path
 
 from app.physical_engineering.build_witness.findings import Finding, finding
 from app.physical_engineering.build_witness.ids import is_identifier
-from app.physical_engineering.build_witness.paths import normalize_relative
+from app.physical_engineering.build_witness.paths import PathPolicyError, normalize_relative
 from app.physical_engineering.build_witness.validate_support import DECIMAL_TEXT, parse_time, path_exists
 from app.physical_engineering.build_witness.vocabulary import (
     CALIBRATION_UNVERIFIED_STATUS,
@@ -17,33 +18,77 @@ from app.physical_engineering.build_witness.vocabulary import (
     MEASUREMENT_SOURCES,
 )
 
+# Settings each trial repeats. The protocol declares one value for each, so a
+# trial that records a different value contradicts the protocol it belongs to.
+TRIAL_SETTINGS = (
+    "protocol_id",
+    "excitation_method",
+    "excitation_position",
+    "microphone_position",
+    "support_condition",
+    "string_state",
+)
+
+
 def _check_trial_groups(package: Path, protocol: dict, findings: list[Finding]) -> None:
     trials = protocol.get("trials")
     if not isinstance(trials, list):
         findings.append(finding("malformed", "trial_count", "trials missing"))
         return
+    declared = protocol.get("trial_count")
+    if isinstance(declared, int) and not isinstance(declared, bool) and declared != len(trials):
+        findings.append(finding("malformed", "trial_count", "trial_count does not match the trials listed"))
     background = protocol.get("background_file")
+    audio_files: list[str] = []
     if not isinstance(background, str):
         findings.append(finding("malformed", "background_missing", "background capture is required"))
     else:
         _check_wav(package, background, protocol, findings)
+        audio_files.append(background)
     groups: dict[tuple, int] = {}
     for trial in trials:
         if not isinstance(trial, dict) or not isinstance(trial.get("file"), str):
             findings.append(finding("malformed", "trial_count", "trial is malformed"))
             continue
         _check_wav(package, trial["file"], protocol, findings)
-        key = (
-            trial.get("protocol_id"),
-            trial.get("excitation_method"),
-            trial.get("excitation_position"),
-            trial.get("microphone_position"),
-            trial.get("support_condition"),
-            trial.get("string_state"),
-        )
-        groups[key] = groups.get(key, 0) + 1
+        audio_files.append(trial["file"])
+        values = tuple(trial.get(name) for name in TRIAL_SETTINGS)
+        if not all(isinstance(value, str) and value for value in values):
+            findings.append(finding("malformed", "trial_count", "trial settings must be nonempty strings"))
+            continue
+        for name, value in zip(TRIAL_SETTINGS, values):
+            if value != protocol.get(name):
+                findings.append(
+                    finding("malformed", "trial_protocol_mismatch", f"trial {name} does not match the protocol")
+                )
+        groups[values] = groups.get(values, 0) + 1
     if not groups or any(count < 3 for count in groups.values()):
         findings.append(finding("malformed", "trial_count", "each configuration needs three trials"))
+    _check_distinct_audio(package, audio_files, findings)
+
+
+def _check_distinct_audio(package: Path, relatives: list[str], findings: list[Finding]) -> None:
+    """Each trial and the background must be a separate recording.
+
+    One file listed twice, or the same bytes under two names, would let a
+    single capture count as several trials.
+    """
+    if len(set(relatives)) != len(relatives):
+        findings.append(finding("malformed", "duplicate_audio", "an audio file is listed more than once"))
+        return
+    digests: set[str] = set()
+    for relative in relatives:
+        try:
+            path = package / normalize_relative(relative)
+        except PathPolicyError:
+            continue  # _check_wav already reported the unsafe path
+        if path.is_symlink() or not path.is_file():
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest in digests:
+            findings.append(finding("malformed", "duplicate_audio", "two audio files hold identical bytes"))
+            return
+        digests.add(digest)
 
 
 def _check_wav(package: Path, relative: str, protocol: dict, findings: list[Finding]) -> None:
@@ -66,6 +111,8 @@ def _check_wav(package: Path, relative: str, protocol: dict, findings: list[Find
         return
     if frames <= 0:
         findings.append(finding("malformed", "empty_audio", relative))
+    if width not in (1, 2, 3, 4):
+        findings.append(finding("malformed", "bit_depth_mismatch", relative))
     if rate != protocol.get("sample_rate_hz"):
         findings.append(finding("malformed", "sample_rate_mismatch", relative))
     if channels != protocol.get("channels"):

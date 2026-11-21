@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 from app.physical_engineering.build_witness.package import PackageError, ingest_package, verify_package
@@ -31,6 +32,20 @@ def render_package(package: Path) -> str:
     return text
 
 
+_CONTROL = re.compile(r"[\x00-\x1f\x7f\u2028\u2029]+")
+
+
+def _text(value: object) -> str:
+    """One line of package-supplied text, safe to place inside Markdown.
+
+    Line breaks would let a field start its own heading or list item and
+    imitate the report's fixed sections (for example a forged gate line).
+    Raw HTML is escaped so it renders as text.
+    """
+    flat = _CONTROL.sub(" ", str(value))
+    return flat.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def render_text(package: Path, verified: dict) -> str:
     build = json.loads((package / "BUILD-RECORD.json").read_text(encoding="utf-8"))
     lines = [
@@ -38,9 +53,9 @@ def render_text(package: Path, verified: dict) -> str:
         "",
         NON_AUTHORITY_STATEMENT,
         "",
-        f"Witness: {verified.get('witness_id')}",
-        f"Record kind: {build.get('record_kind')}",
-        f"Witness class: {build.get('witness_class')}",
+        f"Witness: {_text(verified.get('witness_id'))}",
+        f"Record kind: {_text(build.get('record_kind'))}",
+        f"Witness class: {_text(build.get('witness_class'))}",
         "",
         "## States",
         "",
@@ -48,12 +63,14 @@ def render_text(package: Path, verified: dict) -> str:
     lines.extend(f"- {state}" for state in verified["states"])
     lines.extend(["", "## Declarations", ""])
     for key in ("top", "back_side", "neck"):
-        material = build.get(key) or {}
+        material = build.get(key)
+        if not isinstance(material, dict):
+            material = {}
         lines.append(
-            f"- {key}: status {material.get('identity_status')}; "
-            f"trade name {material.get('trade_name')}; "
-            f"botanical name {material.get('botanical_name')}; "
-            f"reason {material.get('unknown_reason')}"
+            f"- {key}: status {_text(material.get('identity_status'))}; "
+            f"trade name {_text(material.get('trade_name'))}; "
+            f"botanical name {_text(material.get('botanical_name'))}; "
+            f"reason {_text(material.get('unknown_reason'))}"
         )
     lines.extend(
         [
@@ -96,8 +113,8 @@ def _direct_lines(package: Path) -> list[str]:
             if not str(row.get("measurement_source") or "").startswith("DIRECT_"):
                 continue
             lines.append(
-                f"- {row.get('quantity')}: {row.get('value')} {row.get('unit')} "
-                f"({row.get('measurement_source')})"
+                f"- {_text(row.get('quantity'))}: {_text(row.get('value'))} {_text(row.get('unit'))} "
+                f"({_text(row.get('measurement_source'))})"
             )
     return lines or ["- none recorded"]
 
@@ -108,9 +125,12 @@ def _derived_lines(package: Path) -> list[str]:
         return ["- not calculated"]
     payload = json.loads(path.read_text(encoding="utf-8"))
     lines = [
-        f"- Algorithm: {payload.get('algorithm_id')} {payload.get('algorithm_version')}",
-        f"- Inputs: {', '.join(payload.get('inputs') or [])}",
+        f"- Algorithm: {_text(payload.get('algorithm_id'))} {_text(payload.get('algorithm_version'))}",
+        f"- Inputs: {_text(', '.join(str(item) for item in payload.get('inputs') or []))}",
     ]
     for row in payload.get("observations") or []:
-        lines.append(f"- {row.get('quantity')}: {row.get('value')} {row.get('unit')} from {row.get('raw_evidence_ref')}")
+        lines.append(
+            f"- {_text(row.get('quantity'))}: {_text(row.get('value'))} {_text(row.get('unit'))} "
+            f"from {_text(row.get('raw_evidence_ref'))}"
+        )
     return lines
