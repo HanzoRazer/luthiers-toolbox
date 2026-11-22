@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pem_derived_observations_v1.schema.json",
+  "title": "PEM derived observations (derived/observations.json)",
+  "description": "A generated product outside the evidence seal. It names the sealed manifest and the sealed inputs it was computed from. Shape alone is not trust: the verifier also recomputes the document from the sealed audio and requires an exact match.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "algorithm_id",
+    "algorithm_parameters",
+    "algorithm_version",
+    "derivations",
+    "evidence_manifest_sha256",
+    "implementation",
+    "inputs",
+    "observations",
+    "schema_id",
+    "schema_version",
+    "session_id",
+    "witness_id"
+  ],
+  "properties": {
+    "algorithm_id": {"const": "pem_descriptive_v1"},
+    "algorithm_parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fft_size", "full_scale", "window"],
+      "properties": {
+        "fft_size": {"type": "integer", "minimum": 1},
+        "full_scale": {"type": "integer", "minimum": 1},
+        "window": {"const": "rectangular"}
+      }
+    },
+    "algorithm_version": {"const": "1"},
+    "derivations": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "capture_duration",
+          "capture_warnings",
+          "dominant_spectral_peaks",
+          "envelope_decay",
+          "noise_floor",
+          "peak_amplitude",
+          "peak_frequencies",
+          "repeatability",
+          "rms_level",
+          "trial_differences"
+        ]
+      }
+    },
+    "evidence_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "implementation": {"const": "python-stdlib-wave"},
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["byte_length", "path", "sha256"],
+        "properties": {
+          "byte_length": {"type": "integer", "minimum": 0},
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "observations": {"type": "array", "items": {"$ref": "#/$defs/observation"}},
+    "schema_id": {"const": "pem_derived_observations"},
+    "schema_version": {"const": "1"},
+    "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
+    "witness_id": {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"}
+  },
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm_id",
+        "algorithm_version",
+        "derived_from",
+        "measurement_source",
+        "observation_id",
+        "quantity",
+        "raw_evidence_ref",
+        "session_id",
+        "unit",
+        "value",
+        "witness_id"
+      ],
+      "properties": {
+        "algorithm_id": {"const": "pem_descriptive_v1"},
+        "algorithm_version": {"const": "1"},
+        "derived_from": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "measurement_source": {"const": "DERIVED_FROM_CAPTURE"},
+        "observation_id": {"type": "string", "pattern": "^pem_observation_[0-9]+_[0-9a-f]{32}$"},
+        "quantity": {"type": "string", "minLength": 1},
+        "raw_evidence_ref": {"type": "string"},
+        "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
+        "unit": {"type": "string"},
+        "value": {"type": "string"},
+        "witness_id": {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"}
+      }
+    }
+  }
+}
