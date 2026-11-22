@@ -254,6 +254,7 @@ After this change: 430 species have no tangential shrinkage, 8 are FPL, 12 Tropi
 - **Consequences:**
   - Only tangential and radial values were imported; no volumetric.
   - Every row whose values were whole numbers (18) was re-read from its live page. 13 are marked approximate there, and keyaki's values are for a subspecies; these carry `_shrinkage_<dir>_approximate: true` (and a `_shrinkage_caveat` for keyaki).
+  - **Limit of that re-read (found in PR #499 review, 2026-11-21):** the "~" marker is not confined to whole numbers. `black_palm` (*Borassus flabellifer*) is "Radial: ~5.5%, Tangential: ~5.5%" on its live page (T/R 1.0 there, as is usual for a palm), and now carries the approximate flag too (14 records). The other 232 non-whole-number Wood Database rows were not re-read for "~", so a missing flag does not mean the value is exact (O-12). The numbers themselves are unaffected: the 30-row sample matched numerically.
   - Blanks in the copy were treated as unknown, not as absent.
 
 **Matching records to pages.**
@@ -324,7 +325,7 @@ After this change: 53 species have no tangential shrinkage, 134 are FPL (95 Tabl
 | **O-09** | ~~Bagtikan CITES status~~ — resolved by C-11 (not CITES- or EU-listed) | — |
 | **O-10** | ~~CLAUDE.md source label `FPL_GTR282_table_5-3` names the strength table~~ — resolved by C-13 (table-specific labels; old label deprecated) | — |
 | **O-11** | Specific gravity basis is unstated in every document. FPL species now show G₁₂; other species' SG has an unknown basis, sometimes in the same row | State the basis per value, or drop SG where density is given |
-| **O-12** | Shrinkage in `wood_species.json` (C-14 to C-17):<br>• 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar).<br>• 53 species have no shrinkage value, including the 4 excluded for species mismatch in C-16 and `snakewood` (C-15).<br>• ~~20 species take Wood Database values although a Tropix sheet exists (C-16)~~ — resolved by C-17 (no source ranking; values stand). | FPL for the 6 unsourced FPL species; resolve the record identities of the 5 mismatched species |
+| **O-12** | Shrinkage in `wood_species.json` (C-14 to C-17):<br>• 9 values still unsourced; at least 6 of those species are in FPL Tables 4-3/4-4 (black cherry, red and white oak, white spruce, bald cypress, Spanish cedar).<br>• 53 species have no shrinkage value, including the 4 excluded for species mismatch in C-16 and `snakewood` (C-15).<br>• ~~20 species take Wood Database values although a Tropix sheet exists (C-16)~~ — resolved by C-17 (no source ranking; values stand).<br>• `_shrinkage_<dir>_approximate` is complete only for the 18 whole-number Wood Database rows and `black_palm`; the other 232 Wood Database rows were not checked for the site's "~" marker (C-16). | FPL for the 6 unsourced FPL species; resolve the record identities of the 5 mismatched species |
 
 ## Findings outside `docs/tonewood/` (reported, not changed here)
 

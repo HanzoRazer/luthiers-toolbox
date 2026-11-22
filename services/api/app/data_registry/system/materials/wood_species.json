@@ -4054,9 +4054,11 @@
         "contraction_tangential_pct": 5.5,
         "_shrinkage_tangential_source": "wood_database_meier",
         "_shrinkage_tangential_url": "https://www.wood-database.com/black-palm/",
+        "_shrinkage_tangential_approximate": true,
         "contraction_radial_pct": 5.5,
         "_shrinkage_radial_source": "wood_database_meier",
         "_shrinkage_radial_url": "https://www.wood-database.com/black-palm/",
+        "_shrinkage_radial_approximate": true,
         "modulus_of_rupture_mpa": 137.6,
         "modulus_of_elasticity_gpa": 15.6
       },
