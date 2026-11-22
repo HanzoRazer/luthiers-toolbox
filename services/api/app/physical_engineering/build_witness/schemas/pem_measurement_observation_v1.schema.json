@@ -1,17 +1,37 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pem_measurement_observation_v1.schema.json",
-  "title": "PEM measurement or derived observation",
+  "title": "PEM measurement observation (one MEASUREMENTS.csv row)",
+  "description": "One data row of MEASUREMENTS.csv, keyed by the header. CSV cells are text, so every value is a string and an empty cell is the empty string. Derived observations in derived/observations.json are a different document and are not described by this schema.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["observation_id", "witness_id", "session_id", "quantity", "measurement_source"],
+  "required": [
+    "observation_id",
+    "witness_id",
+    "session_id",
+    "quantity",
+    "value",
+    "unit",
+    "measurement_source",
+    "instrument_id",
+    "calibration_status",
+    "observed_at",
+    "raw_evidence_ref",
+    "note",
+    "missing_reason",
+    "derived_from",
+    "algorithm_id",
+    "algorithm_version",
+    "algorithm_parameters",
+    "estimated"
+  ],
   "properties": {
-    "observation_id": {"type": "string"},
+    "observation_id": {"type": "string", "pattern": "^pem_observation_[0-9]+_[0-9a-f]{32}$"},
     "witness_id": {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"},
     "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
-    "quantity": {"type": "string"},
-    "value": {"type": ["string", "null"]},
-    "unit": {"type": ["string", "null"]},
+    "quantity": {"type": "string", "minLength": 1},
+    "value": {"type": "string"},
+    "unit": {"type": "string"},
     "measurement_source": {
       "enum": [
         "DECLARED_BUILD_PROPERTY",
@@ -24,6 +44,17 @@
         "IMPORTED_MEASUREMENT",
         "OPERATOR_OBSERVATION"
       ]
-    }
+    },
+    "instrument_id": {"type": "string"},
+    "calibration_status": {"type": "string"},
+    "observed_at": {"type": "string"},
+    "raw_evidence_ref": {"type": "string"},
+    "note": {"type": "string"},
+    "missing_reason": {"type": "string"},
+    "derived_from": {"type": "string"},
+    "algorithm_id": {"type": "string"},
+    "algorithm_version": {"type": "string"},
+    "algorithm_parameters": {"type": "string"},
+    "estimated": {"enum": ["", "false", "true"]}
   }
 }

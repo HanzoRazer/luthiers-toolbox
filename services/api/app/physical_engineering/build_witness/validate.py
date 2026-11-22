@@ -16,6 +16,12 @@ from PIL import Image
 from app.physical_engineering.build_witness.findings import Finding, finding
 from app.physical_engineering.build_witness.ids import is_identifier
 from app.physical_engineering.build_witness.paths import MANIFEST_NAME
+from app.physical_engineering.build_witness.schema_check import (
+    BUILD_RECORD,
+    MEASUREMENT,
+    TEST_PROTOCOL,
+    schema_findings,
+)
 from app.physical_engineering.build_witness.templates import ENVIRONMENT_FIELDS, MEASUREMENT_FIELDS
 from app.physical_engineering.build_witness.validate_capture import (
     _calibration_unverified,
@@ -72,6 +78,12 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
     for document in (build, protocol, equipment, manifest):
         if isinstance(document, dict):
             _walk_authority(document, findings)
+    if isinstance(build, dict):
+        findings.extend(schema_findings(BUILD_RECORD, build, "BUILD-RECORD.json"))
+    if isinstance(protocol, dict):
+        findings.extend(schema_findings(TEST_PROTOCOL, protocol, "TEST-PROTOCOL.json"))
+    for line, row in enumerate(measurements, start=2):
+        findings.extend(schema_findings(MEASUREMENT, row, f"MEASUREMENTS.csv row {line}"))
     docs = {
         "build": build if isinstance(build, dict) else {},
         "protocol": protocol if isinstance(protocol, dict) else {},
@@ -273,12 +285,20 @@ def _optional_text(record: dict, key: str, reason_key: str, findings: list[Findi
 
 
 def _scale(record: dict, findings: list[Finding]) -> None:
+    """A measured scale length, or an explicit, reasoned unknown.
+
+    An unknown with a nonblank reason is recorded uncertainty: a nonfatal
+    ``warning`` finding, not a pass and not a rejection. No value and no
+    reason is malformed. The separate rule that at least one dimension is
+    measured directly (MEASUREMENTS.csv) still applies.
+    """
     value = record.get("scale_length_mm")
     if value is None:
-        if not record.get("scale_length_unknown_reason"):
-            findings.append(finding("malformed", "missing_dimension", "scale length"))
+        reason = record.get("scale_length_unknown_reason")
+        if isinstance(reason, str) and reason.strip():
+            findings.append(finding("warning", "scale_length_unknown", "scale length not recorded: " + reason.strip()))
         else:
-            findings.append(finding("malformed", "missing_dimension", "scale length"))
+            findings.append(finding("malformed", "missing_dimension", "scale length has no value and no reason"))
         return
     if not isinstance(value, str) or _DECIMAL.fullmatch(value) is None:
         findings.append(finding("malformed", "unit_rejected", "scale_length_mm"))

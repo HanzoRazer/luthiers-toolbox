@@ -62,6 +62,12 @@ Identity. `BUILD-RECORD.json` holds the witness and session ids. The verifier re
 
 CSV records. `ENVIRONMENT.csv` and `MEASUREMENTS.csv` must be UTF-8 with strict quoting. The header must match the template's columns exactly, in order. Every data row must be as wide as the header. Any deviation rejects the whole file. The verifier does not repair a row and then check the repaired copy.
 
+Schemas. The verifier applies the published schemas to `BUILD-RECORD.json` (`pem_build_record_v1`), `TEST-PROTOCOL.json` (`pem_test_protocol_v1`), every `MEASUREMENTS.csv` row (`pem_measurement_observation_v1`), and `WITNESS-MANIFEST.json` (`pem_build_witness_v1`). Each schema is closed: an unknown field, a missing field, or a value of the wrong type is a finding that names the document and the location, for example `TEST-PROTOCOL.json /trials/0`. Record and row violations are malformed (exit `1`). Manifest violations are integrity failures (exit `2`). Ingest refuses to write a manifest that would break its own schema. A blank template satisfies the schemas: fields not yet captured are `null`, and completeness is checked separately. `derived/observations.json` is a different document and is not described by these schemas.
+
+Configuration. One protocol is one configuration. Every trial must repeat the protocol's excitation method and position, microphone position, support condition, and string state. A change of configuration is a new protocol and session, not a second group inside one.
+
+Scale length. A decimal `scale_length_mm` is accepted. A `null` value with a nonblank `scale_length_unknown_reason` is accepted as recorded uncertainty: the verifier emits a `warning` finding, `scale_length_unknown`, which does not change the exit code and is listed in the report under "Recorded uncertainty". A `null` value with no reason is malformed. At least one directly measured dimension in `MEASUREMENTS.csv` is still required either way.
+
 Photographs. Each required photograph must be a different file that decodes as a complete PNG: valid chunk checksums from `IHDR` through `IEND`, and all pixel data present. This shows the file is an image. It does not show what the image depicts.
 
 Audio. The verifier accepts the protocol's declared rate, channel count, and 8/16/24/32-bit PCM. Analysis decodes each width at its own full scale and refuses multichannel captures.

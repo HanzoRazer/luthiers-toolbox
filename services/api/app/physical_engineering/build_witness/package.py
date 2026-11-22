@@ -9,8 +9,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from jsonschema import Draft202012Validator
-
 from app.physical_engineering.build_witness import templates
 from app.physical_engineering.build_witness.findings import Finding, exit_code, finding
 from app.physical_engineering.build_witness.ids import new_id
@@ -24,6 +22,7 @@ from app.physical_engineering.build_witness.paths import (
     sha256_file,
 )
 from app.physical_engineering.build_witness.repository import LedgerError, WitnessRepository
+from app.physical_engineering.build_witness.schema_check import WITNESS_MANIFEST, schema_findings
 from app.physical_engineering.build_witness.validate import load_package_docs, stored_states
 from app.physical_engineering.build_witness.vocabulary import (
     BUILD_RESPONSE_OBSERVED,
@@ -35,8 +34,6 @@ from app.physical_engineering.build_witness.vocabulary import (
 )
 
 _INSTRUMENT = __import__("re").compile(r"^[a-z][a-z0-9_]{0,63}$")
-_MANIFEST_SCHEMA = Path(__file__).with_name("schemas") / "pem_build_witness_v1.schema.json"
-_manifest_validator: Draft202012Validator | None = None
 
 
 class PackageError(Exception):
@@ -222,14 +219,9 @@ def _check_manifest_metadata(manifest: dict, docs: dict) -> list[Finding]:
     A manifest that does not follow its own schema, or names a different
     witness than BUILD-RECORD.json, does not establish integrity.
     """
-    global _manifest_validator
-    if _manifest_validator is None:
-        schema = json.loads(_MANIFEST_SCHEMA.read_text(encoding="utf-8"))
-        _manifest_validator = Draft202012Validator(schema)
-    findings = []
-    for error in sorted(_manifest_validator.iter_errors(manifest), key=lambda item: list(item.absolute_path)):
-        where = "/".join(str(part) for part in error.absolute_path) or "(root)"
-        findings.append(finding("integrity", "manifest_schema", f"{where}: {error.message}"))
+    findings = schema_findings(
+        WITNESS_MANIFEST, manifest, MANIFEST_NAME, severity="integrity", code="manifest_schema"
+    )
     record = docs.get("build") if isinstance(docs.get("build"), dict) else {}
     expected = record.get("witness_id")
     if manifest.get("witness_id") != expected:
@@ -308,6 +300,9 @@ def _manifest_payload(package: Path, files: list[str], docs: dict, findings: lis
 
 
 def _publish_manifest(package: Path, payload: dict) -> None:
+    problems = schema_findings(WITNESS_MANIFEST, payload, MANIFEST_NAME)
+    if problems:
+        raise PackageError("refusing to write a manifest that breaks its schema: " + problems[0].message)
     body = json.dumps(payload, indent=2) + "\n"
     lines = [f"{item['sha256']}  {item['path']}" for item in payload["files"]]
     _atomic_write(package / SUMS_NAME, "\n".join(lines) + "\n")

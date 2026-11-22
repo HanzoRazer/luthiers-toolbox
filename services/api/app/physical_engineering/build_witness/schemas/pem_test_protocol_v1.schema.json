@@ -2,16 +2,102 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pem_test_protocol_v1.schema.json",
   "title": "PEM build-response test protocol",
+  "description": "Shape of TEST-PROTOCOL.json. One protocol is one configuration: every trial repeats the protocol's settings. Fields a blank template leaves unknown are nullable here; completeness is checked by the verifier.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "preprocessing", "trial_count"],
+  "required": [
+    "schema_id",
+    "schema_version",
+    "protocol_id",
+    "protocol_version",
+    "session_id",
+    "operator",
+    "objective",
+    "excitation_method",
+    "excitation_position",
+    "microphone_position",
+    "support_condition",
+    "string_state",
+    "tuning",
+    "sample_rate_hz",
+    "bit_depth",
+    "channels",
+    "recording_duration_s",
+    "preprocessing",
+    "trial_count",
+    "trials",
+    "background_file",
+    "file_naming_convention",
+    "allowed_derivations",
+    "limitations"
+  ],
   "properties": {
     "schema_id": {"const": "pem_test_protocol"},
     "schema_version": {"const": "1"},
+    "protocol_id": {"type": ["string", "null"]},
+    "protocol_version": {"type": "string"},
+    "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
+    "operator": {"type": ["string", "null"]},
+    "objective": {"type": ["string", "null"]},
+    "excitation_method": {"type": ["string", "null"]},
+    "excitation_position": {"type": ["string", "null"]},
+    "microphone_position": {"type": ["string", "null"]},
+    "support_condition": {"type": ["string", "null"]},
+    "string_state": {"type": ["string", "null"]},
+    "tuning": {"type": ["string", "null"]},
+    "sample_rate_hz": {"type": ["integer", "null"], "minimum": 1},
+    "bit_depth": {"enum": [8, 16, 24, 32, null]},
+    "channels": {"type": ["integer", "null"], "minimum": 1},
+    "recording_duration_s": {"type": ["string", "null"]},
     "preprocessing": {"const": "none"},
     "trial_count": {"type": "integer", "minimum": 3},
-    "sample_rate_hz": {"type": ["integer", "null"]},
-    "bit_depth": {"type": ["integer", "null"]},
-    "channels": {"type": ["integer", "null"]}
+    "trials": {"type": "array", "items": {"$ref": "#/$defs/trial"}},
+    "background_file": {"type": ["string", "null"]},
+    "file_naming_convention": {"type": "string"},
+    "allowed_derivations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "capture_duration",
+          "capture_warnings",
+          "dominant_spectral_peaks",
+          "envelope_decay",
+          "noise_floor",
+          "peak_amplitude",
+          "peak_frequencies",
+          "repeatability",
+          "rms_level",
+          "trial_differences"
+        ]
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "trial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "excitation_method",
+        "excitation_position",
+        "file",
+        "microphone_position",
+        "protocol_id",
+        "string_state",
+        "support_condition",
+        "trial_index"
+      ],
+      "properties": {
+        "excitation_method": {"type": "string"},
+        "excitation_position": {"type": "string"},
+        "file": {"type": "string"},
+        "microphone_position": {"type": "string"},
+        "protocol_id": {"type": "string"},
+        "string_state": {"type": "string"},
+        "support_condition": {"type": "string"},
+        "trial_index": {"type": "integer", "minimum": 1}
+      }
+    }
   }
 }

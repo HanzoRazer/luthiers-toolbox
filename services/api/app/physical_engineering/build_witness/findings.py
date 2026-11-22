@@ -1,4 +1,10 @@
-"""Findings and the verifier exit contract."""
+"""Findings and the verifier exit contract.
+
+Severities: ``io``, ``authority``, ``integrity`` and ``malformed`` each set
+an exit code. ``warning`` records an accepted uncertainty (for example an
+unknown scale length with a stated reason); it is reported but does not
+change the exit code.
+"""
 
 from __future__ import annotations
 

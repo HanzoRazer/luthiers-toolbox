@@ -61,6 +61,10 @@ def render_text(package: Path, verified: dict) -> str:
         "",
     ]
     lines.extend(f"- {state}" for state in verified["states"])
+    warnings = [item for item in verified.get("findings") or [] if item.get("severity") == "warning"]
+    if warnings:
+        lines.extend(["", "## Recorded uncertainty", ""])
+        lines.extend(f"- {_text(item.get('code'))}: {_text(item.get('message'))}" for item in warnings)
     lines.extend(["", "## Declarations", ""])
     for key in ("top", "back_side", "neck"):
         material = build.get(key)

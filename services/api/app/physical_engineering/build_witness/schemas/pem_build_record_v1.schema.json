@@ -2,15 +2,137 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "pem_build_record_v1.schema.json",
   "title": "PEM factual build record",
+  "description": "Shape of BUILD-RECORD.json. Fields a blank template leaves unknown are nullable here; completeness is checked by the verifier, not by this schema.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "witness_id", "witness_class", "material_identity_statement"],
+  "required": [
+    "schema_id",
+    "schema_version",
+    "witness_id",
+    "build_id",
+    "session_id",
+    "witness_class",
+    "authority_boundary_id",
+    "literature_reconciliation_status",
+    "record_kind",
+    "instrument_type",
+    "builder",
+    "builder_unknown_reason",
+    "build_completion_state",
+    "specimen_role",
+    "test_date",
+    "test_location",
+    "test_location_unknown_reason",
+    "scale_length_mm",
+    "scale_length_unknown_reason",
+    "body_style",
+    "top",
+    "back_side",
+    "neck",
+    "bracing",
+    "finish",
+    "bridge",
+    "saddle",
+    "strings",
+    "tuning",
+    "component_ids",
+    "photograph_refs",
+    "uncertainty_notes",
+    "material_identity_statement",
+    "operator_attestation",
+    "states",
+    "supersedes_witness_id"
+  ],
   "properties": {
     "schema_id": {"const": "pem_build_record"},
     "schema_version": {"const": "1"},
-    "witness_id": {"type": "string"},
+    "witness_id": {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"},
+    "build_id": {"type": "string", "pattern": "^pem_build_[0-9]+_[0-9a-f]{32}$"},
+    "session_id": {"type": "string", "pattern": "^pem_session_[0-9]+_[0-9a-f]{32}$"},
     "witness_class": {"const": "BUILD_RESPONSE_WITNESS"},
+    "authority_boundary_id": {"const": "PEM-BUILD-WITNESS-001"},
+    "literature_reconciliation_status": {"type": "string"},
+    "record_kind": {"enum": ["PHYSICAL_CAPTURE", "SYNTHETIC_FIXTURE"]},
+    "instrument_type": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
+    "builder": {"type": ["string", "null"]},
+    "builder_unknown_reason": {"type": ["string", "null"]},
+    "build_completion_state": {"type": ["string", "null"]},
+    "specimen_role": {"type": ["string", "null"]},
+    "test_date": {"type": ["string", "null"]},
+    "test_location": {"type": ["string", "null"]},
+    "test_location_unknown_reason": {"type": ["string", "null"]},
+    "scale_length_mm": {"type": ["string", "null"]},
+    "scale_length_unknown_reason": {"type": ["string", "null"]},
+    "body_style": {"type": ["string", "null"]},
+    "top": {"$ref": "#/$defs/material"},
+    "back_side": {"$ref": "#/$defs/material"},
+    "neck": {"$ref": "#/$defs/material"},
+    "bracing": {"$ref": "#/$defs/declaration"},
+    "finish": {"$ref": "#/$defs/declaration"},
+    "bridge": {"$ref": "#/$defs/declaration"},
+    "saddle": {"$ref": "#/$defs/declaration"},
+    "strings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approximate_age", "condition", "gauges", "material", "unknown_reason"],
+      "properties": {
+        "approximate_age": {"type": ["string", "null"]},
+        "condition": {"type": ["string", "null"]},
+        "gauges": {"type": ["string", "null"]},
+        "material": {"type": ["string", "null"]},
+        "unknown_reason": {"type": ["string", "null"]}
+      }
+    },
+    "tuning": {"type": ["string", "null"]},
+    "component_ids": {"type": "array", "items": {"type": "string"}},
+    "photograph_refs": {"type": "array", "items": {"type": "string"}},
+    "uncertainty_notes": {"type": "array", "items": {"type": "string"}},
     "material_identity_statement": {"type": "string"},
-    "record_kind": {"enum": ["PHYSICAL_CAPTURE", "SYNTHETIC_FIXTURE"]}
+    "operator_attestation": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["attested_at", "operator", "statement"],
+          "properties": {
+            "attested_at": {"type": "string"},
+            "operator": {"type": "string"},
+            "statement": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "states": {"type": "array", "items": {"type": "string"}},
+    "supersedes_witness_id": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^pem_witness_[0-9]+_[0-9a-f]{32}$"}
+      ]
+    }
+  },
+  "$defs": {
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["botanical_name", "evidence_ref", "identity_basis", "identity_status", "trade_name", "unknown_reason"],
+      "properties": {
+        "botanical_name": {"type": ["string", "null"]},
+        "evidence_ref": {"type": ["string", "null"]},
+        "identity_basis": {"type": ["string", "null"]},
+        "identity_status": {"enum": ["DECLARED_ONLY", "UNDECLARED", "VERIFIED"]},
+        "trade_name": {"type": ["string", "null"]},
+        "unknown_reason": {"type": ["string", "null"]}
+      }
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declaration", "unknown_reason"],
+      "properties": {
+        "declaration": {"type": ["string", "null"]},
+        "unknown_reason": {"type": ["string", "null"]}
+      }
+    }
   }
 }

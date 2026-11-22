@@ -7,7 +7,8 @@
   "intent": "Record the contract for one working instrument's physical evidence without treating whole-instrument measurements as intrinsic wood properties, and without opening literature comparison, scientific approval, production, CAM, or machine authority.",
   "change_type": "feat",
   "behavior_change": "Adds a library and five CLIs for an external evidence package. No API route, calculator, or existing evidence record changes.",
-  "risk_level": "low",
+  "risk_level": "medium",
+  "risk_statement": "Medium evidence-integrity risk; low production-runtime risk. No route or production workflow is added, but the verifier is new evidence-ingestion, filesystem, parsing, integrity, and reporting code, and an error in it could certify a package as intact or complete when it is not.",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/pem-build-witness-001.json",
@@ -27,6 +28,7 @@
       "services/api/app/physical_engineering/build_witness/paths.py",
       "services/api/app/physical_engineering/build_witness/report.py",
       "services/api/app/physical_engineering/build_witness/repository.py",
+      "services/api/app/physical_engineering/build_witness/schema_check.py",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
@@ -39,7 +41,8 @@
       "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
       "services/api/tests/physical_engineering/test_build_witness_contract.py",
       "services/api/tests/physical_engineering/test_build_witness_integrity.py",
-      "services/api/tests/physical_engineering/test_build_witness_measurements.py"
+      "services/api/tests/physical_engineering/test_build_witness_measurements.py",
+      "services/api/tests/physical_engineering/test_build_witness_schemas.py"
     ],
     "files_expected_to_change": [
       ".cbsp21/patches/pem-build-witness-001.json",
@@ -59,6 +62,7 @@
       "services/api/app/physical_engineering/build_witness/paths.py",
       "services/api/app/physical_engineering/build_witness/report.py",
       "services/api/app/physical_engineering/build_witness/repository.py",
+      "services/api/app/physical_engineering/build_witness/schema_check.py",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
@@ -71,7 +75,8 @@
       "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
       "services/api/tests/physical_engineering/test_build_witness_contract.py",
       "services/api/tests/physical_engineering/test_build_witness_integrity.py",
-      "services/api/tests/physical_engineering/test_build_witness_measurements.py"
+      "services/api/tests/physical_engineering/test_build_witness_measurements.py",
+      "services/api/tests/physical_engineering/test_build_witness_schemas.py"
     ]
   },
   "diff_articulation": {
@@ -80,8 +85,11 @@
   },
   "verification": {
     "commands_run": [
-      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 60 passed, 1 skipped (Windows: case-collision test skips on a case-insensitive filesystem)",
-      "cd services/api && python -m pytest tests/ -q --no-cov -x (Windows) -> 2133 passed, 2 skipped, stopped at 1 failure outside this PR: tests/cam/test_translator_execution_quarantine.py::TestQuarantineIndex::test_get_latest_quarantine (no CAM/translator file in this diff; full suite is covered by hosted CI)",
+      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_build_witness_schemas.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 89 passed, 1 skipped (78 witness tests; Windows: case-collision test skips on a case-insensitive filesystem)",
+      "cd services/api && python -m pytest tests/physical_engineering -q --no-cov -> 265 passed, 1 skipped",
+      "mutation check: with the schema calls removed from validate.py and the old _scale restored, 19 of the 29 tests in test_build_witness_schemas.py fail; restored, all pass",
+      "at 66c352c3: cd services/api && python -m pytest tests/ -q --no-cov -x (Windows) -> 2133 passed, 2 skipped, stopped at 1 failure outside this PR: tests/cam/test_translator_execution_quarantine.py::TestQuarantineIndex::test_get_latest_quarantine (no CAM/translator file in this diff; full suite is covered by hosted CI)",
+      "hosted CI at 66c352c3: 48 pass, 0 fail; API Tests 9750 passed, 60 skipped, 41 xfailed (includes test_get_latest_quarantine PASSED on Linux); cbsp21-patch-input skipped while draft",
       "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK",
       "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
       "python -m app.ci.check_bare_except -> OK",
@@ -172,7 +180,7 @@
     {
       "path": "services/api/app/physical_engineering/build_witness/package.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
@@ -194,27 +202,33 @@
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
+      "path": "services/api/app/physical_engineering/build_witness/schema_check.py",
+      "intent": "Applies the four published JSON schemas to package documents and returns located findings.",
+      "risk": "medium",
+      "behavior_change": "New library. Schema violations in a package become malformed (records) or integrity (manifest) findings."
+    },
+    {
       "path": "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
       "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New schema. No existing schema is redefined."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
       "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New schema. No existing schema is redefined."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
       "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New schema. No existing schema is redefined."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
       "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New schema. No existing schema is redefined."
     },
     {
@@ -226,13 +240,13 @@
     {
       "path": "services/api/app/physical_engineering/build_witness/validate.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/validate_capture.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
@@ -270,6 +284,12 @@
       "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
       "risk": "low",
       "behavior_change": "New tests."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_build_witness_schemas.py",
+      "intent": "Negative and positive tests for runtime schema validation and the scale-length rule.",
+      "risk": "low",
+      "behavior_change": "Tests only."
     }
   ]
 }
