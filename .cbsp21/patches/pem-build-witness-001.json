@@ -8,7 +8,7 @@
   "change_type": "feat",
   "behavior_change": "Adds a library and five CLIs for an external evidence package. No API route, calculator, or existing evidence record changes.",
   "risk_level": "medium",
-  "risk_statement": "Medium evidence-integrity risk; low production-runtime risk. No route or production workflow is added, but the verifier is new evidence-ingestion, filesystem, parsing, integrity, and reporting code, and an error in it could certify a package as intact or complete when it is not.",
+  "risk_statement": "Medium evidence-integrity risk; low production-runtime risk. No route or production workflow is added. The verifier is new evidence-ingestion, filesystem, parsing, integrity, and reporting code, and an error in it could certify a package as intact or complete when it is not. Round 4 narrows that: one seal per witness anchored in the ledger, a fixed evidence layout, prohibited claims checked everywhere, and derived output recomputed before it is trusted. Residual: the ledger must be protected like the evidence (an actor who can rewrite both can forge a seal), Windows directory junctions are not detected, and the analyzer's 256-sample frequency resolution is unchanged.",
   "scope": {
     "paths_in_scope": [
       ".cbsp21/patches/pem-build-witness-001.json",
@@ -21,9 +21,14 @@
       "scripts/verify_build_witness.py",
       "services/api/app/physical_engineering/build_witness/__init__.py",
       "services/api/app/physical_engineering/build_witness/analyze.py",
+      "services/api/app/physical_engineering/build_witness/authority.py",
       "services/api/app/physical_engineering/build_witness/cli.py",
+      "services/api/app/physical_engineering/build_witness/create.py",
+      "services/api/app/physical_engineering/build_witness/derivation.py",
+      "services/api/app/physical_engineering/build_witness/derived_check.py",
       "services/api/app/physical_engineering/build_witness/findings.py",
       "services/api/app/physical_engineering/build_witness/ids.py",
+      "services/api/app/physical_engineering/build_witness/layout.py",
       "services/api/app/physical_engineering/build_witness/package.py",
       "services/api/app/physical_engineering/build_witness/paths.py",
       "services/api/app/physical_engineering/build_witness/report.py",
@@ -31,6 +36,7 @@
       "services/api/app/physical_engineering/build_witness/schema_check.py",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_derived_observations_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/templates.py",
@@ -39,6 +45,7 @@
       "services/api/app/physical_engineering/build_witness/validate_support.py",
       "services/api/app/physical_engineering/build_witness/vocabulary.py",
       "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
+      "services/api/tests/physical_engineering/test_build_witness_boundary.py",
       "services/api/tests/physical_engineering/test_build_witness_contract.py",
       "services/api/tests/physical_engineering/test_build_witness_integrity.py",
       "services/api/tests/physical_engineering/test_build_witness_measurements.py",
@@ -55,9 +62,14 @@
       "scripts/verify_build_witness.py",
       "services/api/app/physical_engineering/build_witness/__init__.py",
       "services/api/app/physical_engineering/build_witness/analyze.py",
+      "services/api/app/physical_engineering/build_witness/authority.py",
       "services/api/app/physical_engineering/build_witness/cli.py",
+      "services/api/app/physical_engineering/build_witness/create.py",
+      "services/api/app/physical_engineering/build_witness/derivation.py",
+      "services/api/app/physical_engineering/build_witness/derived_check.py",
       "services/api/app/physical_engineering/build_witness/findings.py",
       "services/api/app/physical_engineering/build_witness/ids.py",
+      "services/api/app/physical_engineering/build_witness/layout.py",
       "services/api/app/physical_engineering/build_witness/package.py",
       "services/api/app/physical_engineering/build_witness/paths.py",
       "services/api/app/physical_engineering/build_witness/report.py",
@@ -65,6 +77,7 @@
       "services/api/app/physical_engineering/build_witness/schema_check.py",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_record_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
+      "services/api/app/physical_engineering/build_witness/schemas/pem_derived_observations_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_measurement_observation_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/schemas/pem_test_protocol_v1.schema.json",
       "services/api/app/physical_engineering/build_witness/templates.py",
@@ -73,6 +86,7 @@
       "services/api/app/physical_engineering/build_witness/validate_support.py",
       "services/api/app/physical_engineering/build_witness/vocabulary.py",
       "services/api/tests/physical_engineering/pem_build_witness_fixture.py",
+      "services/api/tests/physical_engineering/test_build_witness_boundary.py",
       "services/api/tests/physical_engineering/test_build_witness_contract.py",
       "services/api/tests/physical_engineering/test_build_witness_integrity.py",
       "services/api/tests/physical_engineering/test_build_witness_measurements.py",
@@ -85,17 +99,19 @@
   },
   "verification": {
     "commands_run": [
-      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_build_witness_schemas.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov -> 89 passed, 1 skipped (78 witness tests; Windows: case-collision test skips on a case-insensitive filesystem)",
-      "cd services/api && python -m pytest tests/physical_engineering -q --no-cov -> 265 passed, 1 skipped",
-      "mutation check: with the schema calls removed from validate.py and the old _scale restored, 19 of the 29 tests in test_build_witness_schemas.py fail; restored, all pass",
-      "at 66c352c3: cd services/api && python -m pytest tests/ -q --no-cov -x (Windows) -> 2133 passed, 2 skipped, stopped at 1 failure outside this PR: tests/cam/test_translator_execution_quarantine.py::TestQuarantineIndex::test_get_latest_quarantine (no CAM/translator file in this diff; full suite is covered by hosted CI)",
-      "hosted CI at 66c352c3: 48 pass, 0 fail; API Tests 9750 passed, 60 skipped, 41 xfailed (includes test_get_latest_quarantine PASSED on Linux); cbsp21-patch-input skipped while draft",
+      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_contract.py tests/physical_engineering/test_build_witness_integrity.py tests/physical_engineering/test_build_witness_measurements.py tests/physical_engineering/test_build_witness_schemas.py tests/physical_engineering/test_build_witness_boundary.py tests/physical_engineering/test_evidence_artifact_v1.py -q --no-cov, run 3 times -> 126 passed, 1 skipped each time (Windows: case-collision test skips on a case-insensitive filesystem)",
+      "cd services/api && python -m pytest tests/physical_engineering/test_build_witness_boundary.py -k 'creator or reservation or race', run 20 times -> 5 passed each time",
+      "cd services/api && python -m pytest tests/physical_engineering -q --no-cov -> 302 passed, 1 skipped",
+      "mutation check: 19 single-fix mutations (prohibited-claim scan x3, ledger anchor x2, layout, identical-reseal, audio placement, duplicate manifest entry, photo digest and case, truncation, rejected-CSV report, derived check, recompute, derived refs, reservation, recheck under reservation, empty destination); 18 fail the tests; the empty-destination mutation is still refused by the recheck under the reservation",
+      "CLI: create, create again (refused, exit 1), ingest, verify (exit 1, blank), ingest --replace-manifest unchanged (exit 0), ingest --replace-manifest after a sealed file changed (exit 2), render after the change (exit 2)",
+      "hosted CI at b8ea8c3a: 49 pass, 0 fail; cbsp21-patch-input PASS after the PR left draft",
       "python -m app.ci.check_complexity --baseline app/ci/complexity_baseline.json -> OK",
       "python -m app.ci.check_file_sizes --baseline app/ci/file_sizes_baseline.json -> OK",
       "python -m app.ci.check_bare_except -> OK",
       "python -m app.ci.check_duplication --threshold 100 -> OK, 0 clone groups within threshold",
       "python -m app.ci.fence_checker_v2 -> exit 0",
-      "python scripts/check_protected_paths.py -> exit 0"
+      "python scripts/check_protected_paths.py -> exit 0",
+      "ruff on the witness code and tests: 16 findings, down from 22 at b8ea8c3a; none new"
     ]
   },
   "files": [
@@ -156,14 +172,38 @@
     {
       "path": "services/api/app/physical_engineering/build_witness/analyze.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/authority.py",
+      "intent": "Finds prohibited authority claims as keys or whole values, normalized, in every package document.",
+      "risk": "medium",
+      "behavior_change": "New library. Prohibited claims anywhere in a package are exit 4."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/cli.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
       "risk": "low",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/create.py",
+      "intent": "Creates a blank package under an exclusive destination reservation with staged, single-rename publication.",
+      "risk": "medium",
+      "behavior_change": "New library. An existing destination is never written into; a stale reservation fails closed."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/derivation.py",
+      "intent": "Deterministic descriptive analysis moved out of analyze.py so the verifier can recompute it.",
+      "risk": "medium",
+      "behavior_change": "New library. Same computations as before; the derived document now names its seal and input digests."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/derived_check.py",
+      "intent": "Validates, binds, and recomputes derived/observations.json before it is trusted.",
+      "risk": "medium",
+      "behavior_change": "New library. Untrusted derived output is an integrity finding and is never rendered."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/findings.py",
@@ -176,6 +216,12 @@
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
       "risk": "low",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/layout.py",
+      "intent": "Defines the sealed evidence layout and the two recognized generated products.",
+      "risk": "medium",
+      "behavior_change": "New library. Files outside the layout are refused."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/package.py",
@@ -192,13 +238,13 @@
     {
       "path": "services/api/app/physical_engineering/build_witness/report.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
       "path": "services/api/app/physical_engineering/build_witness/repository.py",
       "intent": "Build-response witness library. It is not exported from the physical-engineering package.",
-      "risk": "low",
+      "risk": "medium",
       "behavior_change": "New library. Existing proposal evidence records are unchanged."
     },
     {
@@ -216,6 +262,12 @@
     {
       "path": "services/api/app/physical_engineering/build_witness/schemas/pem_build_witness_v1.schema.json",
       "intent": "Closed witness schema. Prohibited authority states are not in the stored vocabulary.",
+      "risk": "medium",
+      "behavior_change": "New schema. No existing schema is redefined."
+    },
+    {
+      "path": "services/api/app/physical_engineering/build_witness/schemas/pem_derived_observations_v1.schema.json",
+      "intent": "Closed schema for derived/observations.json.",
       "risk": "medium",
       "behavior_change": "New schema. No existing schema is redefined."
     },
@@ -266,6 +318,12 @@
       "intent": "Synthetic contract, integrity, and measurement tests. Audio is generated in the test.",
       "risk": "low",
       "behavior_change": "New tests."
+    },
+    {
+      "path": "services/api/tests/physical_engineering/test_build_witness_boundary.py",
+      "intent": "Deterministic race, reservation, seal-anchor, layout, prohibited-claim, and derived-boundary tests.",
+      "risk": "low",
+      "behavior_change": "Tests only."
     },
     {
       "path": "services/api/tests/physical_engineering/test_build_witness_contract.py",

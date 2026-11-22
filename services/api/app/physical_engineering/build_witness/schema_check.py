@@ -19,6 +19,7 @@ BUILD_RECORD = "pem_build_record_v1"
 TEST_PROTOCOL = "pem_test_protocol_v1"
 MEASUREMENT = "pem_measurement_observation_v1"
 WITNESS_MANIFEST = "pem_build_witness_v1"
+DERIVED = "pem_derived_observations_v1"
 
 _MESSAGE_LIMIT = 200
 _ERRORS_PER_DOCUMENT = 20

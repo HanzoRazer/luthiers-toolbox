@@ -6,12 +6,17 @@ It repeats the authority boundary and does not add a conclusion.
 
 from __future__ import annotations
 
-import json
 import os
 import re
 from pathlib import Path
 
-from app.physical_engineering.build_witness.package import PackageError, ingest_package, verify_package
+from app.physical_engineering.build_witness.findings import PackageError
+from app.physical_engineering.build_witness.layout import REPORT
+from app.physical_engineering.build_witness.package import (
+    trusted_derived,
+    verify_package,
+)
+from app.physical_engineering.build_witness.validate import load_package_docs
 from app.physical_engineering.build_witness.vocabulary import NON_AUTHORITY_STATEMENT
 
 
@@ -22,13 +27,17 @@ def render_package(package: Path) -> str:
         raise PackageError("prohibited authority claim", 4)
     if not verified["integrity_ok"]:
         raise PackageError("the package integrity check did not pass", verified["exit_code"] or 2)
-    text = render_text(package, verified)
-    destination = package / "reports" / "WITNESS-REPORT.md"
+    # Render from the verifier's own strict reading of the records, and from
+    # derived observations only after every derived check, including the
+    # recomputation. Nothing is re-read leniently, and the seal is not touched.
+    docs, _ = load_package_docs(package)
+    derived = trusted_derived(package, docs)
+    text = render_text(verified, docs, derived)
+    destination = package / REPORT
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(destination.name + ".tmp")
-    temporary.write_text(text, encoding="utf-8")
+    temporary.write_bytes(text.encode("utf-8"))
     os.replace(temporary, destination)
-    ingest_package(package, replace=True)
     return text
 
 
@@ -46,8 +55,8 @@ def _text(value: object) -> str:
     return flat.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def render_text(package: Path, verified: dict) -> str:
-    build = json.loads((package / "BUILD-RECORD.json").read_text(encoding="utf-8"))
+def render_text(verified: dict, docs: dict, derived: dict | None) -> str:
+    build = docs.get("build") or {}
     lines = [
         "# Build-response witness",
         "",
@@ -85,9 +94,9 @@ def render_text(package: Path, verified: dict) -> str:
             "",
         ]
     )
-    lines.extend(_direct_lines(package))
+    lines.extend(_direct_lines(verified, docs))
     lines.extend(["", "## Derived observations", ""])
-    lines.extend(_derived_lines(package))
+    lines.extend(_derived_lines(derived))
     lines.extend(
         [
             "",
@@ -107,34 +116,38 @@ def render_text(package: Path, verified: dict) -> str:
     return "\n".join(lines)
 
 
-def _direct_lines(package: Path) -> list[str]:
-    import csv
+_CSV_REJECTED = {"csv_malformed", "csv_header", "csv_row_width"}
 
-    path = package / "MEASUREMENTS.csv"
+
+def _direct_lines(verified: dict, docs: dict) -> list[str]:
+    rejected = any(
+        item.get("code") in _CSV_REJECTED and str(item.get("message", "")).startswith("MEASUREMENTS.csv")
+        for item in verified.get("findings") or []
+    )
+    if rejected:
+        return ["- MEASUREMENTS.csv was rejected by the verifier; none of its rows are shown"]
     lines = []
-    with path.open(encoding="utf-8", newline="") as handle:
-        for row in csv.DictReader(handle):
-            if not str(row.get("measurement_source") or "").startswith("DIRECT_"):
-                continue
-            lines.append(
-                f"- {_text(row.get('quantity'))}: {_text(row.get('value'))} {_text(row.get('unit'))} "
-                f"({_text(row.get('measurement_source'))})"
-            )
+    for row in docs.get("measurements") or []:
+        if not str(row.get("measurement_source") or "").startswith("DIRECT_"):
+            continue
+        lines.append(
+            f"- {_text(row.get('quantity'))}: {_text(row.get('value'))} {_text(row.get('unit'))} "
+            f"({_text(row.get('measurement_source'))})"
+        )
     return lines or ["- none recorded"]
 
 
-def _derived_lines(package: Path) -> list[str]:
-    path = package / "derived" / "observations.json"
-    if not path.is_file():
+def _derived_lines(payload: dict | None) -> list[str]:
+    if payload is None:
         return ["- not calculated"]
-    payload = json.loads(path.read_text(encoding="utf-8"))
     lines = [
-        f"- Algorithm: {_text(payload.get('algorithm_id'))} {_text(payload.get('algorithm_version'))}",
-        f"- Inputs: {_text(', '.join(str(item) for item in payload.get('inputs') or []))}",
+        f"- Algorithm: {_text(payload['algorithm_id'])} {_text(payload['algorithm_version'])}",
+        f"- Inputs: {_text(', '.join(item['path'] for item in payload['inputs']))}",
+        "- Recomputed from the sealed audio and identical to the stored document",
     ]
-    for row in payload.get("observations") or []:
+    for row in payload["observations"]:
         lines.append(
-            f"- {_text(row.get('quantity'))}: {_text(row.get('value'))} {_text(row.get('unit'))} "
-            f"from {_text(row.get('raw_evidence_ref'))}"
+            f"- {_text(row['quantity'])}: {_text(row['value'])} {_text(row['unit'])} "
+            f"from {_text(row['raw_evidence_ref'])}"
         )
     return lines

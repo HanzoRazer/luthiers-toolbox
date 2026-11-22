@@ -18,6 +18,10 @@ from app.physical_engineering.build_witness.report import render_package
 from app.physical_engineering.build_witness.repository import WitnessRepository
 
 
+def _ledger(args: argparse.Namespace) -> WitnessRepository | None:
+    return WitnessRepository(args.registry) if args.registry else None
+
+
 def create_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Create a blank build-response witness package")
     parser.add_argument("--output", required=True, type=Path)
@@ -39,12 +43,13 @@ def ingest_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--package", required=True, type=Path)
     parser.add_argument("--write-manifest", action="store_true")
     parser.add_argument("--replace-manifest", action="store_true")
+    parser.add_argument("--registry", type=Path, help="witness ledger (default: pem-witness-ledger beside the package)")
     args = parser.parse_args(argv)
     if not args.write_manifest and not args.replace_manifest:
         print("pass --write-manifest or --replace-manifest", file=sys.stderr)
         return 1
     try:
-        payload = ingest_package(args.package, replace=args.replace_manifest)
+        payload = ingest_package(args.package, replace=args.replace_manifest, repository=_ledger(args))
     except PackageError as exc:
         print(str(exc), file=sys.stderr)
         return exc.code
@@ -56,8 +61,9 @@ def verify_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Verify a witness package")
     parser.add_argument("--package", required=True, type=Path)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--registry", type=Path, help="witness ledger (default: pem-witness-ledger beside the package)")
     args = parser.parse_args(argv)
-    result = verify_package(args.package)
+    result = verify_package(args.package, repository=_ledger(args))
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:

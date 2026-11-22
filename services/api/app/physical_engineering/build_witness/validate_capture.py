@@ -9,6 +9,7 @@ from pathlib import Path
 
 from app.physical_engineering.build_witness.findings import Finding, finding
 from app.physical_engineering.build_witness.ids import is_identifier
+from app.physical_engineering.build_witness.layout import AUDIO_DIR, RAW_DIR, placed
 from app.physical_engineering.build_witness.paths import PathPolicyError, normalize_relative
 from app.physical_engineering.build_witness.validate_support import DECIMAL_TEXT, parse_time, path_exists
 from app.physical_engineering.build_witness.vocabulary import (
@@ -92,6 +93,9 @@ def _check_distinct_audio(package: Path, relatives: list[str], findings: list[Fi
 
 
 def _check_wav(package: Path, relative: str, protocol: dict, findings: list[Finding]) -> None:
+    if not placed(relative, AUDIO_DIR, ".wav"):
+        findings.append(finding("malformed", "misplaced_evidence", "recordings must be WAV files under raw/audio/: " + relative))
+        return
     try:
         path = package / normalize_relative(relative)
     except Exception:
@@ -106,11 +110,15 @@ def _check_wav(package: Path, relative: str, protocol: dict, findings: list[Find
             channels = handle.getnchannels()
             rate = handle.getframerate()
             width = handle.getsampwidth()
-    except (wave.Error, EOFError):
+            data = handle.readframes(frames)
+    except (wave.Error, EOFError, OSError):
         findings.append(finding("malformed", "unreadable_audio", relative))
         return
     if frames <= 0:
         findings.append(finding("malformed", "empty_audio", relative))
+    elif len(data) != frames * width * channels:
+        # The header's frame count is a claim; the data chunk is the capture.
+        findings.append(finding("malformed", "truncated_audio", "audio data does not match its header: " + relative))
     if width not in (1, 2, 3, 4):
         findings.append(finding("malformed", "bit_depth_mismatch", relative))
     if rate != protocol.get("sample_rate_hz"):
@@ -246,7 +254,9 @@ def _one_measurement(package: Path, row: dict[str, str], findings: list[Finding]
     if row.get("observed_at"):
         parse_time(row["observed_at"], findings)
     ref = row.get("raw_evidence_ref")
-    if ref and not path_exists(package, ref):
+    if ref and not placed(ref, RAW_DIR):
+        findings.append(finding("malformed", "misplaced_evidence", "raw_evidence_ref must be under raw/: " + ref))
+    elif ref and not path_exists(package, ref):
         findings.append(finding("malformed", "missing_policy", "evidence ref missing"))
     status = row.get("calibration_status")
     if status and status not in {CALIBRATION_VERIFIED, CALIBRATION_UNVERIFIED_STATUS}:

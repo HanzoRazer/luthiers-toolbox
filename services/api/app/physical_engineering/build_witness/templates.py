@@ -151,7 +151,7 @@ def equipment() -> dict:
 
 
 def write_blank_tree(root: Path, record: dict, protocol: dict, equipment_doc: dict) -> None:
-    for relative in ("raw/audio", "raw/sensors", "raw/images", "derived/plots", "reports"):
+    for relative in ("raw/audio", "raw/sensors", "raw/images", "derived", "reports"):
         (root / relative).mkdir(parents=True, exist_ok=True)
     dump_json(root / "BUILD-RECORD.json", record)
     dump_json(root / "TEST-PROTOCOL.json", protocol)
@@ -169,10 +169,6 @@ def write_blank_tree(root: Path, record: dict, protocol: dict, equipment_doc: di
     )
     (root / "raw" / "images" / "NO-CAPTURE.txt").write_text(
         "No photograph has been captured. This file is not a measurement.\n",
-        encoding="utf-8",
-    )
-    (root / "derived" / "plots" / "NO-PLOTS.txt").write_text(
-        "This increment does not generate plots.\n",
         encoding="utf-8",
     )
 

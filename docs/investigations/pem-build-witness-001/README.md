@@ -48,9 +48,40 @@ python scripts/verify_build_witness.py \
 
 Verifier exits: `0` intact and complete, `1` malformed or incomplete, `2` bytes or digests disagree, `3` the check could not be run, `4` a prohibited authority claim.
 
-`analyze_build_response.py` runs only after exit `0`. It writes descriptive duration, level, spectral-peak, envelope-ratio, and repeatability figures under `derived/`. `--derive moe`, `--infer-species`, and `--compare-reference` exit `4` and write nothing.
+`analyze_build_response.py` runs only after exit `0`. It writes descriptive duration, level, spectral-peak, envelope-ratio, and repeatability figures to `derived/observations.json`. `--derive moe`, `--infer-species`, and `--compare-reference` exit `4` and write nothing. Neither analysis nor the report rewrites the evidence seal.
+
+`create_build_witness.py`, `ingest_build_witness.py` and `verify_build_witness.py` use the ledger `pem-witness-ledger` beside the package unless `--registry` names another. Keep the ledger with the evidence and protect it like the evidence: it records which witness ids are used and the first seal of each.
+
+## Creating a package
+
+`create` takes exclusive ownership of the destination before writing anything. It creates a reservation directory, `.<name>.reservation`, beside the destination, writes the blank package into a uniquely named staging directory, and publishes it with a single rename. It removes the staging and reservation directories afterwards, whether it succeeded or failed. An existing destination is never written into or replaced, even if it is empty.
+
+If a creator is killed, its reservation stays behind, and the next `create` for that destination fails with the reservation's path. Recovery: make sure no `create` is running and that the destination does not exist, remove the reservation directory, and run `create` again. The ids the interrupted run burned stay burned.
+
+## Package layout and the seal
+
+The evidence is the root records (`BUILD-RECORD.json`, `TEST-PROTOCOL.json`, `EQUIPMENT.json`, `ENVIRONMENT.csv`, `MEASUREMENTS.csv`, `READ-ME-FIRST.txt`) and everything under `raw/`. Recordings must be WAV files under `raw/audio/`, photographs PNG files under `raw/images/`, and every other evidence reference (`raw_evidence_ref`, a material `evidence_ref`) must point under `raw/`. Every referenced file must appear in the sealed manifest with the same length and digest.
+
+Ingest seals the evidence once. Before writing the manifest it records the manifest's SHA-256 in the ledger. A witness is never resealed with different bytes: deleting the manifest and ingesting again, or ingesting with `--replace-manifest` after anything sealed has changed, is refused. Re-running ingest on unchanged evidence is allowed and writes the same bytes. A correction is a new witness that supersedes the old one. When the ledger is present, verify also requires the manifest to be the one the ledger anchored. Without a ledger, verify reports a `ledger_unavailable` warning.
+
+Two generated products may sit outside the seal: `derived/observations.json` and `reports/WITNESS-REPORT.md`. Any other file, under `derived/`, `reports/`, or anywhere else, is refused (exit `2`).
+
+## Derived observations
+
+`derived/observations.json` is written after the seal, so the seal cannot vouch for it. The verifier and the report trust it only if:
+
+- the evidence itself verifies;
+- it is UTF-8 JSON that satisfies `pem_derived_observations_v1`;
+- it names this witness, this session, and the digest of the current `WITNESS-MANIFEST.json`;
+- its inputs are exactly the protocol's recordings, each with its sealed length and digest;
+- every observation cites only those inputs;
+- recomputing it from the sealed audio gives an identical document.
+
+The last check shows the numbers were not edited. Any failure is exit `2`, and the report is not written. A valid derived document is reported as "recomputed from the sealed audio". The report itself is output, not evidence: it is regenerated from the verified records and is never read back as input.
 
 ## What the verifier enforces
+
+Prohibited claims. Every JSON document, every CSV row, every JSON or CSV file under `raw/`, and the derived observations are scanned for prohibited authority claims, both as keys and as whole values, regardless of case or separators: `intrinsic_moe`, `Intrinsic-MOE` and `INTRINSIC MOE` are one claim. A sentence that mentions the words is not a claim. A prohibited claim is exit `4` and never comes with `INTEGRITY_VERIFIED`. Ingest refuses to seal it.
 
 Identity. `BUILD-RECORD.json` holds the witness and session ids. The verifier requires the same ids in:
 
@@ -62,15 +93,21 @@ Identity. `BUILD-RECORD.json` holds the witness and session ids. The verifier re
 
 CSV records. `ENVIRONMENT.csv` and `MEASUREMENTS.csv` must be UTF-8 with strict quoting. The header must match the template's columns exactly, in order. Every data row must be as wide as the header. Any deviation rejects the whole file. The verifier does not repair a row and then check the repaired copy.
 
-Schemas. The verifier applies the published schemas to `BUILD-RECORD.json` (`pem_build_record_v1`), `TEST-PROTOCOL.json` (`pem_test_protocol_v1`), every `MEASUREMENTS.csv` row (`pem_measurement_observation_v1`), and `WITNESS-MANIFEST.json` (`pem_build_witness_v1`). Each schema is closed: an unknown field, a missing field, or a value of the wrong type is a finding that names the document and the location, for example `TEST-PROTOCOL.json /trials/0`. Record and row violations are malformed (exit `1`). Manifest violations are integrity failures (exit `2`). Ingest refuses to write a manifest that would break its own schema. A blank template satisfies the schemas: fields not yet captured are `null`, and completeness is checked separately. `derived/observations.json` is a different document and is not described by these schemas.
+Schemas. The verifier applies the published schemas to `BUILD-RECORD.json` (`pem_build_record_v1`), `TEST-PROTOCOL.json` (`pem_test_protocol_v1`), every `MEASUREMENTS.csv` row (`pem_measurement_observation_v1`), and `WITNESS-MANIFEST.json` (`pem_build_witness_v1`). Each schema is closed: an unknown field, a missing field, or a value of the wrong type is a finding that names the document and the location, for example `TEST-PROTOCOL.json /trials/0`. Record and row violations are malformed (exit `1`). Manifest violations are integrity failures (exit `2`). Ingest refuses to write a manifest that would break its own schema. A blank template satisfies the schemas: fields not yet captured are `null`, and completeness is checked separately. `derived/observations.json` has its own schema, `pem_derived_observations_v1`; see "Derived observations".
 
 Configuration. One protocol is one configuration. Every trial must repeat the protocol's excitation method and position, microphone position, support condition, and string state. A change of configuration is a new protocol and session, not a second group inside one.
 
 Scale length. A decimal `scale_length_mm` is accepted. A `null` value with a nonblank `scale_length_unknown_reason` is accepted as recorded uncertainty: the verifier emits a `warning` finding, `scale_length_unknown`, which does not change the exit code and is listed in the report under "Recorded uncertainty". A `null` value with no reason is malformed. At least one directly measured dimension in `MEASUREMENTS.csv` is still required either way.
 
-Photographs. Each required photograph must be a different file that decodes as a complete PNG: valid chunk checksums from `IHDR` through `IEND`, and all pixel data present. This shows the file is an image. It does not show what the image depicts.
+Photographs. Each required photograph must be a different file, by name regardless of case and by content, that decodes as a complete PNG: valid chunk checksums from `IHDR` through `IEND`, and all pixel data present. This shows the file is an image. It does not show what the image depicts.
 
-Audio. The verifier accepts the protocol's declared rate, channel count, and 8/16/24/32-bit PCM. Analysis decodes each width at its own full scale and refuses multichannel captures.
+Audio. The verifier accepts the protocol's declared rate, channel count, and 8/16/24/32-bit PCM. The data must be exactly as long as the header declares; a truncated recording is malformed. Analysis decodes each width at its own full scale and refuses multichannel captures.
+
+Manifest. Each path may appear once. A duplicate entry, even with a different spelling of case, is an integrity failure.
+
+Report. The report lists only rows the verifier accepted. If `MEASUREMENTS.csv` is rejected, the report says so and shows none of its rows.
+
+Not covered: a Windows directory junction inside the package is not detected as a link on Python 3.11. Do not place junctions in a package.
 
 ## States
 

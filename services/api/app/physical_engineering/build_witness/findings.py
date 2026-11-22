@@ -17,6 +17,14 @@ EXIT_INCOMPLETE_RUN = 3
 EXIT_AUTHORITY = 4
 
 
+class PackageError(Exception):
+    """A command refused to act. ``code`` is the CLI exit code."""
+
+    def __init__(self, message: str, code: int = 1) -> None:
+        super().__init__(message)
+        self.code = code
+
+
 @dataclass(frozen=True)
 class Finding:
     severity: str

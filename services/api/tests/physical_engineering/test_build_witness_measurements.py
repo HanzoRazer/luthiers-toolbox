@@ -124,7 +124,7 @@ def test_derived_observations_are_reproducible_and_do_not_replace_raw(tmp_path: 
     assert first["algorithm_version"] == "1"
     assert first["inputs"]
     for row in first["observations"]:
-        assert row["raw_evidence_ref"] in first["inputs"]
+        assert row["raw_evidence_ref"] in [item["path"] for item in first["inputs"]]
         assert row["measurement_source"] == "DERIVED_FROM_CAPTURE"
     text = (package / "derived" / "observations.json").read_bytes()
     second = analyze_package(package)

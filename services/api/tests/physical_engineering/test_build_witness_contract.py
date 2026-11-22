@@ -32,6 +32,11 @@ SCHEMA_DIR = (
 )
 
 
+def _leftovers(root: Path) -> list[str]:
+    """Staging or reservation directories a creator failed to clean up."""
+    return sorted(p.name for p in root.iterdir() if ".staging-" in p.name or p.name.endswith(".reservation"))
+
+
 def _repo(tmp_path: Path) -> WitnessRepository:
     return WitnessRepository(tmp_path / "ledger")
 
@@ -100,7 +105,7 @@ def test_aborted_write_does_not_leave_a_package_or_reuse_the_id(tmp_path: Path) 
     finally:
         templates.dump_json = original
     assert not (tmp_path / "pkg").exists()
-    assert not (tmp_path / "pkg.partial").exists()
+    assert _leftovers(tmp_path) == []
     try:
         create_package(tmp_path / "retry", "acoustic_guitar", _repo(tmp_path), clock=clock, factory=lambda: "1" * 32)
     except PackageError as exc:
@@ -131,7 +136,7 @@ def test_parallel_creation_preserves_one_package_or_both(tmp_path: Path) -> None
     assert len(errors) == 1
     assert "collision" in errors[0]
     assert (tmp_path / "same").is_dir()
-    assert not (tmp_path / "same.partial").exists()
+    assert _leftovers(tmp_path) == []
     separate_errors: list[str] = []
 
     def other(name: str) -> None:
@@ -151,17 +156,27 @@ def test_parallel_creation_preserves_one_package_or_both(tmp_path: Path) -> None
     assert left["witness_id"] != right["witness_id"]
 
 
-def test_create_refuses_a_nonempty_destination_and_invents_no_audio(tmp_path: Path) -> None:
+def test_create_refuses_any_existing_destination(tmp_path: Path) -> None:
     dest = tmp_path / "pkg"
     dest.mkdir()
     (dest / "existing.txt").write_text("keep", encoding="utf-8")
     try:
         create_package(dest, "acoustic_guitar", _repo(tmp_path))
     except PackageError as exc:
-        assert "not empty" in str(exc)
+        assert "collision" in str(exc)
     else:
         raise AssertionError("nonempty destination")
     assert (dest / "existing.txt").read_text(encoding="utf-8") == "keep"
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    try:
+        create_package(empty, "acoustic_guitar", _repo(tmp_path))
+    except PackageError as exc:
+        assert "collision" in str(exc)
+    else:
+        raise AssertionError("an existing empty destination must not be written into")
+    assert list(empty.iterdir()) == []
+    assert _leftovers(tmp_path) == []
 
 
 def test_trade_name_stays_declared_and_unknown_material_stays_null(tmp_path: Path) -> None:

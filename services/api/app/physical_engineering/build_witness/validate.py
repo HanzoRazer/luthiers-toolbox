@@ -13,9 +13,16 @@ from pathlib import Path
 
 from PIL import Image
 
+from app.physical_engineering.build_witness.authority import scan as scan_authority
 from app.physical_engineering.build_witness.findings import Finding, finding
 from app.physical_engineering.build_witness.ids import is_identifier
-from app.physical_engineering.build_witness.paths import MANIFEST_NAME
+from app.physical_engineering.build_witness.layout import (
+    IMAGE_DIR,
+    RAW_DIR,
+    ROOT_RECORDS,
+    placed,
+)
+from app.physical_engineering.build_witness.paths import MANIFEST_NAME, relative_files, sha256_file
 from app.physical_engineering.build_witness.schema_check import (
     BUILD_RECORD,
     MEASUREMENT,
@@ -41,16 +48,13 @@ from app.physical_engineering.build_witness.vocabulary import (
     CAPTURE_COMPLETE,
     CAPTURE_INCOMPLETE,
     IDENTITY_STATUSES,
-    INTEGRITY_VERIFIED,
-    LITERATURE_STATUS,
     MATERIAL_IDENTITY_STATEMENT,
     METHOD_REVIEW_PENDING,
-    PROHIBITED_KEYS,
-    PROHIBITED_STATES,
     REFERENCE_COMPARISON_BLOCKED,
     SCIENTIFIC_INTERPRETATION_PENDING,
-    WITNESS_CLASS,
 )
+
+_SCAN_LIMIT = 32 * 1024 * 1024
 
 
 def stored_states(complete: bool, calibration_unverified: bool) -> list[str]:
@@ -75,9 +79,18 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
     environment = _read_csv(package / "ENVIRONMENT.csv", ENVIRONMENT_FIELDS, findings)
     measurements = _read_csv(package / "MEASUREMENTS.csv", MEASUREMENT_FIELDS, findings)
     manifest = _read_optional_json(package / MANIFEST_NAME, findings)
-    for document in (build, protocol, equipment, manifest):
+    for name, document in (
+        ("BUILD-RECORD.json", build),
+        ("TEST-PROTOCOL.json", protocol),
+        ("EQUIPMENT.json", equipment),
+        (MANIFEST_NAME, manifest),
+    ):
         if isinstance(document, dict):
-            _walk_authority(document, findings)
+            scan_authority(document, name, findings)
+    for name, rows in (("ENVIRONMENT.csv", environment), ("MEASUREMENTS.csv", measurements)):
+        for line, row in enumerate(rows, start=2):
+            scan_authority(row, f"{name} row {line}", findings)
+    _scan_other_documents(package, findings)
     if isinstance(build, dict):
         findings.extend(schema_findings(BUILD_RECORD, build, "BUILD-RECORD.json"))
     if isinstance(protocol, dict):
@@ -103,6 +116,7 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
     _check_environment(environment, findings)
     _check_measurements(package, measurements, findings)
     docs["calibration_unverified"] = _calibration_unverified(docs)
+    docs["evidence_refs"] = evidence_refs(docs)
     if isinstance(manifest, dict) and manifest:
         complete = not any(item.severity == "malformed" for item in findings)
         expected = stored_states(complete, docs["calibration_unverified"])
@@ -111,13 +125,56 @@ def load_package_docs(package: Path) -> tuple[dict, list[Finding]]:
     return docs, findings
 
 
+def _scan_other_documents(package: Path, findings: list[Finding]) -> None:
+    """Authority scan of every JSON and CSV file that is not a parsed record.
+
+    This covers ``derived/observations.json`` and any sensor or note file
+    under ``raw/``. A file that does not parse is not read as a claim here;
+    the derived document is separately refused if it does not parse.
+    """
+    skip = ROOT_RECORDS | {MANIFEST_NAME}
+    for relative in relative_files(package):
+        if relative in skip or not relative.lower().endswith((".json", ".csv")):
+            continue
+        path = package / relative
+        if path.stat().st_size > _SCAN_LIMIT:
+            findings.append(finding("malformed", "document_too_large", relative + " is too large to check"))
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+            if relative.lower().endswith(".json"):
+                content: object = json.loads(text)
+            else:
+                content = list(csv.reader(text.splitlines()))
+        except (UnicodeDecodeError, json.JSONDecodeError, csv.Error, RecursionError):
+            continue  # not readable as a claim; derived/observations.json is refused separately
+        scan_authority(content, relative, findings)
+
+
+def evidence_refs(docs: dict) -> set[str]:
+    """Every evidence path the records point to."""
+    refs: set[str] = set()
+    build, protocol = docs.get("build") or {}, docs.get("protocol") or {}
+    photos = build.get("photograph_refs")
+    refs.update(photos if isinstance(photos, list) else [])
+    for key in ("top", "back_side", "neck"):
+        material = build.get(key)
+        if isinstance(material, dict) and material.get("evidence_ref"):
+            refs.add(material["evidence_ref"])
+    trials = protocol.get("trials") if isinstance(protocol.get("trials"), list) else []
+    refs.update(trial.get("file") for trial in trials if isinstance(trial, dict))
+    refs.add(protocol.get("background_file"))
+    refs.update(row.get("raw_evidence_ref") for row in docs.get("measurements") or [])
+    return {ref for ref in refs if isinstance(ref, str) and ref}
+
+
 def _read_json(path: Path, findings: list[Finding]) -> dict | None:
     if not path.is_file():
         findings.append(finding("malformed", "missing_policy", path.name + " is absent"))
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError, RecursionError):
         findings.append(finding("malformed", "schema_version", path.name + " is not UTF-8 JSON"))
         return None
     if not isinstance(payload, dict):
@@ -133,7 +190,7 @@ def _read_optional_json(path: Path, findings: list[Finding]) -> dict | None:
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError, RecursionError):
         findings.append(finding("malformed", "schema_version", path.name + " is not UTF-8 JSON"))
         return None
     return payload if isinstance(payload, dict) else None
@@ -194,56 +251,6 @@ def _header_problem(header: list[str], fields: tuple[str, ...]) -> str:
     if unknown:
         parts.append("unknown " + ", ".join(unknown))
     return "; ".join(parts) or "columns are out of order"
-
-
-def _walk_authority(value: object, findings: list[Finding]) -> None:
-    if isinstance(value, dict):
-        _walk_dict(value, findings)
-    elif isinstance(value, list):
-        for item in value:
-            _walk_authority(item, findings)
-
-
-def _walk_dict(value: dict, findings: list[Finding]) -> None:
-    for key, item in value.items():
-        if isinstance(key, str) and key in PROHIBITED_KEYS:
-            findings.append(finding("authority", "prohibited_key", key))
-        if key == "witness_class":
-            _witness_class(item, findings)
-        if key == "literature_reconciliation_status" and item != LITERATURE_STATUS:
-            findings.append(finding("authority", "prohibited_literature_status", "literature comparison is blocked"))
-        if key == "states" and isinstance(item, list):
-            _states(item, findings)
-        _walk_authority(item, findings)
-
-
-def _witness_class(item: object, findings: list[Finding]) -> None:
-    if item == WITNESS_CLASS:
-        return
-    if isinstance(item, str) and item in PROHIBITED_STATES:
-        findings.append(finding("authority", "prohibited_witness_class", str(item)))
-        return
-    findings.append(finding("malformed", "schema_version", "witness class is not BUILD_RESPONSE_WITNESS"))
-
-
-def _states(items: list, findings: list[Finding]) -> None:
-    for item in items:
-        if not isinstance(item, str):
-            findings.append(finding("malformed", "schema_version", "state is not a string"))
-        elif item in PROHIBITED_STATES:
-            findings.append(finding("authority", "prohibited_state", str(item)))
-        elif item == INTEGRITY_VERIFIED:
-            findings.append(finding("malformed", "self_certified_integrity", "integrity cannot be self-certified"))
-        elif item not in {
-            BUILD_RESPONSE_OBSERVED,
-            CALIBRATION_UNVERIFIED,
-            CAPTURE_COMPLETE,
-            CAPTURE_INCOMPLETE,
-            METHOD_REVIEW_PENDING,
-            REFERENCE_COMPARISON_BLOCKED,
-            SCIENTIFIC_INTERPRETATION_PENDING,
-        }:
-            findings.append(finding("malformed", "schema_version", "unknown state"))
 
 
 def _check_build(package: Path, record: dict, findings: list[Finding]) -> None:
@@ -334,6 +341,9 @@ def _one_material(package: Path, material: dict, findings: list[Finding]) -> Non
         findings.append(finding("authority", "prohibited_witness_class", "botanical identity is not verified"))
         return
     ref = material.get("evidence_ref")
+    if not placed(ref, RAW_DIR):
+        findings.append(finding("malformed", "misplaced_evidence", "identity evidence must be under raw/"))
+        return
     if not isinstance(ref, str) or not _exists(package, ref):
         findings.append(finding("authority", "prohibited_witness_class", "verified identity needs an evidence file"))
 
@@ -358,15 +368,26 @@ def _photos(package: Path, record: dict, findings: list[Finding]) -> None:
     if not isinstance(refs, list) or len(refs) < 2:
         findings.append(finding("malformed", "missing_photograph", "build and placement photographs are required"))
         return
-    seen: set[str] = set()
+    # Distinct by name regardless of case (one file on Windows and macOS)
+    # and distinct by content (one image saved twice).
+    seen_names: set[str] = set()
+    seen_digests: set[str] = set()
     for ref in refs:
-        if not isinstance(ref, str) or not ref.endswith(".png") or not _exists(package, ref):
+        if isinstance(ref, str) and not placed(ref, IMAGE_DIR, ".png"):
+            findings.append(finding("malformed", "misplaced_evidence", "photographs must be PNG files under raw/images/"))
+            continue
+        if not isinstance(ref, str) or not _exists(package, ref):
             findings.append(finding("malformed", "missing_photograph", "photograph missing"))
             continue
-        if ref in seen:
+        if ref.casefold() in seen_names:
             findings.append(finding("malformed", "missing_photograph", "photograph listed twice: " + ref))
             continue
-        seen.add(ref)
+        seen_names.add(ref.casefold())
+        digest = sha256_file(package / ref)
+        if digest in seen_digests:
+            findings.append(finding("malformed", "missing_photograph", "two photographs hold identical bytes: " + ref))
+            continue
+        seen_digests.add(digest)
         if not _is_png(package / ref):
             findings.append(finding("malformed", "invalid_photograph", "not a PNG image: " + ref))
 

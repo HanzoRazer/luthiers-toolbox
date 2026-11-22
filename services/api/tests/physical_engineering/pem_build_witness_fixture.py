@@ -5,6 +5,7 @@ The audio is generated here. It is not a recording of an instrument.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 import math
 import struct
@@ -40,11 +41,15 @@ def _png(width: int = 4, height: int = 4) -> bytes:
 
 
 PNG = _png()
+PLACEMENT_PNG = _png(5, 3)  # a different image: two photographs must not be one file
 
 
 class Factory:
-    def __init__(self) -> None:
-        self.n = 0
+    """Deterministic ids. ``start`` keeps packages in one test directory
+    (which share a ledger) from minting the same witness id."""
+
+    def __init__(self, start: int = 0) -> None:
+        self.n = start
 
     def __call__(self) -> str:
         self.n += 1
@@ -83,7 +88,7 @@ def write_wav(
 
 
 def write_valid(root: Path, *, trials: int = 3, background: bool = True) -> dict[str, str]:
-    factory = Factory()
+    factory = Factory(int(hashlib.sha256(root.name.encode("utf-8")).hexdigest()[:12], 16) * 1000)
     witness_id = new_id("witness", clock, factory)
     build_id = new_id("build", clock, factory)
     session_id = new_id("session", clock, factory)
@@ -97,7 +102,7 @@ def write_valid(root: Path, *, trials: int = 3, background: bool = True) -> dict
     if background:
         write_wav(root / background_name, amplitude=0.01)
     (root / "raw" / "images" / "build-id.png").write_bytes(PNG)
-    (root / "raw" / "images" / "placement.png").write_bytes(PNG)
+    (root / "raw" / "images" / "placement.png").write_bytes(PLACEMENT_PNG)
     record = _record(witness_id, build_id, session_id)
     dump_json(root / "BUILD-RECORD.json", record)
     dump_json(root / "TEST-PROTOCOL.json", _protocol(session_id, names, background_name if background else None))

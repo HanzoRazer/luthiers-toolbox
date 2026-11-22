@@ -57,7 +57,7 @@ def _no_crash(result: dict) -> None:
 
 def test_every_schema_is_valid_draft_2020_12() -> None:
     names = sorted(path.name for path in SCHEMA_DIR.glob("*.schema.json"))
-    assert len(names) == 4
+    assert len(names) == 5
     for name in names:
         Draft202012Validator.check_schema(_load(SCHEMA_DIR / name))
 

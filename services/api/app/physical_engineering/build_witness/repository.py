@@ -28,6 +28,31 @@ class WitnessRepository:
         body = f"package={package}\nsupersedes={supersedes or ''}\n"
         self._exclusive(self.root / "published" / identifier, body)
 
+    def seal(self, identifier: str, manifest_sha256: str) -> None:
+        """Anchor the first sealed manifest of a witness.
+
+        The first call records the digest. A later call with the same digest
+        is a no-op; a different digest is refused. A correction is a new
+        witness that supersedes this one, never a reseal.
+        """
+        path = self.root / "sealed" / identifier
+        try:
+            self._exclusive(path, manifest_sha256 + "\n")
+            return
+        except LedgerError:
+            pass
+        if self.sealed_digest(identifier) != manifest_sha256:
+            raise LedgerError(
+                f"witness {identifier} is already sealed with different bytes; "
+                "a correction needs a new witness that supersedes it"
+            )
+
+    def sealed_digest(self, identifier: str) -> str | None:
+        path = self.root / "sealed" / identifier
+        if not path.is_file():
+            return None
+        return path.read_text(encoding="utf-8").strip()
+
     def published_path(self, identifier: str) -> Path | None:
         path = self.root / "published" / identifier
         if not path.is_file():
