@@ -1,0 +1,83 @@
+{
+  "schema": "cbsp21_patch_input_v1",
+  "schema_version": "cbsp21_patch_input_v1",
+  "coverage_min": 0.95,
+  "patch_id": "WOODDB_SHRINKAGE_003",
+  "title": "data(wood): shrinkage for 377 species that had none (FPL 126, Wood Database 251)",
+  "intent": "Owner GO 2026-11-19: fill empty tangential/radial shrinkage in wood_species.json from the Wood Database, each value cited to its own species page with per-field source. Where FPL GTR-282 Tables 4-3/4-4 have the species (126), the FPL value is used per CLAUDE.md priority. Stacked on PR #497. Owner decision 2026-11-20: the shrinkage source ranking is dropped (FPL, Tropix and Wood Database are approved sources of equal standing; disagreements over 0.5 points are recorded in VERIFICATION_LOG).",
+  "change_type": "data",
+  "behavior_change": "wood_movement_calc returns results for 377 more species instead of raising ValueError (supported species 57 -> 434). No code, route or schema change; no existing value changed.",
+  "risk_level": "medium",
+  "scope": {
+    "paths_in_scope": [
+      ".cbsp21/patches/wooddb-shrinkage-003.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json",
+      "services/api/tests/test_wood_movement_calc.py"
+    ],
+    "files_expected_to_change": [
+      ".cbsp21/patches/wooddb-shrinkage-003.json",
+      "CLAUDE.md",
+      "docs/process/wood_species_update_template.md",
+      "docs/tonewood/VERIFICATION_LOG.md",
+      "services/api/app/data_registry/system/materials/wood_species.json",
+      "services/api/tests/test_wood_movement_calc.py"
+    ]
+  },
+  "diff_articulation": {
+    "what_changed": "wood_species.json: 377 records gain contraction_tangential_pct / contraction_radial_pct with per-field provenance (FPL_GTR282_table_4-3/4-4 + table row for 126; wood_database_meier + page URL for 251; _approximate flag on 13 whose page prints '~'; subspecies caveat on keyaki). VERIFICATION_LOG: C-16 and O-12. Update template: documents the _approximate and _shrinkage_caveat qualifiers. Test: shrinkage-coefficient sanity bound widened to the published range (1.5-15% tangential). CLAUDE.md + template: shrinkage source ranking replaced by equal-standing approved sources (C-17); wood_database_meier URL field corrected to _shrinkage_<dir>_url.",
+    "why_not_redundant": "These 377 species had no shrinkage value, so the wood-movement calculator rejected them."
+  },
+  "verification": {
+    "commands_run": [
+      "json.dumps(indent=2, ensure_ascii=True) reproduces the parent commit's wood_species.json byte-for-byte before editing",
+      "seeded random sample of 30 bulk-copy rows vs live wood-database.com pages: 30/30 tangential and radial values match",
+      "all 18 whole-number rows re-read from their live pages for the '~' marker: 13 approximate, keyaki subspecies",
+      "scripted diff vs parent commit: _meta and all other fields identical; only these 377 records changed, each only by adding shrinkage/provenance keys",
+      "FPL values read from docs/reference/fpl-gtr282/fpl_gtr282_species_tables.csv",
+      "wood_movement_calc.list_species() = 434; get_shrinkage_data returns the new values (teak, iroko, abura spot-checked)",
+      "py -3.11 -m pytest wood-movement and related suites; scripts/ci/test_policy_fpl_examples.py"
+    ]
+  },
+  "files": [
+    {
+      "path": ".cbsp21/patches/wooddb-shrinkage-003.json",
+      "intent": "Per-PR CBSP21 manifest.",
+      "risk": "low",
+      "behavior_change": "None."
+    },
+    {
+      "path": "CLAUDE.md",
+      "intent": "Shrinkage sourcing policy: drop the FPL > Tropix > Wood Database ranking per owner decision 2026-11-20; record disagreements over 0.5 points; correct the wood_database_meier URL field.",
+      "risk": "low",
+      "behavior_change": "None (policy text). No data value changed."
+    },
+    {
+      "path": "docs/process/wood_species_update_template.md",
+      "intent": "Document the optional _shrinkage_<dir>_approximate and _shrinkage_caveat qualifiers.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "docs/tonewood/VERIFICATION_LOG.md",
+      "intent": "C-16: owner ruling, method, sample result, exclusions, FPL vs Wood Database comparison on 126 shared species, Tropix-priority deviation for 20 species; O-12 updated.",
+      "risk": "low",
+      "behavior_change": "None (documentation)."
+    },
+    {
+      "path": "services/api/app/data_registry/system/materials/wood_species.json",
+      "intent": "Sourced tangential/radial shrinkage with per-field attribution for 377 species that had none.",
+      "risk": "medium",
+      "behavior_change": "wood_movement_calc accepts these 377 species instead of raising ValueError."
+    },
+    {
+      "path": "services/api/tests/test_wood_movement_calc.py",
+      "intent": "Widen test_shrinkage_coefficients_realistic from 3-12% to 1.5-15% tangential: published FPL values (Pacific madrone, shellbark hickory, overcup oak, karri) exceed 12%.",
+      "risk": "low",
+      "behavior_change": "None (test bound only)."
+    }
+  ],
+  "risk_rationale": "Medium: additive data only, but large (377 records) and taken through a third-party bulk copy verified by a 30-row sample, not page by page. Known limitations: 20 species with a Tropix sheet keep Wood Database values (ranking dropped by owner, C-17; sheets not read); 13 values are approximate at source; duplicate records of one species get identical values; 4 records with species mismatches were excluded rather than resolved."
+}
